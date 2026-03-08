@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.urls import path
-from processos.views import home_page, add_process_view, visualizar_pdf_processo, editar_processo, painel_impostos, contas_a_pagar, api_processar_boleto, add_pre_empenho_view, a_empenhar_view, add_credor_view, credores_list_view, diarias_list_view, reembolsos_list_view, jetons_list_view, auxilios_list_view, add_diaria_view, add_reembolso_view, add_jeton_view, add_auxilio_view, verbas_panel_view, agrupar_verbas_view, agrupar_impostos_view
+from django.conf import settings
+from django.conf.urls.static import static
+from processos.views import home_page, add_process_view, visualizar_pdf_processo, editar_processo, painel_impostos, contas_a_pagar, api_processar_boleto, add_pre_empenho_view, a_empenhar_view, add_credor_view, credores_list_view, diarias_list_view, reembolsos_list_view, jetons_list_view, auxilios_list_view, add_diaria_view, add_reembolso_view, add_jeton_view, add_auxilio_view, verbas_panel_view, agrupar_verbas_view, agrupar_impostos_view, painel_comprovantes_view, api_fatiar_comprovantes, api_vincular_comprovantes, painel_conferencia_view, aprovar_conferencia_view, enviar_para_autorizacao, painel_autorizacao_view, autorizar_pagamento, aprovar_contabilizacao_view, aprovar_conselho_view, arquivar_processo_view, painel_conselho_view, painel_arquivamento_view, painel_contabilizacao_view, painel_suprimentos_view, gerenciar_suprimento_view, fechar_suprimento_view, add_suprimento_view
 from processos.ai_views import ai_extraction_page_view, api_testar_extracao
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -31,5 +33,30 @@ path('verbas/auxilios/novo/', add_auxilio_view, name='add_auxilio'),
 path('verbas/', verbas_panel_view, name='verbas_panel'),
 path('verbas/agrupar/<str:tipo_verba>/', agrupar_verbas_view, name='agrupar_verbas'),
 path('impostos/agrupar/', agrupar_impostos_view, name='agrupar_impostos'),
+path('processos/comprovantes/', painel_comprovantes_view, name='painel_comprovantes'),
+path('api/comprovantes/fatiar/', api_fatiar_comprovantes, name='api_fatiar_comprovantes'),
+path('api/comprovantes/vincular/', api_vincular_comprovantes, name='api_vincular_comprovantes'),
+path('processos/conferencia/', painel_conferencia_view, name='painel_conferencia'),
+path('processos/conferencia/<int:pk>/aprovar/', aprovar_conferencia_view, name='aprovar_conferencia'),
+path('processos/enviar-autorizacao/', enviar_para_autorizacao, name='enviar_para_autorizacao'),
+path('processos/autorizacao/', painel_autorizacao_view, name='painel_autorizacao'),
+path('processos/autorizar-pagamento/', autorizar_pagamento, name='autorizar_pagamento'),
+# Contabilização
+path('processos/contabilizacao/', painel_contabilizacao_view, name='painel_contabilizacao'),
+path('processos/contabilizacao/<int:pk>/aprovar/', aprovar_contabilizacao_view, name='aprovar_contabilizacao'),
+
+# Conselho Fiscal
+path('processos/conselho/', painel_conselho_view, name='painel_conselho'),
+path('processos/conselho/<int:pk>/aprovar/', aprovar_conselho_view, name='aprovar_conselho'),
+
+# Arquivamento
+path('processos/arquivamento/', painel_arquivamento_view, name='painel_arquivamento'),
+path('processos/arquivamento/<int:pk>/aprovar/', arquivar_processo_view, name='arquivar_processo'),
+path('suprimentos/', painel_suprimentos_view, name='painel_suprimentos'),
+path('suprimentos/<int:pk>/gerenciar/', gerenciar_suprimento_view, name='gerenciar_suprimento'),
+path('suprimentos/<int:pk>/fechar/', fechar_suprimento_view, name='fechar_suprimento'),
+path('suprimentos/novo/', add_suprimento_view, name='add_suprimento'),
 ]
 
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

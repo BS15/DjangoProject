@@ -17,7 +17,15 @@
 <div class="container-fluid px-4 mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Contas a Pagar</h2>
-        <a href="{% url 'home_page' %}" class="btn btn-outline-secondary">Voltar para Home</a>
+        <div class="d-flex gap-2">
+            <a href="{% url 'painel_autorizacao' %}" class="btn btn-warning fw-bold shadow-sm">
+                <i class="bi bi-person-badge"></i> Painel do Ordenador
+            </a>
+            <a href="{% url 'painel_comprovantes' %}" class="btn btn-success fw-bold shadow-sm">
+                <i class="bi bi-file-earmark-break"></i> Baixa em Lote de Comprovantes
+            </a>
+            <a href="{% url 'home_page' %}" class="btn btn-outline-secondary">Voltar para Home</a>
+        </div>
     </div>
 
     <div class="row">
@@ -30,15 +38,12 @@
                     <a href="?data=" class="list-group-item list-group-item-action {% if not data_selecionada %}active fw-bold{% endif %}">
                         Todos os Processos
                     </a>
-
                     {% for item in datas_agrupadas %}
                         {% if item.data_pagamento %}
                             <a href="?data={{ item.data_pagamento|date:'Y-m-d' }}"
                                class="list-group-item list-group-item-action d-flex justify-content-between align-items-center
                                {% if data_selecionada == item.data_pagamento|date:'Y-m-d' %}active fw-bold{% endif %}">
-
                                 {{ item.data_pagamento|date:"d/m/Y" }}
-
                                 <span class="badge {% if data_selecionada == item.data_pagamento|date:'Y-m-d' %}bg-light text-primary{% else %}bg-primary{% endif %} rounded-pill">
                                     {{ item.total }}
                                 </span>
@@ -59,46 +64,74 @@
         </div>
 
         <div class="col-md-9">
-            <div class="card shadow-sm border-0">
-                <div class="card-body p-0">
-                    <table class="table table-hover table-striped mb-0 align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th># ID</th>
-                                <th>Data Pagamento</th>
-                                <th>Nota Empenho</th>
-                                <th>Credor</th>
-                                <th class="text-end pe-4">Valor Líquido</th>
-                                <th>Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for processo in lista_processos %}
-                            <tr>
-                                <td class="fw-bold text-muted">#{{ processo.id }}</td>
-                                <td class="fw-medium text-primary">{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
-                                <td>{{ processo.n_nota_empenho|default:"-" }}</td>
-                                <td class="fw-medium">{{ processo.credor }}</td>
-                                <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></button>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="6" class="text-center py-5 text-muted">
-                                    <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-                                    Nenhum processo a pagar nesta data.
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+            <div class="mb-3 d-flex justify-content-between align-items-center">
+                <button type="submit" form="form-enviar-autorizacao" class="btn btn-primary fw-bold shadow-sm" onclick="return confirm('Enviar os processos selecionados para a mesa do Ordenador de Despesa?');">
+                    <i class="bi bi-send-check"></i> Enviar para Autorização
+                </button>
             </div>
+
+            <form id="form-enviar-autorizacao" method="POST" action="{% url 'enviar_para_autorizacao' %}">
+                {% csrf_token %}
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-0">
+                        <table class="table table-hover table-striped mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-center" style="width: 40px;">
+                                        <input type="checkbox" class="form-check-input" id="checkAll">
+                                    </th>
+                                    <th># ID</th>
+                                    <th>Data Pagamento</th>
+                                    <th>Nota Empenho</th>
+                                    <th>Credor</th>
+                                    <th class="text-end pe-4">Valor Líquido</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for processo in lista_processos %}
+                                <tr>
+                                    <td class="text-center">
+                                        <input type="checkbox" name="processos_selecionados" value="{{ processo.id }}" class="form-check-input check-item">
+                                    </td>
+                                    <td class="fw-bold text-muted">#{{ processo.id }}</td>
+                                    <td class="fw-medium text-primary">{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
+                                    <td>{{ processo.n_nota_empenho|default:"-" }}</td>
+                                    <td class="fw-medium">{{ processo.credor|truncatechars:35 }}</td>
+                                    <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
+                                    <td>
+                                        <a href="{% url 'editar_processo' pk=processo.id %}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                        Nenhum processo pendente nesta data.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+<script>
+    // Javascript simples para marcar todos os checkboxes
+    const checkAll = document.getElementById('checkAll');
+    if (checkAll) {
+        checkAll.addEventListener('change', function() {
+            var checkboxes = document.querySelectorAll('.check-item');
+            for (var checkbox of checkboxes) {
+                checkbox.checked = this.checked;
+            }
+        });
+    }
+</script>
 
 </body>
 </html>

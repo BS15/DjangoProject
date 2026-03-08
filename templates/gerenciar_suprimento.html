@@ -12,7 +12,8 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2><i class="bi bi-wallet2 text-success"></i> Gestão de Suprimento de Fundos</h2>
-            <p class="text-muted mb-0">Suprido(a): <strong>{{ suprimento.suprido.nome }}</strong> | Período: {{ suprimento.data_saida|date:"d/m/Y" }} a {{ suprimento.data_retorno|date:"d/m/Y" }}</p>
+            <p class="text-muted mb-0">Suprido(a): <strong>{{ suprimento.suprido.nome }}</strong> |
+                Período: {{ suprimento.data_saida|date:"d/m/Y" }} a {{ suprimento.data_retorno|date:"d/m/Y" }}</p>
             {% if suprimento.processo %}
                 <span class="badge bg-secondary">Vinculado ao Processo #{{ suprimento.processo.id }}</span>
             {% endif %}
@@ -54,7 +55,7 @@
                     <i class="bi bi-receipt"></i> Lançar Nova Despesa
                 </div>
                 <div class="card-body bg-light">
-                    <form method="POST">
+                    <form method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="mb-2">
                             <label class="small fw-bold text-muted">Data da Compra</label>
@@ -72,9 +73,13 @@
                             <label class="small fw-bold text-muted">Descrição do Item/Serviço</label>
                             <textarea name="detalhamento" class="form-control form-control-sm" rows="2" required></textarea>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-2">
                             <label class="small fw-bold text-muted">Valor (R$)</label>
                             <input type="number" step="0.01" name="valor" class="form-control form-control-sm text-danger fw-bold" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small fw-bold text-muted">Documento (Solicitação + NF)</label>
+                            <input type="file" name="arquivo" class="form-control form-control-sm" accept=".pdf" required>
                         </div>
                         <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">Registrar Despesa</button>
                     </form>
@@ -87,7 +92,8 @@
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <span class="fw-bold"><i class="bi bi-list-columns"></i> Extrato de Compras</span>
 
-                    <form method="POST" action="{% url 'fechar_suprimento' pk=suprimento.id %}" onsubmit="return confirm('Deseja encerrar a prestação de contas? O processo será enviado para a Auditoria.');">
+                    <form method="POST" action="{% url 'fechar_suprimento' pk=suprimento.id %}"
+                          onsubmit="return confirm('Deseja encerrar a prestação de contas? O processo será enviado para a Auditoria.');">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-warning btn-sm fw-bold shadow-sm">
                             <i class="bi bi-lock-fill"></i> Fechar Prestação de Contas
@@ -97,28 +103,40 @@
                 <div class="card-body p-0">
                     <table class="table table-hover table-striped mb-0 align-middle small">
                         <thead class="table-light">
-                            <tr>
-                                <th>Data</th>
-                                <th>NF</th>
-                                <th>Estabelecimento</th>
-                                <th>Detalhe</th>
-                                <th class="text-end pe-3">Valor</th>
-                            </tr>
+                        <tr>
+                            <th>Data</th>
+                            <th>NF</th>
+                            <th>Estabelecimento</th>
+                            <th>Detalhe</th>
+                            <th class="text-end pe-3">Valor</th>
+                            <th class="text-center">Doc</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            {% for despesa in despesas %}
+                        {% for despesa in despesas %}
                             <tr>
                                 <td class="text-muted">{{ despesa.data|date:"d/m/Y" }}</td>
                                 <td class="fw-bold">{{ despesa.nota_fiscal }}</td>
                                 <td>{{ despesa.estabelecimento }}</td>
                                 <td>{{ despesa.detalhamento|truncatechars:40 }}</td>
                                 <td class="text-end pe-3 fw-bold text-danger">R$ {{ despesa.valor|floatformat:2 }}</td>
+                                <td class="text-center">
+                                    {% if despesa.arquivo %}
+                                        <a href="{{ despesa.arquivo.url }}" target="_blank" class="btn btn-sm btn-danger py-0" title="Ver Solicitação + NF">
+                                            <i class="bi bi-file-pdf"></i>
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
                             </tr>
-                            {% empty %}
+                        {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">Nenhuma despesa lançada neste suprimento ainda.</td>
+                                <td colspan="6" class="text-center py-5 text-muted">Nenhuma despesa lançada neste
+                                    suprimento ainda.
+                                </td>
                             </tr>
-                            {% endfor %}
+                        {% endfor %}
                         </tbody>
                     </table>
                 </div>

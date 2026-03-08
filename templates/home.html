@@ -14,28 +14,36 @@
             <h2 class="mb-0">Gerenciamento de Processos</h2>
             <p class="text-muted">Acompanhamento de pagamentos e empenhos</p>
         </div>
-        <div class="row mb-4">
+        <div class="d-flex gap-2">
+            <a href="{% url 'add_process' %}" class="btn btn-success btn-lg shadow-sm fw-bold">
+                <i class="bi bi-plus-lg"></i> Novo Processo
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4 g-3">
         <div class="col-md-3">
-            <a href="{% url 'a_empenhar' %}" class="btn btn-warning shadow-sm fw-bold">
+            <a href="{% url 'a_empenhar' %}" class="btn btn-warning shadow-sm fw-bold w-100">
                 <i class="bi bi-hourglass-split"></i> Fila: A Empenhar
             </a>
         </div>
         <div class="col-md-3">
-            <a href="{% url 'verbas_panel' %}" class="btn btn-secondary shadow-sm fw-bold">
+            <a href="{% url 'verbas_panel' %}" class="btn btn-secondary shadow-sm fw-bold w-100">
                 <i class="bi bi-briefcase"></i> Verbas Indenizatórias
             </a>
         </div>
         <div class="col-md-3">
-            <a href="{% url 'credores_list' %}" class="btn btn-info text-white shadow-sm fw-bold">
+            <a href="{% url 'credores_list' %}" class="btn btn-info text-white shadow-sm fw-bold w-100">
                 <i class="bi bi-people"></i> Credores
             </a>
         </div>
         <div class="col-md-3">
-            <a href="{% url 'add_credor' %}" class="btn btn-success shadow-sm fw-bold">
+            <a href="{% url 'add_credor' %}" class="btn btn-success shadow-sm fw-bold w-100">
                 <i class="bi bi-person-plus"></i> Novo Credor
             </a>
         </div>
-        <div class="col-md-3">
+
+        <div class="col-md-4">
             <a href="{% url 'contas_a_pagar' %}" class="btn btn-outline-success w-100 py-3 shadow-sm fw-bold">
                 <i class="bi bi-cash-coin fs-4 d-block mb-2"></i>
                 Contas a Pagar
@@ -47,10 +55,10 @@
                 Retenção de Impostos
             </a>
         </div>
-    </div>
-        <div class="d-flex gap-2">
-            <a href="{% url 'add_process' %}" class="btn btn-success btn-lg shadow-sm fw-bold">
-                <i class="bi bi-plus-lg"></i> Novo Processo
+        <div class="col-md-4">
+            <a href="{% url 'painel_suprimentos' %}" class="btn btn-outline-primary w-100 py-3 shadow-sm fw-bold">
+                <i class="bi bi-wallet2 fs-4 d-block mb-2"></i>
+                Suprimentos de Fundos
             </a>
         </div>
     </div>
@@ -74,6 +82,7 @@
             </form>
         </div>
     </div>
+
     <div class="mb-3 p-2 bg-white rounded shadow-sm border">
         <span class="fw-bold me-3 ps-2 text-muted">Ações:</span>
         <button id="btnEditar" class="btn btn-primary btn-sm fw-bold shadow-sm">
@@ -117,12 +126,12 @@
                         <td class="fw-medium">{{ processo.credor|default:"-"|truncatechars:30 }}</td>
                         <td>{{ processo.data_empenho|date:"d/m/Y"|default:"-" }}</td>
                         <td>
-                            {% if processo.status == 'concluido' %}
-                                <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">Concluído</span>
-                            {% elif processo.status == 'pendencias' %}
-                                <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill">Com Pendências</span>
+                            {% if processo.status.status_choice == 'ARQUIVADO' %}
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2 rounded-pill"><i class="bi bi-archive-fill"></i> Arquivado</span>
+                            {% elif 'PENDÊNCIAS' in processo.status.status_choice %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill"><i class="bi bi-exclamation-triangle-fill"></i> Pendências</span>
                             {% else %}
-                                <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill">Em Conferência</span>
+                                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">{{ processo.status.status_choice|truncatechars:25 }}</span>
                             {% endif %}
                         </td>
                         <td class="text-end pe-4 fw-bold text-dark">
@@ -155,9 +164,6 @@
     </div>
 </div>
 
-</body>
-</html>
-
 <script>
 document.addEventListener("DOMContentLoaded", function() {
 
@@ -177,10 +183,8 @@ document.addEventListener("DOMContentLoaded", function() {
     // 2. Lógica do Botão Editar
     if(btnEditar) {
         btnEditar.addEventListener('click', function() {
-            // Descobre quais caixinhas estão marcadas
             const selecionados = document.querySelectorAll('.check-linha:checked');
 
-            // Regra de bloqueio:
             if (selecionados.length === 0) {
                 alert("Selecione pelo menos um processo para editar.");
                 return;
@@ -190,12 +194,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 return;
             }
 
-            // Se passou pelas regras, pega o ID do processo e redireciona para a URL de edição
             const idProcesso = selecionados[0].value;
-
-            // Supondo que a sua URL de edição no Django seja algo como /processo/5/editar/
             window.location.href = `/processo/${idProcesso}/editar/`;
         });
     }
 });
 </script>
+
+</body>
+</html>

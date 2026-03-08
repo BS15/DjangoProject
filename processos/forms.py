@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Processo, DocumentoProcesso, NotaFiscal, RetencaoImposto, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao
+from .models import Processo, DocumentoProcesso, NotaFiscal, RetencaoImposto, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos
 
 class ProcessoForm(forms.ModelForm):
     class Meta:
@@ -198,4 +198,18 @@ class AuxilioForm(forms.ModelForm):
             'beneficiario': forms.Select(attrs={'class': 'form-select'}),
             'objetivo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Motivo ou evento da representação'}),
             'valor_total': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        }
+
+class SuprimentoForm(forms.ModelForm):
+    class Meta:
+        model = SuprimentoDeFundos
+        fields = ['suprido', 'lotacao', 'valor_liquido', 'taxa_saque', 'data_saida', 'data_retorno', 'data_recibo']
+        widgets = {
+            'data_saida': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'data_retorno': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'data_recibo': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'valor_liquido': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control'}),
+            'taxa_saque': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control'}),
+            'suprido': forms.Select(attrs={'class': 'form-select'}),
+            'lotacao': forms.TextInput(attrs={'class': 'form-control'}),
         }

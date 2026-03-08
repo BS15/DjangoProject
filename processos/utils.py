@@ -218,59 +218,70 @@ def processar_pdf_boleto(pdf_file):
 
 
 def processar_pdf_comprovantes(pdf_file):
-    """
-    Lê um PDF multicamadas (ex: extrato de pagamentos do banco), separa página por página,
-    tenta extrair o Valor e o Credor usando pdfplumber (melhor leitura) e salva as fatias
-    temporárias no disco usando PyPDF2 (melhor manipulação).
-    """
     resultados = []
 
-    # 1. Abre o PDF usando PyPDF2 apenas para fatiar e salvar
     pdf_writer_source = PyPDF2.PdfReader(pdf_file)
-
-    # 2. Abre o MESMO arquivo usando pdfplumber para extração de texto de alta precisão
-    # (Como o arquivo do Django (request.FILES) já foi lido pelo PyPDF2,
-    # precisamos voltar o "cursor" da memória dele pro começo)
     pdf_file.seek(0)
 
     with pdfplumber.open(pdf_file) as pdf_leitor:
-
         for i, page in enumerate(pdf_leitor.pages):
-            # --- PARTE A: EXTRAÇÃO DE DADOS (pdfplumber) ---
             texto = page.extract_text() or ""
 
-            # Limpa quebras de linha múltiplas para facilitar o Regex
-            texto_limpo = re.sub(r'\s+', ' ', texto)
+            # A MÁGICA: Transforma todo o texto da página (com tabelas e colunas) em uma única linha reta
+            texto_flat = re.sub(r'\s+', ' ', texto)
 
-            # Tenta achar o Valor (Busca "Valor:", "Valor Pago:", "R$", etc. seguido de números)
-            # Regex: Procura palavras chave, ignora espaços/símbolos soltos, e captura o padrão "1.500,00" ou "1500,00"
-            match_valor = re.search(r'(?:Valor|Pago|R\$|Documento)[\s:\-\.]*([\d]{1,3}(?:\.\d{3})*,\d{2})', texto_limpo,
-                                    re.IGNORECASE)
+            # --- PARTE A: EXTRAÇÃO DO VALOR ---
+            # Busca as palavras-chave, ignora símbolos perdidos no meio, e captura o padrão "1.500,00"
+            match_valor = re.search(
+                r'(?:VALOR TOTAL|VALOR DO DOCUMENTO|VALOR COBRADO|Valor Total|Valor em Dinheiro)[\s\:\-\.]*([\d]{1,3}(?:\.\d{3})*,\d{2})',
+                texto_flat,
+                re.IGNORECASE
+            )
 
             valor_float = 0.00
             if match_valor:
-                # Transforma "1.500,00" em "1500.00" para o Python converter pra float
                 valor_str = match_valor.group(1).replace('.', '').replace(',', '.')
                 try:
                     valor_float = float(valor_str)
                 except ValueError:
                     pass
 
-            # Tenta achar o Credor (Busca "Favorecido", "Nome", "Destinatário", "Recebedor")
-            # Regex: Pega as palavras chaves e captura até 50 caracteres (letras, espaços, & e -) após elas
-            match_credor = re.search(
-                r'(?:Favorecido|Nome|Credor|Destinat[áa]rio|Recebedor)[\s:]+([A-ZÀ-Ÿ\s\.\-\&]{5,50})', texto_limpo,
+            # --- PARTE B: EXTRAÇÃO DO CREDOR ---
+            credor = "Não identificado automaticamente"
+
+            # Regra 1: Transferência (Procura "TRANSFERIDO PARA: CLIENTE:" e para no próximo campo)
+            match_transf = re.search(
+                r'TRANSFERIDO PARA:\s*CLIENTE:\s*([A-ZÀ-Ÿ\s\.\-\&]+?)(?:AGENCIA|NR\. DOCUMENTO|CONTA|$)', texto_flat,
                 re.IGNORECASE)
 
-            credor = "Não identificado automaticamente"
-            if match_credor:
-                credor = match_credor.group(1).strip()
-                # Limpa sujeiras comuns do fim da string capturada (ex: se o banco colocou um "CNPJ:" colado no nome)
-                credor = re.split(r'(CNPJ|CPF|\d{2}\.)', credor)[0].strip()
+            # Regra 2: Convênios (Procura "Convenio" e para em "Codigo de Barras")
+            match_convenio = re.search(r'Convenio\s+([A-ZÀ-Ÿ\s\.\-\&]+?)\s*Codigo de Barras', texto_flat, re.IGNORECASE)
 
-            # --- PARTE B: FATIAMENTO E SALVAMENTO (PyPDF2) ---
+            # Regra 3: Títulos/Boletos (Pega o nome da Instituição (Banco X ou S.A.) antes da gigante linha digitável)
+            match_banco = re.search(
+                r'((?:BANCO|CAIXA)[A-ZÀ-Ÿ\s\.\-\&]+?|[A-ZÀ-Ÿ\s\.\-\&]+?S\/?\.?A\.?)\s*(?:\d[\s\.\-]*){47,55}',
+                texto_flat, re.IGNORECASE)
+
+            # Regra 4: Termos genéricos (Favorecido, Destinatário, Recebedor)
+            match_fav = re.search(
+                r'(?:Favorecido|Nome|Credor|Destinat[áa]rio|Recebedor|CLIENTE)[\s:]+([A-ZÀ-Ÿ\s\.\-\&]{5,40}?)(?:AGENCIA|DATA|CONTA|CNPJ|CPF|$)',
+                texto_flat, re.IGNORECASE)
+
+            # Aplica a primeira regra que der match
+            if match_transf:
+                credor = match_transf.group(1).strip()
+            elif match_convenio:
+                credor = match_convenio.group(1).strip()
+            elif match_banco:
+                credor = match_banco.group(1).strip()
+            elif match_fav:
+                credor = match_fav.group(1).strip()
+
+            # Remove lixos comuns do final da string
+            credor = re.sub(r'(?:SISTEMA|SISBB|AUTOATENDIMENTO).*', '', credor, flags=re.IGNORECASE).strip()
+
+            # --- PARTE C: FATIAMENTO E SALVAMENTO ---
             writer = PyPDF2.PdfWriter()
-            # Pega a página equivalente no PyPDF2 (já que estamos no loop do pdfplumber)
             pypdf_page = pdf_writer_source.pages[i]
             writer.add_page(pypdf_page)
 
@@ -283,7 +294,7 @@ def processar_pdf_comprovantes(pdf_file):
 
             path = default_storage.save(temp_filename, ContentFile(temp_pdf.getvalue()))
 
-            # --- PARTE C: EMPACOTAMENTO DOS DADOS ---
+            # --- PARTE D: EMPACOTAMENTO ---
             resultados.append({
                 'temp_path': path,
                 'pagina': i + 1,
@@ -291,5 +302,5 @@ def processar_pdf_comprovantes(pdf_file):
                 'valor_extraido': valor_float,
                 'url': default_storage.url(path)
             })
-
+    print(resultados)
     return resultados

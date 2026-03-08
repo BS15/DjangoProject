@@ -1,16 +1,19 @@
-# Esconde as chaves e senhas
-.env
-
-# Esconde a pasta do seu ambiente virtual (vimos no seu erro anterior que ela se chama .venv)
+# Ambientes Virtuais
 .venv/
 venv/
+env/
 
-# Esconde arquivos de configuração do próprio PyCharm
-.idea/
-
-# Esconde o banco de dados local (se quiser que o banco suba zerado)
+# Banco de Dados Local (NUNCA suba o banco de dados)
 db.sqlite3
 
-# Esconde arquivos temporários do Python
+# Arquivos de mídia (Uploads, PDFs, imagens)
+media/
+
+# Arquivos temporários do Python e PyCharm
 __pycache__/
 *.pyc
+.idea/
+.env
+
+# Arquivos temporários gerais
+temp/
