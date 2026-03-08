@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Prestação de Contas - Suprimento #{{ suprimento.id }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-wallet2 text-success"></i> Gestão de Suprimento de Fundos</h2>
+            <p class="text-muted mb-0">Suprido(a): <strong>{{ suprimento.suprido.nome }}</strong> | Período: {{ suprimento.data_saida|date:"d/m/Y" }} a {{ suprimento.data_retorno|date:"d/m/Y" }}</p>
+            {% if suprimento.processo %}
+                <span class="badge bg-secondary">Vinculado ao Processo #{{ suprimento.processo.id }}</span>
+            {% endif %}
+        </div>
+        <a href="{% url 'painel_suprimentos' %}" class="btn btn-outline-secondary">Voltar</a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 border-start border-primary border-4">
+                <div class="card-body">
+                    <h6 class="text-muted mb-1">Numerário Liberado</h6>
+                    <h3 class="text-primary mb-0">R$ {{ suprimento.valor_liquido|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 border-start border-danger border-4">
+                <div class="card-body">
+                    <h6 class="text-muted mb-1">Total de Despesas Lançadas</h6>
+                    <h3 class="text-danger mb-0">R$ {{ suprimento.valor_gasto|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 border-start border-success border-4">
+                <div class="card-body">
+                    <h6 class="text-muted mb-1">Saldo Remanescente a Devolver</h6>
+                    <h3 class="text-success mb-0">R$ {{ suprimento.saldo_remanescente|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white fw-bold">
+                    <i class="bi bi-receipt"></i> Lançar Nova Despesa
+                </div>
+                <div class="card-body bg-light">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            <label class="small fw-bold text-muted">Data da Compra</label>
+                            <input type="date" name="data" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="small fw-bold text-muted">Estabelecimento / Credor</label>
+                            <input type="text" name="estabelecimento" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="small fw-bold text-muted">Nº Nota Fiscal / Cupom</label>
+                            <input type="text" name="nota_fiscal" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="small fw-bold text-muted">Descrição do Item/Serviço</label>
+                            <textarea name="detalhamento" class="form-control form-control-sm" rows="2" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small fw-bold text-muted">Valor (R$)</label>
+                            <input type="number" step="0.01" name="valor" class="form-control form-control-sm text-danger fw-bold" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">Registrar Despesa</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <span class="fw-bold"><i class="bi bi-list-columns"></i> Extrato de Compras</span>
+
+                    <form method="POST" action="{% url 'fechar_suprimento' pk=suprimento.id %}" onsubmit="return confirm('Deseja encerrar a prestação de contas? O processo será enviado para a Auditoria.');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning btn-sm fw-bold shadow-sm">
+                            <i class="bi bi-lock-fill"></i> Fechar Prestação de Contas
+                        </button>
+                    </form>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover table-striped mb-0 align-middle small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Data</th>
+                                <th>NF</th>
+                                <th>Estabelecimento</th>
+                                <th>Detalhe</th>
+                                <th class="text-end pe-3">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for despesa in despesas %}
+                            <tr>
+                                <td class="text-muted">{{ despesa.data|date:"d/m/Y" }}</td>
+                                <td class="fw-bold">{{ despesa.nota_fiscal }}</td>
+                                <td>{{ despesa.estabelecimento }}</td>
+                                <td>{{ despesa.detalhamento|truncatechars:40 }}</td>
+                                <td class="text-end pe-3 fw-bold text-danger">R$ {{ despesa.valor|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">Nenhuma despesa lançada neste suprimento ainda.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

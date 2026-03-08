@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel de Processos - System X</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">Gerenciamento de Processos</h2>
+            <p class="text-muted">Acompanhamento de pagamentos e empenhos</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'add_process' %}" class="btn btn-success btn-lg shadow-sm fw-bold">
+                <i class="bi bi-plus-lg"></i> Novo Processo
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4 g-3">
+        <div class="col-md-3">
+            <a href="{% url 'a_empenhar' %}" class="btn btn-warning shadow-sm fw-bold w-100">
+                <i class="bi bi-hourglass-split"></i> Fila: A Empenhar
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'verbas_panel' %}" class="btn btn-secondary shadow-sm fw-bold w-100">
+                <i class="bi bi-briefcase"></i> Verbas Indenizatórias
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'credores_list' %}" class="btn btn-info text-white shadow-sm fw-bold w-100">
+                <i class="bi bi-people"></i> Credores
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'add_credor' %}" class="btn btn-success shadow-sm fw-bold w-100">
+                <i class="bi bi-person-plus"></i> Novo Credor
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="{% url 'contas_a_pagar' %}" class="btn btn-outline-success w-100 py-3 shadow-sm fw-bold">
+                <i class="bi bi-cash-coin fs-4 d-block mb-2"></i>
+                Contas a Pagar
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{% url 'painel_impostos' %}" class="btn btn-outline-warning text-dark w-100 py-3 shadow-sm fw-bold">
+                <i class="bi bi-receipt fs-4 d-block mb-2"></i>
+                Retenção de Impostos
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{% url 'painel_suprimentos' %}" class="btn btn-outline-primary w-100 py-3 shadow-sm fw-bold">
+                <i class="bi bi-wallet2 fs-4 d-block mb-2"></i>
+                Suprimentos de Fundos
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4 bg-light">
+        <div class="card-body py-3">
+            <form method="get" class="row g-2 align-items-end">
+                {% for field in meu_filtro.form %}
+                <div class="col-md-2 mb-2">
+                    <label class="form-label text-muted small fw-bold mb-1">{{ field.label }}</label>
+                    {{ field }}
+                </div>
+                {% endfor %}
+
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary btn-sm fw-bold shadow-sm">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
+                    <a href="{% url 'home_page' %}" class="btn btn-outline-secondary btn-sm shadow-sm">Limpar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="mb-3 p-2 bg-white rounded shadow-sm border">
+        <span class="fw-bold me-3 ps-2 text-muted">Ações:</span>
+        <button id="btnEditar" class="btn btn-primary btn-sm fw-bold shadow-sm">
+            <i class="bi bi-pencil-square"></i> Editar Selecionado
+        </button>
+        <button id="btnAutorizacao" class="btn btn-secondary btn-sm" disabled>Enviar para autorização</button>
+        <button id="btnTag" class="btn btn-info btn-sm text-white" disabled>Adicionar tag</button>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <table class="table table-hover table-striped mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4" style="width: 40px;">
+                            <input type="checkbox" id="checkMaster" class="form-check-input border-secondary">
+                        </th>
+                        <th># ID</th>
+                        <th>Nota Empenho</th>
+                        <th>Credor</th>
+                        <th>Data Empenho</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Valor Líquido</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for processo in lista_processos %}
+                    <tr>
+                        <td class="ps-4">
+                            <input type="checkbox" class="form-check-input check-linha border-secondary" value="{{ processo.id }}">
+                        </td>
+                        <td class="fw-bold text-muted">#{{ processo.id }}</td>
+                        <td>
+                            {% if processo.n_nota_empenho %}
+                                <span class="badge bg-light text-dark border">{{ processo.n_nota_empenho }}</span>
+                            {% else %}
+                                <span class="text-muted small">Pend.</span>
+                            {% endif %}
+                        </td>
+                        <td class="fw-medium">{{ processo.credor|default:"-"|truncatechars:30 }}</td>
+                        <td>{{ processo.data_empenho|date:"d/m/Y"|default:"-" }}</td>
+                        <td>
+                            {% if processo.status.status_choice == 'ARQUIVADO' %}
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2 rounded-pill"><i class="bi bi-archive-fill"></i> Arquivado</span>
+                            {% elif 'PENDÊNCIAS' in processo.status.status_choice %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill"><i class="bi bi-exclamation-triangle-fill"></i> Pendências</span>
+                            {% else %}
+                                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">{{ processo.status.status_choice|truncatechars:25 }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4 fw-bold text-dark">
+                            R$ {{ processo.valor_liquido|floatformat:2 }}
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'visualizar_pdf_processo' processo.id %}" target="_blank" class="btn btn-sm btn-danger fw-bold shadow-sm">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                            </a>
+                            <a href="/admin/processos/processo/{{ processo.id }}/change/" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-gear"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                                Nenhum processo cadastrado ainda.
+                                <br>
+                                <a href="{% url 'add_process' %}" class="btn btn-link">Clique aqui para adicionar o primeiro</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    const checkMaster = document.getElementById('checkMaster');
+    const checksLinha = document.querySelectorAll('.check-linha');
+    const btnEditar = document.getElementById('btnEditar');
+
+    // 1. Lógica do "Selecionar Todos"
+    if(checkMaster) {
+        checkMaster.addEventListener('change', function() {
+            checksLinha.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+    }
+
+    // 2. Lógica do Botão Editar
+    if(btnEditar) {
+        btnEditar.addEventListener('click', function() {
+            const selecionados = document.querySelectorAll('.check-linha:checked');
+
+            if (selecionados.length === 0) {
+                alert("Selecione pelo menos um processo para editar.");
+                return;
+            }
+            if (selecionados.length > 1) {
+                alert("Selecione APENAS UM processo para editar.");
+                return;
+            }
+
+            const idProcesso = selecionados[0].value;
+            window.location.href = `/processo/${idProcesso}/editar/`;
+        });
+    }
+});
+</script>
+
+</body>
+</html>
