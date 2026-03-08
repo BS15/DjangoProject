@@ -1,0 +1,191 @@
+import django_filters
+from .models import Processo, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, RetencaoImposto, CodigosImposto, NotaFiscal, StatusChoicesRetencoes, StatusChoicesVerbasIndenizatorias, StatusChoicesPendencias, StatusChoicesProcesso
+
+class ProcessoFilter(django_filters.FilterSet):
+    class Meta:
+        model = Processo
+        # Mapeamos todos os campos agrupando pelo tipo de busca desejada
+        fields = {
+            # Textos (Permite busca parcial ignorando maiúsculas e minúsculas)
+            'n_nota_empenho': ['icontains'],
+            'credor': ['icontains'],
+            'n_pagamento_siscac': ['icontains'],
+            'codigo_barras': ['icontains'],
+            'observacao': ['icontains'],
+            'detalhamento': ['icontains'],
+
+            # Chaves Estrangeiras, Booleanos e Opções (Gera Dropdowns exatos)
+            'extraorcamentario': ['exact'],
+            'ano_exercicio': ['exact'],
+            'forma_pagamento': ['exact'],
+            'tipo_pagamento': ['exact'],
+            'status': ['exact'],
+            'tag': ['exact'],
+            'conta': ['exact'],  # <-- O campo novo que criamos já entra aqui
+
+            # Datas e Valores Numéricos
+            'data_empenho': ['exact'],
+            'data_vencimento': ['exact'],
+            'valor_bruto': ['exact'],
+            'valor_liquido': ['exact'],
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Loop para aplicar o visual do Bootstrap em todos os 17 campos gerados
+        for field_name, field in self.form.fields.items():
+            field.widget.attrs.update({'class': 'form-control form-control-sm'})
+
+
+class CredorFilter(django_filters.FilterSet):
+    class Meta:
+        model = Credor
+        fields = {
+            'nome': ['icontains'],       # Busca parcial ignorando maiúsculas
+            'cpf_cnpj': ['icontains'],   # Busca parcial
+            'tipo': ['exact'],           # Dropdown exato (PF, PJ, EX)
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Aplica o visual do Bootstrap em todos os campos do filtro
+        for field_name, field in self.form.fields.items():
+            field.widget.attrs.update({'class': 'form-control form-control-sm'})
+
+# Filtro para Diárias
+class DiariaFilter(django_filters.FilterSet):
+    class Meta:
+        model = Diaria
+        fields = {
+            'numero_sequencial': ['icontains'],
+            'beneficiario': ['exact'],
+            'status': ['exact'],
+            'cidade_destino': ['icontains'],
+        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.form.fields.values():
+            field.widget.attrs.update({'class': 'form-control form-control-sm'})
+
+# Filtro para Reembolso
+class ReembolsoFilter(django_filters.FilterSet):
+    class Meta:
+        model = ReembolsoCombustivel
+        fields = {
+            'numero_sequencial': ['icontains'],
+            'beneficiario': ['exact'],
+            'status': ['exact'],
+        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.form.fields.values():
+            field.widget.attrs.update({'class': 'form-control form-control-sm'})
+
+# Filtro para Jeton
+class JetonFilter(django_filters.FilterSet):
+    class Meta:
+        model = Jeton
+        fields = {
+            'numero_sequencial': ['icontains'],
+            'beneficiario': ['exact'],
+            'reuniao': ['icontains'],
+            'status': ['exact'],
+        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.form.fields.values():
+            field.widget.attrs.update({'class': 'form-control form-control-sm'})
+
+# Filtro para Auxílio Representação
+class AuxilioFilter(django_filters.FilterSet):
+    class Meta:
+        model = AuxilioRepresentacao
+        fields = {
+            'numero_sequencial': ['icontains'],
+            'beneficiario': ['exact'],
+            'status': ['exact'],
+        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.form.fields.values():
+            field.widget.attrs.update({'class': 'form-control form-control-sm'})
+
+
+class RetencaoNotaFilter(django_filters.FilterSet):
+    """ Filtro para quando a visão for 'Agrupar por Nota Fiscal' """
+    mes = django_filters.NumberFilter(field_name='data_emissao', lookup_expr='month', label='Mês da Emissão')
+    ano = django_filters.NumberFilter(field_name='data_emissao', lookup_expr='year', label='Ano da Emissão')
+    processo = django_filters.CharFilter(field_name='processo__id', lookup_expr='exact', label='Nº do Processo')
+    emitente = django_filters.CharFilter(field_name='nome_emitente', lookup_expr='icontains', label='Emitente/Credor')
+    imposto = django_filters.ModelChoiceFilter(
+        field_name='retencoes__codigo',
+        queryset=CodigosImposto.objects.filter(is_active=True),
+        label='Tipo de Imposto'
+    )
+    status = django_filters.ModelChoiceFilter(
+        field_name='retencoes__status',
+        queryset=StatusChoicesRetencoes.objects.filter(is_active=True),
+        label='Status'
+    )
+
+    class Meta:
+        model = NotaFiscal
+        fields = ['mes', 'ano', 'processo', 'emitente', 'imposto', 'status']  # <-- Adicione aqui
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.form.fields.values():
+            field.widget.attrs.update({'class': 'form-control form-control-sm'})
+
+class RetencaoProcessoFilter(django_filters.FilterSet):
+    """ Filtro para quando a visão for 'Agrupar por Processo' """
+    mes = django_filters.NumberFilter(field_name='notas_fiscais__data_emissao', lookup_expr='month', label='Mês da Emissão')
+    ano = django_filters.NumberFilter(field_name='notas_fiscais__data_emissao', lookup_expr='year', label='Ano da Emissão')
+    processo = django_filters.CharFilter(field_name='id', lookup_expr='exact', label='Nº do Processo')
+    credor = django_filters.CharFilter(field_name='credor', lookup_expr='icontains', label='Credor')
+
+    imposto = django_filters.ModelChoiceFilter(
+        field_name='notas_fiscais__retencoes__codigo',
+        queryset=CodigosImposto.objects.filter(is_active=True),
+        label='Tipo de Imposto'
+    )
+    status = django_filters.ModelChoiceFilter(
+        field_name='retencoes__status',
+        queryset=StatusChoicesRetencoes.objects.filter(is_active=True),
+        label='Status'
+    )
+
+    class Meta:
+        model = Processo
+        fields = ['mes', 'ano', 'processo', 'credor', 'imposto', 'status']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.form.fields.values():
+            field.widget.attrs.update({'class': 'form-control form-control-sm'})
+
+class RetencaoIndividualFilter(django_filters.FilterSet):
+    """ Filtro para a visão granular (Listar Impostos Individuais) """
+    mes = django_filters.NumberFilter(field_name='nota_fiscal__data_emissao', lookup_expr='month', label='Mês (Emissão NF)')
+    ano = django_filters.NumberFilter(field_name='nota_fiscal__data_emissao', lookup_expr='year', label='Ano (Emissão NF)')
+    processo = django_filters.CharFilter(field_name='nota_fiscal__processo__id', lookup_expr='exact', label='Nº do Processo')
+    emitente = django_filters.CharFilter(field_name='nota_fiscal__nome_emitente', lookup_expr='icontains', label='Emitente/Credor')
+    imposto = django_filters.ModelChoiceFilter(
+        field_name='codigo',
+        queryset=CodigosImposto.objects.filter(is_active=True),
+        label='Tipo de Imposto'
+    )
+    status = django_filters.ModelChoiceFilter(
+        field_name='status',
+        queryset=StatusChoicesRetencoes.objects.filter(is_active=True),
+        label='Status'
+    )
+
+    class Meta:
+        model = RetencaoImposto
+        fields = ['mes', 'ano', 'processo', 'emitente', 'imposto', 'status']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.form.fields.values():
+            field.widget.attrs.update({'class': 'form-control form-control-sm'})

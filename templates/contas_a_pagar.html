@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Contas a Pagar - System X</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow-sm">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold" href="{% url 'home_page' %}">System X</a>
+    </div>
+</nav>
+
+<div class="container-fluid px-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Contas a Pagar</h2>
+        <a href="{% url 'home_page' %}" class="btn btn-outline-secondary">Voltar para Home</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white fw-bold text-secondary">
+                    <i class="bi bi-calendar-event me-2"></i> Datas de Pagamento
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="?data=" class="list-group-item list-group-item-action {% if not data_selecionada %}active fw-bold{% endif %}">
+                        Todos os Processos
+                    </a>
+
+                    {% for item in datas_agrupadas %}
+                        {% if item.data_pagamento %}
+                            <a href="?data={{ item.data_pagamento|date:'Y-m-d' }}"
+                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center
+                               {% if data_selecionada == item.data_pagamento|date:'Y-m-d' %}active fw-bold{% endif %}">
+
+                                {{ item.data_pagamento|date:"d/m/Y" }}
+
+                                <span class="badge {% if data_selecionada == item.data_pagamento|date:'Y-m-d' %}bg-light text-primary{% else %}bg-primary{% endif %} rounded-pill">
+                                    {{ item.total }}
+                                </span>
+                            </a>
+                        {% else %}
+                            <a href="?data=sem_data"
+                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center text-danger
+                               {% if data_selecionada == 'sem_data' %}active text-white fw-bold{% endif %}">
+                                Sem Data Definida
+                                <span class="badge {% if data_selecionada == 'sem_data' %}bg-light text-danger{% else %}bg-danger{% endif %} rounded-pill">
+                                    {{ item.total }}
+                                </span>
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <table class="table table-hover table-striped mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th># ID</th>
+                                <th>Data Pagamento</th>
+                                <th>Nota Empenho</th>
+                                <th>Credor</th>
+                                <th class="text-end pe-4">Valor Líquido</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for processo in lista_processos %}
+                            <tr>
+                                <td class="fw-bold text-muted">#{{ processo.id }}</td>
+                                <td class="fw-medium text-primary">{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
+                                <td>{{ processo.n_nota_empenho|default:"-" }}</td>
+                                <td class="fw-medium">{{ processo.credor }}</td>
+                                <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                    Nenhum processo a pagar nesta data.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

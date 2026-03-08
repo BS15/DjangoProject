@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalhes do Processo - System X</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5 mb-5">
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home_page' %}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Processo #{{ processo.id }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <h4 class="mb-0 text-primary">
+                        <i class="bi bi-folder2-open"></i>
+                        {{ processo.n_nota_empenho|default:"Sem NE" }}
+                    </h4>
+                    <span class="badge bg-secondary">{{ processo.get_status_display }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="text-muted small">Credor</label>
+                            <div class="fw-bold">{{ processo.credor }}</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="text-muted small">Valor Líquido</label>
+                            <div class="fw-bold text-success">R$ {{ processo.valor_liquido }}</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="text-muted small">Data Empenho</label>
+                            <div>{{ processo.data_empenho|date:"d/m/Y" }}</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="text-muted small">Nº Pagamento (SISCAC)</label>
+                            <div>{{ processo.numero_pagamento|default:"-" }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted small">Tipo de Pagamento</label>
+                            <div>{{ processo.get_tipo_pagamento_display }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">📄 Documentos Anexados</h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for doc in documentos %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-primary rounded-pill me-2">{{ doc.ordem }}</span>
+                            <strong>{{ doc.get_tipo_display }}</strong>
+                            <span class="text-muted small ms-2">({{ doc.arquivo.name|slice:"16:" }})</span>
+                        </div>
+                        <a href="{{ doc.arquivo.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-eye"></i> Ver
+                        </a>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-center text-muted py-3">Nenhum documento anexado.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 bg-white">
+                <div class="card-body d-grid gap-2">
+                    <h5 class="card-title text-muted mb-3">Ações</h5>
+
+                    <a href="{% url 'merged_pdf' processo.id %}" target="_blank" class="btn btn-primary btn-lg">
+                        <i class="bi bi-file-earmark-pdf-fill"></i> Visualizar Processo Completo
+                    </a>
+                    <div class="form-text text-center mb-3">
+                        Gera um PDF único apenas para visualização. Não altera os arquivos originais.
+                    </div>
+
+                    <hr>
+
+                    <a href="/admin/processos/processo/{{ processo.id }}/change/" class="btn btn-outline-secondary">
+                        <i class="bi bi-pencil"></i> Editar Dados (Admin)
+                    </a>
+                    <a href="{% url 'home_page' %}" class="btn btn-outline-dark">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

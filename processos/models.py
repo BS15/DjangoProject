@@ -1,0 +1,453 @@
+from django.db import models
+from django.utils import timezone
+from datetime import date
+#This file defines the models used in application.
+#Processo model which represents payment process.
+#NotaFiscal is model that represents fiscal note.
+
+# Substitua a sua função antiga por esta:
+def caminho_documento(instance, filename):
+    # Se for documento de Processo Principal
+    if hasattr(instance, 'processo') and instance.processo:
+        ano = instance.processo.data_empenho.year if instance.processo.data_empenho else date.today().year
+        mes = instance.processo.data_empenho.month if instance.processo.data_empenho else date.today().month
+        return f'pagamentos/{ano}/{mes:02d}/proc_{instance.processo.id}/{filename}'
+
+    # Se for documento de Verbas Indenizatórias
+    if hasattr(instance, 'diaria') and instance.diaria:
+        return f'verbas/diarias/diaria_{instance.diaria.id}/{filename}'
+
+    if hasattr(instance, 'reembolso') and instance.reembolso:
+        return f'verbas/reembolsos/reembolso_{instance.reembolso.id}/{filename}'
+
+    if hasattr(instance, 'jeton') and instance.jeton:
+        return f'verbas/jetons/jeton_{instance.jeton.id}/{filename}'
+
+    if hasattr(instance, 'auxilio') and instance.auxilio:
+        return f'verbas/auxilios/auxilio_{instance.auxilio.id}/{filename}'
+
+    return f'documentos_avulsos/{filename}'
+
+class CodigosImposto(models.Model):
+    # This replaces your hard-coded choices
+    codigo = models.CharField(max_length=10, unique=True, null=True, blank=True)
+
+    REGRA_COMPETENCIA_CHOICES = [
+        ('emissao', 'Pela Data de Emissão da NF'),
+        ('pagamento', 'Pela Data de Pagamento'),
+    ]
+    regra_competencia = models.CharField(
+        max_length=15,
+        choices=REGRA_COMPETENCIA_CHOICES,
+        default='emissao'
+    )
+
+    aliquota = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    vencimento_padrao = models.PositiveIntegerField(default=1, help_text="Dia de Vencimento Padrão", null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Código: {self.codigo} - Regra Competência {self.regra_competencia} - Alíquota {self.aliquota} - Vencimento Padrão: {self.vencimento_padrao}"
+
+class StatusChoicesProcesso(models.Model):
+    # This replaces your hard-coded choices
+    status_choice = models.CharField(max_length=100, unique=True)
+
+    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
+    # This prevents old invoices from breaking if a code is retired.
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.status_choice}"
+
+class StatusChoicesPendencias(models.Model):
+    # This replaces your hard-coded choices
+    status_choice = models.CharField(max_length=100, unique=True)
+
+    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
+    # This prevents old invoices from breaking if a code is retired.
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.status_choice}"
+
+class StatusChoicesRetencoes(models.Model):
+    # This replaces your hard-coded choices
+    status_choice = models.CharField(max_length=100, unique=True)
+
+    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
+    # This prevents old invoices from breaking if a code is retired.
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.status_choice}"
+
+class StatusChoicesVerbasIndenizatorias(models.Model):
+    # This replaces your hard-coded choices
+    status_choice = models.CharField(max_length=100, unique=True)
+
+    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
+    # This prevents old invoices from breaking if a code is retired.
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.status_choice}"
+
+class TagChoices(models.Model):
+    # This replaces your hard-coded choices
+    tag_choice = models.CharField(max_length=100, unique=True)
+
+    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
+    # This prevents old invoices from breaking if a code is retired.
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.tag_choice}"
+
+class FormasDePagamento(models.Model):
+    # This replaces your hard-coded choices
+    forma_de_pagamento = models.CharField(max_length=100, unique=True)
+
+    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
+    # This prevents old invoices from breaking if a code is retired.
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.forma_de_pagamento}"
+
+class ContasBancarias(models.Model):
+    titular = models.CharField("Titular", max_length=50, blank=True, null=True)
+    banco = models.CharField("Banco", max_length=50, blank=True, null=True)
+    agencia = models.CharField("Agência", max_length=50, blank=True, null=True)
+    conta = models.CharField("Conta", max_length=50, blank=True, null=True)
+
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Titular: {self.titular} - Banco: {self.banco} - Ag: {self.agencia} / Cc: {self.conta}"
+
+class TiposDePagamento(models.Model):
+    # This replaces your hard-coded choices
+    tipo_de_pagamento = models.CharField(max_length=100, unique=True)
+
+    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
+    # This prevents old invoices from breaking if a code is retired.
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.tipo_de_pagamento}"
+
+class TiposDeDocumento(models.Model):
+    # This replaces your hard-coded choices
+    tipo_de_documento = models.CharField(max_length=100, unique=True)
+
+    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
+    # This prevents old invoices from breaking if a code is retired.
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.tipo_de_documento}"
+
+class TiposDeVerbasIndenizatorias(models.Model):
+    # This replaces your hard-coded choices
+    tipo_de_verba_indenizatoria = models.CharField(max_length=100, unique=True)
+
+    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
+    # This prevents old invoices from breaking if a code is retired.
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.tipo_de_verba_indenizatoria}"
+
+class TiposDePendencias(models.Model):
+    # This replaces your hard-coded choices
+    tipo_de_pendencia = models.CharField(max_length=100, unique=True)
+
+    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
+    # This prevents old invoices from breaking if a code is retired.
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.tipo_de_pendencia}"
+
+class Grupos(models.Model):
+    # This replaces your hard-coded choices
+    grupo = models.CharField(max_length=100, unique=True)
+
+    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
+    # This prevents old invoices from breaking if a code is retired.
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.grupo}"
+
+class CargosFuncoes(models.Model):
+    # This replaces your hard-coded choices
+    cargo_funcao = models.CharField(max_length=100, unique=True)
+
+    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
+    # This prevents old invoices from breaking if a code is retired.
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.cargo_funcao}"
+
+class Credor(models.Model):
+    nome = models.CharField("Nome", max_length=50, null=True, blank=True)
+    cpf_cnpj = models.CharField("CPF/CNPJ", max_length=50, null=True, blank=True)
+    conta = models.ForeignKey(ContasBancarias,on_delete=models.PROTECT, blank=True, null=True, verbose_name="Conta Credor")
+    chave_pix = models.CharField("Chave PIX do credor", max_length=50, null=True, blank=True)
+    grupo = models.ForeignKey('Grupos', on_delete=models.PROTECT, blank=True, null=True)
+    cargo_funcao = models.ForeignKey('CargosFuncoes', on_delete=models.PROTECT, blank=True, null=True)
+    #Dados de contato
+    telefone = models.CharField("Telefone do credor", max_length=50, null=True, blank=True)
+    email = models.CharField("Email do credor", max_length=50, null=True, blank=True)
+
+    TIPO_PESSOA_CHOICES = [
+        ('PF', 'Pessoa Física (CPF)'),
+        ('PJ', 'Pessoa Jurídica (CNPJ)'),
+        ('EX', 'Exterior / Outros'),  # Opcional, mas salva vidas no setor público
+    ]
+
+    # Substituímos o campo "tipo" antigo por este:
+    tipo = models.CharField(
+        "Tipo de Pessoa",
+        max_length=2,
+        choices=TIPO_PESSOA_CHOICES,
+        default='PJ'  # Assume PJ como padrão, já que é o mais comum em notas de empenho
+    )
+
+class Processo(models.Model):
+    # Dados orçamentários
+    extraorcamentario = models.BooleanField(
+        "Extraorçamentário",
+        default=False,
+        help_text="Marque se este processo não utiliza dotação orçamentária (ex: cauções)."
+    )
+    n_nota_empenho = models.CharField(max_length=50, blank=True, null=True)
+    credor = models.CharField(max_length=200, blank=True, null=True)
+    data_empenho = models.DateField(default=timezone.now, blank=True, null=True)
+    valor_bruto = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
+    valor_liquido = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
+    ano_exercicio = models.IntegerField(choices=[(y, y) for y in range(2020, 2030)], default=2026, blank=True, null=True)
+
+    # Dados de pagamento
+    n_pagamento_siscac = models.CharField(max_length=50, blank=True, null=True)
+    codigo_barras = models.CharField(max_length=100, blank=True, null=True)
+    data_vencimento = models.DateField(blank=True, null=True)
+    data_pagamento = models.DateField(blank=True, null=True)
+    forma_pagamento = models.ForeignKey('FormasDePagamento', on_delete=models.PROTECT, blank=True, null=True)
+    tipo_pagamento = models.ForeignKey('TiposDePagamento', on_delete=models.PROTECT, blank=True, null=True)
+    observacao = models.CharField(max_length=200, blank=True, null=True)
+    conta = models.ForeignKey(ContasBancarias,on_delete=models.PROTECT, blank=True, null=True, verbose_name="Conta Sacada")
+
+    # Informações administrativas
+    status = models.ForeignKey('StatusChoicesProcesso', on_delete=models.PROTECT, blank=True, null=True)
+    detalhamento = models.CharField(max_length=200, blank=True, null=True)
+    tag = models.ForeignKey('TagChoices', on_delete=models.PROTECT, blank=True, null=True)
+
+    def __str__(self):
+        return f"Processo {self.n_nota_empenho or 'S/N'}"
+
+class DocumentoBase(models.Model):
+    arquivo = models.FileField(upload_to=caminho_documento)
+    ordem = models.PositiveIntegerField(default=1, help_text="Ordem do arquivo")
+    tipo = models.ForeignKey(TiposDeDocumento, on_delete=models.PROTECT)
+
+    class Meta:
+        abstract = True
+        ordering = ['ordem']
+
+# 2. DOCUMENTO DO PROCESSO
+class DocumentoProcesso(DocumentoBase):
+    processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='documentos')
+    codigo_barras = models.CharField("Código de Barras", max_length=60, null=True, blank=True)
+
+# 3. DOCUMENTOS DAS VERBAS (Uma tabela separada para cada)
+class DocumentoDiaria(DocumentoBase):
+    diaria = models.ForeignKey('Diaria', on_delete=models.CASCADE, related_name='documentos')
+
+class DocumentoReembolso(DocumentoBase):
+    reembolso = models.ForeignKey('ReembolsoCombustivel', on_delete=models.CASCADE, related_name='documentos')
+
+class DocumentoJeton(DocumentoBase):
+    jeton = models.ForeignKey('Jeton', on_delete=models.CASCADE, related_name='documentos')
+
+class DocumentoAuxilio(DocumentoBase):
+    auxilio = models.ForeignKey('AuxilioRepresentacao', on_delete=models.CASCADE, related_name='documentos')
+
+class NotaFiscal(models.Model):
+    processo = models.ForeignKey(Processo, on_delete=models.CASCADE, related_name='notas_fiscais')
+    nome_emitente = models.CharField(max_length=255)
+    cnpj_emitente = models.CharField(max_length=20)
+    numero_nota_fiscal = models.CharField(max_length=50)
+
+    data_emissao = models.DateField()
+    valor_bruto = models.DecimalField(max_digits=12, decimal_places=2)
+    valor_liquido = models.DecimalField(max_digits=12, decimal_places=2)
+    fiscal_contrato = models.ForeignKey(
+        Credor,
+        on_delete=models.PROTECT,
+        verbose_name="Beneficiário(a)",
+        null=True,
+        blank=True,
+        limit_choices_to={'tipo': 'PF'}  # <-- Mostra apenas credores cadastrados como Pessoa Física
+    )
+    def __str__(self):
+        return f"NF {self.numero_nota_fiscal} - {self.nome_emitente}"
+
+class Pendencia(models.Model):
+    processo = models.ForeignKey(Processo, on_delete=models.CASCADE, related_name='pendencias')
+    status = models.ForeignKey('StatusChoicesPendencias', on_delete=models.PROTECT, blank=True, null=True),
+    tipo = models.ForeignKey(TiposDePendencias, on_delete=models.PROTECT)
+    descricao = models.CharField(max_length=200, blank=True, null=True)
+
+class RetencaoImposto(models.Model):
+    nota_fiscal = models.ForeignKey(NotaFiscal, on_delete=models.CASCADE, related_name='retencoes')
+    rendimento_tributavel = valor = models.DecimalField(null=True, blank=True, max_digits=12, decimal_places=2)
+    data_pagamento = models.DateField(blank=True, null=True)
+    codigo = models.ForeignKey(CodigosImposto, on_delete=models.PROTECT)
+    valor = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.ForeignKey('StatusChoicesRetencoes', on_delete=models.PROTECT, blank=True, null=True)
+
+    competencia = models.DateField(
+        "Mês de Competência",
+        help_text="Salvo internamente como YYYY-MM-01, exibido como MM/AAAA",
+        blank=True,
+        null=True
+    )
+
+    def save(self, *args, **kwargs):
+        # 1. Só calcula se os relacionamentos já existirem na memória
+        if getattr(self, 'codigo', None) and getattr(self, 'nota_fiscal', None):
+            data_base = None
+
+            # 2. Avalia a regra do imposto (INSS, ISS = Emissão / IRRF, CSRF = Pagamento)
+            if self.codigo.regra_competencia == 'emissao':
+                data_base = self.nota_fiscal.data_emissao
+
+            elif self.codigo.regra_competencia == 'pagamento':
+                # Tenta pegar a data de pagamento da própria retenção.
+                # Se estiver vazia, tenta puxar do Processo pai.
+                data_base = self.data_pagamento or self.nota_fiscal.processo.data_pagamento
+
+            # 3. Se encontrou uma data válida, "trava" no dia 1º daquele mês e ano
+            if data_base:
+                self.competencia = date(data_base.year, data_base.month, 1)
+
+        # 4. Chama o salvamento original do Django para gravar no banco de dados
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.codigo} - R$ {self.valor}"
+
+#Model for indenizatory payments - handles pendencies.
+#Is "activated" when payment type is verbas indenizatórias.
+#This should be for administrative handling.
+#Doesn't relate immediately to payments.
+
+class Diaria(models.Model):
+    TIPO_SOLICITACAO = [
+        ('INICIAL', 'Concessão Inicial'),
+        ('PRORROGACAO', 'Prorrogação'),
+        ('COMPLEMENTACAO', 'Complementação')
+    ]
+
+    processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='diarias', null=True, blank=True)
+    numero_sequencial = models.CharField("Número Sequencial", max_length=50)
+    beneficiario = models.ForeignKey('Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
+                                     verbose_name="Beneficiário")
+
+    # Dados específicos da Diária
+    tipo_solicitacao = models.CharField(max_length=20, choices=TIPO_SOLICITACAO, default='INICIAL')
+    data_saida = models.DateField("Data de Saída")
+    data_retorno = models.DateField("Data de Retorno")
+    cidade_origem = models.CharField("Cidade de Origem", max_length=50)
+    cidade_destino = models.CharField("Cidade(s) de Destino", max_length=100)
+    objetivo = models.CharField("Objetivo da Viagem", max_length=200)
+
+    quantidade_diarias = models.DecimalField("Quantidade de Diárias", max_digits=4, decimal_places=1)
+    valor_total = models.DecimalField("Valor Total (R$)", max_digits=12, decimal_places=2)
+    status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
+    def __str__(self):
+        return f"Diária {self.numero_sequencial} - {self.beneficiario}"
+
+class ReembolsoCombustivel(models.Model):
+    processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='reembolsos_combustivel', null=True,
+                                 blank=True)
+    numero_sequencial = models.CharField("Número Sequencial", max_length=50)
+    beneficiario = models.ForeignKey('Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
+                                     verbose_name="Beneficiário")
+
+    data_saida = models.DateField("Data de Saída")
+    data_retorno = models.DateField("Data de Retorno")
+    cidade_origem = models.CharField("Cidade de Origem", max_length=50)
+    cidade_destino = models.CharField("Cidade(s) de Destino", max_length=100)
+
+    distancia_km = models.DecimalField("Distância Percorrida (KM)", max_digits=6, decimal_places=2)
+    preco_combustivel = models.DecimalField("Preço Médio do Combustível (R$)", max_digits=5, decimal_places=2)
+
+    valor_total = models.DecimalField("Valor do Reembolso (R$)", max_digits=12, decimal_places=2)
+    objetivo = models.CharField("Objetivo", max_length=200, blank=True, null=True)
+    status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
+    def __str__(self):
+        return f"Reembolso de Combustível: {self.numero_sequencial} - {self.beneficiario}"
+
+class Jeton(models.Model):
+    processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='jetons', null=True, blank=True)
+    numero_sequencial = models.CharField("Número Sequencial", max_length=50)
+    beneficiario = models.ForeignKey('Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
+                                     verbose_name="Conselheiro(a)")
+
+    # Dados específicos do Jeton
+    reuniao = models.CharField("Reunião/Sessão de Referência", max_length=7)
+
+    valor_total = models.DecimalField("Valor Total (R$)", max_digits=12, decimal_places=2)
+    status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
+    def __str__(self):
+        return f"Jeton {self.mes_referencia} - {self.beneficiario}"
+
+class AuxilioRepresentacao(models.Model):
+    processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='auxilios_representacao', null=True,
+                                 blank=True)
+    numero_sequencial = models.CharField("Número Sequencial", max_length=50)
+    beneficiario = models.ForeignKey('Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
+                                     verbose_name="Beneficiário")
+
+    # Dados específicos do Auxílio
+    objetivo = models.CharField("Evento/Motivo da Representação", max_length=200, blank=True, null=True,
+                                            help_text="Preencha se for representação em evento específico")
+
+    valor_total = models.DecimalField("Valor Total (R$)", max_digits=12, decimal_places=2)
+    status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
+    def __str__(self):
+        return f"Aux. Representação {self.numero_sequencial} - {self.beneficiario}"
+
+class Tabela_Valores_Unitarios_Verbas_Indenizatorias(models.Model):
+    tipo = models.ForeignKey(TiposDeVerbasIndenizatorias, on_delete=models.PROTECT, blank=True, null=True)
+    cargo_funcao = models.ForeignKey('CargosFuncoes', on_delete=models.PROTECT, blank=True, null=True)
+    valor_unitario = models.DecimalField(null=True, blank=True, max_digits=12, decimal_places=2)
+
+class Tabela_Proponentes_Diarias(models.Model):
+    cargo_funcao = models.ForeignKey(
+        'CargosFuncoes',
+        on_delete=models.PROTECT,
+        blank=True, null=True,
+        related_name='beneficiarios_mapeados', # <-- Resolve o conflito
+        verbose_name="Cargo do Beneficiário"
+    )
+    proponente = models.ForeignKey(
+        'CargosFuncoes',
+        on_delete=models.PROTECT,
+        blank=True, null=True,
+        related_name='proponentes_mapeados',   # <-- Resolve o conflito
+        verbose_name="Cargo do Proponente (Aprovador)"
+    )
+
+    class Meta:
+        # Trava de segurança: impede que você cadastre acidentalmente
+        # o Assistente Administrativo duas vezes com proponentes diferentes.
+        unique_together = ('cargo_funcao', 'proponente')
+
+    def __str__(self):
+        return f"{self.cargo_funcao} -> Aprovado por: {self.proponente}"

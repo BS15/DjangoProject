@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Novo Auxílio - System X</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+
+<div class="container mt-4 mb-5" style="max-width: 900px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4><i class="bi bi-award"></i> Lançar Auxílio Representação</h4>
+        <a href="{% url 'auxilios_list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Nº Sequencial</label>
+                        {{ form.numero_sequencial }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Processo</label>
+                        {{ form.processo }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Status</label>
+                        {{ form.status }}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Beneficiário</label>
+                    {{ form.beneficiario }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Motivo / Evento de Representação</label>
+                    {{ form.objetivo }}
+                </div>
+
+                <div class="mb-4 w-50">
+                    <label class="form-label fw-bold text-success">Valor Total (R$)</label>
+                    {{ form.valor_total }}
+                </div>
+
+                <div class="mb-4 p-3 border rounded bg-light">
+                    <label class="form-label fw-bold text-primary"><i class="bi bi-paperclip"></i> Anexar Documento (Opcional)</label>
+                    <div class="row g-2 mt-1">
+                        <div class="col-md-4">
+                            <select name="tipo_documento_anexo" class="form-select">
+                                <option value="">Selecione o Tipo...</option>
+                                {% for tipo in tipos_documento %}
+                                    <option value="{{ tipo.id }}">{{ tipo.tipo_de_documento }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <input type="file" name="documento_anexo" class="form-control" accept=".pdf,.png,.jpg,.jpeg">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-success btn-lg shadow-sm"><i class="bi bi-save"></i> Salvar Auxílio</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

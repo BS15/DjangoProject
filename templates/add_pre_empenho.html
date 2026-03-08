@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pré-Empenho - System X</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .card-header { background-color: #6c757d; color: white; } /* Cor alterada para diferenciar da tela de pagamento */
+        .form-label { font-weight: 500; font-size: 0.9rem; }
+        #empty-doc-form, #empty-nf-form, #empty-tax-row { display: none; }
+        .taxes-container { background-color: #f8f9fa; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container mt-4 mb-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-secondary">
+            <h4 class="mb-0"><i class="bi bi-file-earmark-plus"></i> Novo Processo - Fase Pré-Empenho</h4>
+        </div>
+
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" id="processForm">
+                {% csrf_token %}
+                {{ nota_fiscal_formset.management_form }}
+                {{ documento_formset.management_form }}
+                {{ retencao_formset.management_form }}
+
+                <div id="payment-info-block">
+                    <h5 class="text-secondary border-bottom pb-2 mb-3">Informações Iniciais</h5>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4 d-flex align-items-end">
+                            <div class="form-check mb-2">
+                                {{ processo_form.extraorcamentario }}
+                                <label class="form-check-label fw-bold text-danger" for="id_processo-extraorcamentario">
+                                    <i class="bi bi-exclamation-circle"></i> Despesa Extraorçamentária
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4"><label class="form-label">Tipo de Pagamento</label>{{ processo_form.tipo_pagamento }}</div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3"><label class="form-label">Nota de Empenho</label>{{ processo_form.n_nota_empenho }}</div>
+                        <div class="col-md-6"><label class="form-label">Credor</label>{{ processo_form.credor }}</div>
+                        <div class="col-md-3"><label class="form-label">Data Empenho</label>{{ processo_form.data_empenho }}</div>
+                        <div class="col-md-3"><label class="form-label">Ano do Exercício</label>{{ processo_form.ano_exercicio }}</div>
+                    </div>
+
+                    <div id="bloco_transferencia" class="alert alert-secondary mt-2" style="display: none;">
+                        <h6 class="fw-bold mb-1"><i class="bi bi-bank"></i> Dados Bancários do Credor</h6>
+                        <div id="info_conta" class="small text-dark">Selecione um credor primeiro...</div>
+                    </div>
+
+                    <div id="bloco_boleto" class="alert alert-info mt-2" style="display: none;">
+                        <h6 class="fw-bold mb-2"><i class="bi bi-upc-scan"></i> Leitor Automático de Boleto</h6>
+                        <div class="input-group input-group-sm mb-2">
+                            <input type="file" id="boleto_upload" class="form-control" accept=".pdf">
+                            <button type="button" class="btn btn-primary fw-bold" id="btn_processar_boleto">
+                                Processar PDF
+                            </button>
+                        </div>
+                        <div id="boleto_status" class="small fw-bold"></div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3"><label class="form-label text-primary">Conta Bancária Sacada</label>{{ processo_form.conta_de_pagamento_orgao }}</div>
+                        <div class="col-md-3"><label class="form-label text-primary">Valor Bruto (R$)</label>{{ processo_form.valor_bruto }}</div>
+                        <div class="col-md-3"><label class="form-label text-success">Valor Líquido (R$)</label>{{ processo_form.valor_liquido }}</div>
+                        <div class="col-md-4"><label class="form-label">Código de Barras</label>{{ processo_form.codigo_barras }}</div>
+                        <div class="col-md-2"><label class="form-label">Data De/Para Pagamento</label>{{ processo_form.data_pagamento }}</div>
+                        <div class="col-md-2"><label class="form-label">Vencimento</label>{{ processo_form.data_vencimento }}</div>
+                        <div class="col-md-4"><label class="form-label">Forma de Pagamento</label>{{ processo_form.forma_pagamento }}</div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6"><label class="form-label">Detalhamento</label>{{ processo_form.detalhamento }}</div>
+                        <div class="col-md-6"><label class="form-label">Observações</label>{{ processo_form.observacao }}</div>
+                        <div class="col-md-6"><label class="form-label">Tags</label>{{ processo_form.tag }}</div>
+                    </div>
+
+                    <h5 class="text-secondary border-bottom pb-2 mt-5 mb-3">🧾 Notas Fiscais e Impostos</h5>
+                    <div id="nf-list">
+                        {% for nf_f in nota_fiscal_formset %}
+                            <div class="card mb-3 shadow-sm border-secondary nf-card" data-nf-index="{{ forloop.counter0 }}">
+                                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                                    <span>Nota Fiscal #{{ forloop.counter }}</span>
+                                    {% if nf_f.instance.pk %}
+                                        <div class="form-check m-0">
+                                            {{ nf_f.DELETE }} <label class="form-check-label small">Excluir</label>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="card-body">
+                                    {% for hidden in nf_f.hidden_fields %}{{ hidden }}{% endfor %}
+
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-md-6"><label class="small fw-bold">Emitente</label>{{ nf_f.nome_emitente }}</div>
+                                        <div class="col-md-3"><label class="small fw-bold">CNPJ</label>{{ nf_f.cnpj_emitente }}</div>
+                                        <div class="col-md-3"><label class="small fw-bold">Nº Nota</label>{{ nf_f.numero_nota_fiscal }}</div>
+                                        <div class="col-md-4"><label class="small fw-bold">Data Emissão</label>{{ nf_f.data_emissao }}</div>
+                                        <div class="col-md-4"><label class="small fw-bold text-primary">Valor Bruto</label>{{ nf_f.valor_bruto }}</div>
+                                        <div class="col-md-4"><label class="small fw-bold text-success">Valor Líquido</label>{{ nf_f.valor_liquido }}</div>
+                                    </div>
+
+                                    <div class="taxes-container border-top pt-2">
+                                        <h6 class="text-muted small fw-bold">Impostos Retidos</h6>
+                                        <table class="table table-sm table-bordered mb-1"><tbody class="tax-body">
+                                            </tbody></table>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary add-tax-btn small">+ Imposto</button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" id="add-nf-btn" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-lg"></i> Adicionar Nota Fiscal
+                    </button>
+
+                    <h5 class="text-secondary border-bottom pb-2 mt-5 mb-3">📂 Documentos e Anexos</h5>
+                    <div id="document-list" class="bg-white p-3 rounded border">
+                        {% for doc_f in documento_formset %}
+                            <div class="row g-2 align-items-center mb-2 border-bottom pb-2 document-row">
+                                {% for hidden in doc_f.hidden_fields %}{{ hidden }}{% endfor %}
+                                <div class="col-md-1"><label class="small text-muted d-block">Ordem</label>{{ doc_f.ordem }}</div>
+                                <div class="col-md-3"><label class="small text-muted d-block">Tipo</label>{{ doc_f.tipo }}</div>
+                                <div class="col-md-6"><label class="small text-muted d-block">Arquivo</label>{{ doc_f.arquivo }}</div>
+                                <div class="col-md-2 text-center"><label class="small text-danger d-block">Remover</label>{{ doc_f.DELETE }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" id="add-doc-btn" class="btn btn-outline-primary btn-sm mt-2">
+                        <i class="bi bi-plus-circle"></i> Adicionar Documento
+                    </button>
+                </div>
+
+                <hr class="mt-5">
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="/" class="btn btn-secondary">Cancelar</a>
+                    <button type="button" class="btn btn-success px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#previewModal" onclick="check_information_alert()">
+                        Conferir e Salvar
+                    </button>
+                </div>
+
+                <div id="empty-nf-form">
+                    <div class="card mb-3 shadow-sm border-secondary nf-card">
+                        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                            <span>Nota Fiscal #<span class="nf-number-display">1</span></span>
+                            <button type="button" class="btn btn-sm btn-danger remove-nf-btn"><i class="bi bi-trash"></i></button>
+                        </div>
+                        <div class="card-body">
+                            <input type="hidden" name="nota_fiscal-__prefix__-id" id="id_nota_fiscal-__prefix__-id">
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-6"><label class="small fw-bold">Emitente</label><input type="text" name="nota_fiscal-__prefix__-nome_emitente" class="form-control form-control-sm"></div>
+                                <div class="col-md-3"><label class="small fw-bold">CNPJ</label><input type="text" name="nota_fiscal-__prefix__-cnpj_emitente" class="form-control form-control-sm"></div>
+                                <div class="col-md-3"><label class="small fw-bold">Nº Nota</label><input type="text" name="nota_fiscal-__prefix__-numero_nota_fiscal" class="form-control form-control-sm"></div>
+                                <div class="col-md-4"><label class="small fw-bold">Data Emissão</label><input type="date" name="nota_fiscal-__prefix__-data_emissao" class="form-control form-control-sm"></div>
+                                <div class="col-md-4"><label class="small fw-bold text-primary">Valor Bruto</label><input type="number" step="0.01" name="nota_fiscal-__prefix__-valor_bruto" class="form-control form-control-sm"></div>
+                                <div class="col-md-4"><label class="small fw-bold text-success">Valor Líquido</label><input type="number" step="0.01" name="nota_fiscal-__prefix__-valor_liquido" class="form-control form-control-sm"></div>
+                            </div>
+                            <div class="taxes-container border-top pt-2">
+                                <h6 class="text-muted small fw-bold">Impostos Retidos</h6>
+                                <table class="table table-sm table-bordered mb-1"><tbody class="tax-body"></tbody></table>
+                                <button type="button" class="btn btn-xs btn-outline-secondary add-tax-btn small">+ Imposto</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <table id="empty-tax-row">
+                    <tr>
+                        <td>{{ retencao_formset.empty_form.codigo }}</td>
+                        <td><input type="number" step="0.01" class="form-control form-control-sm tax-val-input" placeholder="0.00"></td>
+                        <td><button type="button" class="btn btn-sm btn-outline-danger remove-tax-btn"><i class="bi bi-x"></i></button></td>
+                    </tr>
+                </table>
+
+                <div id="empty-doc-form">
+                    <div class="row g-2 align-items-center mb-2 border-bottom pb-2 document-row">
+                        <div class="col-md-1"><input type="number" name="documento-__prefix__-ordem" class="form-control form-control-sm" value="1"></div>
+                        <div class="col-md-3">
+                            <select name="documento-__prefix__-tipo" class="form-select form-select-sm">
+                                <option value="nf">Nota Fiscal (NF)</option><option value="boleto">Boleto</option><option value="outros">Outros</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6"><input type="file" name="documento-__prefix__-arquivo" class="form-control form-control-sm"></div>
+                        <div class="col-md-2 text-center"><button type="button" class="btn btn-sm btn-outline-danger remove-doc-btn">×</button></div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog"><div class="modal-content">
+                        <div class="modal-header bg-success text-white"><h5 class="modal-title">Conferência</h5></div>
+                        <div class="modal-body">
+                            <p><strong>Credor:</strong> <span id="prev_credor"></span></p>
+                            <p><strong>Valor Líquido:</strong> R$ <span id="prev_val"></span></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Editar</button>
+                            <button type="submit" class="btn btn-primary">Salvar</button>
+                        </div>
+                    </div></div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const nfList = document.getElementById('nf-list');
+    const nfTotalInput = document.getElementById('id_nota_fiscal-TOTAL_FORMS');
+
+    document.getElementById('add-nf-btn').addEventListener('click', function() {
+        let count = parseInt(nfTotalInput.value);
+        let template = document.getElementById('empty-nf-form').innerHTML;
+        let newHtml = template.replace(/__prefix__/g, count);
+        let wrapper = document.createElement('div');
+        wrapper.innerHTML = newHtml;
+        let card = wrapper.firstElementChild;
+        card.querySelector('.nf-number-display').innerText = count + 1;
+        card.setAttribute('data-nf-index', count);
+        nfList.appendChild(card);
+        nfTotalInput.value = count + 1;
+    });
+
+    nfList.addEventListener('click', function(e) {
+        const target = e.target;
+        if (target.closest('.remove-nf-btn')) { target.closest('.nf-card').remove(); }
+        if (target.closest('.add-tax-btn')) {
+            const card = target.closest('.nf-card');
+            const nfIndex = card.getAttribute('data-nf-index');
+            const rowTemplate = document.getElementById('empty-tax-row').querySelector('tr').cloneNode(true);
+            rowTemplate.querySelector('select').name = `imposto_${nfIndex}_code`;
+            rowTemplate.querySelector('.tax-val-input').name = `imposto_${nfIndex}_value`;
+            card.querySelector('.tax-body').appendChild(rowTemplate);
+        }
+        if (target.closest('.remove-tax-btn')) { target.closest('tr').remove(); }
+    });
+
+    const docList = document.getElementById('document-list');
+    const docTotalInput = document.getElementById('id_documento-TOTAL_FORMS');
+
+    document.getElementById('add-doc-btn').addEventListener('click', function() {
+        let count = parseInt(docTotalInput.value);
+        let template = document.getElementById('empty-doc-form').innerHTML;
+        let newHtml = template.replace(/__prefix__/g, count);
+        let div = document.createElement('div');
+        div.innerHTML = newHtml;
+        docList.appendChild(div.firstElementChild);
+        docTotalInput.value = count + 1;
+    });
+
+    docList.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-doc-btn')) { e.target.closest('.document-row').remove(); }
+    });
+
+    window.check_information_alert = function() {
+        document.getElementById('prev_credor').innerText = document.querySelector('[name="processo-credor"]')?.value || "---";
+        document.getElementById('prev_val').innerText = document.querySelector('[name="processo-valor_liquido"]')?.value || "0,00";
+    };
+
+    const selectFormaPgto = document.querySelector('[name="processo-forma_pagamento"]');
+    const selectCredor = document.querySelector('[name="processo-credor"]');
+    const blocoTransf = document.getElementById('bloco_transferencia');
+    const blocoBoleto = document.getElementById('bloco_boleto');
+    const infoConta = document.getElementById('info_conta');
+    const statusBoleto = document.getElementById('boleto_status');
+
+    function atualizarVisibilidadeWidgets() {
+        if (!selectFormaPgto) return;
+        let forma = "";
+        if(selectFormaPgto.tagName.toLowerCase() === 'select' && selectFormaPgto.selectedIndex >= 0) {
+             forma = selectFormaPgto.options[selectFormaPgto.selectedIndex].text.toLowerCase();
+        } else {
+             forma = selectFormaPgto.value.toLowerCase();
+        }
+
+        blocoTransf.style.display = forma.includes('transferência') ? 'block' : 'none';
+        blocoBoleto.style.display = forma.includes('boleto') ? 'block' : 'none';
+
+        if (forma.includes('transferência') && selectCredor && selectCredor.value) {
+            buscarDadosBancarios(selectCredor.value);
+        }
+    }
+
+    if (selectFormaPgto) { selectFormaPgto.addEventListener('change', atualizarVisibilidadeWidgets); }
+    if (selectCredor) {
+        selectCredor.addEventListener('change', function() {
+            if (blocoTransf.style.display === 'block') { buscarDadosBancarios(this.value); }
+        });
+    }
+
+    atualizarVisibilidadeWidgets();
+
+    function buscarDadosBancarios(credorId) {
+        if (!credorId) return;
+        infoConta.innerHTML = "Buscando dados...";
+        fetch(`/api/dados-bancarios/${credorId}/`)
+            .then(res => res.json())
+            .then(data => {
+                if(data.sucesso) {
+                    infoConta.innerHTML = `Banco: ${data.banco || '-'} | Ag: ${data.agencia || '-'} | Conta: ${data.conta || '-'} <br> PIX: ${data.pix || '-'}`;
+                } else {
+                    infoConta.innerHTML = "Dados não encontrados.";
+                }
+            })
+            .catch(err => {
+                infoConta.innerHTML = "Erro ao buscar dados.";
+                console.error(err);
+            });
+    }
+
+    const checkExtra = document.querySelector('[name="processo-extraorcamentario"]');
+    const inputEmpenho = document.querySelector('[name="processo-n_nota_empenho"]');
+
+    if (checkExtra && inputEmpenho) {
+        const blocoEmpenho = inputEmpenho.closest('.col-md-3');
+        function toggleEmpenho() {
+            if (checkExtra.checked) {
+                blocoEmpenho.style.display = 'none';
+                inputEmpenho.value = '';
+            } else {
+                blocoEmpenho.style.display = 'block';
+            }
+        }
+        checkExtra.addEventListener('change', toggleEmpenho);
+        toggleEmpenho();
+    }
+
+    const btnProcessar = document.getElementById('btn_processar_boleto');
+    if (btnProcessar) {
+        btnProcessar.addEventListener('click', function() {
+            const fileInput = document.getElementById('boleto_upload');
+            if (!fileInput.files.length) {
+                statusBoleto.innerHTML = "<span class='text-danger'>Selecione um PDF primeiro.</span>";
+                return;
+            }
+
+            statusBoleto.innerHTML = "<span class='text-primary'>Lendo arquivo... Aguarde.</span>";
+
+            let formData = new FormData();
+            formData.append('boleto_pdf', fileInput.files[0]);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name="csrfmiddlewaretoken"]').value);
+
+            fetch('{% url "api_processar_boleto" %}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.sucesso) {
+                    statusBoleto.innerHTML = "<span class='text-success'>Boleto lido com sucesso! Valores preenchidos.</span>";
+                    document.querySelector('[name="processo-codigo_barras"]').value = data.dados.codigo_barras || '';
+                    document.querySelector('[name="processo-valor_liquido"]').value = data.dados.valor.toFixed(2);
+                    document.querySelector('[name="processo-valor_bruto"]').value = data.dados.valor.toFixed(2);
+                    if (data.dados.vencimento) {
+                        document.querySelector('[name="processo-data_vencimento"]').value = data.dados.vencimento;
+                    }
+                } else {
+                    statusBoleto.innerHTML = `<span class='text-danger'>Erro: ${data.erro}</span>`;
+                }
+            })
+            .catch(err => {
+                statusBoleto.innerHTML = `<span class='text-danger'>Erro na requisição da API.</span>`;
+                console.error(err);
+            });
+        });
+    }
+});
+</script>
+</body>
+</html>

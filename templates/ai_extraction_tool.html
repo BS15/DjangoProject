@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste de IA - Extração</title>
+</head>
+<body style="font-family: monospace; padding: 20px;">
+
+    <h2>Testador Cru de Extração IA</h2>
+
+    <form id="aiTestForm">
+        {% csrf_token %}
+
+        <label>Tipo de Documento:</label><br>
+        <select id="docType" name="doc_type" required>
+            <option value="nota_fiscal">Nota Fiscal</option>
+            <option value="verba_indenizatoria">Verba Indenizatória</option>
+        </select>
+
+        <br><br>
+
+        <label>Arquivo PDF:</label><br>
+        <input type="file" id="docFile" name="documento" accept=".pdf" required>
+
+        <br><br>
+
+        <button type="submit">Enviar para IA</button>
+    </form>
+
+    <hr>
+
+    <h3>Resposta JSON:</h3>
+    <pre id="jsonOutput" style="background: #f4f4f4; padding: 10px; border: 1px solid #ddd;"></pre>
+
+    <script>
+        document.getElementById('aiTestForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Impede a página de recarregar
+
+            const jsonOutput = document.getElementById('jsonOutput');
+            jsonOutput.innerText = "Enviando para o Google Gemini... aguarde (pode levar uns 5 segundos).";
+
+            // Pega o token CSRF escondido no formulário
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            // Prepara os dados
+            const formData = new FormData();
+            formData.append('documento', document.getElementById('docFile').files[0]);
+            formData.append('doc_type', document.getElementById('docType').value);
+
+            // Dispara a requisição para o seu servidor Django
+            fetch('/api/testar-extracao/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Converte o objeto de volta para string JSON formatada (bonita) e joga na tela
+                jsonOutput.innerText = JSON.stringify(data, null, 4);
+            })
+            .catch(error => {
+                jsonOutput.innerText = "ERRO FATAL DE CONEXÃO: " + error;
+            });
+        });
+    </script>
+
+</body>
+</html>
