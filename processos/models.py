@@ -321,6 +321,70 @@ class DocumentoAuxilio(DocumentoBase):
 class DocumentoSuprimentoDeFundos(DocumentoBase):
     suprimento = models.ForeignKey('SuprimentoDeFundos', on_delete=models.CASCADE, related_name='documentos')
 
+
+def caminho_comprovante(instance, filename):
+    if instance.processo_id:
+        try:
+            processo = instance.processo
+            ano = processo.data_empenho.year if processo.data_empenho else date.today().year
+            mes = processo.data_empenho.month if processo.data_empenho else date.today().month
+            return f'pagamentos/{ano}/{mes:02d}/proc_{processo.id}/comprovantes/{filename}'
+        except Exception:
+            pass
+    return f'comprovantes/{filename}'
+
+
+class ComprovanteDePagamento(models.Model):
+    TIPO_PAGAMENTO_CHOICES = [
+        ('GERENCIADOR', 'GERENCIADOR/BOLETO BANCÁRIO'),
+        ('TED', 'TRANSFERÊNCIA (TED)'),
+        ('PIX', 'PIX'),
+        ('REMESSA', 'REMESSA BANCÁRIA'),
+    ]
+
+    processo = models.ForeignKey(
+        'Processo',
+        on_delete=models.CASCADE,
+        related_name='comprovantes_pagamento',
+        verbose_name="Processo"
+    )
+    credor = models.ForeignKey(
+        'Credor',
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        verbose_name="Credor"
+    )
+    valor_pago = models.DecimalField(
+        "Valor Pago",
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+    tipo_de_pagamento = models.CharField(
+        "Tipo de Pagamento",
+        max_length=50,
+        choices=TIPO_PAGAMENTO_CHOICES,
+        null=True,
+        blank=True
+    )
+    data_pagamento = models.DateField("Data de Pagamento", null=True, blank=True)
+    arquivo = models.FileField(
+        "Arquivo do Comprovante",
+        upload_to=caminho_comprovante,
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        verbose_name = "Comprovante de Pagamento"
+        verbose_name_plural = "Comprovantes de Pagamento"
+
+    def __str__(self):
+        return f"Comprovante - {self.processo} - {self.credor} - R$ {self.valor_pago}"
+
+
 class NotaFiscal(models.Model):
     processo = models.ForeignKey(Processo, on_delete=models.CASCADE, related_name='notas_fiscais')
     nome_emitente = models.ForeignKey('Credor', on_delete=models.PROTECT, blank=True, null=True)

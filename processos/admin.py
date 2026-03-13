@@ -7,7 +7,7 @@ from .models import (
     ContasBancarias, TiposDeVerbasIndenizatorias,
     StatusChoicesPendencias, Grupos, CargosFuncoes,
     Tabela_Valores_Unitarios_Verbas_Indenizatorias, Tabela_Proponentes_Diarias,
-    StatusChoicesRetencoes, TiposDePendencias, Pendencia
+    StatusChoicesRetencoes, TiposDePendencias, Pendencia, ComprovanteDePagamento
 )
 # ==========================================
 # TABELAS DE PARAMETRIZAÇÃO (CONFIGURAÇÕES)
@@ -75,3 +75,10 @@ admin.site.register(Tabela_Proponentes_Diarias)
 admin.site.register(StatusChoicesRetencoes)
 admin.site.register(TiposDePendencias)
 admin.site.register(Pendencia)
+
+
+@admin.register(ComprovanteDePagamento)
+class ComprovanteDePagamentoAdmin(admin.ModelAdmin):
+    list_display = ('id', 'processo', 'credor', 'valor_pago', 'tipo_de_pagamento', 'data_pagamento')
+    search_fields = ('processo__n_nota_empenho', 'credor__nome')
+    list_filter = ('tipo_de_pagamento',)
