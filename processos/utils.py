@@ -374,3 +374,50 @@ def fatiar_pdf_manual(arquivo_pdf):
         })
 
     return caminhos_temporarios
+
+
+def processar_pdf_comprovantes_ia(arquivo_pdf):
+    """
+    Recebe um PDF com um comprovante por página, divide-o e usa IA para extrair
+    os dados de cada página conforme o modelo ComprovanteDePagamento.
+    Retorna uma lista de dicts com: temp_path, url, pagina, credor_extraido,
+    valor_extraido, tipo_de_pagamento, data_pagamento.
+    """
+    from .ai_utils import extrair_dados_comprovante_ia
+
+    resultados = []
+    pdf = PdfReader(arquivo_pdf)
+
+    for numero_pagina in range(len(pdf.pages)):
+        # 1. Fatia a página individual
+        writer = PdfWriter()
+        writer.add_page(pdf.pages[numero_pagina])
+
+        buffer = io.BytesIO()
+        writer.write(buffer)
+        buffer.seek(0)
+
+        # 2. Salva o arquivo temporário
+        nome_temp = f"temp_comprovante_{uuid.uuid4().hex[:8]}_pag{numero_pagina+1}.pdf"
+        conteudo = buffer.read()
+        caminho_salvo = default_storage.save(f"temp/{nome_temp}", ContentFile(conteudo))
+
+        # 3. Chama a IA na página isolada
+        dados_ia = None
+        try:
+            dados_ia = extrair_dados_comprovante_ia(conteudo)
+        except Exception as e:
+            print(f"Erro na extração IA da página {numero_pagina + 1}: {e}")
+
+        resultado = {
+            'temp_path': caminho_salvo,
+            'url': default_storage.url(caminho_salvo),
+            'pagina': numero_pagina + 1,
+            'credor_extraido': dados_ia.get('credor_nome', 'Não identificado') if dados_ia else 'Não identificado',
+            'valor_extraido': dados_ia.get('valor_pago', 0.00) if dados_ia else 0.00,
+            'tipo_de_pagamento': dados_ia.get('tipo_de_pagamento', '') if dados_ia else '',
+            'data_pagamento': dados_ia.get('data_pagamento', '') if dados_ia else '',
+        }
+        resultados.append(resultado)
+
+    return resultados

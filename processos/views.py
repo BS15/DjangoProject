@@ -11,9 +11,9 @@ from django.db import transaction
 from django.db.models import Count, Q, F
 from pypdf import PdfWriter
 from .forms import ProcessoForm, DocumentoFormSet, NotaFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet
-from .utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual
+from .utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, processar_pdf_comprovantes_ia
 from .ai_utils import extrair_dados_documento
-from .models import Processo, NotaFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia
+from .models import Processo, NotaFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, ComprovanteDePagamento
 from .filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, NotaFiscalFilter
 
 
@@ -738,12 +738,39 @@ def api_vincular_comprovantes(request):
 
                 if default_storage.exists(temp_path):
                     with default_storage.open(temp_path) as temp_file:
-                        DocumentoProcesso.objects.create(
-                            processo=processo,
-                            arquivo=ContentFile(temp_file.read(), name=f"Comprovante_Proc_{processo.id}.pdf"),
-                            tipo=tipo_comprovante,
-                            ordem=99
-                        )
+                        conteudo_arquivo = temp_file.read()
+
+                    nome_arquivo = f"Comprovante_Proc_{processo.id}.pdf"
+
+                    DocumentoProcesso.objects.create(
+                        processo=processo,
+                        arquivo=ContentFile(conteudo_arquivo, name=nome_arquivo),
+                        tipo=tipo_comprovante,
+                        ordem=99
+                    )
+
+                    # Dados extras extraídos (vindos do front-end ou da IA)
+                    credor_id = vinculo.get('credor_id')
+                    valor_pago = vinculo.get('valor_pago')
+                    tipo_de_pagamento = vinculo.get('tipo_de_pagamento') or ''
+                    data_pagamento = vinculo.get('data_pagamento') or None
+
+                    credor_obj = None
+                    if credor_id:
+                        try:
+                            credor_obj = Credor.objects.get(id=credor_id)
+                        except Credor.DoesNotExist:
+                            pass
+
+                    ComprovanteDePagamento.objects.create(
+                        processo=processo,
+                        credor=credor_obj,
+                        valor_pago=valor_pago if valor_pago else None,
+                        tipo_de_pagamento=tipo_de_pagamento or None,
+                        data_pagamento=data_pagamento,
+                        arquivo=ContentFile(conteudo_arquivo, name=nome_arquivo),
+                    )
+
                     default_storage.delete(temp_path)
 
                 processo.status = status_pago
