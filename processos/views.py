@@ -696,25 +696,36 @@ def painel_impostos(request):
 
 
 def painel_comprovantes_view(request):
-    processos_autorizados = Processo.objects.filter(
-        status__status_choice__iexact='A PAGAR - AUTORIZADO'
-    ).values('id', 'credor', 'valor_liquido', 'n_nota_empenho')
+    processos_lancados = Processo.objects.filter(
+        status__status_choice__iexact='LANÇADO - AGUARDANDO COMPROVANTE'
+    ).select_related('credor').order_by('credor__nome', 'id')
+
+    processos_list = []
+    for p in processos_lancados:
+        processos_list.append({
+            'id': p.id,
+            'credor_nome': p.credor.nome if p.credor else 'Sem Credor',
+            'valor_liquido': str(p.valor_liquido or '0.00'),
+            'n_nota_empenho': p.n_nota_empenho or 'S/N',
+        })
 
     context = {
-        'processos_json': json.dumps(list(processos_autorizados), default=str)
+        'processos_json': json.dumps(processos_list)
     }
     return render(request, 'painel_comprovantes.html', context)
 
 
 def api_fatiar_comprovantes(request):
     if request.method == 'POST' and request.FILES.get('pdf_banco'):
-        modo = request.POST.get('modo', 'manual')
+        modo = request.POST.get('modo', 'auto')
 
         try:
             if modo == 'ia':
                 resultados = processar_pdf_comprovantes_ia(request.FILES['pdf_banco'])
-            else:
+            elif modo == 'manual':
                 resultados = fatiar_pdf_manual(request.FILES['pdf_banco'])
+            else:  # modo == 'auto' (default): regex extraction, no AI cost
+                resultados = processar_pdf_comprovantes(request.FILES['pdf_banco'])
 
             return JsonResponse({'sucesso': True, 'comprovantes': resultados, 'modo': modo})
         except Exception as e:
@@ -727,7 +738,38 @@ def api_vincular_comprovantes(request):
     if request.method == 'POST':
         try:
             dados = json.loads(request.body)
-            vinculos = dados.get('vinculos', [])
+            processo_id = dados.get('processo_id')
+            comprovantes = dados.get('comprovantes', [])
+
+            if not processo_id:
+                return JsonResponse({'sucesso': False, 'erro': 'ID do processo não informado.'})
+
+            if not comprovantes:
+                return JsonResponse({'sucesso': False, 'erro': 'Nenhum comprovante enviado.'})
+
+            processo = get_object_or_404(Processo, id=processo_id)
+
+            if not processo.status or processo.status.status_choice.upper() != 'LANÇADO - AGUARDANDO COMPROVANTE':
+                return JsonResponse({
+                    'sucesso': False,
+                    'erro': f'Processo #{processo_id} não está no status correto. Status atual: {processo.status}'
+                })
+
+            # Validação: soma dos comprovantes deve ser igual ao valor líquido do processo
+            soma_comprovantes = sum(
+                float(c.get('valor_pago') or 0) for c in comprovantes
+            )
+            valor_liquido = float(processo.valor_liquido or 0)
+
+            if abs(soma_comprovantes - valor_liquido) > 0.01:
+                return JsonResponse({
+                    'sucesso': False,
+                    'erro': (
+                        f'Soma dos comprovantes (R$ {soma_comprovantes:.2f}) é diferente do '
+                        f'valor líquido do processo (R$ {valor_liquido:.2f}). '
+                        f'Diferença: R$ {abs(soma_comprovantes - valor_liquido):.2f}'
+                    )
+                })
 
             status_pago, _ = StatusChoicesProcesso.objects.get_or_create(
                 status_choice__iexact='PAGO - EM CONFERÊNCIA',
@@ -739,27 +781,21 @@ def api_vincular_comprovantes(request):
                 defaults={'tipo_de_documento': 'Comprovante de Pagamento'}
             )
 
-            processos_atualizados = 0
-            processos_barrados = 0
-
-            for vinculo in vinculos:
-                processo_id = vinculo.get('processo_id')
-                temp_path = vinculo.get('temp_path')
-
-                if not processo_id or not temp_path:
+            for idx, comp in enumerate(comprovantes):
+                temp_path = comp.get('temp_path')
+                if not temp_path:
                     continue
 
-                processo = Processo.objects.get(id=processo_id)
-
-                if not processo.status or processo.status.status_choice.upper() != 'A PAGAR - AUTORIZADO':
-                    processos_barrados += 1
-                    continue
+                valor_pago = comp.get('valor_pago')
+                credor_nome = comp.get('credor_nome') or ''
+                tipo_de_pagamento = comp.get('tipo_de_pagamento') or ''
+                data_pagamento = comp.get('data_pagamento') or None
 
                 if default_storage.exists(temp_path):
                     with default_storage.open(temp_path) as temp_file:
                         conteudo_arquivo = temp_file.read()
 
-                    nome_arquivo = f"Comprovante_Proc_{processo.id}.pdf"
+                    nome_arquivo = f"Comprovante_Proc_{processo.id}_{idx + 1}.pdf"
 
                     DocumentoProcesso.objects.create(
                         processo=processo,
@@ -768,23 +804,10 @@ def api_vincular_comprovantes(request):
                         ordem=99
                     )
 
-                    # Dados extras extraídos (vindos do front-end ou da IA)
-                    credor_id = vinculo.get('credor_id')
-                    valor_pago = vinculo.get('valor_pago')
-                    tipo_de_pagamento = vinculo.get('tipo_de_pagamento') or ''
-                    data_pagamento = vinculo.get('data_pagamento') or None
-
-                    credor_obj = None
-                    if credor_id:
-                        try:
-                            credor_obj = Credor.objects.get(id=credor_id)
-                        except Credor.DoesNotExist:
-                            pass
-
                     ComprovanteDePagamento.objects.create(
                         processo=processo,
-                        credor=credor_obj,
-                        valor_pago=valor_pago if valor_pago else None,
+                        credor_nome=credor_nome,
+                        valor_pago=valor_pago,
                         tipo_de_pagamento=tipo_de_pagamento or None,
                         data_pagamento=data_pagamento,
                         arquivo=ContentFile(conteudo_arquivo, name=nome_arquivo),
@@ -792,15 +815,13 @@ def api_vincular_comprovantes(request):
 
                     default_storage.delete(temp_path)
 
-                processo.status = status_pago
-                processo.save()
-                processos_atualizados += 1
+            processo.status = status_pago
+            processo.save()
 
-            msg_final = f'{processos_atualizados} processo(s) baixado(s) com sucesso!'
-            if processos_barrados > 0:
-                msg_final += f' (Atenção: {processos_barrados} bloqueados por falta de autorização do Ordenador).'
-
-            return JsonResponse({'sucesso': True, 'mensagem': msg_final})
+            return JsonResponse({
+                'sucesso': True,
+                'mensagem': f'Processo #{processo_id} baixado com sucesso! Status alterado para "PAGO - EM CONFERÊNCIA".'
+            })
 
         except Exception as e:
             return JsonResponse({'sucesso': False, 'erro': str(e)})

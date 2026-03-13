@@ -79,6 +79,6 @@ admin.site.register(Pendencia)
 
 @admin.register(ComprovanteDePagamento)
 class ComprovanteDePagamentoAdmin(admin.ModelAdmin):
-    list_display = ('id', 'processo', 'credor', 'valor_pago', 'tipo_de_pagamento', 'data_pagamento')
-    search_fields = ('processo__n_nota_empenho', 'credor__nome')
+    list_display = ('id', 'processo', 'credor_nome', 'valor_pago', 'tipo_de_pagamento', 'data_pagamento')
+    search_fields = ('processo__n_nota_empenho', 'credor_nome')
     list_filter = ('tipo_de_pagamento',)
