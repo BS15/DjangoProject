@@ -1,6 +1,7 @@
 import io
 import os
 import json
+import tempfile
 from datetime import date, datetime
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse
@@ -12,7 +13,8 @@ from django.db.models import Count, Q, F
 from pypdf import PdfWriter
 from .forms import ProcessoForm, DocumentoFormSet, NotaFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet
 from .utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, processar_pdf_comprovantes_ia
-from .ai_utils import extrair_dados_documento
+from .ai_utils import extrair_dados_documento, extract_data_with_llm
+from .invoice_processor import process_invoice_taxes
 from .models import Processo, NotaFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, ComprovanteDePagamento
 from .filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, NotaFiscalFilter
 
@@ -1190,6 +1192,43 @@ def api_extracao_universal(request):
             return JsonResponse({'status': 'error', 'message': f"Erro interno: {str(e)}"}, status=500)
 
     return JsonResponse({'status': 'error', 'message': 'Requisição inválida ou arquivo ausente'}, status=400)
+
+
+def api_processar_retencoes(request):
+    """
+    Recebe um arquivo PDF de Nota Fiscal, extrai os dados via IA e aplica as
+    regras de negócio de retenções, retornando o JSON padronizado da Etapa 6.
+    """
+    if request.method != 'POST' or not request.FILES.get('arquivo'):
+        return JsonResponse(
+            {'status': 'error', 'message': 'Requisição inválida ou arquivo ausente'},
+            status=400,
+        )
+
+    arquivo = request.FILES['arquivo']
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
+        for chunk in arquivo.chunks():
+            tmp.write(chunk)
+        tmp_path = tmp.name
+
+    try:
+        dados_extraidos = extract_data_with_llm(tmp_path)
+        if dados_extraidos is None:
+            return JsonResponse(
+                {'status': 'error', 'message': 'A IA não conseguiu extrair os dados da nota fiscal.'},
+                status=500,
+            )
+
+        resultado = process_invoice_taxes(dados_extraidos)
+        return JsonResponse({'status': 'success', 'resultado': resultado})
+
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': f'Erro interno: {str(e)}'}, status=500)
+
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
 
 
 def api_dados_credor(request, credor_id):
