@@ -6,10 +6,27 @@ import os
 import io
 from django.conf import settings
 
-# Inicializa o novo Client unificado
-# Se a variável GEMINI_API_KEY estiver definida nas suas variáveis de ambiente,
-# o Client() vai encontrá-la automaticamente. Se não, passe-a explicitamente:
-client = genai.Client(api_key=settings.GEMINI_API_KEY)
+# Inicializa o novo Client unificado de forma lazy para evitar falha quando a
+# chave não está configurada (ex.: ambiente de testes).
+_client = None
+
+
+def _get_client():
+    global _client
+    if _client is None:
+        _client = genai.Client(api_key=settings.GEMINI_API_KEY)
+    return _client
+
+
+# Mantém o alias `client` para retrocompatibilidade com o restante do módulo.
+class _ClientProxy:
+    """Proxy transparente que inicializa o cliente Gemini apenas quando usado."""
+
+    def __getattr__(self, name):
+        return getattr(_get_client(), name)
+
+
+client = _ClientProxy()
 
 def extrair_dados_documento(arquivo_pdf, tipo_documento):
     """
@@ -121,6 +138,60 @@ def extrair_dados_documento(arquivo_pdf, tipo_documento):
         # Garante que o arquivo local é sempre deletado para não lotar o servidor
         if os.path.exists(temp_path):
             os.remove(temp_path)
+
+
+def extract_data_with_llm(pdf_path):
+    """
+    Extrai dados fiscais de uma Nota Fiscal usando IA (Gemini).
+    Recebe o caminho do arquivo PDF e retorna um dicionário com os campos
+    definidos na Etapa 1 do algoritmo de processamento de retenções.
+    Retorna None em caso de erro.
+    """
+    prompt = """
+Atue como um auditor fiscal especialista em extração de dados. Analise a nota fiscal
+fornecida e retorne ESTRITAMENTE um objeto JSON com as seguintes chaves e formatos.
+Não inclua formatação markdown fora do JSON. Valores monetários devem ser números float
+(ex: 1500.50). Se um dado não existir, retorne null.
+
+Estrutura exigida:
+{
+    "valor_bruto": float,
+    "valor_liquido": float,
+    "optante_simples_nacional": boolean,
+    "impostos_federais": {
+        "ir": float,
+        "pis": float,
+        "cofins": float,
+        "csll": float
+    },
+    "justificativa_isencao_federal": string,
+    "iss": {
+        "valor_destacado": float,
+        "local_prestacao_servico": string
+    },
+    "inss_destacado": float
+}
+"""
+    try:
+        uploaded_file = client.files.upload(file=pdf_path)
+
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[uploaded_file, prompt],
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+            )
+        )
+
+        try:
+            return json.loads(response.text)
+        except json.JSONDecodeError:
+            print(f"Erro ao converter saída da IA (retenções): {response.text}")
+            return None
+
+    except Exception as e:
+        print(f"Erro na extração de dados fiscais via IA: {e}")
+        return None
 
 
 def extrair_dados_comprovante_ia(pdf_bytes):
