@@ -1,0 +1,44 @@
+{% if dp.tipo == 'codigo_barras' %}
+    <span class="text-muted small fw-bold d-block">Código de Barras</span>
+    {% if dp.codigo_barras %}
+        <div class="d-flex align-items-center gap-2 mt-1">
+            <span class="font-monospace fw-bold text-primary text-break" style="font-size: 0.85rem;">{{ dp.codigo_barras }}</span>
+            <button class="btn btn-sm btn-outline-secondary copy-btn px-2 py-1 no-print" data-clipboard="{{ dp.codigo_barras }}" title="Copiar">
+                <i class="bi bi-clipboard"></i>
+            </button>
+        </div>
+    {% else %}
+        <span class="text-danger small">Não preenchido</span>
+    {% endif %}
+
+{% elif dp.tipo == 'pix' %}
+    <span class="text-muted small fw-bold d-block">Chave PIX</span>
+    {% if dp.chave_pix %}
+        <div class="d-flex align-items-center gap-2 mt-1">
+            <span class="font-monospace fw-bold text-primary text-break" style="font-size: 0.85rem;">{{ dp.chave_pix }}</span>
+            <button class="btn btn-sm btn-outline-secondary copy-btn px-2 py-1 no-print" data-clipboard="{{ dp.chave_pix }}" title="Copiar">
+                <i class="bi bi-clipboard"></i>
+            </button>
+        </div>
+    {% else %}
+        <span class="text-danger small">Credor sem chave PIX cadastrada</span>
+    {% endif %}
+
+{% elif dp.tipo == 'transferencia' %}
+    <span class="text-muted small fw-bold d-block">Dados Bancários (TED)</span>
+    {% if dp.banco or dp.agencia or dp.conta %}
+        <div class="mt-1 small">
+            <span class="fw-bold">Banco:</span> {{ dp.banco|default:"-" }}<br>
+            <span class="fw-bold">Agência:</span> {{ dp.agencia|default:"-" }}<br>
+            <span class="fw-bold">Conta:</span> {{ dp.conta|default:"-" }}
+        </div>
+    {% else %}
+        <span class="text-danger small">Nenhuma conta bancária vinculada</span>
+    {% endif %}
+
+{% elif dp.tipo == 'remessa' %}
+    <span class="text-muted small fst-italic">— Remessa (sem dados bancários) —</span>
+
+{% else %}
+    <span class="text-muted small">-</span>
+{% endif %}

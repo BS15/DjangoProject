@@ -1444,6 +1444,40 @@ def api_detalhes_pagamento(request):
     return JsonResponse({'sucesso': False, 'erro': 'Método inválido'})
 
 
+def _build_detalhes_pagamento(processos):
+    detalhes = []
+    totais = {}
+    for p in processos:
+        forma = p.forma_pagamento.forma_de_pagamento.lower() if p.forma_pagamento else ''
+        forma_nome = p.forma_pagamento.forma_de_pagamento if p.forma_pagamento else 'N/A'
+
+        if 'boleto' in forma or 'gerenciador' in forma:
+            dados_pagamento = {
+                'tipo': 'codigo_barras',
+                'codigo_barras': p.codigo_barras or '',
+            }
+        elif 'pix' in forma:
+            dados_pagamento = {
+                'tipo': 'pix',
+                'chave_pix': (p.credor.chave_pix if p.credor and p.credor.chave_pix else ''),
+            }
+        elif 'transfer' in forma or 'ted' in forma:
+            credor_conta = p.credor.conta if p.credor else None
+            dados_pagamento = {
+                'tipo': 'transferencia',
+                'banco': credor_conta.banco if credor_conta else '',
+                'agencia': credor_conta.agencia if credor_conta else '',
+                'conta': credor_conta.conta if credor_conta else '',
+            }
+        else:
+            dados_pagamento = {'tipo': 'remessa'}
+
+        detalhes.append({'processo': p, 'dados_pagamento': dados_pagamento})
+        valor = p.valor_liquido or 0
+        totais[forma_nome] = totais.get(forma_nome, 0) + valor
+    return detalhes, totais
+
+
 def separar_para_lancamento_bancario(request):
     if request.method == 'POST':
         selecionados = request.POST.getlist('processos_selecionados')
@@ -1452,54 +1486,48 @@ def separar_para_lancamento_bancario(request):
             messages.warning(request, 'Nenhum processo foi selecionado.')
             return redirect('contas_a_pagar')
 
-        processos = Processo.objects.filter(
-            id__in=selecionados
-        ).select_related('forma_pagamento', 'conta', 'credor__conta', 'status').order_by('forma_pagamento__forma_de_pagamento', 'id')
-
-        processos_detalhes = []
-        totais = {}
-
-        for p in processos:
-            forma = p.forma_pagamento.forma_de_pagamento.lower() if p.forma_pagamento else ''
-            forma_nome = p.forma_pagamento.forma_de_pagamento if p.forma_pagamento else 'N/A'
-
-            dados_pagamento = {}
-            if 'boleto' in forma or 'gerenciador' in forma:
-                dados_pagamento = {
-                    'tipo': 'codigo_barras',
-                    'codigo_barras': p.codigo_barras or '',
-                }
-            elif 'pix' in forma:
-                dados_pagamento = {
-                    'tipo': 'pix',
-                    'chave_pix': (p.credor.chave_pix if p.credor and p.credor.chave_pix else ''),
-                }
-            elif 'transfer' in forma or 'ted' in forma:
-                credor_conta = p.credor.conta if p.credor else None
-                dados_pagamento = {
-                    'tipo': 'transferencia',
-                    'banco': credor_conta.banco if credor_conta else '',
-                    'agencia': credor_conta.agencia if credor_conta else '',
-                    'conta': credor_conta.conta if credor_conta else '',
-                }
-            else:
-                dados_pagamento = {'tipo': 'remessa'}
-
-            processos_detalhes.append({
-                'processo': p,
-                'dados_pagamento': dados_pagamento,
-            })
-
-            valor = p.valor_liquido or 0
-            totais[forma_nome] = totais.get(forma_nome, 0) + valor
-
-        context = {
-            'processos_detalhes': processos_detalhes,
-            'totais': totais,
-        }
-        return render(request, 'lancamento_bancario.html', context)
+        request.session['processos_lancamento'] = [int(pid) for pid in selecionados]
+        return redirect('lancamento_bancario')
 
     return redirect('contas_a_pagar')
+
+
+def lancamento_bancario(request):
+    ids = request.session.get('processos_lancamento', [])
+
+    if not ids:
+        messages.warning(request, 'Nenhum processo foi selecionado.')
+        return redirect('contas_a_pagar')
+
+    status_autorizado = StatusChoicesProcesso.objects.filter(
+        status_choice__iexact='A PAGAR - AUTORIZADO'
+    ).first()
+    status_lancado = StatusChoicesProcesso.objects.filter(
+        status_choice__iexact='LANÇADO - AGUARDANDO COMPROVANTE'
+    ).first()
+
+    processos_qs = Processo.objects.filter(
+        id__in=ids
+    ).select_related('forma_pagamento', 'conta', 'credor__conta', 'status').order_by('forma_pagamento__forma_de_pagamento', 'id')
+
+    a_pagar_qs = processos_qs.filter(status=status_autorizado) if status_autorizado else processos_qs.none()
+    lancados_qs = processos_qs.filter(status=status_lancado) if status_lancado else processos_qs.none()
+
+    processos_a_pagar, totais_a_pagar = _build_detalhes_pagamento(a_pagar_qs)
+    processos_lancados, totais_lancados = _build_detalhes_pagamento(lancados_qs)
+
+    totais = {}
+    for forma, val in totais_a_pagar.items():
+        totais[forma] = totais.get(forma, 0) + val
+    for forma, val in totais_lancados.items():
+        totais[forma] = totais.get(forma, 0) + val
+
+    context = {
+        'processos_a_pagar': processos_a_pagar,
+        'processos_lancados': processos_lancados,
+        'totais': totais,
+    }
+    return render(request, 'lancamento_bancario.html', context)
 
 
 def marcar_como_lancado(request):
@@ -1519,4 +1547,24 @@ def marcar_como_lancado(request):
         else:
             messages.warning(request, 'ID de processo inválido.')
 
-    return redirect('contas_a_pagar')
+    return redirect('lancamento_bancario')
+
+
+def desmarcar_lancamento(request):
+    if request.method == 'POST':
+        processo_id = request.POST.get('processo_id')
+
+        if processo_id:
+            status_autorizado, _ = StatusChoicesProcesso.objects.get_or_create(
+                status_choice__iexact='A PAGAR - AUTORIZADO',
+                defaults={'status_choice': 'A PAGAR - AUTORIZADO'}
+            )
+            updated = Processo.objects.filter(id=processo_id).update(status=status_autorizado)
+            if updated:
+                messages.success(request, f'Lançamento do Processo #{processo_id} desmarcado.')
+            else:
+                messages.warning(request, f'Processo #{processo_id} não encontrado.')
+        else:
+            messages.warning(request, 'ID de processo inválido.')
+
+    return redirect('lancamento_bancario')
