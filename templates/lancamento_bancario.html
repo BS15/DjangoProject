@@ -47,6 +47,8 @@
         </div>
     </div>
 
+    {# ── List 1: A PAGAR - AUTORIZADO ── #}
+    <h5 class="fw-bold text-primary mb-2"><i class="bi bi-hourglass-split me-1"></i> A Pagar – Autorizados</h5>
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body p-0">
             <table class="table table-hover table-bordered mb-0 align-middle">
@@ -62,7 +64,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in processos_detalhes %}
+                    {% for item in processos_a_pagar %}
                     {% with p=item.processo dp=item.dados_pagamento %}
                     <tr>
                         <td class="fw-bold text-muted">#{{ p.id }}</td>
@@ -76,52 +78,7 @@
                                 <span class="text-muted small">-</span>
                             {% endif %}
                         </td>
-                        <td>
-                            {% if dp.tipo == 'codigo_barras' %}
-                                <span class="text-muted small fw-bold d-block">Código de Barras</span>
-                                {% if dp.codigo_barras %}
-                                    <div class="d-flex align-items-center gap-2 mt-1">
-                                        <span class="font-monospace fw-bold text-primary text-break" style="font-size: 0.85rem;">{{ dp.codigo_barras }}</span>
-                                        <button class="btn btn-sm btn-outline-secondary copy-btn px-2 py-1 no-print" data-clipboard="{{ dp.codigo_barras }}" title="Copiar">
-                                            <i class="bi bi-clipboard"></i>
-                                        </button>
-                                    </div>
-                                {% else %}
-                                    <span class="text-danger small">Não preenchido</span>
-                                {% endif %}
-
-                            {% elif dp.tipo == 'pix' %}
-                                <span class="text-muted small fw-bold d-block">Chave PIX</span>
-                                {% if dp.chave_pix %}
-                                    <div class="d-flex align-items-center gap-2 mt-1">
-                                        <span class="font-monospace fw-bold text-primary text-break" style="font-size: 0.85rem;">{{ dp.chave_pix }}</span>
-                                        <button class="btn btn-sm btn-outline-secondary copy-btn px-2 py-1 no-print" data-clipboard="{{ dp.chave_pix }}" title="Copiar">
-                                            <i class="bi bi-clipboard"></i>
-                                        </button>
-                                    </div>
-                                {% else %}
-                                    <span class="text-danger small">Credor sem chave PIX cadastrada</span>
-                                {% endif %}
-
-                            {% elif dp.tipo == 'transferencia' %}
-                                <span class="text-muted small fw-bold d-block">Dados Bancários (TED)</span>
-                                {% if dp.banco or dp.agencia or dp.conta %}
-                                    <div class="mt-1 small">
-                                        <span class="fw-bold">Banco:</span> {{ dp.banco|default:"-" }}<br>
-                                        <span class="fw-bold">Agência:</span> {{ dp.agencia|default:"-" }}<br>
-                                        <span class="fw-bold">Conta:</span> {{ dp.conta|default:"-" }}
-                                    </div>
-                                {% else %}
-                                    <span class="text-danger small">Nenhuma conta bancária vinculada</span>
-                                {% endif %}
-
-                            {% elif dp.tipo == 'remessa' %}
-                                <span class="text-muted small fst-italic">— Remessa (sem dados bancários) —</span>
-
-                            {% else %}
-                                <span class="text-muted small">-</span>
-                            {% endif %}
-                        </td>
+                        <td>{% include "partials/_dados_pagamento.html" with dp=dp %}</td>
                         <td class="text-center no-print">
                             <form method="POST" action="{% url 'marcar_como_lancado' %}" onsubmit="return confirm('Confirmar lançamento do Processo #{{ p.id }}?');">
                                 {% csrf_token %}
@@ -135,9 +92,65 @@
                     {% endwith %}
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">
+                        <td colspan="7" class="text-center py-4 text-muted">
                             <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-                            Nenhum processo foi encontrado.
+                            Nenhum processo pendente de lançamento.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {# ── List 2: LANÇADO - AGUARDANDO COMPROVANTE ── #}
+    <h5 class="fw-bold text-success mb-2 mt-5"><i class="bi bi-check2-all me-1"></i> Lançados – Aguardando Comprovante</h5>
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-0">
+            <table class="table table-hover table-bordered mb-0 align-middle">
+                <thead class="table-success">
+                    <tr>
+                        <th style="width: 7%;"># ID</th>
+                        <th style="width: 12%;">Nota Empenho</th>
+                        <th style="width: 20%;">Credor</th>
+                        <th style="width: 10%;" class="text-end pe-3">Valor Líquido</th>
+                        <th style="width: 13%;">Forma de Pagamento</th>
+                        <th style="width: 30%;">Dados de Pagamento Bancário</th>
+                        <th style="width: 8%;" class="text-center no-print">Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in processos_lancados %}
+                    {% with p=item.processo dp=item.dados_pagamento %}
+                    <tr class="table-success bg-opacity-25">
+                        <td class="fw-bold text-muted">#{{ p.id }}</td>
+                        <td class="small fw-medium">{{ p.n_nota_empenho|default:"-" }}</td>
+                        <td class="fw-medium" style="font-size: 0.85rem;">{{ p.credor|default:"-"|truncatechars:45 }}</td>
+                        <td class="text-end pe-3 fw-bold text-success">R$ {{ p.valor_liquido|floatformat:2 }}</td>
+                        <td>
+                            {% if p.forma_pagamento %}
+                                <span class="badge bg-secondary">{{ p.forma_pagamento }}</span>
+                            {% else %}
+                                <span class="text-muted small">-</span>
+                            {% endif %}
+                        </td>
+                        <td>{% include "partials/_dados_pagamento.html" with dp=dp %}</td>
+                        <td class="text-center no-print">
+                            <form method="POST" action="{% url 'desmarcar_lancamento' %}" onsubmit="return confirm('Desmarcar lançamento do Processo #{{ p.id }}?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="processo_id" value="{{ p.id }}">
+                                <button type="submit" class="btn btn-sm btn-warning fw-bold shadow-sm" title="Desmarcar Lançamento">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Desmarcar Lançamento
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endwith %}
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                            Nenhum processo lançado ainda.
                         </td>
                     </tr>
                     {% endfor %}
