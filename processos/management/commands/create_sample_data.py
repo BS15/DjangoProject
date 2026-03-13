@@ -46,13 +46,16 @@ def _random_cnpj():
 # ---------------------------------------------------------------------------
 
 STATUS_PROCESSOS = [
-    "Em análise",
-    "Aguardando documentação",
-    "Autorizado",
-    "Em pagamento",
-    "Pago",
-    "Arquivado",
-    "Cancelado",
+    "A EMPENHAR",
+    "AGUARDANDO LIQUIDAÇÃO / ATESTE",
+    "A PAGAR - PENDENTE AUTORIZAÇÃO",
+    "A PAGAR - AUTORIZADO",
+    "PAGO - EM CONFERÊNCIA",
+    "PAGO - A CONTABILIZAR",
+    "CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL",
+    "APROVADO - PENDENTE ARQUIVAMENTO",
+    "ARQUIVADO",
+    "CANCELADO / ANULADO",
 ]
 
 TAGS = [
@@ -66,30 +69,27 @@ TAGS = [
 ]
 
 FORMAS_PAGAMENTO = [
-    "TED",
-    "PIX",
-    "Boleto",
-    "Ordem Bancária",
-    "Cheque",
+	"REMESSA BANCÁRIA",
+	"TRANSFERÊNCIA (TED)",
+	"PIX",
+	"GERENCIADOR/BOLETO BANCÁRIO",
 ]
 
 TIPOS_PAGAMENTO = [
-    "Nota de Empenho",
-    "Verbas Indenizatórias",
-    "Suprimento de Fundos",
-    "Contrato",
+    "SUPRIMENTO DE FUNDOS",
+	"CONTAS FIXAS",
+	"IMPOSTOS",
+	"VERBAS INDENIZATÓRIAS",
 ]
 
 GRUPOS = [
     "FORNECEDORES",
     "FUNCIONÁRIOS",
-    "PRESTADORES DE SERVIÇO",
 ]
 
 CARGOS_POR_GRUPO = {
     "FORNECEDORES": ["Empresa de TI", "Empresa de Limpeza", "Empresa de Segurança"],
     "FUNCIONÁRIOS": ["Assessor", "Analista", "Diretor", "Técnico Administrativo"],
-    "PRESTADORES DE SERVIÇO": ["Consultor", "Engenheiro", "Médico"],
 }
 
 BANCOS = [
