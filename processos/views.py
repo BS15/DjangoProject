@@ -781,6 +781,7 @@ def api_vincular_comprovantes(request):
                 defaults={'tipo_de_documento': 'Comprovante de Pagamento'}
             )
 
+            data_pagamento_processo = None
             for idx, comp in enumerate(comprovantes):
                 temp_path = comp.get('temp_path')
                 if not temp_path:
@@ -790,6 +791,10 @@ def api_vincular_comprovantes(request):
                 credor_nome = comp.get('credor_nome') or ''
                 tipo_de_pagamento = comp.get('tipo_de_pagamento') or ''
                 data_pagamento = comp.get('data_pagamento') or None
+
+                # Use the first available payment date to update the process
+                if data_pagamento and not data_pagamento_processo:
+                    data_pagamento_processo = data_pagamento
 
                 if default_storage.exists(temp_path):
                     with default_storage.open(temp_path) as temp_file:
@@ -816,6 +821,8 @@ def api_vincular_comprovantes(request):
                     default_storage.delete(temp_path)
 
             processo.status = status_pago
+            if data_pagamento_processo:
+                processo.data_pagamento = data_pagamento_processo
             processo.save()
 
             return JsonResponse({
