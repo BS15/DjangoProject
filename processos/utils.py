@@ -283,6 +283,29 @@ def processar_pdf_comprovantes(pdf_file):
             # Remove lixos comuns do final da string
             credor = re.sub(r'(?:SISTEMA|SISBB|AUTOATENDIMENTO).*', '', credor, flags=re.IGNORECASE).strip()
 
+            # --- PARTE B.2: EXTRAÇÃO DA DATA DE PAGAMENTO ---
+            data_pagamento = ''
+            match_data = re.search(
+                r'(?:DATA\s+(?:DO\s+)?PAGAMENTO|DATA\s+DA\s+OPERA[ÇC][ÃA]O|DATA\s+DE\s+PAGAMENTO|DATA\s+DO\s+MOVIMENTO|DATA\s+EFETIVA[ÇC][ÃA]O|DATA\s+DA\s+TRANSFER[EÊ]NCIA|DATA)[\s:\-\.]*(\d{2}/\d{2}/\d{4})',
+                texto_flat,
+                re.IGNORECASE
+            )
+            if match_data:
+                partes = match_data.group(1).split('/')
+                if len(partes) == 3:
+                    data_pagamento = f"{partes[2]}-{partes[1]}-{partes[0]}"
+
+            # --- PARTE B.3: EXTRAÇÃO DO TIPO DE PAGAMENTO ---
+            tipo_de_pagamento = ''
+            if re.search(r'\bPIX\b', texto_flat, re.IGNORECASE):
+                tipo_de_pagamento = 'PIX'
+            elif re.search(r'\b(?:TED|DOC)\b', texto_flat, re.IGNORECASE):
+                tipo_de_pagamento = 'TED'
+            elif re.search(r'\b(?:BOLETO|GERENCIADOR|C[OÓ]DIGO\s+DE\s+BARRAS)\b', texto_flat, re.IGNORECASE):
+                tipo_de_pagamento = 'GERENCIADOR'
+            elif re.search(r'\bREMESSA\b', texto_flat, re.IGNORECASE):
+                tipo_de_pagamento = 'REMESSA'
+
             # --- PARTE C: FATIAMENTO E SALVAMENTO ---
             writer = PyPDF2.PdfWriter()
             pypdf_page = pdf_writer_source.pages[i]
@@ -303,6 +326,8 @@ def processar_pdf_comprovantes(pdf_file):
                 'pagina': i + 1,
                 'credor_extraido': credor,
                 'valor_extraido': valor_float,
+                'tipo_de_pagamento': tipo_de_pagamento,
+                'data_pagamento': data_pagamento,
                 'url': default_storage.url(path)
             })
     print(resultados)
