@@ -7,36 +7,105 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 </head>
 <body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow-sm">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold" href="{% url 'home_page' %}">System X</a>
+    </div>
+</nav>
+
 <div class="container mt-4 mb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2><i class="bi bi-people-fill text-info"></i> Conselho Fiscal</h2>
-            <p class="text-muted small">Processos contabilizados aguardando aprovação de contas.</p>
+            <p class="text-muted small">Processos contabilizados aguardando apreciação de contas.</p>
         </div>
         <a href="{% url 'home_page' %}" class="btn btn-outline-secondary">Voltar para Home</a>
     </div>
 
-    <div class="card shadow-sm border-0"><div class="card-body p-0">
-        <table class="table table-hover table-striped mb-0 align-middle">
-            <thead class="table-light"><tr><th># ID</th><th>Empenho</th><th>Credor</th><th>Data Pag.</th><th class="text-end pe-4">Valor</th><th class="text-center">Ações</th></tr></thead>
-            <tbody>
-                {% for processo in processos %}
-                <tr>
-                    <td class="fw-bold text-muted">#{{ processo.id }}</td>
-                    <td>{{ processo.n_nota_empenho|default:"-" }}</td>
-                    <td class="fw-medium">{{ processo.credor|truncatechars:40 }}</td>
-                    <td>{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
-                    <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
-                    <td class="text-center d-flex justify-content-center gap-1">
-                        <a href="{% url 'visualizar_pdf_processo' processo.id %}" target="_blank" class="btn btn-sm btn-danger shadow-sm" title="Ler Documentos"><i class="bi bi-file-earmark-pdf"></i></a>
-                        <form method="POST" action="{% url 'aprovar_conselho' pk=processo.id %}">
-                            {% csrf_token %}<button type="submit" class="btn btn-sm btn-info text-white fw-bold shadow-sm"><i class="bi bi-check-circle"></i> Aprovar Contas</button>
-                        </form>
-                    </td>
-                </tr>
-                {% empty %}<tr><td colspan="6" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>Mesa do Conselho limpa.</td></tr>{% endfor %}
-            </tbody>
-        </table>
-    </div></div>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <table class="table table-hover table-striped mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th># ID</th>
+                        <th>Empenho</th>
+                        <th>Credor</th>
+                        <th>Data Pag.</th>
+                        <th class="text-end pe-4">Valor</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for processo in processos %}
+                    <tr>
+                        <td class="fw-bold text-muted">#{{ processo.id }}</td>
+                        <td>{{ processo.n_nota_empenho|default:"-" }}</td>
+                        <td class="fw-medium">{{ processo.credor|truncatechars:40 }}</td>
+                        <td>{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
+                        <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
+                        <td class="text-center d-flex justify-content-center gap-1">
+                            <a href="{% url 'visualizar_pdf_processo' processo.id %}" target="_blank" class="btn btn-sm btn-danger shadow-sm" title="Ler Documentos"><i class="bi bi-file-earmark-pdf"></i></a>
+                            
+                            <form method="POST" action="{% url 'aprovar_conselho' pk=processo.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-info text-white fw-bold shadow-sm" title="Aprovar Contas">
+                                    <i class="bi bi-check-circle"></i> Aprovar
+                                </button>
+                            </form>
+
+                            <button type="button" class="btn btn-sm btn-outline-danger shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRecusa{{ processo.id }}" title="Devolver Processo">
+                                <i class="bi bi-arrow-return-left"></i>
+                            </button>
+                        </td>
+                    </tr>
+
+                    <div class="modal fade" id="modalRecusa{{ processo.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form method="POST" action="{% url 'recusar_conselho' pk=processo.id %}">
+                                    {% csrf_token %}
+                                    <div class="modal-header bg-danger text-white">
+                                        <h5 class="modal-title"><i class="bi bi-exclamation-octagon"></i> Recusar Contas - Processo #{{ processo.id }}</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body text-start">
+                                        <p class="small text-muted mb-3">Aponte a inconsistência identificada pelo Conselho. O processo retornará à Contabilização para ajustes.</p>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Tipo de Apontamento</label>
+                                            {{ pendencia_form.tipo }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Despacho / Justificativa</label>
+                                            {{ pendencia_form.descricao }}
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-danger fw-bold">Registrar Recusa</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>Mesa do Conselho limpa.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
-</body></html>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

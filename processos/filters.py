@@ -1,5 +1,5 @@
 import django_filters
-from .models import Processo, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, RetencaoImposto, CodigosImposto, NotaFiscal, StatusChoicesRetencoes, StatusChoicesVerbasIndenizatorias, StatusChoicesPendencias, StatusChoicesProcesso
+from .models import Processo, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, RetencaoImposto, CodigosImposto, NotaFiscal, StatusChoicesRetencoes, StatusChoicesVerbasIndenizatorias, StatusChoicesPendencias, StatusChoicesProcesso, Pendencia, NotaFiscal
 
 class ProcessoFilter(django_filters.FilterSet):
     class Meta:
@@ -8,7 +8,7 @@ class ProcessoFilter(django_filters.FilterSet):
         fields = {
             # Textos (Permite busca parcial ignorando maiúsculas e minúsculas)
             'n_nota_empenho': ['icontains'],
-            'credor': ['icontains'],
+            'credor': ['exact'],
             'n_pagamento_siscac': ['icontains'],
             'codigo_barras': ['icontains'],
             'observacao': ['icontains'],
@@ -142,7 +142,7 @@ class RetencaoProcessoFilter(django_filters.FilterSet):
     mes = django_filters.NumberFilter(field_name='notas_fiscais__data_emissao', lookup_expr='month', label='Mês da Emissão')
     ano = django_filters.NumberFilter(field_name='notas_fiscais__data_emissao', lookup_expr='year', label='Ano da Emissão')
     processo = django_filters.CharFilter(field_name='id', lookup_expr='exact', label='Nº do Processo')
-    credor = django_filters.CharFilter(field_name='credor', lookup_expr='icontains', label='Credor')
+    credor = django_filters.CharFilter(field_name='credor', lookup_expr='exact', label='Credor')
 
     imposto = django_filters.ModelChoiceFilter(
         field_name='notas_fiscais__retencoes__codigo',
@@ -169,7 +169,7 @@ class RetencaoIndividualFilter(django_filters.FilterSet):
     mes = django_filters.NumberFilter(field_name='nota_fiscal__data_emissao', lookup_expr='month', label='Mês (Emissão NF)')
     ano = django_filters.NumberFilter(field_name='nota_fiscal__data_emissao', lookup_expr='year', label='Ano (Emissão NF)')
     processo = django_filters.CharFilter(field_name='nota_fiscal__processo__id', lookup_expr='exact', label='Nº do Processo')
-    emitente = django_filters.CharFilter(field_name='nota_fiscal__nome_emitente', lookup_expr='icontains', label='Emitente/Credor')
+    emitente = django_filters.CharFilter(field_name='nota_fiscal__nome_emitente', lookup_expr='exact', label='Emitente/Credor')
     imposto = django_filters.ModelChoiceFilter(
         field_name='codigo',
         queryset=CodigosImposto.objects.filter(is_active=True),
@@ -189,3 +189,27 @@ class RetencaoIndividualFilter(django_filters.FilterSet):
         super().__init__(*args, **kwargs)
         for field in self.form.fields.values():
             field.widget.attrs.update({'class': 'form-control form-control-sm'})
+
+class PendenciaFilter(django_filters.FilterSet):
+    processo__id = django_filters.NumberFilter(label="ID do Processo")
+    # Permite buscar pelo nome do credor do processo atrelado à pendência
+    processo__credor__nome = django_filters.CharFilter(lookup_expr='icontains', label="Credor")
+
+    class Meta:
+        model = Pendencia
+        fields = ['status', 'tipo', 'processo__id', 'processo__credor__nome']
+
+class NotaFiscalFilter(django_filters.FilterSet):
+    numero_nota_fiscal = django_filters.CharFilter(lookup_expr='icontains', label='Nº da Nota')
+    # Permite buscar parte do nome do credor
+    nome_emitente__nome = django_filters.CharFilter(lookup_expr='icontains', label='Nome do Emitente')
+
+    # Filtro para o campo booleano (Atestada = Sim/Não/Qualquer)
+    atestada = django_filters.BooleanFilter(
+        label='Status de Liquidação (Atestada?)',
+        widget=django_filters.widgets.BooleanWidget()
+    )
+
+    class Meta:
+        model = NotaFiscal
+        fields = ['numero_nota_fiscal', 'nome_emitente__nome', 'atestada']

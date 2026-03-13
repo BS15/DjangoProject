@@ -17,26 +17,26 @@
     <div class="card shadow-sm border-0 mb-4 bg-white" id="bloco-upload">
         <div class="card-body py-4 text-center">
             <h5 class="text-primary mb-3">Selecione o PDF gerado pelo Internet Banking</h5>
-            <p class="text-muted small">O sistema dividirá o PDF por páginas e extrairá credores e valores automaticamente.</p>
-            
+            <p class="text-muted small">O sistema dividirá o PDF por páginas para que você possa vincular manualmente cada comprovante ao seu respectivo processo.</p>
+
             <form id="form-upload" class="d-flex justify-content-center gap-2">
                 {% csrf_token %}
                 <input type="file" id="pdf_banco" name="pdf_banco" class="form-control w-50" accept=".pdf" required>
                 <button type="submit" class="btn btn-primary fw-bold px-4" id="btn-processar">
-                    Processar Fatiamento
+                    Fatiar PDF
                 </button>
             </form>
             <div id="loading" class="mt-3 text-warning fw-bold" style="display: none;">
-                <div class="spinner-border spinner-border-sm"></div> Lendo e separando páginas...
+                <div class="spinner-border spinner-border-sm"></div> Separando páginas...
             </div>
         </div>
     </div>
 
     <div id="bloco-resultados" style="display: none;">
         <div class="d-flex justify-content-between align-items-end mb-3">
-            <h5 class="fw-bold m-0 text-secondary">Comprovantes Identificados</h5>
+            <h5 class="fw-bold m-0 text-secondary">Comprovantes Fatiados</h5>
             <button class="btn btn-success fw-bold shadow-sm" id="btn-salvar-tudo">
-                <i class="bi bi-check-all"></i> Confirmar Selecionados e Baixar Processos
+                <i class="bi bi-check-all"></i> Confirmar Vínculos e Baixar Processos
             </button>
         </div>
 
@@ -46,8 +46,8 @@
 </div>
 
 <script>
-    // Injeta os processos vindos do Django no Javascript
-    const processosPendentes = JSON.parse('{{ processos_json|escapejs }}');
+    // Injeta os processos vindos do Django no Javascript de forma segura
+    const processosPendentes = JSON.parse('{{ processos_json|escapejs }}' || '[]');
 
     // Elementos da tela
     const formUpload = document.getElementById('form-upload');
@@ -58,18 +58,18 @@
     const listaComprovantes = document.getElementById('lista-comprovantes');
     const btnSalvarTudo = document.getElementById('btn-salvar-tudo');
 
-    // Guarda os dados fatiados da API
     let comprovantesEmMemoria = [];
 
-    // PASSO 1: Enviar para fatiamento
+    // PASSO 1: Enviar para fatiamento MANUAL
     formUpload.addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
         const fileInput = document.getElementById('pdf_banco');
         if (!fileInput.files.length) return;
 
         let formData = new FormData();
         formData.append('pdf_banco', fileInput.files[0]);
+        formData.append('modo', 'manual');
         formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
 
         btnProcessar.disabled = true;
@@ -79,11 +79,18 @@
             method: 'POST',
             body: formData
         })
-        .then(res => res.json())
+        .then(async res => {
+            // Verifica se o servidor devolveu HTML de erro em vez de JSON
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error("Erro no Servidor Django. Verifique o Error Log no PythonAnywhere.");
+            }
+            return res.json();
+        })
         .then(data => {
             if (data.sucesso) {
-                comprovantesEmMemoria = data.comprovantes;
-                renderizarCards();
+                comprovantesEmMemoria = data.comprovantes || [];
+                renderizarCardsManuais();
                 blocoUpload.style.display = 'none';
                 blocoResultados.style.display = 'block';
             } else {
@@ -93,49 +100,45 @@
             }
         })
         .catch(err => {
-            alert('Erro de conexão com o servidor.');
+            console.error("LOG DE ERRO DETALHADO:", err);
+            // AGORA ELE VAI TE MOSTRAR EXATAMENTE O QUE QUEBROU
+            alert('Atenção: ' + err.message);
             btnProcessar.disabled = false;
             loading.style.display = 'none';
         });
     });
 
-    // PASSO 2: Desenhar os Cards na Tela
-    function renderizarCards() {
-        listaComprovantes.innerHTML = ''; // Limpa a lista
+    // PASSO 2: Desenhar os Cards na Tela (Com proteção contra erros de string)
+    function renderizarCardsManuais() {
+        listaComprovantes.innerHTML = '';
 
-        // Prepara as opções do Select HTML
-        let selectOptions = '<option value="">-- Não vincular / Ignorar --</option>';
+        let selectOptions = '<option value="">-- Selecione o Processo correspondente --</option>';
         processosPendentes.forEach(p => {
-            selectOptions += `<option value="${p.id}" data-valor="${p.valor_liquido}">Proc #${p.id} - ${p.credor.substring(0,25)} - R$ ${parseFloat(p.valor_liquido).toFixed(2)}</option>`;
+            // PROTEÇÃO: Garante que é tratado como string, mesmo que venha nulo ou como ID numérico
+            let nomeCredor = p.credor ? String(p.credor) : 'Credor não informado';
+            if (nomeCredor.length > 35) nomeCredor = nomeCredor.substring(0, 35) + '...';
+
+            let valorLiq = p.valor_liquido ? parseFloat(p.valor_liquido).toFixed(2) : '0.00';
+
+            selectOptions += `<option value="${p.id}" data-valor="${valorLiq}">Proc #${p.id} - ${nomeCredor} - R$ ${valorLiq}</option>`;
         });
 
         comprovantesEmMemoria.forEach((comp, index) => {
             const html = `
                 <div class="col-md-6">
-                    <div class="card shadow-sm h-100 border-secondary">
+                    <div class="card shadow-sm h-100 border-secondary fatia-card" data-path="${comp.temp_path}">
                         <div class="card-header bg-light d-flex justify-content-between align-items-center">
                             <strong>Página ${comp.pagina}</strong>
-                            <a href="${comp.url}" target="_blank" class="btn btn-sm btn-outline-danger py-0"><i class="bi bi-file-pdf"></i> Ver Arquivo</a>
+                            <a href="${comp.url}" target="_blank" class="btn btn-sm btn-outline-danger py-0">
+                                <i class="bi bi-file-pdf"></i> Abrir Comprovante
+                            </a>
                         </div>
                         <div class="card-body">
-                            <div class="row g-2 mb-3">
-                                <div class="col-8">
-                                    <label class="small text-muted fw-bold mb-0">Credor Extraído</label>
-                                    <input type="text" class="form-control form-control-sm text-primary" value="${comp.credor_extraido}">
-                                </div>
-                                <div class="col-4">
-                                    <label class="small text-muted fw-bold mb-0">Valor Extraído</label>
-                                    <input type="text" class="form-control form-control-sm text-success fw-bold valor-extraido" value="${comp.valor_extraido.toFixed(2)}" readonly>
-                                </div>
-                            </div>
-                            
-                            <div class="border-top pt-2">
-                                <label class="small text-muted fw-bold mb-1"><i class="bi bi-link"></i> Vincular a qual Processo?</label>
-                                <select class="form-select form-select-sm select-processo" data-index="${index}" data-temp="${comp.temp_path}">
-                                    ${selectOptions}
-                                </select>
-                                <div class="mt-2 small fw-bold text-end status-validacao"></div>
-                            </div>
+                            <label class="small text-muted fw-bold mb-1"><i class="bi bi-link"></i> Vincular a qual Processo?</label>
+                            <select class="form-select form-select-sm select-processo">
+                                ${selectOptions}
+                            </select>
+                            <div class="mt-2 small fw-bold text-end status-validacao"></div>
                         </div>
                     </div>
                 </div>
@@ -143,63 +146,56 @@
             listaComprovantes.innerHTML += html;
         });
 
-        ativarValidacaoDinamica();
+        ativarFeedbackDinamico();
     }
 
-    // PASSO 3: Validação de Valores (Javascript)
-    function ativarValidacaoDinamica() {
+    // PASSO 3: Feedback Visual
+    function ativarFeedbackDinamico() {
         document.querySelectorAll('.select-processo').forEach(select => {
             select.addEventListener('change', function() {
                 const card = this.closest('.card');
                 const divValidacao = card.querySelector('.status-validacao');
-                const valorExtraido = parseFloat(card.querySelector('.valor-extraido').value);
-                
+
                 if (this.value === "") {
                     divValidacao.innerHTML = "";
-                    card.classList.remove('border-success', 'border-danger');
+                    card.classList.remove('border-success', 'border-2');
                     card.classList.add('border-secondary');
-                    return;
-                }
-
-                // Pega o valor do processo selecionado escondido no atributo 'data-valor'
-                const opcaoSelecionada = this.options[this.selectedIndex];
-                const valorProcesso = parseFloat(opcaoSelecionada.getAttribute('data-valor'));
-
-                // Checa se o valor do comprovante bate exatemente com o valor líquido do processo
-                if (Math.abs(valorExtraido - valorProcesso) < 0.01) {
-                    divValidacao.innerHTML = "<span class='text-success'><i class='bi bi-check-circle-fill'></i> Valores compatíveis. Pronto para baixa.</span>";
-                    card.classList.remove('border-secondary', 'border-danger');
-                    card.classList.add('border-success', 'border-2');
                 } else {
-                    divValidacao.innerHTML = `<span class='text-danger'><i class='bi bi-exclamation-triangle-fill'></i> Cuidado: Valor do Processo (R$ ${valorProcesso.toFixed(2)}) diverge do PDF.</span>`;
-                    card.classList.remove('border-secondary', 'border-success');
-                    card.classList.add('border-danger', 'border-2');
+                    const opcaoSelecionada = this.options[this.selectedIndex];
+                    const valorProcesso = parseFloat(opcaoSelecionada.getAttribute('data-valor'));
+
+                    divValidacao.innerHTML = `<span class='text-success'><i class='bi bi-check-circle-fill'></i> Vinculado com Sucesso (R$ ${valorProcesso.toFixed(2)})</span>`;
+                    card.classList.remove('border-secondary');
+                    card.classList.add('border-success', 'border-2');
                 }
             });
         });
     }
 
-    // PASSO 4: Enviar Vínculos para Baixa
+    // PASSO 4: Enviar Vínculos
     btnSalvarTudo.addEventListener('click', function() {
         let vinculosParaSalvar = [];
 
-        document.querySelectorAll('.select-processo').forEach(select => {
-            if (select.value !== "") {
+        document.querySelectorAll('.fatia-card').forEach(card => {
+            const select = card.querySelector('.select-processo');
+            const path = card.getAttribute('data-path');
+
+            if (select && select.value !== "") {
                 vinculosParaSalvar.push({
                     processo_id: select.value,
-                    temp_path: select.getAttribute('data-temp')
+                    temp_path: path
                 });
             }
         });
 
         if (vinculosParaSalvar.length === 0) {
-            alert("Selecione o processo de destino para pelo menos um comprovante.");
+            alert("Selecione o processo de destino para pelo menos um comprovante antes de salvar.");
             return;
         }
 
-        if(!confirm(`Deseja baixar e alterar para PAGO os ${vinculosParaSalvar.length} processos selecionados?`)) return;
+        if(!confirm(`Deseja efetivar a baixa e alterar para PAGO os ${vinculosParaSalvar.length} processos selecionados?`)) return;
 
-        btnSalvarTudo.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Salvando...';
+        btnSalvarTudo.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Salvando e anexando...';
         btnSalvarTudo.disabled = true;
 
         fetch('{% url "api_vincular_comprovantes" %}', {
@@ -214,15 +210,16 @@
         .then(data => {
             if (data.sucesso) {
                 alert(data.mensagem);
-                window.location.href = '{% url "home_page" %}'; // Redireciona para atualizar as filas
+                window.location.href = '{% url "home_page" %}';
             } else {
-                alert('Erro ao vincular: ' + data.erro);
-                btnSalvarTudo.innerHTML = '<i class="bi bi-check-all"></i> Confirmar e Baixar';
+                alert('Erro ao vincular no banco de dados: ' + data.erro);
+                btnSalvarTudo.innerHTML = '<i class="bi bi-check-all"></i> Confirmar Vínculos e Baixar Processos';
                 btnSalvarTudo.disabled = false;
             }
         })
         .catch(err => {
-            alert('Erro de conexão ao tentar vincular.');
+            console.error(err);
+            alert('Erro de conexão ao tentar salvar os vínculos.');
             btnSalvarTudo.disabled = false;
         });
     });

@@ -1,6 +1,7 @@
+import io
 import os
 import json
-from datetime import date
+from datetime import date, datetime
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
@@ -8,12 +9,12 @@ from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Count, Q, F
-from .forms import ProcessoForm, DocumentoFormSet, NotaFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm
-from .utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes
-from .ai_utils import processar_pdf_comprovantes_ia
-from .models import Processo, NotaFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento
-from .filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, \
-    RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter
+from pypdf import PdfWriter
+from .forms import ProcessoForm, DocumentoFormSet, NotaFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet
+from .utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual
+from .ai_utils import extrair_dados_documento
+from .models import Processo, NotaFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia
+from .filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, NotaFiscalFilter
 
 
 def home_page(request):
@@ -28,106 +29,228 @@ def home_page(request):
     return render(request, 'home.html', context)
 
 
+# ==========================================
+# WIZARD FASE 1: CAPA E DOCUMENTOS
+# ==========================================
 def add_process_view(request):
     initial_data = {}
     siscac_temp_path = None
 
     if request.method == 'POST':
-        if 'btn_extract' in request.POST and request.FILES.get('siscac_file'):
+        btn_extract = 'btn_extract' in request.POST
+        trigger_a_empenhar = request.POST.get('trigger_a_empenhar') == 'on'
+
+        if btn_extract and request.FILES.get('siscac_file'):
             siscac_file = request.FILES['siscac_file']
             try:
                 extracted_data = extract_siscac_data(siscac_file)
                 initial_data = extracted_data
             except Exception as e:
                 print(f"Erro na extração: {e}")
+
             path = default_storage.save(f"temp/{siscac_file.name}", ContentFile(siscac_file.read()))
             request.session['temp_siscac_path'] = path
             request.session['temp_siscac_name'] = siscac_file.name
 
             processo_form = ProcessoForm(initial=initial_data, prefix='processo')
-            nota_fiscal_formset = NotaFiscalFormSet(prefix='nota_fiscal')
-            retencao_formset = RetencaoFormSet(request.POST, request.FILES, prefix='imposto')
             documento_formset = DocumentoFormSet(prefix='documento')
+            pendencia_formset = PendenciaFormSet(prefix='pendencia')
 
             return render(request, 'add_process.html', {
                 'processo_form': processo_form,
-                'nota_fiscal_formset': nota_fiscal_formset,
-                'retencao_formset': retencao_formset,
                 'documento_formset': documento_formset,
+                'pendencia_formset': pendencia_formset,
                 'extracted_msg': "Dados extraídos! O arquivo SISCAC será anexado automaticamente ao salvar."
             })
 
         else:
             processo_form = ProcessoForm(request.POST, prefix='processo')
+            documento_formset = DocumentoFormSet(request.POST, request.FILES, prefix='documento')
+            pendencia_formset = PendenciaFormSet(request.POST, prefix='pendencia')
 
-            if processo_form.is_valid():
+            if processo_form.is_valid() and documento_formset.is_valid() and pendencia_formset.is_valid():
                 try:
                     with transaction.atomic():
-                        processo = processo_form.save()
+                        processo = processo_form.save(commit=False)
+                        is_extra = processo_form.cleaned_data.get('extraorcamentario')
 
-                        nota_fiscal_formset = NotaFiscalFormSet(request.POST, instance=processo, prefix='nota_fiscal')
-                        documento_formset = DocumentoFormSet(request.POST, request.FILES, instance=processo,
-                                                             prefix='documento')
-
-                        if nota_fiscal_formset.is_valid() and documento_formset.is_valid():
-                            notas = nota_fiscal_formset.save()
-                            documento_formset.save()
-
-                            for index, nota in enumerate(notas):
-                                codigos = request.POST.getlist(f'imposto_{index}_code')
-                                rendimentos = request.POST.getlist(f'imposto_{index}_rendimento')
-                                valores = request.POST.getlist(f'imposto_{index}_value')
-
-                                for c, r, v in zip(codigos, rendimentos, valores):
-                                    if c and v:
-                                        RetencaoImposto.objects.create(
-                                            nota_fiscal=nota,
-                                            codigo_id=c,
-                                            rendimento_tributavel=float(r.replace(',', '.')) if r.strip() else None,
-                                            valor=float(v.replace(',', '.'))
-                                        )
-
-                            # --- STATUS ATUALIZADO ---
-                            status_padrao, created = StatusChoicesProcesso.objects.get_or_create(
-                                status_choice__iexact='A PAGAR - AGUARDANDO AUTORIZAÇÃO DE ORDENADORES DE DESPESA',
-                                defaults={'status_choice': 'A PAGAR - AGUARDANDO AUTORIZAÇÃO DE ORDENADORES DE DESPESA'}
+                        if trigger_a_empenhar:
+                            status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
+                                status_choice__iexact='A EMPENHAR', defaults={'status_choice': 'A EMPENHAR'}
                             )
+                            processo.status = status_obj
+                            processo.n_nota_empenho = None
+                            processo.data_empenho = None
 
-                            processo.status = status_padrao
-                            processo.save()
-                            return redirect('home_page')
+                        elif is_extra:
+                            status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
+                                status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
+                                defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
+                            )
+                            processo.status = status_obj
+                            processo.n_nota_empenho = None
+                            processo.data_empenho = None
+
                         else:
-                            print("❌ Erros nas Notas Fiscais:", nota_fiscal_formset.errors)
-                            print("❌ Erros nos Documentos:", documento_formset.errors)
-                            raise Exception("Formulários secundários inválidos.")
+                            status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
+                                status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
+                                defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
+                            )
+                            processo.status = status_obj
+
+                        processo.save()
+
+                        documento_formset.instance = processo
+                        pendencia_formset.instance = processo
+                        documento_formset.save()
+                        pendencia_formset.save()
+
+                        # --- REDIRECIONAMENTO INTELIGENTE ---
+                        # Verifica se algum dos documentos anexados é do tipo "Nota Fiscal"
+                        tem_nota_fiscal = processo.documentos.filter(tipo__tipo_de_documento__icontains='Nota').exists()
+
+                    if tem_nota_fiscal:
+                        messages.success(request, "Capa do processo salva! Por favor, detalhe a(s) Nota(s) Fiscal(is) encontrada(s).")
+                        return redirect('triagem_notas', pk=processo.id)
+                    else:
+                        messages.success(request, "Processo inserido com sucesso!")
+                        return redirect('home_page')
 
                 except Exception as e:
-                    print(f"🛑 Erro CRÍTICO ao salvar no banco: {e}")
-            else:
-                print("❌ O Processo não salvou porque faltam dados:", processo_form.errors)
+                    print(f"🛑 Erro CRÍTICO de Banco de Dados ao salvar: {e}", flush=True)
+                    messages.error(request, "Ocorreu um erro interno ao salvar no banco de dados.")
 
-            nota_fiscal_formset = NotaFiscalFormSet(request.POST, prefix='nota_fiscal')
-            documento_formset = DocumentoFormSet(request.POST, request.FILES, prefix='documento')
-            retencao_formset = RetencaoFormSet(prefix='imposto')
+            else:
+                messages.error(request, "Verifique os erros no formulário (Documentos ou Capa).")
 
             return render(request, 'add_process.html', {
                 'processo_form': processo_form,
-                'nota_fiscal_formset': nota_fiscal_formset,
                 'documento_formset': documento_formset,
-                'retencao_formset': retencao_formset
+                'pendencia_formset': pendencia_formset
             })
+
     else:
         processo_form = ProcessoForm(prefix='processo')
-        nota_fiscal_formset = NotaFiscalFormSet(prefix='nota_fiscal')
-        retencao_formset = RetencaoFormSet(prefix='imposto')
         documento_formset = DocumentoFormSet(prefix='documento')
+        pendencia_formset = PendenciaFormSet(prefix='pendencia')
 
         return render(request, 'add_process.html', {
             'processo_form': processo_form,
-            'nota_fiscal_formset': nota_fiscal_formset,
-            'retencao_formset': retencao_formset,
-            'documento_formset': documento_formset
+            'documento_formset': documento_formset,
+            'pendencia_formset': pendencia_formset
         })
+
+
+def editar_processo(request, pk):
+    processo = get_object_or_404(Processo, id=pk)
+
+    if request.method == 'POST':
+        processo_form = ProcessoForm(request.POST, instance=processo, prefix='processo')
+        documento_formset = DocumentoFormSet(request.POST, request.FILES, instance=processo, prefix='documento')
+        pendencia_formset = PendenciaFormSet(request.POST, instance=processo, prefix='pendencia')
+
+        if processo_form.is_valid() and documento_formset.is_valid() and pendencia_formset.is_valid():
+            try:
+                with transaction.atomic():
+                    processo = processo_form.save()
+                    documento_formset.save()
+                    pendencia_formset.save()
+
+                    tem_nota_fiscal = processo.documentos.filter(tipo__tipo_de_documento__icontains='Nota').exists()
+
+                if tem_nota_fiscal:
+                    messages.success(request, f'Processo #{processo.id} atualizado. Revise as Notas Fiscais, se necessário.')
+                    return redirect('triagem_notas', pk=processo.id)
+                else:
+                    messages.success(request, f'Processo #{processo.id} atualizado com sucesso!')
+                    return redirect('home_page')
+
+            except Exception as e:
+                print(f"🛑 Erro ao atualizar no banco: {e}")
+                messages.error(request, 'Erro interno ao salvar as alterações.')
+        else:
+            messages.error(request, 'Verifique os erros no formulário.')
+
+    else:
+        processo_form = ProcessoForm(instance=processo, prefix='processo')
+        documento_formset = DocumentoFormSet(instance=processo, prefix='documento')
+        pendencia_formset = PendenciaFormSet(instance=processo, prefix='pendencia')
+
+    context = {
+        'processo_form': processo_form,
+        'documento_formset': documento_formset,
+        'pendencia_formset': pendencia_formset,
+        'processo': processo
+    }
+
+    return render(request, 'editar_processo.html', context)
+
+
+# ==========================================
+# WIZARD FASE 2: TRIAGEM FISCAL (NOTAS E IMPOSTOS)
+# ==========================================
+def triagem_notas_view(request, pk):
+    processo = get_object_or_404(Processo, id=pk)
+
+    # Filtramos apenas os PDFs que representam notas fiscais para exibir na tela
+    docs_nota = processo.documentos.filter(tipo__tipo_de_documento__icontains='Nota').order_by('ordem')
+
+    if request.method == 'POST':
+        nota_fiscal_formset = NotaFiscalFormSet(request.POST, instance=processo, prefix='nota_fiscal')
+
+        if nota_fiscal_formset.is_valid():
+            try:
+                with transaction.atomic():
+                    notas = nota_fiscal_formset.save()
+
+                    # 1. Salva Retenções para cada Nota
+                    for index, nota in enumerate(nota_fiscal_formset.queryset):
+                        codigos = request.POST.getlist(f'imposto_{index}_code')
+                        valores = request.POST.getlist(f'imposto_{index}_value')
+                        rendimentos = request.POST.getlist(f'imposto_{index}_rendimento')
+                        nota.retencoes.all().delete()
+
+                        for c, r, v in zip(codigos, rendimentos, valores):
+                            if c and v:
+                                RetencaoImposto.objects.create(
+                                    nota_fiscal=nota,
+                                    codigo_id=c,
+                                    rendimento_tributavel=float(r.replace(',', '.')) if r.strip() else None,
+                                    valor=float(v.replace(',', '.'))
+                                )
+
+                    # 2. MÁGICA: Auto-Vinculação da Nota Fiscal com o Documento Base em PDF
+                    todas_notas = list(processo.notas_fiscais.all().order_by('id'))
+                    docs_lista = list(docs_nota)
+
+                    for idx, nf in enumerate(todas_notas):
+                        # Se a nota ainda não tiver o PDF vinculado, amarra de acordo com a ordem de inserção
+                        if not nf.documento_vinculado and idx < len(docs_lista):
+                            nf.documento_vinculado = docs_lista[idx]
+                            nf.save()
+
+                    messages.success(request, f"Triagem Fiscal do Processo #{processo.id} concluída com sucesso!")
+                    return redirect('home_page')
+
+            except Exception as e:
+                print(f"🛑 Erro na Triagem Fiscal: {e}")
+                messages.error(request, 'Erro interno ao salvar as notas fiscais e retenções.')
+        else:
+            messages.error(request, 'Verifique os erros no formulário de Notas Fiscais.')
+
+    else:
+        nota_fiscal_formset = NotaFiscalFormSet(instance=processo, prefix='nota_fiscal')
+
+    # Instância vazia do Form de Imposto para o Javascript poder clonar (como já fazíamos)
+    retencao_formset = RetencaoFormSet(prefix='imposto')
+
+    context = {
+        'processo': processo,
+        'docs_nota': docs_nota, # Mandamos os PDFs filtrados para o front-end!
+        'nota_fiscal_formset': nota_fiscal_formset,
+        'retencao_formset': retencao_formset,
+    }
+    return render(request, 'triagem_notas.html', context)
 
 
 def visualizar_pdf_processo(request, processo_id):
@@ -153,70 +276,11 @@ def visualizar_pdf_processo(request, processo_id):
         return HttpResponse("Erro interno ao mesclar os PDFs.", status=500)
 
 
-def editar_processo(request, pk):
-    processo = get_object_or_404(Processo, id=pk)
-
-    if request.method == 'POST':
-        processo_form = ProcessoForm(request.POST, instance=processo, prefix='processo')
-        nota_fiscal_formset = NotaFiscalFormSet(request.POST, instance=processo, prefix='nota_fiscal')
-        documento_formset = DocumentoFormSet(request.POST, request.FILES, instance=processo, prefix='documento')
-        retencao_formset = RetencaoFormSet(request.POST, prefix='imposto')
-
-        if processo_form.is_valid() and nota_fiscal_formset.is_valid() and documento_formset.is_valid():
-            try:
-                with transaction.atomic():
-                    processo = processo_form.save()
-                    notas = nota_fiscal_formset.save()
-                    documento_formset.save()
-
-                    for index, nota in enumerate(nota_fiscal_formset.queryset):
-                        codigos = request.POST.getlist(f'imposto_{index}_code')
-                        valores = request.POST.getlist(f'imposto_{index}_value')
-                        rendimentos = request.POST.getlist(f'imposto_{index}_rendimento')
-                        nota.retencoes.all().delete()
-
-                        for c, r, v in zip(codigos, rendimentos, valores):
-                            if c and v:
-                                RetencaoImposto.objects.create(
-                                    nota_fiscal=nota,
-                                    codigo_id=c,
-                                    rendimento_tributavel=float(r.replace(',', '.')) if r.strip() else None,
-                                    valor=float(v.replace(',', '.'))
-                                )
-
-                    messages.success(request, f'Processo #{processo.id} atualizado com sucesso!')
-                    return redirect('home_page')
-
-            except Exception as e:
-                print(f"🛑 Erro ao atualizar no banco: {e}")
-                messages.error(request, 'Erro interno ao salvar as alterações.')
-        else:
-            print("❌ Erros de validação:", processo_form.errors, nota_fiscal_formset.errors, documento_formset.errors)
-            messages.error(request, 'Verifique os erros no formulário.')
-
-    else:
-        processo_form = ProcessoForm(instance=processo, prefix='processo')
-        nota_fiscal_formset = NotaFiscalFormSet(instance=processo, prefix='nota_fiscal')
-        documento_formset = DocumentoFormSet(instance=processo, prefix='documento')
-        retencao_formset = RetencaoFormSet(prefix='imposto')
-
-    context = {
-        'processo_form': processo_form,
-        'nota_fiscal_formset': nota_fiscal_formset,
-        'documento_formset': documento_formset,
-        'retencao_formset': retencao_formset,
-        'processo': processo
-    }
-
-    return render(request, 'editar_processo.html', context)
-
-
 def contas_a_pagar(request):
-    # --- BUG DO FILTRO CORRIGIDO COM __in ---
     processos_pendentes = Processo.objects.filter(
         status__status_choice__in=[
-            'A PAGAR - AGUARDANDO AUTORIZAÇÃO DE ORDENADORES DE DESPESA',
-            'A PAGAR - AUTORIZADO POR ORDENADORES DE DESPESA'
+            'A PAGAR - PENDENTE AUTORIZAÇÃO',
+            'A PAGAR - AUTORIZADO'
         ]
     )
 
@@ -262,16 +326,12 @@ def add_pre_empenho_view(request):
             try:
                 with transaction.atomic():
                     processo = processo_form.save(commit=False)
-
-                    # --- STATUS ATUALIZADO (consertado campo nome para status_choice) ---
                     status_pre_empenho, created = StatusChoicesProcesso.objects.get_or_create(
                         status_choice__iexact='A EMPENHAR',
                         defaults={'status_choice': 'A EMPENHAR'}
                     )
-
                     processo.status = status_pre_empenho
                     processo.save()
-
                     messages.success(request, "Processo salvo com sucesso na fase de Pré-Empenho!")
                     return redirect('home_page')
 
@@ -291,7 +351,53 @@ def add_pre_empenho_view(request):
 
 
 def a_empenhar_view(request):
-    # --- STATUS ATUALIZADO ---
+    if request.method == 'POST':
+        processo_id = request.POST.get('processo_id')
+        n_nota_empenho = request.POST.get('n_nota_empenho')
+        data_empenho_str = request.POST.get('data_empenho')
+        siscac_file = request.FILES.get('siscac_file')
+
+        if processo_id and n_nota_empenho and data_empenho_str:
+            try:
+                with transaction.atomic():
+                    processo = Processo.objects.get(id=processo_id)
+                    processo.n_nota_empenho = n_nota_empenho
+                    processo.data_empenho = datetime.strptime(data_empenho_str, '%Y-%m-%d').date()
+
+                    if siscac_file:
+                        tipo_doc, _ = TiposDeDocumento.objects.get_or_create(
+                            tipo_de_documento__iexact='DOCUMENTOS ORÇAMENTÁRIOS',
+                            defaults={'tipo_de_documento': 'DOCUMENTOS ORÇAMENTÁRIOS'}
+                        )
+
+                        for doc in processo.documentos.all().order_by('-ordem'):
+                            doc.ordem += 1
+                            doc.save()
+
+                        DocumentoProcesso.objects.create(
+                            processo=processo,
+                            arquivo=siscac_file,
+                            tipo=tipo_doc,
+                            ordem=1
+                        )
+
+                    status_aguardando, _ = StatusChoicesProcesso.objects.get_or_create(
+                        status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
+                        defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
+                    )
+                    processo.status = status_aguardando
+                    processo.save()
+
+                messages.success(request, f"Empenho registrado com sucesso! Processo #{processo.id} avançou para Autorização.")
+            except Processo.DoesNotExist:
+                messages.error(request, "Processo não encontrado.")
+            except Exception as e:
+                messages.error(request, f"Erro inesperado ao salvar empenho: {str(e)}")
+        else:
+            messages.error(request, "Por favor, preencha o número e a data da nota de empenho para avançar.")
+
+        return redirect('a_empenhar')
+
     processos_pendentes = Processo.objects.filter(
         status__status_choice__iexact='A EMPENHAR'
     ).order_by('data_vencimento', '-id')
@@ -459,16 +565,16 @@ def agrupar_verbas_view(request, tipo_verba):
         return redirect(url_retorno)
 
     total = sum(item.valor_total for item in itens if item.valor_total)
-    credor_nome = itens.first().beneficiario.nome
 
-    # --- STATUS ATUALIZADO PARA AGRUPAMENTOS ---
+    credor_obj = itens.first().beneficiario
+
     status_padrao, _ = StatusChoicesProcesso.objects.get_or_create(
-        status_choice__iexact='A PAGAR - AGUARDANDO AUTORIZAÇÃO DE ORDENADORES DE DESPESA',
-        defaults={'status_choice': 'A PAGAR - AGUARDANDO AUTORIZAÇÃO DE ORDENADORES DE DESPESA'}
+        status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
+        defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
     )
 
     novo_processo = Processo.objects.create(
-        credor=credor_nome,
+        credor=credor_obj,
         valor_bruto=total,
         valor_liquido=total,
         detalhamento=f"Agrupamento de {tipo_verba.capitalize()}s",
@@ -519,19 +625,24 @@ def agrupar_impostos_view(request):
         messages.warning(request, "Os itens selecionados não possuem valores válidos.")
         return redirect('painel_impostos')
 
-    # --- STATUS ATUALIZADO PARA AGRUPAMENTOS ---
     status_padrao, _ = StatusChoicesProcesso.objects.get_or_create(
-        status_choice__iexact='A PAGAR - AGUARDANDO AUTORIZAÇÃO DE ORDENADORES DE DESPESA',
-        defaults={'status_choice': 'A PAGAR - AGUARDANDO AUTORIZAÇÃO DE ORDENADORES DE DESPESA'}
+        status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
+        defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
+    )
+
+    credor_orgao, _ = Credor.objects.get_or_create(
+        nome="Órgão Arrecadador (A Definir)",
+        defaults={'nome': "Órgão Arrecadador (A Definir)"}
     )
 
     novo_processo = Processo.objects.create(
-        credor="Órgão Arrecadador (A Definir)",
+        credor=credor_orgao,
         valor_bruto=total_impostos,
         valor_liquido=total_impostos,
         detalhamento="Pagamento Agrupado de Impostos Retidos",
         observacao="Gerado automaticamente.",
-        status=status_padrao
+        status=status_padrao,
+        tipo_pagamento="IMPOSTOS"
     )
 
     messages.success(request, f"Processo #{novo_processo.id} para recolhimento gerado com sucesso!")
@@ -567,7 +678,7 @@ def painel_impostos(request):
 
 def painel_comprovantes_view(request):
     processos_autorizados = Processo.objects.filter(
-        status__status_choice__iexact='A PAGAR - AUTORIZADO POR ORDENADORES DE DESPESA'
+        status__status_choice__iexact='A PAGAR - AUTORIZADO'
     ).values('id', 'credor', 'valor_liquido', 'n_nota_empenho')
 
     context = {
@@ -578,9 +689,15 @@ def painel_comprovantes_view(request):
 
 def api_fatiar_comprovantes(request):
     if request.method == 'POST' and request.FILES.get('pdf_banco'):
+        modo = request.POST.get('modo', 'manual')
+
         try:
-            resultados = processar_pdf_comprovantes_ia(request.FILES['pdf_banco'])
-            return JsonResponse({'sucesso': True, 'comprovantes': resultados})
+            if modo == 'ia':
+                resultados = processar_pdf_comprovantes_ia(request.FILES['pdf_banco'])
+            else:
+                resultados = fatiar_pdf_manual(request.FILES['pdf_banco'])
+
+            return JsonResponse({'sucesso': True, 'comprovantes': resultados, 'modo': modo})
         except Exception as e:
             return JsonResponse({'sucesso': False, 'erro': str(e)})
     return JsonResponse({'sucesso': False, 'erro': 'Arquivo não enviado.'})
@@ -593,7 +710,6 @@ def api_vincular_comprovantes(request):
             dados = json.loads(request.body)
             vinculos = dados.get('vinculos', [])
 
-            # --- STATUS ATUALIZADO ---
             status_pago, _ = StatusChoicesProcesso.objects.get_or_create(
                 status_choice__iexact='PAGO - EM CONFERÊNCIA',
                 defaults={'status_choice': 'PAGO - EM CONFERÊNCIA'}
@@ -616,7 +732,7 @@ def api_vincular_comprovantes(request):
 
                 processo = Processo.objects.get(id=processo_id)
 
-                if not processo.status or processo.status.status_choice.upper() != 'A PAGAR - AUTORIZADO POR ORDENADORES DE DESPESA':
+                if not processo.status or processo.status.status_choice.upper() != 'A PAGAR - AUTORIZADO':
                     processos_barrados += 1
                     continue
 
@@ -646,54 +762,9 @@ def api_vincular_comprovantes(request):
     return JsonResponse({'sucesso': False, 'erro': 'Método inválido.'})
 
 
-def painel_conferencia_view(request):
-    # --- STATUS ATUALIZADO ---
-    processos_pagos = Processo.objects.filter(
-        status__status_choice__iexact='PAGO - EM CONFERÊNCIA'
-    )
-
-    processos_aptos = processos_pagos.annotate(
-        total_pendencias=Count('pendencias', distinct=True),
-        pendencias_resolvidas=Count(
-            'pendencias',
-            filter=Q(pendencias__status__status_choice__iexact='RESOLVIDO'),
-            distinct=True
-        ),
-
-        total_retencoes=Count('notas_fiscais__retencoes', distinct=True),
-        retencoes_pagas=Count(
-            'notas_fiscais__retencoes',
-            filter=Q(notas_fiscais__retencoes__status__status_choice__iexact='PAGO'),
-            distinct=True
-        )
-    ).filter(
-        total_pendencias=F('pendencias_resolvidas'),
-        total_retencoes=F('retencoes_pagas')
-    ).order_by('data_pagamento')
-
-    context = {
-        'processos': processos_aptos
-    }
-    return render(request, 'conferencia.html', context)
-
-
-def aprovar_conferencia_view(request, pk):
-    if request.method == 'POST':
-        processo = get_object_or_404(Processo, id=pk)
-
-        # --- STATUS ATUALIZADO ---
-        status_contabilizado, _ = StatusChoicesProcesso.objects.get_or_create(
-            status_choice__iexact='CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL',
-            defaults={'status_choice': 'CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL'}
-        )
-
-        processo.status = status_contabilizado
-        processo.save()
-
-        messages.success(request, f'Processo #{processo.id} aprovado na conferência e enviado para a contabilidade!')
-
-    return redirect('painel_conferencia')
-
+# ==========================================
+# ETAPAS DE CONFERÊNCIA E TRAMITAÇÃO
+# ==========================================
 
 def enviar_para_autorizacao(request):
     if request.method == 'POST':
@@ -701,8 +772,8 @@ def enviar_para_autorizacao(request):
 
         if selecionados:
             status_aguardando, _ = StatusChoicesProcesso.objects.get_or_create(
-                status_choice__iexact='A PAGAR - AGUARDANDO AUTORIZAÇÃO DE ORDENADORES DE DESPESA',
-                defaults={'status_choice': 'A PAGAR - AGUARDANDO AUTORIZAÇÃO DE ORDENADORES DE DESPESA'}
+                status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
+                defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
             )
 
             Processo.objects.filter(id__in=selecionados).update(status=status_aguardando)
@@ -715,10 +786,14 @@ def enviar_para_autorizacao(request):
 
 def painel_autorizacao_view(request):
     processos = Processo.objects.filter(
-        status__status_choice__iexact='A PAGAR - AGUARDANDO AUTORIZAÇÃO DE ORDENADORES DE DESPESA'
+        status__status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO'
     ).order_by('data_pagamento', 'id')
 
-    return render(request, 'autorizacao.html', {'processos': processos})
+    context = {
+        'processos': processos,
+        'pendencia_form': PendenciaForm()
+    }
+    return render(request, 'autorizacao.html', context)
 
 
 def autorizar_pagamento(request):
@@ -727,8 +802,8 @@ def autorizar_pagamento(request):
 
         if selecionados:
             status_autorizado, _ = StatusChoicesProcesso.objects.get_or_create(
-                status_choice__iexact='A PAGAR - AUTORIZADO POR ORDENADORES DE DESPESA',
-                defaults={'status_choice': 'A PAGAR - AUTORIZADO POR ORDENADORES DE DESPESA'}
+                status_choice__iexact='A PAGAR - AUTORIZADO',
+                defaults={'status_choice': 'A PAGAR - AUTORIZADO'}
             )
 
             Processo.objects.filter(id__in=selecionados).update(status=status_autorizado)
@@ -738,8 +813,66 @@ def autorizar_pagamento(request):
 
     return redirect('painel_autorizacao')
 
+
+def recusar_autorizacao_view(request, pk):
+    processo = get_object_or_404(Processo, id=pk)
+
+    if request.method == 'POST':
+        form = PendenciaForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                pendencia = form.save(commit=False)
+                pendencia.processo = processo
+
+                status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
+                    status_choice__iexact='A RESOLVER', defaults={'status_choice': 'A RESOLVER'}
+                )
+                pendencia.status = status_pendencia
+                pendencia.save()
+
+                status_devolvido, _ = StatusChoicesProcesso.objects.get_or_create(
+                    status_choice__iexact='AGUARDANDO LIQUIDAÇÃO / ATESTE',
+                    defaults={'status_choice': 'AGUARDANDO LIQUIDAÇÃO / ATESTE'}
+                )
+                processo.status = status_devolvido
+                processo.save()
+
+            messages.error(request, f'Processo #{processo.id} não autorizado e devolvido com pendência!')
+        else:
+            messages.warning(request, 'Erro ao registrar recusa. Verifique os dados da pendência.')
+
+    return redirect('painel_autorizacao')
+
+
+def painel_conferencia_view(request):
+    processos_pagos = Processo.objects.filter(status__status_choice__iexact='PAGO - EM CONFERÊNCIA')
+
+    processos_aptos = processos_pagos.annotate(
+        total_pendencias=Count('pendencias', distinct=True),
+        pendencias_resolvidas=Count(
+            'pendencias',
+            filter=Q(pendencias__status__status_choice__iexact='RESOLVIDO'),
+            distinct=True
+        ),
+        total_retencoes=Count('notas_fiscais__retencoes', distinct=True),
+        retencoes_pagas=Count(
+            'notas_fiscais__retencoes',
+            filter=Q(notas_fiscais__retencoes__status__status_choice__iexact='PAGO'),
+            distinct=True
+        )
+    ).filter(
+        total_pendencias=F('pendencias_resolvidas'),
+        total_retencoes=F('retencoes_pagas')
+    ).order_by('data_pagamento')
+
+    context = {
+        'processos': processos_aptos,
+        'pendencia_form': PendenciaForm()
+    }
+    return render(request, 'conferencia.html', context)
+
+
 def aprovar_conferencia_view(request, pk):
-    """Muda o status do processo após a conferência e o envia para a CONTABILIZAÇÃO"""
     if request.method == 'POST':
         processo = get_object_or_404(Processo, id=pk)
 
@@ -755,13 +888,45 @@ def aprovar_conferencia_view(request, pk):
     return redirect('painel_conferencia')
 
 
-# ==========================================
-# RETA FINAL DO PROCESSO
-# ==========================================
+def recusar_conferencia_view(request, pk):
+    processo = get_object_or_404(Processo, id=pk)
+
+    if request.method == 'POST':
+        form = PendenciaForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                pendencia = form.save(commit=False)
+                pendencia.processo = processo
+
+                status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
+                    status_choice__iexact='A RESOLVER', defaults={'status_choice': 'A RESOLVER'}
+                )
+                pendencia.status = status_pendencia
+                pendencia.save()
+
+                status_devolvido, _ = StatusChoicesProcesso.objects.get_or_create(
+                    status_choice__iexact='A PAGAR - AUTORIZADO',
+                    defaults={'status_choice': 'A PAGAR - AUTORIZADO'}
+                )
+                processo.status = status_devolvido
+                processo.save()
+
+            messages.error(request, f'Processo #{processo.id} recusado e devolvido com pendência!')
+        else:
+            messages.warning(request, 'Erro ao registrar recusa. Verifique os dados da pendência.')
+
+    return redirect('painel_conferencia')
+
 
 def painel_contabilizacao_view(request):
     processos = Processo.objects.filter(status__status_choice__iexact='PAGO - A CONTABILIZAR').order_by('data_pagamento')
-    return render(request, 'contabilizacao.html', {'processos': processos})
+    context = {
+        'processos': processos,
+        'pendencia_form': PendenciaForm()
+    }
+
+    return render(request, 'contabilizacao.html', context)
+
 
 def aprovar_contabilizacao_view(request, pk):
     if request.method == 'POST':
@@ -775,9 +940,45 @@ def aprovar_contabilizacao_view(request, pk):
         messages.success(request, f'Processo #{processo.id} contabilizado e enviado ao Conselho Fiscal!')
     return redirect('painel_contabilizacao')
 
+
+def recusar_contabilizacao_view(request, pk):
+    processo = get_object_or_404(Processo, id=pk)
+
+    if request.method == 'POST':
+        form = PendenciaForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                pendencia = form.save(commit=False)
+                pendencia.processo = processo
+
+                status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
+                    status_choice__iexact='A RESOLVER', defaults={'status_choice': 'A RESOLVER'}
+                )
+                pendencia.status = status_pendencia
+                pendencia.save()
+
+                status_devolvido, _ = StatusChoicesProcesso.objects.get_or_create(
+                    status_choice__iexact='PAGO - EM CONFERÊNCIA',
+                    defaults={'status_choice': 'PAGO - EM CONFERÊNCIA'}
+                )
+                processo.status = status_devolvido
+                processo.save()
+
+            messages.error(request, f'Processo #{processo.id} recusado pela Contabilidade e devolvido para a Conferência!')
+        else:
+            messages.warning(request, 'Erro ao registrar recusa. Verifique os dados da pendência.')
+
+    return redirect('painel_contabilizacao')
+
+
 def painel_conselho_view(request):
     processos = Processo.objects.filter(status__status_choice__iexact='CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL').order_by('data_pagamento')
-    return render(request, 'conselho.html', {'processos': processos})
+    context = {
+        'processos': processos,
+        'pendencia_form': PendenciaForm()
+    }
+    return render(request, 'conselho.html', context)
+
 
 def aprovar_conselho_view(request, pk):
     if request.method == 'POST':
@@ -791,42 +992,190 @@ def aprovar_conselho_view(request, pk):
         messages.success(request, f'Processo #{processo.id} aprovado pelo Conselho e liberado para arquivamento!')
     return redirect('painel_conselho')
 
+
+def recusar_conselho_view(request, pk):
+    processo = get_object_or_404(Processo, id=pk)
+
+    if request.method == 'POST':
+        form = PendenciaForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                pendencia = form.save(commit=False)
+                pendencia.processo = processo
+
+                status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
+                    status_choice__iexact='A RESOLVER', defaults={'status_choice': 'A RESOLVER'}
+                )
+                pendencia.status = status_pendencia
+                pendencia.save()
+
+                status_devolvido, _ = StatusChoicesProcesso.objects.get_or_create(
+                    status_choice__iexact='PAGO - A CONTABILIZAR',
+                    defaults={'status_choice': 'PAGO - A CONTABILIZAR'}
+                )
+                processo.status = status_devolvido
+                processo.save()
+
+            messages.error(request, f'Processo #{processo.id} recusado pelo Conselho Fiscal e devolvido para a Contabilidade!')
+        else:
+            messages.warning(request, 'Erro ao registrar recusa. Verifique os dados da pendência.')
+
+    return redirect('painel_conselho')
+
+
 def painel_arquivamento_view(request):
-    processos = Processo.objects.filter(status__status_choice__iexact='APROVADO POR CONSELHO FISCAL - PARA ARQUIVAMENTO').order_by('data_pagamento')
-    return render(request, 'arquivamento.html', {'processos': processos})
+    processos_pendentes = Processo.objects.filter(
+        status__status_choice__iexact='APROVADO POR CONSELHO FISCAL - PARA ARQUIVAMENTO'
+    ).order_by('data_pagamento')
+
+    processos_arquivados = Processo.objects.filter(
+        status__status_choice__iexact='ARQUIVADO'
+    ).order_by('-id')
+
+    return render(request, 'arquivamento.html', {
+        'processos_pendentes': processos_pendentes,
+        'processos_arquivados': processos_arquivados
+    })
+
 
 def arquivar_processo_view(request, pk):
     if request.method == 'POST':
         processo = get_object_or_404(Processo, id=pk)
+
+        nome_usuario = request.user.get_full_name() or request.user.username if request.user.is_authenticated else "Conselheiro Fiscal"
+        termo_buffer = gerar_termo_auditoria(processo, nome_usuario)
+
+        merger = PdfWriter()
+        merger.append(termo_buffer)
+
+        documentos = processo.documentos.all().order_by('ordem')
+        for doc in documentos:
+            if doc.arquivo and default_storage.exists(doc.arquivo.path):
+                if doc.arquivo.name.lower().endswith('.pdf'):
+                    merger.append(doc.arquivo.path)
+
+        merged_buffer = io.BytesIO()
+        merger.write(merged_buffer)
+        merged_buffer.seek(0)
+
+        nome_arquivo = f"Processo_{processo.id}_Consolidado.pdf"
+        processo.arquivo_final.save(nome_arquivo, ContentFile(merged_buffer.read()))
+
         status_arquivado, _ = StatusChoicesProcesso.objects.get_or_create(
             status_choice__iexact='ARQUIVADO',
             defaults={'status_choice': 'ARQUIVADO'}
         )
         processo.status = status_arquivado
         processo.save()
-        messages.success(request, f'Processo #{processo.id} devidamente ARQUIVADO. Ciclo encerrado!')
+
+        messages.success(request, f'Processo #{processo.id} assinado, consolidado em PDF único e ARQUIVADO definitivamente!')
+
     return redirect('painel_arquivamento')
 
+
+def api_extrair_nota(request):
+    if request.method == 'POST' and request.FILES.get('arquivo'):
+        arquivo = request.FILES['arquivo']
+        dados = extrair_dados_documento(arquivo, NotaFiscal)
+
+        if dados:
+            return JsonResponse({'status': 'success', 'dados': dados})
+
+    return JsonResponse({'status': 'error', 'message': 'Falha na extração'}, status=400)
+
+
+def api_extracao_universal(request):
+    if request.method == 'POST' and request.FILES.get('arquivo'):
+        arquivo = request.FILES['arquivo']
+        tipo = request.POST.get('tipo')  # Pega o 'value' do <select> do frontend (empenho, notafiscal, boleto, siscac)
+
+        try:
+            # 1. Tratamento Local (SISCAC)
+            # Como o SISCAC provavelmente usa o seu parser nativo (Regex/PyPDF), mantemos a função antiga
+            if tipo == 'siscac':
+                dados = extract_siscac_data(arquivo)
+
+            # 2. Tratamento Inteligente (IA - Gemini)
+            # Para os demais tipos, o nosso novo ai_utils.py assume o controlo e escolhe o Prompt certo
+            else:
+                dados = extrair_dados_documento(arquivo, tipo)
+
+            # 3. Resposta ao Frontend
+            if dados:
+                return JsonResponse({'status': 'success', 'dados': dados})
+            else:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'A IA não conseguiu estruturar os dados deste documento. Tente novamente.'
+                }, status=400)
+
+        except Exception as e:
+            # Imprime o erro no console do PythonAnywhere para facilitar o debug se a API do Gemini falhar
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'status': 'error', 'message': f"Erro interno: {str(e)}"}, status=500)
+
+    return JsonResponse({'status': 'error', 'message': 'Requisição inválida ou arquivo ausente'}, status=400)
+
+
+def api_dados_credor(request, credor_id):
+    try:
+        # select_related otimiza a busca para já trazer a conta junto com o credor
+        credor = Credor.objects.select_related('conta').get(id=credor_id)
+
+        dados = {
+            'sucesso': True,
+            'cpf_cnpj': credor.cpf_cnpj,
+            'pix': credor.chave_pix,
+        }
+
+        # Se o credor tiver uma conta, enviamos o ID para fazer o Autofill no HTML!
+        if credor.conta:
+            dados.update({
+                'conta_id': credor.conta.id,
+                'banco': credor.conta.banco,
+                'agencia': credor.conta.agencia,
+                'conta': credor.conta.conta
+            })
+
+        return JsonResponse(dados)
+    except Credor.DoesNotExist:
+        return JsonResponse({'sucesso': False, 'erro': 'Credor não encontrado'})
+
+
+def api_tipos_documento_por_pagamento(request):
+    tipo_pagamento_id = request.GET.get('tipo_pagamento_id')
+
+    if not tipo_pagamento_id:
+        return JsonResponse({'sucesso': False, 'erro': 'ID não fornecido'})
+
+    try:
+        documentos_validos = TiposDeDocumento.objects.filter(
+            tipo_de_pagamento_id=tipo_pagamento_id,
+            is_active=True
+        ).values('id', 'tipo_de_documento').order_by('tipo_de_documento')
+
+        lista_docs = list(documentos_validos)
+        return JsonResponse({'sucesso': True, 'tipos': lista_docs})
+    except Exception as e:
+        return JsonResponse({'sucesso': False, 'erro': str(e)})
+
+
 def painel_suprimentos_view(request):
-    """Lista todos os suprimentos ativos e fechados."""
     suprimentos = SuprimentoDeFundos.objects.all().order_by('-id')
     return render(request, 'suprimentos_list.html', {'suprimentos': suprimentos})
 
 
 def gerenciar_suprimento_view(request, pk):
-    """A tela principal onde o suprido lança as despesas ao longo do mês."""
     suprimento = get_object_or_404(SuprimentoDeFundos, id=pk)
     despesas = suprimento.despesas.all().order_by('data', 'id')
 
     if request.method == 'POST':
-        # Captura os textos
         data = request.POST.get('data')
         estabelecimento = request.POST.get('estabelecimento')
         detalhamento = request.POST.get('detalhamento')
         nota_fiscal = request.POST.get('nota_fiscal')
         valor = request.POST.get('valor').replace(',', '.')
-
-        # Captura o arquivo único
         arquivo_pdf = request.FILES.get('arquivo')
 
         if data and valor and detalhamento:
@@ -837,7 +1186,7 @@ def gerenciar_suprimento_view(request, pk):
                 detalhamento=detalhamento,
                 nota_fiscal=nota_fiscal,
                 valor=float(valor),
-                arquivo=arquivo_pdf  # Salva o PDF atrelado à despesa
+                arquivo=arquivo_pdf
             )
             messages.success(request, 'Despesa e documento anexados com sucesso!')
             return redirect('gerenciar_suprimento', pk=suprimento.id)
@@ -848,28 +1197,24 @@ def gerenciar_suprimento_view(request, pk):
     }
     return render(request, 'gerenciar_suprimento.html', context)
 
+
 def fechar_suprimento_view(request, pk):
-    """Encerra a prestação de contas e manda para a Conferência."""
     if request.method == 'POST':
         suprimento = get_object_or_404(SuprimentoDeFundos, id=pk)
         processo = suprimento.processo
 
-        # Pega o status de conferência que criamos no passo anterior
         status_conferencia, _ = StatusChoicesProcesso.objects.get_or_create(
             status_choice__iexact='PAGO - EM CONFERÊNCIA',
             defaults={'status_choice': 'PAGO - EM CONFERÊNCIA'}
         )
 
-        # Se houver um processo atrelado, joga ele para a fila da Auditoria
         if processo:
             processo.status = status_conferencia
-            # Atualiza o valor final do processo para refletir apenas o que foi gasto (se for a regra do seu órgão)
-            # processo.valor_liquido = suprimento.valor_gasto
             processo.save()
 
-        messages.success(request,
-                         f'Prestação de contas do suprimento #{suprimento.id} encerrada e enviada para Conferência!')
+        messages.success(request, f'Prestação de contas do suprimento #{suprimento.id} encerrada e enviada para Conferência!')
         return redirect('painel_suprimentos')
+
 
 def add_suprimento_view(request):
     if request.method == 'POST':
@@ -879,7 +1224,6 @@ def add_suprimento_view(request):
             try:
                 suprimento = form.save()
                 messages.success(request, 'Suprimento de Fundos cadastrado com sucesso!')
-                # Redireciona de volta para a lista após criar
                 return redirect('painel_suprimentos')
             except Exception as e:
                 messages.error(request, f'Erro ao salvar: {e}')
@@ -889,3 +1233,185 @@ def add_suprimento_view(request):
         form = SuprimentoForm()
 
     return render(request, 'add_suprimento.html', {'form': form})
+
+def painel_pendencias_view(request):
+    queryset_base = Pendencia.objects.select_related(
+        'processo', 'status', 'tipo', 'processo__credor'
+    ).all().order_by('-id')
+
+    meu_filtro = PendenciaFilter(request.GET, queryset=queryset_base)
+
+    context = {
+        'meu_filtro': meu_filtro,
+        'pendencias': meu_filtro.qs,
+    }
+    return render(request, 'painel_pendencias.html', context)
+
+def painel_liquidacoes_view(request):
+    # select_related otimiza a busca no banco, já puxando o processo e o emitente
+    queryset_base = NotaFiscal.objects.select_related(
+        'processo', 'nome_emitente', 'fiscal_contrato'
+    ).all().order_by('-id')
+
+    meu_filtro = NotaFiscalFilter(request.GET, queryset=queryset_base)
+
+    context = {
+        'meu_filtro': meu_filtro,
+        'notas': meu_filtro.qs,
+    }
+    return render(request, 'painel_liquidacoes.html', context)
+
+def alternar_ateste_nota(request, pk):
+    """Permite atestar ou remover o ateste de uma nota diretamente pelo painel"""
+    if request.method == 'POST':
+        nota = get_object_or_404(NotaFiscal, id=pk)
+
+        # Inverte o status atual (Se True vira False, se False vira True)
+        nota.atestada = not nota.atestada
+        nota.save()
+
+        if nota.atestada:
+            messages.success(request, f'Nota Fiscal #{nota.numero_nota_fiscal} ATESTADA com sucesso!')
+        else:
+            messages.warning(request, f'Ateste da Nota Fiscal #{nota.numero_nota_fiscal} foi revogado.')
+
+    return redirect('painel_liquidacoes')
+
+def triagem_notas_view(request, pk):
+    processo = get_object_or_404(Processo, id=pk)
+
+    # Filtramos apenas os PDFs que representam notas fiscais para exibir na tela
+    docs_nota = processo.documentos.filter(tipo__tipo_de_documento__icontains='Nota').order_by('ordem')
+
+    if request.method == 'POST':
+        nota_fiscal_formset = NotaFiscalFormSet(request.POST, instance=processo, prefix='nota_fiscal')
+
+        if nota_fiscal_formset.is_valid():
+            try:
+                with transaction.atomic():
+                    # Salva as notas fiscais primeiro para garantir que todas têm um ID no banco
+                    notas_salvas = nota_fiscal_formset.save()
+
+                    # 1. Salva Retenções usando os formulários como base para o Índice exato do Front-end
+                    for index, form in enumerate(nota_fiscal_formset.forms):
+                        # Pula os formulários que o utilizador marcou para exclusão na lixeira
+                        if form in nota_fiscal_formset.deleted_objects:
+                            continue
+
+                        nota = form.instance
+
+                        if not nota.pk:
+                            continue # Evita crash se a nota falhou em salvar
+
+                        codigos = request.POST.getlist(f'imposto_{index}_code')
+                        valores = request.POST.getlist(f'imposto_{index}_value')
+                        rendimentos = request.POST.getlist(f'imposto_{index}_rendimento')
+
+                        nota.retencoes.all().delete()
+
+                        for c, r, v in zip(codigos, rendimentos, valores):
+                            if c and v:
+                                RetencaoImposto.objects.create(
+                                    nota_fiscal=nota,
+                                    codigo_id=c,
+                                    # Forçamos a conversão para string antes do replace para evitar TypeErrors
+                                    rendimento_tributavel=float(str(r).replace(',', '.')) if str(r).strip() else None,
+                                    valor=float(str(v).replace(',', '.'))
+                                )
+
+                    # 2. MÁGICA: Auto-Vinculação da Nota Fiscal com o Documento Base em PDF
+                    todas_notas = list(processo.notas_fiscais.all().order_by('id'))
+                    docs_lista = list(docs_nota)
+
+                    for idx, nf in enumerate(todas_notas):
+                        if idx < len(docs_lista):
+                            # Proteção para evitar o IntegrityError (OneToOneField)
+                            if nf.documento_vinculado_id != docs_lista[idx].id:
+                                nf.documento_vinculado = docs_lista[idx]
+                                nf.save()
+
+                    messages.success(request, f"Triagem Fiscal do Processo #{processo.id} concluída com sucesso!")
+                    return redirect('home_page')
+
+            except Exception as e:
+                print(f"🛑 Erro na Triagem Fiscal: {str(e)}")
+                # AGORA O DJANGO VAI MOSTRAR O ERRO REAL NA CAIXA VERMELHA DA TELA
+                messages.error(request, f'Erro interno ao salvar: {str(e)}')
+        else:
+            messages.error(request, 'Verifique os erros no formulário de Notas Fiscais.')
+
+    else:
+        nota_fiscal_formset = NotaFiscalFormSet(instance=processo, prefix='nota_fiscal')
+
+    retencao_formset = RetencaoFormSet(prefix='imposto')
+
+    context = {
+        'processo': processo,
+        'docs_nota': docs_nota,
+        'nota_fiscal_formset': nota_fiscal_formset,
+        'retencao_formset': retencao_formset,
+    }
+    return render(request, 'triagem_notas.html', context)
+
+# Adicione no final do views.py
+def api_detalhes_pagamento(request):
+    if request.method == 'POST':
+        try:
+            dados = json.loads(request.body)
+            processo_ids = dados.get('ids', [])
+
+            # Puxa os processos com os relacionamentos para otimizar a query
+            processos = Processo.objects.filter(id__in=processo_ids).select_related('forma_pagamento', 'conta', 'credor')
+
+            resultados = []
+            for p in processos:
+                forma = p.forma_pagamento.forma_de_pagamento.lower() if p.forma_pagamento else ''
+
+                detalhe_tipo = "Não Especificado"
+                detalhe_valor = "Verifique o processo"
+
+                # LÓGICA DE EXIBIÇÃO BASEADA NA FORMA DE PAGAMENTO
+                if 'boleto' in forma or 'gerenciador' in forma:
+                    detalhe_tipo = "Código de Barras"
+                    detalhe_valor = p.codigo_barras if p.codigo_barras else "Não preenchido"
+
+                elif 'pix' in forma:
+                    detalhe_tipo = "Chave PIX"
+                    detalhe_valor = p.credor.chave_pix if (p.credor and p.credor.chave_pix) else "Credor sem PIX cadastrado"
+
+                elif 'transfer' in forma: # Pega transferência, transferencia, etc.
+                    detalhe_tipo = "Conta Bancária"
+                    if p.conta:
+                        detalhe_valor = f"Banco: {p.conta.banco} | Ag: {p.conta.agencia} | CC: {p.conta.conta}"
+                    else:
+                        detalhe_valor = "Nenhuma conta vinculada a este processo"
+
+                # ========================================================
+                # CORREÇÃO: PROTEÇÃO CONTRA "INVALID FORMAT STRING"
+                # ========================================================
+                try:
+                    # Força a conversão para float para evitar que strings quebrem o f-string
+                    valor_num = float(p.valor_liquido) if p.valor_liquido else 0.0
+                    # Formata padrão US (1,500.50), depois inverte os sinais para PT-BR (1.500,50)
+                    valor_formatado = f"{valor_num:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+                except (ValueError, TypeError):
+                    valor_formatado = "0,00"
+
+                resultados.append({
+                    'id': p.id,
+                    'empenho': p.n_nota_empenho or "S/N",
+                    'credor': p.credor.nome if p.credor else "Sem Credor",
+                    'valor': valor_formatado,
+                    'forma': p.forma_pagamento.forma_de_pagamento if p.forma_pagamento else "N/A",
+                    'detalhe_tipo': detalhe_tipo,
+                    'detalhe_valor': detalhe_valor
+                })
+
+            return JsonResponse({'sucesso': True, 'dados': resultados})
+        except Exception as e:
+            # Imprime o erro no console do PythonAnywhere para debug
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'sucesso': False, 'erro': str(e)})
+
+    return JsonResponse({'sucesso': False, 'erro': 'Método inválido'})

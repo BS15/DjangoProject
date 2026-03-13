@@ -1,19 +1,20 @@
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Processo, DocumentoProcesso, NotaFiscal, RetencaoImposto, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos
+from .models import Processo, DocumentoProcesso, NotaFiscal, RetencaoImposto, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos, Pendencia, StatusChoicesPendencias
+from .validators import validar_regras_processo, validar_regras_suprimento
 
 class ProcessoForm(forms.ModelForm):
     class Meta:
         model = Processo
-        # Traz todos os campos do model, exceto o status
         exclude = ['status']
         widgets = {
-            'extraorcamentario': forms.CheckboxInput(attrs={'class': 'form-control'}),
+            # Ajustado para form-check-input para não esticar o checkbox
+            'extraorcamentario': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'n_nota_empenho': forms.TextInput(attrs={'class': 'form-control'}),
-            'credor': forms.TextInput(attrs={'class': 'form-control'}),
+            'credor': forms.Select(attrs={'class': 'form-select'}),
             'ano_exercicio': forms.Select(attrs={'class': 'form-select'}),
             'data_empenho': forms.DateInput(format='%Y-%m-%d',attrs={'type': 'date', 'class': 'form-control'}),
-            'conta_de_pagamento_orgao': forms.Select(attrs={'class': 'form-select'}),
+            'conta': forms.Select(attrs={'class': 'form-select'}),
             'tipo_pagamento': forms.Select(attrs={'class': 'form-select'}),
             'forma_pagamento': forms.Select(attrs={'class': 'form-select'}),
             'data_pagamento': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date', 'class': 'form-control'}),
@@ -28,36 +29,131 @@ class ProcessoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Loop que percorre todos os campos gerados e desliga a obrigatoriedade (HTML required)
-        for field_name, field in self.fields.items():
-            field.required = False
+
+        # Campos que devem ser SEMPRE obrigatórios no Processo
+        campos_obrigatorios = [
+            'credor', 'valor_bruto', 'valor_liquido',
+            'data_vencimento', 'data_pagamento',
+            'tipo_pagamento', 'forma_pagamento'
+        ]
+
+        for field_name in self.fields:
+            if field_name in campos_obrigatorios:
+                self.fields[field_name].required = True
+            else:
+                self.fields[field_name].required = False
+
+        # --- INÍCIO DA LÓGICA DE TRANCAMENTO (BLINDAGEM) ---
+        self.status_bloqueados = [
+            'A PAGAR - AUTORIZADO POR ORDENADORES DE DESPESA',
+            'A PAGAR - AUTORIZADO',
+            'PAGO - EM CONFERÊNCIA',
+            'PAGO - A CONTABILIZAR',
+            'PAGO - EM CONTABILIZAÇÃO',
+            'CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL',
+            'APROVADO - PENDENTE ARQUIVAMENTO',
+            'APROVADO POR CONSELHO FISCAL - PARA ARQUIVAMENTO',
+            'ARQUIVADO',
+            'CANCELADO / ANULADO'
+        ]
+
+        if self.instance and self.instance.pk and self.instance.status:
+            status_atual = self.instance.status.status_choice.upper()
+
+            if status_atual in self.status_bloqueados:
+
+                # Bloqueia os campos numéricos (adiciona readonly e um fundo cinzento)
+                for campo in ['valor_liquido', 'valor_bruto']:
+                    if campo in self.fields:
+                        self.fields[campo].widget.attrs['readonly'] = True
+                        self.fields[campo].widget.attrs['class'] = self.fields[campo].widget.attrs.get('class', '') + ' bg-light'
+
+                # Bloqueia a lista suspensa do Credor (usando disabled)
+                if 'credor' in self.fields:
+                    self.fields['credor'].widget.attrs['disabled'] = 'disabled'
+                    self.fields['credor'].widget.attrs['class'] = self.fields['credor'].widget.attrs.get('class', '') + ' bg-light'
+                    # Anula o "required = True" estabelecido no loop acima para evitar erro no salvamento
+                    self.fields['credor'].required = False
+        # --- FIM DA LÓGICA DE TRANCAMENTO ---
+
+    # --- INÍCIO DA RECUPERAÇÃO DE DADOS (BACKEND) ---
+    def clean_credor(self):
+        credor_enviado = self.cleaned_data.get('credor')
+        if self.instance and self.instance.pk and self.instance.status:
+            if self.instance.status.status_choice.upper() in getattr(self, 'status_bloqueados', []):
+                # Ignora o que veio da tela e fixa o valor original do banco
+                return self.instance.credor
+        return credor_enviado
+
+    def clean_valor_liquido(self):
+        valor_enviado = self.cleaned_data.get('valor_liquido')
+        if self.instance and self.instance.pk and self.instance.status:
+            if self.instance.status.status_choice.upper() in getattr(self, 'status_bloqueados', []):
+                return self.instance.valor_liquido
+        return valor_enviado
+
+    def clean_valor_bruto(self):
+        valor_enviado = self.cleaned_data.get('valor_bruto')
+        if self.instance and self.instance.pk and self.instance.status:
+            if self.instance.status.status_choice.upper() in getattr(self, 'status_bloqueados', []):
+                return self.instance.valor_bruto
+        return valor_enviado
+    # --- FIM DA RECUPERAÇÃO DE DADOS ---
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        try:
+            erros_processo = validar_regras_processo(cleaned_data)
+            if erros_processo:
+                for field, error in erros_processo.items():
+                    self.add_error(field, error)
+        except NameError:
+            pass # Prevenção caso a função validar_regras_processo não esteja definida no escopo atual
+
+        return cleaned_data
 
 class NotaFiscalForm(forms.ModelForm):
+    arquivo_ia = forms.FileField(
+        required=False,
+        label="Extrair via IA",
+        widget=forms.ClearableFileInput(attrs={
+            'class': 'form-control form-control-sm extrair-ia-input',
+            'accept': 'application/pdf'
+        })
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Campos obrigatórios SE a nota fiscal for preenchida
+        # O Django só validará estes campos se ao menos um dado for inserido na linha do formset
+        self.fields['numero_nota_fiscal'].required = True
+        self.fields['nome_emitente'].required = True
+        self.fields['data_emissao'].required = True
+        self.fields['valor_bruto'].required = True
+        self.fields['valor_liquido'].required = True
+
     class Meta:
         model = NotaFiscal
-        fields = ('data_emissao',
-                  'nome_emitente',
-                  'cnpj_emitente',
-                  'numero_nota_fiscal',
-                  'valor_bruto',
-                  'valor_liquido')
-
+        fields = ['nome_emitente', 'cnpj_emitente', 'numero_nota_fiscal', 'data_emissao', 'valor_bruto', 'valor_liquido', 'fiscal_contrato', 'atestada']
         widgets = {
-            'data_emissao': forms.DateInput(format='%Y-%m-%d',attrs={'type': 'date', 'class': 'form-control'}),
-            'nome_emitente': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Razão Social'}),
-            'cnpj_emitente': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '00.000.000/0000-00'}),
-            'numero_nota_fiscal': forms.TextInput(attrs={'class': 'form-control'}),
-            'valor_bruto': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'valor_liquido': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
+            'nome_emitente': forms.Select(attrs={'class': 'form-select form-select-sm'}),
+            'cnpj_emitente': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
+            'numero_nota_fiscal': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
+            'data_emissao': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date', 'class': 'form-control form-control-sm'}),
+            'valor_bruto': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'step': '0.01'}),
+            'valor_liquido': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'step': '0.01'}),
+            'fiscal_contrato': forms.Select(attrs={'class': 'form-select form-select-sm'}),
+            'atestada': forms.CheckboxInput(attrs={'class': 'form-check-input fs-5'})
         }
+
+# --- FORMSETS ---
 
 DocumentoFormSet = inlineformset_factory(
     Processo,
     DocumentoProcesso,
-    fields=['tipo',
-            'ordem',
-            'arquivo'],
-    extra=1, # Start with 1 empty row
+    fields=['tipo', 'ordem', 'arquivo'],
+    extra=1,
     can_delete=True,
     widgets={
         'tipo': forms.Select(attrs={'class': 'form-select form-select-sm'}),
@@ -66,36 +162,33 @@ DocumentoFormSet = inlineformset_factory(
     }
 )
 
-# Logic: 1 Process has Many Fiscal Notes
 NotaFiscalFormSet = inlineformset_factory(
     Processo,
     NotaFiscal,
     form=NotaFiscalForm,
-    extra=0, # Start with 0, we will add via JS
+    extra=0,
     can_delete=True
 )
 
 RetencaoFormSet = inlineformset_factory(
     NotaFiscal,
     RetencaoImposto,
-    fields=['codigo', 'valor'],
+    fields=['codigo', 'rendimento_tributavel', 'valor'],
     widgets={
         'codigo': forms.Select(attrs={'class': 'form-select form-select-sm'}),
-        'valor': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'style': 'width: 60px'})
+        'rendimento_tributavel': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'style': 'width: 100px', 'placeholder': 'Rendimento R$'}),
+        'valor': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'style': 'width: 100px', 'placeholder': 'Imposto R$'})
     },
     extra=1,
     can_delete=True
 )
 
+# --- DEMAIS FORMULÁRIOS (MANTIDOS CONFORME ORIGINAL COM AJUSTES DE CLEAN) ---
+
 class CredorForm(forms.ModelForm):
     class Meta:
         model = Credor
-        fields = [
-            'tipo', 'cpf_cnpj', 'nome',
-            'telefone', 'email',
-            'conta', 'chave_pix',  'grupo',
-            'cargo_funcao'
-        ]
+        fields = ['tipo', 'cpf_cnpj', 'nome', 'telefone', 'email', 'conta', 'chave_pix', 'grupo', 'cargo_funcao']
         widgets = {
             'tipo': forms.Select(attrs={'class': 'form-select'}),
             'cpf_cnpj': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apenas números'}),
@@ -108,25 +201,16 @@ class CredorForm(forms.ModelForm):
             'chave_pix': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
-# ==========================================
-# 1. FORMULÁRIO DE DIÁRIAS
-# ==========================================
 class DiariaForm(forms.ModelForm):
     class Meta:
         model = Diaria
-        fields = [
-            'numero_sequencial', 'processo', 'status', 'beneficiario',
-            'tipo_solicitacao', 'data_saida', 'data_retorno',
-            'cidade_origem', 'cidade_destino', 'objetivo',
-            'quantidade_diarias', 'valor_total'
-        ]
+        fields = ['numero_sequencial', 'processo', 'status', 'beneficiario', 'tipo_solicitacao', 'data_saida', 'data_retorno', 'cidade_origem', 'cidade_destino', 'objetivo', 'quantidade_diarias', 'valor_total']
         widgets = {
             'numero_sequencial': forms.TextInput(attrs={'class': 'form-control'}),
             'processo': forms.Select(attrs={'class': 'form-select'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
             'beneficiario': forms.Select(attrs={'class': 'form-select'}),
             'tipo_solicitacao': forms.Select(attrs={'class': 'form-select'}),
-            # O type="date" invoca o calendário nativo do navegador
             'data_saida': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'data_retorno': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'cidade_origem': forms.TextInput(attrs={'class': 'form-control'}),
@@ -136,17 +220,10 @@ class DiariaForm(forms.ModelForm):
             'valor_total': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
 
-# ==========================================
-# 2. FORMULÁRIO DE REEMBOLSO DE COMBUSTÍVEL
-# ==========================================
 class ReembolsoForm(forms.ModelForm):
     class Meta:
         model = ReembolsoCombustivel
-        fields = [
-            'numero_sequencial', 'processo', 'status', 'beneficiario',
-            'data_saida', 'data_retorno', 'cidade_origem', 'cidade_destino',
-            'distancia_km', 'preco_combustivel', 'objetivo', 'valor_total'
-        ]
+        fields = ['numero_sequencial', 'processo', 'status', 'beneficiario', 'data_saida', 'data_retorno', 'cidade_origem', 'cidade_destino', 'distancia_km', 'preco_combustivel', 'objetivo', 'valor_total']
         widgets = {
             'numero_sequencial': forms.TextInput(attrs={'class': 'form-control'}),
             'processo': forms.Select(attrs={'class': 'form-select'}),
@@ -162,16 +239,10 @@ class ReembolsoForm(forms.ModelForm):
             'valor_total': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
 
-# ==========================================
-# 3. FORMULÁRIO DE JETON
-# ==========================================
 class JetonForm(forms.ModelForm):
     class Meta:
         model = Jeton
-        fields = [
-            'numero_sequencial', 'processo', 'status', 'beneficiario',
-            'reuniao', 'valor_total'
-        ]
+        fields = ['numero_sequencial', 'processo', 'status', 'beneficiario', 'reuniao', 'valor_total']
         widgets = {
             'numero_sequencial': forms.TextInput(attrs={'class': 'form-control'}),
             'processo': forms.Select(attrs={'class': 'form-select'}),
@@ -181,16 +252,10 @@ class JetonForm(forms.ModelForm):
             'valor_total': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
 
-# ==========================================
-# 4. FORMULÁRIO DE AUXÍLIO REPRESENTAÇÃO
-# ==========================================
 class AuxilioForm(forms.ModelForm):
     class Meta:
         model = AuxilioRepresentacao
-        fields = [
-            'numero_sequencial', 'processo', 'status', 'beneficiario',
-            'objetivo', 'valor_total'
-        ]
+        fields = ['numero_sequencial', 'processo', 'status', 'beneficiario', 'objetivo', 'valor_total']
         widgets = {
             'numero_sequencial': forms.TextInput(attrs={'class': 'form-control'}),
             'processo': forms.Select(attrs={'class': 'form-select'}),
@@ -213,3 +278,44 @@ class SuprimentoForm(forms.ModelForm):
             'suprido': forms.Select(attrs={'class': 'form-select'}),
             'lotacao': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        erros_suprimento = validar_regras_suprimento(cleaned_data)
+        if erros_suprimento:
+            for field, error in erros_suprimento.items():
+                self.add_error(field, error)
+        return cleaned_data
+
+class PendenciaForm(forms.ModelForm):
+    class Meta:
+        model = Pendencia
+        # Removemos o 'status' daqui para ele não ir para a tela
+        fields = ['tipo', 'descricao']
+        widgets = {
+            'tipo': forms.Select(attrs={'class': 'form-select form-select-sm'}),
+            'descricao': forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Descreva a pendência detalhadamente...'}),
+        }
+
+    def save(self, commit=True):
+        # Interceptamos o salvamento antes de ir para o banco
+        pendencia = super().save(commit=False)
+
+        # Se a pendência não tem status (acabou de ser criada), injetamos o padrão
+        if not pendencia.status:
+            status_obj, _ = StatusChoicesPendencias.objects.get_or_create(
+                status_choice__iexact='A RESOLVER',
+                defaults={'status_choice': 'A RESOLVER'}
+            )
+            pendencia.status = status_obj
+
+        if commit:
+            pendencia.save()
+        return pendencia
+
+PendenciaFormSet = inlineformset_factory(
+    Processo, Pendencia,
+    form=PendenciaForm,
+    extra=1,
+    can_delete=True
+)

@@ -69,7 +69,7 @@ class CodigosImposto(models.Model):
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"Código: {self.codigo} - Regra Competência {self.regra_competencia} - Alíquota {self.aliquota} - Vencimento Padrão: {self.vencimento_padrao}"
+        return f"{self.codigo}"
 
 class StatusChoicesProcesso(models.Model):
     # This replaces your hard-coded choices
@@ -172,6 +172,7 @@ class TiposDePagamento(models.Model):
 
 class TiposDeDocumento(models.Model):
     # This replaces your hard-coded choices
+    tipo_de_pagamento = models.ForeignKey('TiposDePagamento', on_delete=models.PROTECT, blank=True, null=True)
     tipo_de_documento = models.CharField(max_length=100, unique=True)
 
     # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
@@ -204,26 +205,31 @@ class TiposDePendencias(models.Model):
         return f"{self.tipo_de_pendencia}"
 
 class Grupos(models.Model):
-    # This replaces your hard-coded choices
     grupo = models.CharField(max_length=100, unique=True)
-
-    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
-    # This prevents old invoices from breaking if a code is retired.
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.grupo}"
+        return self.grupo
 
 class CargosFuncoes(models.Model):
-    # This replaces your hard-coded choices
-    cargo_funcao = models.CharField(max_length=100, unique=True)
-
-    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
-    # This prevents old invoices from breaking if a code is retired.
+    # O VÍNCULO PAI-FILHO:
+    grupo = models.ForeignKey(
+        Grupos,
+        on_delete=models.PROTECT,
+        related_name='cargos',
+        verbose_name="Grupo Relacionado"
+    )
+    cargo_funcao = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)
 
+    class Meta:
+        # Garante que não existam dois cargos iguais dentro do mesmo grupo
+        unique_together = ('grupo', 'cargo_funcao')
+        verbose_name = "Cargo / Função"
+        verbose_name_plural = "Cargos e Funções"
+
     def __str__(self):
-        return f"{self.cargo_funcao}"
+        return f"{self.grupo} -> {self.cargo_funcao}"
 
 class Credor(models.Model):
     nome = models.CharField("Nome", max_length=50, null=True, blank=True)
@@ -249,6 +255,8 @@ class Credor(models.Model):
         choices=TIPO_PESSOA_CHOICES,
         default='PJ'  # Assume PJ como padrão, já que é o mais comum em notas de empenho
     )
+    def __str__(self):
+        return f"{self.nome}"
 
 class Processo(models.Model):
     # Dados orçamentários
@@ -258,7 +266,7 @@ class Processo(models.Model):
         help_text="Marque se este processo não utiliza dotação orçamentária (ex: cauções)."
     )
     n_nota_empenho = models.CharField(max_length=50, blank=True, null=True)
-    credor = models.CharField(max_length=200, blank=True, null=True)
+    credor = models.ForeignKey('Credor', on_delete=models.PROTECT, blank=True, null=True)
     data_empenho = models.DateField(default=timezone.now, blank=True, null=True)
     valor_bruto = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
     valor_liquido = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
@@ -279,6 +287,7 @@ class Processo(models.Model):
     detalhamento = models.CharField(max_length=200, blank=True, null=True)
     tag = models.ForeignKey('TagChoices', on_delete=models.PROTECT, blank=True, null=True)
 
+    arquivo_final = models.FileField("Processo Consolidado", upload_to='processos_arquivados/', null=True, blank=True)
     def __str__(self):
         return f"Processo {self.n_nota_empenho or 'S/N'}"
 
@@ -314,29 +323,45 @@ class DocumentoSuprimentoDeFundos(DocumentoBase):
 
 class NotaFiscal(models.Model):
     processo = models.ForeignKey(Processo, on_delete=models.CASCADE, related_name='notas_fiscais')
-    nome_emitente = models.CharField(max_length=255)
-    cnpj_emitente = models.CharField(max_length=20)
+    nome_emitente = models.ForeignKey('Credor', on_delete=models.PROTECT, blank=True, null=True)
+    cnpj_emitente = models.CharField(max_length=20, blank=True) # Permitimos blank=True para o save() cuidar disso
     numero_nota_fiscal = models.CharField(max_length=50)
-
+    documento_vinculado = models.OneToOneField(
+        'DocumentoProcesso',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='nota_referente',
+        verbose_name="Documento PDF da Nota"
+    )
     data_emissao = models.DateField()
     valor_bruto = models.DecimalField(max_digits=12, decimal_places=2)
     valor_liquido = models.DecimalField(max_digits=12, decimal_places=2)
     fiscal_contrato = models.ForeignKey(
-        Credor,
+        'Credor', # Recomendado usar string ou a classe se já estiver definida acima
         on_delete=models.PROTECT,
-        verbose_name="Beneficiário(a)",
+        verbose_name="Fiscal do Contrato",
+        related_name="fiscalizadas", # Adicionado para evitar conflito de nomes
         null=True,
         blank=True,
-        limit_choices_to={'tipo': 'PF'}  # <-- Mostra apenas credores cadastrados como Pessoa Física
+        limit_choices_to={'grupo__grupo': 'FUNCIONÁRIOS'}
     )
+    atestada = models.BooleanField(default=False)
+    def save(self, *args, **kwargs):
+        # Se um emitente foi selecionado e o CNPJ está vazio (ou queremos sempre atualizar)
+        if self.nome_emitente:
+            self.cnpj_emitente = self.nome_emitente.cpf_cnpj
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"NF {self.numero_nota_fiscal} - {self.nome_emitente}"
 
 class Pendencia(models.Model):
     processo = models.ForeignKey(Processo, on_delete=models.CASCADE, related_name='pendencias')
-    status = models.ForeignKey('StatusChoicesPendencias', on_delete=models.PROTECT, blank=True, null=True),
+    status = models.ForeignKey('StatusChoicesPendencias', on_delete=models.PROTECT, blank=True, null=True)
     tipo = models.ForeignKey(TiposDePendencias, on_delete=models.PROTECT)
     descricao = models.CharField(max_length=200, blank=True, null=True)
+    def __str__(self):
+        return f"PENDÊNCIA: {self.tipo} - {self.descricao}"
 
 class RetencaoImposto(models.Model):
     nota_fiscal = models.ForeignKey(NotaFiscal, on_delete=models.CASCADE, related_name='retencoes')

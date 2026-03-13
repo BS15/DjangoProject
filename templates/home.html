@@ -5,65 +5,74 @@
     <title>Painel de Processos - System X</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        /* Estilo para dar um efeito mais limpo aos botões do menu lateral */
+        .offcanvas-body .btn { text-align: left; padding-left: 1rem; border: none; border-radius: 8px; margin-bottom: 0.5rem; transition: background-color 0.2s; }
+        .offcanvas-body .btn:hover { filter: brightness(0.9); }
+        .offcanvas-body .btn i { margin-right: 10px; width: 20px; text-align: center; display: inline-block; }
+    </style>
 </head>
 <body class="bg-light">
 
+<div class="offcanvas offcanvas-start shadow" tabindex="-1" id="menuLateral" aria-labelledby="menuLateralLabel">
+    <div class="offcanvas-header bg-dark text-white">
+        <h5 class="offcanvas-title fw-bold" id="menuLateralLabel"><i class="bi bi-grid-1x2-fill me-2"></i> Painéis do Sistema</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-4">
+
+        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Cadastros Base</h6>
+        <a href="{% url 'a_empenhar' %}" class="btn btn-warning w-100 fw-bold shadow-sm text-dark"><i class="bi bi-hourglass-split"></i> Fila: A Empenhar</a>
+        <a href="{% url 'verbas_panel' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-briefcase text-secondary"></i> Verbas Indenizatórias</a>
+        <a href="{% url 'credores_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-people text-info"></i> Lista de Credores</a>
+        <a href="{% url 'add_credor' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-person-plus text-success"></i> Novo Credor</a>
+
+        <hr class="my-4 text-muted">
+
+        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Operações Frequentes</h6>
+        <a href="{% url 'contas_a_pagar' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-cash-coin text-success"></i> Contas a Pagar</a>
+        <a href="{% url 'painel_impostos' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-receipt text-warning"></i> Retenção de Impostos</a>
+        <a href="{% url 'painel_suprimentos' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-wallet2 text-primary"></i> Suprimentos de Fundos</a>
+        <a href="{% url 'painel_pendencias' %}" class="btn btn-danger text-white w-100 fw-bold shadow-sm"><i class="bi bi-exclamation-triangle"></i> Painel de Pendências</a>
+
+        <hr class="my-4 text-muted">
+
+        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Esteira de Aprovação</h6>
+        <a href="{% url 'painel_liquidacoes' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-pen text-primary"></i> Liquidações / Atestes</a>
+        <a href="{% url 'painel_conferencia' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-clipboard-check text-info"></i> Painel de Conferência</a>
+        <a href="{% url 'painel_autorizacao' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-check2-square text-success"></i> Autorização de Pagamento</a>
+        <a href="{% url 'painel_contabilizacao' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-calculator text-secondary"></i> Painel de Contabilização</a>
+        <a href="{% url 'painel_conselho' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-bank text-secondary"></i> Conselho Fiscal</a>
+        <a href="{% url 'painel_arquivamento' %}" class="btn btn-dark w-100 fw-bold shadow-sm text-white mt-2"><i class="bi bi-archive-fill"></i> Arquivo Morto / Digital</a>
+
+    </div>
+</div>
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-4 rounded shadow-sm border border-light">
         <div>
-            <h2 class="mb-0">Gerenciamento de Processos</h2>
-            <p class="text-muted">Acompanhamento de pagamentos e empenhos</p>
+            <h2 class="mb-0 fw-bold text-dark"><i class="bi bi-journal-text text-primary me-2"></i> Gerenciamento de Processos</h2>
+            <p class="text-muted mb-0 ms-4">Acompanhamento de pagamentos e empenhos</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-3">
+            <button class="btn btn-outline-dark btn-lg shadow-sm fw-bold" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuLateral" aria-controls="menuLateral">
+                <i class="bi bi-list"></i> Menu de Painéis
+            </button>
             <a href="{% url 'add_process' %}" class="btn btn-success btn-lg shadow-sm fw-bold">
                 <i class="bi bi-plus-lg"></i> Novo Processo
             </a>
         </div>
     </div>
 
-    <div class="row mb-4 g-3">
-        <div class="col-md-3">
-            <a href="{% url 'a_empenhar' %}" class="btn btn-warning shadow-sm fw-bold w-100">
-                <i class="bi bi-hourglass-split"></i> Fila: A Empenhar
-            </a>
-        </div>
-        <div class="col-md-3">
-            <a href="{% url 'verbas_panel' %}" class="btn btn-secondary shadow-sm fw-bold w-100">
-                <i class="bi bi-briefcase"></i> Verbas Indenizatórias
-            </a>
-        </div>
-        <div class="col-md-3">
-            <a href="{% url 'credores_list' %}" class="btn btn-info text-white shadow-sm fw-bold w-100">
-                <i class="bi bi-people"></i> Credores
-            </a>
-        </div>
-        <div class="col-md-3">
-            <a href="{% url 'add_credor' %}" class="btn btn-success shadow-sm fw-bold w-100">
-                <i class="bi bi-person-plus"></i> Novo Credor
-            </a>
-        </div>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
 
-        <div class="col-md-4">
-            <a href="{% url 'contas_a_pagar' %}" class="btn btn-outline-success w-100 py-3 shadow-sm fw-bold">
-                <i class="bi bi-cash-coin fs-4 d-block mb-2"></i>
-                Contas a Pagar
-            </a>
-        </div>
-        <div class="col-md-4">
-            <a href="{% url 'painel_impostos' %}" class="btn btn-outline-warning text-dark w-100 py-3 shadow-sm fw-bold">
-                <i class="bi bi-receipt fs-4 d-block mb-2"></i>
-                Retenção de Impostos
-            </a>
-        </div>
-        <div class="col-md-4">
-            <a href="{% url 'painel_suprimentos' %}" class="btn btn-outline-primary w-100 py-3 shadow-sm fw-bold">
-                <i class="bi bi-wallet2 fs-4 d-block mb-2"></i>
-                Suprimentos de Fundos
-            </a>
-        </div>
-    </div>
-
-    <div class="card shadow-sm border-0 mb-4 bg-light">
+    <div class="card shadow-sm border-0 mb-4 bg-white">
         <div class="card-body py-3">
             <form method="get" class="row g-2 align-items-end">
                 {% for field in meu_filtro.form %}
@@ -77,25 +86,23 @@
                     <button type="submit" class="btn btn-primary btn-sm fw-bold shadow-sm">
                         <i class="bi bi-search"></i> Filtrar
                     </button>
-                    <a href="{% url 'home_page' %}" class="btn btn-outline-secondary btn-sm shadow-sm">Limpar</a>
+                    <a href="{% url 'home_page' %}" class="btn btn-outline-secondary btn-sm shadow-sm">Limpar Filtros</a>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="mb-3 p-2 bg-white rounded shadow-sm border">
-        <span class="fw-bold me-3 ps-2 text-muted">Ações:</span>
+    <div class="mb-3 p-2 bg-white rounded shadow-sm border d-flex align-items-center">
+        <span class="fw-bold me-3 ps-2 text-muted">Ações em Lote:</span>
         <button id="btnEditar" class="btn btn-primary btn-sm fw-bold shadow-sm">
             <i class="bi bi-pencil-square"></i> Editar Selecionado
         </button>
-        <button id="btnAutorizacao" class="btn btn-secondary btn-sm" disabled>Enviar para autorização</button>
-        <button id="btnTag" class="btn btn-info btn-sm text-white" disabled>Adicionar tag</button>
     </div>
 
     <div class="card shadow-sm border-0">
         <div class="card-body p-0">
             <table class="table table-hover table-striped mb-0 align-middle">
-                <thead class="table-light">
+                <thead class="table-dark">
                     <tr>
                         <th class="ps-4" style="width: 40px;">
                             <input type="checkbox" id="checkMaster" class="form-check-input border-secondary">
@@ -128,7 +135,7 @@
                         <td>
                             {% if processo.status.status_choice == 'ARQUIVADO' %}
                                 <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2 rounded-pill"><i class="bi bi-archive-fill"></i> Arquivado</span>
-                            {% elif 'PENDÊNCIAS' in processo.status.status_choice %}
+                            {% elif 'PENDÊNCIAS' in processo.status.status_choice or 'NÃO RESOLVIDO' in processo.status.status_choice %}
                                 <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill"><i class="bi bi-exclamation-triangle-fill"></i> Pendências</span>
                             {% else %}
                                 <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">{{ processo.status.status_choice|truncatechars:25 }}</span>
@@ -138,10 +145,10 @@
                             R$ {{ processo.valor_liquido|floatformat:2 }}
                         </td>
                         <td class="text-center">
-                            <a href="{% url 'visualizar_pdf_processo' processo.id %}" target="_blank" class="btn btn-sm btn-danger fw-bold shadow-sm">
+                            <a href="{% url 'visualizar_pdf_processo' processo.id %}" target="_blank" class="btn btn-sm btn-danger fw-bold shadow-sm" title="Visualizar Documentos Anexos">
                                 <i class="bi bi-file-earmark-pdf"></i>
                             </a>
-                            <a href="/admin/processos/processo/{{ processo.id }}/change/" target="_blank" class="btn btn-sm btn-outline-secondary">
+                            <a href="/admin/processos/processo/{{ processo.id }}/change/" target="_blank" class="btn btn-sm btn-outline-secondary" title="Acessar Admin">
                                 <i class="bi bi-gear"></i>
                             </a>
                         </td>
@@ -151,9 +158,9 @@
                         <td colspan="8" class="text-center py-5">
                             <div class="text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-                                Nenhum processo cadastrado ainda.
+                                Nenhum processo encontrado.
                                 <br>
-                                <a href="{% url 'add_process' %}" class="btn btn-link">Clique aqui para adicionar o primeiro</a>
+                                <a href="{% url 'add_process' %}" class="btn btn-link">Clique aqui para adicionar um novo</a>
                             </div>
                         </td>
                     </tr>
@@ -163,6 +170,8 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -190,7 +199,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 return;
             }
             if (selecionados.length > 1) {
-                alert("Selecione APENAS UM processo para editar.");
+                alert("Selecione APENAS UM processo para editar de cada vez.");
                 return;
             }
 

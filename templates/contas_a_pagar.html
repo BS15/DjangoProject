@@ -5,6 +5,9 @@
     <title>Contas a Pagar - System X</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .copy-btn { transition: all 0.2s ease-in-out; }
+    </style>
 </head>
 <body class="bg-light">
 
@@ -15,8 +18,18 @@
 </nav>
 
 <div class="container-fluid px-4 mt-4">
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Contas a Pagar</h2>
+        <h2><i class="bi bi-wallet2 text-primary me-2"></i> Contas a Pagar</h2>
         <div class="d-flex gap-2">
             <a href="{% url 'painel_autorizacao' %}" class="btn btn-warning fw-bold shadow-sm">
                 <i class="bi bi-person-badge"></i> Painel do Ordenador
@@ -65,9 +78,15 @@
 
         <div class="col-md-9">
             <div class="mb-3 d-flex justify-content-between align-items-center">
-                <button type="submit" form="form-enviar-autorizacao" class="btn btn-primary fw-bold shadow-sm" onclick="return confirm('Enviar os processos selecionados para a mesa do Ordenador de Despesa?');">
-                    <i class="bi bi-send-check"></i> Enviar para Autorização
-                </button>
+                <div>
+                    <button type="submit" form="form-enviar-autorizacao" class="btn btn-primary fw-bold shadow-sm" onclick="return confirm('Enviar os processos selecionados para a mesa do Ordenador de Despesa?');">
+                        <i class="bi bi-send-check"></i> Enviar para Autorização
+                    </button>
+                    
+                    <button type="button" class="btn btn-info text-white fw-bold shadow-sm ms-2" id="btn-visualizar-pagamentos">
+                        <i class="bi bi-eye"></i> Visualizar Dados de Pagamento
+                    </button>
+                </div>
             </div>
 
             <form id="form-enviar-autorizacao" method="POST" action="{% url 'enviar_para_autorizacao' %}">
@@ -120,8 +139,51 @@
     </div>
 </div>
 
+<div class="modal fade" id="pagamentosModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title fw-bold"><i class="bi bi-cash-coin"></i> Detalhes para Pagamento na Tesouraria</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body bg-light">
+                
+                <div id="pagamentos-loading" class="text-center py-4" style="display: none;">
+                    <div class="spinner-border text-info" role="status"></div>
+                    <p class="mt-2 text-muted fw-bold">Analisando processos selecionados...</p>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered bg-white shadow-sm" id="tabela-pagamentos" style="display: none;">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 10%;">Processo/NE</th>
+                                <th style="width: 25%;">Credor</th>
+                                <th style="width: 15%;">Valor Líquido</th>
+                                <th style="width: 15%;">Forma de Pagto</th>
+                                <th style="width: 35%;">Dados de Pagamento Bancário</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pagamentos-tbody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar Painel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-    // Javascript simples para marcar todos os checkboxes
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // ----------------------------------------------------------------------
+    // 1. LÓGICA DO CHECKBOX "SELECIONAR TODOS"
+    // ----------------------------------------------------------------------
     const checkAll = document.getElementById('checkAll');
     if (checkAll) {
         checkAll.addEventListener('change', function() {
@@ -131,6 +193,129 @@
             }
         });
     }
+
+    // ----------------------------------------------------------------------
+    // 2. LÓGICA DO PAINEL DE VISUALIZAÇÃO DE PAGAMENTOS
+    // ----------------------------------------------------------------------
+    const btnVisualizar = document.getElementById('btn-visualizar-pagamentos');
+    
+    if (btnVisualizar) {
+        btnVisualizar.addEventListener('click', function() {
+            
+            // Pega todos os checkboxes de processos que estão selecionados na tabela
+            const checkboxes = document.querySelectorAll('input[name="processos_selecionados"]:checked');
+            const ids = Array.from(checkboxes).map(cb => cb.value);
+
+            if (ids.length === 0) {
+                alert('Selecione pelo menos um processo na tabela para visualizar os detalhes.');
+                return;
+            }
+
+            // Inicia o Modal do Bootstrap
+            const modalElement = document.getElementById('pagamentosModal');
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+            
+            // Gira o Spinner
+            document.getElementById('pagamentos-loading').style.display = 'block';
+            document.getElementById('tabela-pagamentos').style.display = 'none';
+            const tbody = document.getElementById('pagamentos-tbody');
+            tbody.innerHTML = '';
+
+            // Dispara a requisição Fetch para a API no views.py
+            fetch("{% url 'api_detalhes_pagamento' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({ ids: ids })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('pagamentos-loading').style.display = 'none';
+                
+                if (data.sucesso) {
+                    data.dados.forEach(p => {
+                        
+                        // LÓGICA DO BOTÃO DE COPIAR
+                        // Se a API devolveu um Código de Barras ou PIX válido, montamos o HTML com o botão de prancheta
+                        let valorHtml = `<span class="fw-bold text-dark">${p.detalhe_valor}</span>`;
+                        
+                        if (p.detalhe_tipo === 'Código de Barras' || p.detalhe_tipo === 'Chave PIX') {
+                            if (p.detalhe_valor !== "Não preenchido" && !p.detalhe_valor.includes("sem PIX")) {
+                                valorHtml = `
+                                    <div class="d-flex align-items-center justify-content-between p-2 bg-light rounded border border-secondary border-opacity-25">
+                                        <span class="fw-bold text-primary font-monospace text-break me-2" style="font-size: 0.9rem;">${p.detalhe_valor}</span>
+                                        <button class="btn btn-sm btn-outline-secondary copy-btn px-2 py-1" data-clipboard="${p.detalhe_valor}" title="Copiar para a área de transferência">
+                                            <i class="bi bi-clipboard fs-6"></i>
+                                        </button>
+                                    </div>
+                                `;
+                            }
+                        }
+
+                        // CONSTRÓI A LINHA DA TABELA (ROW)
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>
+                                <span class="badge bg-secondary mb-1">Proc #${p.id}</span><br>
+                                <span class="small fw-bold text-muted">${p.empenho}</span>
+                            </td>
+                            <td><span class="fw-medium text-dark" style="font-size: 0.85rem;">${p.credor}</span></td>
+                            <td class="text-success fw-bold">R$ ${p.valor}</td>
+                            <td><span class="badge bg-light text-dark border">${p.forma}</span></td>
+                            <td>
+                                <span class="text-muted small fw-bold d-block mb-1">${p.detalhe_tipo}</span>
+                                ${valorHtml}
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                    
+                    document.getElementById('tabela-pagamentos').style.display = 'table';
+                    
+                    // DELEGAÇÃO DO EVENTO "COPIAR"
+                    // Depois da tabela estar montada, ativamos todos os botões de copiar que acabámos de criar
+                    document.querySelectorAll('.copy-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const textToCopy = this.getAttribute('data-clipboard');
+                            
+                            // API moderna do navegador para área de transferência
+                            navigator.clipboard.writeText(textToCopy).then(() => {
+                                // Feedback visual: Muda o ícone para um Visto Verde
+                                const icone = this.querySelector('i');
+                                icone.classList.replace('bi-clipboard', 'bi-check-lg');
+                                this.classList.replace('btn-outline-secondary', 'btn-success');
+                                this.classList.add('text-white');
+                                
+                                // Retorna ao normal após 2 segundos
+                                setTimeout(() => {
+                                    icone.classList.replace('bi-check-lg', 'bi-clipboard');
+                                    this.classList.replace('btn-success', 'btn-outline-secondary');
+                                    this.classList.remove('text-white');
+                                }, 2000);
+                            }).catch(err => {
+                                console.error('Falha ao copiar: ', err);
+                                alert("Não foi possível copiar automaticamente. Selecione o texto e use Ctrl+C.");
+                            });
+                        });
+                    });
+
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger fw-bold py-4"><i class="bi bi-x-circle fs-3 d-block mb-2"></i>Erro ao carregar dados: ${data.erro}</td></tr>`;
+                    document.getElementById('tabela-pagamentos').style.display = 'table';
+                }
+            })
+            .catch(err => {
+                document.getElementById('pagamentos-loading').style.display = 'none';
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger fw-bold py-4"><i class="bi bi-wifi-off fs-3 d-block mb-2"></i>Erro de conexão com o servidor.</td></tr>`;
+                document.getElementById('tabela-pagamentos').style.display = 'table';
+                console.error(err);
+            });
+        });
+    }
+});
 </script>
 
 </body>

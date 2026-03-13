@@ -23,6 +23,15 @@
         <a href="{% url 'home_page' %}" class="btn btn-outline-secondary">Voltar para Home</a>
     </div>
 
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
     <div class="card shadow-sm border-0">
         <div class="card-body p-0">
             <table class="table table-hover table-striped mb-0 align-middle">
@@ -54,15 +63,47 @@
                                 <i class="bi bi-pencil-square"></i>
                             </a>
 
-                            <form method="POST" action="{% url 'aprovar_conferencia' pk=processo.id %}" onsubmit="return confirm('Confirmar a auditoria e enviar o processo #{{ processo.id }} para contabilização?');">
+                            <form method="POST" action="{% url 'aprovar_conferencia' pk=processo.id %}" style="display:inline;" onsubmit="return confirm('Confirmar a auditoria e enviar o processo #{{ processo.id }} para contabilização?');">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-success fw-bold shadow-sm" title="Aprovar e Enviar">
-                                    <i class="bi bi-check2-all"></i> Aprovar
+                                    <i class="bi bi-check2-all"></i>
                                 </button>
                             </form>
 
+                            <button type="button" class="btn btn-sm btn-warning shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRecusa{{ processo.id }}" title="Devolver (Erro)">
+                                <i class="bi bi-arrow-return-left"></i>
+                            </button>
                         </td>
                     </tr>
+
+                    <div class="modal fade" id="modalRecusa{{ processo.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form method="POST" action="{% url 'recusar_conferencia' pk=processo.id %}">
+                                    {% csrf_token %}
+                                    <div class="modal-header bg-warning text-dark">
+                                        <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Devolver Processo #{{ processo.id }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body text-start">
+                                        <p class="small text-muted mb-3">Informe o erro encontrado na conferência. O processo retornará à fila de Autorização de Pagamento.</p>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Tipo de Pendência</label>
+                                            {{ pendencia_form.tipo }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Justificativa do Erro</label>
+                                            {{ pendencia_form.descricao }}
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-warning fw-bold">Confirmar Devolução</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                     {% empty %}
                     <tr>
                         <td colspan="6" class="text-center py-5 text-muted">
@@ -77,5 +118,6 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -7,393 +7,699 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
-        .card-header { background-color: #ffc107; color: #000; } /* Amarelo para destacar que é edição */
+        .card-header { background-color: #ffc107; color: #000; }
+        .bg-extract { background-color: #e3f2fd; border-left: 5px solid #0dcaf0; }
         .form-label { font-weight: 500; font-size: 0.9rem; }
-        #empty-doc-form, #empty-nf-form, #empty-tax-row { display: none; }
-        .taxes-container { background-color: #f8f9fa; padding: 10px; border-radius: 5px; }
+        #empty-doc-form, #empty-pendencia-form { display: none; }
+        .drag-handle:hover { color: #0d6efd !important; }
+        .django-delete-checkbox input[type="checkbox"] { display: none; }
+        .sticky-viewer { position: sticky; top: 20px; z-index: 1000; }
+        .bg-light-blue { background-color: #f0f8ff; }
     </style>
 </head>
 <body class="bg-light">
 
-<div class="container mt-4 mb-5">
-    <div class="card shadow-sm">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h4 class="mb-0 fw-bold"><i class="bi bi-pencil-square"></i> Editando Processo #{{ processo.id }}</h4>
-            <a href="{% url 'home_page' %}" class="btn btn-outline-dark btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+<div class="container-fluid px-4 mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0 text-warning fw-bold"><i class="bi bi-pencil-square"></i> Editando Processo #{{ processo.id }}</h4>
+        <a href="{% url 'home_page' %}" class="btn btn-outline-dark btn-sm"><i class="bi bi-arrow-left"></i> Voltar para Home</a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if processo_form.errors or documento_formset.errors %}
+        <div class="alert alert-danger shadow-sm">
+            <h6 class="fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Verifique os campos obrigatórios:</h6>
+            <ul class="mb-0 small">
+                {% for field, errors in processo_form.errors.items %}
+                    <li>Capa do Processo ({{ field }}): {{ errors|striptags }}</li>
+                {% endfor %}
+                {% for dict_err in documento_formset.errors %}
+                    {% for field, errors in dict_err.items %}
+                        <li>Documentos ({{ field }}): {{ errors|striptags }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="processForm">
+        {% csrf_token %}
+        {{ documento_formset.management_form }}
+        {{ pendencia_formset.management_form }} 
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="sticky-viewer">
+                    <div class="card shadow-sm border-warning h-100">
+                        <div class="card-header bg-warning text-dark">
+                            <h6 class="mb-0 fw-bold"><i class="bi bi-file-earmark-pdf"></i> Visualizador de Documentos</h6>
+                        </div>
+                        <div class="card-body p-2 bg-light-blue d-flex flex-column align-items-center justify-content-center" id="pdf-viewer-container" style="min-height: 700px;">
+                            <div id="pdf-placeholder" class="text-center text-muted">
+                                <i class="bi bi-file-earmark-text fs-1 d-block mb-3"></i>
+                                <h5>Selecione um documento</h5>
+                                <p class="small">Clique no ícone de "olho" na lista de anexos para ler o arquivo aqui.</p>
+                            </div>
+                            <iframe id="pdf-viewer" src="" width="100%" height="700px" style="border: none; border-radius: 6px; display: none;"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+
+                        <h5 class="text-secondary border-bottom pb-2 mb-3"><i class="bi bi-folder-fill"></i> 1. Gestão de Documentos</h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Tipo de Pagamento do Processo:</label>
+                                {{ processo_form.tipo_pagamento }}
+                            </div>
+                        </div>
+
+                        <div id="avisoDocumentos" class="alert alert-warning small py-2 mb-3" style="display: block;">
+                            <i class="bi bi-lock"></i> Selecione o <b>Tipo de Pagamento</b> acima para liberar a gestão de documentos.
+                        </div>
+
+                        <div id="bloco-documentos" style="display: none;">
+                            <div id="dropzone-area" class="p-4 mb-3 text-center rounded bg-light border-warning" style="border: 2px dashed #ffc107; cursor: pointer; transition: all 0.3s ease;">
+                                <i class="bi bi-cloud-arrow-up fs-1 text-warning dropzone-icon"></i>
+                                <h6 class="text-dark fw-bold mt-2 dropzone-text">Arraste novos arquivos aqui</h6>
+                                <input type="file" id="bulk-file-input" multiple accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
+                            </div>
+
+                            <div id="document-list" class="bg-white p-3 rounded border">
+                                {% for doc_f in documento_formset %}
+                                    <div class="row g-2 align-items-center mb-2 border-bottom pb-2 document-row bg-white">
+                                        <div class="col-md-1 text-center drag-handle" style="cursor: grab;"><i class="bi bi-grip-vertical fs-5 text-secondary"></i></div>
+                                        {% for hidden in doc_f.hidden_fields %}{{ hidden }}{% endfor %}
+                                        <div class="col-md-1"><label class="small text-muted fw-bold d-block mb-1">Ordem</label>{{ doc_f.ordem }}</div>
+                                        <div class="col-md-3"><label class="small text-muted fw-bold d-block mb-1">Tipo</label>{{ doc_f.tipo }}</div>
+                                        <div class="col-md-4">
+                                            <label class="small text-muted fw-bold d-block mb-1">Arquivo</label>
+                                            {{ doc_f.arquivo }}
+                                            <small class="text-primary fw-bold mt-1 d-block doc-filename-display" style="min-height: 18px;">
+                                                {% if doc_f.instance.arquivo %}
+                                                    <span class="text-success"><i class="bi bi-cloud-check"></i> Salvo: {{ doc_f.instance.arquivo.name|cut:"documentos/" }}</span>
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        <div class="col-md-3 text-end d-flex flex-column justify-content-end" style="height: 52px;">
+                                            <div class="d-flex justify-content-end gap-1">
+                                                <button type="button" class="btn btn-sm btn-outline-success extract-doc-btn" title="Extrair com IA" style="display: none;"><i class="bi bi-magic"></i> IA</button>
+                                                
+                                                <button type="button" class="btn btn-sm btn-outline-warning text-dark preview-doc-btn" title="Ver no painel" 
+                                                    {% if doc_f.instance.arquivo %} data-url="{{ doc_f.instance.arquivo.url }}" {% else %} style="display: none;" {% endif %}>
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger remove-doc-btn" tabindex="-1" title="Remover Documento"><i class="bi bi-trash"></i></button>
+                                            </div>
+                                            <div class="django-delete-checkbox d-none">{{ doc_f.DELETE }}</div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <button type="button" id="add-doc-btn" class="btn btn-outline-warning text-dark btn-sm mt-2 fw-bold">
+                                <i class="bi bi-plus-circle"></i> Adicionar Documento Manual
+                            </button>
+                        </div>
+
+                        <div id="painel_confirmacao_ia" class="card bg-extract my-4 shadow-sm border-success" style="display: none;">
+                            <div class="card-body py-3">
+                                <h6 class="card-title text-success fw-bold"><i class="bi bi-robot"></i> Revisão de Dados Extraídos (IA)</h6>
+                                <div id="dados_preview_container" class="row g-2 mb-3 mt-2"></div>
+                                <div class="d-flex justify-content-end gap-2 border-top pt-2 mt-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="cancelarExtracao()">Descartar Leitura</button>
+                                    <button type="button" class="btn btn-sm btn-success fw-bold" id="btn_confirmar_extracao">
+                                        <i class="bi bi-check2-all"></i> Confirmar e Preencher Capa
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="payment-info-block">
+                            <h5 class="text-secondary border-bottom pb-2 mb-3 mt-4"><i class="bi bi-card-heading"></i> 3. Capa do Processo</h5>
+                            
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4 d-flex align-items-end">
+                                    <div class="form-check mb-2">
+                                        {{ processo_form.extraorcamentario }}
+                                        <label class="form-check-label fw-bold text-danger">
+                                            <i class="bi bi-exclamation-circle"></i> Despesa Extraorçamentária
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4"><label class="form-label">Status Atual</label>{{ processo_form.status }}</div>
+                                <div class="col-md-4"><label class="form-label">Ano do Exercício</label>{{ processo_form.ano_exercicio }}</div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-3"><label class="form-label">Nota de Empenho</label>{{ processo_form.n_nota_empenho }}</div>
+                                <div class="col-md-6"><label class="form-label">Credor</label>{{ processo_form.credor }}</div>
+                                <div class="col-md-3"><label class="form-label">Data Empenho</label>{{ processo_form.data_empenho }}</div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4"><label class="form-label">Forma de Pagamento</label>{{ processo_form.forma_pagamento }}</div>
+                                <div class="col-md-2"><label class="form-label">Vencimento</label>{{ processo_form.data_vencimento }}</div>
+                                <div class="col-md-2"><label class="form-label">Data Pagto.</label>{{ processo_form.data_pagamento }}</div>
+                                <div class="col-md-2"><label class="form-label text-primary">Valor Bruto</label>{{ processo_form.valor_bruto }}</div>
+                                <div class="col-md-2"><label class="form-label text-success">Valor Líquido</label>{{ processo_form.valor_liquido }}</div>
+                            </div>
+
+                            <div id="bloco_boleto" class="row g-3 mb-3 bg-light p-3 border rounded mt-2" style="display: none;">
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold text-dark"><i class="bi bi-upc-scan"></i> Código de Barras / Linha Digitável</label>
+                                    {{ processo_form.codigo_barras }}
+                                </div>
+                            </div>
+
+                            <div id="bloco_transferencia" class="row g-3 mb-3 bg-light p-3 border rounded mt-2" style="display: none;">
+                                <div class="col-md-12 mb-2">
+                                    <h6 class="fw-bold text-primary mb-0"><i class="bi bi-bank"></i> Dados de Transferência Bancária</h6>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold small">Banco</label>
+                                    <input type="text" name="manual_banco" class="form-control" placeholder="Ex: Banco do Brasil">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold small">Agência</label>
+                                    <input type="text" name="manual_agencia" class="form-control" placeholder="Ex: 1234-5">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold small">Conta Corrente</label>
+                                    <input type="text" name="manual_conta" class="form-control" placeholder="Ex: 123456-7">
+                                </div>
+                                <div class="col-md-12 mt-3 pt-2 border-top">
+                                    <label class="form-label fw-bold small text-muted">Vincular a uma Conta de Credor Existente (Opcional)</label>
+                                    {{ processo_form.conta }}
+                                </div>
+                            </div>
+
+                            <div id="bloco_pix" class="row g-3 mb-3 bg-light p-3 border rounded border-success border-opacity-50 mt-2" style="display: none;">
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold text-success"><i class="bi bi-qr-code"></i> Chave PIX</label>
+                                    <input type="text" name="manual_pix" class="form-control border-success" placeholder="Insira a Chave PIX do favorecido">
+                                </div>
+                            </div>
+                            <div class="row g-3 mb-3 mt-3">
+                                <div class="col-md-12"><label class="form-label">Detalhamento</label>{{ processo_form.detalhamento }}</div>
+                            </div>
+
+                            <h5 class="text-danger border-bottom border-danger border-opacity-25 pb-2 mt-5 mb-3">
+                                <i class="bi bi-exclamation-triangle"></i> 4. Gestão de Pendências
+                            </h5>
+                            <div id="pendencia-list" class="bg-white p-3 rounded border border-danger border-opacity-25">
+                                {% for pen_f in pendencia_formset %}
+                                    <div class="row g-2 align-items-center mb-2 border-bottom pb-2 pendencia-row">
+                                        {% for hidden in pen_f.hidden_fields %}{{ hidden }}{% endfor %}
+                                        <div class="col-md-4">{{ pen_f.tipo }}</div>
+                                        <div class="col-md-7">{{ pen_f.descricao }}</div>
+                                        <div class="col-md-1 text-center">
+                                            <button type="button" class="btn btn-sm btn-outline-danger remove-pendencia-btn"><i class="bi bi-trash"></i></button>
+                                            <div class="django-delete-checkbox d-none">{{ pen_f.DELETE }}</div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <button type="button" id="add-pendencia-btn" class="btn btn-outline-danger btn-sm mt-2 fw-bold">
+                                <i class="bi bi-plus-circle"></i> Adicionar Pendência
+                            </button>
+
+                        </div>
+
+                        <hr class="mt-5">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'home_page' %}" class="btn btn-secondary">Cancelar Edição</a>
+                            <button type="submit" class="btn btn-warning px-4 fw-bold">
+                                Salvar Alterações <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="card-body">
-            <form method="post" enctype="multipart/form-data" id="processForm">
-                {% csrf_token %}
-                {{ nota_fiscal_formset.management_form }}
-                {{ documento_formset.management_form }}
-                {{ retencao_formset.management_form }}
-
-                <div id="payment-info-block">
-                    <h5 class="text-secondary border-bottom pb-2 mb-3 mt-2">Informações do Processo</h5>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-4 d-flex align-items-end">
-                            <div class="form-check mb-2">
-                                {{ processo_form.extraorcamentario }}
-                                <label class="form-check-label fw-bold text-danger" for="id_processo-extraorcamentario">
-                                    <i class="bi bi-exclamation-circle"></i> Despesa Extraorçamentária
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-4"><label class="form-label">Tipo de Pagamento</label>{{ processo_form.tipo_pagamento }}</div>
-                        <div class="col-md-4"><label class="form-label">Status</label>{{ processo_form.status }}</div>
-                    </div>
-
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-3"><label class="form-label">Nota de Empenho</label>{{ processo_form.n_nota_empenho }}</div>
-                        <div class="col-md-6"><label class="form-label">Credor</label>{{ processo_form.credor }}</div>
-                        <div class="col-md-3"><label class="form-label">Data Empenho</label>{{ processo_form.data_empenho }}</div>
-                        <div class="col-md-3"><label class="form-label">Ano do Exercício</label>{{ processo_form.ano_exercicio }}</div>
-                    </div>
-
-                    <div id="bloco_transferencia" class="alert alert-secondary mt-2" style="display: none;">
-                        <h6 class="fw-bold mb-1"><i class="bi bi-bank"></i> Dados Bancários do Credor</h6>
-                        <div id="info_conta" class="small text-dark">Selecione um credor primeiro...</div>
-                    </div>
-
-                    <div id="bloco_boleto" class="alert alert-info mt-2" style="display: none;">
-                        <h6 class="fw-bold mb-2"><i class="bi bi-upc-scan"></i> Leitor Automático de Boleto</h6>
-                        <div class="input-group input-group-sm mb-2">
-                            <input type="file" id="boleto_upload" class="form-control" accept=".pdf">
-                            <button type="button" class="btn btn-primary fw-bold" id="btn_processar_boleto">Processar PDF</button>
-                        </div>
-                        <div id="boleto_status" class="small fw-bold"></div>
-                    </div>
-
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-3"><label class="form-label text-primary">Conta Bancária Sacada</label>{{ processo_form.conta }}</div>
-                        <div class="col-md-3"><label class="form-label text-primary">Valor Bruto (R$)</label>{{ processo_form.valor_bruto }}</div>
-                        <div class="col-md-3"><label class="form-label text-success">Valor Líquido (R$)</label>{{ processo_form.valor_liquido }}</div>
-                        <div class="col-md-4"><label class="form-label">Código de Barras</label>{{ processo_form.codigo_barras }}</div>
-                        <div class="col-md-2"><label class="form-label">Data Pagamento</label>{{ processo_form.data_pagamento }}</div>
-                        <div class="col-md-2"><label class="form-label">Vencimento</label>{{ processo_form.data_vencimento }}</div>
-                        <div class="col-md-4"><label class="form-label">Forma de Pagamento</label>{{ processo_form.forma_pagamento }}</div>
-                    </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6"><label class="form-label">Detalhamento</label>{{ processo_form.detalhamento }}</div>
-                        <div class="col-md-6"><label class="form-label">Observações</label>{{ processo_form.observacao }}</div>
-                        <div class="col-md-6"><label class="form-label">Tags</label>{{ processo_form.tag }}</div>
-                    </div>
-
-                    <h5 class="text-secondary border-bottom pb-2 mt-5 mb-3">🧾 Notas Fiscais e Impostos</h5>
-                    <div id="nf-list">
-                        {% for nf_f in nota_fiscal_formset %}
-                            <div class="card mb-3 shadow-sm border-secondary nf-card" data-nf-index="{{ forloop.counter0 }}">
-                                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-                                    <span>Nota Fiscal #{{ forloop.counter }}</span>
-                                    {% if nf_f.instance.pk %}
-                                        <div class="form-check m-0">
-                                            {{ nf_f.DELETE }} <label class="form-check-label small text-white">Marcar para Excluir</label>
-                                        </div>
-                                    {% else %}
-                                        <button type="button" class="btn btn-sm btn-danger remove-nf-btn"><i class="bi bi-trash"></i></button>
-                                    {% endif %}
-                                </div>
-                                <div class="card-body">
-                                    {% for hidden in nf_f.hidden_fields %}{{ hidden }}{% endfor %}
-
-                                    <div class="row g-2 mb-3">
-                                        <div class="col-md-6"><label class="small fw-bold">Emitente</label>{{ nf_f.nome_emitente }}</div>
-                                        <div class="col-md-3"><label class="small fw-bold">CNPJ</label>{{ nf_f.cnpj_emitente }}</div>
-                                        <div class="col-md-3"><label class="small fw-bold">Nº Nota</label>{{ nf_f.numero_nota_fiscal }}</div>
-                                        <div class="col-md-4"><label class="small fw-bold">Data Emissão</label>{{ nf_f.data_emissao }}</div>
-                                        <div class="col-md-4"><label class="small fw-bold text-primary">Valor Bruto</label>{{ nf_f.valor_bruto }}</div>
-                                        <div class="col-md-4"><label class="small fw-bold text-success">Valor Líquido</label>{{ nf_f.valor_liquido }}</div>
-                                    </div>
-
-                                    <div class="taxes-container border-top pt-2">
-                                        <h6 class="text-muted small fw-bold">Impostos Retidos</h6>
-                                        <table class="table table-sm table-bordered mb-1"><tbody class="tax-body">
-                                            {% if nf_f.instance.pk %}
-                                                {% for ret in nf_f.instance.retencoes.all %}
-                                                <tr>
-                                                    <td>
-                                                        <select name="imposto_{{ forloop.parentloop.counter0 }}_code" class="form-select form-select-sm">
-                                                            <option value="{{ ret.codigo.id }}" selected>{{ ret.codigo.codigo }}</option>
-                                                        </select>
-                                                    </td>
-                                                    <td>
-                                                        <input type="number" step="0.01" name="imposto_{{ forloop.parentloop.counter0 }}_value" class="form-control form-control-sm tax-val-input" value="{{ ret.valor|stringformat:'f' }}">
-                                                    </td>
-                                                    <td><button type="button" class="btn btn-sm btn-outline-danger remove-tax-btn"><i class="bi bi-x"></i></button></td>
-                                                </tr>
-                                                {% endfor %}
-                                            {% endif %}
-                                        </tbody></table>
-                                        <button type="button" class="btn btn-xs btn-outline-secondary add-tax-btn small">+ Imposto</button>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                    <button type="button" id="add-nf-btn" class="btn btn-primary btn-sm">
-                        <i class="bi bi-plus-lg"></i> Adicionar Nota Fiscal
-                    </button>
-
-                    <h5 class="text-secondary border-bottom pb-2 mt-5 mb-3">📂 Documentos e Anexos</h5>
-                    <div id="document-list" class="bg-white p-3 rounded border">
-                        {% for doc_f in documento_formset %}
-                            <div class="row g-2 align-items-center mb-2 border-bottom pb-2 document-row">
-                                {% for hidden in doc_f.hidden_fields %}{{ hidden }}{% endfor %}
-                                <div class="col-md-1"><label class="small text-muted d-block">Ordem</label>{{ doc_f.ordem }}</div>
-                                <div class="col-md-3"><label class="small text-muted d-block">Tipo</label>{{ doc_f.tipo }}</div>
-                                <div class="col-md-5">
-                                    <label class="small text-muted d-block">Arquivo</label>
-                                    {% if doc_f.instance.arquivo %}
-                                        <a href="{{ doc_f.instance.arquivo.url }}" target="_blank" class="d-block small text-truncate">{{ doc_f.instance.arquivo.name }}</a>
-                                    {% endif %}
-                                    {{ doc_f.arquivo }}
-                                </div>
-                                <div class="col-md-3 text-center">
-                                    <label class="small text-danger d-block">Remover Documento?</label>
-                                    {% if doc_f.instance.pk %}
-                                        {{ doc_f.DELETE }}
-                                    {% else %}
-                                        <button type="button" class="btn btn-sm btn-outline-danger remove-doc-btn">×</button>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                    <button type="button" id="add-doc-btn" class="btn btn-outline-primary btn-sm mt-2">
-                        <i class="bi bi-plus-circle"></i> Adicionar Novo Documento
-                    </button>
+        <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog"><div class="modal-content">
+                <div class="modal-header bg-success text-white"><h5 class="modal-title">Confirmação de Processo</h5></div>
+                <div class="modal-body">
+                    <p><strong>Credor:</strong> <span id="prev_credor"></span></p>
+                    <p><strong>Valor Líquido:</strong> R$ <span id="prev_val"></span></p>
                 </div>
-
-                <hr class="mt-5">
-
-                <div class="d-flex justify-content-end gap-2">
-                    <a href="{% url 'home_page' %}" class="btn btn-secondary">Cancelar Edição</a>
-                    <button type="submit" class="btn btn-success px-4 fw-bold">
-                        Salvar Alterações
-                    </button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Editar</button>
+                    <button type="submit" class="btn btn-primary fw-bold">Prosseguir</button>
                 </div>
+            </div></div>
+        </div>
+    </form>
+</div>
 
-                <div id="empty-nf-form">
-                    <div class="card mb-3 shadow-sm border-secondary nf-card">
-                        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-                            <span>Nota Fiscal #<span class="nf-number-display">1</span></span>
-                            <button type="button" class="btn btn-sm btn-danger remove-nf-btn"><i class="bi bi-trash"></i></button>
-                        </div>
-                        <div class="card-body">
-                            <input type="hidden" name="nota_fiscal-__prefix__-id" id="id_nota_fiscal-__prefix__-id">
-                            <div class="row g-2 mb-3">
-                                <div class="col-md-6"><label class="small fw-bold">Emitente</label><input type="text" name="nota_fiscal-__prefix__-nome_emitente" class="form-control form-control-sm"></div>
-                                <div class="col-md-3"><label class="small fw-bold">CNPJ</label><input type="text" name="nota_fiscal-__prefix__-cnpj_emitente" class="form-control form-control-sm"></div>
-                                <div class="col-md-3"><label class="small fw-bold">Nº Nota</label><input type="text" name="nota_fiscal-__prefix__-numero_nota_fiscal" class="form-control form-control-sm"></div>
-                                <div class="col-md-4"><label class="small fw-bold">Data Emissão</label><input type="date" name="nota_fiscal-__prefix__-data_emissao" class="form-control form-control-sm"></div>
-                                <div class="col-md-4"><label class="small fw-bold text-primary">Valor Bruto</label><input type="number" step="0.01" name="nota_fiscal-__prefix__-valor_bruto" class="form-control form-control-sm"></div>
-                                <div class="col-md-4"><label class="small fw-bold text-success">Valor Líquido</label><input type="number" step="0.01" name="nota_fiscal-__prefix__-valor_liquido" class="form-control form-control-sm"></div>
-                            </div>
-                            <div class="taxes-container border-top pt-2">
-                                <h6 class="text-muted small fw-bold">Impostos Retidos</h6>
-                                <table class="table table-sm table-bordered mb-1">
-                                    <thead class="table-light small">
-                                        <tr>
-                                            <th>Imposto</th>
-                                            <th>Rend. Tributável (R$)</th>
-                                            <th>Valor Retido (R$)</th>
-                                            <th style="width: 40px;"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="tax-body">
-                                        {% if nf_f.instance.pk %}
-                                            {% for ret in nf_f.instance.retencoes.all %}
-                                            <tr>
-                                                <td>
-                                                    <select name="imposto_{{ forloop.parentloop.counter0 }}_code" class="form-select form-select-sm">
-                                                        <option value="{{ ret.codigo.id }}" selected>{{ ret.codigo.codigo }}</option>
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <input type="number" step="0.01" name="imposto_{{ forloop.parentloop.counter0 }}_rendimento" class="form-control form-control-sm tax-rend-input" value="{% if ret.rendimento_tributavel %}{{ ret.rendimento_tributavel|stringformat:'f' }}{% endif %}" placeholder="Rend. Trib.">
-                                                </td>
-                                                <td>
-                                                    <input type="number" step="0.01" name="imposto_{{ forloop.parentloop.counter0 }}_value" class="form-control form-control-sm tax-val-input" value="{{ ret.valor|stringformat:'f' }}" placeholder="Valor Retido">
-                                                </td>
-                                                <td><button type="button" class="btn btn-sm btn-outline-danger remove-tax-btn"><i class="bi bi-x"></i></button></td>
-                                            </tr>
-                                            {% endfor %}
-                                        {% endif %}
-                                    </tbody>
-                                </table>
-                                <button type="button" class="btn btn-xs btn-outline-secondary add-tax-btn small">+ Imposto</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<div id="empty-doc-form">
+    <div class="row g-2 align-items-start mb-2 border-bottom pb-2 document-row bg-white">
+        <div class="col-md-1 text-center drag-handle" style="cursor: grab;"><i class="bi bi-grip-vertical fs-5 text-secondary"></i></div>
+        <div class="col-md-1"><input type="number" name="documento-__prefix__-ordem" class="form-control form-control-sm text-center bg-light" value="1" readonly tabindex="-1"></div>
+        <div class="col-md-3">{{ documento_formset.empty_form.tipo }}</div>
+        <div class="col-md-4">
+            <input type="file" name="documento-__prefix__-arquivo" class="form-control form-control-sm doc-file-input">
+            <small class="text-primary fw-bold mt-1 d-block doc-filename-display" style="min-height: 18px;"></small>
+        </div>
+        <div class="col-md-3 text-end d-flex flex-column justify-content-end" style="height: 52px;">
+            <div class="d-flex justify-content-end gap-1">
+                <button type="button" class="btn btn-sm btn-outline-success extract-doc-btn" title="Extrair com IA" style="display: none;"><i class="bi bi-magic"></i> IA</button>
+                <button type="button" class="btn btn-sm btn-outline-primary preview-doc-btn" title="Ver no painel esquerdo" style="display: none;"><i class="bi bi-eye"></i></button>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-doc-btn" tabindex="-1" title="Remover Documento"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
 
-                <table id="empty-tax-row">
-                    <tr>
-                        <td>{{ retencao_formset.empty_form.codigo }}</td>
-                        <td>
-                            <input type="number" step="0.01" class="form-control form-control-sm tax-rend-input" placeholder="Rend. Trib. (Opcional)">
-                        </td>
-                        <td>
-                            <input type="number" step="0.01" class="form-control form-control-sm tax-val-input" placeholder="Valor Retido">
-                        </td>
-                        <td>
-                            <button type="button" class="btn btn-sm btn-outline-danger remove-tax-btn"><i class="bi bi-x"></i></button>
-                        </td>
-                    </tr>
-                </table>
-
-                <div id="empty-doc-form">
-                    <div class="row g-2 align-items-center mb-2 border-bottom pb-2 document-row">
-                        <div class="col-md-1"><input type="number" name="documento-__prefix__-ordem" class="form-control form-control-sm" value="1"></div>
-                        <div class="col-md-3">
-                            {{ documento_formset.empty_form.tipo }}
-                        </div>
-                        <div class="col-md-6"><input type="file" name="documento-__prefix__-arquivo" class="form-control form-control-sm"></div>
-                        <div class="col-md-2 text-center"><button type="button" class="btn btn-sm btn-outline-danger remove-doc-btn">×</button></div>
-                    </div>
-                </div>
-
-            </form>
+<div id="empty-pendencia-form">
+    <div class="row g-2 align-items-center mb-2 border-bottom pb-2 pendencia-row bg-white">
+        <div class="col-md-4">
+            <label class="small text-muted fw-bold d-block mb-1">Tipo de Pendência</label>
+            {{ pendencia_formset.empty_form.tipo }}
+        </div>
+        <div class="col-md-7">
+            <label class="small text-muted fw-bold d-block mb-1">Descrição</label>
+            {{ pendencia_formset.empty_form.descricao }}
+        </div>
+        <div class="col-md-1 text-center d-flex flex-column justify-content-end" style="height: 52px;">
+            <button type="button" class="btn btn-sm btn-outline-danger remove-pendencia-btn" tabindex="-1" title="Remover Pendência"><i class="bi bi-trash"></i></button>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
 <script>
+let dadosTemporariosIA = null;
+let documentoAtualIaFileInput = null; 
+
+function loadPdfIntoViewer(source) {
+    const viewer = document.getElementById('pdf-viewer');
+    const placeholder = document.getElementById('pdf-placeholder');
+    if (typeof source === 'string') {
+        viewer.src = source;
+        viewer.style.display = 'block';
+        placeholder.style.display = 'none';
+    } else if (source && source.type === "application/pdf") {
+        const fileURL = URL.createObjectURL(source);
+        viewer.src = fileURL;
+        viewer.style.display = 'block';
+        placeholder.style.display = 'none';
+    } else { alert("Apenas arquivos PDF podem ser visualizados no painel."); }
+}
+
+function formatarDataParaInput(dataStr) {
+    if (!dataStr) return '';
+    if (dataStr.includes('/')) { const p = dataStr.split('/'); if (p.length === 3) return `${p[2]}-${p[1]}-${p[0]}`; }
+    if (dataStr.includes('-')) { const p = dataStr.split('-'); if (p[0].length === 2) return `${p[2]}-${p[1]}-${p[0]}`; return dataStr; }
+    return dataStr;
+}
+
+window.cancelarExtracao = function() {
+    document.getElementById('painel_confirmacao_ia').style.display = 'none';
+    dadosTemporariosIA = null;
+    documentoAtualIaFileInput = null;
+};
+
 document.addEventListener('DOMContentLoaded', function() {
-    // ----------------------------------------------------------------------
-    // 1. NOTAS FISCAIS E IMPOSTOS
-    // ----------------------------------------------------------------------
-    const nfList = document.getElementById('nf-list');
-    const nfTotalInput = document.getElementById('id_nota_fiscal-TOTAL_FORMS');
 
-    document.getElementById('add-nf-btn').addEventListener('click', function() {
-        let count = parseInt(nfTotalInput.value);
-        let template = document.getElementById('empty-nf-form').innerHTML;
-        let newHtml = template.replace(/__prefix__/g, count);
-        let wrapper = document.createElement('div');
-        wrapper.innerHTML = newHtml;
-        let card = wrapper.firstElementChild;
-        card.querySelector('.nf-number-display').innerText = count + 1;
-        card.setAttribute('data-nf-index', count);
-        nfList.appendChild(card);
-        nfTotalInput.value = count + 1;
-    });
-
-    nfList.addEventListener('click', function(e) {
-        const target = e.target;
-        if (target.closest('.remove-nf-btn')) { target.closest('.nf-card').remove(); }
-        if (target.closest('.add-tax-btn')) {
-            const card = target.closest('.nf-card');
-            const nfIndex = card.getAttribute('data-nf-index');
-            const rowTemplate = document.getElementById('empty-tax-row').querySelector('tr').cloneNode(true);
-
-            // O empty form default do Django pode trazer selects complexos. Vamos simplificar o name:
-            const selectElement = rowTemplate.querySelector('select');
-            if(selectElement) selectElement.name = `imposto_${nfIndex}_code`;
-            const rendElement = rowTemplate.querySelector('.tax-rend-input');
-            if(rendElement) rendElement.name = `imposto_${nfIndex}_rendimento`;
-            const inputElement = rowTemplate.querySelector('.tax-val-input');
-            if(inputElement) inputElement.name = `imposto_${nfIndex}_value`;
-
-            card.querySelector('.tax-body').appendChild(rowTemplate);
-        }
-        if (target.closest('.remove-tax-btn')) { target.closest('tr').remove(); }
-    });
-
-    // ----------------------------------------------------------------------
-    // 2. DOCUMENTOS E ANEXOS
-    // ----------------------------------------------------------------------
-    const docList = document.getElementById('document-list');
     const docTotalInput = document.getElementById('id_documento-TOTAL_FORMS');
+    const containerDocumentos = document.getElementById('document-list');
 
-    document.getElementById('add-doc-btn').addEventListener('click', function() {
-        let count = parseInt(docTotalInput.value);
-        let template = document.getElementById('empty-doc-form').innerHTML;
-        let newHtml = template.replace(/__prefix__/g, count);
-        let div = document.createElement('div');
-        div.innerHTML = newHtml;
-        docList.appendChild(div.firstElementChild);
-        docTotalInput.value = count + 1;
-    });
-
-    docList.addEventListener('click', function(e) {
-        if (e.target.closest('.remove-doc-btn')) { e.target.closest('.document-row').remove(); }
-    });
-
-    // ----------------------------------------------------------------------
-    // 3. WIDGETS DINÂMICOS: BOLETO E TRANSFERÊNCIA
-    // ----------------------------------------------------------------------
-    const selectFormaPgto = document.querySelector('[name="processo-forma_pagamento"]');
-    const selectCredor = document.querySelector('[name="processo-credor"]');
-    const blocoTransf = document.getElementById('bloco_transferencia');
-    const blocoBoleto = document.getElementById('bloco_boleto');
-    const infoConta = document.getElementById('info_conta');
-    const statusBoleto = document.getElementById('boleto_status');
-
-    function atualizarVisibilidadeWidgets() {
-        if (!selectFormaPgto) return;
-
-        let forma = "";
-        if(selectFormaPgto.tagName.toLowerCase() === 'select' && selectFormaPgto.selectedIndex >= 0) {
-             forma = selectFormaPgto.options[selectFormaPgto.selectedIndex].text.toLowerCase();
-        } else {
-             forma = selectFormaPgto.value.toLowerCase();
+    // PROTEÇÃO ANTES DO ENVIO
+    document.getElementById('processForm').addEventListener('submit', function(e) {
+        if (containerDocumentos) {
+            const docRows = containerDocumentos.querySelectorAll('.document-row');
+            docRows.forEach(row => {
+                const fileInput = row.querySelector('input[type="file"]');
+                const hasSaved = row.querySelector('.doc-filename-display') && row.querySelector('.doc-filename-display').innerText.trim() !== '';
+                const isDeleted = row.style.display === 'none';
+                if (!isDeleted && (!fileInput || fileInput.files.length === 0) && !hasSaved) {
+                    const idInput = row.querySelector('input[type="hidden"][name$="-id"]');
+                    if (!idInput || !idInput.value) { row.remove(); }
+                }
+            });
+            const remainingRows = containerDocumentos.querySelectorAll('.document-row');
+            remainingRows.forEach((row, index) => {
+                row.querySelectorAll('input, select').forEach(el => {
+                    if (el.name) el.name = el.name.replace(/-\d+-/, `-${index}-`);
+                    if (el.id) el.id = el.id.replace(/-\d+-/, `-${index}-`);
+                });
+            });
+            document.getElementById('id_documento-TOTAL_FORMS').value = remainingRows.length;
         }
 
-        blocoTransf.style.display = forma.includes('transferência') ? 'block' : 'none';
-        blocoBoleto.style.display = forma.includes('boleto') ? 'block' : 'none';
-
-        if (forma.includes('transferência') && selectCredor && selectCredor.value) {
-            buscarDadosBancarios(selectCredor.value);
+        const penList = document.getElementById('pendencia-list');
+        if (penList) {
+            const penRows = penList.querySelectorAll('.pendencia-row');
+            penRows.forEach(row => {
+                const descInput = row.querySelector('input[name$="-descricao"]');
+                const isDeleted = row.style.display === 'none';
+                if (!isDeleted && (!descInput || !descInput.value.trim())) {
+                    const idInput = row.querySelector('input[type="hidden"][name$="-id"]');
+                    if (!idInput || !idInput.value) { row.remove(); }
+                }
+            });
+            const remainingPenRows = penList.querySelectorAll('.pendencia-row');
+            remainingPenRows.forEach((row, index) => {
+                row.querySelectorAll('input, select').forEach(el => {
+                    if (el.name) el.name = el.name.replace(/-\d+-/, `-${index}-`);
+                    if (el.id) el.id = el.id.replace(/-\d+-/, `-${index}-`);
+                });
+            });
+            document.getElementById('id_pendencia-TOTAL_FORMS').value = remainingPenRows.length;
         }
-    }
+    });
 
-    if (selectFormaPgto) selectFormaPgto.addEventListener('change', atualizarVisibilidadeWidgets);
-    if (selectCredor) {
-        selectCredor.addEventListener('change', function() {
-            if (blocoTransf.style.display === 'block') buscarDadosBancarios(this.value);
+    // PENDÊNCIAS DINÂMICAS
+    const pendenciaList = document.getElementById('pendencia-list');
+    const pendenciaTotalInput = document.getElementById('id_pendencia-TOTAL_FORMS');
+    const btnAddPendencia = document.getElementById('add-pendencia-btn');
+    if (btnAddPendencia && pendenciaList) {
+        btnAddPendencia.addEventListener('click', function() {
+            let count = parseInt(pendenciaTotalInput.value);
+            let newHtml = document.getElementById('empty-pendencia-form').innerHTML.replace(/__prefix__/g, count);
+            let div = document.createElement('div');
+            div.innerHTML = newHtml;
+            pendenciaList.appendChild(div.firstElementChild);
+            pendenciaTotalInput.value = count + 1;
+        });
+
+        pendenciaList.addEventListener('click', function(e) {
+            const btnRemove = e.target.closest('.remove-pendencia-btn');
+            if (btnRemove) {
+                const linha = btnRemove.closest('.pendencia-row');
+                const checkboxDelete = linha.querySelector('input[type="checkbox"][name$="-DELETE"]');
+                if (checkboxDelete) { checkboxDelete.checked = true; linha.style.display = 'none'; } else { linha.remove(); }
+            }
         });
     }
 
-    atualizarVisibilidadeWidgets();
+    // DOCUMENTOS - CADEADO
+    const selectTipoPagamento = document.getElementById('id_processo-tipo_pagamento');
+    const avisoDocumentos = document.getElementById('avisoDocumentos');
+    const blocoDocumentos = document.getElementById('bloco-documentos');
 
-    function buscarDadosBancarios(credorId) {
-        if (!credorId) return;
-        infoConta.innerHTML = "Buscando dados...";
-        fetch(`/api/dados-bancarios/${credorId}/`)
+    function atualizarTiposDeDocumento(isUserChange = false) {
+        if(!selectTipoPagamento) return;
+        const tipoId = selectTipoPagamento.value;
+        if (!tipoId) { blocoDocumentos.style.display = 'none'; avisoDocumentos.style.display = 'block'; return; }
+        avisoDocumentos.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Carregando documentos...';
+        avisoDocumentos.style.display = 'block';
+
+        fetch(`/api/documentos-por-pagamento/?tipo_pagamento_id=${tipoId}`)
             .then(res => res.json())
             .then(data => {
-                if(data.sucesso) {
-                    infoConta.innerHTML = `Banco: ${data.banco || '-'} | Ag: ${data.agencia || '-'} | Conta: ${data.conta || '-'} <br> PIX: ${data.pix || '-'}`;
-                } else {
-                    infoConta.innerHTML = "Dados não encontrados.";
+                if (data.sucesso) {
+                    const templateSelect = document.querySelector('#empty-doc-form select[name$="-tipo"]');
+                    if(templateSelect) templateSelect.innerHTML = '<option value="">---------</option>';
+                    data.tipos.forEach(tipo => {
+                        const option = document.createElement('option');
+                        option.value = tipo.id; option.textContent = tipo.tipo_de_documento;
+                        if(templateSelect) templateSelect.appendChild(option);
+                    });
+                    const selectsVisiveis = containerDocumentos.querySelectorAll('select[name$="-tipo"]');
+                    selectsVisiveis.forEach(select => {
+                        const valorAntigo = select.value;
+                        if(templateSelect) select.innerHTML = templateSelect.innerHTML;
+                        if (!isUserChange) { select.value = valorAntigo; }
+                    });
+                    avisoDocumentos.style.display = 'none'; blocoDocumentos.style.display = 'block';
                 }
-            })
-            .catch(err => {
-                infoConta.innerHTML = "Erro ao buscar dados.";
-                console.error(err);
             });
     }
 
-    const checkExtra = document.querySelector('[name="processo-extraorcamentario"]');
-    const inputEmpenho = document.querySelector('[name="processo-n_nota_empenho"]');
-
-    if (checkExtra && inputEmpenho) {
-        const blocoEmpenho = inputEmpenho.closest('.col-md-3');
-        function toggleEmpenho() {
-            if (checkExtra.checked) {
-                blocoEmpenho.style.display = 'none';
-                inputEmpenho.value = '';
-            } else {
-                blocoEmpenho.style.display = 'block';
-            }
-        }
-        checkExtra.addEventListener('change', toggleEmpenho);
-        toggleEmpenho();
+    if (selectTipoPagamento) {
+        selectTipoPagamento.addEventListener('change', () => atualizarTiposDeDocumento(true));
+        if (selectTipoPagamento.value) atualizarTiposDeDocumento(false);
     }
+
+    // DOCUMENTOS - DRAG/DROP E IA
+    function recalcularOrdemDocumentos() {
+        if(!containerDocumentos) return;
+        const rows = containerDocumentos.querySelectorAll('.document-row');
+        let contagemReal = 1;
+        rows.forEach((row) => {
+            if (row.style.display !== 'none') {
+                const inputOrdem = row.querySelector('input[name$="-ordem"]');
+                if (inputOrdem) { inputOrdem.value = contagemReal; contagemReal++; }
+            }
+        });
+    }
+
+    if (containerDocumentos) {
+        new Sortable(containerDocumentos, { handle: '.drag-handle', ghostClass: 'bg-light', onEnd: recalcularOrdemDocumentos });
+        recalcularOrdemDocumentos();
+
+        document.getElementById('add-doc-btn').addEventListener('click', function() {
+            let count = parseInt(docTotalInput.value);
+            let newHtml = document.getElementById('empty-doc-form').innerHTML.replace(/__prefix__/g, count);
+            let div = document.createElement('div');
+            div.innerHTML = newHtml;
+            containerDocumentos.appendChild(div.firstElementChild);
+            docTotalInput.value = count + 1;
+            recalcularOrdemDocumentos();
+            
+            const optionsCurrent = document.querySelector('#empty-doc-form select[name$="-tipo"]').innerHTML;
+            const selectNew = containerDocumentos.lastElementChild.querySelector('select[name$="-tipo"]');
+            if(selectNew) selectNew.innerHTML = optionsCurrent;
+        });
+
+        containerDocumentos.addEventListener('click', function(e) {
+            const btnPreview = e.target.closest('.preview-doc-btn');
+            if (btnPreview) {
+                const remoteUrl = btnPreview.getAttribute('data-url');
+                if (remoteUrl) { loadPdfIntoViewer(remoteUrl); return; }
+                const fileInput = btnPreview.closest('.document-row').querySelector('input[type="file"]');
+                if (fileInput && fileInput.files.length > 0) loadPdfIntoViewer(fileInput.files[0]);
+            }
+
+            const btnExtract = e.target.closest('.extract-doc-btn');
+            if (btnExtract) {
+                const linha = btnExtract.closest('.document-row');
+                const fileInput = linha.querySelector('input[type="file"]');
+                const selectTipoDoc = linha.querySelector('select[name$="-tipo"]');
+                
+                if (!selectTipoDoc || !selectTipoDoc.value) {
+                    alert("⚠️ Selecione o 'Tipo' do documento antes de usar a IA.");
+                    if (selectTipoDoc) selectTipoDoc.focus();
+                    return;
+                }
+
+                let tipoTexto = selectTipoDoc.options[selectTipoDoc.selectedIndex].text.toUpperCase();
+                let tipoIa = '';
+                if (tipoTexto.includes('NOTA FISCAL')) tipoIa = 'NOTA FISCAL (NF)';
+                else if (tipoTexto.includes('ORÇAMENTÁRIO') || tipoTexto.includes('EMPENHO')) tipoIa = 'DOCUMENTOS ORÇAMENTÁRIOS';
+                else if (tipoTexto.includes('BOLETO')) tipoIa = 'BOLETO BANCÁRIO';
+                else { alert("⚠️ A IA suporta apenas extração de: Notas Fiscais, Documentos Orçamentários e Boletos."); return; }
+
+                if (!fileInput || fileInput.files.length === 0) {
+                    alert("⚠️ Extração funciona apenas para arquivos recém-anexados. Anexe o PDF novamente."); return;
+                }
+
+                const formData = new FormData();
+                formData.append('arquivo', fileInput.files[0]);
+                formData.append('tipo', tipoIa);
+                formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+                const originalHtml = btnExtract.innerHTML;
+                btnExtract.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                btnExtract.disabled = true;
+
+                fetch("{% url 'api_extracao_universal' %}", { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        dadosTemporariosIA = data.dados;
+                        
+                        const container = document.getElementById('dados_preview_container');
+                        container.innerHTML = '';
+                        const payload = data.dados.dados_gerais || data.dados;
+
+                        for (const [key, value] of Object.entries(payload)) {
+                            if (value && typeof value !== 'object') {
+                                const label = key.replace(/_/g, ' ').toUpperCase();
+                                container.innerHTML += `<div class="col-md-3"><div class="p-2 border rounded bg-light"><small class="d-block text-muted" style="font-size: 0.65rem">${label}</small><span class="fw-bold small text-success">${value}</span></div></div>`;
+                            }
+                        }
+                        
+                        const painelConfirmacao = document.getElementById('painel_confirmacao_ia');
+                        painelConfirmacao.style.display = 'block';
+                        painelConfirmacao.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        loadPdfIntoViewer(fileInput.files[0]);
+
+                    } else { alert("Erro: " + data.message); }
+                })
+                .finally(() => { btnExtract.innerHTML = originalHtml; btnExtract.disabled = false; });
+            }
+
+            const btnRemove = e.target.closest('.remove-doc-btn');
+            if (btnRemove) {
+                const linha = btnRemove.closest('.document-row');
+                const checkDel = linha.querySelector('input[type="checkbox"][name$="-DELETE"]');
+                if (checkDel) { checkDel.checked = true; linha.style.display = 'none'; } else { linha.remove(); }
+                recalcularOrdemDocumentos();
+            }
+        });
+
+        containerDocumentos.addEventListener('change', function(e) {
+            if (e.target.matches('input[type="file"]')) {
+                const row = e.target.closest('.document-row');
+                const displaySpan = row.querySelector('.doc-filename-display');
+                const btnPreview = row.querySelector('.preview-doc-btn');
+                const btnExtract = row.querySelector('.extract-doc-btn');
+
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    if (displaySpan) displaySpan.innerHTML = `<i class="bi bi-file-earmark-check"></i> Anexado: ${file.name}`;
+                    if (file.type === "application/pdf") {
+                        if(btnPreview) { btnPreview.style.display = 'inline-block'; btnPreview.removeAttribute('data-url'); }
+                        if(btnExtract) btnExtract.style.display = 'inline-block';
+                        loadPdfIntoViewer(file); 
+                    }
+                } else {
+                    if(btnPreview) btnPreview.style.display = 'none';
+                    if(btnExtract) btnExtract.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    // Dropzone Inteligente
+    const dropzone = document.getElementById('dropzone-area');
+    const bulkInput = document.getElementById('bulk-file-input');
+    if (dropzone && bulkInput) {
+        dropzone.addEventListener('click', () => bulkInput.click());
+        dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.replace('bg-light', 'bg-warning'); });
+        dropzone.addEventListener('dragleave', (e) => { e.preventDefault(); dropzone.classList.replace('bg-warning', 'bg-light'); });
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault(); dropzone.classList.replace('bg-warning', 'bg-light');
+            if (e.dataTransfer.files.length > 0) processarArquivosEmLote(e.dataTransfer.files);
+        });
+
+        bulkInput.addEventListener('change', function() {
+            if (this.files.length > 0) processarArquivosEmLote(this.files);
+            this.value = ''; 
+        });
+    }
+
+    function processarArquivosEmLote(files) {
+        Array.from(files).forEach(file => {
+            const rows = containerDocumentos.querySelectorAll('.document-row');
+            let targetRow = rows[rows.length - 1];
+            let fileInput = targetRow ? targetRow.querySelector('input[type="file"]') : null;
+            let hasSaved = targetRow ? (targetRow.querySelector('.doc-filename-display') && targetRow.querySelector('.doc-filename-display').innerText.trim() !== '') : false;
+            
+            if (!fileInput || fileInput.files.length > 0 || hasSaved) {
+                document.getElementById('add-doc-btn').click();
+                const newRows = containerDocumentos.querySelectorAll('.document-row');
+                targetRow = newRows[newRows.length - 1];
+                fileInput = targetRow.querySelector('input[type="file"]');
+            }
+
+            if (fileInput) {
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                fileInput.files = dt.files;
+                fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+        dropzone.querySelector('.dropzone-text').innerHTML = `<i class="bi bi-check2-circle"></i> ${files.length} arquivos inseridos!`;
+        setTimeout(() => { dropzone.querySelector('.dropzone-text').innerHTML = "Arraste novos arquivos aqui"; }, 3000);
+    }
+
+    // LÓGICA DE AUTOFILL IA
+    const btnConfirmarIA = document.getElementById('btn_confirmar_extracao');
+    if(btnConfirmarIA) {
+        btnConfirmarIA.addEventListener('click', function() {
+            if (!dadosTemporariosIA) return;
+            const d = dadosTemporariosIA.dados_gerais || dadosTemporariosIA;
+
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el && val) el.value = val;
+            };
+
+            setVal('id_processo-n_nota_empenho', d.n_nota_empenho);
+            setVal('id_processo-data_empenho', formatarDataParaInput(d.data_empenho));
+            setVal('id_processo-valor_bruto', d.valor_bruto);
+            setVal('id_processo-valor_liquido', d.valor_liquido);
+            setVal('id_processo-codigo_barras', d.codigo_barras);
+            setVal('id_processo-data_vencimento', formatarDataParaInput(d.data_vencimento));
+            setVal('id_processo-detalhamento', d.detalhamento);
+
+            alert("Sucesso! Os dados foram preenchidos na Capa do Processo.");
+            window.cancelarExtracao();
+        });
+    }
+
+    // ==========================================
+    // EXIBIÇÃO DINÂMICA: FORMA DE PAGAMENTO
+    // ==========================================
+    const selectFormaPagamento = document.getElementById('id_processo-forma_pagamento');
+    const blocoBoleto = document.getElementById('bloco_boleto');
+    const blocoTransferencia = document.getElementById('bloco_transferencia');
+    const blocoPix = document.getElementById('bloco_pix');
+
+    function gerenciarVisibilidadePagamento() {
+        if (!selectFormaPagamento) return;
+        
+        let formaStr = "";
+        if (selectFormaPagamento.selectedIndex >= 0) {
+            formaStr = selectFormaPagamento.options[selectFormaPagamento.selectedIndex].text.toUpperCase();
+            // Remove os acentos da palavra para que o Javascript encontre de certeza
+            formaStr = formaStr.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
+
+        // Esconde todos os paineis primeiro
+        if (blocoBoleto) blocoBoleto.style.display = 'none';
+        if (blocoTransferencia) blocoTransferencia.style.display = 'none';
+        if (blocoPix) blocoPix.style.display = 'none';
+
+        // Mostra apenas o que interessa
+        if (formaStr.includes('BOLETO') || formaStr.includes('GERENCIADOR')) {
+            if (blocoBoleto) blocoBoleto.style.display = 'flex';
+        } else if (formaStr.includes('TRANSFERENCIA') || formaStr.includes('TED') || formaStr.includes('DOC')) {
+            if (blocoTransferencia) blocoTransferencia.style.display = 'flex';
+        } else if (formaStr.includes('PIX')) {
+            if (blocoPix) blocoPix.style.display = 'flex';
+        }
+    }
+
+    if (selectFormaPagamento) {
+        selectFormaPagamento.addEventListener('change', gerenciarVisibilidadePagamento);
+        gerenciarVisibilidadePagamento(); // Aciona no load para exibir a UI correta se já houver algo selecionado
+    }
+
 });
+
+window.check_information_alert = function() {
+    const credorEl = document.getElementById('id_processo-credor');
+    if(credorEl && credorEl.selectedIndex >= 0 && document.getElementById('prev_credor')) {
+        document.getElementById('prev_credor').innerText = credorEl.options[credorEl.selectedIndex].text;
+    } else if (document.getElementById('prev_credor')) {
+        document.getElementById('prev_credor').innerText = "---";
+    }
+    
+    const valEl = document.getElementById('id_processo-valor_liquido');
+    if(document.getElementById('prev_val')) document.getElementById('prev_val').innerText = valEl ? valEl.value : "0,00";
+};
 </script>
 </body>
 </html>

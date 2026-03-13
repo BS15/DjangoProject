@@ -7,7 +7,7 @@ from .models import (
     ContasBancarias, TiposDeVerbasIndenizatorias,
     StatusChoicesPendencias, Grupos, CargosFuncoes,
     Tabela_Valores_Unitarios_Verbas_Indenizatorias, Tabela_Proponentes_Diarias,
-    StatusChoicesRetencoes
+    StatusChoicesRetencoes, TiposDePendencias, Pendencia
 )
 # ==========================================
 # TABELAS DE PARAMETRIZAÇÃO (CONFIGURAÇÕES)
@@ -73,3 +73,5 @@ admin.site.register(StatusChoicesPendencias)
 admin.site.register(Tabela_Valores_Unitarios_Verbas_Indenizatorias),
 admin.site.register(Tabela_Proponentes_Diarias)
 admin.site.register(StatusChoicesRetencoes)
+admin.site.register(TiposDePendencias)
+admin.site.register(Pendencia)

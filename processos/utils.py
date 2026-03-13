@@ -2,11 +2,14 @@ import io
 import pdfplumber
 import PyPDF2
 import re
+import uuid
 from collections import Counter
-from pypdf import PdfWriter
+from pypdf import PdfWriter, PdfReader
 from datetime import datetime, timedelta
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
 
 def mesclar_pdfs_em_memoria(lista_arquivos):
     """
@@ -304,3 +307,70 @@ def processar_pdf_comprovantes(pdf_file):
             })
     print(resultados)
     return resultados
+
+def gerar_termo_auditoria(processo, usuario_nome="Conselheiro Fiscal"):
+    """Gera uma folha de rosto em PDF na memória atestando o fechamento."""
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    # Cabeçalho
+    p.setFont("Helvetica-Bold", 16)
+    p.drawCentredString(width / 2.0, height - 100, "TERMO DE ENCERRAMENTO E AUDITORIA FISCAL")
+
+    # Dados do Processo
+    p.setFont("Helvetica", 12)
+    p.drawString(100, height - 160, f"Processo Nº: {processo.id}")
+    p.drawString(100, height - 180, f"Credor: {processo.credor}")
+    p.drawString(100, height - 200, f"Valor Consolidado: R$ {processo.valor_liquido}")
+    p.drawString(100, height - 220, f"Data/Hora do Fechamento: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+
+    # Declaração
+    texto_declaracao = (
+        "Certifico que os documentos anexos a este processo foram conferidos em sua "
+        "integralidade, consolidados em arquivo único e aprovados pelo Conselho Fiscal, "
+        "estando aptos para arquivamento definitivo."
+    )
+    p.drawString(100, height - 280, texto_declaracao[:90])
+    p.drawString(100, height - 300, texto_declaracao[90:])
+
+    # Assinatura
+    p.line(150, height - 450, 450, height - 450)
+    p.drawCentredString(width / 2.0, height - 470, f"Assinado eletronicamente por: {usuario_nome}")
+
+    # Rodapé de segurança
+    p.setFont("Helvetica-Oblique", 8)
+    p.drawString(50, 50, f"Documento gerado automaticamente pelo System X - Integridade Garantida.")
+
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+    return buffer
+
+def fatiar_pdf_manual(arquivo_pdf):
+    """
+    Recebe um PDF, divide-o página a página e guarda ficheiros temporários.
+    Retorna uma lista de caminhos temporários.
+    """
+    pdf = PdfReader(arquivo_pdf)
+    caminhos_temporarios = []
+
+    for numero_pagina in range(len(pdf.pages)):
+        writer = PdfWriter()
+        writer.add_page(pdf.pages[numero_pagina])
+
+        buffer = io.BytesIO()
+        writer.write(buffer)
+        buffer.seek(0)
+
+        # Gera um nome único para evitar colisões
+        nome_temp = f"temp_comprovante_{uuid.uuid4().hex[:8]}_pag{numero_pagina+1}.pdf"
+        caminho_salvo = default_storage.save(f"temp/{nome_temp}", ContentFile(buffer.read()))
+
+        caminhos_temporarios.append({
+            'temp_path': caminho_salvo,
+            'url': default_storage.url(caminho_salvo), # Para o utilizador poder visualizar
+            'pagina': numero_pagina + 1
+        })
+
+    return caminhos_temporarios
