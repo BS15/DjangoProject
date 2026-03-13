@@ -348,12 +348,11 @@ class ComprovanteDePagamento(models.Model):
         related_name='comprovantes_pagamento',
         verbose_name="Processo"
     )
-    credor = models.ForeignKey(
-        'Credor',
-        on_delete=models.PROTECT,
-        blank=True,
+    credor_nome = models.CharField(
+        "Credor (Texto)",
+        max_length=200,
         null=True,
-        verbose_name="Credor"
+        blank=True
     )
     valor_pago = models.DecimalField(
         "Valor Pago",
@@ -382,7 +381,7 @@ class ComprovanteDePagamento(models.Model):
         verbose_name_plural = "Comprovantes de Pagamento"
 
     def __str__(self):
-        return f"Comprovante - {self.processo} - {self.credor} - R$ {self.valor_pago}"
+        return f"Comprovante - {self.processo} - {self.credor_nome} - R$ {self.valor_pago}"
 
 
 class NotaFiscal(models.Model):

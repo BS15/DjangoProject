@@ -2,227 +2,462 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Processar Comprovantes - System X</title>
+    <title>Vincular Comprovantes - System X</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .processo-row { cursor: pointer; transition: background 0.15s; }
+        .processo-row:hover { background-color: #e8f4fd !important; }
+        .processo-row.selecionavel-ativo:hover { background-color: #d4edda !important; }
+        .comprovante-card { border: 1px solid #dee2e6; border-radius: 8px; background: #fff; transition: border-color 0.15s, box-shadow 0.15s; }
+        .comprovante-card.selecionado { border-color: #0d6efd; box-shadow: 0 0 0 2px rgba(13,110,253,.25); }
+        .comprovante-card .card-header { background: #f8f9fa; border-bottom: 1px solid #dee2e6; border-radius: 7px 7px 0 0; padding: 8px 12px; }
+        .barra-total { position: sticky; top: 0; z-index: 10; }
+        #painel-processos { max-height: 80vh; overflow-y: auto; }
+        #lista-comprovantes-wrap { max-height: 80vh; overflow-y: auto; }
+    </style>
 </head>
 <body class="bg-light">
 
-<div class="container mt-4 mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-file-earmark-break"></i> Baixa em Lote de Comprovantes</h2>
-        <a href="{% url 'home_page' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Voltar</a>
+<div class="container-fluid mt-3 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0"><i class="bi bi-link-45deg"></i> Vinculação de Comprovantes de Pagamento</h4>
+        <a href="{% url 'home_page' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
     </div>
 
-    <div class="card shadow-sm border-0 mb-4 bg-white" id="bloco-upload">
-        <div class="card-body py-4 text-center">
-            <h5 class="text-primary mb-3">Selecione o PDF gerado pelo Internet Banking</h5>
-            <p class="text-muted small">O sistema dividirá o PDF por páginas para que você possa vincular manualmente cada comprovante ao seu respectivo processo.</p>
+    <div class="row g-3">
+        <!-- ====================== PAINEL ESQUERDO: COMPROVANTES ====================== -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-primary text-white py-2">
+                    <h6 class="mb-0"><i class="bi bi-file-earmark-break"></i> Comprovantes Extraídos do PDF</h6>
+                </div>
+                <div class="card-body pb-2">
+                    <!-- Upload Form -->
+                    <form id="form-upload" class="mb-3">
+                        {% csrf_token %}
+                        <div class="input-group input-group-sm">
+                            <input type="file" id="pdf_banco" name="pdf_banco" class="form-control" accept=".pdf" required>
+                            <select id="modo-extracao" class="form-select" style="max-width:160px">
+                                <option value="auto">Auto (rápido)</option>
+                                <option value="ia">IA (Gemini)</option>
+                                <option value="manual">Manual (só fatiar)</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary fw-bold" id="btn-processar">
+                                <i class="bi bi-scissors"></i> Fatiar PDF
+                            </button>
+                        </div>
+                        <div id="loading" class="mt-2 text-warning small fw-bold" style="display:none;">
+                            <span class="spinner-border spinner-border-sm"></span> Processando PDF...
+                        </div>
+                    </form>
 
-            <form id="form-upload" class="d-flex justify-content-center gap-2">
-                {% csrf_token %}
-                <input type="file" id="pdf_banco" name="pdf_banco" class="form-control w-50" accept=".pdf" required>
-                <button type="submit" class="btn btn-primary fw-bold px-4" id="btn-processar">
-                    Fatiar PDF
-                </button>
-            </form>
-            <div id="loading" class="mt-3 text-warning fw-bold" style="display: none;">
-                <div class="spinner-border spinner-border-sm"></div> Separando páginas...
+                    <!-- Barra de totais selecionados -->
+                    <div id="barra-total" class="barra-total alert alert-info py-2 px-3 mb-2 small" style="display:none;">
+                        <span id="txt-qtd-selecionados">0 comprovante(s) selecionado(s)</span>
+                        &nbsp;|&nbsp;
+                        <strong>Soma: R$ <span id="txt-soma-selecionados">0,00</span></strong>
+                        <button class="btn btn-sm btn-outline-secondary ms-2 py-0" onclick="limparSelecao()">
+                            <i class="bi bi-x-circle"></i> Limpar seleção
+                        </button>
+                    </div>
+
+                    <!-- Lista de comprovantes -->
+                    <div id="lista-comprovantes-wrap">
+                        <div id="lista-comprovantes">
+                            <p class="text-muted text-center small mt-4">
+                                <i class="bi bi-cloud-upload fs-3 d-block mb-2"></i>
+                                Carregue um PDF de extrato bancário para começar.
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="bloco-resultados" style="display: none;">
-        <div class="d-flex justify-content-between align-items-end mb-3">
-            <h5 class="fw-bold m-0 text-secondary">Comprovantes Fatiados</h5>
-            <button class="btn btn-success fw-bold shadow-sm" id="btn-salvar-tudo">
-                <i class="bi bi-check-all"></i> Confirmar Vínculos e Baixar Processos
-            </button>
-        </div>
+        <!-- ====================== PAINEL DIREITO: PROCESSOS ====================== -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-success text-white py-2">
+                    <h6 class="mb-0"><i class="bi bi-list-check"></i> Processos Aguardando Comprovante</h6>
+                </div>
+                <div class="card-body pb-2">
+                    <!-- Filtro e ordenação -->
+                    <div class="input-group input-group-sm mb-2">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" id="filtro-credor" class="form-control" placeholder="Filtrar por credor ou empenho...">
+                        <button class="btn btn-outline-secondary" id="btn-sort" title="Ordenar" onclick="alternarOrdem()">
+                            <i class="bi bi-sort-alpha-down" id="icone-sort"></i>
+                        </button>
+                    </div>
 
-        <div class="row g-3" id="lista-comprovantes">
+                    <!-- Instrução -->
+                    <div id="instrucao-vincular" class="alert alert-warning py-2 px-3 small mb-2" style="display:none;">
+                        <i class="bi bi-info-circle"></i>
+                        Comprovantes selecionados: <strong><span id="txt-qtd-instr">0</span></strong> |
+                        Soma: <strong>R$ <span id="txt-soma-instr">0,00</span></strong>
+                        <br>Clique em um processo para vincular.
+                    </div>
+
+                    <!-- Lista de processos -->
+                    <div id="painel-processos">
+                        <div id="lista-processos"></div>
+                    </div>
+                </div>
             </div>
+        </div>
     </div>
 </div>
 
 <script>
-    // Injeta os processos vindos do Django no Javascript de forma segura
-    const processosPendentes = JSON.parse('{{ processos_json|escapejs }}' || '[]');
-
-    // Elementos da tela
-    const formUpload = document.getElementById('form-upload');
-    const btnProcessar = document.getElementById('btn-processar');
-    const loading = document.getElementById('loading');
-    const blocoUpload = document.getElementById('bloco-upload');
-    const blocoResultados = document.getElementById('bloco-resultados');
-    const listaComprovantes = document.getElementById('lista-comprovantes');
-    const btnSalvarTudo = document.getElementById('btn-salvar-tudo');
+    const processosPendentes = JSON.parse('{{ processos_json|escapejs }}');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
     let comprovantesEmMemoria = [];
+    let selecionados = new Set(); // índices dos comprovantes selecionados
+    let ordemAsc = true;
+    let processosVisiveis = [...processosPendentes];
 
-    // PASSO 1: Enviar para fatiamento MANUAL
-    formUpload.addEventListener('submit', function(e) {
+    // ===================== INICIALIZAÇÃO =====================
+    renderizarListaProcessos();
+
+    // ===================== UPLOAD E FATIAMENTO =====================
+    document.getElementById('form-upload').addEventListener('submit', function(e) {
         e.preventDefault();
-
         const fileInput = document.getElementById('pdf_banco');
         if (!fileInput.files.length) return;
 
-        let formData = new FormData();
+        const modo = document.getElementById('modo-extracao').value;
+        const formData = new FormData();
         formData.append('pdf_banco', fileInput.files[0]);
-        formData.append('modo', 'manual');
-        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        formData.append('modo', modo);
+        formData.append('csrfmiddlewaretoken', csrfToken);
 
-        btnProcessar.disabled = true;
-        loading.style.display = 'block';
+        document.getElementById('btn-processar').disabled = true;
+        document.getElementById('loading').style.display = 'block';
 
-        fetch('{% url "api_fatiar_comprovantes" %}', {
-            method: 'POST',
-            body: formData
-        })
-        .then(async res => {
-            // Verifica se o servidor devolveu HTML de erro em vez de JSON
-            if (!res.ok) {
-                const text = await res.text();
-                throw new Error("Erro no Servidor Django. Verifique o Error Log no PythonAnywhere.");
-            }
-            return res.json();
-        })
-        .then(data => {
-            if (data.sucesso) {
-                comprovantesEmMemoria = data.comprovantes || [];
-                renderizarCardsManuais();
-                blocoUpload.style.display = 'none';
-                blocoResultados.style.display = 'block';
-            } else {
-                alert('Erro ao processar: ' + data.erro);
-                btnProcessar.disabled = false;
-                loading.style.display = 'none';
-            }
-        })
-        .catch(err => {
-            console.error("LOG DE ERRO DETALHADO:", err);
-            // AGORA ELE VAI TE MOSTRAR EXATAMENTE O QUE QUEBROU
-            alert('Atenção: ' + err.message);
-            btnProcessar.disabled = false;
-            loading.style.display = 'none';
-        });
+        fetch('{% url "api_fatiar_comprovantes" %}', { method: 'POST', body: formData })
+            .then(async res => {
+                if (!res.ok) throw new Error('Erro no servidor. Verifique o log.');
+                return res.json();
+            })
+            .then(data => {
+                if (data.sucesso) {
+                    comprovantesEmMemoria = data.comprovantes || [];
+                    selecionados.clear();
+                    renderizarCards();
+                    atualizarBarraTotal();
+                } else {
+                    alert('Erro ao processar PDF: ' + data.erro);
+                }
+            })
+            .catch(err => alert('Erro: ' + err.message))
+            .finally(() => {
+                document.getElementById('btn-processar').disabled = false;
+                document.getElementById('loading').style.display = 'none';
+            });
     });
 
-    // PASSO 2: Desenhar os Cards na Tela (Com proteção contra erros de string)
-    function renderizarCardsManuais() {
-        listaComprovantes.innerHTML = '';
+    // ===================== RENDERIZAÇÃO DOS CARDS =====================
+    function renderizarCards() {
+        const container = document.getElementById('lista-comprovantes');
+        if (!comprovantesEmMemoria.length) {
+            container.innerHTML = '<p class="text-muted text-center small">Nenhum comprovante encontrado.</p>';
+            return;
+        }
 
-        let selectOptions = '<option value="">-- Selecione o Processo correspondente --</option>';
-        processosPendentes.forEach(p => {
-            // PROTEÇÃO: Garante que é tratado como string, mesmo que venha nulo ou como ID numérico
-            let nomeCredor = p.credor ? String(p.credor) : 'Credor não informado';
-            if (nomeCredor.length > 35) nomeCredor = nomeCredor.substring(0, 35) + '...';
+        container.innerHTML = '';
+        comprovantesEmMemoria.forEach((comp, idx) => {
+            const credor = comp.credor_extraido || '';
+            const valor = parseFloat(comp.valor_extraido || 0).toFixed(2);
+            const data = comp.data_pagamento || '';
+            const tipo = comp.tipo_de_pagamento || '';
 
-            let valorLiq = p.valor_liquido ? parseFloat(p.valor_liquido).toFixed(2) : '0.00';
-
-            selectOptions += `<option value="${p.id}" data-valor="${valorLiq}">Proc #${p.id} - ${nomeCredor} - R$ ${valorLiq}</option>`;
-        });
-
-        comprovantesEmMemoria.forEach((comp, index) => {
-            const html = `
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100 border-secondary fatia-card" data-path="${comp.temp_path}">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                            <strong>Página ${comp.pagina}</strong>
-                            <a href="${comp.url}" target="_blank" class="btn btn-sm btn-outline-danger py-0">
-                                <i class="bi bi-file-pdf"></i> Abrir Comprovante
-                            </a>
+            const card = document.createElement('div');
+            card.className = 'comprovante-card mb-2 p-0';
+            card.setAttribute('data-idx', idx);
+            card.innerHTML = `
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="checkbox" class="form-check-input comp-check" data-idx="${idx}" style="cursor:pointer">
+                        <strong class="small">Página ${comp.pagina}</strong>
+                    </div>
+                    <a href="${comp.url}" target="_blank" class="btn btn-sm btn-outline-danger py-0 px-2">
+                        <i class="bi bi-file-pdf"></i> Abrir
+                    </a>
+                </div>
+                <div class="px-3 pt-2 pb-3">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <label class="form-label mb-1 small text-muted fw-bold">Credor</label>
+                            <input type="text" class="form-control form-control-sm comp-credor" data-idx="${idx}" value="${escapeHtml(credor)}" placeholder="Nome do credor...">
                         </div>
-                        <div class="card-body">
-                            <label class="small text-muted fw-bold mb-1"><i class="bi bi-link"></i> Vincular a qual Processo?</label>
-                            <select class="form-select form-select-sm select-processo">
-                                ${selectOptions}
+                        <div class="col-6">
+                            <label class="form-label mb-1 small text-muted fw-bold">Valor Pago (R$)</label>
+                            <input type="number" class="form-control form-control-sm comp-valor" data-idx="${idx}" value="${valor}" step="0.01" min="0">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label mb-1 small text-muted fw-bold">Data Pagamento</label>
+                            <input type="date" class="form-control form-control-sm comp-data" data-idx="${idx}" value="${data}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label mb-1 small text-muted fw-bold">Tipo de Pagamento</label>
+                            <select class="form-select form-select-sm comp-tipo" data-idx="${idx}">
+                                <option value="">-- Selecione --</option>
+                                <option value="GERENCIADOR" ${tipo === 'GERENCIADOR' ? 'selected' : ''}>GERENCIADOR/BOLETO</option>
+                                <option value="TED" ${tipo === 'TED' ? 'selected' : ''}>TED</option>
+                                <option value="PIX" ${tipo === 'PIX' ? 'selected' : ''}>PIX</option>
+                                <option value="REMESSA" ${tipo === 'REMESSA' ? 'selected' : ''}>REMESSA BANCÁRIA</option>
                             </select>
-                            <div class="mt-2 small fw-bold text-end status-validacao"></div>
                         </div>
                     </div>
                 </div>
             `;
-            listaComprovantes.innerHTML += html;
+            container.appendChild(card);
         });
 
-        ativarFeedbackDinamico();
-    }
-
-    // PASSO 3: Feedback Visual
-    function ativarFeedbackDinamico() {
-        document.querySelectorAll('.select-processo').forEach(select => {
-            select.addEventListener('change', function() {
-                const card = this.closest('.card');
-                const divValidacao = card.querySelector('.status-validacao');
-
-                if (this.value === "") {
-                    divValidacao.innerHTML = "";
-                    card.classList.remove('border-success', 'border-2');
-                    card.classList.add('border-secondary');
+        // Eventos de checkbox
+        document.querySelectorAll('.comp-check').forEach(cb => {
+            cb.addEventListener('change', function() {
+                const idx = parseInt(this.getAttribute('data-idx'));
+                const card = this.closest('.comprovante-card');
+                if (this.checked) {
+                    selecionados.add(idx);
+                    card.classList.add('selecionado');
                 } else {
-                    const opcaoSelecionada = this.options[this.selectedIndex];
-                    const valorProcesso = parseFloat(opcaoSelecionada.getAttribute('data-valor'));
-
-                    divValidacao.innerHTML = `<span class='text-success'><i class='bi bi-check-circle-fill'></i> Vinculado com Sucesso (R$ ${valorProcesso.toFixed(2)})</span>`;
-                    card.classList.remove('border-secondary');
-                    card.classList.add('border-success', 'border-2');
+                    selecionados.delete(idx);
+                    card.classList.remove('selecionado');
                 }
+                atualizarBarraTotal();
+            });
+        });
+
+        // Clique no card (fora do checkbox) seleciona/desseleciona
+        document.querySelectorAll('.comprovante-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                // Ignora cliques em inputs, selects e links
+                if (['INPUT', 'SELECT', 'LABEL', 'A', 'BUTTON'].includes(e.target.tagName)) return;
+                const idx = parseInt(this.getAttribute('data-idx'));
+                const cb = this.querySelector('.comp-check');
+                cb.checked = !cb.checked;
+                cb.dispatchEvent(new Event('change'));
             });
         });
     }
 
-    // PASSO 4: Enviar Vínculos
-    btnSalvarTudo.addEventListener('click', function() {
-        let vinculosParaSalvar = [];
+    // ===================== BARRA DE TOTAL =====================
+    function atualizarBarraTotal() {
+        const soma = calcularSomaSelecionados();
+        const qtd = selecionados.size;
 
-        document.querySelectorAll('.fatia-card').forEach(card => {
-            const select = card.querySelector('.select-processo');
-            const path = card.getAttribute('data-path');
+        document.getElementById('barra-total').style.display = qtd > 0 ? 'block' : 'none';
+        document.getElementById('instrucao-vincular').style.display = qtd > 0 ? 'block' : 'none';
 
-            if (select && select.value !== "") {
-                vinculosParaSalvar.push({
-                    processo_id: select.value,
-                    temp_path: path
-                });
+        const somaFmt = formatarBRL(soma);
+        document.getElementById('txt-qtd-selecionados').textContent = `${qtd} comprovante(s) selecionado(s)`;
+        document.getElementById('txt-soma-selecionados').textContent = somaFmt;
+        document.getElementById('txt-qtd-instr').textContent = qtd;
+        document.getElementById('txt-soma-instr').textContent = somaFmt;
+
+        // Destaca processos com valor correspondente
+        document.querySelectorAll('.processo-row').forEach(row => {
+            const vliq = parseFloat(row.getAttribute('data-valor') || 0);
+            if (qtd > 0 && Math.abs(soma - vliq) < 0.01) {
+                row.classList.add('table-success', 'selecionavel-ativo');
+            } else {
+                row.classList.remove('table-success', 'selecionavel-ativo');
             }
         });
+    }
 
-        if (vinculosParaSalvar.length === 0) {
-            alert("Selecione o processo de destino para pelo menos um comprovante antes de salvar.");
+    function calcularSomaSelecionados() {
+        let soma = 0;
+        selecionados.forEach(idx => {
+            const input = document.querySelector(`.comp-valor[data-idx="${idx}"]`);
+            soma += parseFloat(input ? input.value : 0) || 0;
+        });
+        return soma;
+    }
+
+    function limparSelecao() {
+        selecionados.clear();
+        document.querySelectorAll('.comp-check').forEach(cb => cb.checked = false);
+        document.querySelectorAll('.comprovante-card').forEach(c => c.classList.remove('selecionado'));
+        atualizarBarraTotal();
+    }
+
+    // ===================== LISTA DE PROCESSOS =====================
+    function renderizarListaProcessos() {
+        const container = document.getElementById('lista-processos');
+        if (!processosVisiveis.length) {
+            container.innerHTML = '<p class="text-muted text-center small mt-3"><i class="bi bi-check2-all fs-3 d-block mb-1"></i>Nenhum processo aguardando comprovante.</p>';
             return;
         }
 
-        if(!confirm(`Deseja efetivar a baixa e alterar para PAGO os ${vinculosParaSalvar.length} processos selecionados?`)) return;
+        let html = '<table class="table table-sm table-bordered table-hover mb-0"><thead class="table-dark"><tr>' +
+            '<th class="small">#</th>' +
+            '<th class="small">Empenho</th>' +
+            '<th class="small">Credor</th>' +
+            '<th class="small text-end">Valor Líquido</th>' +
+            '<th class="small text-center">Ação</th>' +
+            '</tr></thead><tbody>';
 
-        btnSalvarTudo.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Salvando e anexando...';
-        btnSalvarTudo.disabled = true;
+        processosVisiveis.forEach(p => {
+            const vliq = parseFloat(p.valor_liquido || 0);
+            html += `
+                <tr class="processo-row" data-id="${p.id}" data-valor="${vliq}">
+                    <td class="small">${p.id}</td>
+                    <td class="small">${escapeHtml(p.n_nota_empenho)}</td>
+                    <td class="small">${escapeHtml(p.credor_nome)}</td>
+                    <td class="small text-end">R$ ${formatarBRL(vliq)}</td>
+                    <td class="small text-center">
+                        <button class="btn btn-sm btn-success py-0 px-2 btn-vincular" data-id="${p.id}" data-valor="${vliq}">
+                            <i class="bi bi-link"></i> Vincular
+                        </button>
+                    </td>
+                </tr>`;
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+
+        // Event delegation: row click and button click (safe – no user data in handlers)
+        container.querySelectorAll('.processo-row').forEach(row => {
+            row.addEventListener('click', function(e) {
+                if (e.target.closest('.btn-vincular')) return; // handled by button
+                const pid = parseInt(this.getAttribute('data-id'));
+                const vliq = parseFloat(this.getAttribute('data-valor'));
+                const proc = processosVisiveis.find(p => p.id === pid);
+                solicitarVinculo(pid, vliq, proc ? proc.credor_nome : '');
+            });
+        });
+        container.querySelectorAll('.btn-vincular').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const pid = parseInt(this.getAttribute('data-id'));
+                const vliq = parseFloat(this.getAttribute('data-valor'));
+                const proc = processosVisiveis.find(p => p.id === pid);
+                solicitarVinculo(pid, vliq, proc ? proc.credor_nome : '');
+            });
+        });
+    }
+
+    // ===================== FILTRO E ORDENAÇÃO =====================
+    document.getElementById('filtro-credor').addEventListener('input', function() {
+        const termo = this.value.toLowerCase().trim();
+        processosVisiveis = processosPendentes.filter(p =>
+            p.credor_nome.toLowerCase().includes(termo) ||
+            p.n_nota_empenho.toLowerCase().includes(termo)
+        );
+        if (!ordemAsc) processosVisiveis.sort((a, b) => b.credor_nome.localeCompare(a.credor_nome));
+        else processosVisiveis.sort((a, b) => a.credor_nome.localeCompare(b.credor_nome));
+        renderizarListaProcessos();
+        atualizarBarraTotal();
+    });
+
+    function alternarOrdem() {
+        ordemAsc = !ordemAsc;
+        document.getElementById('icone-sort').className = ordemAsc ? 'bi bi-sort-alpha-down' : 'bi bi-sort-alpha-up';
+        processosVisiveis.sort((a, b) =>
+            ordemAsc ? a.credor_nome.localeCompare(b.credor_nome) : b.credor_nome.localeCompare(a.credor_nome)
+        );
+        renderizarListaProcessos();
+        atualizarBarraTotal();
+    }
+
+    // ===================== VINCULAÇÃO =====================
+    function solicitarVinculo(processoId, valorLiquido, credorNome) {
+        if (!comprovantesEmMemoria.length) {
+            alert('Carregue e fatie um PDF de comprovantes antes de vincular.');
+            return;
+        }
+        if (selecionados.size === 0) {
+            alert('Selecione pelo menos um comprovante no painel esquerdo.');
+            return;
+        }
+
+        const soma = calcularSomaSelecionados();
+        const diff = Math.abs(soma - valorLiquido);
+
+        if (diff > 0.01) {
+            alert(
+                `Validação falhou!\n\n` +
+                `Soma dos comprovantes selecionados: R$ ${formatarBRL(soma)}\n` +
+                `Valor líquido do processo: R$ ${formatarBRL(valorLiquido)}\n` +
+                `Diferença: R$ ${formatarBRL(diff)}\n\n` +
+                `Selecione os comprovantes corretos para que a soma corresponda ao valor líquido do processo.`
+            );
+            return;
+        }
+
+        const msg = `Confirmar vinculação?\n\n` +
+            `Processo #${processoId} - ${credorNome}\n` +
+            `Valor Líquido: R$ ${formatarBRL(valorLiquido)}\n` +
+            `Comprovantes selecionados: ${selecionados.size}\n` +
+            `Soma: R$ ${formatarBRL(soma)}\n\n` +
+            `O status será alterado para "PAGO - EM CONFERÊNCIA".`;
+
+        if (!confirm(msg)) return;
+
+        // Monta payload
+        const comprovantesParaEnviar = [...selecionados].map(idx => {
+            const credorInput = document.querySelector(`.comp-credor[data-idx="${idx}"]`);
+            const valorInput = document.querySelector(`.comp-valor[data-idx="${idx}"]`);
+            const dataInput = document.querySelector(`.comp-data[data-idx="${idx}"]`);
+            const tipoInput = document.querySelector(`.comp-tipo[data-idx="${idx}"]`);
+            return {
+                temp_path: comprovantesEmMemoria[idx].temp_path,
+                valor_pago: parseFloat(valorInput ? valorInput.value : 0) || 0,
+                credor_nome: credorInput ? credorInput.value.trim() : '',
+                data_pagamento: dataInput ? dataInput.value : '',
+                tipo_de_pagamento: tipoInput ? tipoInput.value : '',
+            };
+        });
+
+        // Desabilita botões durante a requisição
+        document.querySelectorAll('.processo-row button').forEach(b => b.disabled = true);
 
         fetch('{% url "api_vincular_comprovantes" %}', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            },
-            body: JSON.stringify({ vinculos: vinculosParaSalvar })
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify({ processo_id: processoId, comprovantes: comprovantesParaEnviar })
         })
-        .then(res => res.json())
+        .then(r => r.json())
         .then(data => {
             if (data.sucesso) {
+                // Remove comprovantes vinculados da lista em memória
+                const indicesSelecionados = [...selecionados].sort((a, b) => b - a);
+                indicesSelecionados.forEach(idx => comprovantesEmMemoria.splice(idx, 1));
+                selecionados.clear();
+                renderizarCards();
+                atualizarBarraTotal();
+
+                // Remove o processo da lista local
+                const pidx = processosPendentes.findIndex(p => p.id === processoId);
+                if (pidx !== -1) processosPendentes.splice(pidx, 1);
+                const vidx = processosVisiveis.findIndex(p => p.id === processoId);
+                if (vidx !== -1) processosVisiveis.splice(vidx, 1);
+                renderizarListaProcessos();
+
                 alert(data.mensagem);
-                window.location.href = '{% url "home_page" %}';
             } else {
-                alert('Erro ao vincular no banco de dados: ' + data.erro);
-                btnSalvarTudo.innerHTML = '<i class="bi bi-check-all"></i> Confirmar Vínculos e Baixar Processos';
-                btnSalvarTudo.disabled = false;
+                alert('Erro ao vincular: ' + data.erro);
             }
         })
-        .catch(err => {
-            console.error(err);
-            alert('Erro de conexão ao tentar salvar os vínculos.');
-            btnSalvarTudo.disabled = false;
+        .catch(err => alert('Erro de conexão: ' + err.message))
+        .finally(() => {
+            document.querySelectorAll('.processo-row button').forEach(b => b.disabled = false);
         });
-    });
+    }
+
+    // ===================== UTILITÁRIOS =====================
+    function formatarBRL(valor) {
+        return parseFloat(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function escapeHtml(str) {
+        return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
 </script>
 
 </body>
