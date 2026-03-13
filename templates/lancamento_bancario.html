@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Lançamento Bancário - System X</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .copy-btn { transition: all 0.2s ease-in-out; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow-sm no-print">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold" href="{% url 'home_page' %}">System X</a>
+    </div>
+</nav>
+
+<div class="container-fluid px-4 mt-4 mb-5">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm no-print" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-bank text-primary me-2"></i> Separação para Lançamento Bancário</h2>
+            <p class="text-muted small mb-0">Processos selecionados para execução bancária.</p>
+        </div>
+        <div class="d-flex gap-2 no-print">
+            <button onclick="window.print()" class="btn btn-outline-secondary fw-bold">
+                <i class="bi bi-printer"></i> Imprimir
+            </button>
+            <a href="{% url 'contas_a_pagar' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar para Contas a Pagar
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-0">
+            <table class="table table-hover table-bordered mb-0 align-middle">
+                <thead class="table-primary">
+                    <tr>
+                        <th style="width: 7%;"># ID</th>
+                        <th style="width: 12%;">Nota Empenho</th>
+                        <th style="width: 20%;">Credor</th>
+                        <th style="width: 10%;" class="text-end pe-3">Valor Líquido</th>
+                        <th style="width: 13%;">Forma de Pagamento</th>
+                        <th style="width: 30%;">Dados de Pagamento Bancário</th>
+                        <th style="width: 8%;" class="text-center no-print">Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in processos_detalhes %}
+                    {% with p=item.processo dp=item.dados_pagamento %}
+                    <tr>
+                        <td class="fw-bold text-muted">#{{ p.id }}</td>
+                        <td class="small fw-medium">{{ p.n_nota_empenho|default:"-" }}</td>
+                        <td class="fw-medium" style="font-size: 0.85rem;">{{ p.credor|default:"-"|truncatechars:45 }}</td>
+                        <td class="text-end pe-3 fw-bold text-success">R$ {{ p.valor_liquido|floatformat:2 }}</td>
+                        <td>
+                            {% if p.forma_pagamento %}
+                                <span class="badge bg-secondary">{{ p.forma_pagamento }}</span>
+                            {% else %}
+                                <span class="text-muted small">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if dp.tipo == 'codigo_barras' %}
+                                <span class="text-muted small fw-bold d-block">Código de Barras</span>
+                                {% if dp.codigo_barras %}
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        <span class="font-monospace fw-bold text-primary text-break" style="font-size: 0.85rem;">{{ dp.codigo_barras }}</span>
+                                        <button class="btn btn-sm btn-outline-secondary copy-btn px-2 py-1 no-print" data-clipboard="{{ dp.codigo_barras }}" title="Copiar">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                    </div>
+                                {% else %}
+                                    <span class="text-danger small">Não preenchido</span>
+                                {% endif %}
+
+                            {% elif dp.tipo == 'pix' %}
+                                <span class="text-muted small fw-bold d-block">Chave PIX</span>
+                                {% if dp.chave_pix %}
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        <span class="font-monospace fw-bold text-primary text-break" style="font-size: 0.85rem;">{{ dp.chave_pix }}</span>
+                                        <button class="btn btn-sm btn-outline-secondary copy-btn px-2 py-1 no-print" data-clipboard="{{ dp.chave_pix }}" title="Copiar">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                    </div>
+                                {% else %}
+                                    <span class="text-danger small">Credor sem chave PIX cadastrada</span>
+                                {% endif %}
+
+                            {% elif dp.tipo == 'transferencia' %}
+                                <span class="text-muted small fw-bold d-block">Dados Bancários (TED)</span>
+                                {% if dp.banco or dp.agencia or dp.conta %}
+                                    <div class="mt-1 small">
+                                        <span class="fw-bold">Banco:</span> {{ dp.banco|default:"-" }}<br>
+                                        <span class="fw-bold">Agência:</span> {{ dp.agencia|default:"-" }}<br>
+                                        <span class="fw-bold">Conta:</span> {{ dp.conta|default:"-" }}
+                                    </div>
+                                {% else %}
+                                    <span class="text-danger small">Nenhuma conta bancária vinculada</span>
+                                {% endif %}
+
+                            {% elif dp.tipo == 'remessa' %}
+                                <span class="text-muted small fst-italic">— Remessa (sem dados bancários) —</span>
+
+                            {% else %}
+                                <span class="text-muted small">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center no-print">
+                            <form method="POST" action="{% url 'marcar_como_lancado' %}" onsubmit="return confirm('Confirmar lançamento do Processo #{{ p.id }}?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="processo_id" value="{{ p.id }}">
+                                <button type="submit" class="btn btn-sm btn-success fw-bold shadow-sm" title="Marcar como Lançado">
+                                    <i class="bi bi-check2-circle"></i> Lançado
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endwith %}
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                            Nenhum processo foi encontrado.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if totais %}
+    <div class="card shadow-sm border-0 border-top border-primary border-3">
+        <div class="card-header bg-primary text-white fw-bold">
+            <i class="bi bi-calculator me-2"></i> Totalizador por Forma de Pagamento
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                {% for forma, total in totais.items %}
+                <div class="col-sm-6 col-md-3">
+                    <div class="card border-0 bg-light h-100">
+                        <div class="card-body text-center py-3">
+                            <p class="text-muted small fw-bold mb-1 text-uppercase">{{ forma }}</p>
+                            <p class="fs-5 fw-bold text-success mb-0">R$ {{ total|floatformat:2 }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.copy-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var text = this.getAttribute('data-clipboard');
+            navigator.clipboard.writeText(text).then(function () {
+                var icon = btn.querySelector('i');
+                icon.classList.replace('bi-clipboard', 'bi-check-lg');
+                btn.classList.replace('btn-outline-secondary', 'btn-success');
+                btn.classList.add('text-white');
+                setTimeout(function () {
+                    icon.classList.replace('bi-check-lg', 'bi-clipboard');
+                    btn.classList.replace('btn-success', 'btn-outline-secondary');
+                    btn.classList.remove('text-white');
+                }, 2000);
+            }).catch(function () {
+                alert('Não foi possível copiar automaticamente. Selecione o texto e use Ctrl+C.');
+            });
+        });
+    });
+});
+</script>
+
+</body>
+</html>

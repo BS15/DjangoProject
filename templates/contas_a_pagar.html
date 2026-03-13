@@ -86,8 +86,16 @@
                     <button type="button" class="btn btn-info text-white fw-bold shadow-sm ms-2" id="btn-visualizar-pagamentos">
                         <i class="bi bi-eye"></i> Visualizar Dados de Pagamento
                     </button>
+
+                    <button type="button" class="btn btn-warning fw-bold shadow-sm ms-2" id="btn-separar-lancamento">
+                        <i class="bi bi-bank"></i> Separar para Lançamento Bancário
+                    </button>
                 </div>
             </div>
+
+            <form id="form-lancamento-bancario" method="POST" action="{% url 'separar_para_lancamento_bancario' %}">
+                {% csrf_token %}
+            </form>
 
             <form id="form-enviar-autorizacao" method="POST" action="{% url 'enviar_para_autorizacao' %}">
                 {% csrf_token %}
@@ -195,7 +203,36 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ----------------------------------------------------------------------
-    // 2. LÓGICA DO PAINEL DE VISUALIZAÇÃO DE PAGAMENTOS
+    // 2. LÓGICA DO BOTÃO "SEPARAR PARA LANÇAMENTO BANCÁRIO"
+    // ----------------------------------------------------------------------
+    const btnSepararLancamento = document.getElementById('btn-separar-lancamento');
+
+    if (btnSepararLancamento) {
+        btnSepararLancamento.addEventListener('click', function () {
+            const checkboxes = document.querySelectorAll('input[name="processos_selecionados"]:checked');
+            const ids = Array.from(checkboxes).map(cb => cb.value);
+
+            if (ids.length === 0) {
+                alert('Selecione pelo menos um processo para separar para lançamento bancário.');
+                return;
+            }
+
+            const form = document.getElementById('form-lancamento-bancario');
+            // Remove any previously added hidden inputs
+            form.querySelectorAll('input[name="processos_selecionados"]').forEach(el => el.remove());
+            ids.forEach(function (id) {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'processos_selecionados';
+                input.value = id;
+                form.appendChild(input);
+            });
+            form.submit();
+        });
+    }
+
+    // ----------------------------------------------------------------------
+    // 3. LÓGICA DO PAINEL DE VISUALIZAÇÃO DE PAGAMENTOS
     // ----------------------------------------------------------------------
     const btnVisualizar = document.getElementById('btn-visualizar-pagamentos');
     
