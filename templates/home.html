@@ -108,10 +108,10 @@
                             <input type="checkbox" id="checkMaster" class="form-check-input border-secondary">
                         </th>
                         <th># ID</th>
-                        <th>Nota Empenho</th>
                         <th>Credor</th>
                         <th>Data Empenho</th>
                         <th>Status</th>
+                        <th>Tipo de Pagamento</th>
                         <th class="text-end pe-4">Valor Líquido</th>
                         <th class="text-center">Ações</th>
                     </tr>
@@ -123,13 +123,6 @@
                             <input type="checkbox" class="form-check-input check-linha border-secondary" value="{{ processo.id }}">
                         </td>
                         <td class="fw-bold text-muted">#{{ processo.id }}</td>
-                        <td>
-                            {% if processo.n_nota_empenho %}
-                                <span class="badge bg-light text-dark border">{{ processo.n_nota_empenho }}</span>
-                            {% else %}
-                                <span class="text-muted small">Pend.</span>
-                            {% endif %}
-                        </td>
                         <td class="fw-medium">{{ processo.credor|default:"-"|truncatechars:30 }}</td>
                         <td>{{ processo.data_empenho|date:"d/m/Y"|default:"-" }}</td>
                         <td>
@@ -141,6 +134,7 @@
                                 <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">{{ processo.status.status_choice|truncatechars:25 }}</span>
                             {% endif %}
                         </td>
+                        <td>{{ processo.tipo_pagamento|default:"-" }}</td>
                         <td class="text-end pe-4 fw-bold text-dark">
                             R$ {{ processo.valor_liquido|floatformat:2 }}
                         </td>
