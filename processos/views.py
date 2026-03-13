@@ -288,20 +288,39 @@ def contas_a_pagar(request):
         total=Count('id')
     ).order_by('data_pagamento')
 
+    formas_agrupadas = processos_pendentes.values(
+        'forma_pagamento__id',
+        'forma_pagamento__forma_de_pagamento'
+    ).annotate(
+        total=Count('id')
+    ).order_by('forma_pagamento__forma_de_pagamento')
+
     data_selecionada = request.GET.get('data')
+    forma_selecionada = request.GET.get('forma')
+
+    lista_processos = processos_pendentes
 
     if data_selecionada:
         if data_selecionada == 'sem_data':
-            lista_processos = processos_pendentes.filter(data_pagamento__isnull=True)
+            lista_processos = lista_processos.filter(data_pagamento__isnull=True)
         else:
-            lista_processos = processos_pendentes.filter(data_pagamento=data_selecionada)
-    else:
-        lista_processos = processos_pendentes
+            lista_processos = lista_processos.filter(data_pagamento=data_selecionada)
+
+    if forma_selecionada:
+        if forma_selecionada == 'sem_forma':
+            lista_processos = lista_processos.filter(forma_pagamento__isnull=True)
+        else:
+            try:
+                lista_processos = lista_processos.filter(forma_pagamento__id=int(forma_selecionada))
+            except (ValueError, TypeError):
+                pass
 
     context = {
         'datas_agrupadas': datas_agrupadas,
+        'formas_agrupadas': formas_agrupadas,
         'lista_processos': lista_processos,
         'data_selecionada': data_selecionada,
+        'forma_selecionada': forma_selecionada,
     }
 
     return render(request, 'contas_a_pagar.html', context)

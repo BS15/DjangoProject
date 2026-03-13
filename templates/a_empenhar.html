@@ -38,6 +38,7 @@
                         <tr>
                             <th>ID</th>
                             <th>Credor</th>
+                            <th>Status</th>
                             <th>Tipo de Pagamento</th>
                             <th>Valor Líquido</th>
                             <th>Vencimento</th>
@@ -49,6 +50,7 @@
                         <tr>
                             <td>#{{ p.id }}</td>
                             <td class="fw-bold">{{ p.credor|default:"---" }}</td>
+                            <td><span class="badge bg-warning bg-opacity-10 text-warning px-2 py-1 rounded-pill">{{ p.status|default:"---" }}</span></td>
                             <td>{{ p.tipo_pagamento|default:"---" }}</td>
                             <td class="text-success fw-bold">R$ {{ p.valor_liquido|default:"0,00" }}</td>
                             <td>
@@ -70,7 +72,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-5">
+                            <td colspan="7" class="text-center text-muted py-5">
                                 <i class="bi bi-check-circle fs-2 d-block mb-2 text-success"></i>
                                 Nenhum processo aguardando empenho no momento. Fila limpa!
                             </td>
