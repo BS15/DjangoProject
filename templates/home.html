@@ -57,9 +57,9 @@
             <button class="btn btn-outline-dark btn-lg shadow-sm fw-bold" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuLateral" aria-controls="menuLateral">
                 <i class="bi bi-list"></i> Menu de Painéis
             </button>
-            <a href="{% url 'painel_liquidacoes' %}" class="btn btn-warning btn-lg shadow-sm fw-bold text-dark">
+            <button type="button" class="btn btn-warning btn-lg shadow-sm fw-bold text-dark" data-bs-toggle="modal" data-bs-target="#nfExtractionModal">
                 <i class="bi bi-receipt-cutoff"></i> Processamento de NF / Impostos
-            </a>
+            </button>
             <a href="{% url 'add_process' %}" class="btn btn-success btn-lg shadow-sm fw-bold">
                 <i class="bi bi-plus-lg"></i> Novo Processo
             </a>
@@ -168,9 +168,150 @@
     </div>
 </div>
 
+
+<!-- ========================================================== -->
+<!-- MODAL: Extração de NF / Impostos                           -->
+<!-- ========================================================== -->
+<div class="modal fade" id="nfExtractionModal" tabindex="-1" aria-labelledby="nfExtractionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+
+            <!-- ── STEP 1: Upload ─────────────────────────────── -->
+            <div id="nfStep1">
+                <div class="modal-header bg-warning bg-opacity-10 border-bottom">
+                    <h5 class="modal-title fw-bold" id="nfExtractionModalLabel">
+                        <i class="bi bi-receipt-cutoff text-warning me-2"></i>
+                        Extração de Dados de NF / Impostos
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted mb-4">Faça o upload de uma ou mais Notas Fiscais em PDF para que a IA extraia os dados fiscais automaticamente.</p>
+
+                    <!-- Drop zone -->
+                    <div id="nfDropZone"
+                         class="border border-2 border-dashed rounded-3 p-5 text-center bg-light"
+                         style="cursor: pointer; border-color: #ffc107 !important; transition: background 0.2s;">
+                        <i class="bi bi-cloud-upload fs-1 text-warning d-block mb-3"></i>
+                        <p class="fw-bold mb-1">Arraste e solte os arquivos PDF aqui</p>
+                        <p class="text-muted small mb-3">ou clique para selecionar</p>
+                        <input type="file" id="nfFileInput" accept=".pdf" multiple class="d-none">
+                        <button type="button" class="btn btn-outline-warning fw-bold px-4" onclick="document.getElementById('nfFileInput').click()">
+                            <i class="bi bi-folder2-open me-2"></i> Selecionar Arquivos
+                        </button>
+                    </div>
+
+                    <!-- File list -->
+                    <ul id="nfFileList" class="list-group mt-3"></ul>
+                </div>
+                <div class="modal-footer bg-light border-top">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="btnNfExtract" class="btn btn-warning fw-bold px-5" disabled>
+                        <i class="bi bi-magic me-2"></i> Extrair Dados com IA
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── STEP 2: Processing ──────────────────────────── -->
+            <div id="nfStep2" style="display:none;">
+                <div class="modal-header bg-warning bg-opacity-10 border-bottom">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-hourglass-split text-warning me-2"></i>
+                        Processando com IA...
+                    </h5>
+                </div>
+                <div class="modal-body p-5 text-center">
+                    <div class="spinner-border text-warning mb-4" style="width:3rem;height:3rem;" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                    <p class="fw-bold fs-5 mb-1">Aguarde — a IA está analisando as notas fiscais</p>
+                    <p id="nfProcessingStatus" class="text-muted small">Iniciando extração...</p>
+                </div>
+            </div>
+
+            <!-- ── STEP 3: Results ─────────────────────────────── -->
+            <div id="nfStep3" style="display:none;">
+                <div class="modal-header bg-success bg-opacity-10 border-bottom">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-clipboard-check text-success me-2"></i>
+                        Dados Extraídos — Revise as Informações
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-4" style="max-height: 65vh; overflow-y: auto;">
+                    <div id="nfResultsContainer"></div>
+                </div>
+                <div class="modal-footer bg-light border-top">
+                    <button type="button" class="btn btn-outline-secondary" id="btnNfBack">
+                        <i class="bi bi-arrow-left me-1"></i> Voltar
+                    </button>
+                    <button type="button" class="btn btn-success fw-bold px-4" id="btnNfContinue">
+                        Continuar <i class="bi bi-arrow-right ms-1"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── STEP 4: Action choice ───────────────────────── -->
+            <div id="nfStep4" style="display:none;">
+                <div class="modal-header bg-primary bg-opacity-10 border-bottom">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-signpost-split text-primary me-2"></i>
+                        O que deseja fazer com esta(s) Nota(s)?
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+                        <!-- Novo Processo -->
+                        <div class="col-md-6">
+                            <div class="card border-success h-100 shadow-sm" style="cursor:pointer;" id="cardNovoProcesso">
+                                <div class="card-body text-center p-5">
+                                    <i class="bi bi-plus-circle-fill text-success" style="font-size:3rem;"></i>
+                                    <h5 class="fw-bold mt-3 mb-2">Criar Novo Processo</h5>
+                                    <p class="text-muted small mb-0">Abre o formulário de novo processo com os dados já identificados como referência.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Processo Existente -->
+                        <div class="col-md-6">
+                            <div class="card border-primary h-100 shadow-sm" style="cursor:pointer;" id="cardProcessoExistente">
+                                <div class="card-body text-center p-5">
+                                    <i class="bi bi-folder2-open text-primary" style="font-size:3rem;"></i>
+                                    <h5 class="fw-bold mt-3 mb-2">Adicionar a Processo Existente</h5>
+                                    <p class="text-muted small mb-0">Vincula esta nota a um processo já cadastrado para complementar os dados de impostos.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Picker de processo existente (inicialmente oculto) -->
+                    <div id="processoExistentePicker" class="mt-4" style="display:none;">
+                        <hr>
+                        <label class="form-label fw-bold mb-2">Buscar Processo:</label>
+                        <input type="text" id="processoSearch" class="form-control mb-3" placeholder="Digite ID, número de empenho ou credor...">
+                        <div id="processoSearchResults" class="list-group" style="max-height:250px; overflow-y:auto;"></div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top">
+                    <button type="button" class="btn btn-outline-secondary" id="btnNfBackToResults">
+                        <i class="bi bi-arrow-left me-1"></i> Voltar
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+<!-- Process data for the picker – rendered as JSON, parsed safely by JS -->
+<script id="processosData" type="application/json">{{ processos_json }}</script>
+
 <script>
+// ── Dados de processos para o picker ──────────────────────────────────────
+const PROCESSOS_DATA = JSON.parse(document.getElementById('processosData').textContent);
+
 document.addEventListener("DOMContentLoaded", function() {
 
     const checkMaster = document.getElementById('checkMaster');
@@ -203,6 +344,245 @@ document.addEventListener("DOMContentLoaded", function() {
             const idProcesso = selecionados[0].value;
             window.location.href = `/processo/${idProcesso}/editar/`;
         });
+    }
+
+    // ── NF Extraction Modal ──────────────────────────────────────────────
+    const fileInput    = document.getElementById('nfFileInput');
+    const dropZone     = document.getElementById('nfDropZone');
+    const fileListEl   = document.getElementById('nfFileList');
+    const btnExtract   = document.getElementById('btnNfExtract');
+    const btnBack      = document.getElementById('btnNfBack');
+    const btnContinue  = document.getElementById('btnNfContinue');
+    const btnBackToRes = document.getElementById('btnNfBackToResults');
+    const cardNovo     = document.getElementById('cardNovoProcesso');
+    const cardExist    = document.getElementById('cardProcessoExistente');
+    const picker       = document.getElementById('processoExistentePicker');
+    const searchInput  = document.getElementById('processoSearch');
+    const searchRes    = document.getElementById('processoSearchResults');
+
+    let selectedFiles  = [];
+    let extractedResults = [];
+
+    // Reset modal state on close
+    document.getElementById('nfExtractionModal').addEventListener('hidden.bs.modal', () => resetModal());
+
+    function resetModal() {
+        selectedFiles = [];
+        extractedResults = [];
+        fileListEl.innerHTML = '';
+        btnExtract.disabled = true;
+        document.getElementById('nfResultsContainer').innerHTML = '';
+        searchInput.value = '';
+        searchRes.innerHTML = '';
+        picker.style.display = 'none';
+        showStep(1);
+    }
+
+    function showStep(n) {
+        [1,2,3,4].forEach(i => {
+            const el = document.getElementById(`nfStep${i}`);
+            if (el) el.style.display = (i === n) ? '' : 'none';
+        });
+    }
+
+    // ── File selection ────────────────────────────────────────────────────
+    dropZone.addEventListener('click', (e) => {
+        if (e.target !== fileInput) fileInput.click();
+    });
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('bg-warning', 'bg-opacity-10'); });
+    dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('bg-warning', 'bg-opacity-10'); });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('bg-warning', 'bg-opacity-10');
+        addFiles(Array.from(e.dataTransfer.files));
+    });
+    fileInput.addEventListener('change', () => { addFiles(Array.from(fileInput.files)); fileInput.value = ''; });
+
+    function addFiles(files) {
+        files.forEach(f => {
+            if (f.type === 'application/pdf' && !selectedFiles.find(x => x.name === f.name && x.size === f.size)) {
+                selectedFiles.push(f);
+            }
+        });
+        renderFileList();
+    }
+
+    function renderFileList() {
+        fileListEl.innerHTML = '';
+        selectedFiles.forEach((f, i) => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item d-flex justify-content-between align-items-center py-2';
+            li.innerHTML = `<span><i class="bi bi-file-earmark-pdf text-danger me-2"></i>${escapeHtml(f.name)} <small class="text-muted">(${(f.size/1024).toFixed(1)} KB)</small></span>
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-idx="${i}"><i class="bi bi-x"></i></button>`;
+            fileListEl.appendChild(li);
+        });
+        fileListEl.querySelectorAll('[data-idx]').forEach(btn => {
+            btn.addEventListener('click', () => { selectedFiles.splice(+btn.dataset.idx, 1); renderFileList(); });
+        });
+        btnExtract.disabled = selectedFiles.length === 0;
+    }
+
+    // ── Extraction ────────────────────────────────────────────────────────
+    btnExtract.addEventListener('click', async () => {
+        if (selectedFiles.length === 0) return;
+        showStep(2);
+        extractedResults = [];
+
+        const csrfToken = getCsrf();
+
+        for (let i = 0; i < selectedFiles.length; i++) {
+            const f = selectedFiles[i];
+            document.getElementById('nfProcessingStatus').textContent =
+                `Processando arquivo ${i+1} de ${selectedFiles.length}: ${f.name}`;
+
+            const fd = new FormData();
+            fd.append('arquivo', f);
+
+            try {
+                const resp = await fetch('/api/processar-retencoes/', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken },
+                    body: fd,
+                });
+                const data = await resp.json();
+                const ok = data && data.status === 'success';
+                extractedResults.push({ filename: f.name, ok, data: ok ? (data.resultado || null) : null, error: (!ok && data) ? (data.message || 'Resposta inesperada do servidor') : null });
+            } catch(e) {
+                extractedResults.push({ filename: f.name, ok: false, data: null, error: 'Falha de conexão: ' + e.message });
+            }
+        }
+
+        renderResults();
+        showStep(3);
+    });
+
+    // ── Render results ────────────────────────────────────────────────────
+    function renderResults() {
+        const container = document.getElementById('nfResultsContainer');
+        container.innerHTML = '';
+
+        extractedResults.forEach((res) => {
+            const card = document.createElement('div');
+            card.className = 'card mb-3 border-0 shadow-sm';
+
+            if (!res.ok) {
+                card.innerHTML = `
+                    <div class="card-header bg-danger bg-opacity-10 fw-bold">
+                        <i class="bi bi-x-circle text-danger me-2"></i>${escapeHtml(res.filename)}
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-danger mb-0"><i class="bi bi-exclamation-triangle me-2"></i>${escapeHtml(res.error || 'Erro desconhecido')}</div>
+                    </div>`;
+            } else {
+                const r = res.data;
+                const retencaoRows = (r.retencoes_a_processar || []).map(ret =>
+                    `<tr><td><span class="badge bg-secondary">${escapeHtml(String(ret.codigo))}</span></td>
+                         <td>${escapeHtml(ret.descricao || '')}</td>
+                         <td class="text-end fw-bold text-danger">R$ ${safeCurrency(ret.valor)}</td></tr>`
+                ).join('');
+
+                const alertRows = (r.alertas_usuario || []).map(a =>
+                    `<div class="alert alert-warning py-2 mb-1"><i class="bi bi-exclamation-triangle me-2"></i>${escapeHtml(a)}</div>`
+                ).join('');
+
+                const mathBadge = r.sucesso_matematico
+                    ? `<span class="badge bg-success ms-2"><i class="bi bi-check-circle me-1"></i>Matemática OK</span>`
+                    : `<span class="badge bg-danger ms-2"><i class="bi bi-x-circle me-1"></i>Divergência Matemática</span>`;
+
+                card.innerHTML = `
+                    <div class="card-header bg-success bg-opacity-10 fw-bold d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-file-earmark-check text-success me-2"></i>${escapeHtml(res.filename)}</span>
+                        ${mathBadge}
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3 mb-3">
+                            <div class="col-sm-6">
+                                <div class="p-3 bg-light rounded">
+                                    <div class="text-muted small fw-bold mb-1">Valor Bruto Identificado</div>
+                                    <div class="fs-5 fw-bold text-dark">R$ ${safeCurrency(r.valor_bruto_identificado)}</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="p-3 bg-light rounded">
+                                    <div class="text-muted small fw-bold mb-1">Valor Líquido Identificado</div>
+                                    <div class="fs-5 fw-bold text-success">R$ ${safeCurrency(r.valor_liquido_identificado)}</div>
+                                </div>
+                            </div>
+                        </div>
+                        ${retencaoRows ? `
+                        <h6 class="fw-bold text-muted mb-2">Retenções a Processar</h6>
+                        <table class="table table-sm table-hover mb-3">
+                            <thead class="table-light"><tr><th>Código</th><th>Descrição</th><th class="text-end">Valor</th></tr></thead>
+                            <tbody>${retencaoRows}</tbody>
+                        </table>` : '<p class="text-muted small"><i class="bi bi-info-circle me-1"></i>Nenhuma retenção identificada.</p>'}
+                        ${alertRows || ''}
+                    </div>`;
+            }
+            container.appendChild(card);
+        });
+    }
+
+    // ── Navigation ────────────────────────────────────────────────────────
+    btnBack.addEventListener('click', () => showStep(1));
+    btnContinue.addEventListener('click', () => showStep(4));
+    btnBackToRes.addEventListener('click', () => showStep(3));
+
+    // ── Action cards ──────────────────────────────────────────────────────
+    cardNovo.addEventListener('click', () => {
+        window.location.href = '/adicionar/';
+    });
+
+    cardExist.addEventListener('click', () => {
+        picker.style.display = picker.style.display === 'none' ? '' : 'none';
+        if (picker.style.display !== 'none') renderProcessoSearch('');
+    });
+
+    searchInput.addEventListener('input', () => renderProcessoSearch(searchInput.value.trim().toLowerCase()));
+
+    function renderProcessoSearch(query) {
+        const filtered = PROCESSOS_DATA.filter(p => {
+            const id = String(p.id);
+            const ne = (p.n_nota_empenho || '').toLowerCase();
+            const credor = (p.credor__nome || '').toLowerCase();
+            return id.includes(query) || ne.includes(query) || credor.includes(query);
+        }).slice(0, 30);
+
+        searchRes.innerHTML = '';
+        if (filtered.length === 0) {
+            searchRes.innerHTML = '<div class="list-group-item text-muted text-center">Nenhum processo encontrado.</div>';
+            return;
+        }
+        filtered.forEach(p => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+            btn.innerHTML = `<span><strong>#${p.id}</strong> — ${escapeHtml(p.n_nota_empenho || 'S/N')} &nbsp;|&nbsp; ${escapeHtml(p.credor__nome || 'Credor não informado')}</span>
+                             <span class="badge bg-secondary">${escapeHtml(p.status__status_choice || '')}</span>`;
+            btn.addEventListener('click', () => {
+                window.location.href = `/processo/${p.id}/editar/`;
+            });
+            searchRes.appendChild(btn);
+        });
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────
+    function getCsrf() {
+        const name = 'csrftoken';
+        const cookies = document.cookie.split(';');
+        for (let c of cookies) {
+            c = c.trim();
+            if (c.startsWith(name + '=')) return decodeURIComponent(c.slice(name.length + 1));
+        }
+        return '';
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    function safeCurrency(val) {
+        const n = Number(val);
+        return isNaN(n) ? '0,00' : n.toFixed(2).replace('.',',');
     }
 });
 </script>

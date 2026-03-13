@@ -24,9 +24,16 @@ def home_page(request):
     meu_filtro = ProcessoFilter(request.GET, queryset=processos_base)
     processos_filtrados = meu_filtro.qs
 
+    processos_para_json = list(
+        Processo.objects.select_related('credor', 'status')
+        .order_by('-id')[:200]
+        .values('id', 'n_nota_empenho', 'credor__nome', 'status__status_choice')
+    )
+
     context = {
         'lista_processos': processos_filtrados,
         'meu_filtro': meu_filtro,
+        'processos_json': json.dumps(processos_para_json, ensure_ascii=False),
     }
     return render(request, 'home.html', context)
 
