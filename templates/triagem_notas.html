@@ -53,7 +53,12 @@
                     <div class="card shadow-sm border-info h-100">
                         <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                             <h6 class="mb-0 fw-bold"><i class="bi bi-file-earmark-pdf"></i> Documentos Identificados</h6>
-                            <span class="badge bg-light text-info">{{ docs_nota|length }} PDF(s)</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-light text-info">{{ docs_nota|length }} PDF(s)</span>
+                                <a href="{% url 'gerar_dummy_pdf' processo.id %}" class="btn btn-xs btn-light btn-sm py-0 px-2 text-info fw-bold" title="Adicionar PDF de teste">
+                                    <i class="bi bi-plus-circle"></i> PDF Teste
+                                </a>
+                            </div>
                         </div>
                         <div class="card-body p-2 bg-light-blue">
                             
@@ -79,6 +84,11 @@
                                 <div class="alert alert-warning m-3 text-center">
                                     <i class="bi bi-exclamation-triangle fs-3 d-block mb-2"></i>
                                     Nenhum PDF do tipo "Nota Fiscal" foi anexado.
+                                    <div class="mt-3">
+                                        <a href="{% url 'gerar_dummy_pdf' processo.id %}" class="btn btn-sm btn-outline-warning fw-bold">
+                                            <i class="bi bi-file-earmark-plus"></i> Gerar PDF de Teste
+                                        </a>
+                                    </div>
                                 </div>
                             {% endif %}
                             
@@ -148,18 +158,25 @@
 
                                 <div class="row g-3 mb-4 p-3 bg-light rounded border border-warning border-opacity-50">
                                     <div class="col-md-8">
-                                        <label class="small fw-bold text-dark mb-1"><i class="bi bi-person-badge"></i> Fiscal do Contrato (Opcional)</label>
+                                        <label class="small fw-bold text-dark mb-1"><i class="bi bi-person-badge"></i> Fiscal do Contrato <span class="text-warning">(obrigatório se "Enviar para Liquidação")</span></label>
                                         {{ nf_f.fiscal_contrato }}
-                                        <small class="text-muted" style="font-size: 0.70rem;">Selecione o responsável pelo ateste/liquidação.</small>
+                                        <small class="text-muted" style="font-size: 0.70rem;">Obrigatório ao enviar para liquidação.</small>
                                     </div>
                                     <div class="col-md-4 d-flex align-items-center justify-content-end">
                                         <div class="form-check form-switch mt-2">
                                             {{ nf_f.atestada }}
                                             <label class="form-check-label fw-bold text-success ms-1" for="id_nota_fiscal-{{ forloop.counter0 }}-atestada">
-                                                Atestada / Enviar Liquidação
+                                                Enviar para Liquidação
                                             </label>
                                         </div>
                                     </div>
+                                </div>
+
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input tem-retencao-toggle" type="checkbox" id="tem-retencao-{{ forloop.counter0 }}" role="switch" {% if nf_f.instance.pk and nf_f.instance.retencoes.all %}checked{% endif %}>
+                                    <label class="form-check-label fw-bold text-danger" for="tem-retencao-{{ forloop.counter0 }}">
+                                        <i class="bi bi-percent"></i> Tem Retenção de Impostos
+                                    </label>
                                 </div>
 
                                 <div class="taxes-container">
@@ -234,15 +251,22 @@
                     </div>
                     <div class="row g-3 mb-4 p-3 bg-light rounded border border-warning border-opacity-50">
                         <div class="col-md-8">
-                            <label class="small fw-bold text-dark mb-1"><i class="bi bi-person-badge"></i> Fiscal do Contrato (Opcional)</label>
+                            <label class="small fw-bold text-dark mb-1"><i class="bi bi-person-badge"></i> Fiscal do Contrato <span class="text-warning">(obrigatório se "Enviar para Liquidação")</span></label>
                             {{ nota_fiscal_formset.empty_form.fiscal_contrato }}
+                            <small class="text-muted" style="font-size: 0.70rem;">Obrigatório ao enviar para liquidação.</small>
                         </div>
                         <div class="col-md-4 d-flex align-items-center justify-content-end">
                             <div class="form-check form-switch mt-2">
                                 {{ nota_fiscal_formset.empty_form.atestada }}
-                                <label class="form-check-label fw-bold text-success ms-1">Atestada / Liquidação</label>
+                                <label class="form-check-label fw-bold text-success ms-1">Enviar para Liquidação</label>
                             </div>
                         </div>
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input tem-retencao-toggle" type="checkbox" id="tem-retencao-__prefix__" role="switch">
+                        <label class="form-check-label fw-bold text-danger" for="tem-retencao-__prefix__">
+                            <i class="bi bi-percent"></i> Tem Retenção de Impostos
+                        </label>
                     </div>
                     <div class="taxes-container">
                         <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
@@ -275,6 +299,29 @@
 
 <script>
     const totalPdfs = {{ docs_nota|length }};
+
+    function updateFiscalContrato(card) {
+        const atestadaChk = card.querySelector('input[name$="-atestada"]');
+        const fiscalSelect = card.querySelector('select[name$="-fiscal_contrato"]');
+        if (!atestadaChk || !fiscalSelect) return;
+        if (atestadaChk.checked) {
+            fiscalSelect.disabled = false;
+        } else {
+            fiscalSelect.value = '';
+            fiscalSelect.disabled = true;
+        }
+    }
+
+    function updateTaxSection(card) {
+        const toggle = card.querySelector('.tem-retencao-toggle');
+        const taxesContainer = card.querySelector('.taxes-container');
+        if (!toggle || !taxesContainer) return;
+        const enabled = toggle.checked;
+        taxesContainer.style.opacity = enabled ? '1' : '0.5';
+        taxesContainer.style.pointerEvents = enabled ? '' : 'none';
+        const addBtn = card.querySelector('.add-tax-btn');
+        if (addBtn) addBtn.disabled = !enabled;
+    }
 
     function calcularValorLiquido(card) {
         const inputBruto = card.querySelector('input[name$="-valor_bruto"]');
@@ -328,6 +375,14 @@
                     inputLiquido.classList.add('bg-light');
                 }
 
+                updateFiscalContrato(form);
+
+                const toggle = form.querySelector('.tem-retencao-toggle');
+                if (toggle && !toggle.checked) {
+                    toggle.checked = form.querySelectorAll('.tax-body tr').length > 0;
+                }
+                updateTaxSection(form);
+
                 if (index !== 0) {
                     form.style.display = 'none';
                 }
@@ -369,9 +424,21 @@
             });
             
             nfList.addEventListener('change', function(e) {
-                if (e.target.tagName.toLowerCase() === 'select' && e.target.name.includes('nome_emitente')) {
-                    const credorId = e.target.value;
-                    const card = e.target.closest('.nf-card');
+                const target = e.target;
+
+                if (target.type === 'checkbox' && target.name && target.name.endsWith('-atestada')) {
+                    const card = target.closest('.nf-card');
+                    if (card) updateFiscalContrato(card);
+                }
+
+                if (target.classList.contains('tem-retencao-toggle')) {
+                    const card = target.closest('.nf-card');
+                    if (card) updateTaxSection(card);
+                }
+
+                if (target.tagName.toLowerCase() === 'select' && target.name.includes('nome_emitente')) {
+                    const credorId = target.value;
+                    const card = target.closest('.nf-card');
                     const inputCNPJ = card.querySelector('input[id$="-cnpj_emitente"]');
                     
                     if (credorId && inputCNPJ) {
@@ -411,6 +478,26 @@
                         
                         alert(`Atenção: A Nota Fiscal ${i + 1} está incompleta. Preencha os campos obrigatórios em vermelho.`);
                         break; 
+                    }
+                }
+
+                const retencaoToggle = card.querySelector('.tem-retencao-toggle');
+                if (retencaoToggle && retencaoToggle.checked) {
+                    const taxRows = card.querySelectorAll('.tax-body tr');
+                    let hasValidTax = false;
+                    taxRows.forEach(row => {
+                        const codeSelect = row.querySelector('select');
+                        const valueInput = row.querySelector('.tax-val-input');
+                        if (codeSelect && codeSelect.value && valueInput && valueInput.value) {
+                            hasValidTax = true;
+                        }
+                    });
+                    if (!hasValidTax) {
+                        e.preventDefault();
+                        const tabBtn = document.getElementById('tab-doc-' + i);
+                        if (tabBtn) tabBtn.click();
+                        alert(`Atenção: A Nota Fiscal ${i + 1} tem retenção de impostos marcada, mas nenhum imposto foi informado.`);
+                        break;
                     }
                 }
             }
