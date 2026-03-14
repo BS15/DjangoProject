@@ -217,8 +217,15 @@ class DiariaForm(forms.ModelForm):
             'cidade_destino': forms.TextInput(attrs={'class': 'form-control'}),
             'objetivo': forms.TextInput(attrs={'class': 'form-control'}),
             'quantidade_diarias': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.5'}),
-            'valor_total': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'valor_total': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'readonly': 'readonly', 'id': 'id_valor_total'}),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        # Allow valor_total to be blank/null when it will be auto-calculated
+        if not cleaned_data.get('valor_total'):
+            cleaned_data['valor_total'] = None
+        return cleaned_data
 
 class ReembolsoForm(forms.ModelForm):
     class Meta:
