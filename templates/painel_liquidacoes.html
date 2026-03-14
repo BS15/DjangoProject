@@ -88,8 +88,8 @@
                                 <i class="bi bi-folder2-open"></i> Proc. #{{ nf.processo.id }}
                             </a>
                             
-                            {% if nf.arquivo %}
-                                <a href="{{ nf.arquivo.url }}" target="_blank" class="btn btn-sm btn-outline-danger" title="Ver PDF da Nota">
+                            {% if nf.documento_vinculado and nf.documento_vinculado.arquivo %}
+                                <a href="{{ nf.documento_vinculado.arquivo.url }}" target="_blank" class="btn btn-sm btn-outline-danger" title="Ver PDF da Nota">
                                     <i class="bi bi-file-earmark-pdf"></i>
                                 </a>
                             {% endif %}
