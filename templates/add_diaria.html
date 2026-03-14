@@ -42,6 +42,16 @@
                 <div class="mb-3">
                     <label class="form-label fw-bold">Beneficiário</label>
                     {{ form.beneficiario }}
+                    <div id="cargo-funcao-info" class="mt-2 d-none">
+                        <span class="badge bg-info text-dark fs-6 px-3 py-2">
+                            <i class="bi bi-person-badge"></i> Cargo/Função: <span id="cargo-funcao-nome"></span>
+                        </span>
+                    </div>
+                    <div id="cargo-funcao-aviso" class="mt-2 d-none">
+                        <span class="badge bg-warning text-dark fs-6 px-3 py-2">
+                            <i class="bi bi-exclamation-triangle"></i> <span id="cargo-funcao-aviso-msg"></span>
+                        </span>
+                    </div>
                 </div>
 
                 <div class="row g-3 mb-3">
@@ -114,6 +124,10 @@
     var valorTotalInput = document.getElementById('id_valor_total');
     var valorUnitarioInfo = document.getElementById('valor-unitario-info');
     var valorTotalMsg = document.getElementById('valor-total-msg');
+    var cargoFuncaoInfo = document.getElementById('cargo-funcao-info');
+    var cargoFuncaoNome = document.getElementById('cargo-funcao-nome');
+    var cargoFuncaoAviso = document.getElementById('cargo-funcao-aviso');
+    var cargoFuncaoAvisoMsg = document.getElementById('cargo-funcao-aviso-msg');
 
     function recalcularValorTotal() {
         if (valorUnitario !== null && quantidadeInput.value) {
@@ -127,11 +141,19 @@
         }
     }
 
+    function limparCargoFuncaoDisplay() {
+        cargoFuncaoInfo.classList.add('d-none');
+        cargoFuncaoNome.textContent = '';
+        cargoFuncaoAviso.classList.add('d-none');
+        cargoFuncaoAvisoMsg.textContent = '';
+    }
+
     function buscarValorUnitario(beneficiarioId) {
         if (!beneficiarioId) {
             valorUnitario = null;
             valorUnitarioInfo.textContent = '';
             valorTotalMsg.textContent = '';
+            limparCargoFuncaoDisplay();
             return;
         }
         var url = apiUrlTemplate.replace('/0/', '/' + beneficiarioId + '/');
@@ -142,17 +164,26 @@
                     valorUnitario = parseFloat(data.valor_unitario);
                     valorUnitarioInfo.textContent = '(R$ ' + valorUnitario.toFixed(2).replace('.', ',') + '/diária — ' + data.cargo_funcao + ')';
                     valorTotalMsg.textContent = '';
+                    cargoFuncaoNome.textContent = data.cargo_funcao;
+                    cargoFuncaoInfo.classList.remove('d-none');
+                    cargoFuncaoAviso.classList.add('d-none');
+                    cargoFuncaoAvisoMsg.textContent = '';
                     recalcularValorTotal();
                 } else {
                     valorUnitario = null;
                     valorUnitarioInfo.textContent = '';
                     valorTotalMsg.textContent = data.erro || 'Valor unitário não encontrado para este beneficiário.';
                     valorTotalMsg.className = 'form-text text-warning';
+                    cargoFuncaoInfo.classList.add('d-none');
+                    cargoFuncaoNome.textContent = '';
+                    cargoFuncaoAvisoMsg.textContent = data.erro || 'Cargo/Função não encontrado para este beneficiário.';
+                    cargoFuncaoAviso.classList.remove('d-none');
                 }
             })
             .catch(function () {
                 valorUnitario = null;
                 valorUnitarioInfo.textContent = '';
+                limparCargoFuncaoDisplay();
             });
     }
 
