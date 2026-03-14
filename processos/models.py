@@ -491,8 +491,27 @@ class Diaria(models.Model):
     objetivo = models.CharField("Objetivo da Viagem", max_length=200)
 
     quantidade_diarias = models.DecimalField("Quantidade de Diárias", max_digits=4, decimal_places=1)
-    valor_total = models.DecimalField("Valor Total (R$)", max_digits=12, decimal_places=2)
+    valor_total = models.DecimalField("Valor Total (R$)", max_digits=12, decimal_places=2, blank=True, null=True)
     status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
+
+    def calcular_valor_total(self):
+        """Returns the calculated valor_total based on beneficiario cargo_funcao unit value."""
+        if not self.beneficiario_id or not self.quantidade_diarias:
+            return None
+        credor = self.beneficiario
+        if not credor.cargo_funcao_id:
+            return None
+        valor_unitario = Tabela_Valores_Unitarios_Verbas_Indenizatorias.get_valor_para_cargo_diaria(credor.cargo_funcao)
+        if valor_unitario is not None:
+            return valor_unitario * self.quantidade_diarias
+        return None
+
+    def save(self, *args, **kwargs):
+        calculado = self.calcular_valor_total()
+        if calculado is not None:
+            self.valor_total = calculado
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Diária {self.numero_sequencial} - {self.beneficiario}"
 
@@ -551,6 +570,19 @@ class Tabela_Valores_Unitarios_Verbas_Indenizatorias(models.Model):
     tipo = models.ForeignKey(TiposDeVerbasIndenizatorias, on_delete=models.PROTECT, blank=True, null=True)
     cargo_funcao = models.ForeignKey('CargosFuncoes', on_delete=models.PROTECT, blank=True, null=True)
     valor_unitario = models.DecimalField(null=True, blank=True, max_digits=12, decimal_places=2)
+
+    @classmethod
+    def get_valor_para_cargo_diaria(cls, cargo_funcao):
+        """Returns the valor_unitario for the given cargo_funcao for diárias, or None if not found."""
+        tabela = cls.objects.filter(
+            cargo_funcao=cargo_funcao,
+            tipo__tipo_de_verba_indenizatoria__icontains='diária'
+        ).first()
+        if not tabela:
+            tabela = cls.objects.filter(cargo_funcao=cargo_funcao).first()
+        if tabela and tabela.valor_unitario is not None:
+            return tabela.valor_unitario
+        return None
 
 class Tabela_Proponentes_Diarias(models.Model):
     cargo_funcao = models.ForeignKey(

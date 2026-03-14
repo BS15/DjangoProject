@@ -15,7 +15,7 @@ from .forms import ProcessoForm, DocumentoFormSet, NotaFiscalFormSet, RetencaoFo
 from .utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, processar_pdf_comprovantes_ia
 from .ai_utils import extrair_dados_documento, extract_data_with_llm
 from .invoice_processor import process_invoice_taxes
-from .models import Processo, NotaFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, ComprovanteDePagamento
+from .models import Processo, NotaFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias
 from .filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, NotaFiscalFilter
 
 
@@ -1254,6 +1254,31 @@ def api_dados_credor(request, credor_id):
         return JsonResponse(dados)
     except Credor.DoesNotExist:
         return JsonResponse({'sucesso': False, 'erro': 'Credor não encontrado'})
+
+
+def api_valor_unitario_diaria(request, beneficiario_id):
+    try:
+        credor = Credor.objects.select_related('cargo_funcao').get(id=beneficiario_id)
+
+        if not credor.cargo_funcao_id:
+            return JsonResponse({'sucesso': False, 'erro': 'Beneficiário sem cargo/função definido', 'valor_unitario': None})
+
+        valor_unitario = Tabela_Valores_Unitarios_Verbas_Indenizatorias.get_valor_para_cargo_diaria(credor.cargo_funcao)
+
+        if valor_unitario is not None:
+            return JsonResponse({
+                'sucesso': True,
+                'valor_unitario': str(valor_unitario),
+                'cargo_funcao': str(credor.cargo_funcao),
+            })
+        else:
+            return JsonResponse({
+                'sucesso': False,
+                'erro': 'Nenhum valor unitário cadastrado para este cargo/função',
+                'valor_unitario': None,
+            })
+    except Credor.DoesNotExist:
+        return JsonResponse({'sucesso': False, 'erro': 'Beneficiário não encontrado', 'valor_unitario': None})
 
 
 def api_tipos_documento_por_pagamento(request):

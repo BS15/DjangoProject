@@ -74,8 +74,9 @@
                         {{ form.quantidade_diarias }}
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold text-success">Valor Total (R$)</label>
+                        <label class="form-label fw-bold text-success">Valor Total (R$) <span id="valor-unitario-info" class="text-muted fw-normal fs-6"></span></label>
                         {{ form.valor_total }}
+                        <div id="valor-total-msg" class="form-text text-muted"></div>
                     </div>
                 </div>
                 <div class="mb-4 p-3 border rounded bg-light">
@@ -102,5 +103,74 @@
         </div>
     </div>
 </div>
+
+<script>
+(function () {
+    var valorUnitario = null;
+    var apiUrlTemplate = "{% url 'api_valor_unitario_diaria' 0 %}";
+
+    var beneficiarioSelect = document.getElementById('id_beneficiario');
+    var quantidadeInput = document.getElementById('id_quantidade_diarias');
+    var valorTotalInput = document.getElementById('id_valor_total');
+    var valorUnitarioInfo = document.getElementById('valor-unitario-info');
+    var valorTotalMsg = document.getElementById('valor-total-msg');
+
+    function recalcularValorTotal() {
+        if (valorUnitario !== null && quantidadeInput.value) {
+            var qtd = parseFloat(quantidadeInput.value);
+            if (!isNaN(qtd) && qtd > 0) {
+                var total = (valorUnitario * qtd).toFixed(2);
+                valorTotalInput.value = total;
+                valorTotalMsg.textContent = 'Calculado automaticamente: R$ ' + valorUnitario.toFixed(2).replace('.', ',') + ' × ' + qtd;
+                valorTotalMsg.className = 'form-text text-success';
+            }
+        }
+    }
+
+    function buscarValorUnitario(beneficiarioId) {
+        if (!beneficiarioId) {
+            valorUnitario = null;
+            valorUnitarioInfo.textContent = '';
+            valorTotalMsg.textContent = '';
+            return;
+        }
+        var url = apiUrlTemplate.replace('/0/', '/' + beneficiarioId + '/');
+        fetch(url)
+            .then(function (resp) { return resp.json(); })
+            .then(function (data) {
+                if (data.sucesso && data.valor_unitario !== null) {
+                    valorUnitario = parseFloat(data.valor_unitario);
+                    valorUnitarioInfo.textContent = '(R$ ' + valorUnitario.toFixed(2).replace('.', ',') + '/diária — ' + data.cargo_funcao + ')';
+                    valorTotalMsg.textContent = '';
+                    recalcularValorTotal();
+                } else {
+                    valorUnitario = null;
+                    valorUnitarioInfo.textContent = '';
+                    valorTotalMsg.textContent = data.erro || 'Valor unitário não encontrado para este beneficiário.';
+                    valorTotalMsg.className = 'form-text text-warning';
+                }
+            })
+            .catch(function () {
+                valorUnitario = null;
+                valorUnitarioInfo.textContent = '';
+            });
+    }
+
+    if (beneficiarioSelect) {
+        beneficiarioSelect.addEventListener('change', function () {
+            buscarValorUnitario(this.value);
+        });
+        // Trigger on load if a beneficiario is already selected (e.g. form re-render after error)
+        if (beneficiarioSelect.value) {
+            buscarValorUnitario(beneficiarioSelect.value);
+        }
+    }
+
+    if (quantidadeInput) {
+        quantidadeInput.addEventListener('input', recalcularValorTotal);
+        quantidadeInput.addEventListener('change', recalcularValorTotal);
+    }
+})();
+</script>
 </body>
 </html>
