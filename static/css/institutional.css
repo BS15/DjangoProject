@@ -1,0 +1,455 @@
+/* =============================================================
+   INSTITUTIONAL THEME — Bootstrap 5 Overrides
+   Provides a sober, governmental, robust aesthetic by
+   remapping Bootstrap CSS custom properties and applying
+   targeted style rules.  No HTML ids, names, or JS
+   attributes are touched.
+   ============================================================= */
+
+/* --- GLOBAL COLOR & SHAPE TOKENS ----------------------------- */
+:root {
+  /* Primary: deep institutional navy */
+  --bs-primary:             #1b3a6b;
+  --bs-primary-rgb:         27, 58, 107;
+
+  /* Secondary: slate gray */
+  --bs-secondary:           #4a5568;
+  --bs-secondary-rgb:       74, 85, 104;
+
+  /* Success: muted institutional green */
+  --bs-success:             #2d6a4f;
+  --bs-success-rgb:         45, 106, 79;
+
+  /* Danger: deep formal red */
+  --bs-danger:              #8b2635;
+  --bs-danger-rgb:          139, 38, 53;
+
+  /* Warning: muted amber (dark enough to be legible on white) */
+  --bs-warning:             #7a5a00;
+  --bs-warning-rgb:         122, 90, 0;
+
+  /* Info: muted teal */
+  --bs-info:                #2c6e8a;
+  --bs-info-rgb:            44, 110, 138;
+
+  /* Dark: near-black with slight navy tint */
+  --bs-dark:                #1a2535;
+  --bs-dark-rgb:            26, 37, 53;
+
+  /* Light: pale institutional off-white */
+  --bs-light:               #eef0f3;
+  --bs-light-rgb:           238, 240, 243;
+
+  /* Body */
+  --bs-body-bg:             #eef0f3;
+  --bs-body-color:          #1a2535;
+  --bs-body-font-family:    'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+  --bs-body-font-size:      0.9rem;
+
+  /* Links */
+  --bs-link-color:          #1b3a6b;
+  --bs-link-color-rgb:      27, 58, 107;
+  --bs-link-hover-color:    #0d2040;
+  --bs-link-hover-color-rgb: 13, 32, 64;
+
+  /* Borders: more defined, slightly cooler */
+  --bs-border-color:        #c4c9d1;
+  --bs-border-color-translucent: rgba(26, 37, 53, 0.18);
+
+  /* Rounded corners: tighter for institutional look */
+  --bs-border-radius:       0.2rem;
+  --bs-border-radius-sm:    0.15rem;
+  --bs-border-radius-lg:    0.3rem;
+  --bs-border-radius-xl:    0.4rem;
+  /* Pill radius kept at Bootstrap's default — badge overrides below */
+  --bs-border-radius-pill:  50rem;
+}
+
+/* --- BODY ---------------------------------------------------- */
+body {
+  background-color: var(--bs-body-bg) !important;
+  color: var(--bs-body-color);
+  font-size: var(--bs-body-font-size);
+}
+
+/* --- TYPOGRAPHY --------------------------------------------- */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--bs-dark);
+}
+
+/* --- LINKS -------------------------------------------------- */
+a {
+  color: var(--bs-link-color);
+}
+a:hover {
+  color: var(--bs-link-hover-color);
+}
+
+/* --- BUTTONS ------------------------------------------------ */
+.btn {
+  border-radius: var(--bs-border-radius);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* Primary */
+.btn-primary {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+  color: #fff;
+}
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background-color: #0f2448;
+  border-color: #0f2448;
+  color: #fff;
+}
+.btn-check:checked + .btn-primary,
+.btn-primary.active {
+  background-color: #0f2448;
+  border-color: #0f2448;
+}
+
+/* Warning (used extensively in this app) */
+.btn-warning {
+  background-color: var(--bs-warning);
+  border-color: var(--bs-warning);
+  color: #fff !important;
+}
+.btn-warning:hover,
+.btn-warning:focus,
+.btn-warning:active {
+  background-color: #5c4400;
+  border-color: #5c4400;
+  color: #fff !important;
+}
+
+/* Success */
+.btn-success {
+  background-color: var(--bs-success);
+  border-color: var(--bs-success);
+  color: #fff;
+}
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active {
+  background-color: #1e4d38;
+  border-color: #1e4d38;
+  color: #fff;
+}
+
+/* Danger */
+.btn-danger {
+  background-color: var(--bs-danger);
+  border-color: var(--bs-danger);
+  color: #fff;
+}
+.btn-danger:hover,
+.btn-danger:focus,
+.btn-danger:active {
+  background-color: #6b1c28;
+  border-color: #6b1c28;
+  color: #fff;
+}
+
+/* Info */
+.btn-info {
+  background-color: var(--bs-info);
+  border-color: var(--bs-info);
+  color: #fff !important;
+}
+.btn-info:hover,
+.btn-info:focus,
+.btn-info:active {
+  background-color: #1f4d63;
+  border-color: #1f4d63;
+  color: #fff !important;
+}
+
+/* Light */
+.btn-light {
+  background-color: #e2e6ea;
+  border-color: #c4c9d1;
+  color: var(--bs-dark) !important;
+}
+.btn-light:hover,
+.btn-light:focus {
+  background-color: #cdd2d8;
+  border-color: #b0b6bf;
+  color: var(--bs-dark) !important;
+}
+
+/* Dark */
+.btn-dark {
+  background-color: var(--bs-dark);
+  border-color: var(--bs-dark);
+  color: #fff;
+}
+.btn-dark:hover,
+.btn-dark:focus {
+  background-color: #0d1520;
+  border-color: #0d1520;
+  color: #fff;
+}
+
+/* Outline variants */
+.btn-outline-primary {
+  color: var(--bs-primary);
+  border-color: var(--bs-primary);
+}
+.btn-outline-primary:hover {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+  color: #fff;
+}
+.btn-outline-secondary {
+  color: var(--bs-secondary);
+  border-color: var(--bs-secondary);
+}
+.btn-outline-secondary:hover {
+  background-color: var(--bs-secondary);
+  border-color: var(--bs-secondary);
+  color: #fff;
+}
+.btn-outline-dark {
+  color: var(--bs-dark);
+  border-color: var(--bs-dark);
+}
+.btn-outline-dark:hover {
+  background-color: var(--bs-dark);
+  border-color: var(--bs-dark);
+  color: #fff;
+}
+.btn-outline-danger {
+  color: var(--bs-danger);
+  border-color: var(--bs-danger);
+}
+.btn-outline-danger:hover {
+  background-color: var(--bs-danger);
+  border-color: var(--bs-danger);
+  color: #fff;
+}
+.btn-outline-warning {
+  color: var(--bs-warning);
+  border-color: var(--bs-warning);
+}
+.btn-outline-warning:hover {
+  background-color: var(--bs-warning);
+  border-color: var(--bs-warning);
+  color: #fff;
+}
+.btn-outline-success {
+  color: var(--bs-success);
+  border-color: var(--bs-success);
+}
+.btn-outline-success:hover {
+  background-color: var(--bs-success);
+  border-color: var(--bs-success);
+  color: #fff;
+}
+.btn-outline-info {
+  color: var(--bs-info);
+  border-color: var(--bs-info);
+}
+.btn-outline-info:hover {
+  background-color: var(--bs-info);
+  border-color: var(--bs-info);
+  color: #fff;
+}
+
+/* --- BACKGROUND UTILITIES ----------------------------------- */
+.bg-primary   { background-color: var(--bs-primary)   !important; }
+.bg-secondary { background-color: var(--bs-secondary) !important; }
+.bg-success   { background-color: var(--bs-success)   !important; }
+.bg-danger    { background-color: var(--bs-danger)    !important; }
+.bg-warning   { background-color: var(--bs-warning)   !important; color: #fff !important; }
+.bg-info      { background-color: var(--bs-info)      !important; color: #fff !important; }
+.bg-dark      { background-color: var(--bs-dark)      !important; }
+.bg-light     { background-color: var(--bs-light)     !important; }
+
+/* Semi-transparent bg variants used for status badges */
+.bg-primary.bg-opacity-10   { background-color: rgba(27, 58, 107, 0.1)  !important; }
+.bg-success.bg-opacity-10   { background-color: rgba(45, 106, 79, 0.1)  !important; }
+.bg-danger.bg-opacity-10    { background-color: rgba(139, 38, 53, 0.1)  !important; }
+.bg-warning.bg-opacity-10   { background-color: rgba(122, 90, 0, 0.1)   !important; color: inherit !important; }
+.bg-info.bg-opacity-10      { background-color: rgba(44, 110, 138, 0.1) !important; color: inherit !important; }
+.bg-secondary.bg-opacity-10 { background-color: rgba(74, 85, 104, 0.1)  !important; }
+
+/* --- TEXT COLOR UTILITIES ----------------------------------- */
+.text-primary   { color: var(--bs-primary)   !important; }
+.text-secondary { color: var(--bs-secondary) !important; }
+.text-success   { color: var(--bs-success)   !important; }
+.text-danger    { color: var(--bs-danger)    !important; }
+.text-warning   { color: var(--bs-warning)   !important; }
+.text-info      { color: var(--bs-info)      !important; }
+.text-dark      { color: var(--bs-dark)      !important; }
+
+/* --- BADGES ------------------------------------------------- */
+.badge {
+  border-radius: 3px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.badge.bg-primary   { background-color: var(--bs-primary)   !important; }
+.badge.bg-secondary { background-color: var(--bs-secondary) !important; }
+.badge.bg-success   { background-color: var(--bs-success)   !important; }
+.badge.bg-danger    { background-color: var(--bs-danger)    !important; }
+.badge.bg-warning   { background-color: var(--bs-warning)   !important; color: #fff !important; }
+.badge.bg-info      { background-color: var(--bs-info)      !important; color: #fff !important; }
+
+/* Status/pill badges use a tighter radius for formal institutional appearance */
+.badge.rounded-pill { border-radius: 4px !important; }
+
+/* --- ALERTS ------------------------------------------------- */
+.alert-primary {
+  background-color: rgba(27, 58, 107, 0.08);
+  border-color: rgba(27, 58, 107, 0.3);
+  color: #0f2448;
+}
+.alert-success {
+  background-color: rgba(45, 106, 79, 0.08);
+  border-color: rgba(45, 106, 79, 0.3);
+  color: #1e4d38;
+}
+.alert-danger {
+  background-color: rgba(139, 38, 53, 0.08);
+  border-color: rgba(139, 38, 53, 0.3);
+  color: #6b1c28;
+}
+.alert-warning {
+  background-color: rgba(122, 90, 0, 0.08);
+  border-color: rgba(122, 90, 0, 0.3);
+  color: #5c4400;
+}
+.alert-info {
+  background-color: rgba(44, 110, 138, 0.08);
+  border-color: rgba(44, 110, 138, 0.3);
+  color: #1f4d63;
+}
+
+/* --- CARDS -------------------------------------------------- */
+.card {
+  border-radius: 0.2rem;
+  border-color: var(--bs-border-color);
+}
+.card-header {
+  border-radius: 0 !important;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.card-header.bg-warning { color: #fff !important; }
+
+/* --- TABLES ------------------------------------------------- */
+.table-dark {
+  --bs-table-bg:           var(--bs-dark);
+  --bs-table-striped-bg:   #202f44;
+  --bs-table-hover-bg:     #253548;
+  --bs-table-border-color: #2c3a4e;
+  color: #fff;
+}
+.table {
+  border-color: var(--bs-border-color);
+  font-size: 0.88rem;
+}
+.table-hover > tbody > tr:hover > * {
+  background-color: rgba(27, 58, 107, 0.05);
+}
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+  background-color: rgba(27, 58, 107, 0.03);
+}
+
+/* --- FORM CONTROLS ------------------------------------------ */
+.form-control,
+.form-select {
+  border-color: var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  font-size: 0.88rem;
+}
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 0.2rem rgba(27, 58, 107, 0.15);
+}
+
+/* --- OFFCANVAS SIDEBAR -------------------------------------- */
+.offcanvas-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* --- MODALS ------------------------------------------------- */
+.modal-header {
+  border-radius: 0;
+  font-weight: 600;
+}
+.modal-header.bg-danger  { background-color: var(--bs-danger)  !important; color: #fff; }
+.modal-header.bg-warning { background-color: var(--bs-warning) !important; color: #fff !important; }
+.modal-header.bg-primary { background-color: var(--bs-primary) !important; color: #fff; }
+
+/* --- NAVIGATION --------------------------------------------- */
+.nav-tabs .nav-link.active {
+  color: var(--bs-primary);
+  border-bottom-color: var(--bs-primary);
+  font-weight: 600;
+}
+.nav-tabs .nav-link:hover {
+  color: var(--bs-primary);
+}
+
+/* --- PAGINATION -------------------------------------------- */
+.page-link {
+  color: var(--bs-primary);
+}
+.page-link:hover {
+  color: var(--bs-link-hover-color);
+}
+.page-item.active .page-link {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+}
+
+/* --- PROGRESS ---------------------------------------------- */
+.progress-bar { background-color: var(--bs-primary); }
+
+/* --- BREADCRUMB -------------------------------------------- */
+.breadcrumb-item a           { color: var(--bs-primary); }
+.breadcrumb-item.active      { color: var(--bs-secondary); }
+
+/* --- SHADOWS ------------------------------------------------ */
+.shadow-sm {
+  box-shadow: 0 1px 4px rgba(26, 37, 53, 0.1) !important;
+}
+.shadow {
+  box-shadow: 0 2px 8px rgba(26, 37, 53, 0.12) !important;
+}
+
+/* --- INPUT GROUP ------------------------------------------- */
+.input-group-text {
+  background-color: #e2e6ea;
+  border-color: var(--bs-border-color);
+  color: var(--bs-secondary);
+}
+
+/* --- DROPDOWN ---------------------------------------------- */
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background-color: rgba(27, 58, 107, 0.08);
+  color: var(--bs-primary);
+}
+.dropdown-item.active,
+.dropdown-item:active {
+  background-color: var(--bs-primary);
+  color: #fff;
+}
+
+/* --- LIST GROUP -------------------------------------------- */
+.list-group-item.active {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+}
+
+/* --- SPINNER ----------------------------------------------- */
+.spinner-border { border-top-color: var(--bs-primary); }
+
+/* --- CLOSE BUTTON (modal/alert X) -------------------------- */
+.btn-close-white { filter: invert(1) grayscale(100%) brightness(200%); }
