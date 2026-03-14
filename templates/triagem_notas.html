@@ -375,7 +375,7 @@
                     const inputCNPJ = card.querySelector('input[id$="-cnpj_emitente"]');
                     
                     if (credorId && inputCNPJ) {
-                        fetch(`/api/dados-bancarios/${credorId}/`)
+                        fetch(`/api/credor/${credorId}/`)
                         .then(res => res.json())
                         .then(data => { if(data.sucesso && data.cpf_cnpj) inputCNPJ.value = data.cpf_cnpj; });
                     }

@@ -20,11 +20,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # A SOLUÇÃO BLINDADA: Aponta diretamente para o arquivo .env usando o BASE_DIR
 load_dotenv(BASE_DIR / '.env')
 
-# Agora sim, o sistema puxa a chave com 100% de certeza
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-
-# Opcional: Uma linha de debug rápido (apague depois que funcionar)
-print(f"DEBUG CHAVE: {GEMINI_API_KEY}")
+# Fallback dummy key used only in DEBUG/development when no .env is present.
+# In production (DEBUG=False) the app will start but Gemini calls will return
+# an authentication error, making misconfiguration immediately visible.
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSy-DUMMY-TEST-KEY-NOT-REAL')
 
 
 # Quick-start development settings - unsuitable for production
