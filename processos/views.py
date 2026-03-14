@@ -1466,6 +1466,52 @@ def triagem_notas_view(request, pk):
     }
     return render(request, 'triagem_notas.html', context)
 
+
+def gerar_dummy_pdf_view(request, pk):
+    """Generates a simple dummy PDF and attaches it as a 'NOTA FISCAL (NF)' document
+    to the processo, so the triagem page can be accessed and tested immediately."""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas as rl_canvas
+    from django.utils import timezone as tz
+
+    processo = get_object_or_404(Processo, id=pk)
+
+    tipo_nf = TiposDeDocumento.objects.filter(tipo_de_documento__iexact='NOTA FISCAL (NF)').first()
+    if not tipo_nf:
+        tipo_nf = TiposDeDocumento.objects.create(tipo_de_documento='NOTA FISCAL (NF)')
+
+    buffer = io.BytesIO()
+    c = rl_canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    c.setFont("Helvetica-Bold", 20)
+    c.drawCentredString(width / 2, height - 80, "NOTA FISCAL DE TESTE")
+    c.setFont("Helvetica", 13)
+    c.drawCentredString(width / 2, height - 110, "*** DOCUMENTO FICTÍCIO GERADO PARA TESTES ***")
+    c.line(50, height - 125, width - 50, height - 125)
+
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(60, height - 160, f"Processo Nº:  {processo.id}")
+    c.drawString(60, height - 185, f"Credor:       {processo.credor}")
+    c.drawString(60, height - 210, f"Valor Bruto:  R$ {processo.valor_bruto:,.2f}" if processo.valor_bruto else "Valor Bruto:  ---")
+    c.drawString(60, height - 235, f"Gerado em:    {tz.now().strftime('%d/%m/%Y %H:%M')}")
+
+    c.setFont("Helvetica-Oblique", 10)
+    c.drawCentredString(width / 2, 40, "Este documento é fictício e destina-se exclusivamente a testes do sistema.")
+    c.save()
+    buffer.seek(0)
+
+    timestamp = tz.now().strftime('%Y%m%d_%H%M%S')
+    filename = f'nota_fiscal_dummy_{timestamp}.pdf'
+    ordem = processo.documentos.count() + 1
+
+    doc = DocumentoProcesso(processo=processo, tipo=tipo_nf, ordem=ordem)
+    doc.arquivo.save(filename, ContentFile(buffer.getvalue()), save=True)
+
+    messages.success(request, f'PDF de teste gerado e vinculado ao Processo #{processo.id}.')
+    return redirect('triagem_notas', pk=pk)
+
+
 # Adicione no final do views.py
 def api_detalhes_pagamento(request):
     if request.method == 'POST':
