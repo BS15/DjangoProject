@@ -1725,3 +1725,30 @@ def desmarcar_lancamento(request):
             messages.warning(request, 'ID de processo inválido.')
 
     return redirect('lancamento_bancario')
+
+from django.views.decorators.http import require_GET
+
+@require_GET
+def api_documentos_processo(request, processo_id):
+    """Returns a JSON list of documents attached to a Processo, for the iFrame previewer."""
+    processo = get_object_or_404(Processo, id=processo_id)
+    documentos = processo.documentos.all().order_by('ordem')
+
+    docs_list = []
+    for doc in documentos:
+        if doc.arquivo:
+            nome = doc.arquivo.name.split('/')[-1]
+            docs_list.append({
+                'id': doc.id,
+                'ordem': doc.ordem,
+                'tipo': doc.tipo.tipo_de_documento if doc.tipo else 'Documento',
+                'nome': nome,
+                'url': doc.arquivo.url,
+            })
+
+    return JsonResponse({
+        'processo_id': processo.id,
+        'n_nota_empenho': processo.n_nota_empenho or str(processo.id),
+        'credor': str(processo.credor) if processo.credor else '-',
+        'documentos': docs_list,
+    })
