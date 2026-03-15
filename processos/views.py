@@ -4,6 +4,7 @@ import json
 import tempfile
 from datetime import date, datetime
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from django.core.files.storage import default_storage
@@ -113,7 +114,8 @@ def add_process_view(request):
 
                     if tem_nota_fiscal:
                         messages.success(request, "Capa do processo salva! Por favor, detalhe a(s) Nota(s) Fiscal(is) encontrada(s).")
-                        return redirect('triagem_notas', pk=processo.id)
+                        url = reverse('triagem_notas', kwargs={'pk': processo.id}) + '?source=add_process'
+                        return redirect(url)
                     else:
                         messages.success(request, "Processo inserido com sucesso!")
                         return redirect('home_page')
@@ -162,7 +164,8 @@ def editar_processo(request, pk):
 
                 if tem_nota_fiscal:
                     messages.success(request, f'Processo #{processo.id} atualizado. Revise as Notas Fiscais, se necessário.')
-                    return redirect('triagem_notas', pk=processo.id)
+                    url = reverse('triagem_notas', kwargs={'pk': processo.id}) + '?source=editar_processo'
+                    return redirect(url)
                 else:
                     messages.success(request, f'Processo #{processo.id} atualizado com sucesso!')
                     return redirect('home_page')
@@ -182,7 +185,8 @@ def editar_processo(request, pk):
         'processo_form': processo_form,
         'documento_formset': documento_formset,
         'pendencia_formset': pendencia_formset,
-        'processo': processo
+        'processo': processo,
+        'triagem_notas_url': reverse('triagem_notas', kwargs={'pk': processo.id}) + '?source=editar_processo',
     }
 
     return render(request, 'editar_processo.html', context)
@@ -1452,6 +1456,11 @@ def triagem_notas_view(request, pk):
     # Filtramos apenas os PDFs que representam notas fiscais para exibir na tela
     docs_nota = processo.documentos.filter(tipo__tipo_de_documento__icontains='Nota').order_by('ordem')
 
+    # Determina a página de origem para o botão "Voltar".
+    # A URL mantém o query param (?source=...) mesmo em POSTs, mas o campo oculto no
+    # formulário garante o valor caso a URL seja acessada sem o parâmetro.
+    source = request.GET.get('source') or request.POST.get('source', 'editar_processo')
+
     if request.method == 'POST':
         nota_fiscal_formset = NotaFiscalFormSet(request.POST, instance=processo, prefix='nota_fiscal')
 
@@ -1514,11 +1523,19 @@ def triagem_notas_view(request, pk):
 
     retencao_formset = RetencaoFormSet(prefix='imposto')
 
+    # Monta a URL de retorno conforme a origem
+    if source == 'add_process':
+        voltar_url = reverse('add_process')
+    else:
+        voltar_url = reverse('editar_processo', kwargs={'pk': processo.id})
+
     context = {
         'processo': processo,
         'docs_nota': docs_nota,
         'nota_fiscal_formset': nota_fiscal_formset,
         'retencao_formset': retencao_formset,
+        'source': source,
+        'voltar_url': voltar_url,
     }
     return render(request, 'triagem_notas.html', context)
 

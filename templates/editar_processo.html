@@ -241,11 +241,18 @@
                         </div>
 
                         <hr class="mt-5">
-                        <div class="d-flex justify-content-end gap-2">
-                            <a href="{% url 'home_page' %}" class="btn btn-secondary">Cancelar Edição</a>
-                            <button type="submit" class="btn btn-warning px-4 fw-bold">
-                                Salvar Alterações <i class="bi bi-arrow-right"></i>
-                            </button>
+                        <div class="d-flex justify-content-between align-items-center gap-2">
+                            {% if processo.notas_fiscais.exists %}
+                            <a href="{{ triagem_notas_url }}" class="btn btn-info text-white fw-bold">
+                                <i class="bi bi-receipt"></i> Notas Fiscais e Retenções
+                            </a>
+                            {% endif %}
+                            <div class="d-flex gap-2 ms-auto">
+                                <a href="{% url 'home_page' %}" class="btn btn-secondary">Cancelar Edição</a>
+                                <button type="submit" class="btn btn-warning px-4 fw-bold">
+                                    Salvar Alterações <i class="bi bi-arrow-right"></i>
+                                </button>
+                            </div>
                         </div>
 
                     </div>
@@ -268,6 +275,56 @@
         </div>
     </form>
 </div>
+
+{% if processo.notas_fiscais.exists %}
+<div class="container-fluid px-4 mb-5">
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-percent"></i> Retenções Vinculadas ao Processo</h5>
+                <a href="{{ triagem_notas_url }}" class="btn btn-info text-white btn-sm fw-bold">
+                    <i class="bi bi-receipt"></i> Notas Fiscais e Retenções
+                </a>
+            </div>
+            {% for nf in processo.notas_fiscais.all %}
+                <div class="mb-3">
+                    <h6 class="fw-bold text-secondary border-bottom pb-1">
+                        <i class="bi bi-file-earmark-text"></i>
+                        NF {{ nf.numero_nota_fiscal|default:"s/n" }}
+                        {% if nf.nome_emitente %} — {{ nf.nome_emitente.nome }}{% endif %}
+                    </h6>
+                    {% if nf.retencoes.exists %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped table-bordered align-middle">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th>Código Imposto</th>
+                                        <th>Rendimento Tributável (R$)</th>
+                                        <th>Valor Retido (R$)</th>
+                                        <th>Competência</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ret in nf.retencoes.all %}
+                                        <tr>
+                                            <td><span class="badge bg-secondary">{{ ret.codigo.codigo }}</span></td>
+                                            <td>{{ ret.rendimento_tributavel|default:"—" }}</td>
+                                            <td>{{ ret.valor }}</td>
+                                            <td>{{ ret.competencia|date:"m/Y"|default:"—" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted small"><i class="bi bi-info-circle"></i> Nenhuma retenção cadastrada para esta nota.</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <div id="empty-doc-form">
     <div class="row g-2 align-items-start mb-2 border-bottom pb-2 document-row bg-white">
