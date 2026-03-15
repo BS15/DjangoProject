@@ -191,7 +191,54 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-            <div class="modal-body p-0 d-flex" style="overflow: hidden; height: 100%;">
+            <div class="modal-body p-0 d-flex flex-column" style="overflow: hidden; height: 100%;">
+
+                <!-- Process Info Header -->
+                <div id="previewInfoHeader" class="border-bottom bg-light px-3 py-2" style="flex-shrink:0;">
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small fw-semibold">Credor:</span>
+                            <span id="previewCredorHeader" class="fw-bold small">—</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small fw-semibold">Valor Bruto:</span>
+                            <span id="previewValorBruto" class="fw-bold small text-dark">—</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small fw-semibold">Valor Líquido:</span>
+                            <span id="previewValorLiquido" class="fw-bold small text-success">—</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small fw-semibold">Empenho:</span>
+                            <span id="previewDataEmpenho" class="small">—</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small fw-semibold">Vencimento:</span>
+                            <span id="previewDataVencimento" class="small">—</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small fw-semibold">Pagamento:</span>
+                            <span id="previewDataPagamento" class="small">—</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small fw-semibold">Status:</span>
+                            <span id="previewStatus" class="badge bg-secondary small">—</span>
+                        </div>
+                        <div id="previewPendenciasWrap" class="d-none">
+                            <span id="previewPendenciasBadge" class="badge bg-warning text-dark small" style="cursor:pointer;" data-bs-toggle="tooltip" title="">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i><span id="previewPendenciasCount">0</span> Pendência(s)
+                            </span>
+                        </div>
+                        <div id="previewRetencoesWrap" class="d-none">
+                            <span id="previewRetencoesBadge" class="badge bg-info text-dark small" style="cursor:pointer;" data-bs-toggle="tooltip" title="">
+                                <i class="bi bi-scissors me-1"></i><span id="previewRetencoesCount">0</span> Retenção(ões)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main area: sidebar + iframe -->
+                <div class="d-flex flex-grow-1" style="overflow: hidden; min-height: 0;">
 
                 <!-- Sidebar: lista de documentos -->
                 <div id="previewSidebar" class="d-flex flex-column border-end bg-white"
@@ -238,6 +285,8 @@
                         </div>
                     </div>
                 </div>
+
+                </div><!-- end main area -->
 
             </div>
         </div>
@@ -290,7 +339,76 @@ document.addEventListener("DOMContentLoaded", function() {
     const btnVerPdfCompleto     = document.getElementById('btnVerPdfCompleto');
     const linkDownloadDoc       = document.getElementById('linkDownloadDoc');
 
+    // Info header elements
+    const previewCredorHeader    = document.getElementById('previewCredorHeader');
+    const previewValorBruto      = document.getElementById('previewValorBruto');
+    const previewValorLiquido    = document.getElementById('previewValorLiquido');
+    const previewDataEmpenho     = document.getElementById('previewDataEmpenho');
+    const previewDataVencimento  = document.getElementById('previewDataVencimento');
+    const previewDataPagamento   = document.getElementById('previewDataPagamento');
+    const previewStatus          = document.getElementById('previewStatus');
+    const previewPendenciasWrap  = document.getElementById('previewPendenciasWrap');
+    const previewPendenciasCount = document.getElementById('previewPendenciasCount');
+    const previewPendenciasBadge = document.getElementById('previewPendenciasBadge');
+    const previewRetencoesWrap   = document.getElementById('previewRetencoesWrap');
+    const previewRetencoesCount  = document.getElementById('previewRetencoesCount');
+    const previewRetencoesBadge  = document.getElementById('previewRetencoesBadge');
+
     const VIEWABLE_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg'];
+
+    function resetInfoHeader() {
+        previewCredorHeader.textContent   = '—';
+        previewValorBruto.textContent     = '—';
+        previewValorLiquido.textContent   = '—';
+        previewDataEmpenho.textContent    = '—';
+        previewDataVencimento.textContent = '—';
+        previewDataPagamento.textContent  = '—';
+        previewStatus.textContent         = '—';
+        previewStatus.className           = 'badge bg-secondary small';
+        previewPendenciasWrap.classList.add('d-none');
+        previewRetencoesWrap.classList.add('d-none');
+    }
+
+    function populateInfoHeader(data) {
+        previewCredorHeader.textContent   = data.credor || '—';
+        previewValorBruto.textContent     = data.valor_bruto || '—';
+        previewValorLiquido.textContent   = data.valor_liquido || '—';
+        previewDataEmpenho.textContent    = data.data_empenho || '—';
+        previewDataVencimento.textContent = data.data_vencimento || '—';
+        previewDataPagamento.textContent  = data.data_pagamento || '—';
+        previewStatus.textContent         = data.status || '—';
+
+        // Pendencias
+        if (data.pendencias && data.pendencias.length > 0) {
+            previewPendenciasCount.textContent = data.pendencias.length;
+            const tooltipLines = data.pendencias.map(function(p) {
+                return p.tipo + (p.descricao ? ': ' + p.descricao : '') + ' [' + p.status + ']';
+            }).join('\n');
+            previewPendenciasBadge.setAttribute('title', tooltipLines);
+            previewPendenciasWrap.classList.remove('d-none');
+        } else {
+            previewPendenciasWrap.classList.add('d-none');
+        }
+
+        // Retencoes
+        if (data.retencoes && data.retencoes.length > 0) {
+            previewRetencoesCount.textContent = data.retencoes.length;
+            const tooltipLines = data.retencoes.map(function(r) {
+                return r.codigo + ': R$ ' + r.valor + ' [' + r.status + ']';
+            }).join('\n');
+            previewRetencoesBadge.setAttribute('title', tooltipLines);
+            previewRetencoesWrap.classList.remove('d-none');
+        } else {
+            previewRetencoesWrap.classList.add('d-none');
+        }
+
+        // Re-initialise Bootstrap tooltips on the badges
+        [previewPendenciasBadge, previewRetencoesBadge].forEach(function(el) {
+            var existing = bootstrap.Tooltip.getInstance(el);
+            if (existing) { existing.dispose(); }
+            new bootstrap.Tooltip(el, { trigger: 'hover focus', placement: 'bottom' });
+        });
+    }
 
     function showPlaceholder() {
         previewPlaceholder.classList.remove('d-none');
@@ -362,6 +480,7 @@ document.addEventListener("DOMContentLoaded", function() {
         btn.addEventListener('click', function() {
             const processoId = this.dataset.processoId;
             showPlaceholder();
+            resetInfoHeader();
             previewIframe.src = 'about:blank';
             previewDocList.innerHTML = '<p class="text-muted small p-2"><span class="spinner-border spinner-border-sm me-2"></span>Carregando documentos...</p>';
             previewProcessoLabel.textContent = '#' + processoId;
@@ -375,6 +494,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 .then(function(data) {
                     previewProcessoLabel.textContent = '#' + data.n_nota_empenho;
                     previewCredorLabel.textContent   = data.credor;
+                    populateInfoHeader(data);
                     renderSidebar(data.documentos);
                 })
                 .catch(function(err) {
