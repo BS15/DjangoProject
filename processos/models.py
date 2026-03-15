@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from datetime import date
+from simple_history.models import HistoricalRecords
 #This file defines the models used in application.
 #Processo model which represents payment process.
 #NotaFiscal is model that represents fiscal note.
@@ -288,6 +289,7 @@ class Processo(models.Model):
     tag = models.ForeignKey('TagChoices', on_delete=models.PROTECT, blank=True, null=True)
 
     arquivo_final = models.FileField("Processo Consolidado", upload_to='processos_arquivados/', null=True, blank=True)
+    history = HistoricalRecords()
     def __str__(self):
         return f"Processo {self.n_nota_empenho or 'S/N'}"
 
@@ -304,22 +306,28 @@ class DocumentoBase(models.Model):
 class DocumentoProcesso(DocumentoBase):
     processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='documentos')
     codigo_barras = models.CharField("Código de Barras", max_length=60, null=True, blank=True)
+    history = HistoricalRecords()
 
 # 3. DOCUMENTOS DAS VERBAS (Uma tabela separada para cada)
 class DocumentoDiaria(DocumentoBase):
     diaria = models.ForeignKey('Diaria', on_delete=models.CASCADE, related_name='documentos')
+    history = HistoricalRecords()
 
 class DocumentoReembolso(DocumentoBase):
     reembolso = models.ForeignKey('ReembolsoCombustivel', on_delete=models.CASCADE, related_name='documentos')
+    history = HistoricalRecords()
 
 class DocumentoJeton(DocumentoBase):
     jeton = models.ForeignKey('Jeton', on_delete=models.CASCADE, related_name='documentos')
+    history = HistoricalRecords()
 
 class DocumentoAuxilio(DocumentoBase):
     auxilio = models.ForeignKey('AuxilioRepresentacao', on_delete=models.CASCADE, related_name='documentos')
+    history = HistoricalRecords()
 
 class DocumentoSuprimentoDeFundos(DocumentoBase):
     suprimento = models.ForeignKey('SuprimentoDeFundos', on_delete=models.CASCADE, related_name='documentos')
+    history = HistoricalRecords()
 
 
 def caminho_comprovante(instance, filename):
