@@ -1,5 +1,5 @@
 import django_filters
-from .models import Processo, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, RetencaoImposto, CodigosImposto, NotaFiscal, StatusChoicesRetencoes, StatusChoicesVerbasIndenizatorias, StatusChoicesPendencias, StatusChoicesProcesso, Pendencia, NotaFiscal
+from .models import Processo, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, RetencaoImposto, CodigosImposto, NotaFiscal, StatusChoicesRetencoes, StatusChoicesVerbasIndenizatorias, StatusChoicesPendencias, StatusChoicesProcesso, Pendencia, Contingencia, STATUS_CONTINGENCIA
 
 class ProcessoFilter(django_filters.FilterSet):
     class Meta:
@@ -213,3 +213,16 @@ class NotaFiscalFilter(django_filters.FilterSet):
     class Meta:
         model = NotaFiscal
         fields = ['numero_nota_fiscal', 'nome_emitente__nome', 'atestada']
+class ContingenciaFilter(django_filters.FilterSet):
+    processo__id = django_filters.NumberFilter(label="Nº do Processo")
+    solicitante__username = django_filters.CharFilter(lookup_expr='icontains', label="Solicitante")
+    status = django_filters.ChoiceFilter(choices=STATUS_CONTINGENCIA, label="Status", empty_label="Todos os Status")
+
+    class Meta:
+        model = Contingencia
+        fields = ['processo__id', 'solicitante__username', 'status']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.form.fields.values():
+            field.widget.attrs.update({'class': 'form-control form-control-sm'})

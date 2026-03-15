@@ -17,7 +17,7 @@ from .utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_b
 from .ai_utils import extrair_dados_documento, extract_data_with_llm
 from .invoice_processor import process_invoice_taxes
 from .models import Processo, NotaFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia
-from .filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, NotaFiscalFilter
+from .filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, NotaFiscalFilter, ContingenciaFilter
 
 
 def home_page(request):
@@ -1955,6 +1955,16 @@ def api_processo_detalhes(request):
         }
     }
     return JsonResponse(dados)
+
+
+def painel_contingencias_view(request):
+    """Displays a filterable list of all Contingencias."""
+    queryset = Contingencia.objects.select_related('processo', 'solicitante').order_by('-data_solicitacao')
+    meu_filtro = ContingenciaFilter(request.GET, queryset=queryset)
+    return render(request, 'painel_contingencias.html', {
+        'filter': meu_filtro,
+        'contingencias': meu_filtro.qs,
+    })
 
 
 def add_contingencia_view(request):
