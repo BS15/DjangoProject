@@ -253,9 +253,20 @@
                         </div>
 
                         <hr class="mt-5">
-                        <div class="d-flex justify-content-between align-items-center bg-light p-3 border rounded">
-                            <span class="text-muted small"><i class="bi bi-info-circle"></i> Se você anexar <b>Notas Fiscais</b>, a triagem fiscal abrirá no próximo passo.</span>
-                            <div class="d-flex gap-2">
+                        <div class="bg-light p-3 border rounded">
+                            <div class="row align-items-center mb-3">
+                                <div class="col-md-8">
+                                    <label class="form-label fw-bold mb-1" for="id_tem_retencao">
+                                        <i class="bi bi-receipt-cutoff text-warning"></i> Há retenção de impostos a informar?
+                                    </label>
+                                    <select name="tem_retencao" id="id_tem_retencao" class="form-select" required>
+                                        <option value="nao" selected>Não — apenas salvar e voltar</option>
+                                        <option value="sim">Sim — prosseguir para triagem fiscal</option>
+                                    </select>
+                                    <small class="text-muted">Se houver retenção, você será redirecionado para informar os impostos após salvar.</small>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2">
                                 <a href="/" class="btn btn-secondary">Cancelar</a>
                                 <button type="button" class="btn btn-success px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#previewModal" onclick="check_information_alert()">
                                     Salvar e Continuar <i class="bi bi-arrow-right"></i>

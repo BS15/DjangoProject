@@ -108,12 +108,9 @@ def add_process_view(request):
                         documento_formset.save()
                         pendencia_formset.save()
 
-                        # --- REDIRECIONAMENTO INTELIGENTE ---
-                        # Verifica se algum dos documentos anexados é do tipo "Nota Fiscal"
-                        tem_nota_fiscal = processo.documentos.filter(tipo__tipo_de_documento__icontains='Nota').exists()
-
-                    if tem_nota_fiscal:
-                        messages.success(request, "Capa do processo salva! Por favor, detalhe a(s) Nota(s) Fiscal(is) encontrada(s).")
+                    tem_retencao = request.POST.get('tem_retencao') == 'sim'
+                    if tem_retencao:
+                        messages.success(request, "Capa do processo salva! Por favor, detalhe as retenções de impostos.")
                         url = reverse('triagem_notas', kwargs={'pk': processo.id}) + '?source=add_process'
                         return redirect(url)
                     else:
