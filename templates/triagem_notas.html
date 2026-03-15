@@ -307,6 +307,7 @@
 
 <script>
     const totalPdfs = {{ docs_nota|length }};
+    const processoCredorId = {{ processo.credor.id|default:'null' }};
 
     function updateFiscalContrato(card) {
         const atestadaChk = card.querySelector('input[name$="-atestada"]');
@@ -383,6 +384,20 @@
                     inputLiquido.classList.add('bg-light');
                 }
 
+                if (processoCredorId) {
+                    const emitenteSelect = form.querySelector('select[name*="nome_emitente"]');
+                    if (emitenteSelect && !emitenteSelect.value) {
+                        emitenteSelect.value = processoCredorId;
+                        const inputCNPJ = form.querySelector('input[id$="-cnpj_emitente"]');
+                        if (inputCNPJ) {
+                            fetch(`/api/credor/${processoCredorId}/`)
+                            .then(res => res.json())
+                            .then(data => { if(data.sucesso && data.cpf_cnpj) inputCNPJ.value = data.cpf_cnpj; })
+                            .catch(err => console.error('Erro ao buscar CNPJ do credor:', err));
+                        }
+                    }
+                }
+
                 updateFiscalContrato(form);
 
                 const toggle = form.querySelector('.tem-retencao-toggle');
@@ -420,6 +435,12 @@
                     rowTemplate.querySelector('select').name = `imposto_${nfIndex}_code`;
                     rowTemplate.querySelector('.tax-rend-input').name = `imposto_${nfIndex}_rendimento`;
                     rowTemplate.querySelector('.tax-val-input').name = `imposto_${nfIndex}_value`;
+
+                    const valorBrutoInput = card.querySelector('input[name$="-valor_bruto"]');
+                    const rendimentoInput = rowTemplate.querySelector('.tax-rend-input');
+                    if (valorBrutoInput && rendimentoInput && valorBrutoInput.value !== '') {
+                        rendimentoInput.value = valorBrutoInput.value;
+                    }
                     
                     card.querySelector('.tax-body').appendChild(rowTemplate);
                 }
