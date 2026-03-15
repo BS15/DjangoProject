@@ -276,6 +276,7 @@ def contas_a_pagar(request):
     processos_pendentes = Processo.objects.filter(
         status__status_choice__in=[
             'A PAGAR - PENDENTE AUTORIZAÇÃO',
+            'A PAGAR - ENVIADO PARA AUTORIZAÇÃO',
             'A PAGAR - AUTORIZADO'
         ]
     )
@@ -846,8 +847,8 @@ def enviar_para_autorizacao(request):
 
         if selecionados:
             status_aguardando, _ = StatusChoicesProcesso.objects.get_or_create(
-                status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
-                defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
+                status_choice__iexact='A PAGAR - ENVIADO PARA AUTORIZAÇÃO',
+                defaults={'status_choice': 'A PAGAR - ENVIADO PARA AUTORIZAÇÃO'}
             )
 
             Processo.objects.filter(id__in=selecionados).update(status=status_aguardando)
@@ -860,7 +861,7 @@ def enviar_para_autorizacao(request):
 
 def painel_autorizacao_view(request):
     processos = Processo.objects.filter(
-        status__status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO'
+        status__status_choice__iexact='A PAGAR - ENVIADO PARA AUTORIZAÇÃO'
     ).order_by('data_pagamento', 'id')
 
     processos_autorizados = Processo.objects.filter(
