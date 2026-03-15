@@ -63,6 +63,7 @@
                                 <th>Trecho / Período</th>
                                 <th>Valor Total</th>
                                 <th class="text-center">Processo</th>
+                                <th class="text-center">Gerenciar</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -90,9 +91,14 @@
                                         <span class="text-warning small"><i class="bi bi-exclamation-triangle"></i> S/ Proc.</span>
                                     {% endif %}
                                 </td>
+                                <td class="text-center">
+                                    <a href="{% url 'gerenciar_diaria' pk=reg.id %}" class="btn btn-sm btn-outline-primary py-0" title="Gerenciar">
+                                        <i class="bi bi-gear"></i>
+                                    </a>
+                                </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="7" class="text-center text-muted py-4">Nenhuma diária encontrada.</td></tr>
+                            <tr><td colspan="8" class="text-center text-muted py-4">Nenhuma diária encontrada.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
