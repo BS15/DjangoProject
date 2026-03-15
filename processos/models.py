@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from datetime import date
 from simple_history.models import HistoricalRecords
+from django.contrib.auth.models import User
 #This file defines the models used in application.
 #Processo model which represents payment process.
 #NotaFiscal is model that represents fiscal note.
@@ -289,7 +290,13 @@ class Processo(models.Model):
     tag = models.ForeignKey('TagChoices', on_delete=models.PROTECT, blank=True, null=True)
 
     arquivo_final = models.FileField("Processo Consolidado", upload_to='processos_arquivados/', null=True, blank=True)
+    em_contingencia = models.BooleanField(
+        "Em Contingência",
+        default=False,
+        help_text="Indica que existe uma Contingência ativa para este processo. Nenhuma operação financeira pode ser realizada enquanto este flag estiver ativo."
+    )
     history = HistoricalRecords()
+
     def __str__(self):
         return f"Processo {self.n_nota_empenho or 'S/N'}"
 
@@ -670,3 +677,87 @@ class DespesaSuprimento(models.Model):
 
     def __str__(self):
         return f"{self.data} - {self.estabelecimento} - R$ {self.valor}"
+
+
+STATUS_CONTINGENCIA = [
+    ('PENDENTE_SUPERVISOR', 'Pendente Supervisor'),
+    ('PENDENTE_ORDENADOR', 'Pendente Ordenador de Despesa'),
+    ('PENDENTE_CONSELHO', 'Pendente Conselho Fiscal'),
+    ('APROVADA', 'Aprovada'),
+    ('REJEITADA', 'Rejeitada'),
+]
+
+
+class Contingencia(models.Model):
+    # Metadados principais
+    processo = models.ForeignKey(
+        'Processo',
+        on_delete=models.CASCADE,
+        related_name='contingencias'
+    )
+    solicitante = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name='contingencias_solicitadas'
+    )
+    data_solicitacao = models.DateTimeField(auto_now_add=True)
+    justificativa = models.TextField(
+        help_text="Motivo detalhado para a quebra de fluxo/retificação."
+    )
+
+    # O Payload (JSON com as mudanças propostas)
+    dados_propostos = models.JSONField(
+        default=dict,
+        help_text="Dicionário JSON contendo o estado exato dos campos que serão alterados no Processo (ex: {'credor_id': 5})."
+    )
+
+    # Status FSM
+    status = models.CharField(
+        max_length=30,
+        choices=STATUS_CONTINGENCIA,
+        default='PENDENTE_SUPERVISOR'
+    )
+
+    # Etapa 1: Assinatura do Supervisor
+    parecer_supervisor = models.TextField(blank=True, null=True)
+    aprovado_por_supervisor = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name='cont_supervisionadas',
+        null=True,
+        blank=True
+    )
+    data_aprovacao_supervisor = models.DateTimeField(null=True, blank=True)
+
+    # Etapa 2: Assinatura do Ordenador de Despesa
+    parecer_ordenador = models.TextField(blank=True, null=True)
+    aprovado_por_ordenador = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name='cont_ordenadas',
+        null=True,
+        blank=True
+    )
+    data_aprovacao_ordenador = models.DateTimeField(null=True, blank=True)
+
+    # Etapa 3: Assinatura do Conselho Fiscal (Condicional)
+    parecer_conselho = models.TextField(blank=True, null=True)
+    aprovado_por_conselho = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name='cont_conselho',
+        null=True,
+        blank=True
+    )
+    data_aprovacao_conselho = models.DateTimeField(null=True, blank=True)
+
+    # Trilha de auditoria
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return f"Contingência #{self.pk} - Processo {self.processo} [{self.get_status_display()}]"
+
+    class Meta:
+        verbose_name = "Contingência"
+        verbose_name_plural = "Contingências"
+        ordering = ['-data_solicitacao']
