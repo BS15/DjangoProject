@@ -866,8 +866,13 @@ def painel_autorizacao_view(request):
         status__status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO'
     ).order_by('data_pagamento', 'id')
 
+    processos_autorizados = Processo.objects.filter(
+        status__status_choice__iexact='A PAGAR - AUTORIZADO'
+    ).order_by('data_pagamento', 'id')
+
     context = {
         'processos': processos,
+        'processos_autorizados': processos_autorizados,
         'pendencia_form': PendenciaForm()
     }
     return render(request, 'autorizacao.html', context)
