@@ -1746,9 +1746,50 @@ def api_documentos_processo(request, processo_id):
                 'url': doc.arquivo.url,
             })
 
+    # Collect pendencias info
+    pendencias_qs = processo.pendencias.select_related('status', 'tipo').all()
+    pendencias_list = [
+        {
+            'tipo': str(p.tipo),
+            'descricao': p.descricao or '',
+            'status': str(p.status) if p.status else '-',
+        }
+        for p in pendencias_qs
+    ]
+
+    # Collect retencoes info (via notas fiscais linked to this processo)
+    retencoes_list = []
+    for nf in processo.notas_fiscais.prefetch_related('retencoes__status', 'retencoes__codigo').all():
+        for ret in nf.retencoes.all():
+            retencoes_list.append({
+                'codigo': str(ret.codigo),
+                'valor': str(ret.valor),
+                'status': str(ret.status) if ret.status else '-',
+            })
+
+    def fmt_date(d):
+        return d.strftime('%d/%m/%Y') if d else '-'
+
+    def fmt_decimal(v):
+        if v is None:
+            return '-'
+        # Format as Brazilian currency: R$ 1.234,56
+        int_part, dec_part = f'{abs(v):.2f}'.split('.')
+        int_formatted = '{:,}'.format(int(int_part)).replace(',', '.')
+        signal = '-' if v < 0 else ''
+        return f'R$ {signal}{int_formatted},{dec_part}'
+
     return JsonResponse({
         'processo_id': processo.id,
         'n_nota_empenho': processo.n_nota_empenho or str(processo.id),
         'credor': str(processo.credor) if processo.credor else '-',
+        'valor_bruto': fmt_decimal(processo.valor_bruto),
+        'valor_liquido': fmt_decimal(processo.valor_liquido),
+        'data_empenho': fmt_date(processo.data_empenho),
+        'data_vencimento': fmt_date(processo.data_vencimento),
+        'data_pagamento': fmt_date(processo.data_pagamento),
+        'status': str(processo.status) if processo.status else '-',
+        'pendencias': pendencias_list,
+        'retencoes': retencoes_list,
         'documentos': docs_list,
     })
