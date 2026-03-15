@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.contrib import admin
+from simple_history.admin import SimpleHistoryAdmin
 from .models import (
     CodigosImposto, StatusChoicesProcesso, TagChoices, FormasDePagamento,
     TiposDePagamento, TiposDeDocumento, Processo, DocumentoProcesso,
@@ -7,7 +7,9 @@ from .models import (
     ContasBancarias, TiposDeVerbasIndenizatorias,
     StatusChoicesPendencias, Grupos, CargosFuncoes,
     Tabela_Valores_Unitarios_Verbas_Indenizatorias, Tabela_Proponentes_Diarias,
-    StatusChoicesRetencoes, TiposDePendencias, Pendencia, ComprovanteDePagamento
+    StatusChoicesRetencoes, TiposDePendencias, Pendencia, ComprovanteDePagamento,
+    DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio,
+    DocumentoSuprimentoDeFundos
 )
 # ==========================================
 # TABELAS DE PARAMETRIZAÇÃO (CONFIGURAÇÕES)
@@ -54,7 +56,7 @@ class TiposDeDocumentoAdmin(admin.ModelAdmin):
 # ==========================================
 
 @admin.register(Processo)
-class ProcessoAdmin(admin.ModelAdmin):
+class ProcessoAdmin(SimpleHistoryAdmin):
     list_display = ('id', 'n_nota_empenho', 'credor', 'data_empenho', 'status')
     search_fields = ('n_nota_empenho', 'credor')
     list_filter = ('status', 'tipo_pagamento', 'forma_pagamento')
@@ -63,7 +65,12 @@ class ProcessoAdmin(admin.ModelAdmin):
 admin.site.register(ContasBancarias)
 admin.site.register(NotaFiscal)
 admin.site.register(RetencaoImposto)
-admin.site.register(DocumentoProcesso)
+admin.site.register(DocumentoProcesso, SimpleHistoryAdmin)
+admin.site.register(DocumentoDiaria, SimpleHistoryAdmin)
+admin.site.register(DocumentoReembolso, SimpleHistoryAdmin)
+admin.site.register(DocumentoJeton, SimpleHistoryAdmin)
+admin.site.register(DocumentoAuxilio, SimpleHistoryAdmin)
+admin.site.register(DocumentoSuprimentoDeFundos, SimpleHistoryAdmin)
 admin.site.register(StatusChoicesVerbasIndenizatorias)
 admin.site.register(Credor)
 admin.site.register(Grupos)
