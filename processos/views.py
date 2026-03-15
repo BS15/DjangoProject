@@ -15,7 +15,7 @@ from .forms import ProcessoForm, DocumentoFormSet, NotaFiscalFormSet, RetencaoFo
 from .utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, processar_pdf_comprovantes_ia
 from .ai_utils import extrair_dados_documento, extract_data_with_llm
 from .invoice_processor import process_invoice_taxes
-from .models import Processo, NotaFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias
+from .models import Processo, NotaFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos
 from .filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, NotaFiscalFilter
 
 
@@ -1824,3 +1824,69 @@ def api_documentos_processo(request, processo_id):
         'retencoes': retencoes_list,
         'documentos': docs_list,
     })
+
+
+# ==========================================
+# AUDITORIA: HISTÓRICO DE ALTERAÇÕES
+# ==========================================
+def auditoria_view(request):
+    HISTORY_TYPE_LABELS = {'+': 'Criação', '~': 'Alteração', '-': 'Exclusão'}
+
+    model_configs = [
+        (Processo.history.model, 'Processo'),
+        (DocumentoProcesso.history.model, 'Documento de Processo'),
+        (DocumentoDiaria.history.model, 'Documento de Diária'),
+        (DocumentoReembolso.history.model, 'Documento de Reembolso'),
+        (DocumentoJeton.history.model, 'Documento de Jeton'),
+        (DocumentoAuxilio.history.model, 'Documento de Auxílio'),
+        (DocumentoSuprimentoDeFundos.history.model, 'Documento de Suprimento'),
+    ]
+
+    modelo_filter = request.GET.get('modelo', '').strip()
+    tipo_filter = request.GET.get('tipo_acao', '').strip()
+    data_inicio = request.GET.get('data_inicio', '').strip()
+    data_fim = request.GET.get('data_fim', '').strip()
+    usuario_filter = request.GET.get('usuario', '').strip()
+
+    all_records = []
+    for history_model, label in model_configs:
+        if modelo_filter and modelo_filter != label:
+            continue
+        qs = history_model.objects.select_related('history_user').all()
+        if tipo_filter:
+            qs = qs.filter(history_type=tipo_filter)
+        if data_inicio:
+            qs = qs.filter(history_date__date__gte=data_inicio)
+        if data_fim:
+            qs = qs.filter(history_date__date__lte=data_fim)
+        if usuario_filter:
+            qs = qs.filter(history_user__username__icontains=usuario_filter)
+        for record in qs:
+            all_records.append({
+                'modelo': label,
+                'object_id': record.id,  # original object PK (copied from the tracked model)
+                'history_date': record.history_date,
+                'history_user': record.history_user,
+                'history_type': record.history_type,
+                'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
+                'history_change_reason': getattr(record, 'history_change_reason', None),
+                'str_repr': str(record),
+            })
+
+    all_records.sort(key=lambda x: x['history_date'], reverse=True)
+    total = len(all_records)
+    all_records = all_records[:500]
+
+    context = {
+        'registros': all_records,
+        'total': total,
+        'modelos_disponiveis': [label for _, label in model_configs],
+        'filtros': {
+            'modelo': modelo_filter,
+            'tipo_acao': tipo_filter,
+            'data_inicio': data_inicio,
+            'data_fim': data_fim,
+            'usuario': usuario_filter,
+        },
+    }
+    return render(request, 'auditoria.html', context)
