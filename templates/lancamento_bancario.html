@@ -82,6 +82,8 @@
                         </td>
                         <td>{% include "partials/_dados_pagamento.html" with dp=dp %}</td>
                         <td class="text-center no-print">
+                            <div class="d-flex justify-content-center gap-1">
+                            <a href="{% url 'visualizar_pdf_processo' p.id %}" target="_blank" class="btn btn-sm btn-danger shadow-sm" title="Ver Documentos"><i class="bi bi-file-earmark-pdf"></i></a>
                             <form method="POST" action="{% url 'marcar_como_lancado' %}" onsubmit="return confirm('Confirmar lançamento do Processo #{{ p.id }}?');">
                                 {% csrf_token %}
                                 <input type="hidden" name="processo_id" value="{{ p.id }}">
@@ -89,6 +91,7 @@
                                     <i class="bi bi-check2-circle"></i> Lançado
                                 </button>
                             </form>
+                            </div>
                         </td>
                     </tr>
                     {% endwith %}
@@ -138,6 +141,8 @@
                         </td>
                         <td>{% include "partials/_dados_pagamento.html" with dp=dp %}</td>
                         <td class="text-center no-print">
+                            <div class="d-flex justify-content-center gap-1">
+                            <a href="{% url 'visualizar_pdf_processo' p.id %}" target="_blank" class="btn btn-sm btn-danger shadow-sm" title="Ver Documentos"><i class="bi bi-file-earmark-pdf"></i></a>
                             <form method="POST" action="{% url 'desmarcar_lancamento' %}" onsubmit="return confirm('Desmarcar lançamento do Processo #{{ p.id }}?');">
                                 {% csrf_token %}
                                 <input type="hidden" name="processo_id" value="{{ p.id }}">
@@ -145,6 +150,7 @@
                                     <i class="bi bi-arrow-counterclockwise"></i> Desmarcar Lançamento
                                 </button>
                             </form>
+                            </div>
                         </td>
                     </tr>
                     {% endwith %}

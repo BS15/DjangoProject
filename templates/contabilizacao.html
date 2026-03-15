@@ -60,6 +60,7 @@
                         <td>{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
                         <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
                         <td class="text-center d-flex justify-content-center gap-1">
+                            <a href="{% url 'visualizar_pdf_processo' processo.id %}" target="_blank" class="btn btn-sm btn-danger shadow-sm" title="Ver Documentos"><i class="bi bi-file-earmark-pdf"></i></a>
                             <a href="{% url 'editar_processo' pk=processo.id %}" target="_blank" class="btn btn-sm btn-outline-primary" title="Abrir Processo"><i class="bi bi-pencil-square"></i></a>
                             
                             <form method="POST" action="{% url 'aprovar_contabilizacao' pk=processo.id %}" style="display:inline;">
