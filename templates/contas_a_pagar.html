@@ -165,7 +165,7 @@
                                     <td>{{ processo.tipo_pagamento|default:"-" }}</td>
                                     <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
                                     <td>
-                                        <button class="btn btn-sm btn-primary fw-bold shadow-sm btn-preview"
+                                        <button type="button" class="btn btn-sm btn-primary fw-bold shadow-sm btn-preview"
                                                 data-processo-id="{{ processo.id }}"
                                                 title="Pré-visualizar Documentos">
                                             <i class="bi bi-eye"></i> Preview
