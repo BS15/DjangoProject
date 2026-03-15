@@ -95,6 +95,7 @@
                                 {% endif %}
                             </td>
                             <td class="text-center pe-4">
+                                <a href="{% url 'visualizar_pdf_processo' p.processo.id %}" target="_blank" class="btn btn-sm btn-danger shadow-sm" title="Ver Documentos"><i class="bi bi-file-earmark-pdf"></i></a>
                                 <a href="{% url 'editar_processo' p.processo.id %}" class="btn btn-sm btn-outline-primary" title="Abrir Processo">
                                     <i class="bi bi-folder2-open"></i> Acessar
                                 </a>

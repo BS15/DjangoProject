@@ -74,6 +74,7 @@
                                 <th>Empenho</th>
                                 <th>Credor</th>
                                 <th>Impostos Retidos (Etiquetas)</th>
+                                <th class="text-center">PDF</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -92,9 +93,12 @@
                                         {% endfor %}
                                     {% endfor %}
                                 </td>
+                                <td class="text-center">
+                                    <a href="{% url 'visualizar_pdf_processo' processo.id %}" target="_blank" class="btn btn-sm btn-danger shadow-sm" title="Ver Documentos"><i class="bi bi-file-earmark-pdf"></i></a>
+                                </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="5" class="text-center py-4 text-muted">Nenhum processo com retenção encontrado para os filtros informados.</td></tr>
+                            <tr><td colspan="6" class="text-center py-4 text-muted">Nenhum processo com retenção encontrado para os filtros informados.</td></tr>
                             {% endfor %}
                         </tbody>
 

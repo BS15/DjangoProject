@@ -1299,6 +1299,37 @@ def api_tipos_documento_por_pagamento(request):
         return JsonResponse({'sucesso': False, 'erro': str(e)})
 
 
+def gerenciar_diaria_view(request, pk):
+    diaria = get_object_or_404(Diaria, id=pk)
+    documentos = diaria.documentos.select_related('tipo').all()
+    tipos_doc = TiposDeDocumento.objects.filter(is_active=True)
+
+    if request.method == 'POST':
+        arquivo = request.FILES.get('arquivo')
+        tipo_id = request.POST.get('tipo')
+        if arquivo and tipo_id:
+            EXTENSOES_PERMITIDAS = {'.pdf', '.jpg', '.jpeg', '.png'}
+            _, ext = os.path.splitext(arquivo.name.lower())
+            if ext not in EXTENSOES_PERMITIDAS:
+                messages.error(request, 'Formato de arquivo não permitido. Use PDF, JPG ou PNG.')
+                return redirect('gerenciar_diaria', pk=diaria.id)
+            try:
+                DocumentoDiaria.objects.create(diaria=diaria, arquivo=arquivo, tipo_id=tipo_id)
+                messages.success(request, 'Documento anexado com sucesso!')
+            except Exception:
+                messages.error(request, 'Erro ao salvar o documento. Tente novamente.')
+        else:
+            messages.error(request, 'Selecione um arquivo e um tipo de documento.')
+        return redirect('gerenciar_diaria', pk=diaria.id)
+
+    context = {
+        'diaria': diaria,
+        'documentos': documentos,
+        'tipos_documento': tipos_doc,
+    }
+    return render(request, 'gerenciar_diaria.html', context)
+
+
 def painel_suprimentos_view(request):
     suprimentos = SuprimentoDeFundos.objects.all().order_by('-id')
     return render(request, 'suprimentos_list.html', {'suprimentos': suprimentos})
