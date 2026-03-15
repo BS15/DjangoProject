@@ -160,15 +160,8 @@ def editar_processo(request, pk):
                     documento_formset.save()
                     pendencia_formset.save()
 
-                    tem_nota_fiscal = processo.documentos.filter(tipo__tipo_de_documento__icontains='Nota').exists()
-
-                if tem_nota_fiscal:
-                    messages.success(request, f'Processo #{processo.id} atualizado. Revise as Notas Fiscais, se necessário.')
-                    url = reverse('triagem_notas', kwargs={'pk': processo.id}) + '?source=editar_processo'
-                    return redirect(url)
-                else:
-                    messages.success(request, f'Processo #{processo.id} atualizado com sucesso!')
-                    return redirect('home_page')
+                messages.success(request, f'Processo #{processo.id} atualizado com sucesso!')
+                return redirect('editar_processo', pk=processo.id)
 
             except Exception as e:
                 print(f"🛑 Erro ao atualizar no banco: {e}")
@@ -1469,6 +1462,10 @@ def triagem_notas_view(request, pk):
                 with transaction.atomic():
                     # Salva as notas fiscais primeiro para garantir que todas têm um ID no banco
                     notas_salvas = nota_fiscal_formset.save()
+
+                    # Garante que atestada=False ao salvar pela triagem (a atestação ocorre no painel de liquidações)
+                    if notas_salvas:
+                        NotaFiscal.objects.filter(pk__in=[n.pk for n in notas_salvas]).update(atestada=False)
 
                     # 1. Salva Retenções usando os formulários como base para o Índice exato do Front-end
                     for index, form in enumerate(nota_fiscal_formset.forms):
