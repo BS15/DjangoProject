@@ -16,7 +16,7 @@ from .forms import ProcessoForm, DocumentoFormSet, NotaFiscalFormSet, RetencaoFo
 from .utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, processar_pdf_comprovantes_ia
 from .ai_utils import extrair_dados_documento, extract_data_with_llm
 from .invoice_processor import process_invoice_taxes
-from .models import Processo, NotaFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento
+from .models import Processo, NotaFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia
 from .filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, NotaFiscalFilter
 
 
@@ -1911,3 +1911,91 @@ def auditoria_view(request):
         },
     }
     return render(request, 'auditoria.html', context)
+
+
+def api_processo_detalhes(request):
+    """API endpoint that returns Processo details as JSON for the contingency form."""
+    processo_id = request.GET.get('id', '').strip()
+    if not processo_id:
+        return JsonResponse({'sucesso': False, 'erro': 'ID do processo não informado.'}, status=400)
+
+    try:
+        processo = Processo.objects.select_related(
+            'credor', 'forma_pagamento', 'tipo_pagamento', 'conta', 'status', 'tag'
+        ).get(pk=processo_id)
+    except Processo.DoesNotExist:
+        return JsonResponse({'sucesso': False, 'erro': f'Processo #{processo_id} não encontrado.'}, status=404)
+    except ValueError:
+        return JsonResponse({'sucesso': False, 'erro': 'ID inválido.'}, status=400)
+
+    dados = {
+        'sucesso': True,
+        'processo': {
+            'id': processo.pk,
+            'n_nota_empenho': processo.n_nota_empenho or '—',
+            'credor_id': processo.credor_id,
+            'credor_nome': str(processo.credor) if processo.credor else '—',
+            'data_empenho': str(processo.data_empenho) if processo.data_empenho else None,
+            'valor_bruto': str(processo.valor_bruto) if processo.valor_bruto is not None else '0.00',
+            'valor_liquido': str(processo.valor_liquido) if processo.valor_liquido is not None else '0.00',
+            'ano_exercicio': processo.ano_exercicio,
+            'n_pagamento_siscac': processo.n_pagamento_siscac or '—',
+            'codigo_barras': processo.codigo_barras or '—',
+            'data_vencimento': str(processo.data_vencimento) if processo.data_vencimento else None,
+            'data_pagamento': str(processo.data_pagamento) if processo.data_pagamento else None,
+            'forma_pagamento': str(processo.forma_pagamento) if processo.forma_pagamento else '—',
+            'tipo_pagamento': str(processo.tipo_pagamento) if processo.tipo_pagamento else '—',
+            'observacao': processo.observacao or '—',
+            'conta': str(processo.conta) if processo.conta else '—',
+            'status': str(processo.status) if processo.status else '—',
+            'detalhamento': processo.detalhamento or '—',
+            'tag': str(processo.tag) if processo.tag else '—',
+            'em_contingencia': processo.em_contingencia,
+            'extraorcamentario': processo.extraorcamentario,
+        }
+    }
+    return JsonResponse(dados)
+
+
+def add_contingencia_view(request):
+    """Renders the form to request an exceptional correction (Contingency) on a locked Processo."""
+    if request.method == 'POST':
+        processo_id = request.POST.get('processo_id', '').strip()
+        justificativa = request.POST.get('justificativa', '').strip()
+        dados_propostos_raw = request.POST.get('dados_propostos', '{}').strip()
+
+        if not processo_id or not justificativa:
+            messages.error(request, 'Processo e justificativa são obrigatórios.')
+            return redirect('add_contingencia')
+
+        try:
+            pk = int(processo_id)
+        except ValueError:
+            messages.error(request, 'Processo não encontrado.')
+            return redirect('add_contingencia')
+
+        processo = get_object_or_404(Processo, pk=pk)
+
+        try:
+            dados_propostos = json.loads(dados_propostos_raw) if dados_propostos_raw else {}
+        except (json.JSONDecodeError, ValueError):
+            dados_propostos = {}
+
+        contingencia = Contingencia.objects.create(
+            processo=processo,
+            solicitante=request.user,
+            justificativa=justificativa,
+            dados_propostos=dados_propostos,
+            status='PENDENTE_SUPERVISOR',
+        )
+        processo.em_contingencia = True
+        processo.save(update_fields=['em_contingencia'])
+
+        messages.success(
+            request,
+            f'Contingência #{contingencia.pk} aberta com sucesso para o Processo #{processo.pk}. '
+            'Aguardando aprovação do Supervisor.'
+        )
+        return redirect('home_page')
+
+    return render(request, 'add_contingencia.html')
