@@ -16,7 +16,7 @@ from .forms import ProcessoForm, DocumentoFormSet, NotaFiscalFormSet, RetencaoFo
 from .utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, processar_pdf_comprovantes_ia
 from .ai_utils import extrair_dados_documento, extract_data_with_llm
 from .invoice_processor import process_invoice_taxes
-from .models import Processo, NotaFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos
+from .models import Processo, NotaFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento
 from .filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, NotaFiscalFilter
 
 
@@ -653,6 +653,10 @@ def agrupar_impostos_view(request):
         defaults={'nome': "Órgão Arrecadador (A Definir)"}
     )
 
+    tipo_pagamento_impostos, _ = TiposDePagamento.objects.get_or_create(
+        tipo_de_pagamento="IMPOSTOS"
+    )
+
     novo_processo = Processo.objects.create(
         credor=credor_orgao,
         valor_bruto=total_impostos,
@@ -660,7 +664,7 @@ def agrupar_impostos_view(request):
         detalhamento="Pagamento Agrupado de Impostos Retidos",
         observacao="Gerado automaticamente.",
         status=status_padrao,
-        tipo_pagamento="IMPOSTOS"
+        tipo_pagamento=tipo_pagamento_impostos
     )
 
     messages.success(request, f"Processo #{novo_processo.id} para recolhimento gerado com sucesso!")
