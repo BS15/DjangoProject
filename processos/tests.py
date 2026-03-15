@@ -245,3 +245,29 @@ class ProcessInvoiceTaxesOutputContractTest(TestCase):
             self.assertIn("valor", retencao)
             self.assertIn("descricao", retencao)
 
+
+class AuditoriaViewTest(TestCase):
+    """Testa a view de auditoria que exibe o histórico do django-simple-history."""
+
+    def test_auditoria_retorna_200(self):
+        response = self.client.get('/auditoria/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_auditoria_usa_template_correto(self):
+        response = self.client.get('/auditoria/')
+        self.assertTemplateUsed(response, 'auditoria.html')
+
+    def test_auditoria_contexto_tem_chaves_esperadas(self):
+        response = self.client.get('/auditoria/')
+        self.assertIn('registros', response.context)
+        self.assertIn('total', response.context)
+        self.assertIn('modelos_disponiveis', response.context)
+        self.assertIn('filtros', response.context)
+
+    def test_auditoria_filtros_preservados_no_contexto(self):
+        response = self.client.get('/auditoria/?modelo=Processo&tipo_acao=%2B&usuario=admin')
+        self.assertEqual(response.context['filtros']['modelo'], 'Processo')
+        self.assertEqual(response.context['filtros']['tipo_acao'], '+')
+        self.assertEqual(response.context['filtros']['usuario'], 'admin')
+
+
