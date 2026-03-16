@@ -47,7 +47,7 @@
 
     <form method="post" enctype="multipart/form-data" id="preTriagemForm" novalidate>
         {% csrf_token %}
-        <input type="hidden" name="tipo_documento" id="tipo_documento_hidden" value="{{ selected_tipo_documento }}">
+        <input type="hidden" name="tipo_documento_id" id="tipo_documento_hidden" value="{{ selected_tipo_documento_id }}">
         <input type="hidden" name="tipo_pagamento_id" id="tipo_pagamento_id_hidden" value="{{ selected_tipo_pagamento }}">
         <input type="hidden" name="num_documentos" id="num_documentos_hidden" value="0">
 
@@ -103,22 +103,8 @@
                         <!-- Tipo de Documento (unlocked after tipo de pagamento) -->
                         <div id="tipo-documento-section" style="display: {% if selected_tipo_pagamento %}block{% else %}none{% endif %};">
                             <label class="form-label fw-bold">Tipo de Documento <span class="text-danger">*</span></label>
-                            <div class="row g-2">
-                                {% for value, label in tipo_choices %}
-                                <div class="col-md-4">
-                                    <div class="tipo-btn rounded p-3 text-center {% if selected_tipo_documento == value %}selected{% endif %}"
-                                         data-value="{{ value }}" onclick="selecionarTipo(this)">
-                                        {% if 'nota_fiscal' in value %}
-                                            <i class="bi bi-receipt fs-3 text-success d-block mb-1"></i>
-                                        {% elif 'boleto' in value %}
-                                            <i class="bi bi-upc-scan fs-3 text-warning d-block mb-1"></i>
-                                        {% else %}
-                                            <i class="bi bi-file-text fs-3 text-info d-block mb-1"></i>
-                                        {% endif %}
-                                        <span class="fw-bold small">{{ label }}</span>
-                                    </div>
-                                </div>
-                                {% endfor %}
+                            <div id="tipos-documento-container">
+                                <p class="text-muted small"><em><i class="bi bi-hourglass-split"></i> Carregando tipos de documento...</em></p>
                             </div>
                         </div>
                     </div>
@@ -135,7 +121,7 @@
                             <h6 class="text-primary fw-bold mt-2">Arraste arquivos aqui</h6>
                             <p class="text-muted small mb-2">ou clique para selecionar do computador</p>
                             <input type="file" id="bulk-file-input" multiple accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
-                            <p class="text-muted small mb-0" id="upload-hint">Selecione um arquivo (para opções "Única") ou vários (para opções "Várias").</p>
+                            <p class="text-muted small mb-0" id="upload-hint">Selecione um ou mais arquivos.</p>
                         </div>
                         <div id="uploaded-files-list" class="d-flex flex-wrap gap-2"></div>
                     </div>
@@ -200,6 +186,25 @@
                 <div class="col-md-4">
                     <label class="small fw-bold text-success mb-1">Valor Líquido (R$)</label>
                     <input type="number" step="0.01" name="valor_liquido___INDEX__" class="form-control form-control-sm valor-liquido-input" placeholder="Auto-calculado" readonly>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3 p-3 bg-light rounded border border-warning border-opacity-50">
+                <div class="col-md-8">
+                    <label class="small fw-bold text-dark mb-1"><i class="bi bi-person-badge"></i> Fiscal do Contrato <span class="text-warning">(obrigatório se "Enviar para Liquidação")</span></label>
+                    <select name="fiscal_contrato___INDEX__" class="form-select form-select-sm fiscal-contrato-select" disabled>
+                        <option value="">---------</option>
+                        {% for fc in fiscais_contrato %}<option value="{{ fc.id }}">{{ fc.nome }}</option>{% endfor %}
+                    </select>
+                    <small class="text-muted" style="font-size: 0.70rem;">Obrigatório ao enviar para liquidação.</small>
+                </div>
+                <div class="col-md-4 d-flex align-items-center justify-content-end">
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input atestado-toggle" type="checkbox" id="atestado-__INDEX__" name="atestado___INDEX__" role="switch">
+                        <label class="form-check-label fw-bold text-success ms-1" for="atestado-__INDEX__">
+                            Enviar para Liquidação
+                        </label>
+                    </div>
                 </div>
             </div>
 
@@ -275,9 +280,43 @@
     const tipoDocumentoSection = document.getElementById('tipo-documento-section');
     const selectTipoPagamento = document.getElementById('select_tipo_pagamento');
 
-    let selectedTipo = tipoDocumentoInput.value || '';
+    let selectedTipoId = tipoDocumentoInput.value || '';
     let uploadedFiles = [];
     let docCount = 0;
+
+    function fetchTiposDocumento(tipoPagamentoId, preselected) {
+        const container = document.getElementById('tipos-documento-container');
+        container.innerHTML = '<p class="text-muted small"><i class="bi bi-hourglass-split"></i> Carregando...</p>';
+        fetch(`/api/documentos-por-pagamento/?tipo_pagamento_id=${tipoPagamentoId}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.sucesso && data.tipos && data.tipos.length > 0) {
+                    container.innerHTML = '';
+                    const row = document.createElement('div');
+                    row.className = 'row g-2';
+                    data.tipos.forEach(tipo => {
+                        const col = document.createElement('div');
+                        col.className = 'col-md-4';
+                        col.innerHTML = `<div class="tipo-btn rounded p-3 text-center" data-value="${tipo.id}" onclick="selecionarTipo(this)"><i class="bi bi-file-earmark-text fs-3 text-primary d-block mb-1"></i><span class="fw-bold small">${tipo.tipo_de_documento}</span></div>`;
+                        row.appendChild(col);
+                    });
+                    container.appendChild(row);
+                    if (preselected) {
+                        const btn = container.querySelector(`.tipo-btn[data-value="${preselected}"]`);
+                        if (btn) {
+                            btn.classList.add('selected');
+                            selectedTipoId = preselected;
+                            tipoDocumentoInput.value = selectedTipoId;
+                        }
+                    }
+                } else {
+                    container.innerHTML = '<p class="text-muted small"><em>Nenhum tipo de documento disponível para este tipo de pagamento.</em></p>';
+                }
+            })
+            .catch(() => {
+                container.innerHTML = '<p class="text-danger small"><em>Erro ao carregar tipos de documento.</em></p>';
+            });
+    }
 
     // Wire up tipo de pagamento selector
     selectTipoPagamento.addEventListener('change', function() {
@@ -285,16 +324,25 @@
         tipoPagamentoInput.value = val;
         if (val) {
             tipoDocumentoSection.style.display = 'block';
+            tipoDocumentoInput.value = '';
+            selectedTipoId = '';
+            uploadSection.style.display = 'none';
+            resetDocs();
+            fetchTiposDocumento(val);
         } else {
             tipoDocumentoSection.style.display = 'none';
-            // Reset tipo documento choice too
             document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('selected'));
             tipoDocumentoInput.value = '';
-            selectedTipo = '';
+            selectedTipoId = '';
             uploadSection.style.display = 'none';
             resetDocs();
         }
     });
+
+    // On page load, if tipo_pagamento is already selected (e.g. after form error), populate tipos
+    if (tipoPagamentoInput.value) {
+        fetchTiposDocumento(tipoPagamentoInput.value, tipoDocumentoInput.value || null);
+    }
 
     function selecionarTipo(el) {
         if (!tipoPagamentoInput.value) {
@@ -303,14 +351,10 @@
         }
         document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('selected'));
         el.classList.add('selected');
-        selectedTipo = el.getAttribute('data-value');
-        tipoDocumentoInput.value = selectedTipo;
+        selectedTipoId = el.getAttribute('data-value');
+        tipoDocumentoInput.value = selectedTipoId;
 
-        const isMultiple = selectedTipo.endsWith('_varias') || selectedTipo.endsWith('_varios');
-        document.getElementById('upload-hint').textContent = isMultiple
-            ? 'Selecione um ou mais arquivos.'
-            : 'Selecione apenas um arquivo.';
-        document.getElementById('bulk-file-input').multiple = isMultiple;
+        document.getElementById('bulk-file-input').multiple = true;
 
         uploadSection.style.display = 'block';
 
@@ -336,7 +380,7 @@
 
     dropzone.addEventListener('click', () => {
         if (!tipoPagamentoInput.value) { alert('Selecione o Tipo de Pagamento primeiro.'); return; }
-        if (selectedTipo) fileInput.click(); else alert('Selecione o tipo de documento primeiro.');
+        if (selectedTipoId) fileInput.click(); else alert('Selecione o tipo de documento primeiro.');
     });
     dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = '#0a58ca'; });
     dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = '#0d6efd'; });
@@ -344,7 +388,7 @@
         e.preventDefault();
         dropzone.style.borderColor = '#0d6efd';
         if (!tipoPagamentoInput.value) { alert('Selecione o Tipo de Pagamento primeiro.'); return; }
-        if (!selectedTipo) { alert('Selecione o tipo de documento primeiro.'); return; }
+        if (!selectedTipoId) { alert('Selecione o tipo de documento primeiro.'); return; }
         handleFiles(Array.from(e.dataTransfer.files));
     });
     fileInput.addEventListener('change', () => {
@@ -353,15 +397,7 @@
     });
 
     function handleFiles(files) {
-        const isMultiple = selectedTipo.endsWith('_varias') || selectedTipo.endsWith('_varios');
-        const filesToAdd = isMultiple ? files : [files[0]];
-
-        // For "única" options, replace existing
-        if (!isMultiple) {
-            resetDocs();
-        }
-
-        filesToAdd.forEach(file => {
+        files.forEach(file => {
             if (!file) return;
             const idx = docCount;
             uploadedFiles.push({ idx, file });
@@ -442,7 +478,20 @@
 
         // Initialize sections
         updateTaxSection(card);
+        updateFiscalContrato(card);
         docList.appendChild(card);
+    }
+
+    function updateFiscalContrato(card) {
+        const atestadoChk = card.querySelector('.atestado-toggle');
+        const fiscalSelect = card.querySelector('.fiscal-contrato-select');
+        if (!atestadoChk || !fiscalSelect) return;
+        if (atestadoChk.checked) {
+            fiscalSelect.disabled = false;
+        } else {
+            fiscalSelect.value = '';
+            fiscalSelect.disabled = true;
+        }
     }
 
     function updateTaxSection(card) {
@@ -480,6 +529,10 @@
     docList.addEventListener('change', function(e) {
         const card = e.target.closest('.doc-card');
         if (!card) return;
+
+        if (e.target.classList.contains('atestado-toggle')) {
+            updateFiscalContrato(card);
+        }
 
         if (e.target.classList.contains('tem-retencao-toggle')) {
             updateTaxSection(card);
@@ -599,6 +652,20 @@
                 if (valorBruto) valorBruto.classList.add('is-invalid');
                 alert(`Documento ${i + 1}: Informe o Valor Bruto.`);
                 return;
+            }
+
+            const atestadoChk = card.querySelector('.atestado-toggle');
+            const fiscalSelect = card.querySelector('.fiscal-contrato-select');
+            if (fiscalSelect) fiscalSelect.classList.remove('is-invalid');
+            if (atestadoChk && atestadoChk.checked) {
+                if (!fiscalSelect || !fiscalSelect.value) {
+                    e.preventDefault();
+                    const tab = document.getElementById('tab-doc-' + i);
+                    if (tab) tab.click();
+                    if (fiscalSelect) fiscalSelect.classList.add('is-invalid');
+                    alert(`Documento ${i + 1}: Informe o Fiscal do Contrato ao marcar "Enviar para Liquidação".`);
+                    return;
+                }
             }
         }
     });
