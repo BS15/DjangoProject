@@ -210,6 +210,7 @@
                                                             <option value="{{ credor.id }}" {% if ret.beneficiario_id == credor.id %}selected{% endif %}>{{ credor.nome }}</option>
                                                             {% endfor %}
                                                         </select>
+                                                        <input type="text" class="form-control form-control-sm bg-light mt-1 tax-beneficiario-cnpj" value="{{ ret.beneficiario.cpf_cnpj|default:'' }}" readonly placeholder="CPF/CNPJ">
                                                     </td>
                                                     <td>
                                                         <select name="imposto_{{ forloop.parentloop.counter0 }}_code" class="form-select form-select-sm border-danger border-opacity-25">
@@ -303,7 +304,7 @@
 
         <table id="empty-tax-row">
             <tr class="border-bottom border-light">
-                <td>{{ retencao_formset.empty_form.beneficiario }}</td>
+                <td>{{ retencao_formset.empty_form.beneficiario }}<input type="text" class="form-control form-control-sm bg-light mt-1 tax-beneficiario-cnpj" readonly placeholder="CPF/CNPJ"></td>
                 <td>{{ retencao_formset.empty_form.codigo }}</td>
                 <td><input type="number" step="0.01" class="form-control form-control-sm border-danger border-opacity-25 tax-rend-input" placeholder="Rend. Trib."></td>
                 <td><input type="number" step="0.01" class="form-control form-control-sm border-danger border-opacity-50 text-danger fw-bold tax-val-input" placeholder="Retenção"></td>
@@ -443,15 +444,22 @@
                     const rowTemplate = document.getElementById('empty-tax-row').querySelector('tr').cloneNode(true);
                     
                     rowTemplate.querySelector('.tax-beneficiario-select').name = `imposto_${nfIndex}_beneficiario`;
-                    rowTemplate.querySelector('select:not(.tax-beneficiario-select)').name = `imposto_${nfIndex}_code`;
+                    rowTemplate.querySelector('.tax-code-select').name = `imposto_${nfIndex}_code`;
                     rowTemplate.querySelector('.tax-rend-input').name = `imposto_${nfIndex}_rendimento`;
                     rowTemplate.querySelector('.tax-val-input').name = `imposto_${nfIndex}_value`;
 
                     // Preset beneficiário to the emitente of this invoice card
                     const emitenteSelect = card.querySelector('select[name*="nome_emitente"]');
                     const beneficiarioSelect = rowTemplate.querySelector('.tax-beneficiario-select');
+                    const beneficiarioCnpjInput = rowTemplate.querySelector('.tax-beneficiario-cnpj');
                     if (emitenteSelect && beneficiarioSelect && emitenteSelect.value) {
                         beneficiarioSelect.value = emitenteSelect.value;
+                        if (beneficiarioCnpjInput) {
+                            fetch(`/api/credor/${emitenteSelect.value}/`)
+                            .then(res => res.json())
+                            .then(data => { beneficiarioCnpjInput.value = (data.sucesso && data.cpf_cnpj) ? data.cpf_cnpj : ''; })
+                            .catch(() => {});
+                        }
                     }
 
                     const valorBrutoInput = card.querySelector('input[name$="-valor_bruto"]');
@@ -481,6 +489,22 @@
                 if (target.classList.contains('tem-retencao-toggle')) {
                     const card = target.closest('.nf-card');
                     if (card) updateTaxSection(card);
+                }
+
+                if (target.classList.contains('tax-beneficiario-select')) {
+                    const credorId = target.value;
+                    const row = target.closest('tr');
+                    const cnpjInput = row ? row.querySelector('.tax-beneficiario-cnpj') : null;
+                    if (cnpjInput) {
+                        if (credorId) {
+                            fetch(`/api/credor/${credorId}/`)
+                            .then(res => res.json())
+                            .then(data => { cnpjInput.value = (data.sucesso && data.cpf_cnpj) ? data.cpf_cnpj : ''; })
+                            .catch(() => { cnpjInput.value = ''; });
+                        } else {
+                            cnpjInput.value = '';
+                        }
+                    }
                 }
 
                 if (target.tagName.toLowerCase() === 'select' && target.name.includes('nome_emitente')) {
