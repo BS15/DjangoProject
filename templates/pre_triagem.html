@@ -159,6 +159,11 @@
             <span class="fw-bold"><i class="bi bi-file-earmark-text"></i> Documento <span class="doc-number-display">1</span></span>
         </div>
         <div class="card-body">
+            <div class="mb-3 p-2 bg-light rounded border">
+                <label class="small fw-bold text-primary mb-1"><i class="bi bi-file-earmark-badge"></i> Tipo de Documento *</label>
+                <div class="doc-tipo-btns row g-2 mt-1"></div>
+                <input type="hidden" name="tipo_documento___INDEX__" class="doc-tipo-hidden">
+            </div>
             <div class="row g-3 mb-3">
                 <div class="col-md-5">
                     <label class="small fw-bold text-muted mb-1">Emitente *</label>
@@ -265,6 +270,36 @@
     </tbody>
 </table>
 
+<!-- Modal: Definição em Lote de Tipo de Documento -->
+<div class="modal fade" id="batchTipoModal" tabindex="-1" aria-labelledby="batchTipoModalLabel" aria-modal="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="batchTipoModalLabel">
+                    <i class="bi bi-collection-fill"></i> Definição em Lote — Tipo de Documento
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info py-2 mb-3">
+                    <i class="bi bi-info-circle-fill me-1"></i>
+                    Você está adicionando <strong><span id="batch-doc-count">0</span> documentos</strong>.
+                    Selecione o tipo de documento para aplicar a todos em lote:
+                </div>
+                <div id="batch-tipos-container" class="row g-2"></div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-sliders"></i> Definir Individualmente
+                </button>
+                <button type="button" id="btn-apply-batch" class="btn btn-primary fw-bold" disabled>
+                    <i class="bi bi-check2-all"></i> Aplicar para Todos
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     const docList = document.getElementById('doc-list');
@@ -283,21 +318,33 @@
     let selectedTipoId = tipoDocumentoInput.value || '';
     let uploadedFiles = [];
     let docCount = 0;
+    let availableTipos = [];
+    let batchSelectedTipoId = '';
+    let pendingBatchCards = [];
+    let batchModal;
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
 
     function fetchTiposDocumento(tipoPagamentoId, preselected) {
         const container = document.getElementById('tipos-documento-container');
         container.innerHTML = '<p class="text-muted small"><i class="bi bi-hourglass-split"></i> Carregando...</p>';
+        availableTipos = [];
         fetch(`/api/documentos-por-pagamento/?tipo_pagamento_id=${tipoPagamentoId}`)
             .then(r => r.json())
             .then(data => {
                 if (data.sucesso && data.tipos && data.tipos.length > 0) {
+                    availableTipos = data.tipos;
                     container.innerHTML = '';
                     const row = document.createElement('div');
                     row.className = 'row g-2';
                     data.tipos.forEach(tipo => {
                         const col = document.createElement('div');
                         col.className = 'col-md-4';
-                        col.innerHTML = `<div class="tipo-btn rounded p-3 text-center" data-value="${tipo.id}" onclick="selecionarTipo(this)"><i class="bi bi-file-earmark-text fs-3 text-primary d-block mb-1"></i><span class="fw-bold small">${tipo.tipo_de_documento}</span></div>`;
+                        col.innerHTML = `<div class="tipo-btn rounded p-3 text-center" data-value="${tipo.id}" onclick="selecionarTipo(this)"><i class="bi bi-file-earmark-text fs-3 text-primary d-block mb-1"></i><span class="fw-bold small">${escapeHtml(tipo.tipo_de_documento)}</span></div>`;
                         row.appendChild(col);
                     });
                     container.appendChild(row);
@@ -310,10 +357,12 @@
                         }
                     }
                 } else {
+                    availableTipos = [];
                     container.innerHTML = '<p class="text-muted small"><em>Nenhum tipo de documento disponível para este tipo de pagamento.</em></p>';
                 }
             })
             .catch(() => {
+                availableTipos = [];
                 container.innerHTML = '<p class="text-danger small"><em>Erro ao carregar tipos de documento.</em></p>';
             });
     }
@@ -326,7 +375,7 @@
             tipoDocumentoSection.style.display = 'block';
             tipoDocumentoInput.value = '';
             selectedTipoId = '';
-            uploadSection.style.display = 'none';
+            uploadSection.style.display = 'block';
             resetDocs();
             fetchTiposDocumento(val);
         } else {
@@ -341,6 +390,7 @@
 
     // On page load, if tipo_pagamento is already selected (e.g. after form error), populate tipos
     if (tipoPagamentoInput.value) {
+        uploadSection.style.display = 'block';
         fetchTiposDocumento(tipoPagamentoInput.value, tipoDocumentoInput.value || null);
     }
 
@@ -349,7 +399,7 @@
             alert('Selecione o Tipo de Pagamento primeiro.');
             return;
         }
-        document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('selected'));
+        document.querySelectorAll('.tipo-btn:not(.doc-tipo-btn):not(.batch-tipo-btn)').forEach(b => b.classList.remove('selected'));
         el.classList.add('selected');
         selectedTipoId = el.getAttribute('data-value');
         tipoDocumentoInput.value = selectedTipoId;
@@ -380,7 +430,7 @@
 
     dropzone.addEventListener('click', () => {
         if (!tipoPagamentoInput.value) { alert('Selecione o Tipo de Pagamento primeiro.'); return; }
-        if (selectedTipoId) fileInput.click(); else alert('Selecione o tipo de documento primeiro.');
+        fileInput.click();
     });
     dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = '#0a58ca'; });
     dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = '#0d6efd'; });
@@ -388,7 +438,6 @@
         e.preventDefault();
         dropzone.style.borderColor = '#0d6efd';
         if (!tipoPagamentoInput.value) { alert('Selecione o Tipo de Pagamento primeiro.'); return; }
-        if (!selectedTipoId) { alert('Selecione o tipo de documento primeiro.'); return; }
         handleFiles(Array.from(e.dataTransfer.files));
     });
     fileInput.addEventListener('change', () => {
@@ -397,6 +446,15 @@
     });
 
     function handleFiles(files) {
+        if (files.length === 0) return;
+
+        // For < 5 files when no tipo is selected, require tipo selection first
+        if (files.length < 5 && !selectedTipoId) {
+            alert('Selecione o tipo de documento antes de fazer o upload.');
+            return;
+        }
+
+        const newCards = [];
         files.forEach(file => {
             if (!file) return;
             const idx = docCount;
@@ -413,7 +471,8 @@
             addPdfTab(idx, file, docCount);
 
             // Add doc form card
-            addDocCard(idx, file);
+            const card = addDocCard(idx, file);
+            newCards.push(card);
         });
 
         numDocumentosInput.value = docCount;
@@ -422,6 +481,13 @@
             // Show first tab
             const firstTab = pdfTabs.querySelector('.pdf-tab-btn');
             if (firstTab) firstTab.click();
+        }
+
+        // Show batch tipo modal when 5+ documents are uploaded in one batch
+        if (files.length >= 5 && availableTipos.length > 0) {
+            pendingBatchCards = newCards;
+            populateBatchTipoModal(files.length);
+            batchModal.show();
         }
     }
 
@@ -452,6 +518,62 @@
         if (card) card.style.display = 'block';
     }
 
+    function populateDocTipoBtns(card, preselectedId) {
+        const container = card.querySelector('.doc-tipo-btns');
+        const hiddenInput = card.querySelector('.doc-tipo-hidden');
+        if (!container) return;
+        container.innerHTML = '';
+        availableTipos.forEach(tipo => {
+            const col = document.createElement('div');
+            col.className = 'col-md-4';
+            const isSelected = String(tipo.id) === String(preselectedId);
+            col.innerHTML = `<div class="tipo-btn doc-tipo-btn rounded p-2 text-center${isSelected ? ' selected' : ''}" data-value="${tipo.id}" onclick="selectDocTipo(this)"><i class="bi bi-file-earmark-text fs-5 text-primary d-block mb-1"></i><span class="fw-bold small">${escapeHtml(tipo.tipo_de_documento)}</span></div>`;
+            container.appendChild(col);
+        });
+        if (hiddenInput && preselectedId) hiddenInput.value = preselectedId;
+    }
+
+    function selectDocTipo(btn) {
+        const container = btn.closest('.doc-tipo-btns');
+        const card = btn.closest('.doc-card');
+        if (container) {
+            container.querySelectorAll('.doc-tipo-btn').forEach(b => b.classList.remove('selected'));
+        }
+        btn.classList.add('selected');
+        const hiddenInput = card ? card.querySelector('.doc-tipo-hidden') : null;
+        if (hiddenInput) hiddenInput.value = btn.getAttribute('data-value');
+    }
+
+    function populateBatchTipoModal(count) {
+        document.getElementById('batch-doc-count').textContent = count;
+        batchSelectedTipoId = '';
+        const applyBtn = document.getElementById('btn-apply-batch');
+        applyBtn.disabled = true;
+
+        const container = document.getElementById('batch-tipos-container');
+        container.innerHTML = '';
+        availableTipos.forEach(tipo => {
+            const col = document.createElement('div');
+            col.className = 'col-md-4';
+            const isPreselected = String(tipo.id) === String(selectedTipoId);
+            col.innerHTML = `<div class="tipo-btn batch-tipo-btn rounded p-3 text-center${isPreselected ? ' selected' : ''}" data-value="${tipo.id}" onclick="selectBatchTipo(this)"><i class="bi bi-file-earmark-text fs-3 text-primary d-block mb-1"></i><span class="fw-bold small">${escapeHtml(tipo.tipo_de_documento)}</span></div>`;
+            container.appendChild(col);
+        });
+
+        // Pre-enable if global tipo already selected
+        if (selectedTipoId) {
+            batchSelectedTipoId = selectedTipoId;
+            applyBtn.disabled = false;
+        }
+    }
+
+    function selectBatchTipo(btn) {
+        document.querySelectorAll('.batch-tipo-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        batchSelectedTipoId = btn.getAttribute('data-value');
+        document.getElementById('btn-apply-batch').disabled = false;
+    }
+
     function addDocCard(idx, file) {
         const template = document.getElementById('empty-doc-card').innerHTML
             .replace(/__INDEX__/g, idx);
@@ -476,11 +598,38 @@
         dt.items.add(file);
         fileInputHidden.files = dt.files;
 
+        // Populate per-doc tipo buttons, defaulting to currently selected global tipo
+        populateDocTipoBtns(card, selectedTipoId);
+
         // Initialize sections
         updateTaxSection(card);
         updateFiscalContrato(card);
         docList.appendChild(card);
+        return card;
     }
+
+    // Batch modal apply button
+    document.getElementById('btn-apply-batch').addEventListener('click', function() {
+        if (!batchSelectedTipoId) return;
+
+        // Update global tipo selection
+        selectedTipoId = batchSelectedTipoId;
+        tipoDocumentoInput.value = batchSelectedTipoId;
+        document.querySelectorAll('.tipo-btn:not(.doc-tipo-btn):not(.batch-tipo-btn)').forEach(b => {
+            b.classList.toggle('selected', String(b.getAttribute('data-value')) === String(batchSelectedTipoId));
+        });
+
+        // Apply to all pending batch cards
+        pendingBatchCards.forEach(card => {
+            populateDocTipoBtns(card, batchSelectedTipoId);
+        });
+        pendingBatchCards = [];
+
+        batchModal.hide();
+    });
+
+    // Initialize batch modal instance
+    batchModal = new bootstrap.Modal(document.getElementById('batchTipoModal'));
 
     function updateFiscalContrato(card) {
         const atestadoChk = card.querySelector('.atestado-toggle');
@@ -616,11 +765,6 @@
             selectTipoPagamento.focus();
             return;
         }
-        if (!tipoDocumentoInput.value) {
-            e.preventDefault();
-            alert('Selecione o tipo de documento antes de continuar.');
-            return;
-        }
         if (parseInt(numDocumentosInput.value) === 0) {
             e.preventDefault();
             alert('Faça o upload de pelo menos um arquivo antes de continuar.');
@@ -628,6 +772,32 @@
         }
 
         const cards = document.querySelectorAll('#doc-list .doc-card');
+
+        // Validate per-doc tipo de documento
+        for (let i = 0; i < cards.length; i++) {
+            const card = cards[i];
+            const tipoHidden = card.querySelector('.doc-tipo-hidden');
+            if (!tipoHidden || !tipoHidden.value) {
+                e.preventDefault();
+                const tabBtn = document.getElementById('tab-doc-' + card.getAttribute('data-doc-index'));
+                if (tabBtn) tabBtn.click();
+                alert(`Documento ${i + 1}: Selecione o tipo de documento.`);
+                return;
+            }
+        }
+
+        // Ensure global tipo_documento_id is set (use first card's tipo as fallback)
+        if (!tipoDocumentoInput.value && cards.length > 0) {
+            const firstTipo = cards[0].querySelector('.doc-tipo-hidden');
+            if (firstTipo && firstTipo.value) tipoDocumentoInput.value = firstTipo.value;
+        }
+
+        if (!tipoDocumentoInput.value) {
+            e.preventDefault();
+            alert('Selecione o tipo de documento antes de continuar.');
+            return;
+        }
+
         for (let i = 0; i < cards.length; i++) {
             const card = cards[i];
             const numero = card.querySelector('input[name^="numero_"]');
