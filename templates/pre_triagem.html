@@ -607,16 +607,17 @@
         dt.items.add(file);
         fileInputHidden.files = dt.files;
 
+        // Populate tipo de documento select options first so they exist when populateDocTipoBtns sets the value
+        const tipoSelect = card.querySelector('.tipo-documento-select');
+        if (tipoSelect) populateDocTypeSelect(tipoSelect);
+
         // Populate per-doc tipo buttons, defaulting to currently selected global tipo
+        // (options are already loaded above, so selectEl.value assignment will succeed)
         populateDocTipoBtns(card, selectedTipoId);
 
         // Initialize sections
         updateTaxSection(card);
         updateFiscalContrato(card);
-
-        // Populate tipo de documento select
-        const tipoSelect = card.querySelector('.tipo-documento-select');
-        if (tipoSelect) populateDocTypeSelect(tipoSelect);
 
         docList.appendChild(card);
         return card;
