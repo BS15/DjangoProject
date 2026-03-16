@@ -1,0 +1,435 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentos Fiscais — Processo #{{ processo.id }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
+    <style>
+        .sticky-viewer { position: sticky; top: 20px; z-index: 100; }
+        .bg-light-blue { background-color: #f0f8ff; }
+        .doc-card { transition: box-shadow .2s; }
+        .doc-card.is-fiscal { border-left: 4px solid #198754; }
+        .nf-form-panel { display: none; }
+        .nf-form-panel.visible { display: block; }
+        .taxes-container { background-color: #f8f9fa; border: 1px dashed #dee2e6; border-radius: 6px; padding: 12px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .doc-card { animation: fadeIn .25s ease; }
+        .save-status { font-size: 0.78rem; transition: opacity .4s; }
+    </style>
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-dark mb-4 shadow-sm">
+    <div class="container-fluid px-4">
+        <span class="navbar-brand mb-0 h1 fw-bold">
+            <i class="bi bi-receipt-cutoff text-warning"></i> Documentos Fiscais
+        </span>
+        <span class="text-white small">Processo <strong>#{{ processo.id }}</strong>{% if processo.credor %} | {{ processo.credor.nome }}{% endif %}</span>
+    </div>
+</nav>
+
+<div class="container-fluid px-4 mb-5">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row g-4">
+
+        <!-- PDF Viewer (sticky left column) -->
+        <div class="col-lg-5">
+            <div class="sticky-viewer">
+                <div class="card shadow-sm border-primary">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-file-earmark-pdf"></i> Visualizador</h6>
+                        <span class="badge bg-light text-primary" id="viewer-label">Selecione um documento</span>
+                    </div>
+                    <div class="card-body p-2 bg-light-blue" style="min-height: 700px;">
+                        <div id="pdf-placeholder" class="text-center text-muted pt-5">
+                            <i class="bi bi-file-earmark-arrow-up fs-1 d-block mb-3"></i>
+                            <p class="small">Clique no ícone <i class="bi bi-eye"></i> de um documento para visualizá-lo aqui.</p>
+                        </div>
+                        <iframe id="pdf-viewer" src="" width="100%" height="700px" style="border:none; border-radius:6px; display:none;"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Document list (right column) -->
+        <div class="col-lg-7">
+
+            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                <div>
+                    <h5 class="fw-bold mb-0"><i class="bi bi-folder2-open"></i> Documentos do Processo</h5>
+                    <small class="text-muted">Marque quais documentos são <strong>Documentos Fiscais</strong> e preencha os dados de cada nota.</small>
+                </div>
+                <a href="{% url 'editar_processo' pk=processo.id %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Voltar ao Processo
+                </a>
+            </div>
+
+            {% if not documentos %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Nenhum documento anexado a este processo.
+                </div>
+            {% endif %}
+
+            {% for doc in documentos %}
+            {% with nota=doc.nota_referente %}
+            <div class="card shadow-sm mb-3 doc-card {% if nota %}is-fiscal{% endif %}" id="doc-card-{{ doc.id }}" data-doc-id="{{ doc.id }}">
+                <div class="card-header py-2 d-flex justify-content-between align-items-center
+                    {% if nota %}bg-success bg-opacity-10 border-success{% else %}bg-white{% endif %}">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-secondary">{{ doc.ordem }}</span>
+                        <span class="fw-bold text-dark small">{{ doc.tipo.tipo_de_documento }}</span>
+                        {% if nota %}
+                            <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Documento Fiscal</span>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        {% if doc.arquivo %}
+                            <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2"
+                                    onclick="showPdf('{{ doc.arquivo.url }}', '{{ doc.tipo.tipo_de_documento }} #{{ doc.ordem }}')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        {% endif %}
+                        <button type="button"
+                                class="btn btn-sm fw-bold toggle-fiscal-btn {% if nota %}btn-outline-danger{% else %}btn-outline-success{% endif %}"
+                                data-doc-id="{{ doc.id }}"
+                                data-toggle-url="{% url 'api_toggle_documento_fiscal' processo_pk=processo.id documento_pk=doc.id %}">
+                            {% if nota %}
+                                <i class="bi bi-x-circle"></i> Remover Documento Fiscal
+                            {% else %}
+                                <i class="bi bi-plus-circle"></i> Marcar como Documento Fiscal
+                            {% endif %}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- NF Form Panel (visible only when doc is fiscal) -->
+                <div class="nf-form-panel card-body {% if nota %}visible{% endif %}" id="nf-panel-{{ doc.id }}"
+                     {% if nota %}data-nota-id="{{ nota.id }}"{% endif %}
+                     data-save-url="{% if nota %}{% url 'api_salvar_nota_fiscal' processo_pk=processo.id nota_pk=nota.id %}{% endif %}">
+
+                    {% if nota %}
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-5">
+                            <label class="small fw-bold text-muted mb-1">Emitente</label>
+                            <select class="form-select form-select-sm nf-field" data-field="nome_emitente">
+                                <option value="">---------</option>
+                                {% for c in credores %}
+                                <option value="{{ c.id }}" {% if nota.nome_emitente_id == c.id %}selected{% endif %}>{{ c.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="small fw-bold text-muted mb-1">CNPJ Emitente</label>
+                            <input type="text" class="form-control form-control-sm bg-light nf-cnpj-display"
+                                   value="{{ nota.cnpj_emitente|default:'' }}" readonly placeholder="—">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="small fw-bold text-muted mb-1">Nº Nota</label>
+                            <input type="text" class="form-control form-control-sm nf-field" data-field="numero_nota_fiscal"
+                                   value="{{ nota.numero_nota_fiscal|default:'' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="small fw-bold text-muted mb-1">Data Emissão</label>
+                            <input type="date" class="form-control form-control-sm nf-field" data-field="data_emissao"
+                                   value="{{ nota.data_emissao|date:'Y-m-d'|default:'' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="small fw-bold text-primary mb-1">Valor Bruto (R$)</label>
+                            <input type="number" step="0.01" class="form-control form-control-sm nf-field" data-field="valor_bruto"
+                                   value="{{ nota.valor_bruto|default:'' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="small fw-bold text-success mb-1">Valor Líquido (R$)</label>
+                            <input type="number" step="0.01" class="form-control form-control-sm nf-field" data-field="valor_liquido"
+                                   value="{{ nota.valor_liquido|default:'' }}">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3 p-3 bg-light rounded border border-warning border-opacity-50">
+                        <div class="col-md-8">
+                            <label class="small fw-bold text-dark mb-1">
+                                <i class="bi bi-person-badge"></i> Fiscal do Contrato
+                                <span class="text-warning small">(obrigatório para liquidação)</span>
+                            </label>
+                            <select class="form-select form-select-sm nf-field" data-field="fiscal_contrato">
+                                <option value="">---------</option>
+                                {% for fc in fiscais_contrato %}
+                                <option value="{{ fc.id }}" {% if nota.fiscal_contrato_id == fc.id %}selected{% endif %}>{{ fc.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-center justify-content-end">
+                            <div class="form-check form-switch mt-3">
+                                <input class="form-check-input nf-field" type="checkbox" data-field="atestada"
+                                       id="atestada-{{ nota.id }}" {% if nota.atestada %}checked{% endif %}>
+                                <label class="form-check-label fw-bold text-success ms-1" for="atestada-{{ nota.id }}">
+                                    Atestada / Enviar para Liquidação
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Retenções de Impostos -->
+                    <div class="mb-2">
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input tem-retencao-toggle" type="checkbox"
+                                   id="tem-ret-{{ nota.id }}" role="switch"
+                                   {% if nota.retencoes.exists %}checked{% endif %}>
+                            <label class="form-check-label fw-bold text-danger" for="tem-ret-{{ nota.id }}">
+                                <i class="bi bi-percent"></i> Tem Retenção de Impostos
+                            </label>
+                        </div>
+                        <div class="taxes-container {% if not nota.retencoes.exists %}d-none{% endif %}" id="tax-container-{{ nota.id }}">
+                            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                                <h6 class="text-danger fw-bold mb-0"><i class="bi bi-calculator"></i> Retenções</h6>
+                                <button type="button" class="btn btn-xs btn-outline-danger btn-sm add-tax-btn fw-bold">
+                                    <i class="bi bi-plus"></i> Adicionar Imposto
+                                </button>
+                            </div>
+                            <table class="table table-sm table-borderless mb-0">
+                                <thead class="text-muted small">
+                                    <tr>
+                                        <th style="width:28%">Beneficiário</th>
+                                        <th style="width:25%">Código Imposto</th>
+                                        <th style="width:20%">Rend. Tributável (R$)</th>
+                                        <th style="width:22%">Valor Retido (R$)</th>
+                                        <th style="width:5%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="tax-body">
+                                    {% for ret in nota.retencoes.all %}
+                                    <tr class="border-bottom border-light">
+                                        <td>
+                                            <select class="form-select form-select-sm tax-beneficiario-select">
+                                                <option value="">---------</option>
+                                                {% for c in credores %}
+                                                <option value="{{ c.id }}" {% if ret.beneficiario_id == c.id %}selected{% endif %}>{{ c.nome }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <input type="text" class="form-control form-control-sm bg-light mt-1 tax-beneficiario-cnpj"
+                                                   value="{{ ret.beneficiario.cpf_cnpj|default:'' }}" readonly placeholder="CPF/CNPJ">
+                                        </td>
+                                        <td>
+                                            <select class="form-select form-select-sm tax-code-select">
+                                                <option value="">---------</option>
+                                                {% for ci in codigos_imposto %}
+                                                <option value="{{ ci.id }}" {% if ret.codigo_id == ci.id %}selected{% endif %}>{{ ci.codigo }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td><input type="number" step="0.01" class="form-control form-control-sm tax-rend-input"
+                                                   value="{{ ret.rendimento_tributavel|default:'' }}"></td>
+                                        <td><input type="number" step="0.01" class="form-control form-control-sm tax-val-input text-danger fw-bold"
+                                                   value="{{ ret.valor|stringformat:'f' }}"></td>
+                                        <td class="text-end"><button type="button" class="btn btn-sm btn-outline-secondary remove-tax-btn border-0"><i class="bi bi-x-lg"></i></button></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end align-items-center gap-3 mt-3">
+                        <span class="save-status text-muted" id="save-status-{{ nota.id }}"></span>
+                        <button type="button" class="btn btn-success btn-sm fw-bold save-nf-btn"
+                                data-nota-id="{{ nota.id }}"
+                                data-save-url="{% url 'api_salvar_nota_fiscal' processo_pk=processo.id nota_pk=nota.id %}">
+                            <i class="bi bi-floppy2"></i> Salvar Nota Fiscal
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endwith %}
+            {% endfor %}
+
+        </div>
+    </div>
+</div>
+
+<!-- Hidden template row for new imposto rows (cloned by JS) -->
+<template id="tax-row-template">
+    <tr class="border-bottom border-light">
+        <td>
+            <select class="form-select form-select-sm tax-beneficiario-select">
+                <option value="">---------</option>
+                {% for c in credores %}
+                <option value="{{ c.id }}">{{ c.nome }}</option>
+                {% endfor %}
+            </select>
+            <input type="text" class="form-control form-control-sm bg-light mt-1 tax-beneficiario-cnpj" readonly placeholder="CPF/CNPJ">
+        </td>
+        <td>
+            <select class="form-select form-select-sm tax-code-select">
+                <option value="">---------</option>
+                {% for ci in codigos_imposto %}
+                <option value="{{ ci.id }}">{{ ci.codigo }}</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td><input type="number" step="0.01" class="form-control form-control-sm tax-rend-input" placeholder="0.00"></td>
+        <td><input type="number" step="0.01" class="form-control form-control-sm tax-val-input text-danger fw-bold" placeholder="0.00"></td>
+        <td class="text-end"><button type="button" class="btn btn-sm btn-outline-secondary remove-tax-btn border-0"><i class="bi bi-x-lg"></i></button></td>
+    </tr>
+</template>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+
+/* ── PDF Viewer ── */
+function showPdf(url, label) {
+    const viewer = document.getElementById('pdf-viewer');
+    const placeholder = document.getElementById('pdf-placeholder');
+    const lbl = document.getElementById('viewer-label');
+    viewer.src = url;
+    viewer.style.display = 'block';
+    placeholder.style.display = 'none';
+    lbl.textContent = label;
+}
+
+/* ── Retencao toggle visibility ── */
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('tem-retencao-toggle')) {
+        const notaId = e.target.id.replace('tem-ret-', '');
+        const container = document.getElementById('tax-container-' + notaId);
+        if (container) container.classList.toggle('d-none', !e.target.checked);
+    }
+});
+
+/* ── Add imposto row ── */
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.add-tax-btn')) {
+        const btn = e.target.closest('.add-tax-btn');
+        const container = btn.closest('.taxes-container');
+        const tbody = container.querySelector('.tax-body');
+        const tmpl = document.getElementById('tax-row-template');
+        const row = tmpl.content.cloneNode(true);
+        tbody.appendChild(row);
+    }
+    if (e.target.closest('.remove-tax-btn')) {
+        e.target.closest('tr').remove();
+    }
+});
+
+/* ── Beneficiario CNPJ auto-fill ── */
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('tax-beneficiario-select')) {
+        const row = e.target.closest('tr');
+        const cnpjInput = row && row.querySelector('.tax-beneficiario-cnpj');
+        const credorId = e.target.value;
+        if (!cnpjInput) return;
+        if (!credorId) { cnpjInput.value = ''; return; }
+        fetch(`/api/credor/${credorId}/`)
+            .then(r => r.json())
+            .then(data => { cnpjInput.value = data.cpf_cnpj || ''; })
+            .catch(() => { cnpjInput.value = ''; });
+    }
+});
+
+/* ── Toggle documento fiscal (AJAX) ── */
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.toggle-fiscal-btn');
+    if (!btn) return;
+    const docId = btn.dataset.docId;
+    const url = btn.dataset.toggleUrl;
+    btn.disabled = true;
+
+    fetch(url, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': CSRF_TOKEN, 'Content-Type': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        // Reload page to reflect changes (simplest approach)
+        location.reload();
+    })
+    .catch(err => {
+        console.error(err);
+        btn.disabled = false;
+        alert('Erro ao alternar documento fiscal. Tente novamente.');
+    });
+});
+
+/* ── Save nota fiscal (AJAX) ── */
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.save-nf-btn');
+    if (!btn) return;
+
+    const notaId = btn.dataset.notaId;
+    const url = btn.dataset.saveUrl;
+    const panel = btn.closest('.nf-form-panel');
+    const statusEl = document.getElementById('save-status-' + notaId);
+
+    // Gather NF field values
+    const payload = {};
+    panel.querySelectorAll('.nf-field').forEach(function(field) {
+        const fieldName = field.dataset.field;
+        if (!fieldName) return;
+        if (field.type === 'checkbox') {
+            payload[fieldName] = field.checked;
+        } else {
+            payload[fieldName] = field.value || null;
+        }
+    });
+
+    // Gather retencoes rows
+    const taxBody = panel.querySelector('.tax-body');
+    const codes = [], rendimentos = [], values = [], beneficiarios = [];
+    if (taxBody) {
+        taxBody.querySelectorAll('tr').forEach(function(row) {
+            const codeSelect = row.querySelector('.tax-code-select');
+            const rendInput = row.querySelector('.tax-rend-input');
+            const valInput = row.querySelector('.tax-val-input');
+            const benef = row.querySelector('.tax-beneficiario-select');
+            codes.push(codeSelect ? codeSelect.value : '');
+            rendimentos.push(rendInput ? rendInput.value : '');
+            values.push(valInput ? valInput.value : '');
+            beneficiarios.push(benef ? benef.value : '');
+        });
+    }
+    payload.imposto_codes = codes;
+    payload.imposto_rendimentos = rendimentos;
+    payload.imposto_values = values;
+    payload.imposto_beneficiarios = beneficiarios;
+
+    btn.disabled = true;
+    if (statusEl) { statusEl.textContent = 'Salvando…'; statusEl.classList.remove('text-success', 'text-danger'); }
+
+    fetch(url, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': CSRF_TOKEN, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(function(data) {
+        btn.disabled = false;
+        if (data.status === 'ok') {
+            if (statusEl) { statusEl.textContent = '✓ Salvo'; statusEl.classList.add('text-success'); }
+            setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3000);
+        } else {
+            if (statusEl) { statusEl.textContent = 'Erro: ' + (data.message || 'desconhecido'); statusEl.classList.add('text-danger'); }
+        }
+    })
+    .catch(function(err) {
+        btn.disabled = false;
+        console.error(err);
+        if (statusEl) { statusEl.textContent = 'Erro de conexão.'; statusEl.classList.add('text-danger'); }
+    });
+});
+</script>
+</body>
+</html>
