@@ -45,6 +45,7 @@ def pre_triagem_view(request):
 
     if request.method == 'POST':
         tipo_pagamento_id = request.POST.get('tipo_pagamento_id', '')
+        tipo_documento_id = request.POST.get('tipo_documento_id', '').strip()
         num_docs_str = request.POST.get('num_documentos', '0')
         try:
             num_docs = int(num_docs_str)
