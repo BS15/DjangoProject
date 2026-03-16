@@ -126,6 +126,9 @@
                             <button type="button" id="add-doc-btn" class="btn btn-outline-primary btn-sm mt-2">
                                 <i class="bi bi-plus-circle"></i> Adicionar Documento Manual
                             </button>
+                            <button type="button" id="btn-batch-tipo" class="btn btn-outline-secondary btn-sm mt-2 ms-2" title="Definir o mesmo tipo de documento para todos os anexos de uma vez">
+                                <i class="bi bi-tag-fill"></i> Definir Tipo em Lote
+                            </button>
                         </div>
 
 
@@ -332,6 +335,30 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+<!-- Modal: Definir Tipo de Documento em Lote -->
+<div class="modal fade" id="modal-batch-tipo" tabindex="-1" aria-labelledby="modalBatchTipoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalBatchTipoLabel"><i class="bi bi-tag-fill me-2"></i>Definir Tipo de Documento em Lote</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p id="batch-tipo-msg" class="text-muted small mb-3"></p>
+                <label for="batch-tipo-select" class="form-label fw-bold">Tipo de Documento:</label>
+                <select id="batch-tipo-select" class="form-select">
+                    <option value="">-- Selecione o tipo --</option>
+                </select>
+                <div class="invalid-feedback">Por favor, selecione um tipo de documento.</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i>Ignorar</button>
+                <button type="button" id="btn-confirmar-batch-tipo" class="btn btn-primary fw-bold"><i class="bi bi-check2-all me-1"></i>Aplicar a Todos</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 let dadosTemporariosIA = null;
@@ -647,6 +674,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         dropzone.querySelector('.dropzone-text').innerHTML = `<i class="bi bi-check2-circle"></i> ${files.length} arquivos inseridos!`;
         setTimeout(() => { dropzone.querySelector('.dropzone-text').innerHTML = "Arraste arquivos aqui para visualizar"; }, 3000);
+        if (files.length > 0) abrirModalBatchTipo(files.length);
     }
 
     // LÓGICA DE AUTOFILL IA
@@ -711,6 +739,82 @@ document.addEventListener('DOMContentLoaded', function() {
         selectFormaPagamento.addEventListener('change', gerenciarVisibilidadePagamento);
         gerenciarVisibilidadePagamento(); // Aciona no load para exibir a UI correta se já houver algo selecionado
     }
+
+    // ==========================================
+    // BATCH DOCUMENT TYPE - MODAL LOGIC
+    // ==========================================
+    let _modalBatchTipoInstance = null;
+    function getModalBatchTipo() {
+        if (!_modalBatchTipoInstance) {
+            _modalBatchTipoInstance = new bootstrap.Modal(document.getElementById('modal-batch-tipo'));
+        }
+        return _modalBatchTipoInstance;
+    }
+
+    function abrirModalBatchTipo(qtdArquivos) {
+        const tipoSelect = document.querySelector('[name="processo-tipo_pagamento"]');
+        if (!tipoSelect || !tipoSelect.value) return;
+
+        const selectLote = document.getElementById('batch-tipo-select');
+        const optionsCurrent = document.querySelector('#empty-doc-form select[name$="-tipo"]');
+        if (optionsCurrent && selectLote) {
+            selectLote.innerHTML = '';
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            defaultOpt.textContent = '-- Selecione o tipo --';
+            selectLote.appendChild(defaultOpt);
+            Array.from(optionsCurrent.options).forEach(opt => {
+                if (!opt.value) return;
+                const newOpt = document.createElement('option');
+                newOpt.value = opt.value;
+                newOpt.textContent = opt.textContent;
+                selectLote.appendChild(newOpt);
+            });
+        }
+
+        const msgEl = document.getElementById('batch-tipo-msg');
+        if (msgEl) {
+            msgEl.textContent = qtdArquivos > 1
+                ? `${qtdArquivos} documentos foram adicionados. Deseja definir o mesmo tipo para todos?`
+                : `1 documento foi adicionado. Deseja definir o tipo agora?`;
+        }
+        getModalBatchTipo().show();
+    }
+
+    document.getElementById('btn-confirmar-batch-tipo').addEventListener('click', function () {
+        const selectLote = document.getElementById('batch-tipo-select');
+        const valorSelecionado = selectLote.value;
+        if (!valorSelecionado) {
+            selectLote.classList.add('is-invalid');
+            return;
+        }
+        selectLote.classList.remove('is-invalid');
+
+        const docList = document.getElementById('document-list');
+        if (docList) {
+            docList.querySelectorAll('.document-row').forEach(row => {
+                if (row.style.display === 'none') return;
+                const sel = row.querySelector('select[name$="-tipo"]');
+                if (sel) sel.value = valorSelecionado;
+            });
+        }
+        getModalBatchTipo().hide();
+    });
+
+    document.getElementById('batch-tipo-select').addEventListener('change', function () {
+        this.classList.remove('is-invalid');
+    });
+
+    document.getElementById('btn-batch-tipo').addEventListener('click', function () {
+        const docList = document.getElementById('document-list');
+        let count = 0;
+        if (docList) {
+            docList.querySelectorAll('.document-row').forEach(r => {
+                if (r.style.display !== 'none') count++;
+            });
+        }
+        abrirModalBatchTipo(count);
+    });
 
 });
 
