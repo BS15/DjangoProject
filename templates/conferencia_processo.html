@@ -10,11 +10,6 @@
     <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
     <style>
         .sticky-panel { position: sticky; top: 12px; }
-        .history-badge-Processo     { background-color: #0d6efd; }
-        .history-badge-Documento    { background-color: #198754; }
-        .history-badge-Pendência    { background-color: #dc3545; }
-        .history-badge-Nota-Fiscal  { background-color: #fd7e14; }
-        .history-badge-default      { background-color: #6c757d; }
         .history-row { font-size: 0.82rem; }
         .pendencia-row-resolvida { opacity: 0.6; }
         #empty-doc-form, #empty-pendencia-form { display: none; }
@@ -394,7 +389,12 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <span class="badge history-badge-{{ rec.modelo|slugify }} history-badge-default">
+                                                <span class="badge
+                                                    {% if rec.modelo == 'Processo' %}bg-primary
+                                                    {% elif rec.modelo == 'Documento' %}bg-success
+                                                    {% elif rec.modelo == 'Pendência' %}bg-danger
+                                                    {% elif rec.modelo == 'Nota Fiscal' %}bg-warning text-dark
+                                                    {% else %}bg-secondary{% endif %}">
                                                     {{ rec.modelo }}
                                                 </span>
                                             </td>
