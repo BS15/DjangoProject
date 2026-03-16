@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from processos.views import home_page, add_process_view, visualizar_pdf_processo, editar_processo, painel_impostos, contas_a_pagar, api_processar_boleto, add_pre_empenho_view, a_empenhar_view, add_credor_view, credores_list_view, diarias_list_view, reembolsos_list_view, jetons_list_view, auxilios_list_view, add_diaria_view, add_reembolso_view, add_jeton_view, add_auxilio_view, verbas_panel_view, agrupar_verbas_view, agrupar_impostos_view, painel_comprovantes_view, api_fatiar_comprovantes, api_vincular_comprovantes, painel_conferencia_view, aprovar_conferencia_view, enviar_para_autorizacao, painel_autorizacao_view, autorizar_pagamento, aprovar_contabilizacao_view, aprovar_conselho_view, arquivar_processo_view, painel_conselho_view, painel_arquivamento_view, painel_contabilizacao_view, painel_suprimentos_view, gerenciar_suprimento_view, fechar_suprimento_view, add_suprimento_view, recusar_conferencia_view, recusar_contabilizacao_view, recusar_autorizacao_view, recusar_conselho_view, api_extrair_nota, api_extracao_universal, api_dados_credor, api_tipos_documento_por_pagamento, painel_pendencias_view, alternar_ateste_nota, painel_liquidacoes_view, triagem_notas_view, api_detalhes_pagamento, separar_para_lancamento_bancario, lancamento_bancario, marcar_como_lancado, desmarcar_lancamento, api_processar_retencoes, gerar_dummy_pdf_view, api_valor_unitario_diaria, api_documentos_processo, auditoria_view, gerenciar_diaria_view, add_contingencia_view, painel_contingencias_view, api_processo_detalhes
+from processos.views import home_page, add_process_view, pre_triagem_view, completar_processo_view, visualizar_pdf_processo, editar_processo, painel_impostos, contas_a_pagar, api_processar_boleto, add_pre_empenho_view, a_empenhar_view, add_credor_view, credores_list_view, diarias_list_view, reembolsos_list_view, jetons_list_view, auxilios_list_view, add_diaria_view, add_reembolso_view, add_jeton_view, add_auxilio_view, verbas_panel_view, agrupar_verbas_view, agrupar_impostos_view, painel_comprovantes_view, api_fatiar_comprovantes, api_vincular_comprovantes, painel_conferencia_view, aprovar_conferencia_view, enviar_para_autorizacao, painel_autorizacao_view, autorizar_pagamento, aprovar_contabilizacao_view, aprovar_conselho_view, arquivar_processo_view, painel_conselho_view, painel_arquivamento_view, painel_contabilizacao_view, painel_suprimentos_view, gerenciar_suprimento_view, fechar_suprimento_view, add_suprimento_view, recusar_conferencia_view, recusar_contabilizacao_view, recusar_autorizacao_view, recusar_conselho_view, api_extrair_nota, api_extracao_universal, api_dados_credor, api_tipos_documento_por_pagamento, painel_pendencias_view, alternar_ateste_nota, painel_liquidacoes_view, triagem_notas_view, api_detalhes_pagamento, separar_para_lancamento_bancario, lancamento_bancario, marcar_como_lancado, desmarcar_lancamento, api_processar_retencoes, gerar_dummy_pdf_view, api_valor_unitario_diaria, api_documentos_processo, auditoria_view, gerenciar_diaria_view, add_contingencia_view, painel_contingencias_view, api_processo_detalhes
 from processos.ai_views import ai_extraction_page_view, api_testar_extracao
 
 urlpatterns = [
@@ -10,7 +10,9 @@ path('admin/', admin.site.urls),
 
 # Rota raiz (Home)
 path('', home_page, name='home_page'),
-path('adicionar/', add_process_view, name='add_process'),
+path('adicionar/', pre_triagem_view, name='add_process'),
+path('adicionar/<int:pk>/completar/', completar_processo_view, name='completar_processo'),
+path('adicionar-legado/', add_process_view, name='add_process_legado'),
 path('processo/<int:pk>/editar/', editar_processo, name='editar_processo'),
 path('processo/<int:processo_id>/pdf/', visualizar_pdf_processo, name='visualizar_pdf_processo'),
 path('contas-a-pagar/', contas_a_pagar, name='contas_a_pagar'),
