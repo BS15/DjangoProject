@@ -131,12 +131,17 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="small fw-bold text-muted mb-1">CNPJ Emitente</label>
                             <input type="text" class="form-control form-control-sm bg-light nf-cnpj-display"
                                    value="{{ nota.cnpj_emitente|default:'' }}" readonly placeholder="—">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
+                            <label class="small fw-bold text-muted mb-1">Série</label>
+                            <input type="text" class="form-control form-control-sm nf-field" data-field="serie_nota_fiscal"
+                                   value="{{ nota.serie_nota_fiscal|default:'' }}" placeholder="Ex: A1" maxlength="10">
+                        </div>
+                        <div class="col-md-2">
                             <label class="small fw-bold text-muted mb-1">Nº Nota</label>
                             <input type="text" class="form-control form-control-sm nf-field" data-field="numero_nota_fiscal"
                                    value="{{ nota.numero_nota_fiscal|default:'' }}">
@@ -179,6 +184,23 @@
                                     Atestada / Enviar para Liquidação
                                 </label>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Código Serviço INSS (condicional: habilitado apenas quando há retenção INSS) -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted mb-1">
+                                <i class="bi bi-hash"></i> Cód. Serviço INSS
+                                <span class="text-muted fw-normal">(Tabela 06 Reinf)</span>
+                            </label>
+                            <input type="text" class="form-control form-control-sm nf-field nf-codigo-servico-inss" data-field="codigo_servico_inss"
+                                   id="codigo-servico-inss-{{ nota.id }}"
+                                   value="{{ nota.codigo_servico_inss|default:'' }}"
+                                   placeholder="Somente quando há retenção INSS"
+                                   maxlength="9"
+                                   disabled>
+                            <small class="text-muted nf-inss-hint">Habilitado automaticamente quando um imposto INSS é adicionado.</small>
                         </div>
                     </div>
 
@@ -226,7 +248,7 @@
                                             <select class="form-select form-select-sm tax-code-select">
                                                 <option value="">---------</option>
                                                 {% for ci in codigos_imposto %}
-                                                <option value="{{ ci.id }}" {% if ret.codigo_id == ci.id %}selected{% endif %}>{{ ci.codigo }}</option>
+                                                <option value="{{ ci.id }}" data-codigo="{{ ci.codigo }}" {% if ret.codigo_id == ci.id %}selected{% endif %}>{{ ci.codigo }}</option>
                                                 {% endfor %}
                                             </select>
                                         </td>
@@ -276,7 +298,7 @@
             <select class="form-select form-select-sm tax-code-select">
                 <option value="">---------</option>
                 {% for ci in codigos_imposto %}
-                <option value="{{ ci.id }}">{{ ci.codigo }}</option>
+                <option value="{{ ci.id }}" data-codigo="{{ ci.codigo }}">{{ ci.codigo }}</option>
                 {% endfor %}
             </select>
         </td>
@@ -319,9 +341,12 @@ document.addEventListener('click', function(e) {
         const tmpl = document.getElementById('tax-row-template');
         const row = tmpl.content.cloneNode(true);
         tbody.appendChild(row);
+        updateCodigoServicoInss(btn.closest('.nf-form-panel'));
     }
     if (e.target.closest('.remove-tax-btn')) {
+        const panel = e.target.closest('.nf-form-panel');
         e.target.closest('tr').remove();
+        updateCodigoServicoInss(panel);
     }
 });
 
@@ -338,6 +363,40 @@ document.addEventListener('change', function(e) {
             .then(data => { cnpjInput.value = data.cpf_cnpj || ''; })
             .catch(() => { cnpjInput.value = ''; });
     }
+});
+
+/* ── Código Serviço INSS: enable/disable based on INSS tax code ── */
+function panelHasInss(panel) {
+    if (!panel) return false;
+    return Array.from(panel.querySelectorAll('.tax-code-select')).some(function(sel) {
+        const opt = sel.options[sel.selectedIndex];
+        return opt && opt.dataset.codigo && opt.dataset.codigo.toUpperCase().includes('INSS');
+    });
+}
+
+function updateCodigoServicoInss(panel) {
+    if (!panel) return;
+    const field = panel.querySelector('.nf-codigo-servico-inss');
+    if (!field) return;
+    const hasInss = panelHasInss(panel);
+    field.disabled = !hasInss;
+    if (!hasInss) {
+        field.value = '';
+    }
+}
+
+/* Re-evaluate when tax code changes */
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('tax-code-select')) {
+        updateCodigoServicoInss(e.target.closest('.nf-form-panel'));
+    }
+});
+
+/* Initialise on page load for panels with existing retencoes */
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.nf-form-panel.visible').forEach(function(panel) {
+        updateCodigoServicoInss(panel);
+    });
 });
 
 /* ── Toggle documento fiscal (AJAX) ── */

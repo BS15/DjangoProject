@@ -398,6 +398,13 @@ def api_salvar_nota_fiscal(request, processo_pk, nota_pk):
 
     atestada = body.get('atestada')
     nota.atestada = bool(atestada) if isinstance(atestada, bool) else str(atestada).lower() in ('true', '1', 'on')
+
+    serie = body.get('serie_nota_fiscal', '')
+    nota.serie_nota_fiscal = serie.strip() if serie else None
+
+    codigo_servico = body.get('codigo_servico_inss', '')
+    nota.codigo_servico_inss = codigo_servico.strip() if codigo_servico else None
+
     nota.save()
 
     nota.retencoes.all().delete()
