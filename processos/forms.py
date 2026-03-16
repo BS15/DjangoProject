@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Processo, DocumentoProcesso, NotaFiscal, RetencaoImposto, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos, Pendencia, StatusChoicesPendencias
+from .models import Processo, DocumentoProcesso, DocumentoFiscal, RetencaoImposto, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos, Pendencia, StatusChoicesPendencias
 from .validators import validar_regras_processo, validar_regras_suprimento
 
 class ProcessoForm(forms.ModelForm):
@@ -113,7 +113,7 @@ class ProcessoForm(forms.ModelForm):
 
         return cleaned_data
 
-class NotaFiscalForm(forms.ModelForm):
+class DocumentoFiscalForm(forms.ModelForm):
     arquivo_ia = forms.FileField(
         required=False,
         label="Extrair via IA",
@@ -134,7 +134,7 @@ class NotaFiscalForm(forms.ModelForm):
         self.fields['valor_liquido'].required = True
 
     class Meta:
-        model = NotaFiscal
+        model = DocumentoFiscal
         fields = ['nome_emitente', 'cnpj_emitente', 'numero_nota_fiscal', 'data_emissao', 'valor_bruto', 'valor_liquido', 'fiscal_contrato', 'atestada']
         widgets = {
             'nome_emitente': forms.Select(attrs={'class': 'form-select form-select-sm'}),
@@ -162,16 +162,16 @@ DocumentoFormSet = inlineformset_factory(
     }
 )
 
-NotaFiscalFormSet = inlineformset_factory(
+DocumentoFiscalFormSet = inlineformset_factory(
     Processo,
-    NotaFiscal,
-    form=NotaFiscalForm,
+    DocumentoFiscal,
+    form=DocumentoFiscalForm,
     extra=0,
     can_delete=True
 )
 
 RetencaoFormSet = inlineformset_factory(
-    NotaFiscal,
+    DocumentoFiscal,
     RetencaoImposto,
     fields=['beneficiario', 'codigo', 'rendimento_tributavel', 'valor'],
     widgets={

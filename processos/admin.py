@@ -3,7 +3,7 @@ from simple_history.admin import SimpleHistoryAdmin
 from .models import (
     CodigosImposto, StatusChoicesProcesso, TagChoices, FormasDePagamento,
     TiposDePagamento, TiposDeDocumento, Processo, DocumentoProcesso,
-    NotaFiscal, RetencaoImposto, StatusChoicesVerbasIndenizatorias, Credor,
+    DocumentoFiscal, RetencaoImposto, StatusChoicesVerbasIndenizatorias, Credor,
     ContasBancarias, TiposDeVerbasIndenizatorias,
     StatusChoicesPendencias, Grupos, CargosFuncoes,
     Tabela_Valores_Unitarios_Verbas_Indenizatorias, Tabela_Proponentes_Diarias,
@@ -69,7 +69,7 @@ class ProcessoAdmin(SimpleHistoryAdmin):
 
 # Registros simples para as demais tabelas
 admin.site.register(ContasBancarias)
-admin.site.register(NotaFiscal)
+admin.site.register(DocumentoFiscal)
 admin.site.register(RetencaoImposto)
 admin.site.register(DocumentoProcesso, SimpleHistoryAdmin)
 admin.site.register(DocumentoDiaria, SimpleHistoryAdmin)

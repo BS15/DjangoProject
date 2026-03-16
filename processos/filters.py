@@ -1,5 +1,5 @@
 import django_filters
-from .models import Processo, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, RetencaoImposto, CodigosImposto, NotaFiscal, StatusChoicesRetencoes, StatusChoicesVerbasIndenizatorias, StatusChoicesPendencias, StatusChoicesProcesso, Pendencia, Contingencia, STATUS_CONTINGENCIA
+from .models import Processo, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, RetencaoImposto, CodigosImposto, DocumentoFiscal, StatusChoicesRetencoes, StatusChoicesVerbasIndenizatorias, StatusChoicesPendencias, StatusChoicesProcesso, Pendencia, Contingencia, STATUS_CONTINGENCIA
 
 class ProcessoFilter(django_filters.FilterSet):
     class Meta:
@@ -134,7 +134,7 @@ class RetencaoNotaFilter(django_filters.FilterSet):
     )
 
     class Meta:
-        model = NotaFiscal
+        model = DocumentoFiscal
         fields = ['mes', 'ano', 'processo', 'emitente', 'beneficiario', 'imposto', 'status']  # <-- Adicione aqui
 
     def __init__(self, *args, **kwargs):
@@ -209,7 +209,7 @@ class PendenciaFilter(django_filters.FilterSet):
         model = Pendencia
         fields = ['status', 'tipo', 'processo__id', 'processo__credor__nome']
 
-class NotaFiscalFilter(django_filters.FilterSet):
+class DocumentoFiscalFilter(django_filters.FilterSet):
     numero_nota_fiscal = django_filters.CharFilter(lookup_expr='icontains', label='Nº da Nota')
     # Permite buscar parte do nome do credor
     nome_emitente__nome = django_filters.CharFilter(lookup_expr='icontains', label='Nome do Emitente')
@@ -221,7 +221,7 @@ class NotaFiscalFilter(django_filters.FilterSet):
     )
 
     class Meta:
-        model = NotaFiscal
+        model = DocumentoFiscal
         fields = ['numero_nota_fiscal', 'nome_emitente__nome', 'atestada']
 class ContingenciaFilter(django_filters.FilterSet):
     processo__id = django_filters.NumberFilter(label="Nº do Processo")
