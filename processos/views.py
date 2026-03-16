@@ -20,6 +20,27 @@ from .invoice_processor import process_invoice_taxes
 from .models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias
 from .filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DiariasAutorizacaoFilter
 
+# ==========================================
+# STATUS RESTRICTIONS FOR PROCESS EDITING
+# ==========================================
+
+# Processes in these statuses are archived/historical and cannot be edited at all.
+STATUS_BLOQUEADOS_TOTAL = {
+    'CANCELADO / ANULADO',
+    'ARQUIVADO',
+    'APROVADO - PENDENTE ARQUIVAMENTO',
+    'CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL',
+}
+
+# Processes in these statuses have been authorised for payment.
+# Only document inclusion and reordering is permitted; all other fields are locked.
+STATUS_SOMENTE_DOCUMENTOS = {
+    'LANÇADO - AGUARDANDO COMPROVANTE',
+    'PAGO - EM CONFERÊNCIA',
+    'A PAGAR - AUTORIZADO',
+    'A PAGAR - ENVIADO PARA AUTORIZAÇÃO',
+}
+
 
 def home_page(request):
     processos_base = Processo.objects.all().order_by('-id')
@@ -174,6 +195,15 @@ def editar_processo(request, pk):
     processo = get_object_or_404(Processo, id=pk)
     status_inicial = processo.status.status_choice.upper() if processo.status else ''
 
+    # Tier 1: Archive / historical – editing is completely blocked.
+    if status_inicial in STATUS_BLOQUEADOS_TOTAL:
+        messages.error(
+            request,
+            f'O processo #{pk} está em status "{processo.status}" e não pode ser editado. '
+            'Alterações nesses processos devem ser tratadas pela interface de contingência.'
+        )
+        return redirect('home_page')
+
     # Redirect to the dedicated verbas page when this processo contains verbas indenizatórias
     if (
         Diaria.objects.filter(processo=processo).exists()
@@ -183,42 +213,63 @@ def editar_processo(request, pk):
     ):
         return redirect('editar_processo_verbas', pk=pk)
 
+    # Tier 2: Authorised-for-payment – only document inclusion/reordering is allowed.
+    somente_documentos = status_inicial in STATUS_SOMENTE_DOCUMENTOS
+
     if request.method == 'POST':
-        confirmar_extra = request.POST.get('confirmar_extra_orcamentario') == 'on'
-        processo_form = ProcessoForm(request.POST, instance=processo, prefix='processo')
         documento_formset = DocumentoFormSet(request.POST, request.FILES, instance=processo, prefix='documento')
-        pendencia_formset = PendenciaFormSet(request.POST, instance=processo, prefix='pendencia')
 
-        if processo_form.is_valid() and documento_formset.is_valid() and pendencia_formset.is_valid():
-            try:
-                with transaction.atomic():
-                    processo_saved = processo_form.save(commit=False)
-
-                    # When confirming extra-budgetary change from 'A EMPENHAR' status,
-                    # override status and clear budget fields
-                    if confirmar_extra and status_inicial == 'A EMPENHAR':
-                        status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
-                            status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
-                            defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
-                        )
-                        processo_saved.status = status_obj
-                        processo_saved.extraorcamentario = True
-                        processo_saved.n_nota_empenho = None
-                        processo_saved.data_empenho = None
-                        processo_saved.ano_exercicio = None
-
-                    processo_saved.save()
-                    documento_formset.save()
-                    pendencia_formset.save()
-
-                messages.success(request, f'Processo #{processo_saved.id} atualizado com sucesso!')
-                return redirect('editar_processo', pk=processo_saved.id)
-
-            except Exception as e:
-                print(f"🛑 Erro ao atualizar no banco: {e}")
-                messages.error(request, 'Erro interno ao salvar as alterações.')
+        if somente_documentos:
+            # Only save document changes; process metadata is left untouched.
+            if documento_formset.is_valid():
+                try:
+                    with transaction.atomic():
+                        documento_formset.save()
+                    messages.success(request, f'Documentos do Processo #{pk} atualizados com sucesso!')
+                    return redirect('editar_processo', pk=pk)
+                except Exception as e:
+                    print(f"🛑 Erro ao atualizar documentos: {e}")
+                    messages.error(request, 'Erro interno ao salvar os documentos.')
+            else:
+                messages.error(request, 'Verifique os erros nos documentos.')
+            processo_form = ProcessoForm(instance=processo, prefix='processo')
+            pendencia_formset = PendenciaFormSet(instance=processo, prefix='pendencia')
         else:
-            messages.error(request, 'Verifique os erros no formulário.')
+            # Tier 3: Full editing.
+            confirmar_extra = request.POST.get('confirmar_extra_orcamentario') == 'on'
+            processo_form = ProcessoForm(request.POST, instance=processo, prefix='processo')
+            pendencia_formset = PendenciaFormSet(request.POST, instance=processo, prefix='pendencia')
+
+            if processo_form.is_valid() and documento_formset.is_valid() and pendencia_formset.is_valid():
+                try:
+                    with transaction.atomic():
+                        processo_saved = processo_form.save(commit=False)
+
+                        # When confirming extra-budgetary change from 'A EMPENHAR' status,
+                        # override status and clear budget fields
+                        if confirmar_extra and status_inicial == 'A EMPENHAR':
+                            status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
+                                status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
+                                defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
+                            )
+                            processo_saved.status = status_obj
+                            processo_saved.extraorcamentario = True
+                            processo_saved.n_nota_empenho = None
+                            processo_saved.data_empenho = None
+                            processo_saved.ano_exercicio = None
+
+                        processo_saved.save()
+                        documento_formset.save()
+                        pendencia_formset.save()
+
+                    messages.success(request, f'Processo #{processo_saved.id} atualizado com sucesso!')
+                    return redirect('editar_processo', pk=processo_saved.id)
+
+                except Exception as e:
+                    print(f"🛑 Erro ao atualizar no banco: {e}")
+                    messages.error(request, 'Erro interno ao salvar as alterações.')
+            else:
+                messages.error(request, 'Verifique os erros no formulário.')
 
     else:
         processo_form = ProcessoForm(instance=processo, prefix='processo')
@@ -231,6 +282,7 @@ def editar_processo(request, pk):
         'pendencia_formset': pendencia_formset,
         'processo': processo,
         'status_inicial': status_inicial,
+        'somente_documentos': somente_documentos,
         'documentos_fiscais_url': reverse('documentos_fiscais', kwargs={'pk': processo.id}),
     }
 

@@ -1,5 +1,7 @@
 from django.test import TestCase
 from .invoice_processor import process_invoice_taxes, _normalizar_cidade
+from .models import Processo, StatusChoicesProcesso
+from .views import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
 
 
 class NormalizarCidadeTest(TestCase):
@@ -270,4 +272,62 @@ class AuditoriaViewTest(TestCase):
         self.assertEqual(response.context['filtros']['tipo_acao'], '+')
         self.assertEqual(response.context['filtros']['usuario'], 'admin')
 
+
+class EditarProcessoRestrictionsTest(TestCase):
+    """Tests for the edit-permission tiers on editar_processo view."""
+
+    def _make_processo(self, status_text):
+        status_obj = StatusChoicesProcesso.objects.create(status_choice=status_text)
+        return Processo.objects.create(status=status_obj)
+
+    # ------------------------------------------------------------------ #
+    # Tier-1 (STATUS_BLOQUEADOS_TOTAL): access must be blocked entirely.  #
+    # ------------------------------------------------------------------ #
+
+    def test_bloqueado_total_get_redirects_home(self):
+        """GET on an archived/cancelled process must redirect to home_page."""
+        status_text = next(iter(STATUS_BLOQUEADOS_TOTAL))
+        processo = self._make_processo(status_text)
+        response = self.client.get(f'/processo/{processo.pk}/editar/')
+        self.assertRedirects(response, '/', fetch_redirect_response=False)
+
+    def test_bloqueado_total_post_redirects_home(self):
+        """POST on an archived/cancelled process must be rejected (redirect to home)."""
+        status_text = next(iter(STATUS_BLOQUEADOS_TOTAL))
+        processo = self._make_processo(status_text)
+        response = self.client.post(f'/processo/{processo.pk}/editar/', data={})
+        self.assertRedirects(response, '/', fetch_redirect_response=False)
+
+    def test_all_bloqueado_statuses_redirect(self):
+        """Every Tier-1 status redirects to home_page."""
+        for status_text in STATUS_BLOQUEADOS_TOTAL:
+            with self.subTest(status=status_text):
+                processo = self._make_processo(status_text)
+                response = self.client.get(f'/processo/{processo.pk}/editar/')
+                self.assertRedirects(response, '/', fetch_redirect_response=False)
+
+    # ------------------------------------------------------------------ #
+    # Tier-2 (STATUS_SOMENTE_DOCUMENTOS): only document changes allowed.  #
+    # ------------------------------------------------------------------ #
+
+    def test_somente_documentos_get_returns_200(self):
+        """GET on an authorised process must render the edit page (not redirect)."""
+        status_text = next(iter(STATUS_SOMENTE_DOCUMENTOS))
+        processo = self._make_processo(status_text)
+        response = self.client.get(f'/processo/{processo.pk}/editar/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_somente_documentos_context_flag(self):
+        """The `somente_documentos` flag must be True in context for Tier-2 statuses."""
+        status_text = next(iter(STATUS_SOMENTE_DOCUMENTOS))
+        processo = self._make_processo(status_text)
+        response = self.client.get(f'/processo/{processo.pk}/editar/')
+        self.assertTrue(response.context['somente_documentos'])
+
+    def test_full_edit_context_flag_is_false(self):
+        """The `somente_documentos` flag must be False for unrestricted statuses."""
+        status_text = 'A PAGAR - PENDENTE AUTORIZAÇÃO'
+        processo = self._make_processo(status_text)
+        response = self.client.get(f'/processo/{processo.pk}/editar/')
+        self.assertFalse(response.context['somente_documentos'])
 
