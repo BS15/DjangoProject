@@ -16,7 +16,7 @@ from django.db import transaction
 from django.db.models import Count, Q, F
 from pypdf import PdfWriter
 from .forms import ProcessoForm, DocumentoFormSet, DocumentoFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet
-from .utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, processar_pdf_comprovantes_ia
+from .utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, processar_pdf_comprovantes_ia, gerar_pdf_autorizacao, gerar_pdf_conselho_fiscal
 from .ai_utils import extrair_dados_documento, extract_data_with_llm, extrair_codigos_barras_boletos
 from .invoice_processor import process_invoice_taxes
 from .models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias
@@ -2565,3 +2565,31 @@ def add_contingencia_view(request):
         return redirect('home_page')
 
     return render(request, 'add_contingencia.html')
+
+
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.pode_autorizar_pagamento'))
+def gerar_autorizacao_pagamento_view(request, pk):
+    """
+    Gera e serve o PDF "Termo de Autorização de Pagamento" para o processo indicado.
+    """
+    processo = get_object_or_404(Processo, pk=pk)
+    pdf_buffer = gerar_pdf_autorizacao(processo)
+    nome_arquivo = f"Autorizacao_Pagamento_Proc_{processo.id}.pdf"
+    response = HttpResponse(pdf_buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{nome_arquivo}"'
+    return response
+
+
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.pode_auditar_conselho'))
+def gerar_parecer_conselho_view(request, pk):
+    """
+    Gera e serve o PDF "Parecer do Conselho Fiscal" para o processo indicado.
+    """
+    processo = get_object_or_404(Processo, pk=pk)
+    pdf_buffer = gerar_pdf_conselho_fiscal(processo)
+    nome_arquivo = f"Parecer_Conselho_Fiscal_Proc_{processo.id}.pdf"
+    response = HttpResponse(pdf_buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{nome_arquivo}"'
+    return response
