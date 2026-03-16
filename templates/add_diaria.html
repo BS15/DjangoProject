@@ -85,11 +85,15 @@
                 </div>
 
                 <div class="row g-3 mb-4">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Meio de Transporte</label>
+                        {{ form.meio_de_transporte }}
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label fw-bold">Qtd. Diárias</label>
                         {{ form.quantidade_diarias }}
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label fw-bold text-success">Valor Total (R$) <span id="valor-unitario-info" class="text-muted fw-normal fs-6"></span></label>
                         {{ form.valor_total }}
                         <div id="valor-total-msg" class="form-text text-muted"></div>
