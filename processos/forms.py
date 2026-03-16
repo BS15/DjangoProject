@@ -135,16 +135,18 @@ class DocumentoFiscalForm(forms.ModelForm):
 
     class Meta:
         model = DocumentoFiscal
-        fields = ['nome_emitente', 'cnpj_emitente', 'numero_nota_fiscal', 'data_emissao', 'valor_bruto', 'valor_liquido', 'fiscal_contrato', 'atestada']
+        fields = ['nome_emitente', 'cnpj_emitente', 'serie_nota_fiscal', 'numero_nota_fiscal', 'data_emissao', 'valor_bruto', 'valor_liquido', 'fiscal_contrato', 'atestada', 'codigo_servico_inss']
         widgets = {
             'nome_emitente': forms.Select(attrs={'class': 'form-select form-select-sm'}),
             'cnpj_emitente': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
+            'serie_nota_fiscal': forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Ex: A1'}),
             'numero_nota_fiscal': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
             'data_emissao': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date', 'class': 'form-control form-control-sm'}),
             'valor_bruto': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'step': '0.01'}),
             'valor_liquido': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'step': '0.01'}),
             'fiscal_contrato': forms.Select(attrs={'class': 'form-select form-select-sm'}),
-            'atestada': forms.CheckboxInput(attrs={'class': 'form-check-input fs-5'})
+            'atestada': forms.CheckboxInput(attrs={'class': 'form-check-input fs-5'}),
+            'codigo_servico_inss': forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Somente quando há retenção INSS'}),
         }
 
 # --- FORMSETS ---
