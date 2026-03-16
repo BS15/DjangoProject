@@ -33,7 +33,305 @@ def home_page(request):
 
 
 # ==========================================
-# WIZARD FASE 1: CAPA E DOCUMENTOS
+# NOVO FLUXO FASE 1: PRÉ-TRIAGEM (DOCUMENTOS + NF + RETENÇÕES)
+# ==========================================
+TIPO_DOCUMENTO_CHOICES = [
+    ('nota_fiscal_unica', 'Nota Fiscal (Única)'),
+    ('nota_fiscal_varias', 'Nota Fiscal (Várias)'),
+    ('boleto_unico', 'Boleto Bancário (Único)'),
+    ('boletos_varios', 'Boletos Bancários (Vários)'),
+    ('fatura_unica', 'Fatura (Única)'),
+    ('faturas_varias', 'Faturas (Várias)'),
+]
+
+
+def pre_triagem_view(request):
+    """Phase 1: Upload documents, fill nota fiscal / document details and retentions.
+    Creates a skeleton Processo and redirects to completar_processo_view (Phase 2)."""
+    credores = Credor.objects.all().order_by('nome')
+    tipos_pagamento = TiposDePagamento.objects.filter(is_active=True).order_by('tipo_de_pagamento')
+    retencao_formset = RetencaoFormSet(prefix='imposto')
+
+    if request.method == 'POST':
+        tipo_documento = request.POST.get('tipo_documento', '')
+        tipo_pagamento_id = request.POST.get('tipo_pagamento_id', '')
+        num_docs_str = request.POST.get('num_documentos', '0')
+        try:
+            num_docs = int(num_docs_str)
+        except (ValueError, TypeError):
+            num_docs = 0
+
+        def _render_form(extra=None):
+            ctx = {
+                'credores': credores,
+                'tipos_pagamento': tipos_pagamento,
+                'retencao_formset': retencao_formset,
+                'tipo_choices': TIPO_DOCUMENTO_CHOICES,
+                'selected_tipo_pagamento': tipo_pagamento_id,
+                'selected_tipo_documento': tipo_documento,
+            }
+            if extra:
+                ctx.update(extra)
+            return render(request, 'pre_triagem.html', ctx)
+
+        errors = []
+        if not tipo_pagamento_id:
+            errors.append('Selecione o Tipo de Pagamento.')
+        if not tipo_documento:
+            errors.append('Selecione o tipo de documento.')
+        if num_docs == 0:
+            errors.append('Faça upload de pelo menos um arquivo.')
+        if not request.POST.get('emitente_0'):
+            errors.append('Informe o emitente do primeiro documento.')
+
+        if errors:
+            for err in errors:
+                messages.error(request, err)
+            return _render_form()
+
+        try:
+            with transaction.atomic():
+                status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
+                    status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
+                    defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
+                )
+
+                # Resolve tipo de pagamento
+                tipo_pagamento_obj = None
+                try:
+                    tipo_pagamento_obj = TiposDePagamento.objects.get(id=int(tipo_pagamento_id))
+                except (TiposDePagamento.DoesNotExist, ValueError, TypeError):
+                    messages.error(request, 'Tipo de Pagamento não encontrado.')
+                    return _render_form()
+
+                first_emitente_id = request.POST.get('emitente_0')
+                try:
+                    first_credor = Credor.objects.get(id=int(first_emitente_id))
+                except (Credor.DoesNotExist, ValueError, TypeError):
+                    messages.error(request, 'Credor não encontrado.')
+                    return _render_form()
+
+                total_bruto = 0
+                total_liquido = 0
+                for i in range(num_docs):
+                    vb = request.POST.get(f'valor_bruto_{i}') or '0'
+                    vl = request.POST.get(f'valor_liquido_{i}') or '0'
+                    try:
+                        total_bruto += float(str(vb).replace(',', '.'))
+                        total_liquido += float(str(vl).replace(',', '.'))
+                    except (ValueError, TypeError):
+                        pass
+
+                processo = Processo.objects.create(
+                    credor=first_credor,
+                    valor_bruto=total_bruto,
+                    valor_liquido=total_liquido,
+                    status=status_obj,
+                    tipo_pagamento=tipo_pagamento_obj,
+                )
+
+                is_nota_fiscal = 'nota_fiscal' in tipo_documento
+                is_boleto = 'boleto' in tipo_documento
+
+                if is_nota_fiscal:
+                    tipo_nome = 'NOTA FISCAL (NF)'
+                elif is_boleto:
+                    tipo_nome = 'BOLETO BANCÁRIO'
+                else:
+                    tipo_nome = 'FATURA'
+
+                # Prefer a TiposDeDocumento that is already linked to this tipo_pagamento;
+                # fall back to any matching name, then create new.
+                tipo_doc_db = (
+                    TiposDeDocumento.objects
+                    .filter(tipo_de_documento__iexact=tipo_nome, tipo_de_pagamento=tipo_pagamento_obj)
+                    .first()
+                    or TiposDeDocumento.objects
+                    .filter(tipo_de_documento__iexact=tipo_nome)
+                    .first()
+                )
+                if tipo_doc_db is None:
+                    tipo_doc_db = TiposDeDocumento.objects.create(
+                        tipo_de_documento=tipo_nome,
+                        tipo_de_pagamento=tipo_pagamento_obj,
+                    )
+
+                for i in range(num_docs):
+                    arquivo = request.FILES.get(f'arquivo_{i}')
+                    emitente_id = request.POST.get(f'emitente_{i}')
+                    numero = request.POST.get(f'numero_{i}', '')
+                    data_str = request.POST.get(f'data_{i}', '')
+                    valor_bruto_str = request.POST.get(f'valor_bruto_{i}') or '0'
+                    valor_liquido_str = request.POST.get(f'valor_liquido_{i}') or '0'
+
+                    try:
+                        vb = float(str(valor_bruto_str).replace(',', '.'))
+                    except (ValueError, TypeError):
+                        vb = 0.0
+                    try:
+                        vl = float(str(valor_liquido_str).replace(',', '.'))
+                    except (ValueError, TypeError):
+                        vl = 0.0
+                    try:
+                        data_emissao = datetime.strptime(data_str, '%Y-%m-%d').date() if data_str else date.today()
+                    except (ValueError, TypeError):
+                        data_emissao = date.today()
+
+                    doc = DocumentoProcesso(
+                        processo=processo,
+                        tipo=tipo_doc_db,
+                        ordem=i + 1,
+                    )
+                    if arquivo:
+                        doc.arquivo = arquivo
+                    doc.save()
+
+                    codigos = request.POST.getlist(f'imposto_{i}_code')
+                    valores = request.POST.getlist(f'imposto_{i}_value')
+                    rendimentos = request.POST.getlist(f'imposto_{i}_rendimento')
+                    beneficiarios = request.POST.getlist(f'imposto_{i}_beneficiario')
+                    has_retention = bool(codigos and any(c for c in codigos))
+
+                    if is_nota_fiscal or has_retention:
+                        try:
+                            emitente = Credor.objects.get(id=int(emitente_id)) if emitente_id else first_credor
+                        except (Credor.DoesNotExist, ValueError, TypeError):
+                            emitente = first_credor
+
+                        nf = NotaFiscal.objects.create(
+                            processo=processo,
+                            nome_emitente=emitente,
+                            numero_nota_fiscal=numero or f'DOC-{i + 1}',
+                            data_emissao=data_emissao,
+                            valor_bruto=vb,
+                            valor_liquido=vl,
+                            documento_vinculado=doc,
+                        )
+
+                        for c, r, v, b in zip(
+                            codigos,
+                            rendimentos if rendimentos else [''] * len(codigos),
+                            valores,
+                            beneficiarios if beneficiarios else [''] * len(codigos),
+                        ):
+                            if c and v:
+                                try:
+                                    beneficiario_id = int(b) if b and str(b).strip() else None
+                                except (ValueError, TypeError):
+                                    beneficiario_id = None
+                                try:
+                                    rend_val = float(str(r).replace(',', '.')) if r and str(r).strip() else None
+                                    imp_val = float(str(v).replace(',', '.'))
+                                    RetencaoImposto.objects.create(
+                                        nota_fiscal=nf,
+                                        codigo_id=c,
+                                        rendimento_tributavel=rend_val,
+                                        valor=imp_val,
+                                        beneficiario_id=beneficiario_id,
+                                    )
+                                except (ValueError, TypeError) as exc:
+                                    print(f'Erro ao criar retenção: {exc}')
+
+                messages.success(request, 'Documentos registrados! Preencha as informações do processo.')
+                return redirect('completar_processo', pk=processo.id)
+
+        except Exception as exc:
+            print(f'Erro na pré-triagem: {exc}')
+            messages.error(request, f'Erro ao salvar documentos: {exc}')
+
+    return render(request, 'pre_triagem.html', {
+        'credores': credores,
+        'tipos_pagamento': tipos_pagamento,
+        'retencao_formset': retencao_formset,
+        'tipo_choices': TIPO_DOCUMENTO_CHOICES,
+        'selected_tipo_pagamento': '',
+        'selected_tipo_documento': '',
+    })
+
+
+# ==========================================
+# NOVO FLUXO FASE 2: COMPLETAR INFORMAÇÕES DO PROCESSO
+# ==========================================
+def completar_processo_view(request, pk):
+    """Phase 2: Fill remaining process metadata for a skeleton processo created in Phase 1."""
+    processo = get_object_or_404(Processo, id=pk)
+
+    if request.method == 'POST':
+        if 'cancelar_processo' in request.POST:
+            processo.delete()
+            messages.info(request, 'Cadastro cancelado.')
+            return redirect('home_page')
+
+        trigger_a_empenhar = request.POST.get('trigger_a_empenhar') == 'on'
+        processo_form = ProcessoForm(request.POST, instance=processo, prefix='processo')
+        documento_formset = DocumentoFormSet(request.POST, request.FILES, instance=processo, prefix='documento')
+        pendencia_formset = PendenciaFormSet(request.POST, instance=processo, prefix='pendencia')
+
+        if processo_form.is_valid() and documento_formset.is_valid() and pendencia_formset.is_valid():
+            try:
+                with transaction.atomic():
+                    processo = processo_form.save(commit=False)
+                    is_extra = processo_form.cleaned_data.get('extraorcamentario')
+
+                    if trigger_a_empenhar:
+                        status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
+                            status_choice__iexact='A EMPENHAR',
+                            defaults={'status_choice': 'A EMPENHAR'}
+                        )
+                        processo.status = status_obj
+                        processo.n_nota_empenho = None
+                        processo.data_empenho = None
+                    elif is_extra:
+                        status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
+                            status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
+                            defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
+                        )
+                        processo.status = status_obj
+                        processo.n_nota_empenho = None
+                        processo.data_empenho = None
+                    else:
+                        status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
+                            status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
+                            defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
+                        )
+                        processo.status = status_obj
+
+                    processo.save()
+                    documento_formset.instance = processo
+                    pendencia_formset.instance = processo
+                    documento_formset.save()
+                    pendencia_formset.save()
+
+                messages.success(request, f'Processo #{processo.id} inserido com sucesso!')
+                return redirect('home_page')
+
+            except Exception as exc:
+                print(f'Erro ao completar processo: {exc}')
+                messages.error(request, 'Erro interno ao salvar.')
+        else:
+            messages.error(request, 'Verifique os erros no formulário.')
+
+        return render(request, 'completar_processo.html', {
+            'processo_form': processo_form,
+            'documento_formset': documento_formset,
+            'pendencia_formset': pendencia_formset,
+            'processo': processo,
+        })
+
+    processo_form = ProcessoForm(instance=processo, prefix='processo')
+    documento_formset = DocumentoFormSet(instance=processo, prefix='documento')
+    pendencia_formset = PendenciaFormSet(instance=processo, prefix='pendencia')
+
+    return render(request, 'completar_processo.html', {
+        'processo_form': processo_form,
+        'documento_formset': documento_formset,
+        'pendencia_formset': pendencia_formset,
+        'processo': processo,
+    })
+
+
+# ==========================================
+# WIZARD FASE 1: CAPA E DOCUMENTOS (FLUXO LEGADO - MANTIDO)
 # ==========================================
 def add_process_view(request):
     initial_data = {}
