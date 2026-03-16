@@ -68,6 +68,7 @@
                                         title="Pré-visualizar Documentos">
                                     <i class="bi bi-eye"></i> Preview
                                 </button>
+                                {% if pode_interagir %}
                                 <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm"
                                         data-bs-toggle="modal"
                                         data-bs-target="#empenhoModal"
@@ -75,6 +76,7 @@
                                         data-credor="{{ p.credor }}">
                                     <i class="bi bi-pencil-square"></i> Inserir Empenho
                                 </button>
+                                {% endif %}
                             </td>
                         </tr>
                         {% empty %}
@@ -92,6 +94,7 @@
     </div>
 </div>
 
+{% if pode_interagir %}
 <div class="modal fade" id="empenhoModal" tabindex="-1" aria-labelledby="empenhoModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -146,6 +149,7 @@
         </div>
     </div>
 </div>
+{% endif %}
 
 {% include 'partials/preview_modal.html' %}
 
