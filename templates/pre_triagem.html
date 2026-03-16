@@ -494,9 +494,15 @@
         if (card) card.style.display = 'block';
     }
 
+    function syncTipoDocumentoValue(card, value) {
+        const hiddenInput = card.querySelector('.doc-tipo-hidden');
+        if (hiddenInput) hiddenInput.value = value;
+        const selectEl = card.querySelector('.tipo-documento-select');
+        if (selectEl) selectEl.value = value;
+    }
+
     function populateDocTipoBtns(card, preselectedId) {
         const container = card.querySelector('.doc-tipo-btns');
-        const hiddenInput = card.querySelector('.doc-tipo-hidden');
         if (!container) return;
         container.innerHTML = '';
         availableTipos.forEach(tipo => {
@@ -506,7 +512,7 @@
             col.innerHTML = `<div class="tipo-btn doc-tipo-btn rounded p-2 text-center${isSelected ? ' selected' : ''}" data-value="${tipo.id}" onclick="selectDocTipo(this)"><i class="bi bi-file-earmark-text fs-5 text-primary d-block mb-1"></i><span class="fw-bold small">${escapeHtml(tipo.tipo_de_documento)}</span></div>`;
             container.appendChild(col);
         });
-        if (hiddenInput && preselectedId) hiddenInput.value = preselectedId;
+        if (preselectedId) syncTipoDocumentoValue(card, preselectedId);
     }
 
     function selectDocTipo(btn) {
@@ -516,8 +522,7 @@
             container.querySelectorAll('.doc-tipo-btn').forEach(b => b.classList.remove('selected'));
         }
         btn.classList.add('selected');
-        const hiddenInput = card ? card.querySelector('.doc-tipo-hidden') : null;
-        if (hiddenInput) hiddenInput.value = btn.getAttribute('data-value');
+        if (card) syncTipoDocumentoValue(card, btn.getAttribute('data-value'));
     }
 
     function populateBatchTipoModal(count) {
@@ -583,7 +588,12 @@
 
         // Populate tipo de documento select
         const tipoSelect = card.querySelector('.tipo-documento-select');
-        if (tipoSelect) populateDocTypeSelect(tipoSelect);
+        if (tipoSelect) {
+            populateDocTypeSelect(tipoSelect);
+            // Sync select value with what was set by populateDocTipoBtns
+            const tipoHidden = card.querySelector('.doc-tipo-hidden');
+            if (tipoHidden && tipoHidden.value) syncTipoDocumentoValue(card, tipoHidden.value);
+        }
 
         docList.appendChild(card);
         return card;
