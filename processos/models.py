@@ -543,6 +543,8 @@ class Diaria(models.Model):
 class ReembolsoCombustivel(models.Model):
     processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='reembolsos_combustivel', null=True,
                                  blank=True)
+    diaria = models.ForeignKey('Diaria', on_delete=models.CASCADE, related_name='reembolsos_combustivel', null=True,
+                               blank=True, verbose_name="Diária")
     numero_sequencial = models.CharField("Número Sequencial", max_length=50)
     beneficiario = models.ForeignKey('Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
                                      verbose_name="Beneficiário")

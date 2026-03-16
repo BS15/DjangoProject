@@ -231,10 +231,11 @@ class DiariaForm(forms.ModelForm):
 class ReembolsoForm(forms.ModelForm):
     class Meta:
         model = ReembolsoCombustivel
-        fields = ['numero_sequencial', 'processo', 'status', 'beneficiario', 'data_saida', 'data_retorno', 'cidade_origem', 'cidade_destino', 'distancia_km', 'preco_combustivel', 'objetivo', 'valor_total']
+        fields = ['numero_sequencial', 'processo', 'diaria', 'status', 'beneficiario', 'data_saida', 'data_retorno', 'cidade_origem', 'cidade_destino', 'distancia_km', 'preco_combustivel', 'objetivo', 'valor_total']
         widgets = {
             'numero_sequencial': forms.TextInput(attrs={'class': 'form-control'}),
             'processo': forms.Select(attrs={'class': 'form-select'}),
+            'diaria': forms.Select(attrs={'class': 'form-select'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
             'beneficiario': forms.Select(attrs={'class': 'form-select'}),
             'data_saida': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
