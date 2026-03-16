@@ -54,6 +54,26 @@
         <div class="col-md-6">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-white fw-bold">
+                    <i class="bi bi-person-check"></i> Proponente
+                </div>
+                <div class="card-body">
+                    {% if diaria.proponente %}
+                        <p class="mb-1"><span class="text-muted small">Nome:</span><br>
+                            <strong>{{ diaria.proponente.nome|default:"—" }}</strong></p>
+                        <p class="mb-1"><span class="text-muted small">CPF/CNPJ:</span><br>
+                            {{ diaria.proponente.cpf_cnpj|default:"—" }}</p>
+                        <p class="mb-0"><span class="text-muted small">Cargo / Função:</span><br>
+                            {{ diaria.proponente.cargo_funcao|default:"—" }}</p>
+                    {% else %}
+                        <p class="text-muted mb-0">Nenhum proponente informado.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white fw-bold">
                     <i class="bi bi-cash-stack"></i> Valores
                 </div>
                 <div class="card-body">
