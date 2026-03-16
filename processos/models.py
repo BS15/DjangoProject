@@ -521,6 +521,7 @@ class Diaria(models.Model):
     meio_de_transporte = models.ForeignKey('MeiosDeTransporte', on_delete=models.PROTECT, blank=True, null=True,
                                            verbose_name="Meio de Transporte")
     status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
+    autorizada = models.BooleanField("Autorizada", default=False)
 
     def calcular_valor_total(self):
         """Returns the calculated valor_total based on beneficiario cargo_funcao unit value."""

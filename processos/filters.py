@@ -223,6 +223,26 @@ class DocumentoFiscalFilter(django_filters.FilterSet):
     class Meta:
         model = DocumentoFiscal
         fields = ['numero_nota_fiscal', 'nome_emitente__nome', 'atestada']
+
+class DiariasAutorizacaoFilter(django_filters.FilterSet):
+    numero_sequencial = django_filters.CharFilter(lookup_expr='icontains', label='Nº Sequencial')
+    beneficiario__nome = django_filters.CharFilter(lookup_expr='icontains', label='Nome do Beneficiário')
+    proponente__nome = django_filters.CharFilter(lookup_expr='icontains', label='Nome do Proponente')
+
+    autorizada = django_filters.BooleanFilter(
+        label='Status de Autorização (Autorizada?)',
+        widget=django_filters.widgets.BooleanWidget()
+    )
+
+    class Meta:
+        model = Diaria
+        fields = ['numero_sequencial', 'beneficiario__nome', 'proponente__nome', 'autorizada']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.form.fields.values():
+            field.widget.attrs.update({'class': 'form-control form-control-sm'})
+
 class ContingenciaFilter(django_filters.FilterSet):
     processo__id = django_filters.NumberFilter(label="Nº do Processo")
     solicitante__username = django_filters.CharFilter(lookup_expr='icontains', label="Solicitante")

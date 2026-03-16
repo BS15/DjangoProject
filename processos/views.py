@@ -18,7 +18,7 @@ from .utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_b
 from .ai_utils import extrair_dados_documento, extract_data_with_llm
 from .invoice_processor import process_invoice_taxes
 from .models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia
-from .filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter
+from .filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DiariasAutorizacaoFilter
 
 
 def home_page(request):
@@ -1676,6 +1676,34 @@ def alternar_ateste_nota(request, pk):
             messages.warning(request, f'Ateste da Nota Fiscal #{nota.numero_nota_fiscal} foi revogado.')
 
     return redirect('painel_liquidacoes')
+
+def painel_autorizacao_diarias_view(request):
+    queryset_base = Diaria.objects.select_related(
+        'beneficiario', 'proponente', 'processo'
+    ).all().order_by('-id')
+
+    meu_filtro = DiariasAutorizacaoFilter(request.GET, queryset=queryset_base)
+
+    context = {
+        'meu_filtro': meu_filtro,
+        'diarias': meu_filtro.qs,
+    }
+    return render(request, 'painel_autorizacao_diarias.html', context)
+
+def alternar_autorizacao_diaria(request, pk):
+    """Permite autorizar ou revogar a autorização de uma diária diretamente pelo painel"""
+    if request.method == 'POST':
+        diaria = get_object_or_404(Diaria, id=pk)
+
+        diaria.autorizada = not diaria.autorizada
+        diaria.save()
+
+        if diaria.autorizada:
+            messages.success(request, f'Diária #{diaria.numero_sequencial} AUTORIZADA com sucesso!')
+        else:
+            messages.warning(request, f'Autorização da Diária #{diaria.numero_sequencial} foi revogada.')
+
+    return redirect('painel_autorizacao_diarias')
 
 def gerar_dummy_pdf_view(request, pk):
     """Generates a simple dummy PDF and attaches it as a 'NOTA FISCAL (NF)' document
