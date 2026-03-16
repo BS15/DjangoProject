@@ -173,7 +173,6 @@
             const credor = comp.credor_extraido || '';
             const valor = parseFloat(comp.valor_extraido || 0).toFixed(2);
             const data = comp.data_pagamento || '';
-            const tipo = comp.tipo_de_pagamento || '';
 
             const card = document.createElement('div');
             card.className = 'comprovante-card mb-2 p-0';
@@ -201,16 +200,6 @@
                         <div class="col-6">
                             <label class="form-label mb-1 small text-muted fw-bold">Data Pagamento</label>
                             <input type="date" class="form-control form-control-sm comp-data" data-idx="${idx}" value="${data}">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label mb-1 small text-muted fw-bold">Tipo de Pagamento</label>
-                            <select class="form-select form-select-sm comp-tipo" data-idx="${idx}">
-                                <option value="">-- Selecione --</option>
-                                <option value="GERENCIADOR" ${tipo === 'GERENCIADOR' ? 'selected' : ''}>GERENCIADOR/BOLETO</option>
-                                <option value="TED" ${tipo === 'TED' ? 'selected' : ''}>TED</option>
-                                <option value="PIX" ${tipo === 'PIX' ? 'selected' : ''}>PIX</option>
-                                <option value="REMESSA" ${tipo === 'REMESSA' ? 'selected' : ''}>REMESSA BANCÁRIA</option>
-                            </select>
                         </div>
                     </div>
                 </div>
@@ -406,13 +395,11 @@
             const credorInput = document.querySelector(`.comp-credor[data-idx="${idx}"]`);
             const valorInput = document.querySelector(`.comp-valor[data-idx="${idx}"]`);
             const dataInput = document.querySelector(`.comp-data[data-idx="${idx}"]`);
-            const tipoInput = document.querySelector(`.comp-tipo[data-idx="${idx}"]`);
             return {
                 temp_path: comprovantesEmMemoria[idx].temp_path,
                 valor_pago: parseFloat(valorInput ? valorInput.value : 0) || 0,
                 credor_nome: credorInput ? credorInput.value.trim() : '',
                 data_pagamento: dataInput ? dataInput.value : '',
-                tipo_de_pagamento: tipoInput ? tipoInput.value : '',
             };
         });
 

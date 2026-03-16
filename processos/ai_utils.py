@@ -112,7 +112,6 @@ def extrair_dados_documento(arquivo_pdf, tipo_documento):
             {
                 "credor_nome": "Nome completo do favorecido/destinatário/beneficiário do pagamento",
                 "valor_pago": "Valor pago em formato float (ex: 1500.50)",
-                "tipo_de_pagamento": "Classifique o tipo de pagamento como uma das seguintes opções EXATAS: 'GERENCIADOR' (para boleto bancário ou gerenciador financeiro), 'TED' (para transferência TED/DOC), 'PIX' (para pagamento PIX), 'REMESSA' (para remessa bancária). Use apenas esses valores.",
                 "data_pagamento": "Data em que o pagamento foi efetuado no formato YYYY-MM-DD"
             }
             """
@@ -198,7 +197,7 @@ def extrair_dados_comprovante_ia(pdf_bytes):
     """
     Extrai dados de uma única página de comprovante de pagamento (BytesIO ou caminho).
     Retorna um dict com os campos do modelo ComprovanteDePagamento:
-      - credor_nome, valor_pago, tipo_de_pagamento, data_pagamento
+      - credor_nome, valor_pago, data_pagamento
     Retorna None em caso de erro.
     """
     temp_path = None
@@ -224,7 +223,6 @@ def extrair_dados_comprovante_ia(pdf_bytes):
         {
             "credor_nome": "Nome completo do favorecido/destinatário/beneficiário do pagamento",
             "valor_pago": "Valor pago em formato float (ex: 1500.50)",
-            "tipo_de_pagamento": "Classifique o tipo de pagamento como uma das seguintes opções EXATAS: 'GERENCIADOR' (para boleto bancário ou gerenciador financeiro), 'TED' (para transferência TED/DOC), 'PIX' (para pagamento PIX), 'REMESSA' (para remessa bancária). Use apenas esses valores.",
             "data_pagamento": "Data em que o pagamento foi efetuado no formato YYYY-MM-DD"
         }
         """

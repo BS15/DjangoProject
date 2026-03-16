@@ -373,18 +373,17 @@ def caminho_comprovante(instance, filename):
 
 
 class ComprovanteDePagamento(models.Model):
-    TIPO_PAGAMENTO_CHOICES = [
-        ('GERENCIADOR', 'GERENCIADOR/BOLETO BANCÁRIO'),
-        ('TED', 'TRANSFERÊNCIA (TED)'),
-        ('PIX', 'PIX'),
-        ('REMESSA', 'REMESSA BANCÁRIA'),
-    ]
-
     processo = models.ForeignKey(
         'Processo',
         on_delete=models.CASCADE,
         related_name='comprovantes_pagamento',
         verbose_name="Processo"
+    )
+    numero_comprovante = models.CharField(
+        "Número do Comprovante",
+        max_length=100,
+        null=True,
+        blank=True
     )
     credor_nome = models.CharField(
         "Credor (Texto)",
@@ -396,13 +395,6 @@ class ComprovanteDePagamento(models.Model):
         "Valor Pago",
         max_digits=12,
         decimal_places=2,
-        null=True,
-        blank=True
-    )
-    tipo_de_pagamento = models.CharField(
-        "Tipo de Pagamento",
-        max_length=50,
-        choices=TIPO_PAGAMENTO_CHOICES,
         null=True,
         blank=True
     )
