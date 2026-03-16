@@ -503,7 +503,10 @@ class Diaria(models.Model):
     processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='diarias', null=True, blank=True)
     numero_sequencial = models.CharField("Número Sequencial", max_length=50)
     beneficiario = models.ForeignKey('Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
-                                     verbose_name="Beneficiário")
+                                     verbose_name="Beneficiário", related_name='diarias_como_beneficiario')
+    proponente = models.ForeignKey('Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
+                                   verbose_name="Proponente", related_name='diarias_como_proponente',
+                                   null=True, blank=True)
 
     # Dados específicos da Diária
     tipo_solicitacao = models.CharField(max_length=20, choices=TIPO_SOLICITACAO, default='INICIAL')
