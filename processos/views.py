@@ -1679,7 +1679,7 @@ def alternar_ateste_nota(request, pk):
 
 def painel_autorizacao_diarias_view(request):
     queryset_base = Diaria.objects.select_related(
-        'beneficiario', 'proponente', 'status'
+        'beneficiario', 'proponente', 'processo'
     ).all().order_by('-id')
 
     meu_filtro = DiariasAutorizacaoFilter(request.GET, queryset=queryset_base)
