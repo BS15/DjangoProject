@@ -264,6 +264,8 @@ class Credor(models.Model):
         choices=TIPO_PESSOA_CHOICES,
         default='PJ'  # Assume PJ como padrão, já que é o mais comum em notas de empenho
     )
+    history = HistoricalRecords()
+
     def __str__(self):
         return f"{self.nome}"
 
@@ -397,6 +399,7 @@ class ComprovanteDePagamento(models.Model):
         null=True,
         blank=True
     )
+    history = HistoricalRecords()
 
     class Meta:
         verbose_name = "Comprovante de Pagamento"
@@ -431,6 +434,8 @@ class DocumentoFiscal(models.Model):
         limit_choices_to={'grupo__grupo': 'FUNCIONÁRIOS'}
     )
     atestada = models.BooleanField(default=False)
+    history = HistoricalRecords()
+
     def save(self, *args, **kwargs):
         # Se um emitente foi selecionado e o CNPJ está vazio (ou queremos sempre atualizar)
         if self.nome_emitente:
@@ -445,6 +450,8 @@ class Pendencia(models.Model):
     status = models.ForeignKey('StatusChoicesPendencias', on_delete=models.PROTECT, blank=True, null=True)
     tipo = models.ForeignKey(TiposDePendencias, on_delete=models.PROTECT)
     descricao = models.CharField(max_length=200, blank=True, null=True)
+    history = HistoricalRecords()
+
     def __str__(self):
         return f"PENDÊNCIA: {self.tipo} - {self.descricao}"
 
@@ -485,6 +492,8 @@ class RetencaoImposto(models.Model):
         # 4. Chama o salvamento original do Django para gravar no banco de dados
         super().save(*args, **kwargs)
 
+    history = HistoricalRecords()
+
     def __str__(self):
         return f"{self.codigo} - R$ {self.valor}"
 
@@ -522,6 +531,7 @@ class Diaria(models.Model):
                                            verbose_name="Meio de Transporte")
     status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
     autorizada = models.BooleanField("Autorizada", default=False)
+    history = HistoricalRecords()
 
     def calcular_valor_total(self):
         """Returns the calculated valor_total based on beneficiario cargo_funcao unit value."""
@@ -564,6 +574,8 @@ class ReembolsoCombustivel(models.Model):
     valor_total = models.DecimalField("Valor do Reembolso (R$)", max_digits=12, decimal_places=2)
     objetivo = models.CharField("Objetivo", max_length=200, blank=True, null=True)
     status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
+    history = HistoricalRecords()
+
     def __str__(self):
         return f"Reembolso de Combustível: {self.numero_sequencial} - {self.beneficiario}"
 
@@ -578,6 +590,8 @@ class Jeton(models.Model):
 
     valor_total = models.DecimalField("Valor Total (R$)", max_digits=12, decimal_places=2)
     status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
+    history = HistoricalRecords()
+
     def __str__(self):
         return f"Jeton {self.mes_referencia} - {self.beneficiario}"
 
@@ -594,6 +608,8 @@ class AuxilioRepresentacao(models.Model):
 
     valor_total = models.DecimalField("Valor Total (R$)", max_digits=12, decimal_places=2)
     status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
+    history = HistoricalRecords()
+
     def __str__(self):
         return f"Aux. Representação {self.numero_sequencial} - {self.beneficiario}"
 
@@ -614,31 +630,6 @@ class Tabela_Valores_Unitarios_Verbas_Indenizatorias(models.Model):
         if tabela and tabela.valor_unitario is not None:
             return tabela.valor_unitario
         return None
-
-class Tabela_Proponentes_Diarias(models.Model):
-    cargo_funcao = models.ForeignKey(
-        'CargosFuncoes',
-        on_delete=models.PROTECT,
-        blank=True, null=True,
-        related_name='beneficiarios_mapeados', # <-- Resolve o conflito
-        verbose_name="Cargo do Beneficiário"
-    )
-    proponente = models.ForeignKey(
-        'CargosFuncoes',
-        on_delete=models.PROTECT,
-        blank=True, null=True,
-        related_name='proponentes_mapeados',   # <-- Resolve o conflito
-        verbose_name="Cargo do Proponente (Aprovador)"
-    )
-
-    class Meta:
-        # Trava de segurança: impede que você cadastre acidentalmente
-        # o Assistente Administrativo duas vezes com proponentes diferentes.
-        unique_together = ('cargo_funcao', 'proponente')
-
-    def __str__(self):
-        return f"{self.cargo_funcao} -> Aprovado por: {self.proponente}"
-
 
 class SuprimentoDeFundos(models.Model):
     processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='suprimentos', null=True,
@@ -677,6 +668,7 @@ class SuprimentoDeFundos(models.Model):
 
     def __str__(self):
         return f"Suprimento: {self.suprido} - Valor: R$ {self.valor_liquido}"
+    history = HistoricalRecords()
 
 
 class DespesaSuprimento(models.Model):
@@ -693,6 +685,7 @@ class DespesaSuprimento(models.Model):
 
     def __str__(self):
         return f"{self.data} - {self.estabelecimento} - R$ {self.valor}"
+    history = HistoricalRecords()
 
 
 STATUS_CONTINGENCIA = [
