@@ -5,6 +5,7 @@ import tempfile
 from datetime import date, datetime
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from django.core.files.storage import default_storage
@@ -63,7 +64,8 @@ def add_process_view(request):
                 'processo_form': processo_form,
                 'documento_formset': documento_formset,
                 'pendencia_formset': pendencia_formset,
-                'extracted_msg': "Dados extraídos! O arquivo SISCAC será anexado automaticamente ao salvar."
+                'extracted_msg': "Dados extraídos! O arquivo SISCAC será anexado automaticamente ao salvar.",
+                'next_url': request.POST.get('next', ''),
             })
 
         else:
@@ -109,7 +111,12 @@ def add_process_view(request):
                         pendencia_formset.save()
 
                     messages.success(request, f"Processo #{processo.id} inserido com sucesso!")
-                    return redirect('editar_processo', pk=processo.id)
+                    if request.POST.get('btn_goto_fiscais'):
+                        return redirect('documentos_fiscais', pk=processo.id)
+                    next_url = request.POST.get('next', '')
+                    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                        return redirect(next_url)
+                    return redirect('home_page')
 
                 except Exception as e:
                     print(f"🛑 Erro CRÍTICO de Banco de Dados ao salvar: {e}", flush=True)
@@ -121,18 +128,21 @@ def add_process_view(request):
             return render(request, 'add_process.html', {
                 'processo_form': processo_form,
                 'documento_formset': documento_formset,
-                'pendencia_formset': pendencia_formset
+                'pendencia_formset': pendencia_formset,
+                'next_url': request.POST.get('next', ''),
             })
 
     else:
         processo_form = ProcessoForm(prefix='processo')
         documento_formset = DocumentoFormSet(prefix='documento')
         pendencia_formset = PendenciaFormSet(prefix='pendencia')
+        next_url = request.META.get('HTTP_REFERER', '')
 
         return render(request, 'add_process.html', {
             'processo_form': processo_form,
             'documento_formset': documento_formset,
-            'pendencia_formset': pendencia_formset
+            'pendencia_formset': pendencia_formset,
+            'next_url': next_url,
         })
 
 
