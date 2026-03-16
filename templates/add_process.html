@@ -387,8 +387,66 @@ document.addEventListener('DOMContentLoaded', function() {
     const docTotalInput = document.getElementById('id_documento-TOTAL_FORMS');
     const containerDocumentos = document.getElementById('document-list');
 
+    // ==========================================
+    // CONTROLE ORÇAMENTÁRIO
+    // ==========================================
+    const chkExtra = document.getElementById('id_processo-extraorcamentario');
+    const chkEmpenhar = document.getElementById('id_trigger_a_empenhar');
+    const camposEmpenho = [
+        document.getElementById('id_processo-n_nota_empenho'),
+        document.getElementById('id_processo-data_empenho'),
+        document.getElementById('id_processo-ano_exercicio'),
+    ];
+
+    function atualizarCamposEmpenho() {
+        const bloquear = (chkExtra && chkExtra.checked) || (chkEmpenhar && chkEmpenhar.checked);
+        camposEmpenho.forEach(function(campo) {
+            if (!campo) return;
+            campo.disabled = bloquear;
+            if (bloquear) campo.value = '';
+        });
+    }
+
+    if (chkExtra) {
+        chkExtra.addEventListener('change', function() {
+            if (this.checked && chkEmpenhar) chkEmpenhar.checked = false;
+            atualizarCamposEmpenho();
+        });
+    }
+    if (chkEmpenhar) {
+        chkEmpenhar.addEventListener('change', function() {
+            if (this.checked && chkExtra) chkExtra.checked = false;
+            atualizarCamposEmpenho();
+        });
+    }
+    atualizarCamposEmpenho();
+
     // PROTEÇÃO ANTES DO ENVIO
     document.getElementById('processForm').addEventListener('submit', function(e) {
+        // VALIDAÇÃO: documento orçamentário obrigatório quando não é extra nem a empenhar
+        const isExtra = chkExtra && chkExtra.checked;
+        const isAEmpenhar = chkEmpenhar && chkEmpenhar.checked;
+        if (!isExtra && !isAEmpenhar) {
+            const docListCheck = document.getElementById('document-list');
+            let hasDocOrcamentario = false;
+            if (docListCheck) {
+                docListCheck.querySelectorAll('.document-row').forEach(function(row) {
+                    if (row.style.display === 'none') return;
+                    const tipoSelect = row.querySelector('select[name$="-tipo"]');
+                    if (tipoSelect && tipoSelect.selectedIndex > 0) {
+                        const txt = tipoSelect.options[tipoSelect.selectedIndex].text
+                            .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+                        if (txt.includes('orcament')) hasDocOrcamentario = true;
+                    }
+                });
+            }
+            if (!hasDocOrcamentario) {
+                e.preventDefault();
+                alert('É necessário anexar um Documento Orçamentário para prosseguir. Se o processo for Extraorçamentário ou estiver marcado como "A Empenhar", selecione a opção correspondente.');
+                return;
+            }
+        }
+
         const docList = document.getElementById('document-list');
         if (docList) {
             const docRows = docList.querySelectorAll('.document-row');
