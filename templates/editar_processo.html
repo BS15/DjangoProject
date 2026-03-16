@@ -17,6 +17,8 @@
         .django-delete-checkbox input[type="checkbox"] { display: none; }
         .sticky-viewer { position: sticky; top: 20px; z-index: 1000; }
         .bg-light-blue { background-color: #f0f8ff; }
+        .document-row:has(.doc-select-check:checked) { background-color: #fff8e1 !important; }
+        #doc-select-controls { display: none; }
     </style>
 </head>
 <body class="bg-light">
@@ -100,10 +102,21 @@
                                 <input type="file" id="bulk-file-input" multiple accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
                             </div>
 
+                            <div id="doc-select-controls" class="d-flex align-items-center gap-3 mb-2 px-1">
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input" type="checkbox" id="select-all-docs" title="Selecionar / desselecionar todos">
+                                    <label class="form-check-label small fw-bold text-muted" for="select-all-docs">Selecionar Todos</label>
+                                </div>
+                                <span class="small text-muted" id="selected-count-label"></span>
+                            </div>
+
                             <div id="document-list" class="bg-white p-3 rounded border">
                                 {% for doc_f in documento_formset %}
                                     <div class="row g-2 align-items-center mb-2 border-bottom pb-2 document-row bg-white">
-                                        <div class="col-md-1 text-center drag-handle" style="cursor: grab;"><i class="bi bi-grip-vertical fs-5 text-secondary"></i></div>
+                                        <div class="col-auto d-flex align-items-center gap-1 drag-handle ps-2" style="cursor: grab;">
+                                            <input type="checkbox" class="form-check-input doc-select-check mt-0" title="Selecionar para lote">
+                                            <i class="bi bi-grip-vertical fs-5 text-secondary"></i>
+                                        </div>
                                         {% for hidden in doc_f.hidden_fields %}{{ hidden }}{% endfor %}
                                         <div class="col-md-1"><label class="small text-muted fw-bold d-block mb-1">Ordem</label>{{ doc_f.ordem }}</div>
                                         <div class="col-md-3"><label class="small text-muted fw-bold d-block mb-1">Tipo</label>{{ doc_f.tipo }}</div>
@@ -134,8 +147,8 @@
                             <button type="button" id="add-doc-btn" class="btn btn-outline-warning text-dark btn-sm mt-2 fw-bold">
                                 <i class="bi bi-plus-circle"></i> Adicionar Documento Manual
                             </button>
-                            <button type="button" id="btn-batch-tipo" class="btn btn-outline-secondary btn-sm mt-2 ms-2 fw-bold" title="Definir o mesmo tipo de documento para todos os anexos de uma vez">
-                                <i class="bi bi-tag-fill"></i> Definir Tipo em Lote
+                            <button type="button" id="btn-batch-tipo" class="btn btn-outline-secondary btn-sm mt-2 ms-2 fw-bold" title="Definir o mesmo tipo de documento para os documentos selecionados (ou todos, se nenhum selecionado)">
+                                <i class="bi bi-tag-fill"></i> Definir Tipo em Lote <span id="batch-selection-badge" class="badge bg-secondary ms-1" style="display:none;"></span>
                             </button>
                         </div>
 
@@ -329,7 +342,10 @@
 
 <div id="empty-doc-form">
     <div class="row g-2 align-items-start mb-2 border-bottom pb-2 document-row bg-white">
-        <div class="col-md-1 text-center drag-handle" style="cursor: grab;"><i class="bi bi-grip-vertical fs-5 text-secondary"></i></div>
+        <div class="col-auto d-flex align-items-center gap-1 drag-handle ps-2" style="cursor: grab;">
+            <input type="checkbox" class="form-check-input doc-select-check mt-0" title="Selecionar para lote">
+            <i class="bi bi-grip-vertical fs-5 text-secondary"></i>
+        </div>
         <div class="col-md-1"><input type="number" name="documento-__prefix__-ordem" class="form-control form-control-sm text-center bg-light" value="1" readonly tabindex="-1"></div>
         <div class="col-md-3">{{ documento_formset.empty_form.tipo }}</div>
         <div class="col-md-4">
@@ -383,7 +399,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i>Ignorar</button>
-                <button type="button" id="btn-confirmar-batch-tipo" class="btn btn-warning text-dark fw-bold"><i class="bi bi-check2-all me-1"></i>Aplicar a Todos</button>
+                <button type="button" id="btn-confirmar-batch-tipo" class="btn btn-warning text-dark fw-bold"><i class="bi bi-check2-all me-1"></i><span id="btn-confirmar-batch-label">Aplicar a Todos</span></button>
             </div>
         </div>
     </div>
@@ -525,6 +541,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (!isUserChange) { select.value = valorAntigo; }
                     });
                     avisoDocumentos.style.display = 'none'; blocoDocumentos.style.display = 'block';
+                    showDocSelectControls();
                 }
             });
     }
@@ -706,7 +723,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         dropzone.querySelector('.dropzone-text').innerHTML = `<i class="bi bi-check2-circle"></i> ${files.length} arquivos inseridos!`;
         setTimeout(() => { dropzone.querySelector('.dropzone-text').innerHTML = "Arraste novos arquivos aqui"; }, 3000);
-        if (files.length > 0) abrirModalBatchTipo(files.length);
+        if (files.length > 0) abrirModalBatchTipo(files.length, true);
     }
 
     // LÓGICA DE AUTOFILL IA
@@ -776,6 +793,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // BATCH DOCUMENT TYPE - MODAL LOGIC
     // ==========================================
     let _modalBatchTipoInstance = null;
+    let _batchApplyAll = false; // true when triggered by file drop (apply to all)
+
     function getModalBatchTipo() {
         if (!_modalBatchTipoInstance) {
             _modalBatchTipoInstance = new bootstrap.Modal(document.getElementById('modal-batch-tipo'));
@@ -783,9 +802,68 @@ document.addEventListener('DOMContentLoaded', function() {
         return _modalBatchTipoInstance;
     }
 
-    function abrirModalBatchTipo(qtdArquivos) {
+    function getVisibleDocRows() {
+        const docList = document.getElementById('document-list');
+        if (!docList) return [];
+        return Array.from(docList.querySelectorAll('.document-row')).filter(r => r.style.display !== 'none');
+    }
+
+    function getCheckedDocRows() {
+        const docList = document.getElementById('document-list');
+        if (!docList) return [];
+        return Array.from(docList.querySelectorAll('.document-row .doc-select-check:checked'))
+            .map(cb => cb.closest('.document-row'))
+            .filter(r => r && r.style.display !== 'none');
+    }
+
+    function updateBatchButtonBadge() {
+        const checked = getCheckedDocRows();
+        const visible = getVisibleDocRows();
+        const badge = document.getElementById('batch-selection-badge');
+        const countLabel = document.getElementById('selected-count-label');
+        const selectAllCb = document.getElementById('select-all-docs');
+
+        if (checked.length > 0) {
+            badge.textContent = checked.length;
+            badge.style.display = '';
+            if (countLabel) countLabel.textContent = `${checked.length} de ${visible.length} selecionado(s)`;
+        } else {
+            badge.style.display = 'none';
+            if (countLabel) countLabel.textContent = '';
+        }
+
+        if (selectAllCb) {
+            selectAllCb.checked = visible.length > 0 && checked.length === visible.length;
+            selectAllCb.indeterminate = checked.length > 0 && checked.length < visible.length;
+        }
+    }
+
+    function showDocSelectControls() {
+        const ctrl = document.getElementById('doc-select-controls');
+        if (ctrl) ctrl.style.display = 'flex';
+    }
+
+    // Select-all checkbox handler
+    document.getElementById('select-all-docs').addEventListener('change', function () {
+        getVisibleDocRows().forEach(row => {
+            const cb = row.querySelector('.doc-select-check');
+            if (cb) cb.checked = this.checked;
+        });
+        updateBatchButtonBadge();
+    });
+
+    // Individual checkbox change (event delegation)
+    document.getElementById('document-list').addEventListener('change', function (e) {
+        if (e.target.classList.contains('doc-select-check')) {
+            updateBatchButtonBadge();
+        }
+    });
+
+    function abrirModalBatchTipo(qtdArquivos, applyAll) {
         const tipoSelect = document.getElementById('id_processo-tipo_pagamento');
         if (!tipoSelect || !tipoSelect.value) return;
+
+        _batchApplyAll = !!applyAll;
 
         const selectLote = document.getElementById('batch-tipo-select');
         const optionsCurrent = document.querySelector('#empty-doc-form select[name$="-tipo"]');
@@ -805,11 +883,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const msgEl = document.getElementById('batch-tipo-msg');
+        const btnLabel = document.getElementById('btn-confirmar-batch-label');
+        const checkedRows = getCheckedDocRows();
+
         if (msgEl) {
-            msgEl.textContent = qtdArquivos > 1
-                ? `${qtdArquivos} documentos foram adicionados. Deseja definir o mesmo tipo para todos?`
-                : `1 documento foi adicionado. Deseja definir o tipo agora?`;
+            if (_batchApplyAll) {
+                msgEl.textContent = qtdArquivos > 1
+                    ? `${qtdArquivos} documentos foram adicionados. Deseja definir o mesmo tipo para todos?`
+                    : `1 documento foi adicionado. Deseja definir o tipo agora?`;
+            } else if (checkedRows.length > 0) {
+                msgEl.textContent = `${checkedRows.length} documento(s) selecionado(s). O tipo será aplicado apenas aos selecionados.`;
+            } else {
+                msgEl.textContent = `Nenhum documento selecionado. O tipo será aplicado a todos os ${qtdArquivos} documento(s) visíveis.`;
+            }
         }
+
+        if (btnLabel) {
+            if (_batchApplyAll || checkedRows.length === 0) {
+                btnLabel.textContent = 'Aplicar a Todos';
+            } else {
+                btnLabel.textContent = `Aplicar a ${checkedRows.length} Selecionado(s)`;
+            }
+        }
+
         getModalBatchTipo().show();
     }
 
@@ -822,14 +918,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         selectLote.classList.remove('is-invalid');
 
-        const docList = document.getElementById('document-list');
-        if (docList) {
-            docList.querySelectorAll('.document-row').forEach(row => {
-                if (row.style.display === 'none') return;
-                const sel = row.querySelector('select[name$="-tipo"]');
-                if (sel) sel.value = valorSelecionado;
-            });
-        }
+        const checkedRows = getCheckedDocRows();
+        const targetRows = (_batchApplyAll || checkedRows.length === 0)
+            ? getVisibleDocRows()
+            : checkedRows;
+
+        targetRows.forEach(row => {
+            const sel = row.querySelector('select[name$="-tipo"]');
+            if (sel) sel.value = valorSelecionado;
+        });
+
+        // Uncheck all after applying
+        document.getElementById('document-list').querySelectorAll('.doc-select-check:checked').forEach(cb => { cb.checked = false; });
+        updateBatchButtonBadge();
+
         getModalBatchTipo().hide();
     });
 
@@ -838,14 +940,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('btn-batch-tipo').addEventListener('click', function () {
-        const docList = document.getElementById('document-list');
-        let count = 0;
-        if (docList) {
-            docList.querySelectorAll('.document-row').forEach(r => {
-                if (r.style.display !== 'none') count++;
-            });
-        }
-        abrirModalBatchTipo(count);
+        const visible = getVisibleDocRows();
+        abrirModalBatchTipo(visible.length, false);
     });
 
 });
