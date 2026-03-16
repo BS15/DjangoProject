@@ -44,7 +44,6 @@ def pre_triagem_view(request):
     retencao_formset = RetencaoFormSet(prefix='imposto')
 
     if request.method == 'POST':
-        tipo_documento_id = request.POST.get('tipo_documento_id', '')
         tipo_pagamento_id = request.POST.get('tipo_pagamento_id', '')
         num_docs_str = request.POST.get('num_documentos', '0')
         try:
@@ -59,7 +58,6 @@ def pre_triagem_view(request):
                 'tipos_pagamento': tipos_pagamento,
                 'retencao_formset': retencao_formset,
                 'selected_tipo_pagamento': tipo_pagamento_id,
-                'selected_tipo_documento_id': tipo_documento_id,
             }
             if extra:
                 ctx.update(extra)
@@ -152,6 +150,12 @@ def pre_triagem_view(request):
                             tipo_doc_i = tipo_doc_db
                     if not tipo_doc_i:
                         messages.error(request, f'Documento {i + 1}: Tipo de Documento não definido.')
+                    # Resolve tipo de documento per document (same as add_process logic)
+                    tipo_doc_id_str = request.POST.get(f'tipo_documento_{i}', '')
+                    try:
+                        tipo_doc_db = TiposDeDocumento.objects.get(id=int(tipo_doc_id_str))
+                    except (TiposDeDocumento.DoesNotExist, ValueError, TypeError):
+                        messages.error(request, f'Selecione um Tipo de Documento válido para o documento {i + 1}.')
                         return _render_form()
 
                     try:
@@ -242,7 +246,6 @@ def pre_triagem_view(request):
         'tipos_pagamento': tipos_pagamento,
         'retencao_formset': retencao_formset,
         'selected_tipo_pagamento': '',
-        'selected_tipo_documento_id': '',
     })
 
 
