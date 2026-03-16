@@ -5,6 +5,7 @@ import tempfile
 import os
 import io
 from django.conf import settings
+from pypdf import PdfWriter, PdfReader
 
 # Inicializa o novo Client unificado de forma lazy para evitar falha quando a
 # chave não está configurada (ex.: ambiente de testes).
@@ -248,3 +249,88 @@ def extrair_dados_comprovante_ia(pdf_bytes):
     finally:
         if temp_path and os.path.exists(temp_path):
             os.remove(temp_path)
+
+
+def extrair_codigos_barras_boletos(caminhos_arquivos):
+    """
+    Extrai códigos de barras de múltiplos boletos bancários num único envio à IA.
+    Mescla os PDFs temporariamente para enviar em uma única chamada ao LLM, evitando
+    múltiplas consultas à API.
+
+    Args:
+        caminhos_arquivos: lista de strings com caminhos no disco para os PDFs de boleto.
+
+    Returns:
+        Lista de strings/None na mesma ordem dos arquivos (None se não encontrado),
+        ou None em caso de erro fatal.
+    """
+    n = len(caminhos_arquivos)
+    if n == 0:
+        return []
+
+    merged_temp = None
+
+    try:
+        writer = PdfWriter()
+        page_ranges = []
+        current_page = 0
+
+        for caminho in caminhos_arquivos:
+            reader = PdfReader(caminho)
+            num_pages = len(reader.pages)
+            for page in reader.pages:
+                writer.add_page(page)
+            page_ranges.append((current_page + 1, current_page + num_pages))
+            current_page += num_pages
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as merged_file:
+            writer.write(merged_file)
+            merged_temp = merged_file.name
+
+        page_info = "\n".join(
+            f"- Boleto {i + 1}: páginas {start} a {end}"
+            for i, (start, end) in enumerate(page_ranges)
+        )
+
+        uploaded_file = client.files.upload(file=merged_temp)
+
+        prompt = f"""Este PDF contém {n} boleto(s) bancário(s) concatenado(s).
+
+Distribuição de páginas no PDF:
+{page_info}
+
+Para cada boleto, extraia a linha digitável completa (código de barras).
+Retorne APENAS um array JSON com exatamente {n} objeto(s), um por boleto, na ordem de aparição:
+[
+  {{"boleto": 1, "codigo_barras": "somente os dígitos sem espaços ou pontuação"}},
+  ...
+]
+Use null para o campo codigo_barras se não conseguir localizar a linha digitável."""
+
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[uploaded_file, prompt],
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+            )
+        )
+
+        try:
+            result = json.loads(response.text)
+            if isinstance(result, list):
+                return [
+                    item.get('codigo_barras') if isinstance(item, dict) else None
+                    for item in result
+                ]
+            return None
+        except json.JSONDecodeError:
+            print(f"Erro ao converter saída da IA (boletos): {response.text}")
+            return None
+
+    except Exception as e:
+        print(f"Erro na extração de códigos de barras de boletos: {e}")
+        return None
+
+    finally:
+        if merged_temp and os.path.exists(merged_temp):
+            os.remove(merged_temp)

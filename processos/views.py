@@ -15,7 +15,7 @@ from django.db.models import Count, Q, F
 from pypdf import PdfWriter
 from .forms import ProcessoForm, DocumentoFormSet, DocumentoFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet
 from .utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, processar_pdf_comprovantes_ia
-from .ai_utils import extrair_dados_documento, extract_data_with_llm
+from .ai_utils import extrair_dados_documento, extract_data_with_llm, extrair_codigos_barras_boletos
 from .invoice_processor import process_invoice_taxes
 from .models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias
 from .filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DiariasAutorizacaoFilter
@@ -52,6 +52,73 @@ def home_page(request):
         'meu_filtro': meu_filtro,
     }
     return render(request, 'home.html', context)
+
+
+import unicodedata
+
+
+def _normalizar_texto(texto):
+    """Remove acentos e converte para maiúsculas para comparações robustas."""
+    return unicodedata.normalize('NFD', texto.upper()).encode('ascii', 'ignore').decode('ascii')
+
+
+def _extrair_e_salvar_codigos_barras(processo):
+    """
+    Se o forma_pagamento do processo for Boleto Bancário ou Gerenciador, percorre todos
+    os DocumentoProcesso do tipo boleto, extrai os códigos de barras via IA (mesclando
+    os PDFs num único envio) e persiste o resultado em DocumentoProcesso.codigo_barras.
+
+    Returns:
+        Tupla (n_extraidos, n_falhas).
+    """
+    if not processo.forma_pagamento:
+        return 0, 0
+
+    forma_str = _normalizar_texto(processo.forma_pagamento.forma_de_pagamento)
+    if 'BOLETO' not in forma_str and 'GERENCIADOR' not in forma_str:
+        return 0, 0
+
+    boleto_docs = [
+        doc for doc in processo.documentos.select_related('tipo').all()
+        if 'boleto' in doc.tipo.tipo_de_documento.lower()
+    ]
+
+    if not boleto_docs:
+        return 0, 0
+
+    caminhos = []
+    docs_validos = []
+    for doc in boleto_docs:
+        try:
+            caminhos.append(doc.arquivo.path)
+            docs_validos.append(doc)
+        except Exception:
+            pass
+
+    if not caminhos:
+        return 0, 0
+
+    barcodes = extrair_codigos_barras_boletos(caminhos)
+    if barcodes is None:
+        return 0, len(docs_validos)
+
+    n_docs = len(docs_validos)
+    extraidos = 0
+    falhas = 0
+    for doc, barcode in zip(docs_validos, barcodes):
+        if barcode:
+            # Truncate to model's max_length (DocumentoProcesso.codigo_barras = max 60 chars)
+            doc.codigo_barras = str(barcode)[:60]
+            doc.save(update_fields=['codigo_barras'])
+            extraidos += 1
+        else:
+            falhas += 1
+
+    # If the LLM returned fewer items than docs (zip stops at the shorter list),
+    # the remaining unprocessed documents are counted as failures.
+    falhas += n_docs - (extraidos + falhas)
+
+    return extraidos, falhas
 
 
 # ==========================================
@@ -155,6 +222,17 @@ def add_process_view(request):
                         documento_formset.save()
                         pendencia_formset.save()
 
+                    # Extrai códigos de barras dos boletos fora da transação para não
+                    # bloquear a conexão com o banco durante a chamada à IA.
+                    try:
+                        n_extraidos, n_falhas = _extrair_e_salvar_codigos_barras(processo)
+                        if n_extraidos > 0:
+                            messages.info(request, f"{n_extraidos} código(s) de barras extraído(s) dos boletos automaticamente.")
+                        if n_falhas > 0:
+                            messages.warning(request, f"Não foi possível extrair o código de barras de {n_falhas} boleto(s). Preencha manualmente se necessário.")
+                    except Exception as barcode_err:
+                        print(f"⚠️ Erro na extração de códigos de barras: {barcode_err}", flush=True)
+
                     messages.success(request, f"Processo #{processo.id} inserido com sucesso!")
                     if request.POST.get('btn_goto_fiscais'):
                         return redirect('documentos_fiscais', pk=processo.id)
@@ -225,6 +303,17 @@ def editar_processo(request, pk):
                 try:
                     with transaction.atomic():
                         documento_formset.save()
+
+                    # Extrai códigos de barras de novos boletos fora da transação.
+                    try:
+                        n_extraidos, n_falhas = _extrair_e_salvar_codigos_barras(processo)
+                        if n_extraidos > 0:
+                            messages.info(request, f"{n_extraidos} código(s) de barras extraído(s) dos boletos automaticamente.")
+                        if n_falhas > 0:
+                            messages.warning(request, f"Não foi possível extrair o código de barras de {n_falhas} boleto(s). Preencha manualmente se necessário.")
+                    except Exception as barcode_err:
+                        print(f"⚠️ Erro na extração de códigos de barras: {barcode_err}", flush=True)
+
                     messages.success(request, f'Documentos do Processo #{pk} atualizados com sucesso!')
                     return redirect('editar_processo', pk=pk)
                 except Exception as e:
@@ -261,6 +350,17 @@ def editar_processo(request, pk):
                         processo_saved.save()
                         documento_formset.save()
                         pendencia_formset.save()
+
+                    # Extrai códigos de barras dos boletos fora da transação para não
+                    # bloquear a conexão com o banco durante a chamada à IA.
+                    try:
+                        n_extraidos, n_falhas = _extrair_e_salvar_codigos_barras(processo_saved)
+                        if n_extraidos > 0:
+                            messages.info(request, f"{n_extraidos} código(s) de barras extraído(s) dos boletos automaticamente.")
+                        if n_falhas > 0:
+                            messages.warning(request, f"Não foi possível extrair o código de barras de {n_falhas} boleto(s). Preencha manualmente se necessário.")
+                    except Exception as barcode_err:
+                        print(f"⚠️ Erro na extração de códigos de barras: {barcode_err}", flush=True)
 
                     messages.success(request, f'Processo #{processo_saved.id} atualizado com sucesso!')
                     return redirect('editar_processo', pk=processo_saved.id)
