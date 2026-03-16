@@ -139,6 +139,15 @@ def add_process_view(request):
 def editar_processo(request, pk):
     processo = get_object_or_404(Processo, id=pk)
 
+    # Redirect to the dedicated verbas page when this processo contains verbas indenizatórias
+    if (
+        Diaria.objects.filter(processo=processo).exists()
+        or ReembolsoCombustivel.objects.filter(processo=processo).exists()
+        or Jeton.objects.filter(processo=processo).exists()
+        or AuxilioRepresentacao.objects.filter(processo=processo).exists()
+    ):
+        return redirect('editar_processo_verbas', pk=pk)
+
     if request.method == 'POST':
         processo_form = ProcessoForm(request.POST, instance=processo, prefix='processo')
         documento_formset = DocumentoFormSet(request.POST, request.FILES, instance=processo, prefix='documento')
@@ -675,28 +684,108 @@ def agrupar_verbas_view(request, tipo_verba):
         defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
     )
 
+    tipo_pagamento_verbas, _ = TiposDePagamento.objects.get_or_create(
+        tipo_de_pagamento__iexact='Verba Indenizatória',
+        defaults={'tipo_de_pagamento': 'Verba Indenizatória'}
+    )
+
     novo_processo = Processo.objects.create(
         credor=credor_obj,
         valor_bruto=total,
         valor_liquido=total,
         detalhamento=f"Agrupamento de {tipo_verba.capitalize()}s",
-        status=status_padrao
+        status=status_padrao,
+        tipo_pagamento=tipo_pagamento_verbas,
     )
 
     for item in itens:
         item.processo = novo_processo
         item.save()
 
-        for doc in item.documentos.all():
-            DocumentoProcesso.objects.create(
-                processo=novo_processo,
-                arquivo=doc.arquivo,
-                tipo=doc.tipo,
-                ordem=doc.ordem
-            )
+    messages.success(request, f"Processo #{novo_processo.id} gerado com sucesso!")
+    return redirect('editar_processo_verbas', pk=novo_processo.id)
 
-    messages.success(request, f"Processo #{novo_processo.id} gerado com sucesso! Os documentos foram importados.")
-    return redirect('editar_processo', pk=novo_processo.id)
+
+def editar_processo_verbas(request, pk):
+    processo = get_object_or_404(Processo, id=pk)
+
+    if request.method == 'POST':
+        processo_form = ProcessoForm(request.POST, instance=processo, prefix='processo')
+        pendencia_formset = PendenciaFormSet(request.POST, instance=processo, prefix='pendencia')
+
+        if processo_form.is_valid() and pendencia_formset.is_valid():
+            try:
+                with transaction.atomic():
+                    processo = processo_form.save()
+                    pendencia_formset.save()
+
+                messages.success(request, f'Processo #{processo.id} atualizado com sucesso!')
+                return redirect('editar_processo_verbas', pk=processo.id)
+
+            except Exception as e:
+                print(f"🛑 Erro ao atualizar no banco: {e}")
+                messages.error(request, 'Erro interno ao salvar as alterações.')
+        else:
+            messages.error(request, 'Verifique os erros no formulário.')
+
+    else:
+        processo_form = ProcessoForm(instance=processo, prefix='processo')
+        pendencia_formset = PendenciaFormSet(instance=processo, prefix='pendencia')
+
+    diarias = Diaria.objects.filter(processo=processo).prefetch_related('documentos__tipo')
+    reembolsos = ReembolsoCombustivel.objects.filter(processo=processo).prefetch_related('documentos__tipo')
+    jetons = Jeton.objects.filter(processo=processo).prefetch_related('documentos__tipo')
+    auxilios = AuxilioRepresentacao.objects.filter(processo=processo).prefetch_related('documentos__tipo')
+    tipos_doc = TiposDeDocumento.objects.filter(is_active=True)
+
+    context = {
+        'processo': processo,
+        'processo_form': processo_form,
+        'pendencia_formset': pendencia_formset,
+        'diarias': diarias,
+        'reembolsos': reembolsos,
+        'jetons': jetons,
+        'auxilios': auxilios,
+        'tipos_documento': tipos_doc,
+    }
+    return render(request, 'editar_processo_verbas.html', context)
+
+
+def api_add_documento_verba(request, tipo_verba, pk):
+    """AJAX: Adiciona um documento a uma verba indenizatória específica."""
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'Método não permitido.'}, status=405)
+
+    MAPA = {
+        'diaria': (Diaria, DocumentoDiaria, 'diaria'),
+        'reembolso': (ReembolsoCombustivel, DocumentoReembolso, 'reembolso'),
+        'jeton': (Jeton, DocumentoJeton, 'jeton'),
+        'auxilio': (AuxilioRepresentacao, DocumentoAuxilio, 'auxilio'),
+    }
+
+    if tipo_verba not in MAPA:
+        return JsonResponse({'ok': False, 'error': 'Tipo de verba inválido.'}, status=400)
+
+    ModeloVerba, ModeloDocumento, fk_name = MAPA[tipo_verba]
+    verba = get_object_or_404(ModeloVerba, id=pk)
+
+    arquivo = request.FILES.get('arquivo')
+    tipo_id = request.POST.get('tipo')
+
+    if not arquivo or not tipo_id:
+        return JsonResponse({'ok': False, 'error': 'Arquivo e tipo de documento são obrigatórios.'}, status=400)
+
+    EXTENSOES_PERMITIDAS = {'.pdf', '.jpg', '.jpeg', '.png'}
+    _, ext = os.path.splitext(arquivo.name.lower())
+    if ext not in EXTENSOES_PERMITIDAS:
+        return JsonResponse({'ok': False, 'error': 'Formato não permitido. Use PDF, JPG ou PNG.'}, status=400)
+
+    try:
+        kwargs = {fk_name: verba, 'arquivo': arquivo, 'tipo_id': tipo_id}
+        doc = ModeloDocumento.objects.create(**kwargs)
+        return JsonResponse({'ok': True, 'doc_id': doc.id, 'arquivo_url': doc.arquivo.url, 'tipo': str(doc.tipo)})
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=500)
 
 
 def agrupar_impostos_view(request):

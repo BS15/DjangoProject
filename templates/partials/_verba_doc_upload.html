@@ -1,0 +1,34 @@
+{# Partial: inline document upload row for a verba indenizatória.
+   Requires context variables: verba, tipo_verba, btn_class, tipos_documento #}
+<div class="doc-upload-row mt-1">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-5">
+            <label class="small fw-bold text-muted mb-1">Tipo</label>
+            <select class="form-select form-select-sm verba-doc-tipo"
+                    data-verba-id="{{ verba.id }}"
+                    data-tipo-verba="{{ tipo_verba }}">
+                <option value="">— Selecione —</option>
+                {% for tipo in tipos_documento %}
+                    <option value="{{ tipo.id }}">{{ tipo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-5">
+            <label class="small fw-bold text-muted mb-1">Arquivo</label>
+            <input type="file"
+                   class="form-control form-control-sm verba-doc-arquivo"
+                   data-verba-id="{{ verba.id }}"
+                   data-tipo-verba="{{ tipo_verba }}"
+                   accept=".pdf,.jpg,.jpeg,.png">
+        </div>
+        <div class="col-md-2">
+            <button type="button"
+                    class="btn btn-sm {{ btn_class }} w-100 btn-upload-verba-doc"
+                    data-verba-id="{{ verba.id }}"
+                    data-tipo-verba="{{ tipo_verba }}"
+                    title="Salvar documento">
+                <i class="bi bi-paperclip"></i>
+            </button>
+        </div>
+    </div>
+</div>
