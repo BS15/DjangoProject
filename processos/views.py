@@ -58,10 +58,13 @@ def pre_triagem_view(request):
                 'tipos_pagamento': tipos_pagamento,
                 'retencao_formset': retencao_formset,
                 'selected_tipo_pagamento': tipo_pagamento_id,
+                'selected_tipo_documento': tipo_documento_id,
             }
             if extra:
                 ctx.update(extra)
             return render(request, 'pre_triagem.html', ctx)
+
+        tipo_documento_id = request.POST.get('tipo_documento_id', '').strip()
 
         errors = []
         if not tipo_pagamento_id:
@@ -150,12 +153,6 @@ def pre_triagem_view(request):
                             tipo_doc_i = tipo_doc_db
                     if not tipo_doc_i:
                         messages.error(request, f'Documento {i + 1}: Tipo de Documento não definido.')
-                    # Resolve tipo de documento per document (same as add_process logic)
-                    tipo_doc_id_str = request.POST.get(f'tipo_documento_{i}', '')
-                    try:
-                        tipo_doc_db = TiposDeDocumento.objects.get(id=int(tipo_doc_id_str))
-                    except (TiposDeDocumento.DoesNotExist, ValueError, TypeError):
-                        messages.error(request, f'Selecione um Tipo de Documento válido para o documento {i + 1}.')
                         return _render_form()
 
                     try:
