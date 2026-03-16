@@ -205,7 +205,7 @@ class CredorForm(forms.ModelForm):
 class DiariaForm(forms.ModelForm):
     class Meta:
         model = Diaria
-        fields = ['numero_sequencial', 'processo', 'status', 'beneficiario', 'proponente', 'tipo_solicitacao', 'data_saida', 'data_retorno', 'cidade_origem', 'cidade_destino', 'objetivo', 'quantidade_diarias', 'valor_total']
+        fields = ['numero_sequencial', 'processo', 'status', 'beneficiario', 'proponente', 'tipo_solicitacao', 'data_saida', 'data_retorno', 'cidade_origem', 'cidade_destino', 'objetivo', 'meio_de_transporte', 'quantidade_diarias', 'valor_total']
         widgets = {
             'numero_sequencial': forms.TextInput(attrs={'class': 'form-control'}),
             'processo': forms.Select(attrs={'class': 'form-select'}),
@@ -218,6 +218,7 @@ class DiariaForm(forms.ModelForm):
             'cidade_origem': forms.TextInput(attrs={'class': 'form-control'}),
             'cidade_destino': forms.TextInput(attrs={'class': 'form-control'}),
             'objetivo': forms.TextInput(attrs={'class': 'form-control'}),
+            'meio_de_transporte': forms.Select(attrs={'class': 'form-select'}),
             'quantidade_diarias': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.5'}),
             'valor_total': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'readonly': 'readonly', 'id': 'id_valor_total'}),
         }
