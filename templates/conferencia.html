@@ -103,13 +103,6 @@
                                 <i class="bi bi-eye"></i>
                             </button>
 
-                            <form method="POST" action="{% url 'aprovar_conferencia' pk=processo.id %}" style="display:inline;" onsubmit="return confirm('Confirmar a conferência direta e enviar o processo #{{ processo.id }} para contabilização?');">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-outline-success" title="Aprovar Diretamente">
-                                    <i class="bi bi-check2-all"></i>
-                                </button>
-                            </form>
-
                         </td>
                     </tr>
                     {% empty %}
