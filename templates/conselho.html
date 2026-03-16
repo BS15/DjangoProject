@@ -65,7 +65,6 @@
                                     title="Pré-visualizar Documentos">
                                 <i class="bi bi-eye"></i> Preview
                             </button>
-                            <a href="{% url 'visualizar_pdf_processo' processo.id %}" target="_blank" class="btn btn-sm btn-danger shadow-sm" title="Ler Documentos"><i class="bi bi-file-earmark-pdf"></i></a>
                             
                             <form method="POST" action="{% url 'aprovar_conselho' pk=processo.id %}" style="display:inline;">
                                 {% csrf_token %}

@@ -158,11 +158,8 @@
                                     title="Pré-visualizar Documentos">
                                 <i class="bi bi-eye"></i> Preview
                             </button>
-                            <a href="{% url 'visualizar_pdf_processo' processo.id %}" target="_blank" class="btn btn-sm btn-danger fw-bold shadow-sm" title="Visualizar Documentos Anexos (PDF Mesclado)">
-                                <i class="bi bi-file-earmark-pdf"></i>
-                            </a>
-                            <a href="/admin/processos/processo/{{ processo.id }}/change/" target="_blank" class="btn btn-sm btn-outline-secondary" title="Acessar Admin">
-                                <i class="bi bi-gear"></i>
+                            <a href="{% url 'editar_processo' pk=processo.id %}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Editar Processo">
+                                <i class="bi bi-pencil-square"></i>
                             </a>
                         </td>
                     </tr>
