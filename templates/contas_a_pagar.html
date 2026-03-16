@@ -115,9 +115,11 @@
         <div class="col-md-9">
             <div class="mb-3 d-flex justify-content-between align-items-center">
                 <div>
+                    {% if pode_interagir %}
                     <button type="submit" form="form-enviar-autorizacao" class="btn btn-primary fw-bold shadow-sm" onclick="return confirm('Enviar os processos selecionados para a mesa do Ordenador de Despesa?');">
                         <i class="bi bi-send-check"></i> Enviar para Autorização
                     </button>
+                    {% endif %}
                     
                     <button type="button" class="btn btn-info text-white fw-bold shadow-sm ms-2" id="btn-visualizar-pagamentos">
                         <i class="bi bi-eye"></i> Visualizar Dados de Pagamento
@@ -140,9 +142,11 @@
                         <table class="table table-hover table-striped mb-0 align-middle">
                             <thead class="table-light">
                                 <tr>
+                                    {% if pode_interagir %}
                                     <th class="text-center" style="width: 40px;">
                                         <input type="checkbox" class="form-check-input" id="checkAll">
                                     </th>
+                                    {% endif %}
                                     <th># ID</th>
                                     <th>Data Pagamento</th>
                                     <th>Credor</th>
@@ -155,6 +159,7 @@
                             <tbody>
                                 {% for processo in lista_processos %}
                                 <tr>
+                                    {% if pode_interagir %}
                                     <td class="text-center">
                                         {% if processo.status.status_choice == 'A PAGAR - PENDENTE AUTORIZAÇÃO' %}
                                             <input type="checkbox" name="processos_selecionados" value="{{ processo.id }}" class="form-check-input check-item">
@@ -163,6 +168,7 @@
                                                    title="Não pode ser enviado para autorização: status atual é '{{ processo.status }}'">
                                         {% endif %}
                                     </td>
+                                    {% endif %}
                                     <td class="fw-bold text-muted">#{{ processo.id }}</td>
                                     <td class="fw-medium text-primary">{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
                                     <td class="fw-medium">{{ processo.credor|truncatechars:35 }}</td>

@@ -8,6 +8,8 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.exceptions import PermissionDenied
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.db import transaction
@@ -578,6 +580,8 @@ def visualizar_pdf_processo(request, processo_id):
         return HttpResponse("Erro interno ao mesclar os PDFs.", status=500)
 
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def contas_a_pagar(request):
     processos_pendentes = Processo.objects.filter(
         status__status_choice__in=[
@@ -624,6 +628,7 @@ def contas_a_pagar(request):
         'lista_processos': lista_processos,
         'data_selecionada': data_selecionada,
         'forma_selecionada': forma_selecionada,
+        'pode_interagir': request.user.has_perm('processos.pode_operar_contas_pagar'),
     }
 
     return render(request, 'contas_a_pagar.html', context)
@@ -672,8 +677,13 @@ def add_pre_empenho_view(request):
     return render(request, 'add_pre_empenho.html', context)
 
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def a_empenhar_view(request):
     if request.method == 'POST':
+        pode_interagir = request.user.has_perm('processos.pode_operar_contas_pagar')
+        if not pode_interagir:
+            raise PermissionDenied
         processo_id = request.POST.get('processo_id')
         n_nota_empenho = request.POST.get('n_nota_empenho')
         data_empenho_str = request.POST.get('data_empenho')
@@ -726,6 +736,7 @@ def a_empenhar_view(request):
 
     context = {
         'processos': processos_pendentes,
+        'pode_interagir': request.user.has_perm('processos.pode_operar_contas_pagar'),
     }
     return render(request, 'a_empenhar.html', context)
 
@@ -1253,8 +1264,12 @@ def api_vincular_comprovantes(request):
 # ETAPAS DE CONFERÊNCIA E TRAMITAÇÃO
 # ==========================================
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def enviar_para_autorizacao(request):
     if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_operar_contas_pagar'):
+            raise PermissionDenied
         selecionados = request.POST.getlist('processos_selecionados')
 
         if selecionados:
@@ -1287,6 +1302,8 @@ def enviar_para_autorizacao(request):
     return redirect('contas_a_pagar')
 
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def painel_autorizacao_view(request):
     processos = Processo.objects.filter(
         status__status_choice__iexact='A PAGAR - ENVIADO PARA AUTORIZAÇÃO'
@@ -1299,13 +1316,18 @@ def painel_autorizacao_view(request):
     context = {
         'processos': processos,
         'processos_autorizados': processos_autorizados,
-        'pendencia_form': PendenciaForm()
+        'pendencia_form': PendenciaForm(),
+        'pode_interagir': request.user.has_perm('processos.pode_autorizar_pagamento'),
     }
     return render(request, 'autorizacao.html', context)
 
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def autorizar_pagamento(request):
     if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_autorizar_pagamento'):
+            raise PermissionDenied
         selecionados = request.POST.getlist('processos_selecionados')
 
         if selecionados:
@@ -1322,10 +1344,14 @@ def autorizar_pagamento(request):
     return redirect('painel_autorizacao')
 
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def recusar_autorizacao_view(request, pk):
     processo = get_object_or_404(Processo, id=pk)
 
     if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_autorizar_pagamento'):
+            raise PermissionDenied
         form = PendenciaForm(request.POST)
         if form.is_valid():
             with transaction.atomic():
@@ -1352,6 +1378,8 @@ def recusar_autorizacao_view(request, pk):
     return redirect('painel_autorizacao')
 
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def painel_conferencia_view(request):
     processos_pagos = Processo.objects.filter(status__status_choice__iexact='PAGO - EM CONFERÊNCIA')
 
@@ -1375,18 +1403,25 @@ def painel_conferencia_view(request):
 
     context = {
         'processos': processos_aptos,
+        'pode_interagir': request.user.has_perm('processos.pode_operar_contas_pagar'),
     }
     return render(request, 'conferencia.html', context)
 
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def aprovar_conferencia_view(request, pk):
     messages.error(request, 'A aprovação direta foi desativada. Abra o processo para realizar a conferência.')
     return redirect('painel_conferencia')
 
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def iniciar_conferencia_view(request):
     """POST: store selected process IDs in session queue, redirect to first process."""
     if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_operar_contas_pagar'):
+            raise PermissionDenied
         ids_raw = request.POST.getlist('processo_ids')
         process_ids = []
         for pid in ids_raw:
@@ -1406,6 +1441,8 @@ def iniciar_conferencia_view(request):
     return redirect('painel_conferencia')
 
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def conferencia_processo_view(request, pk):
     """Detailed conferência view for reviewing a single process."""
     HISTORY_TYPE_LABELS = {'+': 'Criação', '~': 'Alteração', '-': 'Exclusão'}
@@ -1441,6 +1478,8 @@ def conferencia_processo_view(request, pk):
             return redirect('conferencia_processo', pk=pk)
 
         if action in ('confirmar', 'salvar'):
+            if not request.user.has_perm('processos.pode_operar_contas_pagar'):
+                raise PermissionDenied
             doc_formset = DocumentoFormSet(
                 request.POST, request.FILES,
                 instance=processo,
@@ -1561,22 +1600,30 @@ def conferencia_processo_view(request, pk):
         'queue_length': len(queue),
         'queue_position': current_index + 1 if current_index >= 0 else 1,
         'tipos_documento': TiposDeDocumento.objects.all(),
+        'pode_interagir': request.user.has_perm('processos.pode_operar_contas_pagar'),
     }
     return render(request, 'conferencia_processo.html', context)
 
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def painel_contabilizacao_view(request):
     processos = Processo.objects.filter(status__status_choice__iexact='PAGO - A CONTABILIZAR').order_by('data_pagamento')
     context = {
         'processos': processos,
-        'pendencia_form': PendenciaForm()
+        'pendencia_form': PendenciaForm(),
+        'pode_interagir': request.user.has_perm('processos.pode_contabilizar'),
     }
 
     return render(request, 'contabilizacao.html', context)
 
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def aprovar_contabilizacao_view(request, pk):
     if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_contabilizar'):
+            raise PermissionDenied
         processo = get_object_or_404(Processo, id=pk)
         status_conselho, _ = StatusChoicesProcesso.objects.get_or_create(
             status_choice__iexact='CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL',
@@ -1588,10 +1635,14 @@ def aprovar_contabilizacao_view(request, pk):
     return redirect('painel_contabilizacao')
 
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def recusar_contabilizacao_view(request, pk):
     processo = get_object_or_404(Processo, id=pk)
 
     if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_contabilizar'):
+            raise PermissionDenied
         form = PendenciaForm(request.POST)
         if form.is_valid():
             with transaction.atomic():
@@ -1618,17 +1669,24 @@ def recusar_contabilizacao_view(request, pk):
     return redirect('painel_contabilizacao')
 
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def painel_conselho_view(request):
     processos = Processo.objects.filter(status__status_choice__iexact='CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL').order_by('data_pagamento')
     context = {
         'processos': processos,
-        'pendencia_form': PendenciaForm()
+        'pendencia_form': PendenciaForm(),
+        'pode_interagir': request.user.has_perm('processos.pode_auditar_conselho'),
     }
     return render(request, 'conselho.html', context)
 
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def aprovar_conselho_view(request, pk):
     if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_auditar_conselho'):
+            raise PermissionDenied
         processo = get_object_or_404(Processo, id=pk)
         status_arquivamento, _ = StatusChoicesProcesso.objects.get_or_create(
             status_choice__iexact='APROVADO POR CONSELHO FISCAL - PARA ARQUIVAMENTO',
@@ -1640,10 +1698,14 @@ def aprovar_conselho_view(request, pk):
     return redirect('painel_conselho')
 
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def recusar_conselho_view(request, pk):
     processo = get_object_or_404(Processo, id=pk)
 
     if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_auditar_conselho'):
+            raise PermissionDenied
         form = PendenciaForm(request.POST)
         if form.is_valid():
             with transaction.atomic():
@@ -1670,6 +1732,8 @@ def recusar_conselho_view(request, pk):
     return redirect('painel_conselho')
 
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def painel_arquivamento_view(request):
     processos_pendentes = Processo.objects.filter(
         status__status_choice__iexact='APROVADO POR CONSELHO FISCAL - PARA ARQUIVAMENTO'
@@ -1681,42 +1745,16 @@ def painel_arquivamento_view(request):
 
     return render(request, 'arquivamento.html', {
         'processos_pendentes': processos_pendentes,
-        'processos_arquivados': processos_arquivados
+        'processos_arquivados': processos_arquivados,
+        'pode_interagir': False,
     })
 
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def arquivar_processo_view(request, pk):
     if request.method == 'POST':
-        processo = get_object_or_404(Processo, id=pk)
-
-        nome_usuario = request.user.get_full_name() or request.user.username if request.user.is_authenticated else "Conselheiro Fiscal"
-        termo_buffer = gerar_termo_auditoria(processo, nome_usuario)
-
-        merger = PdfWriter()
-        merger.append(termo_buffer)
-
-        documentos = processo.documentos.all().order_by('ordem')
-        for doc in documentos:
-            if doc.arquivo and default_storage.exists(doc.arquivo.path):
-                if doc.arquivo.name.lower().endswith('.pdf'):
-                    merger.append(doc.arquivo.path)
-
-        merged_buffer = io.BytesIO()
-        merger.write(merged_buffer)
-        merged_buffer.seek(0)
-
-        nome_arquivo = f"Processo_{processo.id}_Consolidado.pdf"
-        processo.arquivo_final.save(nome_arquivo, ContentFile(merged_buffer.read()))
-
-        status_arquivado, _ = StatusChoicesProcesso.objects.get_or_create(
-            status_choice__iexact='ARQUIVADO',
-            defaults={'status_choice': 'ARQUIVADO'}
-        )
-        processo.status = status_arquivado
-        processo.save()
-
-        messages.success(request, f'Processo #{processo.id} assinado, consolidado em PDF único e ARQUIVADO definitivamente!')
-
+        raise PermissionDenied
     return redirect('painel_arquivamento')
 
 
@@ -1987,6 +2025,8 @@ def painel_pendencias_view(request):
     }
     return render(request, 'painel_pendencias.html', context)
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def painel_liquidacoes_view(request):
     # select_related otimiza a busca no banco, já puxando o processo e o emitente
     queryset_base = DocumentoFiscal.objects.select_related(
@@ -1998,12 +2038,17 @@ def painel_liquidacoes_view(request):
     context = {
         'meu_filtro': meu_filtro,
         'notas': meu_filtro.qs,
+        'pode_interagir': request.user.has_perm('processos.pode_atestar_liquidacao'),
     }
     return render(request, 'painel_liquidacoes.html', context)
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def alternar_ateste_nota(request, pk):
     """Permite atestar ou remover o ateste de uma nota diretamente pelo painel"""
     if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_atestar_liquidacao'):
+            raise PermissionDenied
         nota = get_object_or_404(DocumentoFiscal, id=pk)
 
         # Inverte o status atual (Se True vira False, se False vira True)

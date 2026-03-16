@@ -23,9 +23,11 @@
             <p class="text-muted small">Processos aguardando autorização final para execução bancária.</p>
         </div>
         <div class="d-flex gap-2">
+            {% if pode_interagir %}
             <button type="submit" form="form-autorizar" class="btn btn-success fw-bold shadow-sm" onclick="return confirm('Atenção: Você está autorizando legalmente a execução financeira destes processos. Deseja prosseguir?');">
                 <i class="bi bi-check-circle"></i> Autorizar Selecionados
             </button>
+            {% endif %}
             <a href="{% url 'contas_a_pagar' %}" class="btn btn-outline-secondary">Voltar para Contas</a>
         </div>
     </div>
@@ -48,9 +50,11 @@
                 <table class="table table-hover table-striped mb-0 align-middle">
                     <thead class="table-light">
                         <tr>
+                            {% if pode_interagir %}
                             <th class="text-center" style="width: 40px;">
                                 <input type="checkbox" class="form-check-input" id="checkAll">
                             </th>
+                            {% endif %}
                             <th># ID</th>
                             <th>Credor</th>
                             <th>Status</th>
@@ -63,9 +67,11 @@
                     <tbody>
                         {% for processo in processos %}
                         <tr>
+                            {% if pode_interagir %}
                             <td class="text-center">
                                 <input type="checkbox" name="processos_selecionados" value="{{ processo.id }}" class="form-check-input check-item">
                             </td>
+                            {% endif %}
                             <td class="fw-bold text-muted">#{{ processo.id }}</td>
                             <td class="fw-medium">{{ processo.credor|default:"-"|truncatechars:40 }}</td>
                             <td><span class="badge bg-warning bg-opacity-10 text-warning px-2 py-1 rounded-pill">{{ processo.status|default:"-" }}</span></td>
@@ -81,9 +87,11 @@
                                 <a href="{% url 'editar_processo' pk=processo.id %}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Ver Detalhes/Despachos">
                                     <i class="bi bi-eye"></i>
                                 </a>
+                                {% if pode_interagir %}
                                 <button type="button" class="btn btn-sm btn-outline-danger shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRecusa{{ processo.id }}" title="Devolver Processo">
                                     <i class="bi bi-arrow-return-left"></i>
                                 </button>
+                                {% endif %}
                             </td>
                         </tr>
                         {% empty %}
@@ -145,6 +153,7 @@
     </div>
     </div>
 
+{% if pode_interagir %}
 {% for processo in processos %}
 <div class="modal fade" id="modalRecusa{{ processo.id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
@@ -175,6 +184,7 @@
     </div>
 </div>
 {% endfor %}
+{% endif %}
 
 {% include 'partials/preview_modal.html' %}
 

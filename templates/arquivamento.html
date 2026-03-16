@@ -47,10 +47,12 @@
                             <td>{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
                             <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
                             <td class="text-center d-flex justify-content-center gap-1">
+                                {% if pode_interagir %}
                                 <form method="POST" action="{% url 'arquivar_processo' pk=processo.id %}" onsubmit="return confirm('ATENÇÃO: O processo será unificado em um PDF blindado. Confirmar o arquivamento definitivo?');">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-dark fw-bold shadow-sm"><i class="bi bi-folder-check"></i> Arquivar e Unificar</button>
                                 </form>
+                                {% endif %}
                             </td>
                         </tr>
                         {% empty %}<tr><td colspan="6" class="text-center py-5 text-muted"><i class="bi bi-check2-all fs-2 d-block mb-2 text-success"></i>Nenhum processo pendente de arquivamento.</td></tr>{% endfor %}
