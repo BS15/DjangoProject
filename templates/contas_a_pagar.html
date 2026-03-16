@@ -156,7 +156,12 @@
                                 {% for processo in lista_processos %}
                                 <tr>
                                     <td class="text-center">
-                                        <input type="checkbox" name="processos_selecionados" value="{{ processo.id }}" class="form-check-input check-item">
+                                        {% if processo.status.status_choice == 'A PAGAR - PENDENTE AUTORIZAÇÃO' %}
+                                            <input type="checkbox" name="processos_selecionados" value="{{ processo.id }}" class="form-check-input check-item">
+                                        {% else %}
+                                            <input type="checkbox" class="form-check-input" disabled
+                                                   title="Não pode ser enviado para autorização: status atual é '{{ processo.status }}'">
+                                        {% endif %}
                                     </td>
                                     <td class="fw-bold text-muted">#{{ processo.id }}</td>
                                     <td class="fw-medium text-primary">{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
