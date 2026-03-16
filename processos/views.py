@@ -13,12 +13,12 @@ from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Count, Q, F
 from pypdf import PdfWriter
-from .forms import ProcessoForm, DocumentoFormSet, NotaFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet
+from .forms import ProcessoForm, DocumentoFormSet, DocumentoFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet
 from .utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, processar_pdf_comprovantes_ia
 from .ai_utils import extrair_dados_documento, extract_data_with_llm
 from .invoice_processor import process_invoice_taxes
-from .models import Processo, NotaFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia
-from .filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, NotaFiscalFilter, ContingenciaFilter
+from .models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia
+from .filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter
 
 
 def home_page(request):
@@ -261,7 +261,7 @@ def documentos_fiscais_view(request, pk):
 
 
 def api_toggle_documento_fiscal(request, processo_pk, documento_pk):
-    """AJAX: Toggle a document as nota fiscal (create/delete NotaFiscal)."""
+    """AJAX: Toggle a document as nota fiscal (create/delete DocumentoFiscal)."""
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
 
@@ -273,8 +273,8 @@ def api_toggle_documento_fiscal(request, processo_pk, documento_pk):
         nota.retencoes.all().delete()
         nota.delete()
         return JsonResponse({'status': 'removed', 'message': 'Documento fiscal removido.'})
-    except (NotaFiscal.DoesNotExist, AttributeError):
-        nota = NotaFiscal.objects.create(
+    except (DocumentoFiscal.DoesNotExist, AttributeError):
+        nota = DocumentoFiscal.objects.create(
             processo=processo,
             documento_vinculado=doc,
             numero_nota_fiscal=f'DOC-{doc.ordem}',
@@ -295,7 +295,7 @@ def api_salvar_nota_fiscal(request, processo_pk, nota_pk):
         return JsonResponse({'error': 'Method not allowed'}, status=405)
 
     processo = get_object_or_404(Processo, id=processo_pk)
-    nota = get_object_or_404(NotaFiscal, id=nota_pk, processo=processo)
+    nota = get_object_or_404(DocumentoFiscal, id=nota_pk, processo=processo)
 
     try:
         body = json.loads(request.body)
@@ -905,7 +905,7 @@ def painel_impostos(request):
         itens = meu_filtro.qs.prefetch_related('notas_fiscais__retencoes__codigo', 'notas_fiscais__retencoes__status')
 
     elif visao == 'notas':
-        queryset_base = NotaFiscal.objects.filter(retencoes__isnull=False).distinct()
+        queryset_base = DocumentoFiscal.objects.filter(retencoes__isnull=False).distinct()
         meu_filtro = RetencaoNotaFilter(request.GET, queryset=queryset_base)
         itens = meu_filtro.qs.prefetch_related('retencoes__codigo', 'retencoes__status', 'processo')
 
@@ -1383,7 +1383,7 @@ def arquivar_processo_view(request, pk):
 def api_extrair_nota(request):
     if request.method == 'POST' and request.FILES.get('arquivo'):
         arquivo = request.FILES['arquivo']
-        dados = extrair_dados_documento(arquivo, NotaFiscal)
+        dados = extrair_dados_documento(arquivo, DocumentoFiscal)
 
         if dados:
             return JsonResponse({'status': 'success', 'dados': dados})
@@ -1649,11 +1649,11 @@ def painel_pendencias_view(request):
 
 def painel_liquidacoes_view(request):
     # select_related otimiza a busca no banco, já puxando o processo e o emitente
-    queryset_base = NotaFiscal.objects.select_related(
+    queryset_base = DocumentoFiscal.objects.select_related(
         'processo', 'nome_emitente', 'fiscal_contrato'
     ).all().order_by('-id')
 
-    meu_filtro = NotaFiscalFilter(request.GET, queryset=queryset_base)
+    meu_filtro = DocumentoFiscalFilter(request.GET, queryset=queryset_base)
 
     context = {
         'meu_filtro': meu_filtro,
@@ -1664,7 +1664,7 @@ def painel_liquidacoes_view(request):
 def alternar_ateste_nota(request, pk):
     """Permite atestar ou remover o ateste de uma nota diretamente pelo painel"""
     if request.method == 'POST':
-        nota = get_object_or_404(NotaFiscal, id=pk)
+        nota = get_object_or_404(DocumentoFiscal, id=pk)
 
         # Inverte o status atual (Se True vira False, se False vira True)
         nota.atestada = not nota.atestada

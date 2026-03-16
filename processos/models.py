@@ -5,7 +5,7 @@ from simple_history.models import HistoricalRecords
 from django.contrib.auth.models import User
 #This file defines the models used in application.
 #Processo model which represents payment process.
-#NotaFiscal is model that represents fiscal note.
+#DocumentoFiscal is model that represents fiscal note.
 
 # Substitua a sua função antiga por esta:
 def caminho_documento(instance, filename):
@@ -406,7 +406,7 @@ class ComprovanteDePagamento(models.Model):
         return f"Comprovante - {self.processo} - {self.credor_nome} - R$ {self.valor_pago}"
 
 
-class NotaFiscal(models.Model):
+class DocumentoFiscal(models.Model):
     processo = models.ForeignKey(Processo, on_delete=models.CASCADE, related_name='notas_fiscais')
     nome_emitente = models.ForeignKey('Credor', on_delete=models.PROTECT, blank=True, null=True)
     cnpj_emitente = models.CharField(max_length=20, blank=True) # Permitimos blank=True para o save() cuidar disso
@@ -449,7 +449,7 @@ class Pendencia(models.Model):
         return f"PENDÊNCIA: {self.tipo} - {self.descricao}"
 
 class RetencaoImposto(models.Model):
-    nota_fiscal = models.ForeignKey(NotaFiscal, on_delete=models.CASCADE, related_name='retencoes')
+    nota_fiscal = models.ForeignKey(DocumentoFiscal, on_delete=models.CASCADE, related_name='retencoes')
     beneficiario = models.ForeignKey('Credor', on_delete=models.PROTECT, blank=True, null=True, verbose_name="Beneficiário", related_name='retencoes')
     rendimento_tributavel = valor = models.DecimalField(null=True, blank=True, max_digits=12, decimal_places=2)
     data_pagamento = models.DateField(blank=True, null=True)
