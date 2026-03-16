@@ -6,10 +6,12 @@ from .models import (
     DocumentoFiscal, RetencaoImposto, StatusChoicesVerbasIndenizatorias, Credor,
     ContasBancarias, TiposDeVerbasIndenizatorias,
     StatusChoicesPendencias, Grupos, CargosFuncoes,
-    Tabela_Valores_Unitarios_Verbas_Indenizatorias, Tabela_Proponentes_Diarias,
+    Tabela_Valores_Unitarios_Verbas_Indenizatorias,
     StatusChoicesRetencoes, TiposDePendencias, Pendencia, ComprovanteDePagamento,
     DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio,
-    DocumentoSuprimentoDeFundos, MeiosDeTransporte
+    DocumentoSuprimentoDeFundos, MeiosDeTransporte,
+    Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao,
+    SuprimentoDeFundos, DespesaSuprimento,
 )
 # ==========================================
 # TABELAS DE PARAMETRIZAÇÃO (CONFIGURAÇÕES)
@@ -69,8 +71,8 @@ class ProcessoAdmin(SimpleHistoryAdmin):
 
 # Registros simples para as demais tabelas
 admin.site.register(ContasBancarias)
-admin.site.register(DocumentoFiscal)
-admin.site.register(RetencaoImposto)
+admin.site.register(DocumentoFiscal, SimpleHistoryAdmin)
+admin.site.register(RetencaoImposto, SimpleHistoryAdmin)
 admin.site.register(DocumentoProcesso, SimpleHistoryAdmin)
 admin.site.register(DocumentoDiaria, SimpleHistoryAdmin)
 admin.site.register(DocumentoReembolso, SimpleHistoryAdmin)
@@ -78,20 +80,25 @@ admin.site.register(DocumentoJeton, SimpleHistoryAdmin)
 admin.site.register(DocumentoAuxilio, SimpleHistoryAdmin)
 admin.site.register(DocumentoSuprimentoDeFundos, SimpleHistoryAdmin)
 admin.site.register(StatusChoicesVerbasIndenizatorias)
-admin.site.register(Credor)
+admin.site.register(Credor, SimpleHistoryAdmin)
 admin.site.register(Grupos)
 admin.site.register(CargosFuncoes)
 admin.site.register(TiposDeVerbasIndenizatorias)
 admin.site.register(StatusChoicesPendencias)
-admin.site.register(Tabela_Valores_Unitarios_Verbas_Indenizatorias),
-admin.site.register(Tabela_Proponentes_Diarias)
+admin.site.register(Tabela_Valores_Unitarios_Verbas_Indenizatorias)
 admin.site.register(StatusChoicesRetencoes)
 admin.site.register(TiposDePendencias)
-admin.site.register(Pendencia)
+admin.site.register(Pendencia, SimpleHistoryAdmin)
+admin.site.register(Diaria, SimpleHistoryAdmin)
+admin.site.register(ReembolsoCombustivel, SimpleHistoryAdmin)
+admin.site.register(Jeton, SimpleHistoryAdmin)
+admin.site.register(AuxilioRepresentacao, SimpleHistoryAdmin)
+admin.site.register(SuprimentoDeFundos, SimpleHistoryAdmin)
+admin.site.register(DespesaSuprimento, SimpleHistoryAdmin)
 
 
 @admin.register(ComprovanteDePagamento)
-class ComprovanteDePagamentoAdmin(admin.ModelAdmin):
+class ComprovanteDePagamentoAdmin(SimpleHistoryAdmin):
     list_display = ('id', 'processo', 'credor_nome', 'valor_pago', 'tipo_de_pagamento', 'data_pagamento')
     search_fields = ('processo__n_nota_empenho', 'credor_nome')
     list_filter = ('tipo_de_pagamento',)
