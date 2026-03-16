@@ -69,6 +69,13 @@ class CodigosImposto(models.Model):
     aliquota = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     vencimento_padrao = models.PositiveIntegerField(default=1, help_text="Dia de Vencimento Padrão", null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    natureza_rendimento = models.CharField(
+        max_length=5,
+        blank=True,
+        null=True,
+        verbose_name="Natureza do Rendimento (EFD-Reinf)",
+        help_text="Código de 5 dígitos (Tabela 01 do SPED). Ex: 15001, 17001. Mapeia o código de receita para o XML."
+    )
 
     def __str__(self):
         return f"{self.codigo}"
@@ -264,6 +271,13 @@ class Credor(models.Model):
         choices=TIPO_PESSOA_CHOICES,
         default='PJ'  # Assume PJ como padrão, já que é o mais comum em notas de empenho
     )
+    codigo_servico_padrao = models.CharField(
+        max_length=9,
+        blank=True,
+        null=True,
+        verbose_name="Cód. Serviço Padrão INSS (Tabela 06)",
+        help_text="Ex: 100000001 (Limpeza). Será herdado automaticamente pelas Notas Fiscais deste credor."
+    )
     history = HistoricalRecords()
 
     def __str__(self):
@@ -434,12 +448,27 @@ class DocumentoFiscal(models.Model):
         limit_choices_to={'grupo__grupo': 'FUNCIONÁRIOS'}
     )
     atestada = models.BooleanField(default=False)
+    serie_nota_fiscal = models.CharField(
+        max_length=10,
+        blank=True,
+        null=True,
+        verbose_name="Série"
+    )
+    codigo_servico_inss = models.CharField(
+        max_length=9,
+        blank=True,
+        null=True,
+        verbose_name="Cód. Serviço INSS (Tabela 06 Reinf)"
+    )
     history = HistoricalRecords()
 
     def save(self, *args, **kwargs):
         # Se um emitente foi selecionado e o CNPJ está vazio (ou queremos sempre atualizar)
         if self.nome_emitente:
             self.cnpj_emitente = self.nome_emitente.cpf_cnpj
+        # Smart Inheritance: auto-fill codigo_servico_inss from the credor's default if not set
+        if not self.codigo_servico_inss and self.nome_emitente and self.nome_emitente.codigo_servico_padrao:
+            self.codigo_servico_inss = self.nome_emitente.codigo_servico_padrao
         super().save(*args, **kwargs)
 
     def __str__(self):
