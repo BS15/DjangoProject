@@ -114,7 +114,7 @@
                             </div>
                             <div class="col-6">
                                 <div class="small text-muted">Status</div>
-                                <span class="badge bg-success bg-opacity-15 text-success">
+                                <span class="badge bg-success text-white">
                                     {{ processo.status|default:"—" }}
                                 </span>
                             </div>
@@ -406,8 +406,7 @@
                                                     {{ rec.history_type_label }}
                                                 </span>
                                             </td>
-                                            <td class="text-truncate" style="max-width:160px;"
-                                                title="{{ rec.str_repr }}">
+                                            <td style="white-space:normal;word-break:break-word;">
                                                 {{ rec.str_repr }}
                                             </td>
                                         </tr>
