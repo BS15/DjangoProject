@@ -45,6 +45,7 @@ def pre_triagem_view(request):
 
     if request.method == 'POST':
         tipo_pagamento_id = request.POST.get('tipo_pagamento_id', '')
+        tipo_documento_id = request.POST.get('tipo_documento_id', '').strip()
         num_docs_str = request.POST.get('num_documentos', '0')
         try:
             num_docs = int(num_docs_str)
@@ -150,12 +151,6 @@ def pre_triagem_view(request):
                             tipo_doc_i = tipo_doc_db
                     if not tipo_doc_i:
                         messages.error(request, f'Documento {i + 1}: Tipo de Documento não definido.')
-                    # Resolve tipo de documento per document (same as add_process logic)
-                    tipo_doc_id_str = request.POST.get(f'tipo_documento_{i}', '')
-                    try:
-                        tipo_doc_db = TiposDeDocumento.objects.get(id=int(tipo_doc_id_str))
-                    except (TiposDeDocumento.DoesNotExist, ValueError, TypeError):
-                        messages.error(request, f'Selecione um Tipo de Documento válido para o documento {i + 1}.')
                         return _render_form()
 
                     try:
