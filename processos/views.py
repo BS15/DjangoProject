@@ -13,7 +13,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.db import transaction
-from django.db.models import Count, Q, F
+from django.db.models import Count, Q, F, Sum
 from pypdf import PdfWriter
 from .forms import ProcessoForm, DocumentoFormSet, DocumentoFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet
 from .utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, processar_pdf_comprovantes_ia, gerar_pdf_autorizacao, gerar_pdf_conselho_fiscal
@@ -477,15 +477,9 @@ def api_salvar_nota_fiscal(request, processo_pk, nota_pk):
             pass
 
     vb = body.get('valor_bruto', '')
-    vl = body.get('valor_liquido', '')
     if vb:
         try:
             nota.valor_bruto = float(str(vb).replace(',', '.'))
-        except (ValueError, TypeError):
-            pass
-    if vl:
-        try:
-            nota.valor_liquido = float(str(vl).replace(',', '.'))
         except (ValueError, TypeError):
             pass
 
@@ -532,6 +526,11 @@ def api_salvar_nota_fiscal(request, processo_pk, nota_pk):
                 )
             except (ValueError, TypeError) as exc:
                 print(f'Erro ao criar retenção: {exc}')
+
+    # Recalculate valor_liquido server-side as valor_bruto minus sum of retencoes
+    total_retencoes = nota.retencoes.aggregate(total=Sum('valor'))['total'] or 0
+    nota.valor_liquido = (nota.valor_bruto or 0) - total_retencoes
+    nota.save(update_fields=['valor_liquido'])
 
     tipo_pendencia, _ = TiposDePendencias.objects.get_or_create(
         tipo_de_pendencia__iexact='ATESTE DE LIQUIDAÇÃO',
