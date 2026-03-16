@@ -580,6 +580,8 @@ def visualizar_pdf_processo(request, processo_id):
         return HttpResponse("Erro interno ao mesclar os PDFs.", status=500)
 
 
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def contas_a_pagar(request):
     processos_pendentes = Processo.objects.filter(
         status__status_choice__in=[
@@ -626,6 +628,7 @@ def contas_a_pagar(request):
         'lista_processos': lista_processos,
         'data_selecionada': data_selecionada,
         'forma_selecionada': forma_selecionada,
+        'pode_interagir': request.user.has_perm('processos.pode_operar_contas_pagar'),
     }
 
     return render(request, 'contas_a_pagar.html', context)
