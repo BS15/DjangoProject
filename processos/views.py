@@ -17,7 +17,7 @@ from .forms import ProcessoForm, DocumentoFormSet, DocumentoFiscalFormSet, Reten
 from .utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, processar_pdf_comprovantes_ia
 from .ai_utils import extrair_dados_documento, extract_data_with_llm
 from .invoice_processor import process_invoice_taxes
-from .models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia
+from .models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias
 from .filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DiariasAutorizacaoFilter
 
 
@@ -630,6 +630,34 @@ def add_diaria_view(request):
             tipo_id = request.POST.get('tipo_documento_anexo')
             if arquivo and tipo_id:
                 DocumentoDiaria.objects.create(diaria=nova_diaria, arquivo=arquivo, tipo_id=tipo_id)
+
+            # Auto-create a ReembolsoCombustivel skeleton when transport is "VEÍCULO PRÓPRIO"
+            meio = nova_diaria.meio_de_transporte
+            if meio and 'VEÍCULO PRÓPRIO' in meio.meio_de_transporte.upper():
+                status_pendente = StatusChoicesVerbasIndenizatorias.objects.filter(
+                    status_choice__iexact='PEDIDO - CÁLCULO DE VALORES PENDENTE'
+                ).first()
+                ReembolsoCombustivel.objects.create(
+                    diaria=nova_diaria,
+                    beneficiario=nova_diaria.beneficiario,
+                    numero_sequencial=nova_diaria.numero_sequencial,
+                    data_saida=nova_diaria.data_saida,
+                    data_retorno=nova_diaria.data_retorno,
+                    cidade_origem=nova_diaria.cidade_origem,
+                    cidade_destino=nova_diaria.cidade_destino,
+                    objetivo=nova_diaria.objetivo,
+                    distancia_km=0,
+                    preco_combustivel=0,
+                    valor_total=0,
+                    status=status_pendente,
+                )
+                messages.info(
+                    request,
+                    'Reembolso de combustível criado automaticamente com status '
+                    '"PEDIDO - CÁLCULO DE VALORES PENDENTE". '
+                    'Verifique a distância e o preço médio do combustível para concluir o cálculo.'
+                )
+
             messages.success(request, 'Diária cadastrada com sucesso!')
             return redirect('diarias_list')
         else:
