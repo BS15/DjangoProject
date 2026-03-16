@@ -206,6 +206,13 @@ class TiposDePendencias(models.Model):
     def __str__(self):
         return f"{self.tipo_de_pendencia}"
 
+class MeiosDeTransporte(models.Model):
+    meio_de_transporte = models.CharField(max_length=100, unique=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.meio_de_transporte}"
+
 class Grupos(models.Model):
     grupo = models.CharField(max_length=100, unique=True)
     is_active = models.BooleanField(default=True)
@@ -508,6 +515,8 @@ class Diaria(models.Model):
 
     quantidade_diarias = models.DecimalField("Quantidade de Diárias", max_digits=4, decimal_places=1)
     valor_total = models.DecimalField("Valor Total (R$)", max_digits=12, decimal_places=2, blank=True, null=True)
+    meio_de_transporte = models.ForeignKey('MeiosDeTransporte', on_delete=models.PROTECT, blank=True, null=True,
+                                           verbose_name="Meio de Transporte")
     status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
 
     def calcular_valor_total(self):
