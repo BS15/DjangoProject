@@ -452,6 +452,24 @@
             Salvar
         </button>
 
+        <!-- Back to previous -->
+        {% if prev_pk %}
+        <button type="button"
+                class="btn btn-outline-secondary fw-bold"
+                id="btn-voltar"
+                data-action="voltar">
+            <i class="bi bi-skip-start me-1"></i>
+            Voltar — Processo Anterior
+        </button>
+        {% else %}
+        <button type="button"
+                class="btn btn-outline-secondary fw-bold disabled"
+                title="Não há processo anterior na fila">
+            <i class="bi bi-skip-start me-1"></i>
+            Voltar
+        </button>
+        {% endif %}
+
         <!-- Skip -->
         {% if next_pk %}
         <button type="button"
@@ -492,7 +510,7 @@
     // ── Action buttons submit the main form with the right action value ──
     var form = document.getElementById('conferencia-form');
 
-    ['btn-confirmar', 'btn-salvar', 'btn-pular'].forEach(function (btnId) {
+    ['btn-confirmar', 'btn-salvar', 'btn-pular', 'btn-voltar'].forEach(function (btnId) {
         var btn = document.getElementById(btnId);
         if (!btn) return;
         btn.addEventListener('click', function () {
