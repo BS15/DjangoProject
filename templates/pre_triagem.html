@@ -47,7 +47,6 @@
 
     <form method="post" enctype="multipart/form-data" id="preTriagemForm" novalidate>
         {% csrf_token %}
-        <input type="hidden" name="tipo_documento_id" id="tipo_documento_hidden" value="{{ selected_tipo_documento_id }}">
         <input type="hidden" name="tipo_pagamento_id" id="tipo_pagamento_id_hidden" value="{{ selected_tipo_pagamento }}">
         <input type="hidden" name="num_documentos" id="num_documentos_hidden" value="0">
 
@@ -83,7 +82,7 @@
                 <div class="card shadow-sm border-0 mb-4">
                     <div class="card-body p-4">
                         <h5 class="text-primary border-bottom pb-2 mb-3 fw-bold">
-                            <i class="bi bi-card-list"></i> 1. Tipo de Pagamento e Documento
+                            <i class="bi bi-card-list"></i> 1. Tipo de Pagamento
                         </h5>
 
                         <!-- Tipo de Pagamento -->
@@ -97,15 +96,7 @@
                                 </option>
                                 {% endfor %}
                             </select>
-                            <small class="text-muted">Selecione para habilitar a escolha de tipo de documento.</small>
-                        </div>
-
-                        <!-- Tipo de Documento (unlocked after tipo de pagamento) -->
-                        <div id="tipo-documento-section" style="display: {% if selected_tipo_pagamento %}block{% else %}none{% endif %};">
-                            <label class="form-label fw-bold">Tipo de Documento <span class="text-danger">*</span></label>
-                            <div id="tipos-documento-container">
-                                <p class="text-muted small"><em><i class="bi bi-hourglass-split"></i> Carregando tipos de documento...</em></p>
-                            </div>
+                            <small class="text-muted">Selecione para habilitar o upload de documentos.</small>
                         </div>
                     </div>
                 </div>
@@ -159,6 +150,14 @@
             <span class="fw-bold"><i class="bi bi-file-earmark-text"></i> Documento <span class="doc-number-display">1</span></span>
         </div>
         <div class="card-body">
+            <div class="row g-3 mb-3">
+                <div class="col-md-5">
+                    <label class="small fw-bold text-muted mb-1">Tipo de Documento *</label>
+                    <select name="tipo_documento___INDEX__" class="form-select form-select-sm tipo-documento-select" required>
+                        <option value="">---------</option>
+                    </select>
+                </div>
+            </div>
             <div class="row g-3 mb-3">
                 <div class="col-md-5">
                     <label class="small fw-bold text-muted mb-1">Emitente *</label>
@@ -271,51 +270,54 @@
     const uploadSection = document.getElementById('upload-section');
     const docFormsSection = document.getElementById('doc-forms-section');
     const numDocumentosInput = document.getElementById('num_documentos_hidden');
-    const tipoDocumentoInput = document.getElementById('tipo_documento_hidden');
     const tipoPagamentoInput = document.getElementById('tipo_pagamento_id_hidden');
     const pdfTabsContainer = document.getElementById('pdf-tabs-container');
     const pdfPlaceholder = document.getElementById('pdf-placeholder');
     const pdfViewer = document.getElementById('pdf-viewer');
     const pdfTabs = document.getElementById('pdf-tabs');
-    const tipoDocumentoSection = document.getElementById('tipo-documento-section');
     const selectTipoPagamento = document.getElementById('select_tipo_pagamento');
 
-    let selectedTipoId = tipoDocumentoInput.value || '';
+    let availableDocTypes = [];
     let uploadedFiles = [];
     let docCount = 0;
 
-    function fetchTiposDocumento(tipoPagamentoId, preselected) {
-        const container = document.getElementById('tipos-documento-container');
-        container.innerHTML = '<p class="text-muted small"><i class="bi bi-hourglass-split"></i> Carregando...</p>';
+    function atualizarTiposDeDocumento(tipoPagamentoId) {
+        if (!tipoPagamentoId) {
+            availableDocTypes = [];
+            uploadSection.style.display = 'none';
+            return;
+        }
         fetch(`/api/documentos-por-pagamento/?tipo_pagamento_id=${tipoPagamentoId}`)
             .then(r => r.json())
             .then(data => {
-                if (data.sucesso && data.tipos && data.tipos.length > 0) {
-                    container.innerHTML = '';
-                    const row = document.createElement('div');
-                    row.className = 'row g-2';
-                    data.tipos.forEach(tipo => {
-                        const col = document.createElement('div');
-                        col.className = 'col-md-4';
-                        col.innerHTML = `<div class="tipo-btn rounded p-3 text-center" data-value="${tipo.id}" onclick="selecionarTipo(this)"><i class="bi bi-file-earmark-text fs-3 text-primary d-block mb-1"></i><span class="fw-bold small">${tipo.tipo_de_documento}</span></div>`;
-                        row.appendChild(col);
+                availableDocTypes = (data.sucesso && data.tipos) ? data.tipos : [];
+                document.querySelectorAll('.tipo-documento-select').forEach(select => {
+                    const valorAntigo = select.value;
+                    select.innerHTML = '<option value="">---------</option>';
+                    availableDocTypes.forEach(tipo => {
+                        const option = document.createElement('option');
+                        option.value = tipo.id;
+                        option.textContent = tipo.tipo_de_documento;
+                        select.appendChild(option);
                     });
-                    container.appendChild(row);
-                    if (preselected) {
-                        const btn = container.querySelector(`.tipo-btn[data-value="${preselected}"]`);
-                        if (btn) {
-                            btn.classList.add('selected');
-                            selectedTipoId = preselected;
-                            tipoDocumentoInput.value = selectedTipoId;
-                        }
-                    }
-                } else {
-                    container.innerHTML = '<p class="text-muted small"><em>Nenhum tipo de documento disponível para este tipo de pagamento.</em></p>';
-                }
+                    select.value = valorAntigo;
+                });
+                uploadSection.style.display = 'block';
             })
             .catch(() => {
-                container.innerHTML = '<p class="text-danger small"><em>Erro ao carregar tipos de documento.</em></p>';
+                availableDocTypes = [];
+                uploadSection.style.display = 'block';
             });
+    }
+
+    function populateDocTypeSelect(select) {
+        select.innerHTML = '<option value="">---------</option>';
+        availableDocTypes.forEach(tipo => {
+            const option = document.createElement('option');
+            option.value = tipo.id;
+            option.textContent = tipo.tipo_de_documento;
+            select.appendChild(option);
+        });
     }
 
     // Wire up tipo de pagamento selector
@@ -323,43 +325,18 @@
         const val = this.value;
         tipoPagamentoInput.value = val;
         if (val) {
-            tipoDocumentoSection.style.display = 'block';
-            tipoDocumentoInput.value = '';
-            selectedTipoId = '';
-            uploadSection.style.display = 'none';
             resetDocs();
-            fetchTiposDocumento(val);
+            atualizarTiposDeDocumento(val);
         } else {
-            tipoDocumentoSection.style.display = 'none';
-            document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('selected'));
-            tipoDocumentoInput.value = '';
-            selectedTipoId = '';
             uploadSection.style.display = 'none';
             resetDocs();
         }
     });
 
-    // On page load, if tipo_pagamento is already selected (e.g. after form error), populate tipos
+    // On page load, if tipo_pagamento is already selected (e.g. after form error), show upload and load types
     if (tipoPagamentoInput.value) {
-        fetchTiposDocumento(tipoPagamentoInput.value, tipoDocumentoInput.value || null);
-    }
-
-    function selecionarTipo(el) {
-        if (!tipoPagamentoInput.value) {
-            alert('Selecione o Tipo de Pagamento primeiro.');
-            return;
-        }
-        document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('selected'));
-        el.classList.add('selected');
-        selectedTipoId = el.getAttribute('data-value');
-        tipoDocumentoInput.value = selectedTipoId;
-
-        document.getElementById('bulk-file-input').multiple = true;
-
         uploadSection.style.display = 'block';
-
-        // Reset if tipo changed
-        resetDocs();
+        atualizarTiposDeDocumento(tipoPagamentoInput.value);
     }
 
     function resetDocs() {
@@ -380,7 +357,8 @@
 
     dropzone.addEventListener('click', () => {
         if (!tipoPagamentoInput.value) { alert('Selecione o Tipo de Pagamento primeiro.'); return; }
-        if (selectedTipoId) fileInput.click(); else alert('Selecione o tipo de documento primeiro.');
+        if (availableDocTypes.length === 0) { alert('Aguarde o carregamento dos tipos de documento.'); return; }
+        fileInput.click();
     });
     dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = '#0a58ca'; });
     dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = '#0d6efd'; });
@@ -388,7 +366,7 @@
         e.preventDefault();
         dropzone.style.borderColor = '#0d6efd';
         if (!tipoPagamentoInput.value) { alert('Selecione o Tipo de Pagamento primeiro.'); return; }
-        if (!selectedTipoId) { alert('Selecione o tipo de documento primeiro.'); return; }
+        if (availableDocTypes.length === 0) { alert('Aguarde o carregamento dos tipos de documento.'); return; }
         handleFiles(Array.from(e.dataTransfer.files));
     });
     fileInput.addEventListener('change', () => {
@@ -479,6 +457,11 @@
         // Initialize sections
         updateTaxSection(card);
         updateFiscalContrato(card);
+
+        // Populate tipo de documento select
+        const tipoSelect = card.querySelector('.tipo-documento-select');
+        if (tipoSelect) populateDocTypeSelect(tipoSelect);
+
         docList.appendChild(card);
     }
 
@@ -616,11 +599,6 @@
             selectTipoPagamento.focus();
             return;
         }
-        if (!tipoDocumentoInput.value) {
-            e.preventDefault();
-            alert('Selecione o tipo de documento antes de continuar.');
-            return;
-        }
         if (parseInt(numDocumentosInput.value) === 0) {
             e.preventDefault();
             alert('Faça o upload de pelo menos um arquivo antes de continuar.');
@@ -630,13 +608,22 @@
         const cards = document.querySelectorAll('#doc-list .doc-card');
         for (let i = 0; i < cards.length; i++) {
             const card = cards[i];
+            const tipoDoc = card.querySelector('.tipo-documento-select');
             const numero = card.querySelector('input[name^="numero_"]');
             const data = card.querySelector('input[name^="data_"]');
             const valorBruto = card.querySelector('.valor-bruto-input');
             const emitente = card.querySelector('.emitente-select');
 
-            [numero, data, valorBruto, emitente].forEach(el => { if (el) el.classList.remove('is-invalid'); });
+            [tipoDoc, numero, data, valorBruto, emitente].forEach(el => { if (el) el.classList.remove('is-invalid'); });
 
+            if (!tipoDoc || !tipoDoc.value) {
+                e.preventDefault();
+                const tab = document.getElementById('tab-doc-' + i);
+                if (tab) tab.click();
+                if (tipoDoc) tipoDoc.classList.add('is-invalid');
+                alert(`Documento ${i + 1}: Selecione o Tipo de Documento.`);
+                return;
+            }
             if (!emitente || !emitente.value) {
                 e.preventDefault();
                 const tab = document.getElementById('tab-doc-' + i);
