@@ -22,3 +22,6 @@ pagamentos/
 verbas/
 verbasindenizatorias/
 suprimentosdefundos/
+
+# Arquivos estáticos coletados (gerados pelo collectstatic, não devem ser versionados)
+staticfiles/
