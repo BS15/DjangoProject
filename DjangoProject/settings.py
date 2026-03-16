@@ -38,7 +38,7 @@ if not _secret_key:
     warnings.warn(
         "SECRET_KEY is not set via the environment. "
         "Using an insecure fallback – DO NOT use in production.",
-        stacklevel=1,
+        stacklevel=2,
     )
     _secret_key = 'django-insecure-fallback-key-for-local-dev-only-do-not-use-in-production'
 SECRET_KEY = _secret_key
