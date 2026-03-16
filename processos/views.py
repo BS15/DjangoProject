@@ -59,7 +59,7 @@ def pre_triagem_view(request):
                 'tipos_pagamento': tipos_pagamento,
                 'retencao_formset': retencao_formset,
                 'selected_tipo_pagamento': tipo_pagamento_id,
-                'selected_tipo_documento': tipo_documento_id,
+                'selected_tipo_documento_id': tipo_documento_id,
             }
             if extra:
                 ctx.update(extra)
@@ -226,7 +226,7 @@ def pre_triagem_view(request):
         'tipos_pagamento': tipos_pagamento,
         'retencao_formset': retencao_formset,
         'selected_tipo_pagamento': '',
-        'selected_tipo_documento': '',
+        'selected_tipo_documento_id': '',
     })
 
 
@@ -284,8 +284,6 @@ def completar_processo_view(request, pk):
                     pendencia_formset.save()
 
                 messages.success(request, f'Processo #{processo.id} inserido com sucesso!')
-                if processo.notas_fiscais.filter(atestada=True).exists():
-                    return redirect('painel_liquidacoes')
                 return redirect('home_page')
 
             except Exception as exc:

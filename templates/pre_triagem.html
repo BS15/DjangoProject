@@ -47,7 +47,7 @@
 
     <form method="post" enctype="multipart/form-data" id="preTriagemForm" novalidate>
         {% csrf_token %}
-        <input type="hidden" name="tipo_documento_id" id="tipo_documento_hidden" value="{{ selected_tipo_documento }}">
+        <input type="hidden" name="tipo_documento_id" id="tipo_documento_hidden" value="{{ selected_tipo_documento_id }}">
         <input type="hidden" name="tipo_pagamento_id" id="tipo_pagamento_id_hidden" value="{{ selected_tipo_pagamento }}">
         <input type="hidden" name="num_documentos" id="num_documentos_hidden" value="0">
 
@@ -280,7 +280,7 @@
     const tipoDocumentoSection = document.getElementById('tipo-documento-section');
     const selectTipoPagamento = document.getElementById('select_tipo_pagamento');
 
-    let selectedTipo = tipoDocumentoInput.value || '';
+    let selectedTipoId = tipoDocumentoInput.value || '';
     let uploadedFiles = [];
     let docCount = 0;
 
@@ -305,8 +305,8 @@
                         const btn = container.querySelector(`.tipo-btn[data-value="${preselected}"]`);
                         if (btn) {
                             btn.classList.add('selected');
-                            selectedTipo = preselected;
-                            tipoDocumentoInput.value = selectedTipo;
+                            selectedTipoId = preselected;
+                            tipoDocumentoInput.value = selectedTipoId;
                         }
                     }
                 } else {
@@ -325,7 +325,7 @@
         if (val) {
             tipoDocumentoSection.style.display = 'block';
             tipoDocumentoInput.value = '';
-            selectedTipo = '';
+            selectedTipoId = '';
             uploadSection.style.display = 'none';
             resetDocs();
             fetchTiposDocumento(val);
@@ -333,7 +333,7 @@
             tipoDocumentoSection.style.display = 'none';
             document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('selected'));
             tipoDocumentoInput.value = '';
-            selectedTipo = '';
+            selectedTipoId = '';
             uploadSection.style.display = 'none';
             resetDocs();
         }
@@ -351,8 +351,8 @@
         }
         document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('selected'));
         el.classList.add('selected');
-        selectedTipo = el.getAttribute('data-value');
-        tipoDocumentoInput.value = selectedTipo;
+        selectedTipoId = el.getAttribute('data-value');
+        tipoDocumentoInput.value = selectedTipoId;
 
         document.getElementById('bulk-file-input').multiple = true;
 
@@ -380,7 +380,7 @@
 
     dropzone.addEventListener('click', () => {
         if (!tipoPagamentoInput.value) { alert('Selecione o Tipo de Pagamento primeiro.'); return; }
-        if (selectedTipo) fileInput.click(); else alert('Selecione o tipo de documento primeiro.');
+        if (selectedTipoId) fileInput.click(); else alert('Selecione o tipo de documento primeiro.');
     });
     dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = '#0a58ca'; });
     dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = '#0d6efd'; });
@@ -388,7 +388,7 @@
         e.preventDefault();
         dropzone.style.borderColor = '#0d6efd';
         if (!tipoPagamentoInput.value) { alert('Selecione o Tipo de Pagamento primeiro.'); return; }
-        if (!selectedTipo) { alert('Selecione o tipo de documento primeiro.'); return; }
+        if (!selectedTipoId) { alert('Selecione o tipo de documento primeiro.'); return; }
         handleFiles(Array.from(e.dataTransfer.files));
     });
     fileInput.addEventListener('change', () => {
