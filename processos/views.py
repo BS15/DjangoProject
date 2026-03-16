@@ -1258,13 +1258,29 @@ def enviar_para_autorizacao(request):
         selecionados = request.POST.getlist('processos_selecionados')
 
         if selecionados:
-            status_aguardando, _ = StatusChoicesProcesso.objects.get_or_create(
-                status_choice__iexact='A PAGAR - ENVIADO PARA AUTORIZAÇÃO',
-                defaults={'status_choice': 'A PAGAR - ENVIADO PARA AUTORIZAÇÃO'}
+            elegiveis = Processo.objects.filter(
+                id__in=selecionados,
+                status__status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO'
             )
+            count_elegiveis = elegiveis.count()
+            count_ignorados = len(selecionados) - count_elegiveis
 
-            Processo.objects.filter(id__in=selecionados).update(status=status_aguardando)
-            messages.success(request, f'{len(selecionados)} processo(s) enviado(s) para autorização com sucesso.')
+            if count_elegiveis > 0:
+                status_aguardando, _ = StatusChoicesProcesso.objects.get_or_create(
+                    status_choice__iexact='A PAGAR - ENVIADO PARA AUTORIZAÇÃO',
+                    defaults={'status_choice': 'A PAGAR - ENVIADO PARA AUTORIZAÇÃO'}
+                )
+                elegiveis.update(status=status_aguardando)
+                messages.success(request, f'{count_elegiveis} processo(s) enviado(s) para autorização com sucesso.')
+            else:
+                messages.error(request, 'Nenhum dos processos selecionados está com status "A PAGAR - PENDENTE AUTORIZAÇÃO".')
+
+            if count_ignorados > 0:
+                messages.warning(
+                    request,
+                    f'{count_ignorados} processo(s) ignorado(s): apenas processos com status '
+                    f'"A PAGAR - PENDENTE AUTORIZAÇÃO" podem ser enviados para autorização.'
+                )
         else:
             messages.warning(request, 'Nenhum processo foi selecionado.')
 
