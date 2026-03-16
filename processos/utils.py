@@ -295,17 +295,6 @@ def processar_pdf_comprovantes(pdf_file):
                 if len(partes) == 3:
                     data_pagamento = f"{partes[2]}-{partes[1]}-{partes[0]}"
 
-            # --- PARTE B.3: EXTRAÇÃO DO TIPO DE PAGAMENTO ---
-            tipo_de_pagamento = ''
-            if re.search(r'\bPIX\b', texto_flat, re.IGNORECASE):
-                tipo_de_pagamento = 'PIX'
-            elif re.search(r'\b(?:TED|DOC)\b', texto_flat, re.IGNORECASE):
-                tipo_de_pagamento = 'TED'
-            elif re.search(r'\b(?:BOLETO|GERENCIADOR|C[OÓ]DIGO\s+DE\s+BARRAS)\b', texto_flat, re.IGNORECASE):
-                tipo_de_pagamento = 'GERENCIADOR'
-            elif re.search(r'\bREMESSA\b', texto_flat, re.IGNORECASE):
-                tipo_de_pagamento = 'REMESSA'
-
             # --- PARTE C: FATIAMENTO E SALVAMENTO ---
             writer = PyPDF2.PdfWriter()
             pypdf_page = pdf_writer_source.pages[i]
@@ -326,7 +315,6 @@ def processar_pdf_comprovantes(pdf_file):
                 'pagina': i + 1,
                 'credor_extraido': credor,
                 'valor_extraido': valor_float,
-                'tipo_de_pagamento': tipo_de_pagamento,
                 'data_pagamento': data_pagamento,
                 'url': default_storage.url(path)
             })
@@ -406,7 +394,7 @@ def processar_pdf_comprovantes_ia(arquivo_pdf):
     Recebe um PDF com um comprovante por página, divide-o e usa IA para extrair
     os dados de cada página conforme o modelo ComprovanteDePagamento.
     Retorna uma lista de dicts com: temp_path, url, pagina, credor_extraido,
-    valor_extraido, tipo_de_pagamento, data_pagamento.
+    valor_extraido, data_pagamento.
     """
     from .ai_utils import extrair_dados_comprovante_ia
 
@@ -440,7 +428,6 @@ def processar_pdf_comprovantes_ia(arquivo_pdf):
             'pagina': numero_pagina + 1,
             'credor_extraido': dados_ia.get('credor_nome', 'Não identificado') if dados_ia else 'Não identificado',
             'valor_extraido': dados_ia.get('valor_pago', 0.00) if dados_ia else 0.00,
-            'tipo_de_pagamento': dados_ia.get('tipo_de_pagamento', '') if dados_ia else '',
             'data_pagamento': dados_ia.get('data_pagamento', '') if dados_ia else '',
         }
         resultados.append(resultado)

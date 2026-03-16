@@ -1104,7 +1104,6 @@ def api_vincular_comprovantes(request):
 
                 valor_pago = comp.get('valor_pago')
                 credor_nome = comp.get('credor_nome') or ''
-                tipo_de_pagamento = comp.get('tipo_de_pagamento') or ''
                 data_pagamento = comp.get('data_pagamento') or None
 
                 # Use the first available payment date to update the process
@@ -1128,7 +1127,6 @@ def api_vincular_comprovantes(request):
                         processo=processo,
                         credor_nome=credor_nome,
                         valor_pago=valor_pago,
-                        tipo_de_pagamento=tipo_de_pagamento or None,
                         data_pagamento=data_pagamento,
                         arquivo=ContentFile(conteudo_arquivo, name=nome_arquivo),
                     )
