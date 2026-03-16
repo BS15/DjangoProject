@@ -59,10 +59,13 @@ def pre_triagem_view(request):
                 'tipos_pagamento': tipos_pagamento,
                 'retencao_formset': retencao_formset,
                 'selected_tipo_pagamento': tipo_pagamento_id,
+                'selected_tipo_documento': tipo_documento_id,
             }
             if extra:
                 ctx.update(extra)
             return render(request, 'pre_triagem.html', ctx)
+
+        tipo_documento_id = request.POST.get('tipo_documento_id', '').strip()
 
         errors = []
         if not tipo_pagamento_id:
