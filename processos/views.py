@@ -1261,7 +1261,6 @@ def painel_conferencia_view(request):
 
     context = {
         'processos': processos_aptos,
-        'pendencia_form': PendenciaForm()
     }
     return render(request, 'conferencia.html', context)
 
@@ -1278,36 +1277,6 @@ def aprovar_conferencia_view(request, pk):
         processo.status = status_contabilizar
         processo.save()
         messages.success(request, f'Processo #{processo.id} aprovado na conferência e enviado para Contabilização!')
-
-    return redirect('painel_conferencia')
-
-
-def recusar_conferencia_view(request, pk):
-    processo = get_object_or_404(Processo, id=pk)
-
-    if request.method == 'POST':
-        form = PendenciaForm(request.POST)
-        if form.is_valid():
-            with transaction.atomic():
-                pendencia = form.save(commit=False)
-                pendencia.processo = processo
-
-                status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
-                    status_choice__iexact='A RESOLVER', defaults={'status_choice': 'A RESOLVER'}
-                )
-                pendencia.status = status_pendencia
-                pendencia.save()
-
-                status_devolvido, _ = StatusChoicesProcesso.objects.get_or_create(
-                    status_choice__iexact='A PAGAR - AUTORIZADO',
-                    defaults={'status_choice': 'A PAGAR - AUTORIZADO'}
-                )
-                processo.status = status_devolvido
-                processo.save()
-
-            messages.error(request, f'Processo #{processo.id} recusado e devolvido com pendência!')
-        else:
-            messages.warning(request, 'Erro ao registrar recusa. Verifique os dados da pendência.')
 
     return redirect('painel_conferencia')
 

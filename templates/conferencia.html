@@ -78,40 +78,8 @@
                                 </button>
                             </form>
 
-                            <button type="button" class="btn btn-sm btn-warning shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRecusa{{ processo.id }}" title="Devolver (Erro)">
-                                <i class="bi bi-arrow-return-left"></i>
-                            </button>
                         </td>
                     </tr>
-
-                    <div class="modal fade" id="modalRecusa{{ processo.id }}" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <form method="POST" action="{% url 'recusar_conferencia' pk=processo.id %}">
-                                    {% csrf_token %}
-                                    <div class="modal-header bg-warning text-dark">
-                                        <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Devolver Processo #{{ processo.id }}</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body text-start">
-                                        <p class="small text-muted mb-3">Informe o erro encontrado na conferência. O processo retornará à fila de Autorização de Pagamento.</p>
-                                        <div class="mb-3">
-                                            <label class="form-label fw-bold">Tipo de Pendência</label>
-                                            {{ pendencia_form.tipo }}
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label fw-bold">Justificativa do Erro</label>
-                                            {{ pendencia_form.descricao }}
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                        <button type="submit" class="btn btn-warning fw-bold">Confirmar Devolução</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
                     {% empty %}
                     <tr>
                         <td colspan="8" class="text-center py-5 text-muted">
