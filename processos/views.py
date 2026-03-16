@@ -245,10 +245,33 @@ def completar_processo_view(request, pk):
         pendencia_formset = PendenciaFormSet(request.POST, instance=processo, prefix='pendencia')
 
         if processo_form.is_valid() and documento_formset.is_valid() and pendencia_formset.is_valid():
+            is_extra = processo_form.cleaned_data.get('extraorcamentario')
+
+            # Validação: se o processo não é "a empenhar" nem extraorçamentário,
+            # deve conter ao menos um documento do tipo "DOCUMENTOS ORÇAMENTÁRIOS".
+            if not trigger_a_empenhar and not is_extra:
+                has_doc_orcamentario = any(
+                    f.cleaned_data.get('tipo') and
+                    f.cleaned_data['tipo'].tipo_de_documento and
+                    f.cleaned_data['tipo'].tipo_de_documento.upper() == 'DOCUMENTOS ORÇAMENTÁRIOS'
+                    for f in documento_formset
+                    if f.cleaned_data and not f.cleaned_data.get('DELETE')
+                )
+                if not has_doc_orcamentario:
+                    messages.error(
+                        request,
+                        'É necessário incluir um documento do tipo "DOCUMENTOS ORÇAMENTÁRIOS" antes de salvar o processo.'
+                    )
+                    return render(request, 'completar_processo.html', {
+                        'processo_form': processo_form,
+                        'documento_formset': documento_formset,
+                        'pendencia_formset': pendencia_formset,
+                        'processo': processo,
+                    })
+
             try:
                 with transaction.atomic():
                     processo = processo_form.save(commit=False)
-                    is_extra = processo_form.cleaned_data.get('extraorcamentario')
 
                     if trigger_a_empenhar:
                         status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
@@ -258,6 +281,7 @@ def completar_processo_view(request, pk):
                         processo.status = status_obj
                         processo.n_nota_empenho = None
                         processo.data_empenho = None
+                        processo.ano_exercicio = None
                     elif is_extra:
                         status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
                             status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
@@ -266,6 +290,7 @@ def completar_processo_view(request, pk):
                         processo.status = status_obj
                         processo.n_nota_empenho = None
                         processo.data_empenho = None
+                        processo.ano_exercicio = None
                     else:
                         status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
                             status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',

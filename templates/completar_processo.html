@@ -663,6 +663,51 @@ document.addEventListener('DOMContentLoaded', function() {
         selectFormaPagamento.addEventListener('change', gerenciarVisibilidadePagamento);
         gerenciarVisibilidadePagamento();
     }
+
+    // LÓGICA ORÇAMENTÁRIA: Extraorçamentário e A Empenhar são mutuamente exclusivos.
+    // Quando qualquer um está marcado, os campos de empenho são desabilitados e limpos.
+    const chkExtraorcamentario = document.getElementById('id_processo-extraorcamentario');
+    const chkAEmpenhar = document.getElementById('id_trigger_a_empenhar');
+    const camposEmpenho = [
+        document.getElementById('id_processo-n_nota_empenho'),
+        document.getElementById('id_processo-data_empenho'),
+        document.getElementById('id_processo-ano_exercicio'),
+    ];
+
+    function gerenciarCamposOrcamentarios() {
+        const extraMarcado = chkExtraorcamentario && chkExtraorcamentario.checked;
+        const empenharMarcado = chkAEmpenhar && chkAEmpenhar.checked;
+        const bloquear = extraMarcado || empenharMarcado;
+
+        camposEmpenho.forEach(function(campo) {
+            if (!campo) return;
+            campo.disabled = bloquear;
+            if (bloquear) {
+                if (campo.tagName === 'SELECT') {
+                    campo.selectedIndex = 0;
+                } else {
+                    campo.value = '';
+                }
+            }
+        });
+    }
+
+    if (chkExtraorcamentario) {
+        chkExtraorcamentario.addEventListener('change', function() {
+            if (this.checked && chkAEmpenhar) chkAEmpenhar.checked = false;
+            gerenciarCamposOrcamentarios();
+        });
+    }
+
+    if (chkAEmpenhar) {
+        chkAEmpenhar.addEventListener('change', function() {
+            if (this.checked && chkExtraorcamentario) chkExtraorcamentario.checked = false;
+            gerenciarCamposOrcamentarios();
+        });
+    }
+
+    // Estado inicial ao carregar a página
+    gerenciarCamposOrcamentarios();
 });
 
 window.check_information_alert = function() {
