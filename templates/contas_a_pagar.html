@@ -324,7 +324,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Se a API devolveu um Código de Barras ou PIX válido, montamos o HTML com o botão de prancheta
                         let valorHtml = `<span class="fw-bold text-dark">${p.detalhe_valor}</span>`;
                         
-                        if (p.detalhe_tipo === 'Código de Barras' || p.detalhe_tipo === 'Chave PIX') {
+                        if (p.detalhe_tipo === 'Código de Barras') {
+                            if (p.codigos_barras && p.codigos_barras.length > 0) {
+                                // Renderiza um item por código de barras extraído dos documentos do processo
+                                valorHtml = p.codigos_barras.map(cb => `
+                                    <div class="d-flex align-items-center justify-content-between p-2 bg-light rounded border border-secondary border-opacity-25 mb-1">
+                                        <span class="fw-bold text-primary font-monospace text-break me-2" style="font-size: 0.9rem;">${cb}</span>
+                                        <button class="btn btn-sm btn-outline-secondary copy-btn px-2 py-1" data-clipboard="${cb}" title="Copiar para a área de transferência">
+                                            <i class="bi bi-clipboard fs-6"></i>
+                                        </button>
+                                    </div>
+                                `).join('');
+                            } else {
+                                valorHtml = `<span class="fw-bold text-dark">Não preenchido</span>`;
+                            }
+                        } else if (p.detalhe_tipo === 'Chave PIX') {
                             if (p.detalhe_valor !== "Não preenchido" && !p.detalhe_valor.includes("sem PIX")) {
                                 valorHtml = `
                                     <div class="d-flex align-items-center justify-content-between p-2 bg-light rounded border border-secondary border-opacity-25">
