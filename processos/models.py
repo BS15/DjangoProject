@@ -320,6 +320,16 @@ class Processo(models.Model):
     )
     history = HistoricalRecords()
 
+    class Meta:
+        permissions = [
+            ("acesso_backoffice", "Pode acessar as telas gerais do sistema financeiro"),
+            ("pode_operar_contas_pagar", "Pode empenhar, triar notas e fazer conferência"),
+            ("pode_atestar_liquidacao", "Pode atestar notas fiscais (Fiscal do Contrato)"),
+            ("pode_autorizar_pagamento", "Pode autorizar pagamentos (Ordenador)"),
+            ("pode_contabilizar", "Pode registrar a contabilização (Contador)"),
+            ("pode_auditar_conselho", "Pode aprovar no Conselho Fiscal"),
+        ]
+
     def __str__(self):
         return f"Processo {self.n_nota_empenho or 'S/N'}"
 
