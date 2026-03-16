@@ -336,6 +336,11 @@ class DocumentoBase(models.Model):
 class DocumentoProcesso(DocumentoBase):
     processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='documentos')
     codigo_barras = models.CharField("Código de Barras", max_length=60, null=True, blank=True)
+    imutavel = models.BooleanField(
+        "Imutável",
+        default=False,
+        help_text="Documento bloqueado para exclusão. Definido automaticamente durante a etapa de Conferência."
+    )
     history = HistoricalRecords()
 
 # 3. DOCUMENTOS DAS VERBAS (Uma tabela separada para cada)

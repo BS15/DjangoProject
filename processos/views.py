@@ -1279,6 +1279,179 @@ def aprovar_conferencia_view(request, pk):
     return redirect('painel_conferencia')
 
 
+def iniciar_conferencia_view(request):
+    """POST: store selected process IDs in session queue, redirect to first process."""
+    if request.method == 'POST':
+        ids_raw = request.POST.getlist('processo_ids')
+        process_ids = []
+        for pid in ids_raw:
+            try:
+                process_ids.append(int(pid))
+            except (ValueError, TypeError):
+                pass
+
+        if not process_ids:
+            messages.warning(request, 'Selecione ao menos um processo para iniciar a conferência.')
+            return redirect('painel_conferencia')
+
+        request.session['conferencia_queue'] = process_ids
+        request.session.modified = True
+        return redirect('conferencia_processo', pk=process_ids[0])
+
+    return redirect('painel_conferencia')
+
+
+def conferencia_processo_view(request, pk):
+    """Detailed conferência view for reviewing a single process."""
+    HISTORY_TYPE_LABELS = {'+': 'Criação', '~': 'Alteração', '-': 'Exclusão'}
+
+    processo = get_object_or_404(Processo, id=pk)
+
+    # Navigation queue
+    queue = request.session.get('conferencia_queue', [])
+    current_index = queue.index(pk) if pk in queue else -1
+    next_pk = queue[current_index + 1] if 0 <= current_index < len(queue) - 1 else None
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+
+        if action == 'sair':
+            request.session.pop('conferencia_queue', None)
+            request.session.modified = True
+            return redirect('painel_conferencia')
+
+        if action == 'pular':
+            if next_pk:
+                return redirect('conferencia_processo', pk=next_pk)
+            messages.info(request, 'Não há mais processos na fila. Retornando ao painel.')
+            request.session.pop('conferencia_queue', None)
+            request.session.modified = True
+            return redirect('painel_conferencia')
+
+        if action in ('confirmar', 'salvar'):
+            doc_formset = DocumentoFormSet(
+                request.POST, request.FILES,
+                instance=processo,
+                prefix='documentos',
+            )
+            pendencia_formset = PendenciaFormSet(
+                request.POST,
+                instance=processo,
+                prefix='pendencias',
+            )
+
+            if doc_formset.is_valid() and pendencia_formset.is_valid():
+                with transaction.atomic():
+                    # Save documents; never delete existing ones
+                    for form in doc_formset.forms:
+                        if not form.cleaned_data:
+                            continue
+                        should_delete = form.cleaned_data.get('DELETE', False)
+                        is_existing = bool(form.instance.pk)
+                        if should_delete and is_existing:
+                            # Existing documents are protected from deletion in conferência
+                            continue
+                        if should_delete and not is_existing:
+                            continue
+                        if form.has_changed() or not is_existing:
+                            instance = form.save(commit=False)
+                            instance.processo = processo
+                            instance.save()
+
+                    # Mark every document on this process as immutable
+                    processo.documentos.all().update(imutavel=True)
+
+                    # Save pendências
+                    pendencia_formset.save()
+
+                    if action == 'confirmar':
+                        status_contabilizar, _ = StatusChoicesProcesso.objects.get_or_create(
+                            status_choice__iexact='PAGO - A CONTABILIZAR',
+                            defaults={'status_choice': 'PAGO - A CONTABILIZAR'}
+                        )
+                        processo.status = status_contabilizar
+                        processo.save()
+                        messages.success(
+                            request,
+                            f'Processo #{processo.id} confirmado na conferência e enviado para Contabilização!'
+                        )
+                        if next_pk:
+                            return redirect('conferencia_processo', pk=next_pk)
+                        request.session.pop('conferencia_queue', None)
+                        request.session.modified = True
+                        return redirect('painel_conferencia')
+                    else:
+                        messages.success(request, f'Alterações do Processo #{processo.id} salvas.')
+                        return redirect('conferencia_processo', pk=pk)
+            else:
+                messages.error(request, 'Verifique os erros no formulário abaixo.')
+
+    # ── GET (or failed POST) ──────────────────────────────────────────────
+    doc_formset = DocumentoFormSet(instance=processo, prefix='documentos')
+    pendencia_formset = PendenciaFormSet(instance=processo, prefix='pendencias')
+    pendencia_form = PendenciaForm()
+
+    # Build unified history from all related models
+    history_records = []
+
+    for record in processo.history.all().select_related('history_user'):
+        history_records.append({
+            'modelo': 'Processo',
+            'history_date': record.history_date,
+            'history_user': record.history_user,
+            'history_type': record.history_type,
+            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
+            'str_repr': str(record),
+        })
+
+    for record in DocumentoProcesso.history.filter(processo_id=pk).select_related('history_user'):
+        history_records.append({
+            'modelo': 'Documento',
+            'history_date': record.history_date,
+            'history_user': record.history_user,
+            'history_type': record.history_type,
+            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
+            'str_repr': str(record),
+        })
+
+    for record in Pendencia.history.filter(processo_id=pk).select_related('history_user'):
+        history_records.append({
+            'modelo': 'Pendência',
+            'history_date': record.history_date,
+            'history_user': record.history_user,
+            'history_type': record.history_type,
+            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
+            'str_repr': str(record),
+        })
+
+    for record in DocumentoFiscal.history.filter(processo_id=pk).select_related('history_user'):
+        history_records.append({
+            'modelo': 'Nota Fiscal',
+            'history_date': record.history_date,
+            'history_user': record.history_user,
+            'history_type': record.history_type,
+            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
+            'str_repr': str(record),
+        })
+
+    history_records.sort(key=lambda x: x['history_date'], reverse=True)
+
+    context = {
+        'processo': processo,
+        'doc_formset': doc_formset,
+        'pendencia_formset': pendencia_formset,
+        'pendencia_form': pendencia_form,
+        'history_records': history_records,
+        'queue': queue,
+        'current_index': current_index,
+        'next_pk': next_pk,
+        'queue_length': len(queue),
+        'queue_position': current_index + 1 if current_index >= 0 else 1,
+        'tipos_documento': TiposDeDocumento.objects.all(),
+    }
+    return render(request, 'conferencia_processo.html', context)
+
+
 def painel_contabilizacao_view(request):
     processos = Processo.objects.filter(status__status_choice__iexact='PAGO - A CONTABILIZAR').order_by('data_pagamento')
     context = {
