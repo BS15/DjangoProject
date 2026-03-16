@@ -66,6 +66,10 @@ def pre_triagem_view(request):
         errors = []
         if not tipo_pagamento_id:
             errors.append('Selecione o Tipo de Pagamento.')
+        # Allow per-doc tipo_documento even if global is not set
+        first_doc_tipo = request.POST.get('tipo_documento_0', '').strip()
+        if not tipo_documento_id and not first_doc_tipo:
+            errors.append('Selecione o tipo de documento.')
         if num_docs == 0:
             errors.append('Faça upload de pelo menos um arquivo.')
         if not request.POST.get('emitente_0'):
@@ -90,6 +94,15 @@ def pre_triagem_view(request):
                 except (TiposDePagamento.DoesNotExist, ValueError, TypeError):
                     messages.error(request, 'Tipo de Pagamento não encontrado.')
                     return _render_form()
+
+                # Resolve tipo de documento globally (used as fallback per doc)
+                tipo_doc_db = None
+                if tipo_documento_id:
+                    try:
+                        tipo_doc_db = TiposDeDocumento.objects.get(id=int(tipo_documento_id))
+                    except (TiposDeDocumento.DoesNotExist, ValueError, TypeError):
+                        messages.error(request, 'Tipo de Documento não encontrado.')
+                        return _render_form()
 
                 first_emitente_id = request.POST.get('emitente_0')
                 try:
@@ -127,6 +140,16 @@ def pre_triagem_view(request):
                     atestado_checked = request.POST.get(f'atestado_{i}') == 'on'
                     fiscal_contrato_id = request.POST.get(f'fiscal_contrato_{i}', '')
 
+                    # Resolve per-doc tipo, fall back to global tipo_doc_db
+                    per_doc_tipo_id = request.POST.get(f'tipo_documento_{i}', '').strip()
+                    tipo_doc_i = tipo_doc_db
+                    if per_doc_tipo_id:
+                        try:
+                            tipo_doc_i = TiposDeDocumento.objects.get(id=int(per_doc_tipo_id))
+                        except (TiposDeDocumento.DoesNotExist, ValueError, TypeError):
+                            tipo_doc_i = tipo_doc_db
+                    if not tipo_doc_i:
+                        messages.error(request, f'Documento {i + 1}: Tipo de Documento não definido.')
                     # Resolve tipo de documento per document (same as add_process logic)
                     tipo_doc_id_str = request.POST.get(f'tipo_documento_{i}', '')
                     try:
@@ -150,7 +173,7 @@ def pre_triagem_view(request):
 
                     doc = DocumentoProcesso(
                         processo=processo,
-                        tipo=tipo_doc_db,
+                        tipo=tipo_doc_i,
                         ordem=i + 1,
                     )
                     if arquivo:
