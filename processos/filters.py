@@ -117,6 +117,11 @@ class RetencaoNotaFilter(django_filters.FilterSet):
     ano = django_filters.NumberFilter(field_name='data_emissao', lookup_expr='year', label='Ano da Emissão')
     processo = django_filters.CharFilter(field_name='processo__id', lookup_expr='exact', label='Nº do Processo')
     emitente = django_filters.CharFilter(field_name='nome_emitente', lookup_expr='icontains', label='Emitente/Credor')
+    beneficiario = django_filters.ModelChoiceFilter(
+        field_name='retencoes__beneficiario',
+        queryset=Credor.objects.all(),
+        label='Beneficiário'
+    )
     imposto = django_filters.ModelChoiceFilter(
         field_name='retencoes__codigo',
         queryset=CodigosImposto.objects.filter(is_active=True),
@@ -130,7 +135,7 @@ class RetencaoNotaFilter(django_filters.FilterSet):
 
     class Meta:
         model = NotaFiscal
-        fields = ['mes', 'ano', 'processo', 'emitente', 'imposto', 'status']  # <-- Adicione aqui
+        fields = ['mes', 'ano', 'processo', 'emitente', 'beneficiario', 'imposto', 'status']  # <-- Adicione aqui
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -170,6 +175,11 @@ class RetencaoIndividualFilter(django_filters.FilterSet):
     ano = django_filters.NumberFilter(field_name='nota_fiscal__data_emissao', lookup_expr='year', label='Ano (Emissão NF)')
     processo = django_filters.CharFilter(field_name='nota_fiscal__processo__id', lookup_expr='exact', label='Nº do Processo')
     emitente = django_filters.CharFilter(field_name='nota_fiscal__nome_emitente', lookup_expr='exact', label='Emitente/Credor')
+    beneficiario = django_filters.ModelChoiceFilter(
+        field_name='beneficiario',
+        queryset=Credor.objects.all(),
+        label='Beneficiário'
+    )
     imposto = django_filters.ModelChoiceFilter(
         field_name='codigo',
         queryset=CodigosImposto.objects.filter(is_active=True),
@@ -183,7 +193,7 @@ class RetencaoIndividualFilter(django_filters.FilterSet):
 
     class Meta:
         model = RetencaoImposto
-        fields = ['mes', 'ano', 'processo', 'emitente', 'imposto', 'status']
+        fields = ['mes', 'ano', 'processo', 'emitente', 'beneficiario', 'imposto', 'status']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

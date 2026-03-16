@@ -192,9 +192,10 @@
                                     <table class="table table-sm table-borderless mb-0">
                                         <thead class="text-muted small">
                                             <tr>
-                                                <th style="width: 35%;">Código Imposto</th>
-                                                <th style="width: 30%;">Rend. Tributável (R$)</th>
-                                                <th style="width: 30%;">Valor Retido (R$)</th>
+                                                <th style="width: 25%;">Beneficiário</th>
+                                                <th style="width: 25%;">Código Imposto</th>
+                                                <th style="width: 22%;">Rend. Tributável (R$)</th>
+                                                <th style="width: 23%;">Valor Retido (R$)</th>
                                                 <th style="width: 5%;"></th>
                                             </tr>
                                         </thead>
@@ -202,6 +203,15 @@
                                             {% if nf_f.instance.pk %}
                                                 {% for ret in nf_f.instance.retencoes.all %}
                                                 <tr class="border-bottom border-light">
+                                                    <td>
+                                                        <select name="imposto_{{ forloop.parentloop.counter0 }}_beneficiario" class="form-select form-select-sm border-danger border-opacity-25 tax-beneficiario-select">
+                                                            <option value="">---------</option>
+                                                            {% for credor in credores %}
+                                                            <option value="{{ credor.id }}" {% if ret.beneficiario_id == credor.id %}selected{% endif %}>{{ credor.nome }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                        <input type="text" class="form-control form-control-sm bg-light mt-1 tax-beneficiario-cnpj" value="{{ ret.beneficiario.cpf_cnpj|default:'' }}" readonly placeholder="CPF/CNPJ">
+                                                    </td>
                                                     <td>
                                                         <select name="imposto_{{ forloop.parentloop.counter0 }}_code" class="form-select form-select-sm border-danger border-opacity-25">
                                                             <option value="{{ ret.codigo.id }}" selected>{{ ret.codigo.codigo }}</option>
@@ -283,7 +293,7 @@
                         </div>
                         <table class="table table-sm table-borderless mb-0">
                             <thead class="text-muted small">
-                                <tr><th style="width: 35%;">Código</th><th style="width: 30%;">Rend. Tributável</th><th style="width: 30%;">Valor Retido</th><th style="width: 5%;"></th></tr>
+                                <tr><th style="width: 25%;">Beneficiário</th><th style="width: 25%;">Código</th><th style="width: 22%;">Rend. Tributável</th><th style="width: 23%;">Valor Retido</th><th style="width: 5%;"></th></tr>
                             </thead>
                             <tbody class="tax-body"></tbody>
                         </table>
@@ -294,6 +304,7 @@
 
         <table id="empty-tax-row">
             <tr class="border-bottom border-light">
+                <td>{{ retencao_formset.empty_form.beneficiario }}<input type="text" class="form-control form-control-sm bg-light mt-1 tax-beneficiario-cnpj" readonly placeholder="CPF/CNPJ"></td>
                 <td>{{ retencao_formset.empty_form.codigo }}</td>
                 <td><input type="number" step="0.01" class="form-control form-control-sm border-danger border-opacity-25 tax-rend-input" placeholder="Rend. Trib."></td>
                 <td><input type="number" step="0.01" class="form-control form-control-sm border-danger border-opacity-50 text-danger fw-bold tax-val-input" placeholder="Retenção"></td>
@@ -432,9 +443,24 @@
                     const nfIndex = card.getAttribute('data-nf-index');
                     const rowTemplate = document.getElementById('empty-tax-row').querySelector('tr').cloneNode(true);
                     
-                    rowTemplate.querySelector('select').name = `imposto_${nfIndex}_code`;
+                    rowTemplate.querySelector('.tax-beneficiario-select').name = `imposto_${nfIndex}_beneficiario`;
+                    rowTemplate.querySelector('.tax-code-select').name = `imposto_${nfIndex}_code`;
                     rowTemplate.querySelector('.tax-rend-input').name = `imposto_${nfIndex}_rendimento`;
                     rowTemplate.querySelector('.tax-val-input').name = `imposto_${nfIndex}_value`;
+
+                    // Preset beneficiário to the emitente of this invoice card
+                    const emitenteSelect = card.querySelector('select[name*="nome_emitente"]');
+                    const beneficiarioSelect = rowTemplate.querySelector('.tax-beneficiario-select');
+                    const beneficiarioCnpjInput = rowTemplate.querySelector('.tax-beneficiario-cnpj');
+                    if (emitenteSelect && beneficiarioSelect && emitenteSelect.value) {
+                        beneficiarioSelect.value = emitenteSelect.value;
+                        if (beneficiarioCnpjInput) {
+                            fetch(`/api/credor/${emitenteSelect.value}/`)
+                            .then(res => res.json())
+                            .then(data => { beneficiarioCnpjInput.value = (data.sucesso && data.cpf_cnpj) ? data.cpf_cnpj : ''; })
+                            .catch(() => {});
+                        }
+                    }
 
                     const valorBrutoInput = card.querySelector('input[name$="-valor_bruto"]');
                     const rendimentoInput = rowTemplate.querySelector('.tax-rend-input');
@@ -463,6 +489,22 @@
                 if (target.classList.contains('tem-retencao-toggle')) {
                     const card = target.closest('.nf-card');
                     if (card) updateTaxSection(card);
+                }
+
+                if (target.classList.contains('tax-beneficiario-select')) {
+                    const credorId = target.value;
+                    const row = target.closest('tr');
+                    const cnpjInput = row ? row.querySelector('.tax-beneficiario-cnpj') : null;
+                    if (cnpjInput) {
+                        if (credorId) {
+                            fetch(`/api/credor/${credorId}/`)
+                            .then(res => res.json())
+                            .then(data => { cnpjInput.value = (data.sucesso && data.cpf_cnpj) ? data.cpf_cnpj : ''; })
+                            .catch(() => { cnpjInput.value = ''; });
+                        } else {
+                            cnpjInput.value = '';
+                        }
+                    }
                 }
 
                 if (target.tagName.toLowerCase() === 'select' && target.name.includes('nome_emitente')) {

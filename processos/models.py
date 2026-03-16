@@ -443,6 +443,7 @@ class Pendencia(models.Model):
 
 class RetencaoImposto(models.Model):
     nota_fiscal = models.ForeignKey(NotaFiscal, on_delete=models.CASCADE, related_name='retencoes')
+    beneficiario = models.ForeignKey('Credor', on_delete=models.PROTECT, blank=True, null=True, verbose_name="Beneficiário", related_name='retencoes')
     rendimento_tributavel = valor = models.DecimalField(null=True, blank=True, max_digits=12, decimal_places=2)
     data_pagamento = models.DateField(blank=True, null=True)
     codigo = models.ForeignKey(CodigosImposto, on_delete=models.PROTECT)

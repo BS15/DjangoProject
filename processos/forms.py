@@ -173,9 +173,10 @@ NotaFiscalFormSet = inlineformset_factory(
 RetencaoFormSet = inlineformset_factory(
     NotaFiscal,
     RetencaoImposto,
-    fields=['codigo', 'rendimento_tributavel', 'valor'],
+    fields=['beneficiario', 'codigo', 'rendimento_tributavel', 'valor'],
     widgets={
-        'codigo': forms.Select(attrs={'class': 'form-select form-select-sm'}),
+        'beneficiario': forms.Select(attrs={'class': 'form-select form-select-sm tax-beneficiario-select'}),
+        'codigo': forms.Select(attrs={'class': 'form-select form-select-sm tax-code-select'}),
         'rendimento_tributavel': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'style': 'width: 100px', 'placeholder': 'Rendimento R$'}),
         'valor': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'style': 'width: 100px', 'placeholder': 'Imposto R$'})
     },
