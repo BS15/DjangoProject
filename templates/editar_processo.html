@@ -290,6 +290,27 @@
     </form>
 </div>
 
+<!-- Modal: Confirmar Extraorçamentário -->
+<div class="modal fade" id="modalConfirmarExtraOrcamentario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Confirmar Alteração</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Deseja marcar como <strong>Extraorçamentário</strong> e alterar o status enviando para <strong>Contas a Pagar</strong>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button>
+                <button type="button" class="btn btn-warning fw-bold" id="btnConfirmarExtraOrcamentario">
+                    <i class="bi bi-check2"></i> Sim, Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% if processo.notas_fiscais.exists %}
 <div class="container-fluid px-4 mb-5">
     <div class="card shadow-sm border-0">
@@ -443,7 +464,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const containerDocumentos = document.getElementById('document-list');
 
     // PROTEÇÃO ANTES DO ENVIO
+    const processoStatusInicial = "{{ status_inicial|escapejs }}";
+
     document.getElementById('processForm').addEventListener('submit', function(e) {
+        // Verificar se deve mostrar confirmação de extraorçamentário
+        const chkExtraEdit = document.getElementById('id_processo-extraorcamentario');
+        if (processoStatusInicial === 'A EMPENHAR' && chkExtraEdit && chkExtraEdit.checked) {
+            const jaConfirmou = document.querySelector('input[name="confirmar_extra_orcamentario"]');
+            if (!jaConfirmou) {
+                e.preventDefault();
+                new bootstrap.Modal(document.getElementById('modalConfirmarExtraOrcamentario')).show();
+                return;
+            }
+        }
+
         if (containerDocumentos) {
             const docRows = containerDocumentos.querySelectorAll('.document-row');
             docRows.forEach(row => {
@@ -943,6 +977,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const visible = getVisibleDocRows();
         abrirModalBatchTipo(visible.length, false);
     });
+
+    // Confirmação extraorçamentário
+    const btnConfirmarExtra = document.getElementById('btnConfirmarExtraOrcamentario');
+    if (btnConfirmarExtra) {
+        btnConfirmarExtra.addEventListener('click', function() {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'confirmar_extra_orcamentario';
+            hidden.value = 'on';
+            document.getElementById('processForm').appendChild(hidden);
+            document.getElementById('processForm').submit();
+        });
+    }
 
 });
 

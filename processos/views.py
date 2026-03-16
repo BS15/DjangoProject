@@ -72,10 +72,32 @@ def add_process_view(request):
             pendencia_formset = PendenciaFormSet(request.POST, prefix='pendencia')
 
             if processo_form.is_valid() and documento_formset.is_valid() and pendencia_formset.is_valid():
+                is_extra = processo_form.cleaned_data.get('extraorcamentario')
+
+                # Validate documento orçamentário before entering the transaction
+                if not is_extra and not trigger_a_empenhar:
+                    has_orcamentario = any(
+                        f.cleaned_data
+                        and not f.cleaned_data.get('DELETE', False)
+                        and f.cleaned_data.get('tipo')
+                        and 'orçament' in f.cleaned_data['tipo'].tipo_de_documento.lower()
+                        for f in documento_formset.forms
+                    )
+                    if not has_orcamentario:
+                        messages.error(
+                            request,
+                            'É necessário anexar um Documento Orçamentário para prosseguir. '
+                            'Se o processo for Extraorçamentário ou "A Empenhar", selecione a opção correspondente.'
+                        )
+                        return render(request, 'add_process.html', {
+                            'processo_form': processo_form,
+                            'documento_formset': documento_formset,
+                            'pendencia_formset': pendencia_formset
+                        })
+
                 try:
                     with transaction.atomic():
                         processo = processo_form.save(commit=False)
-                        is_extra = processo_form.cleaned_data.get('extraorcamentario')
 
                         if trigger_a_empenhar:
                             status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
@@ -84,6 +106,7 @@ def add_process_view(request):
                             processo.status = status_obj
                             processo.n_nota_empenho = None
                             processo.data_empenho = None
+                            processo.ano_exercicio = None
 
                         elif is_extra:
                             status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
@@ -93,6 +116,7 @@ def add_process_view(request):
                             processo.status = status_obj
                             processo.n_nota_empenho = None
                             processo.data_empenho = None
+                            processo.ano_exercicio = None
 
                         else:
                             status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
@@ -138,8 +162,10 @@ def add_process_view(request):
 
 def editar_processo(request, pk):
     processo = get_object_or_404(Processo, id=pk)
+    status_inicial = processo.status.status_choice.upper() if processo.status else ''
 
     if request.method == 'POST':
+        confirmar_extra = request.POST.get('confirmar_extra_orcamentario') == 'on'
         processo_form = ProcessoForm(request.POST, instance=processo, prefix='processo')
         documento_formset = DocumentoFormSet(request.POST, request.FILES, instance=processo, prefix='documento')
         pendencia_formset = PendenciaFormSet(request.POST, instance=processo, prefix='pendencia')
@@ -147,12 +173,27 @@ def editar_processo(request, pk):
         if processo_form.is_valid() and documento_formset.is_valid() and pendencia_formset.is_valid():
             try:
                 with transaction.atomic():
-                    processo = processo_form.save()
+                    processo_saved = processo_form.save(commit=False)
+
+                    # When confirming extra-budgetary change from 'A EMPENHAR' status,
+                    # override status and clear budget fields
+                    if confirmar_extra and status_inicial == 'A EMPENHAR':
+                        status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
+                            status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
+                            defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
+                        )
+                        processo_saved.status = status_obj
+                        processo_saved.extraorcamentario = True
+                        processo_saved.n_nota_empenho = None
+                        processo_saved.data_empenho = None
+                        processo_saved.ano_exercicio = None
+
+                    processo_saved.save()
                     documento_formset.save()
                     pendencia_formset.save()
 
-                messages.success(request, f'Processo #{processo.id} atualizado com sucesso!')
-                return redirect('editar_processo', pk=processo.id)
+                messages.success(request, f'Processo #{processo_saved.id} atualizado com sucesso!')
+                return redirect('editar_processo', pk=processo_saved.id)
 
             except Exception as e:
                 print(f"🛑 Erro ao atualizar no banco: {e}")
@@ -170,6 +211,7 @@ def editar_processo(request, pk):
         'documento_formset': documento_formset,
         'pendencia_formset': pendencia_formset,
         'processo': processo,
+        'status_inicial': status_inicial,
         'documentos_fiscais_url': reverse('documentos_fiscais', kwargs={'pk': processo.id}),
     }
 
