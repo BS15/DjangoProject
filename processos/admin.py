@@ -9,7 +9,7 @@ from .models import (
     Tabela_Valores_Unitarios_Verbas_Indenizatorias, Tabela_Proponentes_Diarias,
     StatusChoicesRetencoes, TiposDePendencias, Pendencia, ComprovanteDePagamento,
     DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio,
-    DocumentoSuprimentoDeFundos
+    DocumentoSuprimentoDeFundos, MeiosDeTransporte
 )
 # ==========================================
 # TABELAS DE PARAMETRIZAÇÃO (CONFIGURAÇÕES)
@@ -49,6 +49,12 @@ class TiposDePagamentoAdmin(admin.ModelAdmin):
 class TiposDeDocumentoAdmin(admin.ModelAdmin):
     list_display = ('tipo_de_documento', 'is_active')
     search_fields = ('tipo_de_documento',)
+    list_filter = ('is_active',)
+
+@admin.register(MeiosDeTransporte)
+class MeiosDeTransporteAdmin(admin.ModelAdmin):
+    list_display = ('meio_de_transporte', 'is_active')
+    search_fields = ('meio_de_transporte',)
     list_filter = ('is_active',)
 
 # ==========================================
