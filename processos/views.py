@@ -2082,7 +2082,7 @@ def api_detalhes_pagamento(request):
             processo_ids = dados.get('ids', [])
 
             # Puxa os processos com os relacionamentos para otimizar a query
-            processos = Processo.objects.filter(id__in=processo_ids).select_related('forma_pagamento', 'conta', 'credor')
+            processos = Processo.objects.filter(id__in=processo_ids).select_related('forma_pagamento', 'conta', 'credor').prefetch_related('documentos')
 
             resultados = []
             for p in processos:
@@ -2090,11 +2090,20 @@ def api_detalhes_pagamento(request):
 
                 detalhe_tipo = "Não Especificado"
                 detalhe_valor = "Verifique o processo"
+                codigos_barras = None
 
                 # LÓGICA DE EXIBIÇÃO BASEADA NA FORMA DE PAGAMENTO
                 if 'boleto' in forma or 'gerenciador' in forma:
                     detalhe_tipo = "Código de Barras"
-                    detalhe_valor = p.codigo_barras if p.codigo_barras else "Não preenchido"
+                    # Coleta os códigos de barras de todos os documentos vinculados ao processo
+                    codigos_barras = [
+                        doc.codigo_barras
+                        for doc in p.documentos.all()
+                        if doc.codigo_barras
+                    ]
+                    # detalhe_valor mantém o primeiro código apenas como fallback para outros contextos;
+                    # o front-end usa codigos_barras para exibir todos os códigos individualmente.
+                    detalhe_valor = codigos_barras[0] if codigos_barras else "Não preenchido"
 
                 elif 'pix' in forma:
                     detalhe_tipo = "Chave PIX"
@@ -2125,7 +2134,8 @@ def api_detalhes_pagamento(request):
                     'valor': valor_formatado,
                     'forma': p.forma_pagamento.forma_de_pagamento if p.forma_pagamento else "N/A",
                     'detalhe_tipo': detalhe_tipo,
-                    'detalhe_valor': detalhe_valor
+                    'detalhe_valor': detalhe_valor,
+                    'codigos_barras': codigos_barras,
                 })
 
             return JsonResponse({'sucesso': True, 'dados': resultados})
