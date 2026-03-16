@@ -49,6 +49,7 @@
         {% csrf_token %}
         <input type="hidden" name="tipo_pagamento_id" id="tipo_pagamento_id_hidden" value="{{ selected_tipo_pagamento }}">
         <input type="hidden" name="num_documentos" id="num_documentos_hidden" value="0">
+        <input type="hidden" name="tipo_documento_id" id="tipo_documento_id_hidden" value="{{ selected_tipo_documento|default:'' }}">
 
         <div class="row g-4">
             <!-- Coluna Esquerda: Visualizador PDF -->
@@ -306,6 +307,7 @@
     const docFormsSection = document.getElementById('doc-forms-section');
     const numDocumentosInput = document.getElementById('num_documentos_hidden');
     const tipoPagamentoInput = document.getElementById('tipo_pagamento_id_hidden');
+    const tipoDocumentoInput = document.getElementById('tipo_documento_id_hidden');
     const pdfTabsContainer = document.getElementById('pdf-tabs-container');
     const pdfPlaceholder = document.getElementById('pdf-placeholder');
     const pdfViewer = document.getElementById('pdf-viewer');
@@ -316,6 +318,7 @@
     let uploadedFiles = [];
     let docCount = 0;
     let availableTipos = [];
+    let selectedTipoId = '';
     let batchSelectedTipoId = '';
     let pendingBatchCards = [];
     let batchModal;
@@ -326,44 +329,10 @@
         return div.innerHTML;
     }
 
-    function fetchTiposDocumento(tipoPagamentoId, preselected) {
-        const container = document.getElementById('tipos-documento-container');
-        container.innerHTML = '<p class="text-muted small"><i class="bi bi-hourglass-split"></i> Carregando...</p>';
-        availableTipos = [];
-        fetch(`/api/documentos-por-pagamento/?tipo_pagamento_id=${tipoPagamentoId}`)
-            .then(r => r.json())
-            .then(data => {
-                if (data.sucesso && data.tipos && data.tipos.length > 0) {
-                    availableTipos = data.tipos;
-                    container.innerHTML = '';
-                    const row = document.createElement('div');
-                    row.className = 'row g-2';
-                    data.tipos.forEach(tipo => {
-                        const col = document.createElement('div');
-                        col.className = 'col-md-4';
-                        col.innerHTML = `<div class="tipo-btn rounded p-3 text-center" data-value="${tipo.id}" onclick="selecionarTipo(this)"><i class="bi bi-file-earmark-text fs-3 text-primary d-block mb-1"></i><span class="fw-bold small">${escapeHtml(tipo.tipo_de_documento)}</span></div>`;
-                        row.appendChild(col);
-                    });
-                    container.appendChild(row);
-                    if (preselected) {
-                        const btn = container.querySelector(`.tipo-btn[data-value="${preselected}"]`);
-                        if (btn) {
-                            btn.classList.add('selected');
-                            selectedTipoId = preselected;
-                            tipoDocumentoInput.value = selectedTipoId;
-                        }
-                    }
-                } else {
-                    availableTipos = [];
-                    container.innerHTML = '<p class="text-muted small"><em>Nenhum tipo de documento disponível para este tipo de pagamento.</em></p>';
-                }
-            })
-            .catch(() => {
-                availableTipos = [];
-                container.innerHTML = '<p class="text-danger small"><em>Erro ao carregar tipos de documento.</em></p>';
     function atualizarTiposDeDocumento(tipoPagamentoId) {
         if (!tipoPagamentoId) {
             availableDocTypes = [];
+            availableTipos = [];
             uploadSection.style.display = 'none';
             return;
         }
@@ -371,6 +340,7 @@
             .then(r => r.json())
             .then(data => {
                 availableDocTypes = (data.sucesso && data.tipos) ? data.tipos : [];
+                availableTipos = availableDocTypes;
                 document.querySelectorAll('.tipo-documento-select').forEach(select => {
                     const valorAntigo = select.value;
                     select.innerHTML = '<option value="">---------</option>';
@@ -386,6 +356,7 @@
             })
             .catch(() => {
                 availableDocTypes = [];
+                availableTipos = [];
                 uploadSection.style.display = 'block';
             });
     }
@@ -405,10 +376,8 @@
         const val = this.value;
         tipoPagamentoInput.value = val;
         if (val) {
-            tipoDocumentoSection.style.display = 'block';
             tipoDocumentoInput.value = '';
             selectedTipoId = '';
-            uploadSection.style.display = 'block';
             resetDocs();
             atualizarTiposDeDocumento(val);
         } else {
@@ -419,22 +388,6 @@
 
     // On page load, if tipo_pagamento is already selected (e.g. after form error), show upload and load types
     if (tipoPagamentoInput.value) {
-        uploadSection.style.display = 'block';
-        fetchTiposDocumento(tipoPagamentoInput.value, tipoDocumentoInput.value || null);
-    }
-
-    function selecionarTipo(el) {
-        if (!tipoPagamentoInput.value) {
-            alert('Selecione o Tipo de Pagamento primeiro.');
-            return;
-        }
-        document.querySelectorAll('.tipo-btn:not(.doc-tipo-btn):not(.batch-tipo-btn)').forEach(b => b.classList.remove('selected'));
-        el.classList.add('selected');
-        selectedTipoId = el.getAttribute('data-value');
-        tipoDocumentoInput.value = selectedTipoId;
-
-        document.getElementById('bulk-file-input').multiple = true;
-
         uploadSection.style.display = 'block';
         atualizarTiposDeDocumento(tipoPagamentoInput.value);
     }
@@ -476,12 +429,6 @@
 
     function handleFiles(files) {
         if (files.length === 0) return;
-
-        // For < 5 files when no tipo is selected, require tipo selection first
-        if (files.length < 5 && !selectedTipoId) {
-            alert('Selecione o tipo de documento antes de fazer o upload.');
-            return;
-        }
 
         const newCards = [];
         files.forEach(file => {
