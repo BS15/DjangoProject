@@ -33,213 +33,7 @@ def home_page(request):
 
 
 # ==========================================
-# NOVO FLUXO FASE 1: PRÉ-TRIAGEM (UPLOAD DE DOCUMENTOS)
-# ==========================================
-def pre_triagem_view(request):
-    """Phase 1: Upload documents. Creates a skeleton Processo and redirects to completar_processo_view (Phase 2)."""
-    tipos_pagamento = TiposDePagamento.objects.filter(is_active=True).order_by('tipo_de_pagamento')
-
-    if request.method == 'POST':
-        tipo_pagamento_id = request.POST.get('tipo_pagamento_id', '')
-        num_docs_str = request.POST.get('num_documentos', '0')
-        try:
-            num_docs = int(num_docs_str)
-        except (ValueError, TypeError):
-            num_docs = 0
-
-        selected_tipo_pagamento = tipo_pagamento_id
-
-        errors = []
-        if not tipo_pagamento_id:
-            errors.append('Selecione o Tipo de Pagamento.')
-        if num_docs == 0:
-            errors.append('Faça upload de pelo menos um arquivo.')
-
-        if errors:
-            for err in errors:
-                messages.error(request, err)
-            return render(request, 'pre_triagem.html', {
-                'tipos_pagamento': tipos_pagamento,
-                'selected_tipo_pagamento': selected_tipo_pagamento,
-            })
-
-        try:
-            with transaction.atomic():
-                status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
-                    status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
-                    defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
-                )
-
-                try:
-                    tipo_pagamento_obj = TiposDePagamento.objects.get(id=int(tipo_pagamento_id))
-                except (TiposDePagamento.DoesNotExist, ValueError, TypeError):
-                    messages.error(request, 'Tipo de Pagamento não encontrado.')
-                    return render(request, 'pre_triagem.html', {
-                        'tipos_pagamento': tipos_pagamento,
-                        'selected_tipo_pagamento': selected_tipo_pagamento,
-                    })
-
-                processo = Processo.objects.create(
-                    status=status_obj,
-                    tipo_pagamento=tipo_pagamento_obj,
-                )
-
-                global_tipo_id = request.POST.get('tipo_documento_id', '').strip()
-                global_tipo_doc = None
-                if global_tipo_id:
-                    try:
-                        global_tipo_doc = TiposDeDocumento.objects.get(id=int(global_tipo_id))
-                    except (TiposDeDocumento.DoesNotExist, ValueError, TypeError):
-                        pass
-
-                for i in range(num_docs):
-                    arquivo = request.FILES.get(f'arquivo_{i}')
-                    per_doc_tipo_id = request.POST.get(f'tipo_documento_{i}', '').strip()
-                    tipo_doc_i = global_tipo_doc
-                    if per_doc_tipo_id:
-                        try:
-                            tipo_doc_i = TiposDeDocumento.objects.get(id=int(per_doc_tipo_id))
-                        except (TiposDeDocumento.DoesNotExist, ValueError, TypeError):
-                            pass
-
-                    if not tipo_doc_i:
-                        messages.error(request, f'Documento {i + 1}: Tipo de Documento não definido.')
-                        processo.delete()
-                        return render(request, 'pre_triagem.html', {
-                            'tipos_pagamento': tipos_pagamento,
-                            'selected_tipo_pagamento': selected_tipo_pagamento,
-                        })
-
-                    doc = DocumentoProcesso(
-                        processo=processo,
-                        tipo=tipo_doc_i,
-                        ordem=i + 1,
-                    )
-                    if arquivo:
-                        doc.arquivo = arquivo
-                    doc.save()
-
-                messages.success(request, 'Documentos registrados! Preencha as informações do processo.')
-                return redirect('completar_processo', pk=processo.id)
-
-        except Exception as exc:
-            print(f'Erro na pré-triagem: {exc}')
-            messages.error(request, f'Erro ao salvar documentos: {exc}')
-
-    return render(request, 'pre_triagem.html', {
-        'tipos_pagamento': tipos_pagamento,
-        'selected_tipo_pagamento': '',
-    })
-
-
-# ==========================================
-# NOVO FLUXO FASE 2: COMPLETAR INFORMAÇÕES DO PROCESSO
-# ==========================================
-def completar_processo_view(request, pk):
-    """Phase 2: Fill remaining process metadata for a skeleton processo created in Phase 1."""
-    processo = get_object_or_404(Processo, id=pk)
-
-    if request.method == 'POST':
-        if 'cancelar_processo' in request.POST:
-            processo.delete()
-            messages.info(request, 'Cadastro cancelado.')
-            return redirect('home_page')
-
-        trigger_a_empenhar = request.POST.get('trigger_a_empenhar') == 'on'
-        processo_form = ProcessoForm(request.POST, instance=processo, prefix='processo')
-        documento_formset = DocumentoFormSet(request.POST, request.FILES, instance=processo, prefix='documento')
-        pendencia_formset = PendenciaFormSet(request.POST, instance=processo, prefix='pendencia')
-
-        if processo_form.is_valid() and documento_formset.is_valid() and pendencia_formset.is_valid():
-            is_extra = processo_form.cleaned_data.get('extraorcamentario')
-
-            # Validação: se o processo não é "a empenhar" nem extraorçamentário,
-            # deve conter ao menos um documento do tipo "DOCUMENTOS ORÇAMENTÁRIOS".
-            if not trigger_a_empenhar and not is_extra:
-                has_doc_orcamentario = any(
-                    f.cleaned_data.get('tipo') and
-                    f.cleaned_data['tipo'].tipo_de_documento and
-                    f.cleaned_data['tipo'].tipo_de_documento.upper() == 'DOCUMENTOS ORÇAMENTÁRIOS'
-                    for f in documento_formset
-                    if f.cleaned_data and not f.cleaned_data.get('DELETE')
-                )
-                if not has_doc_orcamentario:
-                    messages.error(
-                        request,
-                        'É necessário incluir um documento do tipo "DOCUMENTOS ORÇAMENTÁRIOS" antes de salvar o processo.'
-                    )
-                    return render(request, 'completar_processo.html', {
-                        'processo_form': processo_form,
-                        'documento_formset': documento_formset,
-                        'pendencia_formset': pendencia_formset,
-                        'processo': processo,
-                    })
-
-            try:
-                with transaction.atomic():
-                    processo = processo_form.save(commit=False)
-
-                    if trigger_a_empenhar:
-                        status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
-                            status_choice__iexact='A EMPENHAR',
-                            defaults={'status_choice': 'A EMPENHAR'}
-                        )
-                        processo.status = status_obj
-                        processo.n_nota_empenho = None
-                        processo.data_empenho = None
-                        processo.ano_exercicio = None
-                    elif is_extra:
-                        status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
-                            status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
-                            defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
-                        )
-                        processo.status = status_obj
-                        processo.n_nota_empenho = None
-                        processo.data_empenho = None
-                        processo.ano_exercicio = None
-                    else:
-                        status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
-                            status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
-                            defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
-                        )
-                        processo.status = status_obj
-
-                    processo.save()
-                    documento_formset.instance = processo
-                    pendencia_formset.instance = processo
-                    documento_formset.save()
-                    pendencia_formset.save()
-
-                messages.success(request, f'Processo #{processo.id} inserido com sucesso!')
-                return redirect('home_page')
-
-            except Exception as exc:
-                print(f'Erro ao completar processo: {exc}')
-                messages.error(request, 'Erro interno ao salvar.')
-        else:
-            messages.error(request, 'Verifique os erros no formulário.')
-
-        return render(request, 'completar_processo.html', {
-            'processo_form': processo_form,
-            'documento_formset': documento_formset,
-            'pendencia_formset': pendencia_formset,
-            'processo': processo,
-        })
-
-    processo_form = ProcessoForm(instance=processo, prefix='processo')
-    documento_formset = DocumentoFormSet(instance=processo, prefix='documento')
-    pendencia_formset = PendenciaFormSet(instance=processo, prefix='pendencia')
-
-    return render(request, 'completar_processo.html', {
-        'processo_form': processo_form,
-        'documento_formset': documento_formset,
-        'pendencia_formset': pendencia_formset,
-        'processo': processo,
-    })
-
-
-# ==========================================
-# WIZARD FASE 1: CAPA E DOCUMENTOS (FLUXO LEGADO - MANTIDO)
+# CAPA E DOCUMENTOS DO PROCESSO
 # ==========================================
 def add_process_view(request):
     initial_data = {}
@@ -314,14 +108,8 @@ def add_process_view(request):
                         documento_formset.save()
                         pendencia_formset.save()
 
-                    tem_retencao = request.POST.get('tem_retencao') == 'sim'
-                    if tem_retencao:
-                        messages.success(request, "Capa do processo salva! Por favor, detalhe as retenções de impostos.")
-                        url = reverse('triagem_notas', kwargs={'pk': processo.id}) + '?source=add_process'
-                        return redirect(url)
-                    else:
-                        messages.success(request, "Processo inserido com sucesso!")
-                        return redirect('home_page')
+                    messages.success(request, f"Processo #{processo.id} inserido com sucesso!")
+                    return redirect('editar_processo', pk=processo.id)
 
                 except Exception as e:
                     print(f"🛑 Erro CRÍTICO de Banco de Dados ao salvar: {e}", flush=True)
@@ -397,7 +185,7 @@ def documentos_fiscais_view(request, pk):
     documentos = processo.documentos.all().order_by('ordem')
     fiscais_contrato = Credor.objects.filter(grupo__grupo='FUNCIONÁRIOS').order_by('nome')
     credores = Credor.objects.all().order_by('nome')
-    retencao_formset = RetencaoFormSet(prefix='imposto')
+    codigos_imposto = CodigosImposto.objects.all().order_by('codigo')
     source = request.GET.get('source', '')
 
     context = {
@@ -405,7 +193,7 @@ def documentos_fiscais_view(request, pk):
         'documentos': documentos,
         'fiscais_contrato': fiscais_contrato,
         'credores': credores,
-        'retencao_formset': retencao_formset,
+        'codigos_imposto': codigos_imposto,
         'source': source,
     }
     return render(request, 'documentos_fiscais.html', context)
@@ -1748,100 +1536,6 @@ def alternar_ateste_nota(request, pk):
 
     return redirect('painel_liquidacoes')
 
-def triagem_notas_view(request, pk):
-    processo = get_object_or_404(Processo, id=pk)
-
-    # Filtramos apenas os PDFs que representam notas fiscais para exibir na tela
-    docs_nota = processo.documentos.filter(tipo__tipo_de_documento__icontains='Nota').order_by('ordem')
-
-    # Determina a página de origem para o botão "Voltar".
-    # A URL mantém o query param (?source=...) mesmo em POSTs, mas o campo oculto no
-    # formulário garante o valor caso a URL seja acessada sem o parâmetro.
-    source = request.GET.get('source') or request.POST.get('source', 'editar_processo')
-
-    if request.method == 'POST':
-        nota_fiscal_formset = NotaFiscalFormSet(request.POST, instance=processo, prefix='nota_fiscal')
-
-        if nota_fiscal_formset.is_valid():
-            try:
-                with transaction.atomic():
-                    # Salva as notas fiscais primeiro para garantir que todas têm um ID no banco
-                    notas_salvas = nota_fiscal_formset.save()
-
-                    # Garante que atestada=False ao salvar pela triagem (a atestação ocorre no painel de liquidações)
-                    if notas_salvas:
-                        NotaFiscal.objects.filter(pk__in=[n.pk for n in notas_salvas]).update(atestada=False)
-
-                    # 1. Salva Retenções usando os formulários como base para o Índice exato do Front-end
-                    for index, form in enumerate(nota_fiscal_formset.forms):
-                        # Pula os formulários que o utilizador marcou para exclusão na lixeira
-                        if form in nota_fiscal_formset.deleted_objects:
-                            continue
-
-                        nota = form.instance
-
-                        if not nota.pk:
-                            continue # Evita crash se a nota falhou em salvar
-
-                        codigos = request.POST.getlist(f'imposto_{index}_code')
-                        valores = request.POST.getlist(f'imposto_{index}_value')
-                        rendimentos = request.POST.getlist(f'imposto_{index}_rendimento')
-
-                        nota.retencoes.all().delete()
-
-                        for c, r, v in zip(codigos, rendimentos, valores):
-                            if c and v:
-                                RetencaoImposto.objects.create(
-                                    nota_fiscal=nota,
-                                    codigo_id=c,
-                                    # Forçamos a conversão para string antes do replace para evitar TypeErrors
-                                    rendimento_tributavel=float(str(r).replace(',', '.')) if str(r).strip() else None,
-                                    valor=float(str(v).replace(',', '.'))
-                                )
-
-                    # 2. MÁGICA: Auto-Vinculação da Nota Fiscal com o Documento Base em PDF
-                    todas_notas = list(processo.notas_fiscais.all().order_by('id'))
-                    docs_lista = list(docs_nota)
-
-                    for idx, nf in enumerate(todas_notas):
-                        if idx < len(docs_lista):
-                            # Proteção para evitar o IntegrityError (OneToOneField)
-                            if nf.documento_vinculado_id != docs_lista[idx].id:
-                                nf.documento_vinculado = docs_lista[idx]
-                                nf.save()
-
-                    messages.success(request, f"Triagem Fiscal do Processo #{processo.id} concluída com sucesso!")
-                    return redirect('home_page')
-
-            except Exception as e:
-                print(f"🛑 Erro na Triagem Fiscal: {str(e)}")
-                # AGORA O DJANGO VAI MOSTRAR O ERRO REAL NA CAIXA VERMELHA DA TELA
-                messages.error(request, f'Erro interno ao salvar: {str(e)}')
-        else:
-            messages.error(request, 'Verifique os erros no formulário de Notas Fiscais.')
-
-    else:
-        nota_fiscal_formset = NotaFiscalFormSet(instance=processo, prefix='nota_fiscal')
-
-    retencao_formset = RetencaoFormSet(prefix='imposto')
-
-    # Monta a URL de retorno conforme a origem
-    if source == 'add_process':
-        voltar_url = reverse('add_process')
-    else:
-        voltar_url = reverse('editar_processo', kwargs={'pk': processo.id})
-
-    context = {
-        'processo': processo,
-        'docs_nota': docs_nota,
-        'nota_fiscal_formset': nota_fiscal_formset,
-        'retencao_formset': retencao_formset,
-        'source': source,
-        'voltar_url': voltar_url,
-    }
-    return render(request, 'triagem_notas.html', context)
-
-
 def gerar_dummy_pdf_view(request, pk):
     """Generates a simple dummy PDF and attaches it as a 'NOTA FISCAL (NF)' document
     to the processo, so the triagem page can be accessed and tested immediately."""
@@ -1884,7 +1578,7 @@ def gerar_dummy_pdf_view(request, pk):
     doc.arquivo.save(filename, ContentFile(buffer.getvalue()), save=True)
 
     messages.success(request, f'PDF de teste gerado e vinculado ao Processo #{processo.id}.')
-    return redirect('triagem_notas', pk=pk)
+    return redirect('documentos_fiscais', pk=pk)
 
 
 # Adicione no final do views.py
