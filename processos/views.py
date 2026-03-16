@@ -1311,6 +1311,7 @@ def conferencia_processo_view(request, pk):
     queue = request.session.get('conferencia_queue', [])
     current_index = queue.index(pk) if pk in queue else -1
     next_pk = queue[current_index + 1] if 0 <= current_index < len(queue) - 1 else None
+    prev_pk = queue[current_index - 1] if current_index > 0 else None
 
     if request.method == 'POST':
         action = request.POST.get('action', '')
@@ -1327,6 +1328,12 @@ def conferencia_processo_view(request, pk):
             request.session.pop('conferencia_queue', None)
             request.session.modified = True
             return redirect('painel_conferencia')
+
+        if action == 'voltar':
+            if prev_pk:
+                return redirect('conferencia_processo', pk=prev_pk)
+            messages.info(request, 'Não há processo anterior na fila.')
+            return redirect('conferencia_processo', pk=pk)
 
         if action in ('confirmar', 'salvar'):
             doc_formset = DocumentoFormSet(
@@ -1445,6 +1452,7 @@ def conferencia_processo_view(request, pk):
         'queue': queue,
         'current_index': current_index,
         'next_pk': next_pk,
+        'prev_pk': prev_pk,
         'queue_length': len(queue),
         'queue_position': current_index + 1 if current_index >= 0 else 1,
         'tipos_documento': TiposDeDocumento.objects.all(),
