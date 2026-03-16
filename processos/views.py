@@ -204,15 +204,21 @@ def triagem_notas_view(request, pk):
                         codigos = request.POST.getlist(f'imposto_{index}_code')
                         valores = request.POST.getlist(f'imposto_{index}_value')
                         rendimentos = request.POST.getlist(f'imposto_{index}_rendimento')
+                        beneficiarios = request.POST.getlist(f'imposto_{index}_beneficiario')
                         nota.retencoes.all().delete()
 
-                        for c, r, v in zip(codigos, rendimentos, valores):
+                        for c, r, v, b in zip(codigos, rendimentos, valores, beneficiarios):
                             if c and v:
+                                try:
+                                    beneficiario_id = int(b) if b and b.strip() else None
+                                except (ValueError, TypeError):
+                                    beneficiario_id = None
                                 RetencaoImposto.objects.create(
                                     nota_fiscal=nota,
                                     codigo_id=c,
                                     rendimento_tributavel=float(r.replace(',', '.')) if r.strip() else None,
-                                    valor=float(v.replace(',', '.'))
+                                    valor=float(v.replace(',', '.')),
+                                    beneficiario_id=beneficiario_id,
                                 )
 
                     # 2. MÁGICA: Auto-Vinculação da Nota Fiscal com o Documento Base em PDF
@@ -245,6 +251,7 @@ def triagem_notas_view(request, pk):
         'docs_nota': docs_nota, # Mandamos os PDFs filtrados para o front-end!
         'nota_fiscal_formset': nota_fiscal_formset,
         'retencao_formset': retencao_formset,
+        'credores': Credor.objects.all().order_by('nome'),
     }
     return render(request, 'triagem_notas.html', context)
 
