@@ -1264,18 +1264,7 @@ def painel_conferencia_view(request):
 
 
 def aprovar_conferencia_view(request, pk):
-    if request.method == 'POST':
-        processo = get_object_or_404(Processo, id=pk)
-
-        status_contabilizar, _ = StatusChoicesProcesso.objects.get_or_create(
-            status_choice__iexact='PAGO - A CONTABILIZAR',
-            defaults={'status_choice': 'PAGO - A CONTABILIZAR'}
-        )
-
-        processo.status = status_contabilizar
-        processo.save()
-        messages.success(request, f'Processo #{processo.id} aprovado na conferência e enviado para Contabilização!')
-
+    messages.error(request, 'A aprovação direta foi desativada. Abra o processo para realizar a conferência.')
     return redirect('painel_conferencia')
 
 
