@@ -59,6 +59,16 @@
         {{ documento_formset.management_form }}
         {{ pendencia_formset.management_form }} 
 
+        {% if somente_documentos %}
+        <div class="alert alert-warning border-warning shadow-sm mb-3 d-flex align-items-start gap-2" role="alert">
+            <i class="bi bi-lock-fill fs-5 mt-1 flex-shrink-0"></i>
+            <div>
+                <strong>Edição Limitada — Status: {{ processo.status }}</strong><br>
+                <span class="small">Este processo foi autorizado para pagamento. Apenas a <strong>inclusão e reordenação de documentos</strong> é permitida. As demais informações do processo não podem ser alteradas.</span>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="row g-4">
             <div class="col-lg-5">
                 <div class="sticky-viewer">
@@ -88,6 +98,9 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Tipo de Pagamento do Processo:</label>
                                 {{ processo_form.tipo_pagamento }}
+                                {% if somente_documentos %}
+                                <small class="text-muted mt-1 d-block"><i class="bi bi-lock"></i> Não pode ser alterado neste status.</small>
+                                {% endif %}
                             </div>
                         </div>
 
@@ -164,7 +177,8 @@
                                 </div>
                             </div>
                         </div>
-
+
+                        {% if not somente_documentos %}
                         <div id="payment-info-block">
                             <h5 class="text-secondary border-bottom pb-2 mb-3 mt-4"><i class="bi bi-card-heading"></i> 3. Capa do Processo</h5>
                             
@@ -256,6 +270,8 @@
 
                         </div>
 
+                        {% endif %}{# somente_documentos #}
+
                         <hr class="mt-5">
                         <div class="d-flex justify-content-between align-items-center gap-2">
                             <a href="{{ documentos_fiscais_url }}" class="btn btn-info text-white fw-bold">
@@ -264,7 +280,7 @@
                             <div class="d-flex gap-2 ms-auto">
                                 <a href="{% url 'home_page' %}" class="btn btn-secondary">Cancelar Edição</a>
                                 <button type="submit" class="btn btn-warning px-4 fw-bold">
-                                    Salvar Alterações <i class="bi bi-arrow-right"></i>
+                                    {% if somente_documentos %}Salvar Documentos{% else %}Salvar Alterações{% endif %} <i class="bi bi-arrow-right"></i>
                                 </button>
                             </div>
                         </div>
@@ -581,8 +597,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (selectTipoPagamento) {
+        {% if not somente_documentos %}
         selectTipoPagamento.addEventListener('change', () => atualizarTiposDeDocumento(true));
+        {% endif %}
         if (selectTipoPagamento.value) atualizarTiposDeDocumento(false);
+        {% if somente_documentos %}
+        // Lock tipo de pagamento – document-only mode; type is pre-loaded, must not be changed.
+        selectTipoPagamento.disabled = true;
+        {% endif %}
     }
 
     // DOCUMENTOS - DRAG/DROP E IA
