@@ -56,6 +56,17 @@ class CodigosImposto(models.Model):
     # This replaces your hard-coded choices
     codigo = models.CharField(max_length=10, unique=True, null=True, blank=True)
 
+    FAMILIA_IMPOSTO_CHOICES = [
+        ('INSS', 'Previdenciário (Série 2000)'),
+        ('FEDERAL', 'Federal - IR/CSRF (Série 4000)'),
+    ]
+    familia = models.CharField(
+        max_length=10,
+        choices=FAMILIA_IMPOSTO_CHOICES,
+        default='FEDERAL',
+        blank=True,
+    )
+
     REGRA_COMPETENCIA_CHOICES = [
         ('emissao', 'Pela Data de Emissão da NF'),
         ('pagamento', 'Pela Data de Pagamento'),
@@ -494,10 +505,10 @@ class Pendencia(models.Model):
 class RetencaoImposto(models.Model):
     nota_fiscal = models.ForeignKey(DocumentoFiscal, on_delete=models.CASCADE, related_name='retencoes')
     beneficiario = models.ForeignKey('Credor', on_delete=models.PROTECT, blank=True, null=True, verbose_name="Beneficiário", related_name='retencoes')
-    rendimento_tributavel = valor = models.DecimalField(null=True, blank=True, max_digits=12, decimal_places=2)
+    rendimento_tributavel = models.DecimalField("Base de Cálculo / Rend. Tributável", null=True, blank=True, max_digits=12, decimal_places=2)
     data_pagamento = models.DateField(blank=True, null=True)
     codigo = models.ForeignKey(CodigosImposto, on_delete=models.PROTECT)
-    valor = models.DecimalField(max_digits=12, decimal_places=2)
+    valor = models.DecimalField("Valor Retido", max_digits=12, decimal_places=2)
     status = models.ForeignKey('StatusChoicesRetencoes', on_delete=models.PROTECT, blank=True, null=True)
 
     competencia = models.DateField(
