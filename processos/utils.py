@@ -637,6 +637,154 @@ def gerar_pdf_autorizacao(processo):
     return merge_canvas_with_template(buffer, settings.CRECI_LETTERHEAD_PATH)
 
 
+# Geometry for the PCD signature blocks.
+_PCD_SIG_Y = 120
+_PCD_SIG_HALF_WIDTH = 130
+
+
+def gerar_pdf_pcd(diaria):
+    """
+    Gera o PDF "Proposta de Concessão de Diárias (PCD)" para a diária especificada.
+    Inclui numeração, dados do beneficiário, detalhes da viagem e espaço para
+    identificação e assinatura do beneficiário.
+    Retorna um BytesIO contendo o PDF final mesclado com o papel timbrado.
+    """
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    margin_left = 70
+    margin_right = 70
+    text_width = width - margin_left - margin_right
+
+    y = height - 160
+
+    # --- CABEÇALHO ---
+    p.setFont("Helvetica-Bold", 13)
+    p.drawCentredString(width / 2.0, y, "PROPOSTA DE CONCESSÃO DE DIÁRIAS (PCD)")
+    y -= 18
+    p.setFont("Helvetica-Bold", 11)
+    p.drawCentredString(width / 2.0, y, f"Nº {diaria.numero_sequencial}")
+    y -= 16
+    p.setFont("Helvetica", 10)
+    p.drawCentredString(width / 2.0, y, f"Tipo: {diaria.get_tipo_solicitacao_display()}")
+    y -= 28
+
+    p.setLineWidth(0.5)
+    p.line(margin_left, y, width - margin_right, y)
+    y -= 20
+
+    # --- DADOS DO BENEFICIÁRIO ---
+    nome = str(diaria.beneficiario.nome) if diaria.beneficiario and diaria.beneficiario.nome else "Não informado"
+    cpf = str(diaria.beneficiario.cpf_cnpj) if diaria.beneficiario and diaria.beneficiario.cpf_cnpj else "Não informado"
+    cargo = str(diaria.beneficiario.cargo_funcao) if diaria.beneficiario and diaria.beneficiario.cargo_funcao else "Não informado"
+
+    p.setFont("Helvetica-Bold", 11)
+    p.drawString(margin_left, y, "DADOS DO BENEFICIÁRIO:")
+    y -= 16
+    p.setFont("Helvetica", 11)
+    p.drawString(margin_left, y, f"Nome:              {nome}")
+    y -= 16
+    p.drawString(margin_left, y, f"CPF:               {cpf}")
+    y -= 16
+    p.drawString(margin_left, y, f"Cargo / Função:    {cargo}")
+    y -= 24
+
+    # --- DADOS DO PROPONENTE ---
+    if diaria.proponente:
+        p.setFont("Helvetica-Bold", 11)
+        p.drawString(margin_left, y, "PROPONENTE:")
+        y -= 16
+        p.setFont("Helvetica", 11)
+        nome_p = str(diaria.proponente.nome) if diaria.proponente.nome else "Não informado"
+        cpf_p = str(diaria.proponente.cpf_cnpj) if diaria.proponente.cpf_cnpj else "Não informado"
+        cargo_p = str(diaria.proponente.cargo_funcao) if diaria.proponente.cargo_funcao else "Não informado"
+        p.drawString(margin_left, y, f"Nome:              {nome_p}")
+        y -= 16
+        p.drawString(margin_left, y, f"CPF:               {cpf_p}")
+        y -= 16
+        p.drawString(margin_left, y, f"Cargo / Função:    {cargo_p}")
+        y -= 24
+
+    # --- DADOS DA VIAGEM ---
+    p.setFont("Helvetica-Bold", 11)
+    p.drawString(margin_left, y, "DADOS DA VIAGEM:")
+    y -= 16
+    p.setFont("Helvetica", 11)
+
+    data_saida = diaria.data_saida.strftime('%d/%m/%Y') if diaria.data_saida else "Não informado"
+    data_retorno = diaria.data_retorno.strftime('%d/%m/%Y') if diaria.data_retorno else "Não informado"
+
+    p.drawString(margin_left, y, f"Data de Saída:           {data_saida}")
+    y -= 16
+    p.drawString(margin_left, y, f"Data de Retorno:         {data_retorno}")
+    y -= 16
+    p.drawString(margin_left, y, f"Cidade de Origem:        {diaria.cidade_origem or 'Não informado'}")
+    y -= 16
+    p.drawString(margin_left, y, f"Cidade(s) de Destino:    {diaria.cidade_destino or 'Não informado'}")
+    y -= 16
+    if diaria.meio_de_transporte:
+        p.drawString(margin_left, y, f"Meio de Transporte:      {diaria.meio_de_transporte}")
+        y -= 16
+    y -= 8
+
+    # --- OBJETIVO DA VIAGEM ---
+    p.setFont("Helvetica-Bold", 11)
+    p.drawString(margin_left, y, "OBJETIVO DA VIAGEM:")
+    y -= 16
+    y = _draw_wrapped_text(p, diaria.objetivo or "Não informado.", margin_left, y, text_width,
+                           font_name="Helvetica", font_size=11)
+    y -= 20
+
+    # --- VALORES ---
+    p.setFont("Helvetica-Bold", 11)
+    p.drawString(margin_left, y, "VALORES:")
+    y -= 16
+    p.setFont("Helvetica", 11)
+    p.drawString(margin_left, y, f"Quantidade de Diárias:   {diaria.quantidade_diarias}")
+    y -= 16
+    p.setFont("Helvetica-Bold", 11)
+    p.drawString(margin_left, y, f"Valor Total:             {_formatar_moeda(diaria.valor_total)}")
+    y -= 28
+
+    # --- BOILERPLATE LEGAL ---
+    p.setLineWidth(0.5)
+    p.line(margin_left, y, width - margin_right, y)
+    y -= 14
+    boilerplate = (
+        "Proposta de concessão de diárias elaborada nos termos da legislação e regulamento interno vigentes, "
+        "para fins de autorização pelo Ordenador de Despesas."
+    )
+    _draw_wrapped_text(p, boilerplate, margin_left, y, text_width, font_name="Helvetica-Oblique", font_size=10)
+
+    # --- BLOCOS DE ASSINATURA ---
+    sig_left_x = margin_left + _PCD_SIG_HALF_WIDTH
+    sig_right_x = width - margin_right - _PCD_SIG_HALF_WIDTH
+
+    p.setFont("Helvetica", 9)
+
+    # Beneficiário (left) — pre-filled identification
+    p.drawCentredString(sig_left_x, _PCD_SIG_Y + 38, nome)
+    p.drawCentredString(sig_left_x, _PCD_SIG_Y + 26, f"CPF: {cpf}")
+    p.drawCentredString(sig_left_x, _PCD_SIG_Y + 14, cargo)
+    p.line(sig_left_x - _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y,
+           sig_left_x + _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y)
+    p.drawCentredString(sig_left_x, _PCD_SIG_Y - 12, "Assinatura do(a) Beneficiário(a)")
+
+    # Ordenador de Despesa (right)
+    p.drawCentredString(sig_right_x, _PCD_SIG_Y + 14,
+                        "Local e Data: _____ / _____ / _________")
+    p.line(sig_right_x - _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y,
+           sig_right_x + _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y)
+    p.drawCentredString(sig_right_x, _PCD_SIG_Y - 12, "Ordenador(a) de Despesa")
+
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+
+    return merge_canvas_with_template(buffer, TEMPLATE_PATH)
+
+
 def gerar_pdf_conselho_fiscal(processo):
     """
     Gera o PDF "Parecer do Conselho Fiscal" para o processo especificado.
