@@ -142,11 +142,11 @@
                         <td>{{ processo.data_empenho|date:"d/m/Y"|default:"-" }}</td>
                         <td>
                             {% if processo.status.status_choice == 'ARQUIVADO' %}
-                                <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2 rounded-pill"><i class="bi bi-archive-fill"></i> Arquivado</span>
+                                <span class="badge bg-secondary px-3 py-2"><i class="bi bi-archive-fill"></i> Arquivado</span>
                             {% elif 'PENDÊNCIAS' in processo.status.status_choice or 'NÃO RESOLVIDO' in processo.status.status_choice %}
-                                <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill"><i class="bi bi-exclamation-triangle-fill"></i> Pendências</span>
+                                <span class="badge bg-danger px-3 py-2"><i class="bi bi-exclamation-triangle-fill"></i> Pendências</span>
                             {% else %}
-                                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">{{ processo.status.status_choice|truncatechars:25 }}</span>
+                                <span class="badge bg-primary px-3 py-2">{{ processo.status.status_choice|truncatechars:25 }}</span>
                             {% endif %}
                         </td>
                         <td>{{ processo.tipo_pagamento|default:"-" }}</td>
