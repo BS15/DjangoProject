@@ -134,7 +134,7 @@
                             <strong>{{ grupo.credor.nome|default:"Prestador não informado" }}</strong>
                             <span class="text-muted small ms-2">{{ grupo.credor.cpf_cnpj|default:"–" }}</span>
                         </div>
-                        <span class="badge bg-primary bg-opacity-10 text-primary">
+                        <span class="badge bg-primary">
                             Total retido: R$ {{ grupo.total_retido|floatformat:2 }}
                         </span>
                     </div>
@@ -229,7 +229,7 @@
                             <span class="badge bg-secondary bg-opacity-75 ms-1">Pessoa Jurídica</span>
                             {% endif %}
                         </div>
-                        <span class="badge bg-success bg-opacity-10 text-success">
+                        <span class="badge bg-success">
                             Total retido: R$ {{ grupo.total_retido|floatformat:2 }}
                         </span>
                     </div>
