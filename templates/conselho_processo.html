@@ -1,0 +1,425 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conselho Fiscal — Processo #{{ processo.id }} - System X</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
+    <style>
+        .sticky-panel { position: sticky; top: 12px; }
+        .history-row { font-size: 0.82rem; }
+        .pendencia-row-resolvida { opacity: 0.6; }
+        .progress-queue { font-size: 0.82rem; }
+        .action-bar { position: sticky; bottom: 0; z-index: 100; background: #fff;
+                      border-top: 2px solid #dee2e6; padding: 0.75rem 1rem; box-shadow: 0 -2px 8px rgba(0,0,0,.07); }
+        .readonly-overlay { pointer-events: none; opacity: 0.75; }
+    </style>
+</head>
+<body class="bg-light">
+
+<!-- ═══ NAVBAR ═══════════════════════════════════════════════════════════ -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-info mb-0 shadow-sm">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold" href="{% url 'home_page' %}">System X</a>
+        <span class="navbar-text text-white fw-semibold small">
+            <i class="bi bi-people-fill me-1"></i> Conselho Fiscal
+        </span>
+    </div>
+</nav>
+
+<!-- ═══ PROGRESS BAR ═════════════════════════════════════════════════════ -->
+{% if queue_length > 0 %}
+<div class="bg-white border-bottom px-4 py-2 d-flex align-items-center gap-3">
+    <span class="progress-queue text-muted">
+        <i class="bi bi-list-check me-1"></i>
+        Processo <strong>{{ queue_position }}</strong> de <strong>{{ queue_length }}</strong> na fila
+    </span>
+    <div class="progress flex-grow-1" style="height:6px;">
+        <div class="progress-bar bg-info"
+             style="width: {% widthratio queue_position queue_length 100 %}%"></div>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="sair">
+        <button type="submit" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-x-lg me-1"></i>Sair da Revisão
+        </button>
+    </form>
+</div>
+{% endif %}
+
+<!-- ═══ MAIN CONTENT ═════════════════════════════════════════════════════ -->
+<div class="container-fluid px-3 py-3" style="padding-bottom: 90px !important;">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="alert alert-info border-info mb-3 py-2 small">
+        <i class="bi bi-lock-fill me-1"></i>
+        <strong>Modo somente leitura.</strong> Como Conselho Fiscal, você pode apenas aprovar ou devolver o processo. Nenhuma alteração de dados, documentos ou pendências é permitida.
+    </div>
+
+    <div class="row g-3">
+
+        <!-- ── LEFT: PDF PREVIEW ─────────────────────────────────────────── -->
+        <div class="col-xl-7 col-lg-6">
+            <div class="sticky-panel">
+                <div class="card shadow-sm border-info">
+                    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center py-2">
+                        <span class="fw-bold">
+                            <i class="bi bi-file-earmark-pdf me-1"></i>
+                            Processo #{{ processo.id }} — PDF Consolidado
+                        </span>
+                        <a href="{% url 'visualizar_pdf_processo' processo_id=processo.id %}"
+                           target="_blank"
+                           class="btn btn-sm btn-light text-info fw-bold">
+                            <i class="bi bi-box-arrow-up-right"></i> Abrir em nova aba
+                        </a>
+                    </div>
+                    <div class="card-body p-0">
+                        <iframe
+                            src="{% url 'visualizar_pdf_processo' processo_id=processo.id %}"
+                            width="100%"
+                            style="height: calc(100vh - 200px); min-height: 600px; border: none;"
+                            title="PDF Consolidado do Processo">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── RIGHT: INFO (READONLY) + HISTORY ──────────────────────────── -->
+        <div class="col-xl-5 col-lg-6">
+
+            <!-- ┌ PROCESS INFO ────────────────────────────────────────┐ -->
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-header bg-light fw-bold text-secondary py-2">
+                    <i class="bi bi-card-heading me-1"></i> Informações do Processo
+                </div>
+                <div class="card-body py-2">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="small text-muted">Credor</div>
+                            <div class="fw-semibold">{{ processo.credor|default:"—" }}</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="small text-muted">Status</div>
+                            <span class="badge bg-info text-white">
+                                {{ processo.status|default:"—" }}
+                            </span>
+                        </div>
+                        <div class="col-4">
+                            <div class="small text-muted">Valor Bruto</div>
+                            <div class="fw-semibold">R$ {{ processo.valor_bruto|floatformat:2|default:"—" }}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small text-muted">Valor Líquido</div>
+                            <div class="fw-semibold text-info">R$ {{ processo.valor_liquido|floatformat:2|default:"—" }}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small text-muted">Data Pgto</div>
+                            <div class="fw-semibold">{{ processo.data_pagamento|date:"d/m/Y"|default:"—" }}</div>
+                        </div>
+                        {% if processo.n_nota_empenho %}
+                        <div class="col-6">
+                            <div class="small text-muted">Nota de Empenho</div>
+                            <div>{{ processo.n_nota_empenho }}</div>
+                        </div>
+                        {% endif %}
+                        {% if processo.n_pagamento_siscac %}
+                        <div class="col-6">
+                            <div class="small text-muted">N° SISCAC</div>
+                            <div>{{ processo.n_pagamento_siscac }}</div>
+                        </div>
+                        {% endif %}
+                        {% if processo.tipo_pagamento %}
+                        <div class="col-6">
+                            <div class="small text-muted">Tipo de Pagamento</div>
+                            <div>{{ processo.tipo_pagamento }}</div>
+                        </div>
+                        {% endif %}
+                        {% if processo.forma_pagamento %}
+                        <div class="col-6">
+                            <div class="small text-muted">Forma de Pagamento</div>
+                            <div>{{ processo.forma_pagamento }}</div>
+                        </div>
+                        {% endif %}
+                        {% if processo.conta %}
+                        <div class="col-12">
+                            <div class="small text-muted">Conta Sacada</div>
+                            <div>{{ processo.conta }}</div>
+                        </div>
+                        {% endif %}
+                        {% if processo.detalhamento %}
+                        <div class="col-12">
+                            <div class="small text-muted">Detalhamento</div>
+                            <div class="small">{{ processo.detalhamento }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <!-- └──────────────────────────────────────────────────────┘ -->
+
+            <!-- ┌ DOCUMENTS (readonly) ────────────────────────────────┐ -->
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-header bg-light fw-bold text-secondary py-2 d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-paperclip me-1"></i> Documentos do Processo</span>
+                    <span class="badge bg-secondary">{{ processo.documentos.count }} doc(s)</span>
+                </div>
+                <div class="card-body py-2 px-2">
+                    {% for doc in processo.documentos.all %}
+                    <div class="row g-1 align-items-center mb-2 border-bottom pb-2">
+                        <div class="col-1 text-center text-muted small">{{ doc.ordem }}</div>
+                        <div class="col-4 small">{{ doc.tipo|default:"—" }}</div>
+                        <div class="col text-truncate small text-success" style="max-width:160px;" title="{{ doc.arquivo.name }}">
+                            <i class="bi bi-cloud-check"></i>
+                            {{ doc.arquivo.name|cut:"documentos/" }}
+                        </div>
+                        <div class="col-auto">
+                            {% if doc.arquivo %}
+                            <a href="{{ doc.arquivo.url }}" target="_blank"
+                               class="btn btn-sm btn-outline-secondary" title="Ver arquivo">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {% endif %}
+                            {% if doc.imutavel %}
+                            <span class="badge bg-secondary" style="font-size:0.7rem;">
+                                <i class="bi bi-lock-fill"></i> imutável
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small mb-0">Nenhum documento anexado.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- └──────────────────────────────────────────────────────┘ -->
+
+            <!-- ┌ PENDÊNCIAS (readonly) ───────────────────────────────┐ -->
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-header bg-light fw-bold text-secondary py-2 d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-exclamation-triangle me-1"></i> Pendências</span>
+                    <span class="badge bg-warning text-dark">{{ processo.pendencias.count }}</span>
+                </div>
+                <div class="card-body py-2 px-2">
+                    {% for pend in processo.pendencias.all %}
+                    <div class="row g-1 align-items-start mb-2 border-bottom pb-2
+                        {% if pend.status.status_choice|lower == 'resolvido' %}pendencia-row-resolvida{% endif %}">
+                        <div class="col-4 small">{{ pend.tipo|default:"—" }}</div>
+                        <div class="col small">{{ pend.descricao|default:"—" }}</div>
+                        <div class="col-auto">
+                            {% if pend.status %}
+                            <span class="badge bg-secondary small">{{ pend.status }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small mb-0">Nenhuma pendência registrada.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- └──────────────────────────────────────────────────────┘ -->
+
+            <!-- ┌ HISTORY / LOG ───────────────────────────────────────┐ -->
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-header bg-light fw-bold text-secondary py-2"
+                     style="cursor:pointer;"
+                     data-bs-toggle="collapse"
+                     data-bs-target="#history-panel"
+                     aria-expanded="true">
+                    <i class="bi bi-clock-history me-1"></i>
+                    Histórico de Alterações
+                    <span class="badge bg-secondary ms-2">{{ history_records|length }}</span>
+                    <i class="bi bi-chevron-down ms-auto float-end mt-1"></i>
+                </div>
+                <div id="history-panel" class="collapse show">
+                    <div class="card-body p-0">
+                        {% if history_records %}
+                        <div style="max-height: 360px; overflow-y: auto;">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead class="table-light sticky-top">
+                                    <tr class="small text-muted">
+                                        <th>Data/Hora</th>
+                                        <th>Usuário</th>
+                                        <th>Módulo</th>
+                                        <th>Ação</th>
+                                        <th>Objeto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for rec in history_records %}
+                                    <tr class="history-row">
+                                        <td class="text-nowrap">
+                                            {{ rec.history_date|date:"d/m/Y H:i" }}
+                                        </td>
+                                        <td>
+                                            {% if rec.history_user %}
+                                                {{ rec.history_user.get_full_name|default:rec.history_user.username }}
+                                            {% else %}
+                                                <span class="text-muted">—</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge
+                                                {% if rec.modelo == 'Processo' %}bg-primary
+                                                {% elif rec.modelo == 'Documento' %}bg-success
+                                                {% elif rec.modelo == 'Pendência' %}bg-danger
+                                                {% elif rec.modelo == 'Nota Fiscal' %}bg-warning text-dark
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ rec.modelo }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge
+                                                {% if rec.history_type == '+' %}bg-success
+                                                {% elif rec.history_type == '-' %}bg-danger
+                                                {% else %}bg-warning text-dark{% endif %}">
+                                                {{ rec.history_type_label }}
+                                            </span>
+                                        </td>
+                                        <td style="white-space:normal;word-break:break-word;">
+                                            {{ rec.str_repr }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-muted small p-3">Nenhum registro de histórico encontrado.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <!-- └──────────────────────────────────────────────────────┘ -->
+
+        </div><!-- col-right -->
+
+    </div><!-- .row -->
+</div><!-- container -->
+
+<!-- ═══ REJEITAR MODAL ═══════════════════════════════════════════════════ -->
+{% if pode_interagir %}
+<div class="modal fade" id="modalRejeitar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="rejeitar">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-exclamation-octagon"></i> Recusar Contas — Processo #{{ processo.id }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-start">
+                    <p class="small text-muted mb-3">Aponte a inconsistência identificada pelo Conselho. O processo retornará à Contabilização para ajustes.</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tipo de Apontamento</label>
+                        {{ pendencia_form.tipo }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Despacho / Justificativa</label>
+                        {{ pendencia_form.descricao }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger fw-bold">Registrar Recusa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ═══ STICKY ACTION BAR ══════════════════════════════════════════════════ -->
+<div class="action-bar">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+        {% if pode_interagir %}
+        <!-- Approve → Arquivamento -->
+        <form method="post" id="aprovar-form" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="aprovar">
+            <button type="submit"
+                    class="btn btn-info text-white fw-bold shadow-sm"
+                    onclick="return confirm('Aprovar o Processo #{{ processo.id }} e liberar para arquivamento?');"
+                    title="Aprovar e liberar para Arquivamento">
+                <i class="bi bi-check-circle me-1"></i>
+                Aprovar
+            </button>
+        </form>
+
+        <!-- Reject → back to Contabilização -->
+        <button type="button"
+                class="btn btn-outline-danger fw-bold"
+                data-bs-toggle="modal"
+                data-bs-target="#modalRejeitar"
+                title="Devolver para a Contabilização">
+            <i class="bi bi-arrow-return-left me-1"></i>
+            Devolver para Contabilização
+        </button>
+        {% endif %}
+
+        <!-- Back to previous -->
+        {% if prev_pk %}
+        <form method="post" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="voltar">
+            <button type="submit" class="btn btn-outline-secondary fw-bold">
+                <i class="bi bi-skip-start me-1"></i>
+                Voltar — Processo Anterior
+            </button>
+        </form>
+        {% else %}
+        <button type="button" class="btn btn-outline-secondary fw-bold disabled"
+                title="Não há processo anterior na fila">
+            <i class="bi bi-skip-start me-1"></i>
+            Voltar
+        </button>
+        {% endif %}
+
+        <!-- Skip -->
+        {% if next_pk %}
+        <form method="post" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="pular">
+            <button type="submit" class="btn btn-outline-secondary fw-bold">
+                <i class="bi bi-skip-end me-1"></i>
+                Pular — Próximo Processo
+            </button>
+        </form>
+        {% else %}
+        <button type="button" class="btn btn-outline-secondary fw-bold disabled"
+                title="Não há mais processos na fila">
+            <i class="bi bi-skip-end me-1"></i>
+            Pular
+        </button>
+        {% endif %}
+
+        <div class="ms-auto d-flex gap-2 align-items-center">
+            <!-- Back to panel (sair) -->
+            <form method="post" id="sair-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="sair">
+                <button type="submit" class="btn btn-outline-danger fw-bold">
+                    <i class="bi bi-x-circle me-1"></i>Sair da Revisão
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
