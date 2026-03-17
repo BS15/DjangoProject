@@ -3093,3 +3093,43 @@ def gerar_pcd_view(request, pk):
     response = HttpResponse(pdf_buffer, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="{nome_arquivo}"'
     return response
+
+
+# ---------------------------------------------------------------------------
+# EFD-Reinf Panel
+# ---------------------------------------------------------------------------
+
+@login_required
+def painel_reinf_view(request):
+    """
+    Painel EFD-Reinf — exibe as retenções separadas em:
+      • Série 2000  (INSS / R-2010)
+      • Série 4000  (IRRF / CSRF / R-4010 / R-4020)
+
+    Aceita os parâmetros GET `mes` (1-12) e `ano` (YYYY) para filtrar
+    pela competência.  Quando omitidos, usa o mês/ano corrente.
+    """
+    from .reinf_services import get_serie_2000_data, get_serie_4000_data
+
+    today = date.today()
+    try:
+        mes = int(request.GET.get('mes', today.month))
+        ano = int(request.GET.get('ano', today.year))
+        if not (1 <= mes <= 12):
+            raise ValueError
+    except (ValueError, TypeError):
+        mes = today.month
+        ano = today.year
+
+    serie_2000 = get_serie_2000_data(mes, ano)
+    serie_4000 = get_serie_4000_data(mes, ano)
+
+    context = {
+        'mes': mes,
+        'ano': ano,
+        'serie_2000': serie_2000,
+        'serie_4000': serie_4000,
+        'meses': range(1, 13),
+        'anos': range(today.year - 4, today.year + 2),
+    }
+    return render(request, 'painel_reinf.html', context)
