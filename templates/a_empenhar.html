@@ -52,7 +52,7 @@
                         <tr>
                             <td>#{{ p.id }}</td>
                             <td class="fw-bold">{{ p.credor|default:"---" }}</td>
-                            <td><span class="badge bg-warning bg-opacity-10 text-warning px-2 py-1 rounded-pill">{{ p.status|default:"---" }}</span></td>
+                            <td><span class="badge bg-warning px-2 py-1">{{ p.status|default:"---" }}</span></td>
                             <td>{{ p.tipo_pagamento|default:"---" }}</td>
                             <td class="text-success fw-bold">R$ {{ p.valor_liquido|default:"0,00" }}</td>
                             <td>

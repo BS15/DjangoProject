@@ -90,7 +90,7 @@
                         {% endif %}
                         <td class="fw-bold text-muted">#{{ processo.id }}</td>
                         <td class="fw-medium">{{ processo.credor|truncatechars:40 }}</td>
-                        <td><span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 rounded-pill">{{ processo.status|default:"-" }}</span></td>
+                        <td><span class="badge bg-primary px-2 py-1">{{ processo.status|default:"-" }}</span></td>
                         <td>{{ processo.tipo_pagamento|default:"-" }}</td>
                         <td>{{ processo.n_pagamento_siscac|default:"-" }}</td>
                         <td>{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>

@@ -194,7 +194,7 @@
                                     <td class="fw-bold text-muted">#{{ processo.id }}</td>
                                     <td class="fw-medium text-primary">{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
                                     <td class="fw-medium">{{ processo.credor|truncatechars:35 }}</td>
-                                    <td><span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 rounded-pill">{{ processo.status|default:"-" }}</span></td>
+                                    <td><span class="badge bg-primary px-2 py-1">{{ processo.status|default:"-" }}</span></td>
                                     <td>{{ processo.tipo_pagamento|default:"-" }}</td>
                                     <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
                                     <td>
