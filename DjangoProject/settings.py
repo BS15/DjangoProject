@@ -97,6 +97,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'DjangoProject.wsgi.application'
 
+# Redirect to home page after a successful login instead of the default /accounts/profile/
+LOGIN_REDIRECT_URL = '/'
+
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
