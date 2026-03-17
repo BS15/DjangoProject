@@ -24,7 +24,7 @@ load_dotenv(BASE_DIR / '.env')
 # Falls back to a non-functional dummy so the app starts locally without a key;
 # any actual Gemini calls will return an authentication error until the key is set.
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSy-DUMMY-TEST-KEY-NOT-REAL')
-
+CRECI_LETTERHEAD_PATH = os.getenv('CRECI_LETTERHEAD_PATH')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
