@@ -279,7 +279,7 @@
                             </a>
                             <div class="d-flex gap-2 ms-auto">
                                 <a href="{% url 'home_page' %}" class="btn btn-secondary">Cancelar Edição</a>
-                                {% if status_inicial|upper|slice:":21" == "AGUARDANDO LIQUIDAÇÃO" %}
+                                {% if aguardando_liquidacao %}
                                 <button type="button" class="btn btn-success px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#modalAvancarParaPagamento">
                                     <i class="bi bi-check2-circle"></i> Avançar para Pagamento
                                 </button>

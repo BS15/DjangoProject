@@ -384,6 +384,7 @@ def editar_processo(request, pk):
         'processo': processo,
         'status_inicial': status_inicial,
         'somente_documentos': somente_documentos,
+        'aguardando_liquidacao': status_inicial.startswith('AGUARDANDO LIQUIDAÇÃO'),
         'documentos_fiscais_url': reverse('documentos_fiscais', kwargs={'pk': processo.id}),
     }
 
