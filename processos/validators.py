@@ -1,5 +1,84 @@
 from django.core.exceptions import ValidationError
 
+
+# ============================================================
+# TURNPIKE: Status-transition gate checks
+# ============================================================
+
+def verificar_turnpike(processo, status_anterior, status_novo):
+    """
+    Validates business rules that must be satisfied before a process is allowed
+    to advance to a new status ("turnpike" / porteira).
+
+    Parameters
+    ----------
+    processo      : Processo instance (already saved in DB; documents/notas are
+                    assumed to reflect the final state before the status change).
+    status_anterior : str – current status label (case-insensitive).
+    status_novo     : str – target status label (case-insensitive).
+
+    Returns
+    -------
+    list[str] – list of human-readable error messages.  Empty list means OK.
+    """
+    erros = []
+
+    anterior = status_anterior.upper().strip()
+    novo = status_novo.upper().strip()
+
+    # ------------------------------------------------------------------ #
+    # Rule 1: A EMPENHAR → AGUARDANDO LIQUIDAÇÃO                          #
+    # Requires at least one "DOCUMENTOS ORÇAMENTÁRIOS" document attached. #
+    # ------------------------------------------------------------------ #
+    if anterior == 'A EMPENHAR' and novo.startswith('AGUARDANDO LIQUIDAÇÃO'):
+        tem_doc_orcamentario = processo.documentos.filter(
+            tipo__tipo_de_documento__iexact='DOCUMENTOS ORÇAMENTÁRIOS'
+        ).exists()
+        if not tem_doc_orcamentario:
+            erros.append(
+                'Para avançar para "Aguardando Liquidação" é necessário anexar ao menos '
+                'um documento do tipo "DOCUMENTOS ORÇAMENTÁRIOS".'
+            )
+
+    # ------------------------------------------------------------------ #
+    # Rule 2: AGUARDANDO LIQUIDAÇÃO → A PAGAR - PENDENTE AUTORIZAÇÃO      #
+    # All documentos fiscais linked to the process must have atestada=True.#
+    # ------------------------------------------------------------------ #
+    if anterior.startswith('AGUARDANDO LIQUIDAÇÃO') and novo == 'A PAGAR - PENDENTE AUTORIZAÇÃO':
+        notas = processo.notas_fiscais.all()
+        if not notas.exists():
+            erros.append(
+                'Para avançar para "A Pagar - Pendente Autorização" é necessário que haja ao '
+                'menos um documento fiscal vinculado ao processo.'
+            )
+        else:
+            nao_atestadas = notas.filter(atestada=False)
+            if nao_atestadas.exists():
+                nomes = ', '.join(
+                    nf.numero_nota_fiscal or f'(id {nf.pk})' for nf in nao_atestadas[:5]
+                )
+                erros.append(
+                    f'Todos os documentos fiscais devem estar atestados antes de avançar para '
+                    f'"A Pagar - Pendente Autorização". Documento(s) pendente(s): {nomes}.'
+                )
+
+    # ------------------------------------------------------------------ #
+    # Rule 3: LANÇADO - AGUARDANDO COMPROVANTE → PAGO - EM CONFERÊNCIA    #
+    # Requires at least one "COMPROVANTE DE PAGAMENTO" document attached.  #
+    # ------------------------------------------------------------------ #
+    if anterior == 'LANÇADO - AGUARDANDO COMPROVANTE' and novo == 'PAGO - EM CONFERÊNCIA':
+        tem_comprovante = processo.documentos.filter(
+            tipo__tipo_de_documento__iexact='COMPROVANTE DE PAGAMENTO'
+        ).exists()
+        if not tem_comprovante:
+            erros.append(
+                'Para avançar para "Pago - Em Conferência" é necessário anexar ao menos '
+                'um documento do tipo "COMPROVANTE DE PAGAMENTO".'
+            )
+
+    return erros
+
+
 def validar_regras_processo(cleaned_data):
     """
     Validates rules specific to the Processo model.
