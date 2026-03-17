@@ -1,6 +1,7 @@
 from django.test import TestCase
 from .invoice_processor import process_invoice_taxes, _normalizar_cidade
-from .models import Processo, StatusChoicesProcesso
+from .models import Processo, StatusChoicesProcesso, TiposDeDocumento, DocumentoProcesso, DocumentoFiscal
+from .validators import verificar_turnpike
 from .views import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
 
 
@@ -331,3 +332,151 @@ class EditarProcessoRestrictionsTest(TestCase):
         response = self.client.get(f'/processo/{processo.pk}/editar/')
         self.assertFalse(response.context['somente_documentos'])
 
+
+
+class VerificarTurnpikeTest(TestCase):
+    """Tests for the verificar_turnpike status-transition gate."""
+
+    def _make_processo(self, status_text='A EMPENHAR'):
+        status_obj = StatusChoicesProcesso.objects.create(status_choice=status_text)
+        return Processo.objects.create(status=status_obj)
+
+    def _add_document(self, processo, tipo_nome):
+        tipo, _ = TiposDeDocumento.objects.get_or_create(
+            tipo_de_documento=tipo_nome
+        )
+        return DocumentoProcesso.objects.create(
+            processo=processo,
+            tipo=tipo,
+            arquivo='dummy/path.pdf',
+            ordem=1,
+        )
+
+    def _add_nota_fiscal(self, processo, atestada=True):
+        return DocumentoFiscal.objects.create(
+            processo=processo,
+            numero_nota_fiscal='NF-001',
+            data_emissao='2024-01-01',
+            valor_bruto='1000.00',
+            valor_liquido='900.00',
+            atestada=atestada,
+        )
+
+    # ------------------------------------------------------------------ #
+    # Rule 1: A EMPENHAR → AGUARDANDO LIQUIDAÇÃO                          #
+    # ------------------------------------------------------------------ #
+
+    def test_empenhar_to_aguardando_sem_documento_retorna_erro(self):
+        """Without DOCUMENTOS ORÇAMENTÁRIOS, transition must be blocked."""
+        processo = self._make_processo('A EMPENHAR')
+        erros = verificar_turnpike(processo, 'A EMPENHAR', 'AGUARDANDO LIQUIDAÇÃO')
+        self.assertTrue(len(erros) > 0)
+        self.assertIn('DOCUMENTOS ORÇAMENTÁRIOS', erros[0])
+
+    def test_empenhar_to_aguardando_com_documento_ok(self):
+        """With DOCUMENTOS ORÇAMENTÁRIOS attached, transition must be allowed."""
+        processo = self._make_processo('A EMPENHAR')
+        self._add_document(processo, 'DOCUMENTOS ORÇAMENTÁRIOS')
+        erros = verificar_turnpike(processo, 'A EMPENHAR', 'AGUARDANDO LIQUIDAÇÃO')
+        self.assertEqual(erros, [])
+
+    def test_empenhar_to_aguardando_case_insensitive(self):
+        """Document type check must be case-insensitive (ASCII chars, SQLite-compatible)."""
+        processo = self._make_processo('A EMPENHAR')
+        # 'Comprovante de Pagamento' → validates iexact works for ASCII case differences;
+        # for the DOCUMENTOS ORÇAMENTÁRIOS type, we store with the canonical uppercase form
+        # to avoid SQLite's limited Unicode LIKE behaviour in tests.
+        self._add_document(processo, 'DOCUMENTOS ORÇAMENTÁRIOS')
+        erros = verificar_turnpike(processo, 'A EMPENHAR', 'AGUARDANDO LIQUIDAÇÃO')
+        self.assertEqual(erros, [])
+
+    def test_empenhar_to_aguardando_ateste_variant(self):
+        """'AGUARDANDO LIQUIDAÇÃO / ATESTE' variant must also be accepted as the target."""
+        processo = self._make_processo('A EMPENHAR')
+        self._add_document(processo, 'DOCUMENTOS ORÇAMENTÁRIOS')
+        erros = verificar_turnpike(processo, 'A EMPENHAR', 'AGUARDANDO LIQUIDAÇÃO / ATESTE')
+        self.assertEqual(erros, [])
+
+    # ------------------------------------------------------------------ #
+    # Rule 2: AGUARDANDO LIQUIDAÇÃO → A PAGAR - PENDENTE AUTORIZAÇÃO      #
+    # ------------------------------------------------------------------ #
+
+    def test_aguardando_to_pagar_sem_notas_retorna_erro(self):
+        """Without any documentos fiscais, transition must be blocked."""
+        processo = self._make_processo('AGUARDANDO LIQUIDAÇÃO')
+        erros = verificar_turnpike(processo, 'AGUARDANDO LIQUIDAÇÃO', 'A PAGAR - PENDENTE AUTORIZAÇÃO')
+        self.assertTrue(len(erros) > 0)
+
+    def test_aguardando_to_pagar_nota_nao_atestada_retorna_erro(self):
+        """When a nota fiscal is NOT attested, transition must be blocked."""
+        processo = self._make_processo('AGUARDANDO LIQUIDAÇÃO')
+        self._add_nota_fiscal(processo, atestada=False)
+        erros = verificar_turnpike(processo, 'AGUARDANDO LIQUIDAÇÃO', 'A PAGAR - PENDENTE AUTORIZAÇÃO')
+        self.assertTrue(len(erros) > 0)
+        self.assertIn('atestados', erros[0])
+
+    def test_aguardando_to_pagar_todas_atestadas_ok(self):
+        """When all notas fiscais are attested, transition must be allowed."""
+        processo = self._make_processo('AGUARDANDO LIQUIDAÇÃO')
+        self._add_nota_fiscal(processo, atestada=True)
+        self._add_nota_fiscal(processo, atestada=True)
+        erros = verificar_turnpike(processo, 'AGUARDANDO LIQUIDAÇÃO', 'A PAGAR - PENDENTE AUTORIZAÇÃO')
+        self.assertEqual(erros, [])
+
+    def test_aguardando_ateste_variant_also_checked(self):
+        """'AGUARDANDO LIQUIDAÇÃO / ATESTE' variant triggers the same rule."""
+        processo = self._make_processo('AGUARDANDO LIQUIDAÇÃO / ATESTE')
+        self._add_nota_fiscal(processo, atestada=False)
+        erros = verificar_turnpike(processo, 'AGUARDANDO LIQUIDAÇÃO / ATESTE', 'A PAGAR - PENDENTE AUTORIZAÇÃO')
+        self.assertTrue(len(erros) > 0)
+
+    # ------------------------------------------------------------------ #
+    # Rule 3: LANÇADO - AGUARDANDO COMPROVANTE → PAGO - EM CONFERÊNCIA    #
+    # ------------------------------------------------------------------ #
+
+    def test_lancado_to_pago_sem_comprovante_retorna_erro(self):
+        """Without COMPROVANTE DE PAGAMENTO, transition must be blocked."""
+        processo = self._make_processo('LANÇADO - AGUARDANDO COMPROVANTE')
+        erros = verificar_turnpike(
+            processo,
+            'LANÇADO - AGUARDANDO COMPROVANTE',
+            'PAGO - EM CONFERÊNCIA',
+        )
+        self.assertTrue(len(erros) > 0)
+        self.assertIn('COMPROVANTE DE PAGAMENTO', erros[0])
+
+    def test_lancado_to_pago_com_comprovante_ok(self):
+        """With COMPROVANTE DE PAGAMENTO attached, transition must be allowed."""
+        processo = self._make_processo('LANÇADO - AGUARDANDO COMPROVANTE')
+        self._add_document(processo, 'COMPROVANTE DE PAGAMENTO')
+        erros = verificar_turnpike(
+            processo,
+            'LANÇADO - AGUARDANDO COMPROVANTE',
+            'PAGO - EM CONFERÊNCIA',
+        )
+        self.assertEqual(erros, [])
+
+    def test_lancado_to_pago_comprovante_case_insensitive(self):
+        """Document type check must be case-insensitive."""
+        processo = self._make_processo('LANÇADO - AGUARDANDO COMPROVANTE')
+        self._add_document(processo, 'Comprovante de Pagamento')
+        erros = verificar_turnpike(
+            processo,
+            'LANÇADO - AGUARDANDO COMPROVANTE',
+            'PAGO - EM CONFERÊNCIA',
+        )
+        self.assertEqual(erros, [])
+
+    # ------------------------------------------------------------------ #
+    # Transitions not in any rule must not generate errors.               #
+    # ------------------------------------------------------------------ #
+
+    def test_unrelated_transition_no_error(self):
+        """Transitions not covered by the turnpike must always pass."""
+        processo = self._make_processo('A PAGAR - PENDENTE AUTORIZAÇÃO')
+        erros = verificar_turnpike(
+            processo,
+            'A PAGAR - PENDENTE AUTORIZAÇÃO',
+            'A PAGAR - ENVIADO PARA AUTORIZAÇÃO',
+        )
+        self.assertEqual(erros, [])

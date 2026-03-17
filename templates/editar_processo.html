@@ -279,6 +279,11 @@
                             </a>
                             <div class="d-flex gap-2 ms-auto">
                                 <a href="{% url 'home_page' %}" class="btn btn-secondary">Cancelar Edição</a>
+                                {% if status_inicial|upper|slice:":21" == "AGUARDANDO LIQUIDAÇÃO" %}
+                                <button type="button" class="btn btn-success px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#modalAvancarParaPagamento">
+                                    <i class="bi bi-check2-circle"></i> Avançar para Pagamento
+                                </button>
+                                {% endif %}
                                 <button type="submit" class="btn btn-warning px-4 fw-bold">
                                     {% if somente_documentos %}Salvar Documentos{% else %}Salvar Alterações{% endif %} <i class="bi bi-arrow-right"></i>
                                 </button>
@@ -322,6 +327,31 @@
                 <button type="button" class="btn btn-warning fw-bold" id="btnConfirmarExtraOrcamentario">
                     <i class="bi bi-check2"></i> Sim, Confirmar
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Avançar para A Pagar - Pendente Autorização -->
+<div class="modal fade" id="modalAvancarParaPagamento" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold"><i class="bi bi-check2-circle"></i> Avançar para Pagamento</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Todos os documentos fiscais do processo <strong>#{{ processo.pk }}</strong> estão atestados?</p>
+                <p class="text-muted small">O processo só avançará se todos os documentos fiscais vinculados estiverem com <strong>atestada = Sim</strong>.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="post" action="{% url 'avancar_para_pagamento' pk=processo.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success fw-bold">
+                        <i class="bi bi-check2"></i> Sim, Avançar
+                    </button>
+                </form>
             </div>
         </div>
     </div>

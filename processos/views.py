@@ -16,6 +16,7 @@ from django.db import transaction
 from django.db.models import Count, Q, F, Sum, Exists, OuterRef
 from pypdf import PdfWriter
 from .forms import ProcessoForm, DocumentoFormSet, DocumentoFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet
+from .validators import verificar_turnpike
 from .utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, processar_pdf_comprovantes_ia, gerar_pdf_autorizacao, gerar_pdf_conselho_fiscal, gerar_pdf_pcd
 from .ai_utils import extrair_dados_documento, extract_data_with_llm, extrair_codigos_barras_boletos
 from .invoice_processor import process_invoice_taxes
@@ -725,14 +726,23 @@ def a_empenhar_view(request):
                             ordem=1
                         )
 
+                    # Turnpike: check requirements before advancing status
+                    erros_turnpike = verificar_turnpike(
+                        processo,
+                        status_anterior='A EMPENHAR',
+                        status_novo='AGUARDANDO LIQUIDAÇÃO',
+                    )
+                    if erros_turnpike:
+                        raise ValueError(' '.join(erros_turnpike))
+
                     status_aguardando, _ = StatusChoicesProcesso.objects.get_or_create(
-                        status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
-                        defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
+                        status_choice__iexact='AGUARDANDO LIQUIDAÇÃO',
+                        defaults={'status_choice': 'AGUARDANDO LIQUIDAÇÃO'}
                     )
                     processo.status = status_aguardando
                     processo.save()
 
-                messages.success(request, f"Empenho registrado com sucesso! Processo #{processo.id} avançou para Autorização.")
+                messages.success(request, f"Empenho registrado com sucesso! Processo #{processo.id} avançou para Aguardando Liquidação.")
             except Processo.DoesNotExist:
                 messages.error(request, "Processo não encontrado.")
             except Exception as e:
@@ -751,6 +761,58 @@ def a_empenhar_view(request):
         'pode_interagir': request.user.has_perm('processos.pode_operar_contas_pagar'),
     }
     return render(request, 'a_empenhar.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+def avancar_para_pagamento_view(request, pk):
+    """
+    Advance a process from 'AGUARDANDO LIQUIDAÇÃO' to 'A PAGAR - PENDENTE AUTORIZAÇÃO'.
+    Turnpike check: all documentos fiscais must be attested (atestada=True).
+    """
+    processo = get_object_or_404(Processo, id=pk)
+
+    if request.method != 'POST':
+        return redirect('editar_processo', pk=pk)
+
+    status_atual = processo.status.status_choice.upper() if processo.status else ''
+
+    if not status_atual.startswith('AGUARDANDO LIQUIDAÇÃO'):
+        messages.error(
+            request,
+            f'O processo #{pk} não está em status "Aguardando Liquidação" '
+            f'(status atual: "{processo.status}"). Ação não permitida.'
+        )
+        return redirect('editar_processo', pk=pk)
+
+    erros_turnpike = verificar_turnpike(
+        processo,
+        status_anterior=status_atual,
+        status_novo='A PAGAR - PENDENTE AUTORIZAÇÃO',
+    )
+
+    if erros_turnpike:
+        for erro in erros_turnpike:
+            messages.error(request, erro)
+        return redirect('editar_processo', pk=pk)
+
+    try:
+        with transaction.atomic():
+            status_pendente, _ = StatusChoicesProcesso.objects.get_or_create(
+                status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
+                defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
+            )
+            processo.status = status_pendente
+            processo.save()
+
+        messages.success(
+            request,
+            f'Processo #{pk} avançado com sucesso para "A Pagar - Pendente Autorização".'
+        )
+    except Exception as e:
+        messages.error(request, f'Erro ao avançar o processo: {str(e)}')
+
+    return redirect('editar_processo', pk=pk)
 
 
 def add_credor_view(request):
@@ -1255,6 +1317,15 @@ def api_vincular_comprovantes(request):
                     )
 
                     default_storage.delete(temp_path)
+
+            # Turnpike: check that a comprovante document is now attached
+            erros_turnpike = verificar_turnpike(
+                processo,
+                status_anterior='LANÇADO - AGUARDANDO COMPROVANTE',
+                status_novo='PAGO - EM CONFERÊNCIA',
+            )
+            if erros_turnpike:
+                return JsonResponse({'sucesso': False, 'erro': ' '.join(erros_turnpike)})
 
             processo.status = status_pago
             if data_pagamento_processo:
