@@ -79,14 +79,11 @@
                             <td class="text-primary fw-bold">{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
                             <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
                             <td class="text-center d-flex justify-content-center gap-1">
-                                <button class="btn btn-sm btn-primary fw-bold shadow-sm btn-preview"
+                                <button type="button" class="btn btn-sm btn-primary fw-bold shadow-sm btn-preview"
                                         data-processo-id="{{ processo.id }}"
                                         title="Pré-visualizar Documentos">
                                     <i class="bi bi-eye"></i> Preview
                                 </button>
-                                <a href="{% url 'editar_processo' pk=processo.id %}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Ver Detalhes/Despachos">
-                                    <i class="bi bi-eye"></i>
-                                </a>
                                 {% if pode_interagir %}
                                 <button type="button" class="btn btn-sm btn-outline-danger shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRecusa{{ processo.id }}" title="Devolver Processo">
                                     <i class="bi bi-arrow-return-left"></i>
@@ -134,9 +131,11 @@
                         <td class="text-primary fw-bold">{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
                         <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
                         <td class="text-center d-flex justify-content-center gap-1">
-                            <a href="{% url 'editar_processo' pk=processo.id %}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Ver Detalhes/Despachos">
+                            <button type="button" class="btn btn-sm btn-outline-secondary btn-preview"
+                                    data-processo-id="{{ processo.id }}"
+                                    title="Pré-visualizar Documentos">
                                 <i class="bi bi-eye"></i>
-                            </a>
+                            </button>
                         </td>
                     </tr>
                     {% empty %}
