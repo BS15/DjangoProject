@@ -13,4 +13,4 @@ jobs:
         with:
           username: ${{ secrets.PA_USERNAME }}
           api_token: ${{ secrets.PA_API_TOKEN }}
-          domain_name: 'guiluizramos.pythonanywhere.com'
+          domain_name: ${{ secrets.PA_DOMAIN_NAME }}
