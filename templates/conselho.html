@@ -7,6 +7,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
+    <style>
+        #start-conselho-bar { display: none; }
+        tr.selected-row { background-color: #f0fdfd !important; }
+    </style>
 </head>
 <body class="bg-light">
 
@@ -34,11 +38,36 @@
         {% endfor %}
     {% endif %}
 
+    <!-- Selection action bar (shown when ≥1 process is checked) -->
+    {% if pode_interagir %}
+    <div id="start-conselho-bar" class="alert alert-info d-flex align-items-center gap-3 mb-3 shadow-sm">
+        <i class="bi bi-check2-square fs-5"></i>
+        <span><strong id="selected-count">0</strong> processo(s) selecionado(s).</span>
+        <form method="POST" action="{% url 'iniciar_conselho' %}" id="iniciar-form" class="ms-auto d-flex align-items-center gap-2">
+            {% csrf_token %}
+            <div id="hidden-ids-container"></div>
+            <button type="submit" class="btn btn-info text-white fw-bold shadow-sm">
+                <i class="bi bi-play-fill me-1"></i>Iniciar Revisão
+            </button>
+        </form>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="clear-selection">
+            <i class="bi bi-x-lg"></i> Limpar Seleção
+        </button>
+    </div>
+    {% endif %}
+
     <div class="card shadow-sm border-0">
         <div class="card-body p-0">
+            <form id="selection-form">
             <table class="table table-hover table-striped mb-0 align-middle">
                 <thead class="table-light">
                     <tr>
+                        {% if pode_interagir %}
+                        <th class="ps-3">
+                            <input type="checkbox" id="select-all" class="form-check-input"
+                                   title="Selecionar / desselecionar todos">
+                        </th>
+                        {% endif %}
                         <th># ID</th>
                         <th>Credor</th>
                         <th>Status</th>
@@ -51,7 +80,14 @@
                 </thead>
                 <tbody>
                     {% for processo in processos %}
-                    <tr>
+                    <tr data-processo-id="{{ processo.id }}">
+                        {% if pode_interagir %}
+                        <td class="ps-3">
+                            <input type="checkbox" class="form-check-input row-check"
+                                   value="{{ processo.id }}"
+                                   aria-label="Selecionar processo #{{ processo.id }}">
+                        </td>
+                        {% endif %}
                         <td class="fw-bold text-muted">#{{ processo.id }}</td>
                         <td class="fw-medium">{{ processo.credor|truncatechars:40 }}</td>
                         <td><span class="badge bg-info bg-opacity-10 text-info px-2 py-1 rounded-pill">{{ processo.status|default:"-" }}</span></td>
@@ -60,62 +96,34 @@
                         <td>{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
                         <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
                         <td class="text-center d-flex justify-content-center gap-1">
-                            <button class="btn btn-sm btn-primary fw-bold shadow-sm btn-preview"
+
+                            {% if pode_interagir %}
+                            <a href="{% url 'conselho_processo' pk=processo.id %}"
+                               class="btn btn-sm btn-info text-white fw-bold shadow-sm"
+                               title="Revisar este Processo">
+                                <i class="bi bi-eye-fill"></i> Revisar
+                            </a>
+                            {% endif %}
+
+                            <button class="btn btn-sm btn-outline-secondary btn-preview"
                                     data-processo-id="{{ processo.id }}"
                                     title="Pré-visualizar Documentos">
-                                <i class="bi bi-eye"></i> Preview
+                                <i class="bi bi-eye"></i>
                             </button>
-                            
-                            {% if pode_interagir %}
-                            <form method="POST" action="{% url 'aprovar_conselho' pk=processo.id %}" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-info text-white fw-bold shadow-sm" title="Aprovar Contas">
-                                    <i class="bi bi-check-circle"></i> Aprovar
-                                </button>
-                            </form>
 
-                            <button type="button" class="btn btn-sm btn-outline-danger shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRecusa{{ processo.id }}" title="Devolver Processo">
-                                <i class="bi bi-arrow-return-left"></i>
-                            </button>
-                            {% endif %}
                         </td>
                     </tr>
-
-                    {% if pode_interagir %}
-                    <div class="modal fade" id="modalRecusa{{ processo.id }}" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <form method="POST" action="{% url 'recusar_conselho' pk=processo.id %}">
-                                    {% csrf_token %}
-                                    <div class="modal-header bg-danger text-white">
-                                        <h5 class="modal-title"><i class="bi bi-exclamation-octagon"></i> Recusar Contas - Processo #{{ processo.id }}</h5>
-                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body text-start">
-                                        <p class="small text-muted mb-3">Aponte a inconsistência identificada pelo Conselho. O processo retornará à Contabilização para ajustes.</p>
-                                        <div class="mb-3">
-                                            <label class="form-label fw-bold">Tipo de Apontamento</label>
-                                            {{ pendencia_form.tipo }}
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label fw-bold">Despacho / Justificativa</label>
-                                            {{ pendencia_form.descricao }}
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                        <button type="submit" class="btn btn-danger fw-bold">Registrar Recusa</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
                     {% empty %}
-                    <tr><td colspan="8" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>Mesa do Conselho limpa.</td></tr>
+                    <tr>
+                        <td colspan="{% if pode_interagir %}9{% else %}8{% endif %}" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                            Mesa do Conselho limpa.
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            </form>
         </div>
     </div>
 </div>
@@ -123,5 +131,60 @@
 {% include 'partials/preview_modal.html' %}
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    var bar            = document.getElementById('start-conselho-bar');
+    var countLabel     = document.getElementById('selected-count');
+    var hiddenCont     = document.getElementById('hidden-ids-container');
+    var selectAll      = document.getElementById('select-all');
+    var clearBtn       = document.getElementById('clear-selection');
+    var rowChecks      = document.querySelectorAll('.row-check');
+
+    if (!bar) return;
+
+    function updateBar() {
+        var checked = document.querySelectorAll('.row-check:checked');
+        var n = checked.length;
+        countLabel.textContent = n;
+
+        hiddenCont.innerHTML = '';
+        checked.forEach(function (cb) {
+            var inp = document.createElement('input');
+            inp.type  = 'hidden';
+            inp.name  = 'processo_ids';
+            inp.value = cb.value;
+            hiddenCont.appendChild(inp);
+        });
+
+        rowChecks.forEach(function (cb) {
+            var row = cb.closest('tr');
+            if (cb.checked) {
+                row.classList.add('selected-row');
+            } else {
+                row.classList.remove('selected-row');
+            }
+        });
+
+        bar.style.display = n > 0 ? 'flex' : 'none';
+    }
+
+    rowChecks.forEach(function (cb) {
+        cb.addEventListener('change', updateBar);
+    });
+
+    selectAll && selectAll.addEventListener('change', function () {
+        rowChecks.forEach(function (cb) { cb.checked = selectAll.checked; });
+        updateBar();
+    });
+
+    clearBtn && clearBtn.addEventListener('click', function () {
+        rowChecks.forEach(function (cb) { cb.checked = false; });
+        if (selectAll) selectAll.checked = false;
+        updateBar();
+    });
+})();
+</script>
 </body>
 </html>

@@ -1619,6 +1619,223 @@ def painel_contabilizacao_view(request):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+def iniciar_contabilizacao_view(request):
+    """POST: store selected process IDs in session queue, redirect to first process."""
+    if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_contabilizar'):
+            raise PermissionDenied
+        ids_raw = request.POST.getlist('processo_ids')
+        process_ids = []
+        for pid in ids_raw:
+            try:
+                process_ids.append(int(pid))
+            except (ValueError, TypeError):
+                pass
+
+        if not process_ids:
+            messages.warning(request, 'Selecione ao menos um processo para iniciar a contabilização.')
+            return redirect('painel_contabilizacao')
+
+        request.session['contabilizacao_queue'] = process_ids
+        request.session.modified = True
+        return redirect('contabilizacao_processo', pk=process_ids[0])
+
+    return redirect('painel_contabilizacao')
+
+
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+def contabilizacao_processo_view(request, pk):
+    """Detailed contabilização view for reviewing a single process."""
+    HISTORY_TYPE_LABELS = {'+': 'Criação', '~': 'Alteração', '-': 'Exclusão'}
+
+    processo = get_object_or_404(Processo, id=pk)
+
+    # Navigation queue
+    queue = request.session.get('contabilizacao_queue', [])
+    current_index = queue.index(pk) if pk in queue else -1
+    next_pk = queue[current_index + 1] if 0 <= current_index < len(queue) - 1 else None
+    prev_pk = queue[current_index - 1] if current_index > 0 else None
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+
+        if action == 'sair':
+            request.session.pop('contabilizacao_queue', None)
+            request.session.modified = True
+            return redirect('painel_contabilizacao')
+
+        if action == 'pular':
+            if next_pk:
+                return redirect('contabilizacao_processo', pk=next_pk)
+            messages.info(request, 'Não há mais processos na fila. Retornando ao painel.')
+            request.session.pop('contabilizacao_queue', None)
+            request.session.modified = True
+            return redirect('painel_contabilizacao')
+
+        if action == 'voltar':
+            if prev_pk:
+                return redirect('contabilizacao_processo', pk=prev_pk)
+            messages.info(request, 'Não há processo anterior na fila.')
+            return redirect('contabilizacao_processo', pk=pk)
+
+        if action in ('aprovar', 'rejeitar', 'salvar'):
+            if not request.user.has_perm('processos.pode_contabilizar'):
+                raise PermissionDenied
+
+            if action == 'rejeitar':
+                form = PendenciaForm(request.POST)
+                if form.is_valid():
+                    with transaction.atomic():
+                        pendencia = form.save(commit=False)
+                        pendencia.processo = processo
+                        status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
+                            status_choice__iexact='A RESOLVER', defaults={'status_choice': 'A RESOLVER'}
+                        )
+                        pendencia.status = status_pendencia
+                        pendencia.save()
+
+                        status_devolvido, _ = StatusChoicesProcesso.objects.get_or_create(
+                            status_choice__iexact='PAGO - EM CONFERÊNCIA',
+                            defaults={'status_choice': 'PAGO - EM CONFERÊNCIA'}
+                        )
+                        processo.status = status_devolvido
+                        processo.save()
+
+                    messages.error(
+                        request,
+                        f'Processo #{processo.id} recusado pela Contabilidade e devolvido para a Conferência!'
+                    )
+                    if next_pk:
+                        return redirect('contabilizacao_processo', pk=next_pk)
+                    request.session.pop('contabilizacao_queue', None)
+                    request.session.modified = True
+                    return redirect('painel_contabilizacao')
+                else:
+                    messages.warning(request, 'Erro ao registrar recusa. Verifique os dados da pendência.')
+                    return redirect('contabilizacao_processo', pk=pk)
+
+            doc_formset = DocumentoFormSet(
+                request.POST, request.FILES,
+                instance=processo,
+                prefix='documentos',
+            )
+            pendencia_formset = PendenciaFormSet(
+                request.POST,
+                instance=processo,
+                prefix='pendencias',
+            )
+
+            if doc_formset.is_valid() and pendencia_formset.is_valid():
+                with transaction.atomic():
+                    for form in doc_formset.forms:
+                        if not form.cleaned_data:
+                            continue
+                        should_delete = form.cleaned_data.get('DELETE', False)
+                        is_existing = bool(form.instance.pk)
+                        if should_delete and is_existing:
+                            # Documents already marked imutável from conferência are protected
+                            continue
+                        if should_delete and not is_existing:
+                            continue
+                        if form.has_changed() or not is_existing:
+                            instance = form.save(commit=False)
+                            instance.processo = processo
+                            instance.save()
+
+                    pendencia_formset.save()
+
+                    if action == 'aprovar':
+                        status_conselho, _ = StatusChoicesProcesso.objects.get_or_create(
+                            status_choice__iexact='CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL',
+                            defaults={'status_choice': 'CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL'}
+                        )
+                        processo.status = status_conselho
+                        processo.save()
+                        messages.success(
+                            request,
+                            f'Processo #{processo.id} contabilizado e enviado ao Conselho Fiscal!'
+                        )
+                        if next_pk:
+                            return redirect('contabilizacao_processo', pk=next_pk)
+                        request.session.pop('contabilizacao_queue', None)
+                        request.session.modified = True
+                        return redirect('painel_contabilizacao')
+                    else:
+                        messages.success(request, f'Alterações do Processo #{processo.id} salvas.')
+                        return redirect('contabilizacao_processo', pk=pk)
+            else:
+                messages.error(request, 'Verifique os erros no formulário abaixo.')
+
+    # ── GET (or failed POST) ──────────────────────────────────────────────
+    doc_formset = DocumentoFormSet(instance=processo, prefix='documentos')
+    pendencia_formset = PendenciaFormSet(instance=processo, prefix='pendencias')
+    pendencia_form = PendenciaForm()
+
+    history_records = []
+
+    for record in processo.history.all().select_related('history_user'):
+        history_records.append({
+            'modelo': 'Processo',
+            'history_date': record.history_date,
+            'history_user': record.history_user,
+            'history_type': record.history_type,
+            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
+            'str_repr': str(record),
+        })
+
+    for record in DocumentoProcesso.history.filter(processo_id=pk).select_related('history_user'):
+        history_records.append({
+            'modelo': 'Documento',
+            'history_date': record.history_date,
+            'history_user': record.history_user,
+            'history_type': record.history_type,
+            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
+            'str_repr': str(record),
+        })
+
+    for record in Pendencia.history.filter(processo_id=pk).select_related('history_user'):
+        history_records.append({
+            'modelo': 'Pendência',
+            'history_date': record.history_date,
+            'history_user': record.history_user,
+            'history_type': record.history_type,
+            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
+            'str_repr': str(record),
+        })
+
+    for record in DocumentoFiscal.history.filter(processo_id=pk).select_related('history_user'):
+        history_records.append({
+            'modelo': 'Nota Fiscal',
+            'history_date': record.history_date,
+            'history_user': record.history_user,
+            'history_type': record.history_type,
+            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
+            'str_repr': str(record),
+        })
+
+    history_records.sort(key=lambda x: x['history_date'], reverse=True)
+
+    context = {
+        'processo': processo,
+        'doc_formset': doc_formset,
+        'pendencia_formset': pendencia_formset,
+        'pendencia_form': pendencia_form,
+        'history_records': history_records,
+        'queue': queue,
+        'current_index': current_index,
+        'next_pk': next_pk,
+        'prev_pk': prev_pk,
+        'queue_length': len(queue),
+        'queue_position': current_index + 1 if current_index >= 0 else 1,
+        'tipos_documento': TiposDeDocumento.objects.all(),
+        'pode_interagir': request.user.has_perm('processos.pode_contabilizar'),
+    }
+    return render(request, 'contabilizacao_processo.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def aprovar_contabilizacao_view(request, pk):
     if request.method == 'POST':
         if not request.user.has_perm('processos.pode_contabilizar'):
@@ -1678,6 +1895,183 @@ def painel_conselho_view(request):
         'pode_interagir': request.user.has_perm('processos.pode_auditar_conselho'),
     }
     return render(request, 'conselho.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+def iniciar_conselho_view(request):
+    """POST: store selected process IDs in session queue, redirect to first process."""
+    if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_auditar_conselho'):
+            raise PermissionDenied
+        ids_raw = request.POST.getlist('processo_ids')
+        process_ids = []
+        for pid in ids_raw:
+            try:
+                process_ids.append(int(pid))
+            except (ValueError, TypeError):
+                pass
+
+        if not process_ids:
+            messages.warning(request, 'Selecione ao menos um processo para iniciar a revisão.')
+            return redirect('painel_conselho')
+
+        request.session['conselho_queue'] = process_ids
+        request.session.modified = True
+        return redirect('conselho_processo', pk=process_ids[0])
+
+    return redirect('painel_conselho')
+
+
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+def conselho_processo_view(request, pk):
+    """Completely readonly view for Conselho Fiscal — can only approve or reject."""
+    HISTORY_TYPE_LABELS = {'+': 'Criação', '~': 'Alteração', '-': 'Exclusão'}
+
+    processo = get_object_or_404(Processo, id=pk)
+
+    # Navigation queue
+    queue = request.session.get('conselho_queue', [])
+    current_index = queue.index(pk) if pk in queue else -1
+    next_pk = queue[current_index + 1] if 0 <= current_index < len(queue) - 1 else None
+    prev_pk = queue[current_index - 1] if current_index > 0 else None
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+
+        if action == 'sair':
+            request.session.pop('conselho_queue', None)
+            request.session.modified = True
+            return redirect('painel_conselho')
+
+        if action == 'pular':
+            if next_pk:
+                return redirect('conselho_processo', pk=next_pk)
+            messages.info(request, 'Não há mais processos na fila. Retornando ao painel.')
+            request.session.pop('conselho_queue', None)
+            request.session.modified = True
+            return redirect('painel_conselho')
+
+        if action == 'voltar':
+            if prev_pk:
+                return redirect('conselho_processo', pk=prev_pk)
+            messages.info(request, 'Não há processo anterior na fila.')
+            return redirect('conselho_processo', pk=pk)
+
+        if action in ('aprovar', 'rejeitar'):
+            if not request.user.has_perm('processos.pode_auditar_conselho'):
+                raise PermissionDenied
+
+            if action == 'aprovar':
+                status_arquivamento, _ = StatusChoicesProcesso.objects.get_or_create(
+                    status_choice__iexact='APROVADO POR CONSELHO FISCAL - PARA ARQUIVAMENTO',
+                    defaults={'status_choice': 'APROVADO POR CONSELHO FISCAL - PARA ARQUIVAMENTO'}
+                )
+                processo.status = status_arquivamento
+                processo.save()
+                messages.success(
+                    request,
+                    f'Processo #{processo.id} aprovado pelo Conselho e liberado para arquivamento!'
+                )
+                if next_pk:
+                    return redirect('conselho_processo', pk=next_pk)
+                request.session.pop('conselho_queue', None)
+                request.session.modified = True
+                return redirect('painel_conselho')
+
+            if action == 'rejeitar':
+                form = PendenciaForm(request.POST)
+                if form.is_valid():
+                    with transaction.atomic():
+                        pendencia = form.save(commit=False)
+                        pendencia.processo = processo
+                        status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
+                            status_choice__iexact='A RESOLVER', defaults={'status_choice': 'A RESOLVER'}
+                        )
+                        pendencia.status = status_pendencia
+                        pendencia.save()
+
+                        status_devolvido, _ = StatusChoicesProcesso.objects.get_or_create(
+                            status_choice__iexact='PAGO - A CONTABILIZAR',
+                            defaults={'status_choice': 'PAGO - A CONTABILIZAR'}
+                        )
+                        processo.status = status_devolvido
+                        processo.save()
+
+                    messages.error(
+                        request,
+                        f'Processo #{processo.id} recusado pelo Conselho Fiscal e devolvido para a Contabilidade!'
+                    )
+                    if next_pk:
+                        return redirect('conselho_processo', pk=next_pk)
+                    request.session.pop('conselho_queue', None)
+                    request.session.modified = True
+                    return redirect('painel_conselho')
+                else:
+                    messages.warning(request, 'Erro ao registrar recusa. Verifique os dados da pendência.')
+                    return redirect('conselho_processo', pk=pk)
+
+    # ── GET (or failed POST) ──────────────────────────────────────────────
+    pendencia_form = PendenciaForm()
+
+    history_records = []
+
+    for record in processo.history.all().select_related('history_user'):
+        history_records.append({
+            'modelo': 'Processo',
+            'history_date': record.history_date,
+            'history_user': record.history_user,
+            'history_type': record.history_type,
+            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
+            'str_repr': str(record),
+        })
+
+    for record in DocumentoProcesso.history.filter(processo_id=pk).select_related('history_user'):
+        history_records.append({
+            'modelo': 'Documento',
+            'history_date': record.history_date,
+            'history_user': record.history_user,
+            'history_type': record.history_type,
+            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
+            'str_repr': str(record),
+        })
+
+    for record in Pendencia.history.filter(processo_id=pk).select_related('history_user'):
+        history_records.append({
+            'modelo': 'Pendência',
+            'history_date': record.history_date,
+            'history_user': record.history_user,
+            'history_type': record.history_type,
+            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
+            'str_repr': str(record),
+        })
+
+    for record in DocumentoFiscal.history.filter(processo_id=pk).select_related('history_user'):
+        history_records.append({
+            'modelo': 'Nota Fiscal',
+            'history_date': record.history_date,
+            'history_user': record.history_user,
+            'history_type': record.history_type,
+            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
+            'str_repr': str(record),
+        })
+
+    history_records.sort(key=lambda x: x['history_date'], reverse=True)
+
+    context = {
+        'processo': processo,
+        'pendencia_form': pendencia_form,
+        'history_records': history_records,
+        'queue': queue,
+        'current_index': current_index,
+        'next_pk': next_pk,
+        'prev_pk': prev_pk,
+        'queue_length': len(queue),
+        'queue_position': current_index + 1 if current_index >= 0 else 1,
+        'pode_interagir': request.user.has_perm('processos.pode_auditar_conselho'),
+    }
+    return render(request, 'conselho_processo.html', context)
 
 
 @login_required

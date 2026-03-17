@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from processos.views import home_page, add_process_view, visualizar_pdf_processo, editar_processo, editar_processo_verbas, api_add_documento_verba, painel_impostos, contas_a_pagar, api_processar_boleto, add_pre_empenho_view, a_empenhar_view, add_credor_view, credores_list_view, diarias_list_view, reembolsos_list_view, jetons_list_view, auxilios_list_view, add_diaria_view, add_reembolso_view, add_jeton_view, add_auxilio_view, verbas_panel_view, agrupar_verbas_view, agrupar_impostos_view, painel_comprovantes_view, api_fatiar_comprovantes, api_vincular_comprovantes, painel_conferencia_view, aprovar_conferencia_view, iniciar_conferencia_view, conferencia_processo_view, enviar_para_autorizacao, painel_autorizacao_view, autorizar_pagamento, aprovar_contabilizacao_view, aprovar_conselho_view, arquivar_processo_view, painel_conselho_view, painel_arquivamento_view, painel_contabilizacao_view, painel_suprimentos_view, gerenciar_suprimento_view, fechar_suprimento_view, add_suprimento_view, recusar_contabilizacao_view, recusar_autorizacao_view, recusar_conselho_view, api_extrair_nota, api_extracao_universal, api_dados_credor, api_tipos_documento_por_pagamento, painel_pendencias_view, alternar_ateste_nota, painel_liquidacoes_view, documentos_fiscais_view, api_toggle_documento_fiscal, api_salvar_nota_fiscal, api_detalhes_pagamento, separar_para_lancamento_bancario, lancamento_bancario, marcar_como_lancado, desmarcar_lancamento, api_processar_retencoes, gerar_dummy_pdf_view, api_valor_unitario_diaria, api_documentos_processo, auditoria_view, gerenciar_diaria_view, add_contingencia_view, painel_contingencias_view, api_processo_detalhes, painel_autorizacao_diarias_view, alternar_autorizacao_diaria, gerar_autorizacao_pagamento_view, gerar_parecer_conselho_view
+from processos.views import home_page, add_process_view, visualizar_pdf_processo, editar_processo, editar_processo_verbas, api_add_documento_verba, painel_impostos, contas_a_pagar, api_processar_boleto, add_pre_empenho_view, a_empenhar_view, add_credor_view, credores_list_view, diarias_list_view, reembolsos_list_view, jetons_list_view, auxilios_list_view, add_diaria_view, add_reembolso_view, add_jeton_view, add_auxilio_view, verbas_panel_view, agrupar_verbas_view, agrupar_impostos_view, painel_comprovantes_view, api_fatiar_comprovantes, api_vincular_comprovantes, painel_conferencia_view, aprovar_conferencia_view, iniciar_conferencia_view, conferencia_processo_view, enviar_para_autorizacao, painel_autorizacao_view, autorizar_pagamento, aprovar_contabilizacao_view, aprovar_conselho_view, arquivar_processo_view, painel_conselho_view, painel_arquivamento_view, painel_contabilizacao_view, iniciar_contabilizacao_view, contabilizacao_processo_view, iniciar_conselho_view, conselho_processo_view, painel_suprimentos_view, gerenciar_suprimento_view, fechar_suprimento_view, add_suprimento_view, recusar_contabilizacao_view, recusar_autorizacao_view, recusar_conselho_view, api_extrair_nota, api_extracao_universal, api_dados_credor, api_tipos_documento_por_pagamento, painel_pendencias_view, alternar_ateste_nota, painel_liquidacoes_view, documentos_fiscais_view, api_toggle_documento_fiscal, api_salvar_nota_fiscal, api_detalhes_pagamento, separar_para_lancamento_bancario, lancamento_bancario, marcar_como_lancado, desmarcar_lancamento, api_processar_retencoes, gerar_dummy_pdf_view, api_valor_unitario_diaria, api_documentos_processo, auditoria_view, gerenciar_diaria_view, add_contingencia_view, painel_contingencias_view, api_processo_detalhes, painel_autorizacao_diarias_view, alternar_autorizacao_diaria, gerar_autorizacao_pagamento_view, gerar_parecer_conselho_view
 from processos.ai_views import ai_extraction_page_view, api_testar_extracao
 
 urlpatterns = [
@@ -49,10 +49,14 @@ path('processos/autorizacao/', painel_autorizacao_view, name='painel_autorizacao
 path('processos/autorizar-pagamento/', autorizar_pagamento, name='autorizar_pagamento'),
 # Contabilização
 path('processos/contabilizacao/', painel_contabilizacao_view, name='painel_contabilizacao'),
+path('processos/contabilizacao/iniciar/', iniciar_contabilizacao_view, name='iniciar_contabilizacao'),
+path('processos/contabilizacao/<int:pk>/revisar/', contabilizacao_processo_view, name='contabilizacao_processo'),
 path('processos/contabilizacao/<int:pk>/aprovar/', aprovar_contabilizacao_view, name='aprovar_contabilizacao'),
 
 # Conselho Fiscal
 path('processos/conselho/', painel_conselho_view, name='painel_conselho'),
+path('processos/conselho/iniciar/', iniciar_conselho_view, name='iniciar_conselho'),
+path('processos/conselho/<int:pk>/revisar/', conselho_processo_view, name='conselho_processo'),
 path('processos/conselho/<int:pk>/aprovar/', aprovar_conselho_view, name='aprovar_conselho'),
 
 # Arquivamento
@@ -67,8 +71,6 @@ path('processos/autorizacao/<int:pk>/recusar/', recusar_autorizacao_view, name='
 path('processos/conselho/<int:pk>/recusar/', recusar_conselho_view, name='recusar_conselho'),
 path('api/extrair-nota/', api_extrair_nota, name='api_extrair_nota'),
 path('api/extracao-universal/', api_extracao_universal, name='api_extracao_universal'),
-path('processos/conselho/', painel_conselho_view, name='painel_conselho'),
-path('processos/autorizacao/', painel_autorizacao_view, name='painel_autorizacao'),
 path('api/credor/<int:credor_id>/', api_dados_credor, name='api_dados_credor'),
 path('api/valor-unitario-diaria/<int:beneficiario_id>/', api_valor_unitario_diaria, name='api_valor_unitario_diaria'),
 path('api/documentos-por-pagamento/', api_tipos_documento_por_pagamento, name='api_documentos_pagamento'),
