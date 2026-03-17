@@ -782,7 +782,7 @@ def gerar_pdf_pcd(diaria):
     p.save()
     buffer.seek(0)
 
-    return merge_canvas_with_template(buffer, TEMPLATE_PATH)
+    return merge_canvas_with_template(buffer, settings.CRECI_LETTERHEAD_PATH)
 
 
 def gerar_pdf_conselho_fiscal(processo):
