@@ -179,9 +179,9 @@
                         <div class="col-md-4 d-flex align-items-center justify-content-end">
                             <div class="form-check form-switch mt-3">
                                 <input class="form-check-input nf-field" type="checkbox" data-field="atestada"
-                                       id="atestada-{{ nota.id }}" {% if nota.atestada %}checked{% endif %}>
+                                       id="atestada-{{ nota.id }}" {% if not nota.atestada %}checked{% endif %}>
                                 <label class="form-check-label fw-bold text-success ms-1" for="atestada-{{ nota.id }}">
-                                    Atestada / Enviar para Liquidação
+                                    Enviar para liquidação/ateste
                                 </label>
                             </div>
                         </div>
@@ -432,11 +432,33 @@ document.addEventListener('change', function(e) {
     }
 });
 
+/* ── Fiscal do Contrato: enable/disable based on "Enviar para liquidação/ateste" checkbox ── */
+function updateFiscalContrato(panel) {
+    if (!panel) return;
+    const atestadaChk = panel.querySelector('.nf-field[data-field="atestada"]');
+    const fiscalSelect = panel.querySelector('.nf-field[data-field="fiscal_contrato"]');
+    if (!atestadaChk || !fiscalSelect) return;
+    if (atestadaChk.checked) {
+        fiscalSelect.disabled = false;
+    } else {
+        fiscalSelect.value = '';
+        fiscalSelect.disabled = true;
+    }
+}
+
+/* Trigger when atestada checkbox changes */
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('nf-field') && e.target.dataset.field === 'atestada') {
+        updateFiscalContrato(e.target.closest('.nf-form-panel'));
+    }
+});
+
 /* Initialise on page load for panels with existing retencoes */
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.nf-form-panel.visible').forEach(function(panel) {
         updateCodigoServicoInss(panel);
         recalcularValorLiquido(panel);
+        updateFiscalContrato(panel);
     });
 });
 
@@ -480,7 +502,8 @@ document.addEventListener('click', function(e) {
         const fieldName = field.dataset.field;
         if (!fieldName) return;
         if (field.type === 'checkbox') {
-            payload[fieldName] = field.checked;
+            // atestada is stored inverted: checkbox checked means "send for liquidation" (atestada=false)
+            payload[fieldName] = fieldName === 'atestada' ? !field.checked : field.checked;
         } else {
             payload[fieldName] = field.value || null;
         }
