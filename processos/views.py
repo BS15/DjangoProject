@@ -284,12 +284,10 @@ def editar_processo(request, pk):
         )
         return redirect('home_page')
 
-    # Redirect to the dedicated verbas page when this processo contains verbas indenizatórias
+    # Redirect to the dedicated verbas page when this processo is of tipo "VERBAS INDENIZATÓRIAS"
     if (
-        Diaria.objects.filter(processo=processo).exists()
-        or ReembolsoCombustivel.objects.filter(processo=processo).exists()
-        or Jeton.objects.filter(processo=processo).exists()
-        or AuxilioRepresentacao.objects.filter(processo=processo).exists()
+        processo.tipo_pagamento
+        and processo.tipo_pagamento.tipo_de_pagamento.upper() == 'VERBAS INDENIZATÓRIAS'
     ):
         return redirect('editar_processo_verbas', pk=pk)
 
@@ -934,8 +932,8 @@ def agrupar_verbas_view(request, tipo_verba):
     )
 
     tipo_pagamento_verbas, _ = TiposDePagamento.objects.get_or_create(
-        tipo_de_pagamento__iexact='Verba Indenizatória',
-        defaults={'tipo_de_pagamento': 'Verba Indenizatória'}
+        tipo_de_pagamento__iexact='VERBAS INDENIZATÓRIAS',
+        defaults={'tipo_de_pagamento': 'VERBAS INDENIZATÓRIAS'}
     )
 
     novo_processo = Processo.objects.create(
