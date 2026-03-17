@@ -580,12 +580,15 @@ def visualizar_pdf_processo(request, processo_id):
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def contas_a_pagar(request):
+    STATUSES_CONTAS_A_PAGAR = [
+        'A PAGAR - PENDENTE AUTORIZAÇÃO',
+        'A PAGAR - ENVIADO PARA AUTORIZAÇÃO',
+        'A PAGAR - AUTORIZADO',
+        'LANÇADO - AGUARDANDO COMPROVANTE',
+    ]
+
     processos_pendentes = Processo.objects.filter(
-        status__status_choice__in=[
-            'A PAGAR - PENDENTE AUTORIZAÇÃO',
-            'A PAGAR - ENVIADO PARA AUTORIZAÇÃO',
-            'A PAGAR - AUTORIZADO'
-        ]
+        status__status_choice__in=STATUSES_CONTAS_A_PAGAR
     )
 
     datas_agrupadas = processos_pendentes.values('data_pagamento').annotate(
@@ -599,10 +602,20 @@ def contas_a_pagar(request):
         total=Count('id')
     ).order_by('forma_pagamento__forma_de_pagamento')
 
+    statuses_agrupados = processos_pendentes.values(
+        'status__status_choice'
+    ).annotate(
+        total=Count('id')
+    ).order_by('status__status_choice')
+
     data_selecionada = request.GET.get('data')
     forma_selecionada = request.GET.get('forma')
+    status_selecionado = request.GET.get('status')
 
     lista_processos = processos_pendentes
+
+    if status_selecionado:
+        lista_processos = lista_processos.filter(status__status_choice=status_selecionado)
 
     if data_selecionada:
         if data_selecionada == 'sem_data':
@@ -622,9 +635,11 @@ def contas_a_pagar(request):
     context = {
         'datas_agrupadas': datas_agrupadas,
         'formas_agrupadas': formas_agrupadas,
+        'statuses_agrupados': statuses_agrupados,
         'lista_processos': lista_processos,
         'data_selecionada': data_selecionada,
         'forma_selecionada': forma_selecionada,
+        'status_selecionado': status_selecionado,
         'pode_interagir': request.user.has_perm('processos.pode_operar_contas_pagar'),
     }
 
