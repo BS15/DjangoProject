@@ -58,8 +58,9 @@
                         <tr>
                             <th class="ps-4">ID Processo</th>
                             <th>Credor</th>
+                            <th>Status do Processo</th>
                             <th>Tipo de Pendência</th>
-                            <th style="width: 35%;">Justificativa / Descrição</th>
+                            <th style="width: 30%;">Justificativa / Descrição</th>
                             <th class="text-center">Status</th>
                             <th class="text-center pe-4">Ação</th>
                         </tr>
@@ -74,6 +75,9 @@
                             </td>
                             <td class="fw-medium text-secondary">
                                 {{ p.processo.credor.nome|default:"Não informado"|truncatechars:35 }}
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary bg-opacity-75 px-2 py-1">{{ p.processo.status|default:"—" }}</span>
                             </td>
                             <td>
                                 <span class="badge bg-secondary">{{ p.tipo|default:"Geral" }}</span>
@@ -102,7 +106,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
+                            <td colspan="7" class="text-center py-5 text-muted">
                                 <i class="bi bi-shield-check fs-1 d-block mb-3 text-success"></i>
                                 Nenhuma pendência encontrada com os filtros atuais.<br>Tudo em ordem por aqui!
                             </td>

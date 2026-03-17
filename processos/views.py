@@ -13,7 +13,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.db import transaction
-from django.db.models import Count, Q, F, Sum
+from django.db.models import Count, Q, F, Sum, Exists, OuterRef
 from pypdf import PdfWriter
 from .forms import ProcessoForm, DocumentoFormSet, DocumentoFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet
 from .utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, processar_pdf_comprovantes_ia, gerar_pdf_autorizacao, gerar_pdf_conselho_fiscal
@@ -1380,29 +1380,38 @@ def recusar_autorizacao_view(request, pk):
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def painel_conferencia_view(request):
-    processos_pagos = Processo.objects.filter(status__status_choice__iexact='PAGO - EM CONFERÊNCIA')
-
-    processos_aptos = processos_pagos.annotate(
-        total_pendencias=Count('pendencias', distinct=True),
-        pendencias_resolvidas=Count(
-            'pendencias',
-            filter=Q(pendencias__status__status_choice__iexact='RESOLVIDO'),
-            distinct=True
+    processos_pagos = Processo.objects.filter(
+        status__status_choice__iexact='PAGO - EM CONFERÊNCIA'
+    ).annotate(
+        tem_pendencia=Exists(
+            Pendencia.objects.filter(
+                processo=OuterRef('pk')
+            ).exclude(status__status_choice__iexact='RESOLVIDO')
         ),
-        total_retencoes=Count('notas_fiscais__retencoes', distinct=True),
-        retencoes_pagas=Count(
-            'notas_fiscais__retencoes',
-            filter=Q(notas_fiscais__retencoes__status__status_choice__iexact='PAGO'),
-            distinct=True
+        tem_retencao=Exists(
+            RetencaoImposto.objects.filter(
+                nota_fiscal__processo=OuterRef('pk')
+            ).exclude(status__status_choice__iexact='PAGO')
         )
-    ).filter(
-        total_pendencias=F('pendencias_resolvidas'),
-        total_retencoes=F('retencoes_pagas')
     ).order_by('data_pagamento')
 
+    FILTROS_VALIDOS = {'com_pendencia', 'com_retencao', 'com_ambos', 'sem_pendencias'}
+    filtro = request.GET.get('filtro', '')
+    if filtro not in FILTROS_VALIDOS:
+        filtro = ''
+    if filtro == 'com_pendencia':
+        processos_pagos = processos_pagos.filter(tem_pendencia=True)
+    elif filtro == 'com_retencao':
+        processos_pagos = processos_pagos.filter(tem_retencao=True)
+    elif filtro == 'com_ambos':
+        processos_pagos = processos_pagos.filter(tem_pendencia=True, tem_retencao=True)
+    elif filtro == 'sem_pendencias':
+        processos_pagos = processos_pagos.filter(tem_pendencia=False, tem_retencao=False)
+
     context = {
-        'processos': processos_aptos,
+        'processos': processos_pagos,
         'pode_interagir': request.user.has_perm('processos.pode_operar_contas_pagar'),
+        'filtro_ativo': filtro,
     }
     return render(request, 'conferencia.html', context)
 
@@ -2407,7 +2416,7 @@ def add_suprimento_view(request):
 
 def painel_pendencias_view(request):
     queryset_base = Pendencia.objects.select_related(
-        'processo', 'status', 'tipo', 'processo__credor'
+        'processo', 'status', 'tipo', 'processo__credor', 'processo__status'
     ).all().order_by('-id')
 
     meu_filtro = PendenciaFilter(request.GET, queryset=queryset_base)
