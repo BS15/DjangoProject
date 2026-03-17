@@ -89,7 +89,7 @@
                                 <td>
                                     {% for nf in processo.notas_fiscais.all %}
                                         {% for retencao in nf.retencoes.all %}
-                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill px-2 py-1 me-1">{{ retencao.codigo }}</span>
+                                            <span class="badge bg-danger px-2 py-1 me-1">{{ retencao.codigo }}</span>
                                         {% endfor %}
                                     {% endfor %}
                                 </td>
@@ -124,7 +124,7 @@
                                 <td class="text-muted">Proc. #{{ nf.processo.id }}</td>
                                 <td>
                                     {% for retencao in nf.retencoes.all %}
-                                        <span class="badge bg-warning bg-opacity-10 text-dark border border-warning rounded-pill px-2 py-1 me-1">{{ retencao.codigo }}</span>
+                                        <span class="badge bg-warning px-2 py-1 me-1">{{ retencao.codigo }}</span>
                                     {% endfor %}
                                 </td>
                             </tr>
@@ -151,7 +151,7 @@
                                 <td class="text-center">
                                     <input class="form-check-input check-item" type="checkbox" name="itens_selecionados" value="{{ ret.id }}">
                                 </td>
-                                <td><span class="badge bg-warning bg-opacity-10 text-dark border border-warning rounded-pill px-3 py-1">{{ ret.codigo.codigo }}</span></td>
+                                <td><span class="badge bg-warning px-3 py-1">{{ ret.codigo.codigo }}</span></td>
                                 <td class="text-danger fw-bold">R$ {{ ret.valor }}</td>
                                 <td>{{ ret.competencia|date:"m/Y"|default:"-" }}</td>
                                 <td><span class="badge bg-secondary">{{ ret.status|default:"Pendente" }}</span></td>
