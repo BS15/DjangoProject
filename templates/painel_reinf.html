@@ -1,0 +1,301 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel EFD-Reinf – System X</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
+    <style>
+        .badge-s2000 { background-color: #0d6efd; }
+        .badge-s4000 { background-color: #198754; }
+        .table-header-blue thead th { background-color: #e7f0fd; }
+        .table-header-green thead th { background-color: #e6f4ea; }
+        .credor-card { border-left: 4px solid #0d6efd; }
+        .credor-card-green { border-left: 4px solid #198754; }
+        .natureza-badge { font-size: .75rem; }
+        .section-title { font-size: 1rem; font-weight: 600; }
+        .total-row td { font-weight: 600; background-color: #f8f9fa; }
+    </style>
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="{% url 'home_page' %}">System X</a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link text-white" href="{% url 'home_page' %}">
+                <i class="bi bi-house-door"></i> Home
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container-lg mt-2 mb-5">
+
+    <!-- ── Page Header ─────────────────────────────────────────────────── -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0">
+                <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                Painel EFD-Reinf
+            </h2>
+            <small class="text-muted">Revisão de retenções para geração dos XMLs</small>
+        </div>
+        <a href="{% url 'painel_impostos' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+
+    <!-- ── Month / Year Filter ─────────────────────────────────────────── -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body py-3">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-auto">
+                    <label class="form-label text-muted small fw-bold mb-1">Mês</label>
+                    <select name="mes" class="form-select form-select-sm">
+                        {% for m in meses %}
+                        <option value="{{ m }}" {% if m == mes %}selected{% endif %}>
+                            {{ m|stringformat:"02d" }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label class="form-label text-muted small fw-bold mb-1">Ano</label>
+                    <select name="ano" class="form-select form-select-sm">
+                        {% for a in anos %}
+                        <option value="{{ a }}" {% if a == ano %}selected{% endif %}>{{ a }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-funnel"></i> Filtrar
+                    </button>
+                </div>
+                <div class="col-auto ms-auto d-flex align-items-end">
+                    <span class="badge bg-secondary me-2">
+                        Competência: {{ mes|stringformat:"02d" }}/{{ ano }}
+                    </span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ── Tabs ──────────────────────────────────────────────────────────── -->
+    <ul class="nav nav-tabs mb-0" id="reinfTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-semibold" id="tab-s2000" data-bs-toggle="tab"
+                    data-bs-target="#pane-s2000" type="button" role="tab">
+                <span class="badge badge-s2000 text-white me-1">S-2000</span>
+                Previdenciário – INSS
+                {% if serie_2000 %}
+                <span class="badge bg-primary rounded-pill ms-1">{{ serie_2000|length }}</span>
+                {% endif %}
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold" id="tab-s4000" data-bs-toggle="tab"
+                    data-bs-target="#pane-s4000" type="button" role="tab">
+                <span class="badge badge-s4000 text-white me-1">S-4000</span>
+                Retenções Federais – IRRF / CSRF
+                {% if serie_4000 %}
+                <span class="badge bg-success rounded-pill ms-1">{{ serie_4000|length }}</span>
+                {% endif %}
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content border border-top-0 rounded-bottom bg-white shadow-sm p-4" id="reinfTabContent">
+
+        <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+             SÉRIE 2000 – INSS / R-2010
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+        <div class="tab-pane fade show active" id="pane-s2000" role="tabpanel">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <span class="badge badge-s2000 text-white me-2">R-2010</span>
+                    <span class="section-title">Serviços Tomados com Retenção Previdenciária</span>
+                </div>
+                <button class="btn btn-outline-primary btn-sm" disabled title="Em desenvolvimento">
+                    <i class="bi bi-file-code"></i> Gerar XML R-2010
+                </button>
+            </div>
+
+            {% if serie_2000 %}
+                {% for grupo in serie_2000 %}
+                <div class="card mb-3 credor-card shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+                        <div>
+                            <i class="bi bi-building me-1 text-primary"></i>
+                            <strong>{{ grupo.credor.nome|default:"Prestador não informado" }}</strong>
+                            <span class="text-muted small ms-2">{{ grupo.credor.cpf_cnpj|default:"–" }}</span>
+                        </div>
+                        <span class="badge bg-primary bg-opacity-10 text-primary">
+                            Total retido: R$ {{ grupo.total_retido|floatformat:2 }}
+                        </span>
+                    </div>
+                    <div class="card-body p-0">
+                        {% for item in grupo.notas %}
+                        <div class="px-3 pt-3 pb-1">
+                            <p class="mb-1 small text-muted fw-semibold">
+                                <i class="bi bi-receipt me-1"></i>
+                                NF {{ item.nota_fiscal.numero_nota_fiscal }}
+                                <span class="ms-2">Emissão: {{ item.nota_fiscal.data_emissao|date:"d/m/Y" }}</span>
+                                <span class="ms-2">Valor Bruto NF: <strong>R$ {{ item.nota_fiscal.valor_bruto|floatformat:2 }}</strong></span>
+                                {% if item.nota_fiscal.codigo_servico_inss %}
+                                <span class="ms-2 badge bg-secondary natureza-badge">
+                                    Cód. Serviço Tabela 06: {{ item.nota_fiscal.codigo_servico_inss }}
+                                </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered table-hover table-header-blue mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Código Imposto</th>
+                                        <th>Base de Cálculo</th>
+                                        <th>Valor Retido INSS</th>
+                                        <th>Competência</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ret in item.retencoes %}
+                                    <tr>
+                                        <td><span class="badge bg-primary bg-opacity-75">{{ ret.codigo }}</span></td>
+                                        <td>R$ {{ ret.rendimento_tributavel|floatformat:2|default:"–" }}</td>
+                                        <td class="fw-semibold text-primary">R$ {{ ret.valor|floatformat:2 }}</td>
+                                        <td>{{ ret.competencia|date:"m/Y"|default:"–" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr class="total-row">
+                                        <td colspan="1"><em>Subtotal NF {{ item.nota_fiscal.numero_nota_fiscal }}</em></td>
+                                        <td>R$ {{ item.total_base|floatformat:2 }}</td>
+                                        <td class="text-primary">R$ {{ item.total_retido|floatformat:2 }}</td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+
+            {% else %}
+                <div class="alert alert-info d-flex align-items-center">
+                    <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                    Nenhuma retenção de INSS (Série 2000) encontrada para
+                    <strong class="ms-1">{{ mes|stringformat:"02d" }}/{{ ano }}</strong>.
+                    <span class="ms-1">Verifique se os <em>CodigosImposto</em> estão classificados como
+                    <code>Série 2000</code> no admin.</span>
+                </div>
+            {% endif %}
+
+        </div><!-- /pane-s2000 -->
+
+        <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+             SÉRIE 4000 – IRRF / CSRF / R-4010 / R-4020
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+        <div class="tab-pane fade" id="pane-s4000" role="tabpanel">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <span class="badge badge-s4000 text-white me-1">R-4010</span>
+                    <span class="badge badge-s4000 text-white me-2">R-4020</span>
+                    <span class="section-title">Retenções Federais (IRRF / CSLL / PIS / COFINS)</span>
+                </div>
+                <button class="btn btn-outline-success btn-sm" disabled title="Em desenvolvimento">
+                    <i class="bi bi-file-code"></i> Gerar XML R-4020
+                </button>
+            </div>
+
+            {% if serie_4000 %}
+                {% for grupo in serie_4000 %}
+                <div class="card mb-3 credor-card-green shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+                        <div>
+                            <i class="bi bi-person-circle me-1 text-success"></i>
+                            <strong>{{ grupo.beneficiario.nome|default:"Beneficiário não informado" }}</strong>
+                            <span class="text-muted small ms-2">{{ grupo.beneficiario.cpf_cnpj|default:"–" }}</span>
+                            <span class="badge bg-success bg-opacity-75 ms-2">{{ grupo.evento }}</span>
+                            {% if grupo.beneficiario.tipo == 'PF' %}
+                            <span class="badge bg-info bg-opacity-75 ms-1">Pessoa Física</span>
+                            {% else %}
+                            <span class="badge bg-secondary bg-opacity-75 ms-1">Pessoa Jurídica</span>
+                            {% endif %}
+                        </div>
+                        <span class="badge bg-success bg-opacity-10 text-success">
+                            Total retido: R$ {{ grupo.total_retido|floatformat:2 }}
+                        </span>
+                    </div>
+                    <div class="card-body p-0">
+                        {% for nat in grupo.naturezas %}
+                        <div class="px-3 pt-3 pb-1">
+                            <p class="mb-1 small fw-semibold text-muted">
+                                <i class="bi bi-tag me-1"></i>
+                                Natureza do Rendimento (Tabela 01):
+                                <span class="badge bg-secondary natureza-badge ms-1">{{ nat.natureza_codigo }}</span>
+                            </p>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered table-hover table-header-green mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Nota Fiscal</th>
+                                        <th>Código Imposto</th>
+                                        <th>Fato Gerador (Competência)</th>
+                                        <th>Rendimento Bruto</th>
+                                        <th>Valor Retido</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ret in nat.retencoes %}
+                                    <tr>
+                                        <td>
+                                            {% if ret.nota_fiscal %}
+                                            NF {{ ret.nota_fiscal.numero_nota_fiscal }}
+                                            <span class="text-muted small ms-1">({{ ret.nota_fiscal.data_emissao|date:"d/m/Y" }})</span>
+                                            {% else %}–{% endif %}
+                                        </td>
+                                        <td><span class="badge bg-success bg-opacity-75">{{ ret.codigo }}</span></td>
+                                        <td>{{ ret.competencia|date:"m/Y"|default:"–" }}</td>
+                                        <td>R$ {{ ret.rendimento_tributavel|floatformat:2|default:"–" }}</td>
+                                        <td class="fw-semibold text-success">R$ {{ ret.valor|floatformat:2 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr class="total-row">
+                                        <td colspan="3"><em>Subtotal – Natureza {{ nat.natureza_codigo }}</em></td>
+                                        <td>R$ {{ nat.total_bruto|floatformat:2 }}</td>
+                                        <td class="text-success">R$ {{ nat.total_retido|floatformat:2 }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+
+            {% else %}
+                <div class="alert alert-info d-flex align-items-center">
+                    <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                    Nenhuma retenção federal (Série 4000) encontrada para
+                    <strong class="ms-1">{{ mes|stringformat:"02d" }}/{{ ano }}</strong>.
+                    <span class="ms-1">Verifique se os <em>CodigosImposto</em> estão classificados como
+                    <code>Série 4000</code> no admin.</span>
+                </div>
+            {% endif %}
+
+        </div><!-- /pane-s4000 -->
+
+    </div><!-- /tab-content -->
+</div><!-- /container -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

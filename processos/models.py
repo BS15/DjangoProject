@@ -77,6 +77,19 @@ class CodigosImposto(models.Model):
         help_text="Código de 5 dígitos (Tabela 01 do SPED). Ex: 15001, 17001. Mapeia o código de receita para o XML."
     )
 
+    SERIE_REINF_CHOICES = [
+        ('NONE', 'Não mapeado'),
+        ('S2000', 'Série 2000 – Previdenciário (INSS)'),
+        ('S4000', 'Série 4000 – Retenções Federais (IRRF/CSRF)'),
+    ]
+    serie_reinf = models.CharField(
+        max_length=6,
+        choices=SERIE_REINF_CHOICES,
+        default='NONE',
+        verbose_name="Série EFD-Reinf",
+        help_text="Classifica o imposto para geração do XML EFD-Reinf: S2000 = INSS, S4000 = IR/CSLL/PIS/COFINS."
+    )
+
     def __str__(self):
         return f"{self.codigo}"
 
