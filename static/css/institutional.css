@@ -259,22 +259,37 @@ a:hover {
 }
 
 /* --- BACKGROUND UTILITIES ----------------------------------- */
-.bg-primary   { background-color: var(--bs-primary)   !important; }
-.bg-secondary { background-color: var(--bs-secondary) !important; }
-.bg-success   { background-color: var(--bs-success)   !important; }
-.bg-danger    { background-color: var(--bs-danger)    !important; }
+/* All dark-toned institutional backgrounds enforce white text.                    */
+/* bg-light gets dark text; all others get white.                                  */
+.bg-primary   { background-color: var(--bs-primary)   !important; color: #fff !important; }
+.bg-secondary { background-color: var(--bs-secondary) !important; color: #fff !important; }
+.bg-success   { background-color: var(--bs-success)   !important; color: #fff !important; }
+.bg-danger    { background-color: var(--bs-danger)    !important; color: #fff !important; }
 .bg-warning   { background-color: var(--bs-warning)   !important; color: #fff !important; }
 .bg-info      { background-color: var(--bs-info)      !important; color: #fff !important; }
-.bg-dark      { background-color: var(--bs-dark)      !important; }
-.bg-light     { background-color: var(--bs-light)     !important; }
+.bg-dark      { background-color: var(--bs-dark)      !important; color: #fff !important; }
+.bg-light     { background-color: var(--bs-light)     !important; color: var(--bs-dark) !important; }
 
-/* Semi-transparent bg variants used for status badges */
-.bg-primary.bg-opacity-10   { background-color: rgba(27, 58, 107, 0.1)  !important; }
-.bg-success.bg-opacity-10   { background-color: rgba(45, 106, 79, 0.1)  !important; }
-.bg-danger.bg-opacity-10    { background-color: rgba(139, 38, 53, 0.1)  !important; }
-.bg-warning.bg-opacity-10   { background-color: rgba(122, 90, 0, 0.1)   !important; color: inherit !important; }
-.bg-info.bg-opacity-10      { background-color: rgba(44, 110, 138, 0.1) !important; color: inherit !important; }
-.bg-secondary.bg-opacity-10 { background-color: rgba(74, 85, 104, 0.1)  !important; }
+/* Semi-transparent bg variants used for status badges.                            */
+/* Two-class specificity (0-2-0) overrides the solid bg-* color rule above.       */
+/* Tinted backgrounds use the matching dark colour for legible contrast.           */
+.bg-primary.bg-opacity-10   { background-color: rgba(27, 58, 107, 0.1)  !important; color: var(--bs-primary)   !important; }
+.bg-success.bg-opacity-10   { background-color: rgba(45, 106, 79, 0.1)  !important; color: var(--bs-success)   !important; }
+.bg-danger.bg-opacity-10    { background-color: rgba(139, 38, 53, 0.1)  !important; color: var(--bs-danger)    !important; }
+.bg-warning.bg-opacity-10   { background-color: rgba(122, 90, 0, 0.1)   !important; color: var(--bs-warning)   !important; }
+.bg-info.bg-opacity-10      { background-color: rgba(44, 110, 138, 0.1) !important; color: var(--bs-info)      !important; }
+.bg-secondary.bg-opacity-10 { background-color: rgba(74, 85, 104, 0.1)  !important; color: var(--bs-secondary) !important; }
+
+/* Higher-specificity overrides for Bootstrap text utilities applied on top of     */
+/* dark institutional backgrounds. Two-class (0-2-0) beats Bootstrap's .text-dark  */
+/* single-class (0-1-0), so white text is always rendered on these elements.       */
+.bg-warning.text-dark,
+.bg-warning.text-dark *,
+.btn-warning.text-dark,
+.badge.bg-warning.text-dark,
+.card-header.bg-warning,
+.card-header.bg-warning.text-dark,
+.modal-header.bg-warning.text-dark { color: #fff !important; }
 
 /* --- TEXT COLOR UTILITIES ----------------------------------- */
 .text-primary   { color: var(--bs-primary)   !important; }
@@ -291,10 +306,10 @@ a:hover {
   font-weight: 600;
   letter-spacing: 0.03em;
 }
-.badge.bg-primary   { background-color: var(--bs-primary)   !important; }
-.badge.bg-secondary { background-color: var(--bs-secondary) !important; }
-.badge.bg-success   { background-color: var(--bs-success)   !important; }
-.badge.bg-danger    { background-color: var(--bs-danger)    !important; }
+.badge.bg-primary   { background-color: var(--bs-primary)   !important; color: #fff !important; }
+.badge.bg-secondary { background-color: var(--bs-secondary) !important; color: #fff !important; }
+.badge.bg-success   { background-color: var(--bs-success)   !important; color: #fff !important; }
+.badge.bg-danger    { background-color: var(--bs-danger)    !important; color: #fff !important; }
 .badge.bg-warning   { background-color: var(--bs-warning)   !important; color: #fff !important; }
 .badge.bg-info      { background-color: var(--bs-info)      !important; color: #fff !important; }
 
