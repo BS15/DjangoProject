@@ -156,6 +156,18 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 STATIC_ROOT = os.getenv('STATIC_ROOT', str(BASE_DIR / 'staticfiles'))
 
 # ---------------------------------------------------------------------------
+# PDF template settings
+# ---------------------------------------------------------------------------
+# Path to the CRECI-SC letterhead PDF used as a background for auto-generated
+# documents (payment authorisations, fiscal-council opinions, etc.).
+# Override via the CRECI_LETTERHEAD_PATH environment variable to use a
+# different file per deployment without touching source code.
+CRECI_LETTERHEAD_PATH = os.getenv(
+    'CRECI_LETTERHEAD_PATH',
+    str(BASE_DIR / 'processos' / 'pdf_templates' / 'papel_timbrado_creci_sc.pdf'),
+)
+
+# ---------------------------------------------------------------------------
 # Production security settings
 # These are only activated when DEBUG is False so they don't interfere with
 # local development where HTTPS is typically not available.

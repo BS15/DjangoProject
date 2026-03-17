@@ -8,13 +8,11 @@ import uuid
 from collections import Counter
 from pypdf import PdfWriter, PdfReader
 from datetime import datetime, timedelta
+from django.conf import settings
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
-
-# Caminho para o papel timbrado CRECI-SC usado como fundo dos documentos gerados.
-TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'papel_timbrado_creci_sc.pdf')
 
 def mesclar_pdfs_em_memoria(lista_arquivos):
     """
@@ -636,7 +634,7 @@ def gerar_pdf_autorizacao(processo):
     p.save()
     buffer.seek(0)
 
-    return merge_canvas_with_template(buffer, TEMPLATE_PATH)
+    return merge_canvas_with_template(buffer, settings.CRECI_LETTERHEAD_PATH)
 
 
 def gerar_pdf_conselho_fiscal(processo):
@@ -816,4 +814,4 @@ def gerar_pdf_conselho_fiscal(processo):
     p.save()
     buffer.seek(0)
 
-    return merge_canvas_with_template(buffer, TEMPLATE_PATH)
+    return merge_canvas_with_template(buffer, settings.CRECI_LETTERHEAD_PATH)
