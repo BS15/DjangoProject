@@ -12,17 +12,17 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 import os
 from pathlib import Path
-from dotenv import load_dotenv  # <-- Importe isso
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# A SOLUÇÃO BLINDADA: Aponta diretamente para o arquivo .env usando o BASE_DIR
+# Load environment variables from .env file (development) or the environment (production)
 load_dotenv(BASE_DIR / '.env')
 
-# Fallback dummy key used only in DEBUG/development when no .env is present.
-# In production (DEBUG=False) the app will start but Gemini calls will return
-# an authentication error, making misconfiguration immediately visible.
+# Gemini AI API key – must be set via environment variable in production.
+# Falls back to a non-functional dummy so the app starts locally without a key;
+# any actual Gemini calls will return an authentication error until the key is set.
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSy-DUMMY-TEST-KEY-NOT-REAL')
 
 
@@ -30,12 +30,25 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSy-DUMMY-TEST-KEY-NOT-REAL')
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-9^&7i6#wio-7gjviwsa2mvyx**3&00vryqkdqo!_5-2hqy&*8-'
+# Must be set via the SECRET_KEY environment variable in production.
+_secret_key = os.getenv('SECRET_KEY')
+if not _secret_key:
+    # Allow development without a .env file, but make the insecure fallback obvious.
+    import warnings
+    warnings.warn(
+        "SECRET_KEY is not set via the environment. "
+        "Using an insecure fallback – DO NOT use in production.",
+        stacklevel=2,
+    )
+    _secret_key = 'django-insecure-fallback-key-for-local-dev-only-do-not-use-in-production'
+SECRET_KEY = _secret_key
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = ['GuiLuizRamos.pythonanywhere.com', '127.0.0.1', 'localhost']
+# Comma-separated list of allowed hosts, e.g. "yourdomain.com,www.yourdomain.com"
+_allowed_hosts_env = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost')
+ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts_env.split(',') if h.strip()]
 
 
 # Application definition
@@ -134,4 +147,27 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-STATIC_ROOT = '/home/GuiLuizRamos/DjangoProject/staticfiles'
+# Set STATIC_ROOT via environment variable so no server-specific paths are
+# committed to source control.  Falls back to a local 'staticfiles' directory
+# which is safe for development and is already excluded in .gitignore.
+STATIC_ROOT = os.getenv('STATIC_ROOT', str(BASE_DIR / 'staticfiles'))
+
+# ---------------------------------------------------------------------------
+# Production security settings
+# These are only activated when DEBUG is False so they don't interfere with
+# local development where HTTPS is typically not available.
+# ---------------------------------------------------------------------------
+if not DEBUG:
+    # Redirect all plain-HTTP requests to HTTPS
+    SECURE_SSL_REDIRECT = True
+    # Tell browsers to only connect via HTTPS for 1 year (including subdomains)
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    # Prevent session and CSRF cookies from being sent over plain HTTP
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # Prevent the site from being embedded in iframes (clickjacking protection)
+    X_FRAME_OPTIONS = 'DENY'
+    # Prevent browsers from guessing content types (MIME-sniffing protection)
+    SECURE_CONTENT_TYPE_NOSNIFF = True
