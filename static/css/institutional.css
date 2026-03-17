@@ -313,6 +313,15 @@ a:hover {
 .badge.bg-warning   { background-color: var(--bs-warning)   !important; color: #fff !important; }
 .badge.bg-info      { background-color: var(--bs-info)      !important; color: #fff !important; }
 
+/* Tinted badge variants (3-class specificity — beats the solid .badge.bg-* rules above). */
+/* These restore the intended look: very light tinted background with dark legible text.  */
+.badge.bg-primary.bg-opacity-10   { background-color: rgba(27, 58, 107, 0.12)  !important; color: var(--bs-primary)   !important; }
+.badge.bg-success.bg-opacity-10   { background-color: rgba(45, 106, 79, 0.12)  !important; color: var(--bs-success)   !important; }
+.badge.bg-danger.bg-opacity-10    { background-color: rgba(139, 38, 53, 0.12)  !important; color: var(--bs-danger)    !important; }
+.badge.bg-warning.bg-opacity-10   { background-color: rgba(122, 90, 0, 0.12)   !important; color: var(--bs-warning)   !important; }
+.badge.bg-info.bg-opacity-10      { background-color: rgba(44, 110, 138, 0.12) !important; color: var(--bs-info)      !important; }
+.badge.bg-secondary.bg-opacity-10 { background-color: rgba(74, 85, 104, 0.12)  !important; color: var(--bs-secondary) !important; }
+
 /* Status/pill badges use a tighter radius for formal institutional appearance */
 .badge.rounded-pill { border-radius: 4px !important; }
 
