@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Processo, DocumentoProcesso, DocumentoFiscal, RetencaoImposto, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos, Pendencia, StatusChoicesPendencias
+from .models import Processo, DocumentoProcesso, DocumentoFiscal, RetencaoImposto, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos, Pendencia, StatusChoicesPendencias, DadosContribuinte, ContasBancarias
 from .validators import validar_regras_processo, validar_regras_suprimento
 
 class ProcessoForm(forms.ModelForm):
@@ -75,6 +75,16 @@ class ProcessoForm(forms.ModelForm):
                     # Anula o "required = True" estabelecido no loop acima para evitar erro no salvamento
                     self.fields['credor'].required = False
         # --- FIM DA LÓGICA DE TRANCAMENTO ---
+
+        # --- FILTRO DE CONTA SACADA POR CNPJ DO ÓRGÃO ---
+        contribuinte = DadosContribuinte.objects.first()
+        if contribuinte:
+            self.fields['conta'].queryset = ContasBancarias.objects.filter(
+                titular__cpf_cnpj=contribuinte.cnpj
+            )
+        else:
+            self.fields['conta'].queryset = ContasBancarias.objects.none()
+        # --- FIM DO FILTRO ---
 
     # --- INÍCIO DA RECUPERAÇÃO DE DADOS (BACKEND) ---
     def clean_credor(self):

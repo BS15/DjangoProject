@@ -32,7 +32,7 @@ class CargosFuncoes(models.Model):
 
 
 class ContasBancarias(models.Model):
-    titular = models.CharField("Titular", max_length=50, blank=True, null=True)
+    titular = models.ForeignKey('Credor', on_delete=models.CASCADE, null=True, blank=True, related_name='contas_bancarias')
     banco = models.CharField("Banco", max_length=50, blank=True, null=True)
     agencia = models.CharField("Agência", max_length=50, blank=True, null=True)
     conta = models.CharField("Conta", max_length=50, blank=True, null=True)
