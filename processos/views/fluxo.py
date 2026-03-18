@@ -408,6 +408,38 @@ def editar_processo(request, pk):
     return render(request, 'fluxo/editar_processo.html', context)
 
 
+@login_required
+def api_extrair_codigos_barras_processo(request, pk):
+    """
+    AJAX endpoint que dispara a extração de códigos de barras via IA para um processo,
+    sem necessidade de salvar o formulário. Retorna JSON com o resultado.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'sucesso': False, 'erro': 'Método não permitido.'}, status=405)
+
+    processo = get_object_or_404(Processo, id=pk)
+
+    try:
+        n_extraidos, n_falhas = _extrair_e_salvar_codigos_barras(processo)
+    except Exception as e:
+        return JsonResponse({'sucesso': False, 'erro': str(e)}, status=500)
+
+    barcodes = [
+        doc.codigo_barras
+        for doc in processo.documentos.select_related('tipo').filter(
+            tipo__tipo_de_documento__icontains='boleto'
+        )
+        if doc.codigo_barras
+    ]
+
+    return JsonResponse({
+        'sucesso': True,
+        'n_extraidos': n_extraidos,
+        'n_falhas': n_falhas,
+        'barcodes': barcodes,
+    })
+
+
 # ==========================================
 # DOCUMENTOS FISCAIS: GERENCIAMENTO DE NOTAS FISCAIS
 # ==========================================

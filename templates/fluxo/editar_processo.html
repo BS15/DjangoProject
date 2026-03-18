@@ -215,7 +215,7 @@
                                 </div>
                                 <!-- INDICADORES DE BOLETOS -->
                                 <div class="col-md-12 mt-2 pt-3 border-top">
-                                    <div class="d-flex gap-3 flex-wrap mb-2">
+                                    <div class="d-flex gap-3 flex-wrap align-items-center mb-2">
                                         <div class="d-flex align-items-center gap-2 px-3 py-2 bg-white rounded border shadow-sm">
                                             <i class="bi bi-files text-primary fs-5"></i>
                                             <div>
@@ -226,11 +226,18 @@
                                         <div class="d-flex align-items-center gap-2 px-3 py-2 bg-white rounded border shadow-sm">
                                             <i class="bi bi-upc-scan text-success fs-5"></i>
                                             <div>
-                                                <div class="fw-bold fs-5 text-success">{{ boleto_barcodes_count }} / {{ boleto_docs_count }}</div>
+                                                <div id="boleto_barcodes_count" class="fw-bold fs-5 text-success">{{ boleto_barcodes_count }} / {{ boleto_docs_count }}</div>
                                                 <div class="text-muted small">Linha(s) digitável(is) extraída(s)</div>
                                             </div>
                                         </div>
+                                        <button type="button" id="btn_extrair_codigos_barras"
+                                                class="btn btn-primary btn-sm fw-bold"
+                                                data-url="{% url 'api_extrair_codigos_barras_processo' pk=processo.pk %}"
+                                                disabled>
+                                            <i class="bi bi-upc-scan"></i> Extrair Códigos de Barras
+                                        </button>
                                     </div>
+                                    <div id="boleto_barcodes_area">
                                     {% if boleto_barcodes_list %}
                                     <div>
                                         <a class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" href="#collapseBarcodeList" role="button" aria-expanded="false" aria-controls="collapseBarcodeList">
@@ -252,8 +259,9 @@
                                         </div>
                                     </div>
                                     {% elif boleto_docs_count > 0 %}
-                                    <p class="text-muted small mb-0"><i class="bi bi-info-circle"></i> Nenhuma linha digitável extraída ainda. Salve o processo para extrair automaticamente.</p>
+                                    <p class="text-muted small mb-0"><i class="bi bi-info-circle"></i> Nenhuma linha digitável extraída ainda. Clique em <strong>Extrair Códigos de Barras</strong> ou salve o processo para extrair automaticamente.</p>
                                     {% endif %}
+                                    </div>
                                 </div>
                             </div>
 
@@ -895,6 +903,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const blocoBoleto = document.getElementById('bloco_boleto');
     const blocoTransferencia = document.getElementById('bloco_transferencia');
     const blocoPix = document.getElementById('bloco_pix');
+    const btnExtrairCodigosBarras = document.getElementById('btn_extrair_codigos_barras');
 
     function gerenciarVisibilidadePagamento() {
         if (!selectFormaPagamento) return;
@@ -911,19 +920,107 @@ document.addEventListener('DOMContentLoaded', function() {
         if (blocoTransferencia) blocoTransferencia.style.display = 'none';
         if (blocoPix) blocoPix.style.display = 'none';
 
+        const ehBoleto = formaStr.includes('BOLETO') || formaStr.includes('GERENCIADOR');
+
         // Mostra apenas o que interessa
-        if (formaStr.includes('BOLETO') || formaStr.includes('GERENCIADOR')) {
+        if (ehBoleto) {
             if (blocoBoleto) blocoBoleto.style.display = 'flex';
         } else if (formaStr.includes('TRANSFERENCIA') || formaStr.includes('TED') || formaStr.includes('DOC')) {
             if (blocoTransferencia) blocoTransferencia.style.display = 'flex';
         } else if (formaStr.includes('PIX')) {
             if (blocoPix) blocoPix.style.display = 'flex';
         }
+
+        // Habilita o botão de extração apenas quando a forma de pagamento é boleto/gerenciador
+        if (btnExtrairCodigosBarras) {
+            btnExtrairCodigosBarras.disabled = !ehBoleto;
+        }
     }
 
     if (selectFormaPagamento) {
         selectFormaPagamento.addEventListener('change', gerenciarVisibilidadePagamento);
         gerenciarVisibilidadePagamento(); // Aciona no load para exibir a UI correta se já houver algo selecionado
+    }
+
+    // ==========================================
+    // EXTRAÇÃO DE CÓDIGOS DE BARRAS VIA AJAX
+    // ==========================================
+    if (btnExtrairCodigosBarras) {
+        btnExtrairCodigosBarras.addEventListener('click', function () {
+            const url = this.dataset.url;
+            const originalHtml = this.innerHTML;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Extraindo...';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Accept': 'application/json',
+                },
+            })
+            .then(res => res.json())
+            .then(data => {
+                this.innerHTML = originalHtml;
+                // Re-enable button based on current payment type selection
+                gerenciarVisibilidadePagamento();
+
+                if (!data.sucesso) {
+                    alert('Erro ao extrair códigos de barras: ' + (data.erro || 'Erro desconhecido.'));
+                    return;
+                }
+
+                // Atualiza o contador
+                const countEl = document.getElementById('boleto_barcodes_count');
+                if (countEl && data.barcodes) {
+                    const parts = countEl.textContent.split('/');
+                    const total = parts.length > 1 ? parts[1].trim() : '';
+                    countEl.textContent = data.barcodes.length + (total ? ' / ' + total : '');
+                }
+
+                // Atualiza a lista de códigos de barras
+                const area = document.getElementById('boleto_barcodes_area');
+                if (area && data.barcodes && data.barcodes.length > 0) {
+                    const items = data.barcodes.map(code =>
+                        `<li class="list-group-item d-flex justify-content-between align-items-center small font-monospace py-2">
+                            <span>${code}</span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary flex-shrink-0 ms-2"
+                                    onclick="copiarCodigoBarras(this)"
+                                    data-code="${code}" title="Copiar">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </li>`
+                    ).join('');
+                    area.innerHTML =
+                        `<div>
+                            <a class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" href="#collapseBarcodeList" role="button" aria-expanded="true" aria-controls="collapseBarcodeList">
+                                <i class="bi bi-list-ul"></i> Ver linhas digitáveis (${data.barcodes.length})
+                            </a>
+                            <div class="collapse show mt-2" id="collapseBarcodeList">
+                                <ul class="list-group">${items}</ul>
+                            </div>
+                        </div>`;
+                }
+
+                if (data.n_extraidos > 0 && data.n_falhas > 0) {
+                    alert(`${data.n_extraidos} código(s) extraído(s) com sucesso. Não foi possível extrair ${data.n_falhas} boleto(s) — preencha manualmente se necessário.`);
+                } else if (data.n_extraidos > 0) {
+                    alert(`${data.n_extraidos} código(s) de barras extraído(s) com sucesso.`);
+                } else if (data.n_falhas > 0) {
+                    alert(`Não foi possível extrair o código de barras de ${data.n_falhas} boleto(s). Preencha manualmente se necessário.`);
+                } else {
+                    alert('Nenhum boleto encontrado para extração. Certifique-se de que há documentos do tipo BOLETO BANCÁRIO anexados.');
+                }
+            })
+            .catch(err => {
+                this.innerHTML = originalHtml;
+                gerenciarVisibilidadePagamento();
+                alert('Erro de comunicação ao tentar extrair os códigos de barras.');
+                console.error(err);
+            });
+        });
     }
 
     // ==========================================
