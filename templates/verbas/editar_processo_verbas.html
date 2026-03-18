@@ -1,0 +1,537 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processo de Verbas Indenizatórias #{{ processo.id }} - System X</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
+    <style>
+        .card-header-verbas { background-color: #0d6efd; color: #fff; }
+        .form-label { font-weight: 500; font-size: 0.9rem; }
+        .verba-group-header { cursor: pointer; user-select: none; }
+        .verba-badge-diaria  { background-color: #0d6efd; }
+        .verba-badge-reembolso { background-color: #198754; }
+        .verba-badge-jeton { background-color: #ffc107; color: #000 !important; }
+        .verba-badge-auxilio { background-color: #0dcaf0; color: #000 !important; }
+        .doc-upload-row { background: #f8f9fa; border-radius: 6px; padding: 10px 14px; }
+        #empty-pendencia-form { display: none; }
+        .django-delete-checkbox input[type="checkbox"] { display: none; }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container-fluid px-4 mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0 text-primary fw-bold">
+            <i class="bi bi-briefcase-fill"></i> Processo de Verbas Indenizatórias #{{ processo.id }}
+        </h4>
+        <a href="{% url 'home_page' %}" class="btn btn-outline-dark btn-sm">
+            <i class="bi bi-arrow-left"></i> Voltar para Home
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if processo_form.errors %}
+        <div class="alert alert-danger shadow-sm">
+            <h6 class="fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Verifique os campos obrigatórios:</h6>
+            <ul class="mb-0 small">
+                {% for field, errors in processo_form.errors.items %}
+                    <li>{{ field }}: {{ errors|striptags }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <div class="row g-4">
+
+        <!-- =====================================================
+             COLUNA ESQUERDA: VERBAS AGRUPADAS + DOCUMENTOS
+             ===================================================== -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-header card-header-verbas">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="bi bi-collection-fill"></i> Verbas Indenizatórias Agrupadas
+                    </h6>
+                </div>
+                <div class="card-body p-3">
+                    {% if not diarias and not reembolsos and not jetons and not auxilios %}
+                        <p class="text-muted text-center py-3">
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                            Nenhuma verba vinculada a este processo.
+                        </p>
+                    {% endif %}
+
+                    <!-- ---- DIÁRIAS ---- -->
+                    {% for diaria in diarias %}
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-primary bg-opacity-10 border-0 py-2 verba-group-header"
+                             data-bs-toggle="collapse"
+                             data-bs-target="#verba-diaria-{{ diaria.id }}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="badge verba-badge-diaria me-2">Diária</span>
+                                    <strong>{{ diaria.beneficiario.nome|default:"—" }}</strong>
+                                </div>
+                                <span class="text-success fw-bold small">R$ {{ diaria.valor_total|floatformat:2|default:"—" }}</span>
+                            </div>
+                            <div class="small text-muted mt-1">
+                                <i class="bi bi-calendar-range"></i>
+                                {{ diaria.data_saida|date:"d/m/Y"|default:"—" }}
+                                <i class="bi bi-arrow-right mx-1"></i>
+                                {{ diaria.data_retorno|date:"d/m/Y"|default:"—" }}
+                                &nbsp;·&nbsp;
+                                <i class="bi bi-geo-alt"></i>
+                                {{ diaria.cidade_origem }} → {{ diaria.cidade_destino }}
+                            </div>
+                        </div>
+                        <div class="collapse show" id="verba-diaria-{{ diaria.id }}">
+                            <div class="card-body pt-2 pb-2">
+                                <!-- Document list -->
+                                <ul class="list-group list-group-flush mb-2">
+                                    {% for doc in diaria.documentos.all %}
+                                        <li class="list-group-item py-1 px-2 d-flex align-items-center justify-content-between small">
+                                            <span>
+                                                <i class="bi bi-file-earmark text-secondary me-1"></i>
+                                                {{ doc.tipo }}
+                                            </span>
+                                            <a href="{{ doc.arquivo.url }}" target="_blank"
+                                               class="btn btn-sm btn-outline-primary py-0 px-2">
+                                                <i class="bi bi-eye"></i> Ver
+                                            </a>
+                                        </li>
+                                    {% empty %}
+                                        <li class="list-group-item py-1 px-2 text-muted small">
+                                            <i class="bi bi-info-circle me-1"></i> Nenhum documento anexado.
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                                <!-- Inline upload -->
+                                {% include "partials/_verba_doc_upload.html" with verba=diaria tipo_verba="diaria" btn_class="btn-primary" %}
+                                <a href="{% url 'gerenciar_diaria' pk=diaria.id %}" class="btn btn-sm btn-outline-secondary w-100 mt-2">
+                                    <i class="bi bi-gear"></i> Gerenciar esta Diária
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <!-- ---- REEMBOLSOS ---- -->
+                    {% for reembolso in reembolsos %}
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-success bg-opacity-10 border-0 py-2 verba-group-header"
+                             data-bs-toggle="collapse"
+                             data-bs-target="#verba-reembolso-{{ reembolso.id }}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="badge verba-badge-reembolso me-2">Reembolso Comb.</span>
+                                    <strong>{{ reembolso.beneficiario.nome|default:"—" }}</strong>
+                                </div>
+                                <span class="text-success fw-bold small">R$ {{ reembolso.valor_total|floatformat:2|default:"—" }}</span>
+                            </div>
+                            <div class="small text-muted mt-1">
+                                <i class="bi bi-calendar-range"></i>
+                                {{ reembolso.data_saida|date:"d/m/Y"|default:"—" }}
+                                <i class="bi bi-arrow-right mx-1"></i>
+                                {{ reembolso.data_retorno|date:"d/m/Y"|default:"—" }}
+                                &nbsp;·&nbsp;
+                                <i class="bi bi-speedometer2"></i>
+                                {{ reembolso.distancia_km }} km
+                            </div>
+                        </div>
+                        <div class="collapse show" id="verba-reembolso-{{ reembolso.id }}">
+                            <div class="card-body pt-2 pb-2">
+                                <ul class="list-group list-group-flush mb-2">
+                                    {% for doc in reembolso.documentos.all %}
+                                        <li class="list-group-item py-1 px-2 d-flex align-items-center justify-content-between small">
+                                            <span>
+                                                <i class="bi bi-file-earmark text-secondary me-1"></i>
+                                                {{ doc.tipo }}
+                                            </span>
+                                            <a href="{{ doc.arquivo.url }}" target="_blank"
+                                               class="btn btn-sm btn-outline-primary py-0 px-2">
+                                                <i class="bi bi-eye"></i> Ver
+                                            </a>
+                                        </li>
+                                    {% empty %}
+                                        <li class="list-group-item py-1 px-2 text-muted small">
+                                            <i class="bi bi-info-circle me-1"></i> Nenhum documento anexado.
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                                {% include "partials/_verba_doc_upload.html" with verba=reembolso tipo_verba="reembolso" btn_class="btn-success" %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <!-- ---- JETONS ---- -->
+                    {% for jeton in jetons %}
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-warning bg-opacity-10 border-0 py-2 verba-group-header"
+                             data-bs-toggle="collapse"
+                             data-bs-target="#verba-jeton-{{ jeton.id }}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="badge verba-badge-jeton me-2">Jeton</span>
+                                    <strong>{{ jeton.beneficiario.nome|default:"—" }}</strong>
+                                </div>
+                                <span class="text-success fw-bold small">R$ {{ jeton.valor_total|floatformat:2|default:"—" }}</span>
+                            </div>
+                            <div class="small text-muted mt-1">
+                                <i class="bi bi-calendar-event"></i>
+                                {{ jeton.reuniao|default:"—" }}
+                            </div>
+                        </div>
+                        <div class="collapse show" id="verba-jeton-{{ jeton.id }}">
+                            <div class="card-body pt-2 pb-2">
+                                <ul class="list-group list-group-flush mb-2">
+                                    {% for doc in jeton.documentos.all %}
+                                        <li class="list-group-item py-1 px-2 d-flex align-items-center justify-content-between small">
+                                            <span>
+                                                <i class="bi bi-file-earmark text-secondary me-1"></i>
+                                                {{ doc.tipo }}
+                                            </span>
+                                            <a href="{{ doc.arquivo.url }}" target="_blank"
+                                               class="btn btn-sm btn-outline-primary py-0 px-2">
+                                                <i class="bi bi-eye"></i> Ver
+                                            </a>
+                                        </li>
+                                    {% empty %}
+                                        <li class="list-group-item py-1 px-2 text-muted small">
+                                            <i class="bi bi-info-circle me-1"></i> Nenhum documento anexado.
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                                {% include "partials/_verba_doc_upload.html" with verba=jeton tipo_verba="jeton" btn_class="btn-warning" %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <!-- ---- AUXÍLIOS ---- -->
+                    {% for auxilio in auxilios %}
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-info bg-opacity-10 border-0 py-2 verba-group-header"
+                             data-bs-toggle="collapse"
+                             data-bs-target="#verba-auxilio-{{ auxilio.id }}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="badge verba-badge-auxilio me-2">Auxílio Repr.</span>
+                                    <strong>{{ auxilio.beneficiario.nome|default:"—" }}</strong>
+                                </div>
+                                <span class="text-success fw-bold small">R$ {{ auxilio.valor_total|floatformat:2|default:"—" }}</span>
+                            </div>
+                            <div class="small text-muted mt-1">
+                                <i class="bi bi-card-text"></i>
+                                {{ auxilio.objetivo|default:"—" }}
+                            </div>
+                        </div>
+                        <div class="collapse show" id="verba-auxilio-{{ auxilio.id }}">
+                            <div class="card-body pt-2 pb-2">
+                                <ul class="list-group list-group-flush mb-2">
+                                    {% for doc in auxilio.documentos.all %}
+                                        <li class="list-group-item py-1 px-2 d-flex align-items-center justify-content-between small">
+                                            <span>
+                                                <i class="bi bi-file-earmark text-secondary me-1"></i>
+                                                {{ doc.tipo }}
+                                            </span>
+                                            <a href="{{ doc.arquivo.url }}" target="_blank"
+                                               class="btn btn-sm btn-outline-primary py-0 px-2">
+                                                <i class="bi bi-eye"></i> Ver
+                                            </a>
+                                        </li>
+                                    {% empty %}
+                                        <li class="list-group-item py-1 px-2 text-muted small">
+                                            <i class="bi bi-info-circle me-1"></i> Nenhum documento anexado.
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                                {% include "partials/_verba_doc_upload.html" with verba=auxilio tipo_verba="auxilio" btn_class="btn-info" %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================================
+             COLUNA DIREITA: CAPA DO PROCESSO + PENDÊNCIAS
+             ===================================================== -->
+        <div class="col-lg-7">
+            <form method="post" enctype="multipart/form-data" id="processForm">
+                {% csrf_token %}
+                {{ pendencia_formset.management_form }}
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+
+                        <h5 class="text-secondary border-bottom pb-2 mb-3">
+                            <i class="bi bi-card-heading"></i> Capa do Processo
+                        </h5>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4 d-flex align-items-end">
+                                <div class="form-check mb-2">
+                                    {{ processo_form.extraorcamentario }}
+                                    <label class="form-check-label fw-bold text-danger">
+                                        <i class="bi bi-exclamation-circle"></i> Despesa Extraorçamentária
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Status Atual</label>
+                                {{ processo_form.status }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Ano do Exercício</label>
+                                {{ processo_form.ano_exercicio }}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Nota de Empenho</label>
+                                {{ processo_form.n_nota_empenho }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Credor</label>
+                                {{ processo_form.credor }}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Data Empenho</label>
+                                {{ processo_form.data_empenho }}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Tipo de Pagamento</label>
+                                {{ processo_form.tipo_pagamento }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Forma de Pagamento</label>
+                                {{ processo_form.forma_pagamento }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Conta Sacada</label>
+                                {{ processo_form.conta }}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Vencimento</label>
+                                {{ processo_form.data_vencimento }}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Data Pagto.</label>
+                                {{ processo_form.data_pagamento }}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-primary">Valor Bruto</label>
+                                {{ processo_form.valor_bruto }}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-success">Valor Líquido</label>
+                                {{ processo_form.valor_liquido }}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">N° Pagamento SISCAC</label>
+                                {{ processo_form.n_pagamento_siscac }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Código de Barras</label>
+                                {{ processo_form.codigo_barras }}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Detalhamento</label>
+                                {{ processo_form.detalhamento }}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Observação</label>
+                                {{ processo_form.observacao }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Tag</label>
+                                {{ processo_form.tag }}
+                            </div>
+                        </div>
+
+                        <!-- PENDÊNCIAS -->
+                        <h5 class="text-danger border-bottom border-danger border-opacity-25 pb-2 mt-5 mb-3">
+                            <i class="bi bi-exclamation-triangle"></i> Gestão de Pendências
+                        </h5>
+                        <div id="pendencia-list" class="bg-white p-3 rounded border border-danger border-opacity-25">
+                            {% for pen_f in pendencia_formset %}
+                                <div class="row g-2 align-items-center mb-2 border-bottom pb-2 pendencia-row">
+                                    {% for hidden in pen_f.hidden_fields %}{{ hidden }}{% endfor %}
+                                    <div class="col-md-4">{{ pen_f.tipo }}</div>
+                                    <div class="col-md-7">{{ pen_f.descricao }}</div>
+                                    <div class="col-md-1 text-center">
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-pendencia-btn">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        <div class="django-delete-checkbox d-none">{{ pen_f.DELETE }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <button type="button" id="add-pendencia-btn" class="btn btn-outline-danger btn-sm mt-2 fw-bold">
+                            <i class="bi bi-plus-circle"></i> Adicionar Pendência
+                        </button>
+
+                        <hr class="mt-5">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'home_page' %}" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-primary px-4 fw-bold">
+                                Salvar Alterações <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<!-- Empty pendência row (hidden, for JS cloning) -->
+<div id="empty-pendencia-form">
+    <div class="row g-2 align-items-center mb-2 border-bottom pb-2 pendencia-row bg-white">
+        <div class="col-md-4">
+            <label class="small text-muted fw-bold d-block mb-1">Tipo de Pendência</label>
+            {{ pendencia_formset.empty_form.tipo }}
+        </div>
+        <div class="col-md-7">
+            <label class="small text-muted fw-bold d-block mb-1">Descrição</label>
+            {{ pendencia_formset.empty_form.descricao }}
+        </div>
+        <div class="col-md-1 text-center d-flex flex-column justify-content-end" style="height: 52px;">
+            <button type="button" class="btn btn-sm btn-outline-danger remove-pendencia-btn" tabindex="-1">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ---- Pendências dinâmicas ----
+(function () {
+    const addBtn = document.getElementById('add-pendencia-btn');
+    const list   = document.getElementById('pendencia-list');
+    const template = document.getElementById('empty-pendencia-form');
+    const totalInput = document.querySelector('[name="pendencia-TOTAL_FORMS"]');
+
+    addBtn.addEventListener('click', function () {
+        const total = parseInt(totalInput.value, 10);
+        const newRow = template.children[0].cloneNode(true);
+        newRow.innerHTML = newRow.innerHTML.replaceAll('__prefix__', total);
+        list.appendChild(newRow);
+        totalInput.value = total + 1;
+        attachRemoveBtn(newRow.querySelector('.remove-pendencia-btn'));
+    });
+
+    function attachRemoveBtn(btn) {
+        btn.addEventListener('click', function () {
+            const row = btn.closest('.pendencia-row');
+            const delInput = row.querySelector('[id$="-DELETE"]');
+            if (delInput) {
+                delInput.checked = true;
+                row.style.display = 'none';
+            } else {
+                row.remove();
+            }
+        });
+    }
+
+    document.querySelectorAll('.remove-pendencia-btn').forEach(attachRemoveBtn);
+})();
+
+// ---- Upload de documentos por verba (AJAX) ----
+document.querySelectorAll('.btn-upload-verba-doc').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        const verbaId   = btn.dataset.verbaId;
+        const tipoVerba = btn.dataset.tipoVerba;
+        const container = btn.closest('.doc-upload-row, .card-body');
+        const tipoSel   = container.querySelector('.verba-doc-tipo[data-verba-id="' + verbaId + '"][data-tipo-verba="' + tipoVerba + '"]');
+        const fileInput = container.querySelector('.verba-doc-arquivo[data-verba-id="' + verbaId + '"][data-tipo-verba="' + tipoVerba + '"]');
+
+        if (!tipoSel || !tipoSel.value) {
+            alert('Selecione o tipo de documento antes de enviar.');
+            return;
+        }
+        if (!fileInput || !fileInput.files.length) {
+            alert('Selecione um arquivo antes de enviar.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('tipo', tipoSel.value);
+        formData.append('arquivo', fileInput.files[0]);
+        // Read CSRF token from the hidden input in the page form
+        const csrfInput = document.querySelector('[name="csrfmiddlewaretoken"]');
+        formData.append('csrfmiddlewaretoken', csrfInput ? csrfInput.value : '');
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+        fetch('/api/verba/' + tipoVerba + '/' + verbaId + '/add-documento/', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.ok) {
+                // Add the new document to the list without full reload
+                const ul = container.closest('.card-body').querySelector('ul.list-group');
+                const li = document.createElement('li');
+                li.className = 'list-group-item py-1 px-2 d-flex align-items-center justify-content-between small';
+                li.innerHTML = '<span><i class="bi bi-file-earmark text-secondary me-1"></i>' + data.tipo + '</span>'
+                             + '<a href="' + data.arquivo_url + '" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2"><i class="bi bi-eye"></i> Ver</a>';
+                // Remove "no documents" placeholder if present
+                const emptyLi = ul.querySelector('li.text-muted');
+                if (emptyLi) emptyLi.remove();
+                ul.appendChild(li);
+                tipoSel.value = '';
+                fileInput.value = '';
+            } else {
+                alert('Erro: ' + (data.error || 'Falha desconhecida.'));
+            }
+        })
+        .catch(function () {
+            alert('Erro de rede ao enviar o documento.');
+        })
+        .finally(function () {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-paperclip"></i>';
+        });
+    });
+});
+</script>
+</body>
+</html>
