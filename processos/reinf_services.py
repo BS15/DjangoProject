@@ -283,6 +283,9 @@ def gerar_lotes_reinf(month: int, year: int) -> dict:
     Generate EFD-Reinf XML batch files (lotes) for a given month/year.
 
     Business rules:
+    - Requires a DadosContribuinte record; uses the first record returned by
+      the database (the system is designed to hold a single configuration row).
+      Raises ValueError if no record is configured.
     - Only includes RetencaoImposto records whose competência matches the
       given month/year AND whose associated DocumentoFiscal is atestada.
     - INSS retentions (CodigosImposto.familia == 'INSS') → R-2010 events.
@@ -290,9 +293,18 @@ def gerar_lotes_reinf(month: int, year: int) -> dict:
     - One XML file is produced per unique provider CNPJ within each family.
 
     Returns:
-        dict mapping filename (str) → XML content (str).
-        e.g. {'R2010_CNPJ_12345678000195_202403.xml': '<Reinf ...>...</Reinf>'}
+        dict mapping filename (str) → XML content (str), including:
+        - 'R-1000_Cadastro_Empresa.xml'
+        - 'INSS_R2010/R2010_CNPJ_{cnpj}_{yyyymm}.xml' (one per INSS provider)
+        - 'INSS_R2010/R2099_Fechamento.xml'
+        - 'Federais_R4020/R4020_CNPJ_{cnpj}_{yyyymm}.xml' (one per Federal provider)
+        - 'Federais_R4020/R4099_Fechamento.xml'
     """
+    contribuinte = DadosContribuinte.objects.first()
+    if contribuinte is None:
+        raise ValueError("Dados do contribuinte não configurados.")
+
+    cnpj_contribuinte = contribuinte.cnpj
     competencia = _build_competencia_date(month, year)
 
     retencoes = (
@@ -312,21 +324,35 @@ def gerar_lotes_reinf(month: int, year: int) -> dict:
         emitente = ret.nota_fiscal.nome_emitente
         if not emitente or not emitente.cpf_cnpj:
             continue
-        cnpj = emitente.cpf_cnpj
+        provider_cnpj = emitente.cpf_cnpj
         if ret.codigo.familia == 'INSS':
-            inss_por_cnpj[cnpj].append(ret)
+            inss_por_cnpj[provider_cnpj].append(ret)
         elif ret.codigo.familia == 'FEDERAL':
-            federal_por_cnpj[cnpj].append(ret)
+            federal_por_cnpj[provider_cnpj].append(ret)
+
+    # True when at least one retention was processed for the given category;
+    # propagated to closing events (R-2099 / R-4099) to indicate movement.
+    has_inss_movement = bool(inss_por_cnpj)
+    has_federal_movement = bool(federal_por_cnpj)
 
     xmls: dict = {}
 
-    for cnpj, rets in inss_por_cnpj.items():
-        filename = f'R2010_CNPJ_{cnpj}_{year}{month:02d}.xml'
-        xmls[filename] = _build_r2010_xml(cnpj, rets, month, year)
+    xmls['R-1000_Cadastro_Empresa.xml'] = _build_r1000_xml(contribuinte)
 
-    for cnpj, rets in federal_por_cnpj.items():
-        filename = f'R4020_CNPJ_{cnpj}_{year}{month:02d}.xml'
-        xmls[filename] = _build_r4020_xml(cnpj, rets, month, year)
+    for provider_cnpj, rets in inss_por_cnpj.items():
+        filename = f'INSS_R2010/R2010_CNPJ_{provider_cnpj}_{year}{month:02d}.xml'
+        xmls[filename] = _build_r2010_xml(provider_cnpj, rets, month, year)
+
+    for provider_cnpj, rets in federal_por_cnpj.items():
+        filename = f'Federais_R4020/R4020_CNPJ_{provider_cnpj}_{year}{month:02d}.xml'
+        xmls[filename] = _build_r4020_xml(provider_cnpj, rets, month, year)
+
+    xmls['INSS_R2010/R2099_Fechamento.xml'] = _build_r2099_xml(
+        cnpj_contribuinte, month, year, has_inss_movement,
+    )
+    xmls['Federais_R4020/R4099_Fechamento.xml'] = _build_r4099_xml(
+        cnpj_contribuinte, month, year, has_federal_movement,
+    )
 
     return xmls
 

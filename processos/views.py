@@ -3175,13 +3175,10 @@ def gerar_lote_reinf_view(request):
         mes = today.month
         ano = today.year
 
-    xmls = gerar_lotes_reinf(mes, ano)
-
-    if not xmls:
-        return HttpResponse(
-            'Nenhuma retenção atestada encontrada para o período informado.',
-            status=404,
-        )
+    try:
+        xmls = gerar_lotes_reinf(mes, ano)
+    except ValueError as exc:
+        return HttpResponse(str(exc), status=404)
 
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
