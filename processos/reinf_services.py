@@ -288,8 +288,8 @@ def gerar_lotes_reinf(month: int, year: int) -> dict:
       Raises ValueError if no record is configured.
     - Only includes RetencaoImposto records whose competência matches the
       given month/year AND whose associated DocumentoFiscal is atestada.
-    - INSS retentions (CodigosImposto.familia == 'INSS') → R-2010 events.
-    - Federal retentions (CodigosImposto.familia == 'FEDERAL') → R-4020 events.
+    - INSS retentions (CodigosImposto.serie_reinf == 'S2000') → R-2010 events.
+    - Federal retentions (CodigosImposto.serie_reinf == 'S4000') → R-4020 events.
     - One XML file is produced per unique provider CNPJ within each family.
 
     Returns:
@@ -325,9 +325,9 @@ def gerar_lotes_reinf(month: int, year: int) -> dict:
         if not emitente or not emitente.cpf_cnpj:
             continue
         provider_cnpj = emitente.cpf_cnpj
-        if ret.codigo.familia == 'INSS':
+        if ret.codigo.serie_reinf == 'S2000':
             inss_por_cnpj[provider_cnpj].append(ret)
-        elif ret.codigo.familia == 'FEDERAL':
+        elif ret.codigo.serie_reinf == 'S4000':
             federal_por_cnpj[provider_cnpj].append(ret)
 
     # True when at least one retention was processed for the given category;
