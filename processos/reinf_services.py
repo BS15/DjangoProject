@@ -25,9 +25,12 @@ def _build_competencia_date(month: int, year: int) -> date:
     return date(year, month, 1)
 
 
-def get_serie_2000_data(month: int, year: int) -> list:
+def get_serie_2000_data(month: int | None, year: int | None) -> list:
     """
     Return aggregated data for Série 2000 (INSS / R-2010).
+
+    When *month* and *year* are both ``None`` all entries are returned
+    regardless of competência (clear-filter / show-all mode).
 
     Structure returned:
     [
@@ -48,11 +51,13 @@ def get_serie_2000_data(month: int, year: int) -> list:
       ...
     ]
     """
-    competencia = _build_competencia_date(month, year)
+    qs = RetencaoImposto.objects.filter(codigo__serie_reinf='S2000')
+    if month is not None and year is not None:
+        competencia = _build_competencia_date(month, year)
+        qs = qs.filter(competencia=competencia)
 
     retencoes = (
-        RetencaoImposto.objects
-        .filter(codigo__serie_reinf='S2000', competencia=competencia)
+        qs
         .select_related(
             'nota_fiscal',
             'nota_fiscal__nome_emitente',
@@ -98,9 +103,12 @@ def get_serie_2000_data(month: int, year: int) -> list:
     return result
 
 
-def get_serie_4000_data(month: int, year: int) -> list:
+def get_serie_4000_data(month: int | None, year: int | None) -> list:
     """
     Return aggregated data for Série 4000 (IRRF / CSRF / R-4010 / R-4020).
+
+    When *month* and *year* are both ``None`` all entries are returned
+    regardless of competência (clear-filter / show-all mode).
 
     Structure returned:
     [
@@ -121,11 +129,13 @@ def get_serie_4000_data(month: int, year: int) -> list:
       ...
     ]
     """
-    competencia = _build_competencia_date(month, year)
+    qs = RetencaoImposto.objects.filter(codigo__serie_reinf='S4000')
+    if month is not None and year is not None:
+        competencia = _build_competencia_date(month, year)
+        qs = qs.filter(competencia=competencia)
 
     retencoes = (
-        RetencaoImposto.objects
-        .filter(codigo__serie_reinf='S4000', competencia=competencia)
+        qs
         .select_related(
             'nota_fiscal',
             'nota_fiscal__nome_emitente',

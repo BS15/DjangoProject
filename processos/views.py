@@ -3111,25 +3111,36 @@ def painel_reinf_view(request):
 
     Aceita os parâmetros GET `mes` (1-12) e `ano` (YYYY) para filtrar
     pela competência.  Quando omitidos, usa o mês/ano corrente.
+    O parâmetro `todos=1` ignora o filtro de competência e retorna
+    todos os lançamentos de todas as competências.
     """
     from .reinf_services import get_serie_2000_data, get_serie_4000_data
 
     today = date.today()
-    try:
-        mes = int(request.GET.get('mes', today.month))
-        ano = int(request.GET.get('ano', today.year))
-        if not (1 <= mes <= 12):
-            raise ValueError
-    except (ValueError, TypeError):
-        mes = today.month
-        ano = today.year
+
+    # ?todos=1  →  show every entry regardless of competência
+    todos = request.GET.get('todos') == '1'
+
+    if todos:
+        mes = None
+        ano = None
+    else:
+        try:
+            mes = int(request.GET.get('mes', today.month))
+            ano = int(request.GET.get('ano', today.year))
+            if not (1 <= mes <= 12):
+                raise ValueError
+        except (ValueError, TypeError):
+            mes = today.month
+            ano = today.year
 
     serie_2000 = get_serie_2000_data(mes, ano)
     serie_4000 = get_serie_4000_data(mes, ano)
 
     context = {
-        'mes': mes,
-        'ano': ano,
+        'mes': mes if mes is not None else today.month,
+        'ano': ano if ano is not None else today.year,
+        'todos': todos,
         'serie_2000': serie_2000,
         'serie_4000': serie_4000,
         'meses': range(1, 13),
