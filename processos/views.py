@@ -835,6 +835,22 @@ def add_credor_view(request):
     return render(request, 'add_credor.html', {'form': form})
 
 
+def edit_credor_view(request, pk):
+    credor = get_object_or_404(Credor, pk=pk)
+    if request.method == 'POST':
+        form = CredorForm(request.POST, instance=credor)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Credor atualizado com sucesso!")
+            return redirect('credores_list')
+        else:
+            messages.error(request, "Erro ao atualizar. Verifique os campos.")
+    else:
+        form = CredorForm(instance=credor)
+
+    return render(request, 'edit_credor.html', {'form': form, 'credor': credor})
+
+
 def credores_list_view(request):
     queryset = Credor.objects.all().order_by('nome')
     meu_filtro = CredorFilter(request.GET, queryset=queryset)

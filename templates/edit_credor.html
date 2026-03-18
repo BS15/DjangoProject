@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adicionar Credor - System X</title>
+    <title>Editar Credor - System X</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
@@ -13,9 +13,20 @@
 
 <div class="container mt-4 mb-5" style="max-width: 900px;">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0"><i class="bi bi-person-plus"></i> Novo Credor</h4>
-        <a href="/" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+        <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Editar Credor: {{ credor.nome }}</h4>
+        <a href="{% url 'credores_list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
     </div>
+
+    {% if messages %}
+    <div class="mb-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <div class="card shadow-sm border-0">
         <div class="card-body p-4">
@@ -85,9 +96,9 @@
                 <hr class="mt-4 mb-4">
 
                 <div class="d-flex justify-content-end gap-2">
-                    <a href="/" class="btn btn-secondary px-4">Cancelar</a>
-                    <button type="submit" class="btn btn-success px-4 fw-bold">
-                        <i class="bi bi-check-lg"></i> Salvar Credor
+                    <a href="{% url 'credores_list' %}" class="btn btn-secondary px-4">Cancelar</a>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold">
+                        <i class="bi bi-check-lg"></i> Salvar Alterações
                     </button>
                 </div>
             </form>
@@ -95,31 +106,24 @@
     </div>
 </div>
 
-</body>
-</html>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
-    // 1. Máscara Dinâmica para CPF e CNPJ
+    // Máscara Dinâmica para CPF e CNPJ
     const inputCpfCnpj = document.querySelector('[name="cpf_cnpj"]');
     if (inputCpfCnpj) {
-        // Limita o tamanho máximo para 18 caracteres (tamanho do CNPJ com pontuação)
         inputCpfCnpj.setAttribute('maxlength', '18');
 
         inputCpfCnpj.addEventListener('input', function(e) {
             let valor = e.target.value;
-
-            // Tira tudo que não for número
             valor = valor.replace(/\D/g, "");
 
             if (valor.length <= 11) {
-                // Formata como CPF: 000.000.000-00
                 valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
                 valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
                 valor = valor.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
             } else {
-                // Formata como CNPJ: 00.000.000/0000-00
                 valor = valor.replace(/^(\d{2})(\d)/, "$1.$2");
                 valor = valor.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
                 valor = valor.replace(/\.(\d{3})(\d)/, ".$1/$2");
@@ -129,19 +133,21 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 2. Máscara para Telefone
+    // Máscara para Telefone
     const inputTelefone = document.querySelector('[name="telefone"]');
     if (inputTelefone) {
         inputTelefone.setAttribute('maxlength', '15');
 
         inputTelefone.addEventListener('input', function(e) {
             let valor = e.target.value;
-            valor = valor.replace(/\D/g, ""); // Tira letras
-            valor = valor.replace(/^(\d{2})(\d)/g, "($1) $2"); // Coloca parênteses no DDD
-            valor = valor.replace(/(\d)(\d{4})$/, "$1-$2");    // Coloca o traço antes dos últimos 4 dígitos
+            valor = valor.replace(/\D/g, "");
+            valor = valor.replace(/^(\d{2})(\d)/g, "($1) $2");
+            valor = valor.replace(/(\d)(\d{4})$/, "$1-$2");
             e.target.value = valor;
         });
     }
 
 });
 </script>
+</body>
+</html>

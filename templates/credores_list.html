@@ -69,9 +69,9 @@
                             <td>{{ credor.get_tipo_display|default:"---" }}</td>
                             <td>{{ credor.telefone|default:"---" }}</td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-outline-primary" title="Editar" disabled>
+                                <a href="{% url 'edit_credor' credor.pk %}" class="btn btn-sm btn-outline-primary" title="Editar">
                                     <i class="bi bi-pencil"></i>
-                                </button>
+                                </a>
                             </td>
                         </tr>
                         {% empty %}
