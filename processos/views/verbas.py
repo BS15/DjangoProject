@@ -16,6 +16,8 @@ from ..models import (
 from ..filters import DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, DiariasAutorizacaoFilter
 from ..utils import gerar_pdf_pcd
 
+_EXTENSOES_DOCUMENTO_PERMITIDAS = {'.pdf', '.jpg', '.jpeg', '.png'}
+
 
 def diarias_list_view(request):
     queryset = Diaria.objects.select_related('beneficiario', 'status', 'processo').all().order_by('-id')
@@ -275,9 +277,8 @@ def api_add_documento_verba(request, tipo_verba, pk):
     if not arquivo or not tipo_id:
         return JsonResponse({'ok': False, 'error': 'Arquivo e tipo de documento são obrigatórios.'}, status=400)
 
-    EXTENSOES_PERMITIDAS = {'.pdf', '.jpg', '.jpeg', '.png'}
     _, ext = os.path.splitext(arquivo.name.lower())
-    if ext not in EXTENSOES_PERMITIDAS:
+    if ext not in _EXTENSOES_DOCUMENTO_PERMITIDAS:
         return JsonResponse({'ok': False, 'error': 'Formato não permitido. Use PDF, JPG ou PNG.'}, status=400)
 
     try:
@@ -297,9 +298,8 @@ def gerenciar_diaria_view(request, pk):
         arquivo = request.FILES.get('arquivo')
         tipo_id = request.POST.get('tipo')
         if arquivo and tipo_id:
-            EXTENSOES_PERMITIDAS = {'.pdf', '.jpg', '.jpeg', '.png'}
             _, ext = os.path.splitext(arquivo.name.lower())
-            if ext not in EXTENSOES_PERMITIDAS:
+            if ext not in _EXTENSOES_DOCUMENTO_PERMITIDAS:
                 messages.error(request, 'Formato de arquivo não permitido. Use PDF, JPG ou PNG.')
                 return redirect('gerenciar_diaria', pk=diaria.id)
             try:
@@ -347,6 +347,132 @@ def alternar_autorizacao_diaria(request, pk):
             messages.warning(request, f'Autorização da Diária #{diaria.numero_sequencial} foi revogada.')
 
     return redirect('painel_autorizacao_diarias')
+
+
+def edit_reembolso_view(request, pk):
+    reembolso = get_object_or_404(ReembolsoCombustivel, id=pk)
+    documentos = reembolso.documentos.select_related('tipo').all()
+    tipos_doc = TiposDeDocumento.objects.filter(is_active=True)
+
+    if request.method == 'POST':
+        if request.POST.get('upload_doc'):
+            arquivo = request.FILES.get('arquivo')
+            tipo_id = request.POST.get('tipo')
+            if arquivo and tipo_id:
+                _, ext = os.path.splitext(arquivo.name.lower())
+                if ext not in _EXTENSOES_DOCUMENTO_PERMITIDAS:
+                    messages.error(request, 'Formato de arquivo não permitido. Use PDF, JPG ou PNG.')
+                else:
+                    try:
+                        DocumentoReembolso.objects.create(reembolso=reembolso, arquivo=arquivo, tipo_id=tipo_id)
+                        messages.success(request, 'Documento anexado com sucesso!')
+                    except Exception:
+                        messages.error(request, 'Erro ao salvar o documento. Tente novamente.')
+            else:
+                messages.error(request, 'Selecione um arquivo e um tipo de documento.')
+            return redirect('edit_reembolso', pk=reembolso.id)
+        else:
+            form = ReembolsoForm(request.POST, instance=reembolso)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Reembolso atualizado com sucesso!')
+                return redirect('edit_reembolso', pk=reembolso.id)
+            else:
+                messages.error(request, 'Erro ao salvar. Verifique os campos.')
+    else:
+        form = ReembolsoForm(instance=reembolso)
+
+    context = {
+        'reembolso': reembolso,
+        'form': form,
+        'documentos': documentos,
+        'tipos_documento': tipos_doc,
+    }
+    return render(request, 'verbas/edit_reembolso.html', context)
+
+
+def edit_jeton_view(request, pk):
+    jeton = get_object_or_404(Jeton, id=pk)
+    documentos = jeton.documentos.select_related('tipo').all()
+    tipos_doc = TiposDeDocumento.objects.filter(is_active=True)
+
+    if request.method == 'POST':
+        if request.POST.get('upload_doc'):
+            arquivo = request.FILES.get('arquivo')
+            tipo_id = request.POST.get('tipo')
+            if arquivo and tipo_id:
+                _, ext = os.path.splitext(arquivo.name.lower())
+                if ext not in _EXTENSOES_DOCUMENTO_PERMITIDAS:
+                    messages.error(request, 'Formato de arquivo não permitido. Use PDF, JPG ou PNG.')
+                else:
+                    try:
+                        DocumentoJeton.objects.create(jeton=jeton, arquivo=arquivo, tipo_id=tipo_id)
+                        messages.success(request, 'Documento anexado com sucesso!')
+                    except Exception:
+                        messages.error(request, 'Erro ao salvar o documento. Tente novamente.')
+            else:
+                messages.error(request, 'Selecione um arquivo e um tipo de documento.')
+            return redirect('edit_jeton', pk=jeton.id)
+        else:
+            form = JetonForm(request.POST, instance=jeton)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Jeton atualizado com sucesso!')
+                return redirect('edit_jeton', pk=jeton.id)
+            else:
+                messages.error(request, 'Erro ao salvar. Verifique os campos.')
+    else:
+        form = JetonForm(instance=jeton)
+
+    context = {
+        'jeton': jeton,
+        'form': form,
+        'documentos': documentos,
+        'tipos_documento': tipos_doc,
+    }
+    return render(request, 'verbas/edit_jeton.html', context)
+
+
+def edit_auxilio_view(request, pk):
+    auxilio = get_object_or_404(AuxilioRepresentacao, id=pk)
+    documentos = auxilio.documentos.select_related('tipo').all()
+    tipos_doc = TiposDeDocumento.objects.filter(is_active=True)
+
+    if request.method == 'POST':
+        if request.POST.get('upload_doc'):
+            arquivo = request.FILES.get('arquivo')
+            tipo_id = request.POST.get('tipo')
+            if arquivo and tipo_id:
+                _, ext = os.path.splitext(arquivo.name.lower())
+                if ext not in _EXTENSOES_DOCUMENTO_PERMITIDAS:
+                    messages.error(request, 'Formato de arquivo não permitido. Use PDF, JPG ou PNG.')
+                else:
+                    try:
+                        DocumentoAuxilio.objects.create(auxilio=auxilio, arquivo=arquivo, tipo_id=tipo_id)
+                        messages.success(request, 'Documento anexado com sucesso!')
+                    except Exception:
+                        messages.error(request, 'Erro ao salvar o documento. Tente novamente.')
+            else:
+                messages.error(request, 'Selecione um arquivo e um tipo de documento.')
+            return redirect('edit_auxilio', pk=auxilio.id)
+        else:
+            form = AuxilioForm(request.POST, instance=auxilio)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Auxílio atualizado com sucesso!')
+                return redirect('edit_auxilio', pk=auxilio.id)
+            else:
+                messages.error(request, 'Erro ao salvar. Verifique os campos.')
+    else:
+        form = AuxilioForm(instance=auxilio)
+
+    context = {
+        'auxilio': auxilio,
+        'form': form,
+        'documentos': documentos,
+        'tipos_documento': tipos_doc,
+    }
+    return render(request, 'verbas/edit_auxilio.html', context)
 
 
 def api_valor_unitario_diaria(request, beneficiario_id):
