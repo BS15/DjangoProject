@@ -305,8 +305,31 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+// Sortable headers: current sort state injected from Django context
+const sortOrdemAtual = "{{ ordem }}";
+const sortDirecaoAtual = "{{ direcao }}";
+
 document.addEventListener('DOMContentLoaded', function() {
-    
+
+    // ----------------------------------------------------------------------
+    // 0. LÓGICA DOS CABEÇALHOS ORDENÁVEIS
+    // ----------------------------------------------------------------------
+    document.querySelectorAll('.sort-header').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const campo = this.getAttribute('data-campo');
+            const params = new URLSearchParams(window.location.search);
+            // Toggle direction if same field, otherwise start ascending
+            if (params.get('ordem') === campo) {
+                params.set('direcao', params.get('direcao') === 'asc' ? 'desc' : 'asc');
+            } else {
+                params.set('ordem', campo);
+                params.set('direcao', 'asc');
+            }
+            window.location.href = '?' + params.toString();
+        });
+    });
+
     // ----------------------------------------------------------------------
     // 1. LÓGICA DO CHECKBOX "SELECIONAR TODOS"
     // ----------------------------------------------------------------------
