@@ -161,7 +161,7 @@ class Processo(models.Model):
     forma_pagamento = models.ForeignKey('FormasDePagamento', on_delete=models.PROTECT, blank=True, null=True)
     tipo_pagamento = models.ForeignKey('TiposDePagamento', on_delete=models.PROTECT, blank=True, null=True)
     observacao = models.CharField(max_length=200, blank=True, null=True)
-    conta = models.ForeignKey('ContasBancarias', on_delete=models.PROTECT, blank=True, null=True, verbose_name="Conta Sacada")
+    conta = models.ForeignKey('ContasBancarias', on_delete=models.SET_NULL, null=True, blank=True, related_name='processos_sacados', verbose_name="Conta Sacada")
 
     # Informações administrativas
     status = models.ForeignKey('StatusChoicesProcesso', on_delete=models.PROTECT, blank=True, null=True)
