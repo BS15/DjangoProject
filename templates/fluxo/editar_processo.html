@@ -213,6 +213,48 @@
                                     <label class="form-label fw-bold text-dark"><i class="bi bi-upc-scan"></i> Código de Barras / Linha Digitável</label>
                                     {{ processo_form.codigo_barras }}
                                 </div>
+                                <!-- INDICADORES DE BOLETOS -->
+                                <div class="col-md-12 mt-2 pt-3 border-top">
+                                    <div class="d-flex gap-3 flex-wrap mb-2">
+                                        <div class="d-flex align-items-center gap-2 px-3 py-2 bg-white rounded border shadow-sm">
+                                            <i class="bi bi-files text-primary fs-5"></i>
+                                            <div>
+                                                <div class="fw-bold fs-5 text-primary">{{ boleto_docs_count }}</div>
+                                                <div class="text-muted small">Doc(s) BOLETO BANCÁRIO</div>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2 px-3 py-2 bg-white rounded border shadow-sm">
+                                            <i class="bi bi-upc-scan text-success fs-5"></i>
+                                            <div>
+                                                <div class="fw-bold fs-5 text-success">{{ boleto_barcodes_count }} / {{ boleto_docs_count }}</div>
+                                                <div class="text-muted small">Linha(s) digitável(is) extraída(s)</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% if boleto_barcodes_list %}
+                                    <div>
+                                        <a class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" href="#collapseBarcodeList" role="button" aria-expanded="false" aria-controls="collapseBarcodeList">
+                                            <i class="bi bi-list-ul"></i> Ver linhas digitáveis ({{ boleto_barcodes_count }})
+                                        </a>
+                                        <div class="collapse mt-2" id="collapseBarcodeList">
+                                            <ul class="list-group">
+                                                {% for code in boleto_barcodes_list %}
+                                                <li class="list-group-item d-flex justify-content-between align-items-center small font-monospace py-2">
+                                                    <span>{{ code }}</span>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary flex-shrink-0 ms-2"
+                                                            onclick="copiarCodigoBarras(this)"
+                                                            data-code="{{ code }}" title="Copiar">
+                                                        <i class="bi bi-clipboard"></i>
+                                                    </button>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    {% elif boleto_docs_count > 0 %}
+                                    <p class="text-muted small mb-0"><i class="bi bi-info-circle"></i> Nenhuma linha digitável extraída ainda. Salve o processo para extrair automaticamente.</p>
+                                    {% endif %}
+                                </div>
                             </div>
 
                             <div id="bloco_transferencia" class="row g-3 mb-3 bg-light p-3 border rounded mt-2" style="display: none;">
@@ -474,6 +516,16 @@
 <script>
 let dadosTemporariosIA = null;
 let documentoAtualIaFileInput = null; 
+
+function copiarCodigoBarras(btn) {
+    const code = btn.dataset.code;
+    if (code) {
+        navigator.clipboard.writeText(code).then(function() {
+            btn.innerHTML = '<i class="bi bi-check2"></i>';
+            setTimeout(function() { btn.innerHTML = '<i class="bi bi-clipboard"></i>'; }, 2000);
+        });
+    }
+}
 
 function loadPdfIntoViewer(source) {
     const viewer = document.getElementById('pdf-viewer');
