@@ -830,3 +830,16 @@ class Contingencia(models.Model):
         verbose_name = "Contingência"
         verbose_name_plural = "Contingências"
         ordering = ['-data_solicitacao']
+
+
+class DadosContribuinte(models.Model):
+    cnpj = models.CharField(max_length=14)
+    razao_social = models.CharField(max_length=255)
+    tipo_inscricao = models.IntegerField(default=1)
+
+    def __str__(self):
+        return f"{self.razao_social} ({self.cnpj})"
+
+    class Meta:
+        verbose_name = "Dados do Contribuinte"
+        verbose_name_plural = "Dados do Contribuinte"
