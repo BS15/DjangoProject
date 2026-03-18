@@ -495,6 +495,7 @@ from django.test import TestCase
 from .models import (
     CodigosImposto,
     Credor,
+    DadosContribuinte,
     DocumentoFiscal,
     Processo,
 )
@@ -652,6 +653,13 @@ class GerarLotesReinfHelpersTest(TestCase):
 class GerarLotesReinfIntegrationTest(TestCase):
     """Integration tests for gerar_lotes_reinf."""
 
+    def setUp(self):
+        self.contribuinte = DadosContribuinte.objects.create(
+            cnpj='00000000000191',
+            razao_social='Empresa Contribuinte',
+            tipo_inscricao=1,
+        )
+
     def _setup_data(self, familia, cnpj, atestada=True, competencia_month=3, competencia_year=2024):
         """Helper to create a full chain: Credor→Processo→DocumentoFiscal→RetencaoImposto."""
         from .models import RetencaoImposto
@@ -683,25 +691,36 @@ class GerarLotesReinfIntegrationTest(TestCase):
         ret.save()
         return ret
 
-    def test_returns_empty_dict_when_no_records(self):
-        result = gerar_lotes_reinf(3, 2024)
-        self.assertEqual(result, {})
+    def test_raises_value_error_when_no_contribuinte(self):
+        self.contribuinte.delete()
+        with self.assertRaises(ValueError):
+            gerar_lotes_reinf(3, 2024)
 
-    def test_returns_empty_dict_when_not_atestada(self):
+    def test_always_includes_r1000_and_closers(self):
+        result = gerar_lotes_reinf(3, 2024)
+        self.assertIn('R-1000_Cadastro_Empresa.xml', result)
+        self.assertIn('INSS_R2010/R2099_Fechamento.xml', result)
+        self.assertIn('Federais_R4020/R4099_Fechamento.xml', result)
+
+    def test_returns_only_r1000_and_closers_when_no_records(self):
+        result = gerar_lotes_reinf(3, 2024)
+        self.assertEqual(len(result), 3)
+
+    def test_returns_only_r1000_and_closers_when_not_atestada(self):
         self._setup_data('INSS', '11111111000101', atestada=False)
         result = gerar_lotes_reinf(3, 2024)
-        self.assertEqual(result, {})
+        self.assertEqual(len(result), 3)
 
     def test_returns_r2010_for_inss(self):
         self._setup_data('INSS', '11111111000101')
         result = gerar_lotes_reinf(3, 2024)
-        r2010_keys = [k for k in result if k.startswith('R2010_')]
+        r2010_keys = [k for k in result if k.startswith('INSS_R2010/R2010_')]
         self.assertEqual(len(r2010_keys), 1)
 
     def test_returns_r4020_for_federal(self):
         self._setup_data('FEDERAL', '22222222000101')
         result = gerar_lotes_reinf(3, 2024)
-        r4020_keys = [k for k in result if k.startswith('R4020_')]
+        r4020_keys = [k for k in result if k.startswith('Federais_R4020/R4020_')]
         self.assertEqual(len(r4020_keys), 1)
 
     def test_groups_inss_by_cnpj(self):
@@ -736,28 +755,29 @@ class GerarLotesReinfIntegrationTest(TestCase):
             ret.save()
 
         result = gerar_lotes_reinf(3, 2024)
-        r2010_keys = [k for k in result if k.startswith('R2010_')]
+        r2010_keys = [k for k in result if k.startswith('INSS_R2010/R2010_')]
         self.assertEqual(len(r2010_keys), 1)
 
     def test_two_cnpjs_produce_two_inss_files(self):
         self._setup_data('INSS', '44444444000101')
         self._setup_data('INSS', '55555555000101')
         result = gerar_lotes_reinf(3, 2024)
-        r2010_keys = [k for k in result if k.startswith('R2010_')]
+        r2010_keys = [k for k in result if k.startswith('INSS_R2010/R2010_')]
         self.assertEqual(len(r2010_keys), 2)
 
     def test_filename_contains_cnpj_and_period(self):
         cnpj = '66666666000101'
         self._setup_data('INSS', cnpj)
         result = gerar_lotes_reinf(3, 2024)
-        expected_filename = f'R2010_CNPJ_{cnpj}_202403.xml'
+        expected_filename = f'INSS_R2010/R2010_CNPJ_{cnpj}_202403.xml'
         self.assertIn(expected_filename, result)
 
     def test_ignores_wrong_competencia(self):
         """Records from a different period should not appear."""
         self._setup_data('INSS', '77777777000101', competencia_month=5, competencia_year=2024)
         result = gerar_lotes_reinf(3, 2024)
-        self.assertEqual(result, {})
+        r2010_keys = [k for k in result if k.startswith('INSS_R2010/R2010_')]
+        self.assertEqual(len(r2010_keys), 0)
 
     def test_xml_content_is_valid_xml(self):
         import xml.etree.ElementTree as ET
@@ -776,6 +796,11 @@ class GerarLoteReinfViewTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='testuser', password='testpass')
         self.client.login(username='testuser', password='testpass')
+        self.contribuinte = DadosContribuinte.objects.create(
+            cnpj='00000000000191',
+            razao_social='Empresa Contribuinte',
+            tipo_inscricao=1,
+        )
 
     def _setup_inss_record(self, cnpj='99999999000101', month=3, year=2024):
         from .models import RetencaoImposto
@@ -805,7 +830,8 @@ class GerarLoteReinfViewTest(TestCase):
         )
         ret.save()
 
-    def test_returns_404_when_no_records(self):
+    def test_returns_404_when_no_contribuinte(self):
+        self.contribuinte.delete()
         response = self.client.get('/reinf/gerar-lotes/?mes=3&ano=2024', secure=True)
         self.assertEqual(response.status_code, 404)
 
