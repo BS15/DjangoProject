@@ -2140,7 +2140,6 @@ def _ensure_fake_lookup_tables():
         CodigosImposto.objects.create(
             codigo="1708",
             aliquota=Decimal("1.50"),
-            familia="FEDERAL",
             regra_competencia="pagamento",
             serie_reinf="S4000",
         )

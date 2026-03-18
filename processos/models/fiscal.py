@@ -19,17 +19,6 @@ class CodigosImposto(models.Model):
     # This replaces your hard-coded choices
     codigo = models.CharField(max_length=10, unique=True, null=True, blank=True)
 
-    FAMILIA_IMPOSTO_CHOICES = [
-        ('INSS', 'Previdenciário (Série 2000)'),
-        ('FEDERAL', 'Federal - IR/CSRF (Série 4000)'),
-    ]
-    familia = models.CharField(
-        max_length=10,
-        choices=FAMILIA_IMPOSTO_CHOICES,
-        default='FEDERAL',
-        blank=True,
-    )
-
     REGRA_COMPETENCIA_CHOICES = [
         ('emissao', 'Pela Data de Emissão da NF'),
         ('pagamento', 'Pela Data de Pagamento'),

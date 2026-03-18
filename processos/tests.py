@@ -512,7 +512,6 @@ class GerarLotesReinfHelpersTest(TestCase):
     def _make_codigo_inss(self):
         return CodigosImposto.objects.create(
             codigo='1490',
-            familia='INSS',
             regra_competencia='emissao',
             serie_reinf='S2000',
         )
@@ -520,7 +519,6 @@ class GerarLotesReinfHelpersTest(TestCase):
     def _make_codigo_federal(self, natureza='15001'):
         return CodigosImposto.objects.create(
             codigo='6190',
-            familia='FEDERAL',
             regra_competencia='emissao',
             serie_reinf='S4000',
             natureza_rendimento=natureza,
@@ -666,7 +664,6 @@ class GerarLotesReinfIntegrationTest(TestCase):
 
         codigo = CodigosImposto.objects.create(
             codigo=f'TEST_{familia}_{cnpj[:4]}',
-            familia=familia,
             regra_competencia='emissao',
             serie_reinf='S2000' if familia == 'INSS' else 'S4000',
             natureza_rendimento='15001' if familia == 'FEDERAL' else None,
@@ -730,7 +727,6 @@ class GerarLotesReinfIntegrationTest(TestCase):
         cnpj = '33333333000101'
         codigo = CodigosImposto.objects.create(
             codigo='INSS_GRP',
-            familia='INSS',
             regra_competencia='emissao',
             serie_reinf='S2000',
         )
@@ -807,7 +803,6 @@ class GerarLoteReinfViewTest(TestCase):
 
         codigo = CodigosImposto.objects.create(
             codigo='VIEW_INSS',
-            familia='INSS',
             regra_competencia='emissao',
             serie_reinf='S2000',
         )
