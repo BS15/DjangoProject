@@ -183,18 +183,21 @@
                                 <tr>
                                     {% if pode_interagir %}
                                     <td class="text-center">
-                                        {% if processo.status.status_choice == 'A PAGAR - PENDENTE AUTORIZAÇÃO' %}
-                                            <input type="checkbox" name="processos_selecionados" value="{{ processo.id }}" class="form-check-input check-item">
-                                        {% else %}
-                                            <input type="checkbox" class="form-check-input" disabled
-                                                   title="Não pode ser enviado para autorização: status atual é '{{ processo.status }}'">
-                                        {% endif %}
+                                        <input type="checkbox" name="processos_selecionados" value="{{ processo.id }}" class="form-check-input check-item">
                                     </td>
                                     {% endif %}
                                     <td class="fw-bold text-muted">#{{ processo.id }}</td>
                                     <td class="fw-medium text-primary">{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
                                     <td class="fw-medium">{{ processo.credor|truncatechars:35 }}</td>
-                                    <td><span class="badge bg-primary px-2 py-1">{{ processo.status|default:"-" }}</span></td>
+                                    <td>
+                                        <span class="badge bg-primary px-2 py-1">{{ processo.status|default:"-" }}</span>
+                                        {% if processo.has_retencoes %}
+                                            <span class="badge bg-warning text-dark px-2 py-1 ms-1" title="Possui retenções de impostos">Retenções</span>
+                                        {% endif %}
+                                        {% if processo.has_pendencias %}
+                                            <span class="badge bg-danger px-2 py-1 ms-1" title="Possui pendências">Pendências</span>
+                                        {% endif %}
+                                    </td>
                                     <td>{{ processo.tipo_pagamento|default:"-" }}</td>
                                     <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
                                     <td>

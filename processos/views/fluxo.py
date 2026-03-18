@@ -489,6 +489,11 @@ def contas_a_pagar(request):
             except (ValueError, TypeError):
                 pass
 
+    lista_processos = lista_processos.annotate(
+        has_pendencias=Exists(Pendencia.objects.filter(processo=OuterRef('pk'))),
+        has_retencoes=Exists(RetencaoImposto.objects.filter(nota_fiscal__processo=OuterRef('pk'))),
+    )
+
     context = {
         'datas_agrupadas': datas_agrupadas,
         'formas_agrupadas': formas_agrupadas,
