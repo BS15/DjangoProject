@@ -21,7 +21,6 @@ class ProcessoForm(forms.ModelForm):
             'data_vencimento': forms.DateInput(format='%Y-%m-%d',attrs={'type': 'date', 'class': 'form-control'}),
             'valor_bruto': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'valor_liquido': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'codigo_barras': forms.TextInput(attrs={'class': 'form-control'}),
             'detalhamento': forms.TextInput(attrs={'class': 'form-control'}),
             'observacao': forms.TextInput(attrs={'class': 'form-control'}),
             'tag': forms.Select(attrs={'class': 'form-select'})

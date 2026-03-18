@@ -271,9 +271,6 @@ class Command(BaseCommand):
                 valor_liquido=valor_liquido,
                 ano_exercicio=ano,
                 n_pagamento_siscac=n_siscac,
-                codigo_barras=fake.numerify(
-                    "####.#####  #####.###### #####.###### # ##############"
-                ),
                 data_vencimento=data_vencimento,
                 data_pagamento=data_pagamento,
                 forma_pagamento=random.choice(forma_list),

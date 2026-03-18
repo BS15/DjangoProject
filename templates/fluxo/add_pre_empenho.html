@@ -71,7 +71,6 @@
                         <div class="col-md-3"><label class="form-label text-primary">Conta Bancária Sacada</label>{{ processo_form.conta_de_pagamento_orgao }}</div>
                         <div class="col-md-3"><label class="form-label text-primary">Valor Bruto (R$)</label>{{ processo_form.valor_bruto }}</div>
                         <div class="col-md-3"><label class="form-label text-success">Valor Líquido (R$)</label>{{ processo_form.valor_liquido }}</div>
-                        <div class="col-md-4"><label class="form-label">Código de Barras</label>{{ processo_form.codigo_barras }}</div>
                         <div class="col-md-2"><label class="form-label">Data De/Para Pagamento</label>{{ processo_form.data_pagamento }}</div>
                         <div class="col-md-2"><label class="form-label">Vencimento</label>{{ processo_form.data_vencimento }}</div>
                         <div class="col-md-4"><label class="form-label">Forma de Pagamento</label>{{ processo_form.forma_pagamento }}</div>
@@ -356,7 +355,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if(data.sucesso) {
                     statusBoleto.innerHTML = "<span class='text-success'>Boleto lido com sucesso! Valores preenchidos.</span>";
-                    document.querySelector('[name="processo-codigo_barras"]').value = data.dados.codigo_barras || '';
                     document.querySelector('[name="processo-valor_liquido"]').value = data.dados.valor.toFixed(2);
                     document.querySelector('[name="processo-valor_bruto"]').value = data.dados.valor.toFixed(2);
                     if (data.dados.vencimento) {

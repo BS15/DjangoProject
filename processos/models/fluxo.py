@@ -156,7 +156,6 @@ class Processo(models.Model):
 
     # Dados de pagamento
     n_pagamento_siscac = models.CharField(max_length=50, blank=True, null=True)
-    codigo_barras = models.CharField(max_length=100, blank=True, null=True)
     data_vencimento = models.DateField(blank=True, null=True)
     data_pagamento = models.DateField(blank=True, null=True)
     forma_pagamento = models.ForeignKey('FormasDePagamento', on_delete=models.PROTECT, blank=True, null=True)

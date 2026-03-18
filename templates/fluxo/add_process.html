@@ -184,12 +184,8 @@
                             </div>
 
                             <div id="bloco_boleto" class="row g-3 mb-3 bg-light p-3 border rounded mt-2" style="display: none;">
-                                <div class="col-md-12">
-                                    <label class="form-label fw-bold text-dark"><i class="bi bi-upc-scan"></i> Código de Barras / Linha Digitável</label>
-                                    {{ processo_form.codigo_barras }}
-                                </div>
                                 <!-- INDICADORES DE BOLETOS (dinâmico via JS) -->
-                                <div class="col-md-12 mt-2 pt-3 border-top" id="bloco-indicadores-boleto">
+                                <div class="col-md-12" id="bloco-indicadores-boleto">
                                     <div class="d-flex gap-3 flex-wrap mb-2">
                                         <div class="d-flex align-items-center gap-2 px-3 py-2 bg-white rounded border shadow-sm">
                                             <i class="bi bi-files text-primary fs-5"></i>
@@ -766,7 +762,6 @@ document.addEventListener('DOMContentLoaded', function() {
             setVal('id_processo-data_empenho', formatarDataParaInput(d.data_empenho));
             setVal('id_processo-valor_bruto', d.valor_bruto);
             setVal('id_processo-valor_liquido', d.valor_liquido);
-            setVal('id_processo-codigo_barras', d.codigo_barras);
             setVal('id_processo-data_vencimento', formatarDataParaInput(d.data_vencimento));
             setVal('id_processo-detalhamento', d.detalhamento);
 
