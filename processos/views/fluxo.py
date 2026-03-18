@@ -497,9 +497,22 @@ def contas_a_pagar(request):
         total=Count('id')
     ).order_by('status__status_choice')
 
+    contas_agrupadas = processos_pendentes.values(
+        'conta__id',
+        'conta__banco',
+        'conta__agencia',
+        'conta__conta',
+        'conta__titular__nome',
+    ).annotate(
+        total=Count('id')
+    ).order_by('conta__titular__nome', 'conta__banco', 'conta__agencia')
+
     data_selecionada = request.GET.get('data')
     forma_selecionada = request.GET.get('forma')
     status_selecionado = request.GET.get('status')
+    conta_selecionada = request.GET.get('conta')
+    ordem = request.GET.get('ordem', 'id')
+    direcao = request.GET.get('direcao', 'asc')
 
     lista_processos = processos_pendentes
 
@@ -521,19 +534,44 @@ def contas_a_pagar(request):
             except (ValueError, TypeError):
                 pass
 
+    if conta_selecionada:
+        if conta_selecionada == 'sem_conta':
+            lista_processos = lista_processos.filter(conta__isnull=True)
+        else:
+            try:
+                lista_processos = lista_processos.filter(conta__id=int(conta_selecionada))
+            except (ValueError, TypeError):
+                pass
+
+    ORDER_FIELDS = {
+        'id': 'id',
+        'data_pagamento': 'data_pagamento',
+        'credor': 'credor__nome',
+        'valor_liquido': 'valor_liquido',
+        'status': 'status__status_choice',
+        'tipo_pagamento': 'tipo_pagamento__tipo_de_pagamento',
+    }
+    order_field = ORDER_FIELDS.get(ordem, 'id')
+    if direcao == 'desc':
+        order_field = f'-{order_field}'
+
     lista_processos = lista_processos.annotate(
         has_pendencias=Exists(Pendencia.objects.filter(processo=OuterRef('pk'))),
         has_retencoes=Exists(RetencaoImposto.objects.filter(nota_fiscal__processo=OuterRef('pk'))),
-    )
+    ).order_by(order_field)
 
     context = {
         'datas_agrupadas': datas_agrupadas,
         'formas_agrupadas': formas_agrupadas,
         'statuses_agrupados': statuses_agrupados,
+        'contas_agrupadas': contas_agrupadas,
         'lista_processos': lista_processos,
         'data_selecionada': data_selecionada,
         'forma_selecionada': forma_selecionada,
         'status_selecionado': status_selecionado,
+        'conta_selecionada': conta_selecionada,
+        'ordem': ordem,
+        'direcao': direcao,
         'pode_interagir': request.user.has_perm('processos.pode_operar_contas_pagar'),
     }
 
