@@ -381,6 +381,16 @@ def editar_processo(request, pk):
         documento_formset = DocumentoFormSet(instance=processo, prefix='documento')
         pendencia_formset = PendenciaFormSet(instance=processo, prefix='pendencia')
 
+    # Boleto indicators – only relevant when forma_pagamento is BOLETO/GERENCIADOR
+    boleto_docs_qs = processo.documentos.select_related('tipo').filter(
+        tipo__tipo_de_documento__icontains='boleto'
+    )
+    boleto_docs_count = boleto_docs_qs.count()
+    boleto_barcodes_list = [
+        doc.codigo_barras for doc in boleto_docs_qs if doc.codigo_barras
+    ]
+    boleto_barcodes_count = len(boleto_barcodes_list)
+
     context = {
         'processo_form': processo_form,
         'documento_formset': documento_formset,
@@ -390,6 +400,9 @@ def editar_processo(request, pk):
         'somente_documentos': somente_documentos,
         'aguardando_liquidacao': status_inicial.startswith('AGUARDANDO LIQUIDAÇÃO'),
         'documentos_fiscais_url': reverse('documentos_fiscais', kwargs={'pk': processo.id}),
+        'boleto_docs_count': boleto_docs_count,
+        'boleto_barcodes_list': boleto_barcodes_list,
+        'boleto_barcodes_count': boleto_barcodes_count,
     }
 
     return render(request, 'fluxo/editar_processo.html', context)
