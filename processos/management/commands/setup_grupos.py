@@ -6,11 +6,11 @@ from processos.models.fluxo import Processo
 
 
 GRUPOS_PERMISSOES = {
-    'Operacional (Contas a Pagar)': ['acesso_backoffice', 'pode_operar_contas_pagar'],
-    'Fiscais (Atestadores)': ['acesso_backoffice', 'pode_atestar_liquidacao'],
-    'Ordenadores de Despesa': ['acesso_backoffice', 'pode_autorizar_pagamento'],
-    'Contabilidade': ['acesso_backoffice', 'pode_contabilizar'],
-    'Conselho Fiscal': ['acesso_backoffice', 'pode_auditar_conselho'],
+    'FUNCIONÁRIO(A) CONTAS A PAGAR': ['acesso_backoffice', 'pode_operar_contas_pagar'],
+    'FISCAL DE CONTRATO': ['acesso_backoffice', 'pode_atestar_liquidacao'],
+    'ORDENADOR(A) DE DESPESA': ['acesso_backoffice', 'pode_autorizar_pagamento'],
+    'CONTADOR(A)': ['acesso_backoffice', 'pode_contabilizar'],
+    'CONSELHEIRO(A) FISCAL': ['acesso_backoffice', 'pode_auditar_conselho'],
 }
 
 
