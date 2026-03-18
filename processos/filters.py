@@ -44,6 +44,8 @@ class CredorFilter(django_filters.FilterSet):
             'nome': ['icontains'],       # Busca parcial ignorando maiúsculas
             'cpf_cnpj': ['icontains'],   # Busca parcial
             'tipo': ['exact'],           # Dropdown exato (PF, PJ, EX)
+            'grupo': ['exact'],          # Dropdown por grupo
+            'cargo_funcao': ['exact'],   # Dropdown por cargo/função
         }
 
     def __init__(self, *args, **kwargs):
