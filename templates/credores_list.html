@@ -38,6 +38,14 @@
                     {{ filter.form.tipo }}
                 </div>
                 <div class="col-md-3">
+                    <label class="small fw-bold text-secondary mb-1">Grupo</label>
+                    {{ filter.form.grupo }}
+                </div>
+                <div class="col-md-3">
+                    <label class="small fw-bold text-secondary mb-1">Cargo / Função</label>
+                    {{ filter.form.cargo_funcao }}
+                </div>
+                <div class="col-md-3">
                     <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">
                         <i class="bi bi-search"></i> Pesquisar
                     </button>
@@ -56,6 +64,8 @@
                             <th>Nome</th>
                             <th>CPF/CNPJ</th>
                             <th>Tipo</th>
+                            <th>Grupo</th>
+                            <th>Cargo/Função</th>
                             <th>Telefone</th>
                             <th class="text-center">Ações</th>
                         </tr>
@@ -67,16 +77,18 @@
                             <td class="fw-bold">{{ credor.nome|default:"---" }}</td>
                             <td>{{ credor.cpf_cnpj|default:"---" }}</td>
                             <td>{{ credor.get_tipo_display|default:"---" }}</td>
+                            <td>{{ credor.grupo|default:"---" }}</td>
+                            <td>{{ credor.cargo_funcao|default:"---" }}</td>
                             <td>{{ credor.telefone|default:"---" }}</td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-outline-primary" title="Editar" disabled>
+                                <a href="{% url 'edit_credor' credor.pk %}" class="btn btn-sm btn-outline-primary" title="Editar">
                                     <i class="bi bi-pencil"></i>
-                                </button>
+                                </a>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">
+                            <td colspan="8" class="text-center text-muted py-4">
                                 <i class="bi bi-search fs-4 d-block mb-2"></i>
                                 Nenhum credor encontrado com estes filtros.
                             </td>

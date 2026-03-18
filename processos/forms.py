@@ -191,7 +191,7 @@ RetencaoFormSet = inlineformset_factory(
 class CredorForm(forms.ModelForm):
     class Meta:
         model = Credor
-        fields = ['tipo', 'cpf_cnpj', 'nome', 'telefone', 'email', 'conta', 'chave_pix', 'grupo', 'cargo_funcao']
+        fields = ['tipo', 'cpf_cnpj', 'nome', 'telefone', 'email', 'conta', 'chave_pix', 'grupo', 'cargo_funcao', 'codigo_servico_padrao']
         widgets = {
             'tipo': forms.Select(attrs={'class': 'form-select'}),
             'cpf_cnpj': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apenas números'}),
@@ -202,6 +202,7 @@ class CredorForm(forms.ModelForm):
             'cargo_funcao': forms.Select(attrs={'class': 'form-select'}),
             'conta': forms.Select(attrs={'class': 'form-select'}),
             'chave_pix': forms.TextInput(attrs={'class': 'form-control'}),
+            'codigo_servico_padrao': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 100000001'}),
         }
 
 class DiariaForm(forms.ModelForm):
