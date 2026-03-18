@@ -1,14 +1,25 @@
 {% if dp.tipo == 'codigo_barras' %}
-    <span class="text-muted small fw-bold d-block">Código de Barras</span>
-    {% if dp.codigo_barras %}
-        <div class="d-flex align-items-center gap-2 mt-1">
-            <span class="font-monospace fw-bold text-primary text-break" style="font-size: 0.85rem;">{{ dp.codigo_barras }}</span>
-            <button class="btn btn-sm btn-outline-secondary copy-btn px-2 py-1 no-print" data-clipboard="{{ dp.codigo_barras }}" title="Copiar">
-                <i class="bi bi-clipboard"></i>
-            </button>
+    <span class="text-muted small fw-bold d-block">Códigos de Barras</span>
+    {% if dp.codigos_barras %}
+        <div class="mt-1">
+            <a class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" href="#collapseBarcodes_{{ p.id }}" role="button" aria-expanded="false">
+                <i class="bi bi-list-ul"></i> Ver linhas digitáveis ({{ dp.codigos_barras|length }})
+            </a>
+            <div class="collapse mt-2" id="collapseBarcodes_{{ p.id }}">
+                <ul class="list-group list-group-flush">
+                    {% for code in dp.codigos_barras %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
+                        <span class="font-monospace text-primary text-break small fw-bold me-2">{{ code }}</span>
+                        <button class="btn btn-sm btn-outline-secondary copy-btn flex-shrink-0 px-2 py-1 no-print" data-clipboard="{{ code }}" title="Copiar">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
     {% else %}
-        <span class="text-danger small">Não preenchido</span>
+        <span class="text-danger small">Nenhum código de barras encontrado nos documentos</span>
     {% endif %}
 
 {% elif dp.tipo == 'pix' %}

@@ -10,7 +10,6 @@ class ProcessoFilter(django_filters.FilterSet):
             'n_nota_empenho': ['icontains'],
             'credor': ['exact'],
             'n_pagamento_siscac': ['icontains'],
-            'codigo_barras': ['icontains'],
             'observacao': ['icontains'],
             'detalhamento': ['icontains'],
 

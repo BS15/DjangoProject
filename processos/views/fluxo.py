@@ -1761,11 +1761,17 @@ def _build_detalhes_pagamento(processos):
     for p in processos:
         forma = p.forma_pagamento.forma_de_pagamento.lower() if p.forma_pagamento else ''
         forma_nome = p.forma_pagamento.forma_de_pagamento if p.forma_pagamento else 'N/A'
+        tipo = p.tipo_pagamento.tipo_de_pagamento.upper() if p.tipo_pagamento else ''
 
-        if 'boleto' in forma or 'gerenciador' in forma:
+        if tipo == 'GERENCIADOR/BOLETO BANCÁRIO' or 'boleto' in forma or 'gerenciador' in forma:
+            codigos_barras = [
+                doc.codigo_barras
+                for doc in p.documentos.all()
+                if doc.codigo_barras
+            ]
             dados_pagamento = {
                 'tipo': 'codigo_barras',
-                'codigo_barras': p.codigo_barras or '',
+                'codigos_barras': codigos_barras,
             }
         elif 'pix' in forma:
             dados_pagamento = {
@@ -1819,7 +1825,7 @@ def lancamento_bancario(request):
 
     processos_qs = Processo.objects.filter(
         id__in=ids
-    ).select_related('forma_pagamento', 'conta', 'credor__conta', 'status').order_by('forma_pagamento__forma_de_pagamento', 'id')
+    ).select_related('forma_pagamento', 'tipo_pagamento', 'conta', 'credor__conta', 'status').prefetch_related('documentos').order_by('forma_pagamento__forma_de_pagamento', 'id')
 
     a_pagar_qs = processos_qs.filter(status=status_autorizado) if status_autorizado else processos_qs.none()
     lancados_qs = processos_qs.filter(status=status_lancado) if status_lancado else processos_qs.none()
@@ -2042,7 +2048,6 @@ def api_processo_detalhes(request):
             'valor_liquido': str(processo.valor_liquido) if processo.valor_liquido is not None else '0.00',
             'ano_exercicio': processo.ano_exercicio,
             'n_pagamento_siscac': processo.n_pagamento_siscac or '—',
-            'codigo_barras': processo.codigo_barras or '—',
             'data_vencimento': str(processo.data_vencimento) if processo.data_vencimento else None,
             'data_pagamento': str(processo.data_pagamento) if processo.data_pagamento else None,
             'forma_pagamento': str(processo.forma_pagamento) if processo.forma_pagamento else '—',
@@ -2267,9 +2272,6 @@ def _create_fake_processos(n):
             valor_liquido=valor_liquido,
             ano_exercicio=ano,
             n_pagamento_siscac=n_siscac,
-            codigo_barras=_fake_generator.numerify(
-                "####.#####  #####.###### #####.###### # ##############"
-            ),
             data_vencimento=data_vencimento,
             data_pagamento=data_pagamento,
             forma_pagamento=random.choice(forma_list) if forma_list else None,
