@@ -75,10 +75,27 @@
                         <i class="bi bi-funnel"></i> Filtrar
                     </button>
                 </div>
+                <div class="col-auto">
+                    {% if todos %}
+                    <a href="{% url 'painel_reinf' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-calendar3"></i> Filtrar por competência
+                    </a>
+                    {% else %}
+                    <a href="?todos=1" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-x-circle"></i> Limpar Filtros
+                    </a>
+                    {% endif %}
+                </div>
                 <div class="col-auto ms-auto d-flex align-items-end">
+                    {% if todos %}
+                    <span class="badge bg-secondary me-2">
+                        Todas as competências
+                    </span>
+                    {% else %}
                     <span class="badge bg-secondary me-2">
                         Competência: {{ mes|stringformat:"02d" }}/{{ ano }}
                     </span>
+                    {% endif %}
                 </div>
             </form>
         </div>
@@ -189,8 +206,12 @@
             {% else %}
                 <div class="alert alert-info d-flex align-items-center">
                     <i class="bi bi-info-circle-fill me-2 fs-5"></i>
-                    Nenhuma retenção de INSS (Série 2000) encontrada para
-                    <strong class="ms-1">{{ mes|stringformat:"02d" }}/{{ ano }}</strong>.
+                    Nenhuma retenção de INSS (Série 2000) encontrada
+                    {% if todos %}
+                    em nenhuma competência.
+                    {% else %}
+                    para <strong class="ms-1">{{ mes|stringformat:"02d" }}/{{ ano }}</strong>.
+                    {% endif %}
                     <span class="ms-1">Verifique se os <em>CodigosImposto</em> estão classificados como
                     <code>Série 2000</code> no admin.</span>
                 </div>
@@ -284,8 +305,12 @@
             {% else %}
                 <div class="alert alert-info d-flex align-items-center">
                     <i class="bi bi-info-circle-fill me-2 fs-5"></i>
-                    Nenhuma retenção federal (Série 4000) encontrada para
-                    <strong class="ms-1">{{ mes|stringformat:"02d" }}/{{ ano }}</strong>.
+                    Nenhuma retenção federal (Série 4000) encontrada
+                    {% if todos %}
+                    em nenhuma competência.
+                    {% else %}
+                    para <strong class="ms-1">{{ mes|stringformat:"02d" }}/{{ ano }}</strong>.
+                    {% endif %}
                     <span class="ms-1">Verifique se os <em>CodigosImposto</em> estão classificados como
                     <code>Série 4000</code> no admin.</span>
                 </div>
