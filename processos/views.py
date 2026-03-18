@@ -3,6 +3,7 @@ import os
 import json
 import random
 import tempfile
+import zipfile
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from faker import Faker
@@ -3147,6 +3148,51 @@ def painel_reinf_view(request):
         'anos': range(today.year - 4, today.year + 2),
     }
     return render(request, 'painel_reinf.html', context)
+
+
+@login_required
+def gerar_lote_reinf_view(request):
+    """
+    Generate EFD-Reinf XML batch files (lotes) for R-2010 (INSS) and
+    R-4020 (Federais) based on the given competência (mes/ano) and return
+    them packaged as a downloadable .zip file.
+
+    GET parameters:
+    - mes: month 1–12 (defaults to current month)
+    - ano: year YYYY  (defaults to current year)
+
+    Returns 404 if no attested retentions exist for the requested period.
+    """
+    from .reinf_services import gerar_lotes_reinf
+
+    today = date.today()
+    try:
+        mes = int(request.GET.get('mes', today.month))
+        ano = int(request.GET.get('ano', today.year))
+        if not (1 <= mes <= 12):
+            raise ValueError
+    except (ValueError, TypeError):
+        mes = today.month
+        ano = today.year
+
+    xmls = gerar_lotes_reinf(mes, ano)
+
+    if not xmls:
+        return HttpResponse(
+            'Nenhuma retenção atestada encontrada para o período informado.',
+            status=404,
+        )
+
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for filename, xml_content in xmls.items():
+            zf.writestr(filename, xml_content)
+
+    buffer.seek(0)
+    response = HttpResponse(buffer.read(), content_type='application/zip')
+    zip_filename = f'lotes_reinf_{ano}{mes:02d}.zip'
+    response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
+    return response
 
 
 # ============================================================

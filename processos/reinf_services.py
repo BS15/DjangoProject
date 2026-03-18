@@ -14,6 +14,8 @@ Groups RetencaoImposto records whose CodigosImposto.serie_reinf == 'S4000'
 by:  Credor (beneficiário)  →  Natureza do Rendimento (Tabela 01)  →  [retencoes]
 """
 
+import xml.dom.minidom
+import xml.etree.ElementTree as ET
 from collections import defaultdict
 from datetime import date
 
@@ -180,3 +182,150 @@ def get_serie_4000_data(month: int | None, year: int | None) -> list:
         })
 
     return result
+
+
+# ---------------------------------------------------------------------------
+# XML batch generation – R-2010 (INSS) and R-4020 (Federais)
+# ---------------------------------------------------------------------------
+
+def _build_r2010_xml(cnpj: str, retencoes: list, month: int, year: int) -> str:
+    """
+    Build a minimal R-2010 (INSS / Série 2000) XML skeleton for a single
+    provider CNPJ, listing every retention record for that CNPJ.
+
+    Returns a pretty-printed XML string.
+    """
+    root = ET.Element(
+        'Reinf',
+        xmlns='http://www.reinf.esocial.gov.br/schemas/evtServTom/v2_01_01',
+    )
+
+    evt = ET.SubElement(root, 'evtServTom')
+
+    ide_evento = ET.SubElement(evt, 'ideEvento')
+    ET.SubElement(ide_evento, 'indRetif').text = '1'
+    ET.SubElement(ide_evento, 'perApur').text = f'{year}-{month:02d}'
+    ET.SubElement(ide_evento, 'tpAmb').text = '2'
+    ET.SubElement(ide_evento, 'procEmi').text = '1'
+    ET.SubElement(ide_evento, 'verProc').text = '1.0'
+
+    ide_contrib = ET.SubElement(evt, 'ideContrib')
+    ET.SubElement(ide_contrib, 'tpInsc').text = '1'
+    ET.SubElement(ide_contrib, 'nrInsc').text = cnpj
+
+    ide_estab = ET.SubElement(evt, 'ideEstab')
+    ET.SubElement(ide_estab, 'tpInsc').text = '1'
+    ET.SubElement(ide_estab, 'nrInsc').text = cnpj
+
+    det_evt = ET.SubElement(ide_estab, 'detEvt')
+    for ret in retencoes:
+        nf = ret.nota_fiscal
+        nf_seq = ET.SubElement(det_evt, 'nfSeq')
+        ET.SubElement(nf_seq, 'nrNF').text = str(nf.numero_nota_fiscal or '')
+        ET.SubElement(nf_seq, 'dtEmiNF').text = str(nf.data_emissao)
+        ET.SubElement(nf_seq, 'vrBruto').text = str(nf.valor_bruto or 0)
+
+        det_ret = ET.SubElement(nf_seq, 'detRet')
+        ET.SubElement(det_ret, 'vrBaseRet').text = str(ret.rendimento_tributavel or 0)
+        ET.SubElement(det_ret, 'vrRet').text = str(ret.valor or 0)
+
+    raw = ET.tostring(root, encoding='unicode')
+    return xml.dom.minidom.parseString(raw).toprettyxml(indent='  ')
+
+
+def _build_r4020_xml(cnpj: str, retencoes: list, month: int, year: int) -> str:
+    """
+    Build a minimal R-4020 (Federal taxes / Série 4000) XML skeleton for a
+    single provider CNPJ.  Retentions are sub-grouped by *natureza_rendimento*.
+
+    Returns a pretty-printed XML string.
+    """
+    root = ET.Element(
+        'Reinf',
+        xmlns='http://www.reinf.esocial.gov.br/schemas/evtRetPJ/v2_01_01',
+    )
+
+    evt = ET.SubElement(root, 'evtRetPJ')
+
+    ide_evento = ET.SubElement(evt, 'ideEvento')
+    ET.SubElement(ide_evento, 'indRetif').text = '1'
+    ET.SubElement(ide_evento, 'perApur').text = f'{year}-{month:02d}'
+    ET.SubElement(ide_evento, 'tpAmb').text = '2'
+    ET.SubElement(ide_evento, 'procEmi').text = '1'
+    ET.SubElement(ide_evento, 'verProc').text = '1.0'
+
+    ide_contrib = ET.SubElement(evt, 'ideContrib')
+    ET.SubElement(ide_contrib, 'tpInsc').text = '1'
+    ET.SubElement(ide_contrib, 'nrInsc').text = cnpj
+
+    ide_pj = ET.SubElement(evt, 'idePJ')
+    ET.SubElement(ide_pj, 'cnpjPrestador').text = cnpj
+
+    natureza_map: dict = defaultdict(list)
+    for ret in retencoes:
+        nat = ret.codigo.natureza_rendimento or 'Não informado'
+        natureza_map[nat].append(ret)
+
+    for natureza, rets in natureza_map.items():
+        det_pag = ET.SubElement(ide_pj, 'detPag')
+        ET.SubElement(det_pag, 'natRend').text = str(natureza)
+        total_base = sum((r.rendimento_tributavel or 0) for r in rets)
+        total_retido = sum((r.valor or 0) for r in rets)
+        ET.SubElement(det_pag, 'vrBaseRet').text = str(total_base)
+        ET.SubElement(det_pag, 'vrRet').text = str(total_retido)
+
+    raw = ET.tostring(root, encoding='unicode')
+    return xml.dom.minidom.parseString(raw).toprettyxml(indent='  ')
+
+
+def gerar_lotes_reinf(month: int, year: int) -> dict:
+    """
+    Generate EFD-Reinf XML batch files (lotes) for a given month/year.
+
+    Business rules:
+    - Only includes RetencaoImposto records whose competência matches the
+      given month/year AND whose associated DocumentoFiscal is atestada.
+    - INSS retentions (CodigosImposto.familia == 'INSS') → R-2010 events.
+    - Federal retentions (CodigosImposto.familia == 'FEDERAL') → R-4020 events.
+    - One XML file is produced per unique provider CNPJ within each family.
+
+    Returns:
+        dict mapping filename (str) → XML content (str).
+        e.g. {'R2010_CNPJ_12345678000195_202403.xml': '<Reinf ...>...</Reinf>'}
+    """
+    competencia = _build_competencia_date(month, year)
+
+    retencoes = (
+        RetencaoImposto.objects
+        .filter(competencia=competencia, nota_fiscal__atestada=True)
+        .select_related(
+            'nota_fiscal',
+            'nota_fiscal__nome_emitente',
+            'codigo',
+        )
+    )
+
+    inss_por_cnpj: dict = defaultdict(list)
+    federal_por_cnpj: dict = defaultdict(list)
+
+    for ret in retencoes:
+        emitente = ret.nota_fiscal.nome_emitente
+        if not emitente or not emitente.cpf_cnpj:
+            continue
+        cnpj = emitente.cpf_cnpj
+        if ret.codigo.familia == 'INSS':
+            inss_por_cnpj[cnpj].append(ret)
+        elif ret.codigo.familia == 'FEDERAL':
+            federal_por_cnpj[cnpj].append(ret)
+
+    xmls: dict = {}
+
+    for cnpj, rets in inss_por_cnpj.items():
+        filename = f'R2010_CNPJ_{cnpj}_{year}{month:02d}.xml'
+        xmls[filename] = _build_r2010_xml(cnpj, rets, month, year)
+
+    for cnpj, rets in federal_por_cnpj.items():
+        filename = f'R4020_CNPJ_{cnpj}_{year}{month:02d}.xml'
+        xmls[filename] = _build_r4020_xml(cnpj, rets, month, year)
+
+    return xmls

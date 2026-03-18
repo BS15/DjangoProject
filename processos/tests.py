@@ -480,3 +480,357 @@ class VerificarTurnpikeTest(TestCase):
             'A PAGAR - ENVIADO PARA AUTORIZAÇÃO',
         )
         self.assertEqual(erros, [])
+
+
+# ---------------------------------------------------------------------------
+# EFD-Reinf XML batch generation tests
+# ---------------------------------------------------------------------------
+
+from datetime import date as _date
+from decimal import Decimal
+
+from django.contrib.auth.models import User
+from django.test import TestCase
+
+from .models import (
+    CodigosImposto,
+    Credor,
+    DocumentoFiscal,
+    Processo,
+)
+from .reinf_services import (
+    _build_r2010_xml,
+    _build_r4020_xml,
+    gerar_lotes_reinf,
+)
+
+
+class GerarLotesReinfHelpersTest(TestCase):
+    """Unit tests for _build_r2010_xml and _build_r4020_xml."""
+
+    def _make_codigo_inss(self):
+        return CodigosImposto.objects.create(
+            codigo='1490',
+            familia='INSS',
+            regra_competencia='emissao',
+            serie_reinf='S2000',
+        )
+
+    def _make_codigo_federal(self, natureza='15001'):
+        return CodigosImposto.objects.create(
+            codigo='6190',
+            familia='FEDERAL',
+            regra_competencia='emissao',
+            serie_reinf='S4000',
+            natureza_rendimento=natureza,
+        )
+
+    def _make_credor(self, cnpj='12345678000195'):
+        return Credor.objects.create(nome='Empresa Teste', cpf_cnpj=cnpj, tipo='PJ')
+
+    def _make_nota(self, credor, atestada=True):
+        proc = Processo.objects.create()
+        return DocumentoFiscal.objects.create(
+            processo=proc,
+            nome_emitente=credor,
+            numero_nota_fiscal='NF-001',
+            data_emissao=_date(2024, 3, 15),
+            valor_bruto=Decimal('1000.00'),
+            valor_liquido=Decimal('900.00'),
+            atestada=atestada,
+        )
+
+    def _make_retencao(self, nota, codigo, valor='50.00', base='1000.00'):
+        from .models import RetencaoImposto
+        ret = RetencaoImposto(
+            nota_fiscal=nota,
+            codigo=codigo,
+            valor=Decimal(valor),
+            rendimento_tributavel=Decimal(base),
+        )
+        ret.save()
+        return ret
+
+    # --- _build_r2010_xml ---
+
+    def test_r2010_xml_has_correct_root_tag(self):
+        codigo = self._make_codigo_inss()
+        credor = self._make_credor()
+        nota = self._make_nota(credor)
+        ret = self._make_retencao(nota, codigo)
+
+        xml_str = _build_r2010_xml('12345678000195', [ret], 3, 2024)
+        self.assertIn('<Reinf', xml_str)
+
+    def test_r2010_xml_contains_evtServTom(self):
+        codigo = self._make_codigo_inss()
+        credor = self._make_credor()
+        nota = self._make_nota(credor)
+        ret = self._make_retencao(nota, codigo)
+
+        xml_str = _build_r2010_xml('12345678000195', [ret], 3, 2024)
+        self.assertIn('evtServTom', xml_str)
+
+    def test_r2010_xml_contains_perApur(self):
+        codigo = self._make_codigo_inss()
+        credor = self._make_credor()
+        nota = self._make_nota(credor)
+        ret = self._make_retencao(nota, codigo)
+
+        xml_str = _build_r2010_xml('12345678000195', [ret], 3, 2024)
+        self.assertIn('<perApur>2024-03</perApur>', xml_str)
+
+    def test_r2010_xml_contains_cnpj(self):
+        codigo = self._make_codigo_inss()
+        credor = self._make_credor()
+        nota = self._make_nota(credor)
+        ret = self._make_retencao(nota, codigo)
+
+        xml_str = _build_r2010_xml('12345678000195', [ret], 3, 2024)
+        self.assertIn('12345678000195', xml_str)
+
+    def test_r2010_xml_contains_valor_retido(self):
+        codigo = self._make_codigo_inss()
+        credor = self._make_credor()
+        nota = self._make_nota(credor)
+        ret = self._make_retencao(nota, codigo, valor='75.50')
+
+        xml_str = _build_r2010_xml('12345678000195', [ret], 3, 2024)
+        self.assertIn('75.50', xml_str)
+
+    def test_r2010_xml_lists_multiple_retencoes(self):
+        codigo = self._make_codigo_inss()
+        credor = self._make_credor()
+        nota = self._make_nota(credor)
+        ret1 = self._make_retencao(nota, codigo, valor='50.00')
+        ret2 = self._make_retencao(nota, codigo, valor='30.00')
+
+        xml_str = _build_r2010_xml('12345678000195', [ret1, ret2], 3, 2024)
+        self.assertEqual(xml_str.count('<nfSeq>'), 2)
+
+    # --- _build_r4020_xml ---
+
+    def test_r4020_xml_has_correct_root_tag(self):
+        codigo = self._make_codigo_federal()
+        credor = self._make_credor()
+        nota = self._make_nota(credor)
+        ret = self._make_retencao(nota, codigo)
+
+        xml_str = _build_r4020_xml('12345678000195', [ret], 3, 2024)
+        self.assertIn('<Reinf', xml_str)
+
+    def test_r4020_xml_contains_evtRetPJ(self):
+        codigo = self._make_codigo_federal()
+        credor = self._make_credor()
+        nota = self._make_nota(credor)
+        ret = self._make_retencao(nota, codigo)
+
+        xml_str = _build_r4020_xml('12345678000195', [ret], 3, 2024)
+        self.assertIn('evtRetPJ', xml_str)
+
+    def test_r4020_xml_contains_natureza_rendimento(self):
+        codigo = self._make_codigo_federal(natureza='15001')
+        credor = self._make_credor()
+        nota = self._make_nota(credor)
+        ret = self._make_retencao(nota, codigo)
+
+        xml_str = _build_r4020_xml('12345678000195', [ret], 3, 2024)
+        self.assertIn('<natRend>15001</natRend>', xml_str)
+
+    def test_r4020_xml_groups_by_natureza(self):
+        """Two retentions with the same natureza should produce a single detPag."""
+        codigo = self._make_codigo_federal(natureza='15001')
+        credor = self._make_credor()
+        nota = self._make_nota(credor)
+        ret1 = self._make_retencao(nota, codigo, valor='40.00')
+        ret2 = self._make_retencao(nota, codigo, valor='60.00')
+
+        xml_str = _build_r4020_xml('12345678000195', [ret1, ret2], 3, 2024)
+        self.assertEqual(xml_str.count('<detPag>'), 1)
+
+
+class GerarLotesReinfIntegrationTest(TestCase):
+    """Integration tests for gerar_lotes_reinf."""
+
+    def _setup_data(self, familia, cnpj, atestada=True, competencia_month=3, competencia_year=2024):
+        """Helper to create a full chain: Credor→Processo→DocumentoFiscal→RetencaoImposto."""
+        from .models import RetencaoImposto
+
+        codigo = CodigosImposto.objects.create(
+            codigo=f'TEST_{familia}_{cnpj[:4]}',
+            familia=familia,
+            regra_competencia='emissao',
+            serie_reinf='S2000' if familia == 'INSS' else 'S4000',
+            natureza_rendimento='15001' if familia == 'FEDERAL' else None,
+        )
+        credor = Credor.objects.create(nome=f'Credor {cnpj}', cpf_cnpj=cnpj, tipo='PJ')
+        proc = Processo.objects.create()
+        nota = DocumentoFiscal.objects.create(
+            processo=proc,
+            nome_emitente=credor,
+            numero_nota_fiscal='NF-TEST',
+            data_emissao=_date(competencia_year, competencia_month, 15),
+            valor_bruto=Decimal('1000.00'),
+            valor_liquido=Decimal('900.00'),
+            atestada=atestada,
+        )
+        ret = RetencaoImposto(
+            nota_fiscal=nota,
+            codigo=codigo,
+            valor=Decimal('50.00'),
+            rendimento_tributavel=Decimal('1000.00'),
+        )
+        ret.save()
+        return ret
+
+    def test_returns_empty_dict_when_no_records(self):
+        result = gerar_lotes_reinf(3, 2024)
+        self.assertEqual(result, {})
+
+    def test_returns_empty_dict_when_not_atestada(self):
+        self._setup_data('INSS', '11111111000101', atestada=False)
+        result = gerar_lotes_reinf(3, 2024)
+        self.assertEqual(result, {})
+
+    def test_returns_r2010_for_inss(self):
+        self._setup_data('INSS', '11111111000101')
+        result = gerar_lotes_reinf(3, 2024)
+        r2010_keys = [k for k in result if k.startswith('R2010_')]
+        self.assertEqual(len(r2010_keys), 1)
+
+    def test_returns_r4020_for_federal(self):
+        self._setup_data('FEDERAL', '22222222000101')
+        result = gerar_lotes_reinf(3, 2024)
+        r4020_keys = [k for k in result if k.startswith('R4020_')]
+        self.assertEqual(len(r4020_keys), 1)
+
+    def test_groups_inss_by_cnpj(self):
+        """Three INSS retentions for the same CNPJ → single R-2010 file."""
+        from .models import RetencaoImposto
+
+        cnpj = '33333333000101'
+        codigo = CodigosImposto.objects.create(
+            codigo='INSS_GRP',
+            familia='INSS',
+            regra_competencia='emissao',
+            serie_reinf='S2000',
+        )
+        credor = Credor.objects.create(nome='Credor Agrupado', cpf_cnpj=cnpj, tipo='PJ')
+        proc = Processo.objects.create()
+        for i in range(3):
+            nota = DocumentoFiscal.objects.create(
+                processo=proc,
+                nome_emitente=credor,
+                numero_nota_fiscal=f'NF-{i}',
+                data_emissao=_date(2024, 3, 10 + i),
+                valor_bruto=Decimal('500.00'),
+                valor_liquido=Decimal('450.00'),
+                atestada=True,
+            )
+            ret = RetencaoImposto(
+                nota_fiscal=nota,
+                codigo=codigo,
+                valor=Decimal('20.00'),
+                rendimento_tributavel=Decimal('500.00'),
+            )
+            ret.save()
+
+        result = gerar_lotes_reinf(3, 2024)
+        r2010_keys = [k for k in result if k.startswith('R2010_')]
+        self.assertEqual(len(r2010_keys), 1)
+
+    def test_two_cnpjs_produce_two_inss_files(self):
+        self._setup_data('INSS', '44444444000101')
+        self._setup_data('INSS', '55555555000101')
+        result = gerar_lotes_reinf(3, 2024)
+        r2010_keys = [k for k in result if k.startswith('R2010_')]
+        self.assertEqual(len(r2010_keys), 2)
+
+    def test_filename_contains_cnpj_and_period(self):
+        cnpj = '66666666000101'
+        self._setup_data('INSS', cnpj)
+        result = gerar_lotes_reinf(3, 2024)
+        expected_filename = f'R2010_CNPJ_{cnpj}_202403.xml'
+        self.assertIn(expected_filename, result)
+
+    def test_ignores_wrong_competencia(self):
+        """Records from a different period should not appear."""
+        self._setup_data('INSS', '77777777000101', competencia_month=5, competencia_year=2024)
+        result = gerar_lotes_reinf(3, 2024)
+        self.assertEqual(result, {})
+
+    def test_xml_content_is_valid_xml(self):
+        import xml.etree.ElementTree as ET
+
+        self._setup_data('INSS', '88888888000101')
+        result = gerar_lotes_reinf(3, 2024)
+        for filename, content in result.items():
+            with self.subTest(filename=filename):
+                tree = ET.fromstring(content)
+                self.assertIsNotNone(tree)
+
+
+class GerarLoteReinfViewTest(TestCase):
+    """Tests for the gerar_lote_reinf_view endpoint."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='testpass')
+        self.client.login(username='testuser', password='testpass')
+
+    def _setup_inss_record(self, cnpj='99999999000101', month=3, year=2024):
+        from .models import RetencaoImposto
+
+        codigo = CodigosImposto.objects.create(
+            codigo='VIEW_INSS',
+            familia='INSS',
+            regra_competencia='emissao',
+            serie_reinf='S2000',
+        )
+        credor = Credor.objects.create(nome='View Credor', cpf_cnpj=cnpj, tipo='PJ')
+        proc = Processo.objects.create()
+        nota = DocumentoFiscal.objects.create(
+            processo=proc,
+            nome_emitente=credor,
+            numero_nota_fiscal='NF-VIEW',
+            data_emissao=_date(year, month, 20),
+            valor_bruto=Decimal('2000.00'),
+            valor_liquido=Decimal('1800.00'),
+            atestada=True,
+        )
+        ret = RetencaoImposto(
+            nota_fiscal=nota,
+            codigo=codigo,
+            valor=Decimal('100.00'),
+            rendimento_tributavel=Decimal('2000.00'),
+        )
+        ret.save()
+
+    def test_returns_404_when_no_records(self):
+        response = self.client.get('/reinf/gerar-lotes/?mes=3&ano=2024', secure=True)
+        self.assertEqual(response.status_code, 404)
+
+    def test_returns_zip_when_records_exist(self):
+        self._setup_inss_record()
+        response = self.client.get('/reinf/gerar-lotes/?mes=3&ano=2024', secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/zip')
+
+    def test_zip_filename_contains_period(self):
+        self._setup_inss_record()
+        response = self.client.get('/reinf/gerar-lotes/?mes=3&ano=2024', secure=True)
+        self.assertIn('lotes_reinf_202403.zip', response['Content-Disposition'])
+
+    def test_zip_contains_xml_file(self):
+        import io
+        import zipfile
+
+        self._setup_inss_record(cnpj='99999999000101')
+        response = self.client.get('/reinf/gerar-lotes/?mes=3&ano=2024', secure=True)
+        zf = zipfile.ZipFile(io.BytesIO(response.content))
+        names = zf.namelist()
+        self.assertTrue(any(n.endswith('.xml') for n in names))
+
+    def test_redirects_when_not_logged_in(self):
+        self.client.logout()
+        response = self.client.get('/reinf/gerar-lotes/?mes=3&ano=2024', secure=True)
+        self.assertEqual(response.status_code, 302)
