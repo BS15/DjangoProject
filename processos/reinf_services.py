@@ -19,7 +19,7 @@ import xml.etree.ElementTree as ET
 from collections import defaultdict
 from datetime import date
 
-from .models import RetencaoImposto
+from .models import RetencaoImposto, DadosContribuinte
 
 
 def _build_competencia_date(month: int, year: int) -> date:
@@ -329,3 +329,96 @@ def gerar_lotes_reinf(month: int, year: int) -> dict:
         xmls[filename] = _build_r4020_xml(cnpj, rets, month, year)
 
     return xmls
+
+
+def _build_r1000_xml(contribuinte: DadosContribuinte) -> str:
+    """
+    Build a skeleton R-1000 (evtInfoContri – Starter event) XML for the
+    given taxpayer (DadosContribuinte instance).
+
+    Returns a pretty-printed XML string.
+    """
+    root = ET.Element(
+        'Reinf',
+        xmlns='http://www.reinf.esocial.gov.br/schemas/evtInfoContribuinte/v2_01_01',
+    )
+
+    evt = ET.SubElement(root, 'evtInfoContri')
+
+    ide_evento = ET.SubElement(evt, 'ideEvento')
+    ET.SubElement(ide_evento, 'indRetif').text = '1'
+    ET.SubElement(ide_evento, 'tpAmb').text = '2'
+    ET.SubElement(ide_evento, 'procEmi').text = '1'
+    ET.SubElement(ide_evento, 'verProc').text = '1.0'
+
+    ide_contrib = ET.SubElement(evt, 'ideContrib')
+    ET.SubElement(ide_contrib, 'tpInsc').text = str(contribuinte.tipo_inscricao)
+    ET.SubElement(ide_contrib, 'nrInsc').text = contribuinte.cnpj
+
+    info_contrib = ET.SubElement(evt, 'infoContrib')
+    ET.SubElement(info_contrib, 'nmRazao').text = contribuinte.razao_social
+
+    raw = ET.tostring(root, encoding='unicode')
+    return xml.dom.minidom.parseString(raw).toprettyxml(indent='  ')
+
+
+def _build_r2099_xml(cnpj_contribuinte: str, month: int, year: int, has_movement: bool = True) -> str:
+    """
+    Build a skeleton R-2099 (evtFechaEvPer – INSS closing event) XML.
+
+    Returns a pretty-printed XML string.
+    """
+    root = ET.Element(
+        'Reinf',
+        xmlns='http://www.reinf.esocial.gov.br/schemas/evtFechaEvPer/v2_01_01',
+    )
+
+    evt = ET.SubElement(root, 'evtFechaEvPer')
+
+    ide_evento = ET.SubElement(evt, 'ideEvento')
+    ET.SubElement(ide_evento, 'indRetif').text = '1'
+    ET.SubElement(ide_evento, 'perApur').text = f'{year}-{month:02d}'
+    ET.SubElement(ide_evento, 'tpAmb').text = '2'
+    ET.SubElement(ide_evento, 'procEmi').text = '1'
+    ET.SubElement(ide_evento, 'verProc').text = '1.0'
+
+    ide_contrib = ET.SubElement(evt, 'ideContrib')
+    ET.SubElement(ide_contrib, 'tpInsc').text = '1'
+    ET.SubElement(ide_contrib, 'nrInsc').text = cnpj_contribuinte
+
+    fecha_ev_per = ET.SubElement(evt, 'fechaEvPer')
+    ET.SubElement(fecha_ev_per, 'evtServTom').text = 'S' if has_movement else 'N'
+
+    raw = ET.tostring(root, encoding='unicode')
+    return xml.dom.minidom.parseString(raw).toprettyxml(indent='  ')
+
+
+def _build_r4099_xml(cnpj_contribuinte: str, month: int, year: int, has_movement: bool = True) -> str:
+    """
+    Build a skeleton R-4099 (evtFechaEvPer – Federal taxes closing event) XML.
+
+    Returns a pretty-printed XML string.
+    """
+    root = ET.Element(
+        'Reinf',
+        xmlns='http://www.reinf.esocial.gov.br/schemas/evtFechaEvPerFed/v2_01_01',
+    )
+
+    evt = ET.SubElement(root, 'evtFechaEvPer')
+
+    ide_evento = ET.SubElement(evt, 'ideEvento')
+    ET.SubElement(ide_evento, 'indRetif').text = '1'
+    ET.SubElement(ide_evento, 'perApur').text = f'{year}-{month:02d}'
+    ET.SubElement(ide_evento, 'tpAmb').text = '2'
+    ET.SubElement(ide_evento, 'procEmi').text = '1'
+    ET.SubElement(ide_evento, 'verProc').text = '1.0'
+
+    ide_contrib = ET.SubElement(evt, 'ideContrib')
+    ET.SubElement(ide_contrib, 'tpInsc').text = '1'
+    ET.SubElement(ide_contrib, 'nrInsc').text = cnpj_contribuinte
+
+    fecha_ev_per = ET.SubElement(evt, 'fechaEvPer')
+    ET.SubElement(fecha_ev_per, 'evtRetPJ').text = 'S' if has_movement else 'N'
+
+    raw = ET.tostring(root, encoding='unicode')
+    return xml.dom.minidom.parseString(raw).toprettyxml(indent='  ')

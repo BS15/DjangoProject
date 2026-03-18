@@ -11,7 +11,7 @@ from .models import (
     DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio,
     DocumentoSuprimentoDeFundos, MeiosDeTransporte,
     Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao,
-    SuprimentoDeFundos, DespesaSuprimento,
+    SuprimentoDeFundos, DespesaSuprimento, DadosContribuinte,
 )
 # ==========================================
 # TABELAS DE PARAMETRIZAÇÃO (CONFIGURAÇÕES)
@@ -101,3 +101,13 @@ admin.site.register(DespesaSuprimento, SimpleHistoryAdmin)
 class ComprovanteDePagamentoAdmin(SimpleHistoryAdmin):
     list_display = ('id', 'processo', 'numero_comprovante', 'credor_nome', 'valor_pago', 'data_pagamento')
     search_fields = ('processo__n_nota_empenho', 'credor_nome', 'numero_comprovante')
+
+
+@admin.register(DadosContribuinte)
+class DadosContribuinteAdmin(admin.ModelAdmin):
+    list_display = ('cnpj', 'razao_social', 'tipo_inscricao')
+
+    def has_add_permission(self, request):
+        if DadosContribuinte.objects.exists():
+            return False
+        return super().has_add_permission(request)
