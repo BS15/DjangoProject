@@ -11,7 +11,7 @@ TIPO_DOC_MAP = {
 
 # 1. Apenas renderiza a página HTML
 def ai_extraction_page_view(request):
-    return render(request, 'ai_extraction_tool.html')
+    return render(request, 'fiscal/ai_extraction_tool.html')
 
 # 2. O endpoint da API que o JavaScript vai acessar
 def api_testar_extracao(request):
