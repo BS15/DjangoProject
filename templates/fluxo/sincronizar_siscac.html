@@ -3,7 +3,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Sincronizar SISCAC - System X</title>
+    <title>Painel de Reconciliação SISCAC - System X</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
@@ -16,7 +16,7 @@
     </div>
 </nav>
 
-<div class="container mt-4" style="max-width: 700px;">
+<div class="container mt-4" style="max-width: 1100px;">
 
     {% if messages %}
         {% for message in messages %}
@@ -28,13 +28,13 @@
     {% endif %}
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-arrow-repeat text-primary me-2"></i> Sincronizar SISCAC</h2>
+        <h2><i class="bi bi-arrow-repeat text-primary me-2"></i> Painel de Reconciliação SISCAC</h2>
         <a href="{% url 'home_page' %}" class="btn btn-outline-secondary">Voltar para Home</a>
     </div>
 
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body p-4">
-            <p class="text-muted mb-3">Selecione o relatório de pagamentos do SISCAC (PDF) para extrair e sincronizar os números PG com os processos cadastrados.</p>
+            <p class="text-muted mb-3">Selecione o relatório de pagamentos do SISCAC (PDF) para extrair e reconciliar os números PG com os processos cadastrados.</p>
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="mb-3">
@@ -49,33 +49,135 @@
     </div>
 
     {% if resultados %}
-    <div class="card shadow-sm border-0 border-start border-success border-4">
+
+    {# ── Sucessos ────────────────────────────────────────────────── #}
+    <div class="card shadow-sm border-0 border-start border-success border-4 mb-4">
         <div class="card-header bg-success text-white fw-bold">
-            <i class="bi bi-check-circle me-2"></i> Resultado da Sincronização
+            <i class="bi bi-check-circle me-2"></i>
+            Sucessos — {{ resultados.sucessos|length }} correspondência(s) perfeita(s)
+            {% if resultados.retroativos_corrigidos %}
+            <span class="badge bg-warning text-dark ms-2">{{ resultados.retroativos_corrigidos }} retroativo(s) corrigido(s)</span>
+            {% endif %}
         </div>
-        <div class="card-body">
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    Processos atualizados
-                    <span class="badge bg-primary rounded-pill">{{ resultados.atualizados }}</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    Retroativos corrigidos
-                    <span class="badge bg-warning text-dark rounded-pill">{{ resultados.retroativos_corrigidos }}</span>
-                </li>
-            </ul>
-            {% if resultados.erros %}
-            <div class="mt-3">
-                <h6 class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i> Erros</h6>
-                <ul class="list-group list-group-flush">
-                    {% for erro in resultados.erros %}
-                    <li class="list-group-item text-danger">{{ erro }}</li>
-                    {% endfor %}
-                </ul>
+        <div class="card-body p-0">
+            {% if resultados.sucessos %}
+            <div class="table-responsive">
+                <table class="table table-sm table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID Processo</th>
+                            <th>SISCAC PG</th>
+                            <th>Credor</th>
+                            <th class="text-end">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in resultados.sucessos %}
+                        <tr>
+                            <td>{{ s.id }}</td>
+                            <td>{{ s.siscac_pg }}</td>
+                            <td>{{ s.credor }}</td>
+                            <td class="text-end">{{ s.valor }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
+            {% else %}
+            <p class="text-muted p-3 mb-0">Nenhuma correspondência perfeita encontrada.</p>
             {% endif %}
         </div>
     </div>
+
+    {# ── Não Encontrados ─────────────────────────────────────────── #}
+    <div class="card shadow-sm border-0 border-start border-danger border-4 mb-4">
+        <div class="card-header bg-danger text-white fw-bold">
+            <i class="bi bi-exclamation-circle me-2"></i>
+            Não Encontrados — {{ resultados.nao_encontrados|length }} processo(s) pagos sem PG SISCAC
+        </div>
+        <div class="card-body p-0">
+            {% if resultados.nao_encontrados %}
+            <div class="table-responsive">
+                <table class="table table-sm table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID Processo</th>
+                            <th>Credor</th>
+                            <th>Data Pagamento</th>
+                            <th class="text-end">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for nf in resultados.nao_encontrados %}
+                        <tr class="table-danger">
+                            <td>{{ nf.id }}</td>
+                            <td>{{ nf.credor }}</td>
+                            <td>{{ nf.data_pagamento|default:"—" }}</td>
+                            <td class="text-end">{{ nf.valor_liquido }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted p-3 mb-0">Nenhum processo pago sem número SISCAC encontrado.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ── Divergências ────────────────────────────────────────────── #}
+    <div class="card shadow-sm border-0 border-start border-warning border-4 mb-4">
+        <div class="card-header bg-warning text-dark fw-bold">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Divergências — {{ resultados.divergencias|length }} correspondência(s) parcial(is) para revisão
+        </div>
+        <div class="card-body p-0">
+            {% if resultados.divergencias %}
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="forcar_sync">
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Selecionar</th>
+                                <th>ID Processo</th>
+                                <th>SISCAC PG</th>
+                                <th>Credor SISCAC</th>
+                                <th class="text-end">Valor SISCAC</th>
+                                <th>Credor Sistema</th>
+                                <th class="text-end">Valor Sistema</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for div in resultados.divergencias %}
+                            <tr class="table-warning">
+                                <td>
+                                    <input type="checkbox" name="force_sync_ids" value="{{ div.processo_id }}|{{ div.siscac_pg }}" class="form-check-input">
+                                </td>
+                                <td>{{ div.processo_id }}</td>
+                                <td>{{ div.siscac_pg }}</td>
+                                <td>{{ div.credor_siscac }}</td>
+                                <td class="text-end">{{ div.valor_siscac }}</td>
+                                <td>{{ div.credor_sistema }}</td>
+                                <td class="text-end">{{ div.valor_sistema }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-3">
+                    <button type="submit" class="btn btn-warning fw-bold">
+                        <i class="bi bi-arrow-repeat me-1"></i> Forçar Sincronização dos Selecionados
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <p class="text-muted p-3 mb-0">Nenhuma divergência encontrada.</p>
+            {% endif %}
+        </div>
+    </div>
+
     {% endif %}
 
 </div>
