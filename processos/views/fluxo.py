@@ -25,7 +25,7 @@ from ..utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_
 from ..ai_utils import extrair_dados_documento, extract_data_with_llm, extrair_codigos_barras_boletos
 from ..invoice_processor import process_invoice_taxes
 from ..models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias, StatusChoicesRetencoes, MeiosDeTransporte, FormasDePagamento, ContasBancarias, Grupos, CargosFuncoes, TagChoices
-from ..filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DiariasAutorizacaoFilter
+from ..filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DiariasAutorizacaoFilter, ArquivamentoFilter
 
 # ==========================================
 # STATUS RESTRICTIONS FOR PROCESS EDITING
@@ -1624,13 +1624,18 @@ def painel_arquivamento_view(request):
         status__status_choice__iexact='APROVADO POR CONSELHO FISCAL - PARA ARQUIVAMENTO'
     ).order_by('data_pagamento')
 
-    processos_arquivados = Processo.objects.filter(
+    arquivados_qs = Processo.objects.filter(
         status__status_choice__iexact='ARQUIVADO'
     ).order_by('-id')
+
+    arquivamento_filtro = ArquivamentoFilter(request.GET or None, queryset=arquivados_qs)
+    processos_arquivados = arquivamento_filtro.qs
 
     return render(request, 'fluxo/arquivamento.html', {
         'processos_pendentes': processos_pendentes,
         'processos_arquivados': processos_arquivados,
+        'processos_arquivados_count': processos_arquivados.count(),
+        'arquivamento_filtro': arquivamento_filtro,
         'pode_interagir': False,
     })
 
