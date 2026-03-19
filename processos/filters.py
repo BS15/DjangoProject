@@ -244,6 +244,29 @@ class DiariasAutorizacaoFilter(django_filters.FilterSet):
         for field in self.form.fields.values():
             field.widget.attrs.update({'class': 'form-control form-control-sm'})
 
+class ArquivamentoFilter(django_filters.FilterSet):
+    credor__nome = django_filters.CharFilter(lookup_expr='icontains', label='Credor')
+    n_nota_empenho = django_filters.CharFilter(lookup_expr='icontains', label='Nº Empenho')
+    data_pagamento__gte = django_filters.DateFilter(
+        field_name='data_pagamento', lookup_expr='gte', label='Data Pagamento (de)'
+    )
+    data_pagamento__lte = django_filters.DateFilter(
+        field_name='data_pagamento', lookup_expr='lte', label='Data Pagamento (até)'
+    )
+    ano_exercicio = django_filters.NumberFilter(label='Ano Exercício')
+
+    class Meta:
+        model = Processo
+        fields = ['credor__nome', 'n_nota_empenho', 'data_pagamento__gte', 'data_pagamento__lte', 'ano_exercicio']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.form.fields.values():
+            field.widget.attrs.update({'class': 'form-control form-control-sm'})
+        self.form.fields['data_pagamento__gte'].widget.attrs['type'] = 'date'
+        self.form.fields['data_pagamento__lte'].widget.attrs['type'] = 'date'
+
+
 class ContingenciaFilter(django_filters.FilterSet):
     processo__id = django_filters.NumberFilter(label="Nº do Processo")
     solicitante__username = django_filters.CharFilter(lookup_expr='icontains', label="Solicitante")
