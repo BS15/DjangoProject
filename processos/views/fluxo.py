@@ -2494,15 +2494,35 @@ def gerar_dados_fake_view(request):
 @login_required
 def sincronizar_siscac(request):
     context = {}
-    if request.method == 'POST' and 'siscac_pdf' in request.FILES:
-        pdf_file = request.FILES['siscac_pdf']
-        if not pdf_file.name.lower().endswith('.pdf'):
-            messages.error(request, 'O arquivo enviado não é um PDF válido.')
-            return render(request, 'fluxo/sincronizar_siscac.html', context)
-        try:
-            extracted = parse_siscac_report(pdf_file)
-            results = sync_siscac_payments(extracted)
-            context['resultados'] = results
-        except Exception as e:
-            messages.error(request, f'Erro ao processar o relatório SISCAC: {e}')
+    if request.method == 'POST':
+        if request.POST.get('action') == 'forcar_sync':
+            from ..models import Processo
+            force_sync_ids = request.POST.getlist('force_sync_ids')
+            count = 0
+            errors = 0
+            for item in force_sync_ids:
+                try:
+                    processo_id, siscac_pg = item.split('|', 1)
+                    processo = Processo.objects.get(id=int(processo_id))
+                    processo.n_pagamento_siscac = siscac_pg
+                    processo.save(update_fields=['n_pagamento_siscac'])
+                    count += 1
+                except Exception:
+                    errors += 1
+            if count:
+                messages.success(request, f'{count} processo(s) sincronizado(s) com sucesso.')
+            if errors:
+                messages.error(request, f'{errors} item(ns) não puderam ser sincronizados.')
+            return redirect('sincronizar_siscac')
+        elif 'siscac_pdf' in request.FILES:
+            pdf_file = request.FILES['siscac_pdf']
+            if not pdf_file.name.lower().endswith('.pdf'):
+                messages.error(request, 'O arquivo enviado não é um PDF válido.')
+                return render(request, 'fluxo/sincronizar_siscac.html', context)
+            try:
+                extracted = parse_siscac_report(pdf_file)
+                results = sync_siscac_payments(extracted)
+                context['resultados'] = results
+            except Exception as e:
+                messages.error(request, f'Erro ao processar o relatório SISCAC: {e}')
     return render(request, 'fluxo/sincronizar_siscac.html', context)

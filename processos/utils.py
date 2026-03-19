@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from django.db.models import Q
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
@@ -1008,13 +1009,11 @@ def parse_siscac_report(pdf_file):
 def sync_siscac_payments(extracted_payments):
     from .models import Processo
 
-    results = {'atualizados': 0, 'retroativos_corrigidos': 0, 'erros': []}
+    resultados = {'sucessos': [], 'divergencias': [], 'nao_encontrados': [], 'retroativos_corrigidos': 0}
+    matched_processo_ids = []
 
     for payment in extracted_payments:
         if payment['comprovante'] is None:
-            results['erros'].append(
-                f"PG {payment['siscac_pg']}: sem número de comprovante, ignorado."
-            )
             continue
 
         candidates = Processo.objects.filter(
@@ -1028,20 +1027,58 @@ def sync_siscac_payments(extracted_payments):
 
             credor_nome_upper = processo.credor.nome.upper()
             payment_credor_upper = payment['credor'].upper()
-
-            if payment_credor_upper not in credor_nome_upper and credor_nome_upper not in payment_credor_upper:
-                continue
+            credor_match = (
+                payment_credor_upper in credor_nome_upper or credor_nome_upper in payment_credor_upper
+            )
 
             valor_decimal = payment['valor_total'].quantize(Decimal('0.01'))
-            if valor_decimal != processo.valor_liquido:
-                continue
+            valor_match = (valor_decimal == processo.valor_liquido)
 
-            if processo.n_pagamento_siscac != payment['siscac_pg']:
-                if processo.n_pagamento_siscac:
-                    results['retroativos_corrigidos'] += 1
-                processo.n_pagamento_siscac = payment['siscac_pg']
-                processo.save(update_fields=['n_pagamento_siscac'])
-                results['atualizados'] += 1
-            break
+            if credor_match and valor_match:
+                if processo.n_pagamento_siscac != payment['siscac_pg']:
+                    if processo.n_pagamento_siscac:
+                        resultados['retroativos_corrigidos'] += 1
+                    processo.n_pagamento_siscac = payment['siscac_pg']
+                    processo.save(update_fields=['n_pagamento_siscac'])
+                resultados['sucessos'].append({
+                    'id': processo.id,
+                    'siscac_pg': payment['siscac_pg'],
+                    'credor': processo.credor.nome,
+                    'valor': processo.valor_liquido,
+                })
+                matched_processo_ids.append(processo.id)
+            else:
+                resultados['divergencias'].append({
+                    'processo_id': processo.id,
+                    'siscac_pg': payment['siscac_pg'],
+                    'credor_siscac': payment['credor'],
+                    'valor_siscac': valor_decimal,
+                    'credor_sistema': processo.credor.nome,
+                    'valor_sistema': processo.valor_liquido,
+                })
+                matched_processo_ids.append(processo.id)
 
-    return results
+    status_pagos = [
+        "PAGO - EM CONFERÊNCIA",
+        "PAGO - A CONTABILIZAR",
+        "CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL",
+        "APROVADO - PENDENTE ARQUIVAMENTO",
+        "ARQUIVADO",
+    ]
+    orphans = Processo.objects.filter(
+        status__status_choice__in=status_pagos
+    ).filter(
+        Q(n_pagamento_siscac__isnull=True) | Q(n_pagamento_siscac__exact='')
+    ).exclude(
+        id__in=matched_processo_ids
+    ).select_related('credor')
+
+    for orphan in orphans:
+        resultados['nao_encontrados'].append({
+            'id': orphan.id,
+            'credor': orphan.credor.nome if orphan.credor else '—',
+            'data_pagamento': orphan.data_pagamento,
+            'valor_liquido': orphan.valor_liquido,
+        })
+
+    return resultados
