@@ -2184,6 +2184,10 @@ def gerar_parecer_conselho_view(request, pk):
     return response
 
 
+_fake_generator = Faker('pt_BR')
+_MIN_FAKE_ANO_EXERCICIO = 2020
+
+
 def _ensure_fake_lookup_tables():
     """Create minimal lookup table records required for fake data generation."""
     for s in [
