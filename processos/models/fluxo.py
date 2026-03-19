@@ -185,6 +185,7 @@ class Processo(models.Model):
             ("pode_autorizar_pagamento", "Pode autorizar pagamentos (Ordenador)"),
             ("pode_contabilizar", "Pode registrar a contabilização (Contador)"),
             ("pode_auditar_conselho", "Pode aprovar no Conselho Fiscal"),
+            ("pode_arquivar", "Pode realizar o arquivamento definitivo de processos"),
         ]
 
     def __str__(self):
