@@ -301,3 +301,18 @@ class Contingencia(models.Model):
         verbose_name = "Contingência"
         verbose_name_plural = "Contingências"
         ordering = ['-data_solicitacao']
+
+
+class RegistroAcessoArquivo(models.Model):
+    usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    nome_arquivo = models.CharField(max_length=500)
+    data_acesso = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.usuario} acessou {self.nome_arquivo}"
+
+    class Meta:
+        verbose_name = "Registro de Acesso a Arquivo"
+        verbose_name_plural = "Registros de Acesso a Arquivos"
+        ordering = ['-data_acesso']

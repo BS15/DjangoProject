@@ -68,7 +68,7 @@
                             <strong>{{ doc.get_tipo_display }}</strong>
                             <span class="text-muted small ms-2">({{ doc.arquivo.name|slice:"16:" }})</span>
                         </div>
-                        <a href="{{ doc.arquivo.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                        <a href="{% url 'download_arquivo_seguro' 'processo' doc.id %}" target="_blank" class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-eye"></i> Ver
                         </a>
                     </li>

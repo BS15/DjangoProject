@@ -111,7 +111,7 @@
                     <div class="d-flex align-items-center gap-2">
                         {% if doc.arquivo %}
                             <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2"
-                                    onclick="showPdf('{{ doc.arquivo.url }}', '{{ doc.tipo.tipo_de_documento }} #{{ doc.ordem }}')">
+                                    onclick="showPdf('{% url 'download_arquivo_seguro' 'processo' doc.id %}', '{{ doc.tipo.tipo_de_documento }} #{{ doc.ordem }}')">
                                 <i class="bi bi-eye"></i>
                             </button>
                         {% endif %}
