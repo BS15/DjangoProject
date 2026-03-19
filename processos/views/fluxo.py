@@ -13,41 +13,19 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Count, Q, F, Sum, Exists, OuterRef
 from pypdf import PdfWriter
 from ..forms import ProcessoForm, DocumentoFormSet, DocumentoFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet
-from ..validators import verificar_turnpike
+from ..validators import verificar_turnpike, STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
 from ..utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, processar_pdf_comprovantes_ia, gerar_pdf_autorizacao, gerar_pdf_conselho_fiscal, gerar_pdf_pcd, parse_siscac_report, sync_siscac_payments
 from ..ai_utils import extrair_dados_documento, extract_data_with_llm, extrair_codigos_barras_boletos
 from ..invoice_processor import process_invoice_taxes
 from ..models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias, StatusChoicesRetencoes, MeiosDeTransporte, FormasDePagamento, ContasBancarias, Grupos, CargosFuncoes, TagChoices
 from ..filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DiariasAutorizacaoFilter, ArquivamentoFilter
-
-# ==========================================
-# STATUS RESTRICTIONS FOR PROCESS EDITING
-# ==========================================
-
-# Processes in these statuses are archived/historical and cannot be edited at all.
-STATUS_BLOQUEADOS_TOTAL = {
-    'CANCELADO / ANULADO',
-    'ARQUIVADO',
-    'APROVADO - PENDENTE ARQUIVAMENTO',
-    'CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL',
-}
-
-# Processes in these statuses have been authorised for payment.
-# Only document inclusion and reordering is permitted; all other fields are locked.
-STATUS_SOMENTE_DOCUMENTOS = {
-    'LANÇADO - AGUARDANDO COMPROVANTE',
-    'PAGO - EM CONFERÊNCIA',
-    'A PAGAR - AUTORIZADO',
-    'A PAGAR - ENVIADO PARA AUTORIZAÇÃO',
-}
-
 
 def home_page(request):
     processos_base = Processo.objects.all().order_by('-id')
@@ -658,20 +636,11 @@ def a_empenhar_view(request):
                         )
 
                     # Turnpike: check requirements before advancing status
-                    erros_turnpike = verificar_turnpike(
-                        processo,
-                        status_anterior='A EMPENHAR',
-                        status_novo='AGUARDANDO LIQUIDAÇÃO',
-                    )
-                    if erros_turnpike:
-                        raise ValueError(' '.join(erros_turnpike))
-
-                    status_aguardando, _ = StatusChoicesProcesso.objects.get_or_create(
-                        status_choice__iexact='AGUARDANDO LIQUIDAÇÃO',
-                        defaults={'status_choice': 'AGUARDANDO LIQUIDAÇÃO'}
-                    )
-                    processo.status = status_aguardando
-                    processo.save()
+                    processo.save(update_fields=['n_nota_empenho', 'data_empenho'])
+                    try:
+                        processo.avancar_status('AGUARDANDO LIQUIDAÇÃO')
+                    except ValidationError as ve:
+                        raise ValueError(str(ve))
 
                 messages.success(request, f"Empenho registrado com sucesso! Processo #{processo.id} avançou para Aguardando Liquidação.")
             except Processo.DoesNotExist:
@@ -716,30 +685,17 @@ def avancar_para_pagamento_view(request, pk):
         )
         return redirect('editar_processo', pk=pk)
 
-    erros_turnpike = verificar_turnpike(
-        processo,
-        status_anterior=status_atual,
-        status_novo='A PAGAR - PENDENTE AUTORIZAÇÃO',
-    )
-
-    if erros_turnpike:
-        for erro in erros_turnpike:
-            messages.error(request, erro)
-        return redirect('editar_processo', pk=pk)
-
     try:
         with transaction.atomic():
-            status_pendente, _ = StatusChoicesProcesso.objects.get_or_create(
-                status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
-                defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
-            )
-            processo.status = status_pendente
-            processo.save()
+            processo.avancar_status('A PAGAR - PENDENTE AUTORIZAÇÃO')
 
         messages.success(
             request,
             f'Processo #{pk} avançado com sucesso para "A Pagar - Pendente Autorização".'
         )
+    except ValidationError as ve:
+        for erro in ve.messages:
+            messages.error(request, erro)
     except Exception as e:
         messages.error(request, f'Erro ao avançar o processo: {str(e)}')
 
@@ -1007,12 +963,7 @@ def conferencia_processo_view(request, pk):
                     pendencia_formset.save()
 
                     if action == 'confirmar':
-                        status_contabilizar, _ = StatusChoicesProcesso.objects.get_or_create(
-                            status_choice__iexact='PAGO - A CONTABILIZAR',
-                            defaults={'status_choice': 'PAGO - A CONTABILIZAR'}
-                        )
-                        processo.status = status_contabilizar
-                        processo.save()
+                        processo.avancar_status('PAGO - A CONTABILIZAR')
                         messages.success(
                             request,
                             f'Processo #{processo.id} confirmado na conferência e enviado para Contabilização!'
@@ -1187,12 +1138,7 @@ def contabilizacao_processo_view(request, pk):
                         pendencia.status = status_pendencia
                         pendencia.save()
 
-                        status_devolvido, _ = StatusChoicesProcesso.objects.get_or_create(
-                            status_choice__iexact='PAGO - EM CONFERÊNCIA',
-                            defaults={'status_choice': 'PAGO - EM CONFERÊNCIA'}
-                        )
-                        processo.status = status_devolvido
-                        processo.save()
+                        processo.avancar_status('PAGO - EM CONFERÊNCIA')
 
                     messages.error(
                         request,
@@ -1238,12 +1184,7 @@ def contabilizacao_processo_view(request, pk):
                     pendencia_formset.save()
 
                     if action == 'aprovar':
-                        status_conselho, _ = StatusChoicesProcesso.objects.get_or_create(
-                            status_choice__iexact='CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL',
-                            defaults={'status_choice': 'CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL'}
-                        )
-                        processo.status = status_conselho
-                        processo.save()
+                        processo.avancar_status('CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL')
                         messages.success(
                             request,
                             f'Processo #{processo.id} contabilizado e enviado ao Conselho Fiscal!'
@@ -1456,12 +1397,7 @@ def conselho_processo_view(request, pk):
                 raise PermissionDenied
 
             if action == 'aprovar':
-                status_arquivamento, _ = StatusChoicesProcesso.objects.get_or_create(
-                    status_choice__iexact='APROVADO POR CONSELHO FISCAL - PARA ARQUIVAMENTO',
-                    defaults={'status_choice': 'APROVADO POR CONSELHO FISCAL - PARA ARQUIVAMENTO'}
-                )
-                processo.status = status_arquivamento
-                processo.save()
+                processo.avancar_status('APROVADO POR CONSELHO FISCAL - PARA ARQUIVAMENTO')
                 messages.success(
                     request,
                     f'Processo #{processo.id} aprovado pelo Conselho e liberado para arquivamento!'
@@ -1484,12 +1420,7 @@ def conselho_processo_view(request, pk):
                         pendencia.status = status_pendencia
                         pendencia.save()
 
-                        status_devolvido, _ = StatusChoicesProcesso.objects.get_or_create(
-                            status_choice__iexact='PAGO - A CONTABILIZAR',
-                            defaults={'status_choice': 'PAGO - A CONTABILIZAR'}
-                        )
-                        processo.status = status_devolvido
-                        processo.save()
+                        processo.avancar_status('PAGO - A CONTABILIZAR')
 
                     messages.error(
                         request,
