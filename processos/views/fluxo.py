@@ -5,7 +5,7 @@ import random
 import tempfile
 import zipfile
 from datetime import date, datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from faker import Faker
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
@@ -2090,6 +2090,84 @@ def add_contingencia_view(request):
         return redirect('home_page')
 
     return render(request, 'fluxo/add_contingencia.html')
+
+
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+def analisar_contingencia_view(request, pk):
+    """POST: Approve or reject a pending Contingencia by its PK."""
+    _CAMPOS_PERMITIDOS_CONTINGENCIA = {
+        'n_nota_empenho', 'data_empenho', 'valor_bruto', 'valor_liquido',
+        'ano_exercicio', 'n_pagamento_siscac', 'data_vencimento', 'data_pagamento',
+        'observacao', 'detalhamento', 'credor_id', 'forma_pagamento_id',
+        'tipo_pagamento_id', 'conta_id', 'tag_id',
+    }
+
+    contingencia = get_object_or_404(Contingencia, pk=pk)
+    processo = contingencia.processo
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '').strip()
+
+        if action == 'aprovar':
+            if 'novo_valor_liquido' in contingencia.dados_propostos:
+                raw_value = contingencia.dados_propostos['novo_valor_liquido']
+                if isinstance(raw_value, str):
+                    raw_value = raw_value.replace('.', '').replace(',', '.')
+                try:
+                    novo_valor_liquido = Decimal(str(raw_value))
+                except (InvalidOperation, ValueError):
+                    messages.error(request, 'O valor líquido proposto na contingência é inválido.')
+                    return redirect('painel_contingencias')
+
+                soma_comprovantes = sum(
+                    comp.valor_pago for comp in processo.comprovantes_pagamento.all()
+                    if comp.valor_pago is not None
+                )
+
+                if abs(novo_valor_liquido - Decimal(str(soma_comprovantes))) > Decimal('0.01'):
+                    messages.error(
+                        request,
+                        'A contingência não pode ser aprovada. O novo valor líquido proposto não corresponde à '
+                        'soma dos comprovantes bancários anexados no sistema. O setor responsável deve anexar '
+                        'os comprovantes restantes antes da aprovação.'
+                    )
+                    return redirect('painel_contingencias')
+
+            campos_alterados = []
+            for campo, valor in contingencia.dados_propostos.items():
+                if campo in _CAMPOS_PERMITIDOS_CONTINGENCIA and hasattr(processo, campo):
+                    setattr(processo, campo, valor)
+                    campos_alterados.append(campo)
+
+            processo.em_contingencia = False
+            campos_alterados.append('em_contingencia')
+            processo.save(update_fields=campos_alterados)
+
+            contingencia.status = 'APROVADA'
+            contingencia.save(update_fields=['status'])
+
+            messages.success(
+                request,
+                f'Contingência #{contingencia.pk} aprovada com sucesso. O Processo #{processo.pk} foi atualizado.'
+            )
+
+        elif action == 'rejeitar':
+            contingencia.status = 'REJEITADA'
+            contingencia.save(update_fields=['status'])
+
+            processo.em_contingencia = False
+            processo.save(update_fields=['em_contingencia'])
+
+            messages.warning(
+                request,
+                f'Contingência #{contingencia.pk} rejeitada.'
+            )
+
+        else:
+            messages.error(request, 'Ação inválida.')
+
+    return redirect('painel_contingencias')
 
 
 @login_required
