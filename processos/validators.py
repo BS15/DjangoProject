@@ -2,6 +2,30 @@ from django.core.exceptions import ValidationError
 
 
 # ============================================================
+# STATUS CONSTANTS
+# ============================================================
+
+STATUS_BLOQUEADOS_TOTAL = {
+    'CANCELADO / ANULADO',
+    'ARQUIVADO',
+    'APROVADO - PENDENTE ARQUIVAMENTO',
+    'CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL',
+}
+
+STATUS_SOMENTE_DOCUMENTOS = {
+    'LANÇADO - AGUARDANDO COMPROVANTE',
+    'PAGO - EM CONFERÊNCIA',
+    'A PAGAR - AUTORIZADO',
+    'A PAGAR - ENVIADO PARA AUTORIZAÇÃO',
+}
+
+STATUS_BLOQUEADOS_FORM = list(STATUS_BLOQUEADOS_TOTAL | STATUS_SOMENTE_DOCUMENTOS | {
+    'PAGO - A CONTABILIZAR',
+    'PAGO - EM CONTABILIZAÇÃO',
+})
+
+
+# ============================================================
 # TURNPIKE: Status-transition gate checks
 # ============================================================
 
@@ -65,6 +89,7 @@ def verificar_turnpike(processo, status_anterior, status_novo):
     # ------------------------------------------------------------------ #
     # Rule 3: LANÇADO - AGUARDANDO COMPROVANTE → PAGO - EM CONFERÊNCIA    #
     # Requires at least one "COMPROVANTE DE PAGAMENTO" document attached.  #
+    # Also validates that the sum of comprovantes matches valor_liquido.   #
     # ------------------------------------------------------------------ #
     if anterior == 'LANÇADO - AGUARDANDO COMPROVANTE' and novo == 'PAGO - EM CONFERÊNCIA':
         tem_comprovante = processo.documentos.filter(
@@ -74,6 +99,18 @@ def verificar_turnpike(processo, status_anterior, status_novo):
             erros.append(
                 'Para avançar para "Pago - Em Conferência" é necessário anexar ao menos '
                 'um documento do tipo "COMPROVANTE DE PAGAMENTO".'
+            )
+
+        soma_comprovantes = sum(
+            comp.valor_pago for comp in processo.comprovantes_pagamento.all()
+            if comp.valor_pago is not None
+        )
+        valor_liquido = processo.valor_liquido or 0
+        if abs(float(soma_comprovantes) - float(valor_liquido)) > 0.01:
+            erros.append(
+                f'Soma dos comprovantes de pagamento (R$ {float(soma_comprovantes):.2f}) é diferente do '
+                f'valor líquido do processo (R$ {float(valor_liquido):.2f}). '
+                f'Diferença: R$ {abs(float(soma_comprovantes) - float(valor_liquido)):.2f}.'
             )
 
     return erros

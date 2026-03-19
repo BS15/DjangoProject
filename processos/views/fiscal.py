@@ -6,7 +6,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.db import transaction
@@ -274,25 +274,7 @@ def api_vincular_comprovantes(request):
                 })
 
             # Validação: soma dos comprovantes deve ser igual ao valor líquido do processo
-            soma_comprovantes = sum(
-                float(c.get('valor_pago') or 0) for c in comprovantes
-            )
-            valor_liquido = float(processo.valor_liquido or 0)
-
-            if abs(soma_comprovantes - valor_liquido) > 0.01:
-                return JsonResponse({
-                    'sucesso': False,
-                    'erro': (
-                        f'Soma dos comprovantes (R$ {soma_comprovantes:.2f}) é diferente do '
-                        f'valor líquido do processo (R$ {valor_liquido:.2f}). '
-                        f'Diferença: R$ {abs(soma_comprovantes - valor_liquido):.2f}'
-                    )
-                })
-
-            status_pago, _ = StatusChoicesProcesso.objects.get_or_create(
-                status_choice__iexact='PAGO - EM CONFERÊNCIA',
-                defaults={'status_choice': 'PAGO - EM CONFERÊNCIA'}
-            )
+            # (esta verificação é realizada dentro de verificar_turnpike via avancar_status)
 
             tipo_comprovante, _ = TiposDeDocumento.objects.get_or_create(
                 tipo_de_documento__iexact='Comprovante de Pagamento',
@@ -336,19 +318,15 @@ def api_vincular_comprovantes(request):
 
                     default_storage.delete(temp_path)
 
-            # Turnpike: check that a comprovante document is now attached
-            erros_turnpike = verificar_turnpike(
-                processo,
-                status_anterior='LANÇADO - AGUARDANDO COMPROVANTE',
-                status_novo='PAGO - EM CONFERÊNCIA',
-            )
-            if erros_turnpike:
-                return JsonResponse({'sucesso': False, 'erro': ' '.join(erros_turnpike)})
+            # Advance status via avancar_status (includes turnpike validation)
+            try:
+                processo.avancar_status('PAGO - EM CONFERÊNCIA')
+            except ValidationError as ve:
+                return JsonResponse({'sucesso': False, 'erro': ' '.join(ve.messages)})
 
-            processo.status = status_pago
             if data_pagamento_processo:
                 processo.data_pagamento = data_pagamento_processo
-            processo.save()
+                processo.save(update_fields=['data_pagamento'])
 
             return JsonResponse({
                 'sucesso': True,

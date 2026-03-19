@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import inlineformset_factory
 from .models import Processo, DocumentoProcesso, DocumentoFiscal, RetencaoImposto, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos, Pendencia, StatusChoicesPendencias, DadosContribuinte, ContasBancarias
-from .validators import validar_regras_processo, validar_regras_suprimento
+from .validators import validar_regras_processo, validar_regras_suprimento, STATUS_BLOQUEADOS_FORM
 
 class ProcessoForm(forms.ModelForm):
     class Meta:
@@ -43,18 +43,7 @@ class ProcessoForm(forms.ModelForm):
                 self.fields[field_name].required = False
 
         # --- INÍCIO DA LÓGICA DE TRANCAMENTO (BLINDAGEM) ---
-        self.status_bloqueados = [
-            'A PAGAR - AUTORIZADO POR ORDENADORES DE DESPESA',
-            'A PAGAR - AUTORIZADO',
-            'PAGO - EM CONFERÊNCIA',
-            'PAGO - A CONTABILIZAR',
-            'PAGO - EM CONTABILIZAÇÃO',
-            'CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL',
-            'APROVADO - PENDENTE ARQUIVAMENTO',
-            'APROVADO POR CONSELHO FISCAL - PARA ARQUIVAMENTO',
-            'ARQUIVADO',
-            'CANCELADO / ANULADO'
-        ]
+        self.status_bloqueados = STATUS_BLOQUEADOS_FORM
 
         if self.instance and self.instance.pk and self.instance.status:
             status_atual = self.instance.status.status_choice.upper()
