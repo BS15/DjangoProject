@@ -21,7 +21,7 @@ from django.db.models import Count, Q, F, Sum, Exists, OuterRef
 from pypdf import PdfWriter
 from ..forms import ProcessoForm, DocumentoFormSet, DocumentoFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet
 from ..validators import verificar_turnpike
-from ..utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, processar_pdf_comprovantes_ia, gerar_pdf_autorizacao, gerar_pdf_conselho_fiscal, gerar_pdf_pcd
+from ..utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, processar_pdf_comprovantes_ia, gerar_pdf_autorizacao, gerar_pdf_conselho_fiscal, gerar_pdf_pcd, parse_siscac_report, sync_siscac_payments
 from ..ai_utils import extrair_dados_documento, extract_data_with_llm, extrair_codigos_barras_boletos
 from ..invoice_processor import process_invoice_taxes
 from ..models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias, StatusChoicesRetencoes, MeiosDeTransporte, FormasDePagamento, ContasBancarias, Grupos, CargosFuncoes, TagChoices
@@ -2489,3 +2489,20 @@ def gerar_dados_fake_view(request):
         return render(request, 'gerar_dados_fake.html', context)
 
     return render(request, 'gerar_dados_fake.html', context)
+
+
+@login_required
+def sincronizar_siscac(request):
+    context = {}
+    if request.method == 'POST' and 'siscac_pdf' in request.FILES:
+        pdf_file = request.FILES['siscac_pdf']
+        if not pdf_file.name.lower().endswith('.pdf'):
+            messages.error(request, 'O arquivo enviado não é um PDF válido.')
+            return render(request, 'fluxo/sincronizar_siscac.html', context)
+        try:
+            extracted = parse_siscac_report(pdf_file)
+            results = sync_siscac_payments(extracted)
+            context['resultados'] = results
+        except Exception as e:
+            messages.error(request, f'Erro ao processar o relatório SISCAC: {e}')
+    return render(request, 'fluxo/sincronizar_siscac.html', context)

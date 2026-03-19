@@ -6,6 +6,7 @@ import re
 import textwrap
 import uuid
 from collections import Counter
+from decimal import Decimal
 from pypdf import PdfWriter, PdfReader
 from datetime import datetime, timedelta
 from django.conf import settings
@@ -963,3 +964,84 @@ def gerar_pdf_conselho_fiscal(processo):
     buffer.seek(0)
 
     return merge_canvas_with_template(buffer, settings.CRECI_LETTERHEAD_PATH)
+
+
+def parse_siscac_report(pdf_file):
+    pattern_payment = re.compile(
+        r'^(20\d{2}PG\d{5})\s+(.*?)\s+(20\d{2}NE\d{5}).*?([\d.,]+)$'
+    )
+    pattern_comprovante = re.compile(r'Nº do Comprovante:\s*([\d.-]+)')
+
+    payments = {}
+    current_comprovante = None
+
+    with pdfplumber.open(pdf_file) as pdf:
+        for page in pdf.pages:
+            text = page.extract_text() or ''
+            for line in text.splitlines():
+                m_comp = pattern_comprovante.search(line)
+                if m_comp:
+                    current_comprovante = m_comp.group(1).replace('.', '')
+
+                m_pay = pattern_payment.match(line)
+                if m_pay:
+                    pg = m_pay.group(1)
+                    credor = m_pay.group(2).strip()
+                    nota_empenho = m_pay.group(3)
+                    valor_str = m_pay.group(4)
+                    valor_decimal = Decimal(valor_str.replace('.', '').replace(',', '.'))
+
+                    if pg in payments:
+                        payments[pg]['valor_total'] += valor_decimal
+                    else:
+                        payments[pg] = {
+                            'siscac_pg': pg,
+                            'credor': credor,
+                            'nota_empenho': nota_empenho,
+                            'valor_total': valor_decimal,
+                            'comprovante': current_comprovante,
+                        }
+
+    return list(payments.values())
+
+
+def sync_siscac_payments(extracted_payments):
+    from .models import Processo
+
+    results = {'atualizados': 0, 'retroativos_corrigidos': 0, 'erros': []}
+
+    for payment in extracted_payments:
+        if payment['comprovante'] is None:
+            results['erros'].append(
+                f"PG {payment['siscac_pg']}: sem número de comprovante, ignorado."
+            )
+            continue
+
+        candidates = Processo.objects.filter(
+            comprovantes_pagamento__numero_comprovante=payment['comprovante'],
+            n_nota_empenho=payment['nota_empenho'],
+        ).select_related('credor')
+
+        for processo in candidates:
+            if processo.credor is None or not processo.credor.nome:
+                continue
+
+            credor_nome_upper = processo.credor.nome.upper()
+            payment_credor_upper = payment['credor'].upper()
+
+            if payment_credor_upper not in credor_nome_upper and credor_nome_upper not in payment_credor_upper:
+                continue
+
+            valor_decimal = payment['valor_total'].quantize(Decimal('0.01'))
+            if valor_decimal != processo.valor_liquido:
+                continue
+
+            if processo.n_pagamento_siscac != payment['siscac_pg']:
+                if processo.n_pagamento_siscac:
+                    results['retroativos_corrigidos'] += 1
+                processo.n_pagamento_siscac = payment['siscac_pg']
+                processo.save(update_fields=['n_pagamento_siscac'])
+                results['atualizados'] += 1
+            break
+
+    return results
