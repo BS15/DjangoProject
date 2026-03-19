@@ -219,7 +219,7 @@
 
                                     <div class="col-auto">
                                         {% if doc_f.instance.arquivo %}
-                                        <a href="{{ doc_f.instance.arquivo.url }}"
+                                        <a href="{% url 'download_arquivo_seguro' 'processo' doc_f.instance.id %}"
                                            target="_blank"
                                            class="btn btn-sm btn-outline-secondary"
                                            title="Ver arquivo">

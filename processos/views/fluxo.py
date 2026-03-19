@@ -10,7 +10,7 @@ from faker import Faker
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.http import HttpResponse, JsonResponse
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -24,8 +24,53 @@ from ..validators import verificar_turnpike, STATUS_BLOQUEADOS_TOTAL, STATUS_SOM
 from ..utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, processar_pdf_comprovantes_ia, gerar_pdf_autorizacao, gerar_pdf_conselho_fiscal, gerar_pdf_pcd, parse_siscac_report, sync_siscac_payments
 from ..ai_utils import extrair_dados_documento, extract_data_with_llm, extrair_codigos_barras_boletos
 from ..invoice_processor import process_invoice_taxes
-from ..models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias, StatusChoicesRetencoes, MeiosDeTransporte, FormasDePagamento, ContasBancarias, Grupos, CargosFuncoes, TagChoices
+from ..models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias, StatusChoicesRetencoes, MeiosDeTransporte, FormasDePagamento, ContasBancarias, Grupos, CargosFuncoes, TagChoices, RegistroAcessoArquivo
 from ..filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DiariasAutorizacaoFilter, ArquivamentoFilter
+
+
+@login_required
+def download_arquivo_seguro(request, tipo_documento, documento_id):
+    arquivo = None
+
+    if tipo_documento == 'processo':
+        doc = get_object_or_404(DocumentoProcesso, id=documento_id)
+        arquivo = doc.arquivo
+    elif tipo_documento == 'fiscal':
+        doc = get_object_or_404(DocumentoFiscal, id=documento_id)
+        if not doc.documento_vinculado:
+            raise Http404
+        arquivo = doc.documento_vinculado.arquivo
+    elif tipo_documento == 'comprovante':
+        doc = get_object_or_404(ComprovanteDePagamento, id=documento_id)
+        arquivo = doc.arquivo
+    elif tipo_documento == 'suprimento':
+        doc = get_object_or_404(DespesaSuprimento, id=documento_id)
+        arquivo = doc.arquivo
+    else:
+        raise Http404
+
+    if not arquivo or not arquivo.name:
+        raise Http404
+
+    try:
+        file_handle = arquivo.open('rb')
+    except (FileNotFoundError, OSError):
+        raise Http404
+
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0].strip()
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+
+    RegistroAcessoArquivo.objects.create(
+        usuario=request.user,
+        nome_arquivo=arquivo.name,
+        ip_address=ip,
+    )
+
+    return FileResponse(file_handle, as_attachment=False)
+
 
 def home_page(request):
     processos_base = Processo.objects.all().order_by('-id')
