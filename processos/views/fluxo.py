@@ -1397,7 +1397,7 @@ def conselho_processo_view(request, pk):
                 raise PermissionDenied
 
             if action == 'aprovar':
-                processo.avancar_status('APROVADO POR CONSELHO FISCAL - PARA ARQUIVAMENTO')
+                processo.avancar_status('APROVADO - PENDENTE ARQUIVAMENTO')
                 messages.success(
                     request,
                     f'Processo #{processo.id} aprovado pelo Conselho e liberado para arquivamento!'
@@ -1505,8 +1505,8 @@ def aprovar_conselho_view(request, pk):
             raise PermissionDenied
         processo = get_object_or_404(Processo, id=pk)
         status_arquivamento, _ = StatusChoicesProcesso.objects.get_or_create(
-            status_choice__iexact='APROVADO POR CONSELHO FISCAL - PARA ARQUIVAMENTO',
-            defaults={'status_choice': 'APROVADO POR CONSELHO FISCAL - PARA ARQUIVAMENTO'}
+            status_choice__iexact='APROVADO - PENDENTE ARQUIVAMENTO',
+            defaults={'status_choice': 'APROVADO - PENDENTE ARQUIVAMENTO'}
         )
         processo.status = status_arquivamento
         processo.save()
@@ -1552,7 +1552,7 @@ def recusar_conselho_view(request, pk):
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def painel_arquivamento_view(request):
     processos_pendentes = Processo.objects.filter(
-        status__status_choice__iexact='APROVADO POR CONSELHO FISCAL - PARA ARQUIVAMENTO'
+        status__status_choice__iexact='APROVADO - PENDENTE ARQUIVAMENTO'
     ).order_by('data_pagamento')
 
     arquivados_qs = Processo.objects.filter(
