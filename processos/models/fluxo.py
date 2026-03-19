@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from simple_history.models import HistoricalRecords
 from datetime import date
+from processos.validators import validar_arquivo_seguro
 
 
 # Substitua a sua função antiga por esta:
@@ -122,7 +123,7 @@ class TiposDePendencias(models.Model):
 
 
 class DocumentoBase(models.Model):
-    arquivo = models.FileField(upload_to=caminho_documento)
+    arquivo = models.FileField(upload_to=caminho_documento, validators=[validar_arquivo_seguro])
     ordem = models.PositiveIntegerField(default=1, help_text="Ordem do arquivo")
     tipo = models.ForeignKey('TiposDeDocumento', on_delete=models.PROTECT)
 
@@ -168,7 +169,7 @@ class Processo(models.Model):
     detalhamento = models.CharField(max_length=200, blank=True, null=True)
     tag = models.ForeignKey('TagChoices', on_delete=models.PROTECT, blank=True, null=True)
 
-    arquivo_final = models.FileField("Processo Consolidado", upload_to='processos_arquivados/', null=True, blank=True)
+    arquivo_final = models.FileField("Processo Consolidado", upload_to='processos_arquivados/', null=True, blank=True, validators=[validar_arquivo_seguro])
     em_contingencia = models.BooleanField(
         "Em Contingência",
         default=False,
