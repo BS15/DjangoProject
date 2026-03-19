@@ -933,6 +933,35 @@ def iniciar_conferencia_view(request):
     return redirect('painel_conferencia')
 
 
+def _build_history_record(record, modelo_label):
+    """Build an enriched history record dict with changed fields and change reason."""
+    HISTORY_TYPE_LABELS = {'+': 'Criação', '~': 'Alteração', '-': 'Exclusão'}
+    changed_fields = []
+    if record.history_type == '~':
+        prev = record.prev_record
+        if prev is not None:
+            try:
+                delta = record.diff_against(prev)
+                for change in delta.changes:
+                    changed_fields.append({
+                        'field': change.field,
+                        'old': change.old,
+                        'new': change.new,
+                    })
+            except Exception:
+                pass
+    return {
+        'modelo': modelo_label,
+        'history_date': record.history_date,
+        'history_user': record.history_user,
+        'history_type': record.history_type,
+        'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
+        'history_change_reason': getattr(record, 'history_change_reason', None),
+        'str_repr': str(record),
+        'changed_fields': changed_fields,
+    }
+
+
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def conferencia_processo_view(request, pk):
@@ -1033,46 +1062,22 @@ def conferencia_processo_view(request, pk):
     history_records = []
 
     for record in processo.history.all().select_related('history_user'):
-        history_records.append({
-            'modelo': 'Processo',
-            'history_date': record.history_date,
-            'history_user': record.history_user,
-            'history_type': record.history_type,
-            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
-            'str_repr': str(record),
-        })
+        history_records.append(_build_history_record(record, 'Processo'))
 
     for record in DocumentoProcesso.history.filter(processo_id=pk).select_related('history_user'):
-        history_records.append({
-            'modelo': 'Documento',
-            'history_date': record.history_date,
-            'history_user': record.history_user,
-            'history_type': record.history_type,
-            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
-            'str_repr': str(record),
-        })
+        history_records.append(_build_history_record(record, 'Documento'))
 
     for record in Pendencia.history.filter(processo_id=pk).select_related('history_user'):
-        history_records.append({
-            'modelo': 'Pendência',
-            'history_date': record.history_date,
-            'history_user': record.history_user,
-            'history_type': record.history_type,
-            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
-            'str_repr': str(record),
-        })
+        history_records.append(_build_history_record(record, 'Pendência'))
 
     for record in DocumentoFiscal.history.filter(processo_id=pk).select_related('history_user'):
-        history_records.append({
-            'modelo': 'Nota Fiscal',
-            'history_date': record.history_date,
-            'history_user': record.history_user,
-            'history_type': record.history_type,
-            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
-            'str_repr': str(record),
-        })
+        history_records.append(_build_history_record(record, 'Nota Fiscal'))
 
     history_records.sort(key=lambda x: x['history_date'], reverse=True)
+
+    contingencias = Contingencia.objects.filter(processo=processo).select_related(
+        'solicitante', 'aprovado_por_supervisor', 'aprovado_por_ordenador', 'aprovado_por_conselho'
+    ).order_by('-data_solicitacao')
 
     context = {
         'processo': processo,
@@ -1080,6 +1085,7 @@ def conferencia_processo_view(request, pk):
         'pendencia_formset': pendencia_formset,
         'pendencia_form': pendencia_form,
         'history_records': history_records,
+        'contingencias': contingencias,
         'queue': queue,
         'current_index': current_index,
         'next_pk': next_pk,
@@ -1253,46 +1259,22 @@ def contabilizacao_processo_view(request, pk):
     history_records = []
 
     for record in processo.history.all().select_related('history_user'):
-        history_records.append({
-            'modelo': 'Processo',
-            'history_date': record.history_date,
-            'history_user': record.history_user,
-            'history_type': record.history_type,
-            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
-            'str_repr': str(record),
-        })
+        history_records.append(_build_history_record(record, 'Processo'))
 
     for record in DocumentoProcesso.history.filter(processo_id=pk).select_related('history_user'):
-        history_records.append({
-            'modelo': 'Documento',
-            'history_date': record.history_date,
-            'history_user': record.history_user,
-            'history_type': record.history_type,
-            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
-            'str_repr': str(record),
-        })
+        history_records.append(_build_history_record(record, 'Documento'))
 
     for record in Pendencia.history.filter(processo_id=pk).select_related('history_user'):
-        history_records.append({
-            'modelo': 'Pendência',
-            'history_date': record.history_date,
-            'history_user': record.history_user,
-            'history_type': record.history_type,
-            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
-            'str_repr': str(record),
-        })
+        history_records.append(_build_history_record(record, 'Pendência'))
 
     for record in DocumentoFiscal.history.filter(processo_id=pk).select_related('history_user'):
-        history_records.append({
-            'modelo': 'Nota Fiscal',
-            'history_date': record.history_date,
-            'history_user': record.history_user,
-            'history_type': record.history_type,
-            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
-            'str_repr': str(record),
-        })
+        history_records.append(_build_history_record(record, 'Nota Fiscal'))
 
     history_records.sort(key=lambda x: x['history_date'], reverse=True)
+
+    contingencias = Contingencia.objects.filter(processo=processo).select_related(
+        'solicitante', 'aprovado_por_supervisor', 'aprovado_por_ordenador', 'aprovado_por_conselho'
+    ).order_by('-data_solicitacao')
 
     context = {
         'processo': processo,
@@ -1300,6 +1282,7 @@ def contabilizacao_processo_view(request, pk):
         'pendencia_formset': pendencia_formset,
         'pendencia_form': pendencia_form,
         'history_records': history_records,
+        'contingencias': contingencias,
         'queue': queue,
         'current_index': current_index,
         'next_pk': next_pk,
@@ -1486,51 +1469,28 @@ def conselho_processo_view(request, pk):
     history_records = []
 
     for record in processo.history.all().select_related('history_user'):
-        history_records.append({
-            'modelo': 'Processo',
-            'history_date': record.history_date,
-            'history_user': record.history_user,
-            'history_type': record.history_type,
-            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
-            'str_repr': str(record),
-        })
+        history_records.append(_build_history_record(record, 'Processo'))
 
     for record in DocumentoProcesso.history.filter(processo_id=pk).select_related('history_user'):
-        history_records.append({
-            'modelo': 'Documento',
-            'history_date': record.history_date,
-            'history_user': record.history_user,
-            'history_type': record.history_type,
-            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
-            'str_repr': str(record),
-        })
+        history_records.append(_build_history_record(record, 'Documento'))
 
     for record in Pendencia.history.filter(processo_id=pk).select_related('history_user'):
-        history_records.append({
-            'modelo': 'Pendência',
-            'history_date': record.history_date,
-            'history_user': record.history_user,
-            'history_type': record.history_type,
-            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
-            'str_repr': str(record),
-        })
+        history_records.append(_build_history_record(record, 'Pendência'))
 
     for record in DocumentoFiscal.history.filter(processo_id=pk).select_related('history_user'):
-        history_records.append({
-            'modelo': 'Nota Fiscal',
-            'history_date': record.history_date,
-            'history_user': record.history_user,
-            'history_type': record.history_type,
-            'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
-            'str_repr': str(record),
-        })
+        history_records.append(_build_history_record(record, 'Nota Fiscal'))
 
     history_records.sort(key=lambda x: x['history_date'], reverse=True)
+
+    contingencias = Contingencia.objects.filter(processo=processo).select_related(
+        'solicitante', 'aprovado_por_supervisor', 'aprovado_por_ordenador', 'aprovado_por_conselho'
+    ).order_by('-data_solicitacao')
 
     context = {
         'processo': processo,
         'pendencia_form': pendencia_form,
         'history_records': history_records,
+        'contingencias': contingencias,
         'queue': queue,
         'current_index': current_index,
         'next_pk': next_pk,
