@@ -2,6 +2,7 @@ from django.db import models
 from simple_history.models import HistoricalRecords
 
 from .fluxo import DocumentoBase, caminho_documento
+from processos.validators import validar_arquivo_seguro
 
 
 class StatusChoicesSuprimentoDeFundos(models.Model):
@@ -66,7 +67,7 @@ class DespesaSuprimento(models.Model):
     valor = models.DecimalField("Valor Pago (R$)", max_digits=10, decimal_places=2)
 
     # NOVO CAMPO: O arquivo único contendo Solicitação + Nota Fiscal
-    arquivo = models.FileField("Arquivo Único (Solicitação + NF)", upload_to=caminho_documento, blank=True, null=True)
+    arquivo = models.FileField("Arquivo Único (Solicitação + NF)", upload_to=caminho_documento, blank=True, null=True, validators=[validar_arquivo_seguro])
 
     def __str__(self):
         return f"{self.data} - {self.estabelecimento} - R$ {self.valor}"

@@ -1,4 +1,42 @@
+import magic
 from django.core.exceptions import ValidationError
+
+
+# ============================================================
+# FILE SECURITY VALIDATOR
+# ============================================================
+
+ALLOWED_MIME_TYPES = {
+    'application/pdf',
+    'image/jpeg',
+    'image/png',
+}
+
+
+def validar_arquivo_seguro(file):
+    """
+    Validates that the uploaded file's true MIME type (determined by magic bytes)
+    is in the allowed list.  Raises ValidationError if the file type is not
+    permitted or appears to be spoofed.
+    """
+    if not file:
+        return
+
+    try:
+        mime_type = magic.from_buffer(file.read(2048), mime=True)
+        file.seek(0)
+    except Exception:
+        raise ValidationError(
+            "Não foi possível verificar o tipo do arquivo. "
+            "Certifique-se de que o arquivo não está corrompido."
+        )
+
+    if mime_type not in ALLOWED_MIME_TYPES:
+        raise ValidationError(
+            f"Formato de arquivo não permitido ou aparenta estar corrompido/adulterado "
+            f"(tipo detectado: {mime_type}). "
+            f"Apenas PDF, JPEG e PNG são aceitos."
+        )
 
 
 # ============================================================

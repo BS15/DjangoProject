@@ -8,4 +8,5 @@ protobuf==7.34.0
 pypdf==6.8.0
 PyPDF2==3.0.1
 python-dotenv==1.2.2
+python-magic>=0.4.27
 reportlab>=4.0.0

@@ -1,6 +1,7 @@
 from django.db import models
 from datetime import date
 from simple_history.models import HistoricalRecords
+from processos.validators import validar_arquivo_seguro
 
 
 def caminho_comprovante(instance, filename):
@@ -195,7 +196,8 @@ class ComprovanteDePagamento(models.Model):
         "Arquivo do Comprovante",
         upload_to=caminho_comprovante,
         null=True,
-        blank=True
+        blank=True,
+        validators=[validar_arquivo_seguro]
     )
     history = HistoricalRecords()
 
