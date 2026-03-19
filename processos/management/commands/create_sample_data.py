@@ -175,7 +175,6 @@ class Command(BaseCommand):
                 banco=banco_info["banco"],
                 agencia=banco_info["agencia"],
                 defaults={
-                    "titular": fake.company(),
                     "conta": str(random.randint(10000, 99999)),
                 },
             )

@@ -2227,7 +2227,6 @@ def _ensure_fake_lookup_tables():
 
     if not ContasBancarias.objects.exists():
         ContasBancarias.objects.create(
-            titular=_fake_generator.company(),
             banco="Banco do Brasil",
             agencia="0001",
             conta=str(random.randint(10000, 99999)),
@@ -2247,7 +2246,6 @@ def _ensure_fake_lookup_tables():
             banco="Caixa Econômica Federal",
             agencia="1234",
             defaults={
-                "titular": _fake_generator.company(),
                 "conta": str(random.randint(10000, 99999)),
             },
         )
