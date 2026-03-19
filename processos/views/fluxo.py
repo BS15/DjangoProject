@@ -1612,15 +1612,63 @@ def painel_arquivamento_view(request):
         'processos_arquivados': processos_arquivados,
         'processos_arquivados_count': processos_arquivados.count(),
         'arquivamento_filtro': arquivamento_filtro,
-        'pode_interagir': False,
+        'pode_interagir': request.user.has_perm('processos.pode_arquivar'),
     })
 
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def arquivar_processo_view(request, pk):
-    if request.method == 'POST':
+    if request.method != 'POST':
+        return redirect('painel_arquivamento')
+
+    if not request.user.has_perm('processos.pode_arquivar'):
         raise PermissionDenied
+
+    processo = get_object_or_404(Processo, id=pk)
+
+    status_atual = processo.status.status_choice if processo.status else ''
+    if status_atual.upper() != 'APROVADO - PENDENTE ARQUIVAMENTO':
+        messages.error(request, f'Processo #{processo.id} não está no status correto para arquivamento.')
+        return redirect('painel_arquivamento')
+
+    lista_arquivos = []
+    try:
+        for doc in processo.documentos.order_by('id'):
+            if doc.arquivo and doc.arquivo.name:
+                try:
+                    lista_arquivos.append(doc.arquivo.open('rb'))
+                except (FileNotFoundError, OSError):
+                    pass
+
+        if not lista_arquivos:
+            messages.error(request, f'Processo #{processo.id} não possui documentos para arquivar.')
+            return redirect('painel_arquivamento')
+
+        try:
+            pdf_buffer = mesclar_pdfs_em_memoria(lista_arquivos)
+        except Exception:
+            pdf_buffer = None
+
+        if pdf_buffer is None:
+            messages.error(request, f'Erro ao gerar o PDF consolidado do processo #{processo.id}.')
+            return redirect('painel_arquivamento')
+
+        pdf_bytes = pdf_buffer.read()
+    finally:
+        for f in lista_arquivos:
+            try:
+                f.close()
+            except Exception:
+                pass
+
+    nome_arquivo = f'processo_{processo.id}_consolidado.pdf'
+    with transaction.atomic():
+        processo.arquivo_final.save(nome_arquivo, ContentFile(pdf_bytes), save=False)
+        processo.save(update_fields=['arquivo_final'])
+        processo.avancar_status('ARQUIVADO')
+
+    messages.success(request, f'Processo #{processo.id} arquivado definitivamente com sucesso!')
     return redirect('painel_arquivamento')
 
 
