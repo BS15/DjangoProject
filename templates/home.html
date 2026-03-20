@@ -129,12 +129,12 @@
                         <th class="ps-4" style="width: 40px;">
                             <input type="checkbox" id="checkMaster" class="form-check-input border-secondary">
                         </th>
-                        <th># ID</th>
-                        <th>Credor</th>
-                        <th>Data Empenho</th>
-                        <th>Status</th>
-                        <th>Tipo de Pagamento</th>
-                        <th class="text-end pe-4">Valor Líquido</th>
+                        <th><a href="#" class="sort-header text-decoration-none text-white" data-campo="id"># ID {% if ordem == 'id' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
+                        <th><a href="#" class="sort-header text-decoration-none text-white" data-campo="credor">Credor {% if ordem == 'credor' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %} text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
+                        <th><a href="#" class="sort-header text-decoration-none text-white" data-campo="data_empenho">Data Empenho {% if ordem == 'data_empenho' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
+                        <th><a href="#" class="sort-header text-decoration-none text-white" data-campo="status">Status {% if ordem == 'status' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %} text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
+                        <th><a href="#" class="sort-header text-decoration-none text-white" data-campo="tipo_pagamento">Tipo de Pagamento {% if ordem == 'tipo_pagamento' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %} text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
+                        <th class="text-end pe-4"><a href="#" class="sort-header text-decoration-none text-white" data-campo="valor_liquido">Valor Líquido {% if ordem == 'valor_liquido' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
                         <th class="text-center">Ações</th>
                     </tr>
                 </thead>
@@ -310,6 +310,22 @@ document.addEventListener("DOMContentLoaded", function() {
     const checkMaster = document.getElementById('checkMaster');
     const checksLinha = document.querySelectorAll('.check-linha');
     const btnEditar = document.getElementById('btnEditar');
+
+    // 0. Sortable column headers
+    document.querySelectorAll('.sort-header').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const campo = this.getAttribute('data-campo');
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('ordem') === campo) {
+                params.set('direcao', params.get('direcao') === 'asc' ? 'desc' : 'asc');
+            } else {
+                params.set('ordem', campo);
+                params.set('direcao', 'asc');
+            }
+            window.location.href = '?' + params.toString();
+        });
+    });
 
     // 1. Logica do "Selecionar Todos"
     if(checkMaster) {
