@@ -312,6 +312,7 @@ def api_vincular_comprovantes(request):
                 valor_pago = comp.get('valor_pago')
                 credor_nome = comp.get('credor_nome') or ''
                 data_pagamento = comp.get('data_pagamento') or None
+                numero_comprovante = comp.get('numero_comprovante') or None
 
                 # Use the first available payment date to update the process
                 if data_pagamento and not data_pagamento_processo:
@@ -335,6 +336,7 @@ def api_vincular_comprovantes(request):
                         credor_nome=credor_nome,
                         valor_pago=valor_pago,
                         data_pagamento=data_pagamento,
+                        numero_comprovante=numero_comprovante,
                         arquivo=ContentFile(conteudo_arquivo, name=nome_arquivo),
                     )
 
