@@ -287,7 +287,8 @@ def processar_pdf_comprovantes(pdf_file):
             'documentos_encontrados': documentos_encontrados,
             'contas_encontradas': contas_encontradas,
         })
-    print(resultados)
+    for item in resultados:
+        print(item)
     return resultados
 
 def gerar_termo_auditoria(processo, usuario_nome="Conselheiro Fiscal"):

@@ -233,6 +233,27 @@ def painel_comprovantes_view(request):
     return render(request, 'fiscal/painel_comprovantes.html', context)
 
 
+def _serializar_comprovante(comp):
+    """Convert a comprovante result dict to a JSON-serializable form.
+
+    ``processar_pdf_comprovantes`` stores Django model objects inside
+    ``documentos_encontrados`` and ``contas_encontradas``.  This helper
+    replaces those objects with their ``nome`` string (or None) so that
+    the dict can be passed directly to ``JsonResponse``.
+    """
+    return {
+        **comp,
+        'documentos_encontrados': [
+            {'doc': item['doc'], 'credor': getattr(item['credor'], 'nome', None)}
+            for item in comp.get('documentos_encontrados', [])
+        ],
+        'contas_encontradas': [
+            {'agencia': item['agencia'], 'conta': item['conta'], 'credor': getattr(item['credor'], 'nome', None)}
+            for item in comp.get('contas_encontradas', [])
+        ],
+    }
+
+
 def api_fatiar_comprovantes(request):
     if request.method == 'POST' and request.FILES.get('pdf_banco'):
         modo = request.POST.get('modo', 'auto')
@@ -245,7 +266,8 @@ def api_fatiar_comprovantes(request):
             else:  # modo == 'auto' (default): regex extraction, no AI cost
                 resultados = processar_pdf_comprovantes(request.FILES['pdf_banco'])
 
-            return JsonResponse({'sucesso': True, 'comprovantes': resultados, 'modo': modo})
+            resultados_json = [_serializar_comprovante(r) for r in resultados]
+            return JsonResponse({'sucesso': True, 'comprovantes': resultados_json, 'modo': modo})
         except Exception as e:
             return JsonResponse({'sucesso': False, 'erro': str(e)})
     return JsonResponse({'sucesso': False, 'erro': 'Arquivo não enviado.'})
