@@ -268,7 +268,7 @@ def processar_pdf_comprovantes(pdf_file):
             documentos = padrao_doc.findall(texto_flat)
             for doc in documentos:
                 if doc != CNPJ_ORGAO:
-                    credor_encontrado = Credor.objects.filter(cnpj_cpf=doc).first()
+                    credor_encontrado = Credor.objects.filter(cpf_cnpj=doc).first()
                     if credor_encontrado:
                         break
 
