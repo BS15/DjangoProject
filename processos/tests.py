@@ -1,6 +1,11 @@
+import io
+from unittest.mock import patch
 from django.test import TestCase
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
 from .invoice_processor import process_invoice_taxes, _normalizar_cidade
 from .models import Processo, StatusChoicesProcesso, TiposDeDocumento, DocumentoProcesso, DocumentoFiscal
+from .utils import processar_pdf_comprovantes
 from .validators import verificar_turnpike
 from .views import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
 
@@ -855,3 +860,84 @@ class GerarLoteReinfViewTest(TestCase):
         self.client.logout()
         response = self.client.get('/reinf/gerar-lotes/?mes=3&ano=2024', secure=True)
         self.assertEqual(response.status_code, 302)
+
+
+# ===========================================================================
+# ⚠  DEBUG / DESENVOLVIMENTO — REMOVER ANTES DE PRODUÇÃO
+#
+# Esta classe de teste imprime os campos extraídos pela função
+# processar_pdf_comprovantes no console para inspeção visual.
+# NÃO inclua esta classe em ambiente de produção, pois ela pode
+# expor informações sensíveis nos logs.
+#
+# Para desativar: comente ou remova a classe inteira abaixo.
+# ===========================================================================
+class ComprovantesExtracaoDebugTest(TestCase):
+    """
+    ⚠  DEBUG / DESENVOLVIMENTO — REMOVER ANTES DE PRODUÇÃO.
+
+    Teste de impressão no console para a função processar_pdf_comprovantes.
+    Constrói um PDF sintético de uma página com valor, data e CNPJ conhecidos,
+    executa o extrator e imprime todos os campos extraídos no stdout para
+    verificação manual.
+    """
+
+    def _make_pdf(self, text_lines):
+        """Cria um PDF de uma página em memória contendo as linhas de texto fornecidas."""
+        buffer = io.BytesIO()
+        c = canvas.Canvas(buffer, pagesize=A4)
+        y = 750
+        for line in text_lines:
+            c.drawString(50, y, line)
+            y -= 20
+        c.save()
+        buffer.seek(0)
+        buffer.name = "test_comprovante.pdf"
+        return buffer
+
+    @patch('processos.utils.default_storage')
+    def test_console_print_extracao_valor_data_credor(self, mock_storage):
+        """
+        ⚠  DEBUG — imprime os campos extraídos no console.
+
+        Cria um comprovante sintético com valor, data de pagamento e CNPJ
+        conhecidos. O credor não estará cadastrado no banco (retorna None).
+        Verifique o output no console para confirmar se os campos estão
+        sendo extraídos corretamente.
+        """
+        mock_storage.exists.return_value = False
+        mock_storage.save.return_value = 'temp/test_comprovante_pag_1_test_comprovante.pdf'
+        mock_storage.url.return_value = '/media/temp/test_comprovante_pag_1_test_comprovante.pdf'
+
+        pdf = self._make_pdf([
+            "COMPROVANTE DE PAGAMENTO",
+            "CNPJ FAVORECIDO: 99.999.999/0001-99",
+            "VALOR TOTAL: 1.500,00",
+            "DATA DO PAGAMENTO: 15/03/2026",
+        ])
+
+        resultados = processar_pdf_comprovantes(pdf)
+
+        print("\n" + "=" * 60)
+        print("[DEBUG] RESULTADO DA EXTRACAO DE COMPROVANTES")
+        print("=" * 60)
+        for r in resultados:
+            print(f"  Pagina        : {r['pagina']}")
+            print(f"  Credor        : {r['credor_extraido']}")
+            print(f"  Valor         : {r['valor_extraido']}")
+            print(f"  Data pagamento: {r['data_pagamento']}")
+            print(f"  Caminho temp  : {r['temp_path']}")
+            print(f"  URL           : {r['url']}")
+            print("-" * 60)
+        print("[FIM DO DEBUG]\n")
+
+        self.assertEqual(len(resultados), 1)
+        r = resultados[0]
+        self.assertEqual(r['pagina'], 1)
+        self.assertIn('credor_extraido', r)
+        self.assertIn('valor_extraido', r)
+        self.assertIn('data_pagamento', r)
+        self.assertIn('temp_path', r)
+        self.assertIn('url', r)
+        self.assertAlmostEqual(r['valor_extraido'], 1500.0)
+        self.assertEqual(r['data_pagamento'], '2026-03-15')
