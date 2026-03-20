@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Sincronizar Diárias SISCAC - System X</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow-sm">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold" href="{% url 'home_page' %}">System X</a>
+    </div>
+</nav>
+
+<div class="container mt-4" style="max-width: 900px;">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-arrow-repeat text-primary me-2"></i> Sincronizar Diárias SISCAC</h2>
+        <a href="{% url 'diarias_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar para Diárias
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+            <p class="text-muted mb-3">
+                Selecione o arquivo CSV exportado do SISCAC para importar ou atualizar as Diárias automaticamente.
+            </p>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="siscac_csv" class="form-label fw-semibold">Arquivo CSV do SISCAC</label>
+                    <input class="form-control" type="file" id="siscac_csv" name="siscac_csv" accept=".csv" required>
+                </div>
+                <button type="submit" class="btn btn-primary fw-bold">
+                    <i class="bi bi-arrow-repeat me-1"></i> Sincronizar Diárias
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {% if resultados %}
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="alert alert-success shadow-sm mb-0">
+                <i class="bi bi-plus-circle-fill me-2"></i>
+                <strong>Diárias Importadas:</strong> {{ resultados.criadas }}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="alert alert-info shadow-sm mb-0">
+                <i class="bi bi-arrow-repeat me-2"></i>
+                <strong>Diárias Atualizadas:</strong> {{ resultados.atualizadas }}
+            </div>
+        </div>
+    </div>
+
+    {% if resultados.erros %}
+    <div class="card border-danger shadow-sm">
+        <div class="card-header bg-danger text-white fw-bold">
+            <i class="bi bi-exclamation-circle me-2"></i> Erros ({{ resultados.erros|length }})
+        </div>
+        <div class="card-body">
+            <ul class="mb-0 text-danger">
+                {% for erro in resultados.erros %}
+                <li>{{ erro }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

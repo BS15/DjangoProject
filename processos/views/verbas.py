@@ -14,7 +14,7 @@ from ..models import (
     Processo, Credor, Tabela_Valores_Unitarios_Verbas_Indenizatorias, MeiosDeTransporte,
 )
 from ..filters import DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, DiariasAutorizacaoFilter
-from ..utils import gerar_pdf_pcd
+from ..utils import gerar_pdf_pcd, sync_diarias_siscac_csv
 
 _EXTENSOES_DOCUMENTO_PERMITIDAS = {'.pdf', '.jpg', '.jpeg', '.png'}
 
@@ -511,3 +511,20 @@ def gerar_pcd_view(request, pk):
     response = HttpResponse(pdf_buffer, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="{nome_arquivo}"'
     return response
+
+
+@login_required
+def sincronizar_diarias(request):
+    context = {}
+    if request.method == 'POST' and 'siscac_csv' in request.FILES:
+        csv_file = request.FILES['siscac_csv']
+        try:
+            resultados = sync_diarias_siscac_csv(csv_file)
+            context['resultados'] = resultados
+        except UnicodeDecodeError:
+            messages.error(request, 'Erro de codificação: verifique se o arquivo está em UTF-8.')
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).exception('Erro ao processar CSV SISCAC Diárias')
+            messages.error(request, 'Erro ao processar o arquivo CSV. Verifique o formato e tente novamente.')
+    return render(request, 'verbas/sincronizar_diarias.html', context)

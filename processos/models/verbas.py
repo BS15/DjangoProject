@@ -89,6 +89,7 @@ class Diaria(models.Model):
                                            verbose_name="Meio de Transporte")
     status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
     autorizada = models.BooleanField("Autorizada", default=False)
+    numero_siscac = models.CharField("Nº SISCAC", max_length=20, unique=True, null=True, blank=True)
     history = HistoricalRecords()
 
     def calcular_valor_total(self):
