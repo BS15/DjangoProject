@@ -1,5 +1,5 @@
 import django_filters
-from .models import Processo, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, RetencaoImposto, CodigosImposto, DocumentoFiscal, StatusChoicesRetencoes, StatusChoicesVerbasIndenizatorias, StatusChoicesPendencias, StatusChoicesProcesso, Pendencia, Contingencia, STATUS_CONTINGENCIA
+from .models import Processo, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, RetencaoImposto, CodigosImposto, DocumentoFiscal, StatusChoicesRetencoes, StatusChoicesVerbasIndenizatorias, StatusChoicesPendencias, StatusChoicesProcesso, Pendencia, Contingencia, STATUS_CONTINGENCIA, Devolucao
 
 class ProcessoFilter(django_filters.FilterSet):
     class Meta:
@@ -265,6 +265,29 @@ class ArquivamentoFilter(django_filters.FilterSet):
             field.widget.attrs.update({'class': 'form-control form-control-sm'})
         self.form.fields['data_pagamento__gte'].widget.attrs['type'] = 'date'
         self.form.fields['data_pagamento__lte'].widget.attrs['type'] = 'date'
+
+
+class DevolucaoFilter(django_filters.FilterSet):
+    processo__id = django_filters.NumberFilter(label="Nº do Processo")
+    processo__credor__nome = django_filters.CharFilter(lookup_expr='icontains', label="Credor")
+    data_devolucao__gte = django_filters.DateFilter(
+        field_name='data_devolucao', lookup_expr='gte', label='Data Devolução (de)'
+    )
+    data_devolucao__lte = django_filters.DateFilter(
+        field_name='data_devolucao', lookup_expr='lte', label='Data Devolução (até)'
+    )
+    motivo = django_filters.CharFilter(lookup_expr='icontains', label='Motivo')
+
+    class Meta:
+        model = Devolucao
+        fields = ['processo__id', 'processo__credor__nome', 'data_devolucao__gte', 'data_devolucao__lte', 'motivo']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.form.fields.values():
+            field.widget.attrs.update({'class': 'form-control form-control-sm'})
+        self.form.fields['data_devolucao__gte'].widget.attrs['type'] = 'date'
+        self.form.fields['data_devolucao__lte'].widget.attrs['type'] = 'date'
 
 
 class ContingenciaFilter(django_filters.FilterSet):

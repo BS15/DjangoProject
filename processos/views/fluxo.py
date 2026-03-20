@@ -25,7 +25,7 @@ from ..utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_
 from ..ai_utils import extrair_dados_documento, extract_data_with_llm, extrair_codigos_barras_boletos
 from ..invoice_processor import process_invoice_taxes
 from ..models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias, StatusChoicesRetencoes, MeiosDeTransporte, FormasDePagamento, ContasBancarias, Grupos, CargosFuncoes, TagChoices, RegistroAcessoArquivo, Devolucao
-from ..filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DiariasAutorizacaoFilter, ArquivamentoFilter
+from ..filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DiariasAutorizacaoFilter, ArquivamentoFilter, DevolucaoFilter
 
 
 @login_required
@@ -2636,4 +2636,16 @@ def process_detail_view(request, pk):
         'processo': processo,
         'documentos': documentos,
         'pode_registrar_devolucao': pode_registrar_devolucao,
+    })
+
+
+@login_required
+def painel_devolucoes_view(request):
+    queryset = Devolucao.objects.select_related('processo', 'processo__credor').order_by('-data_devolucao')
+    meu_filtro = DevolucaoFilter(request.GET, queryset=queryset)
+    total_valor = meu_filtro.qs.aggregate(total=Sum('valor_devolvido'))['total'] or Decimal('0')
+    return render(request, 'fluxo/devolucoes_list.html', {
+        'filter': meu_filtro,
+        'devolucoes': meu_filtro.qs,
+        'total_valor': total_valor,
     })
