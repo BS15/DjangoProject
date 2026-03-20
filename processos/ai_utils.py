@@ -5,6 +5,7 @@ import tempfile
 import os
 import io
 from django.conf import settings
+from django.core.files.storage import default_storage
 from pypdf import PdfWriter, PdfReader
 
 # Inicializa o novo Client unificado de forma lazy para evitar falha quando a
@@ -334,3 +335,40 @@ Use null para o campo codigo_barras se não conseguir localizar a linha digitáv
     finally:
         if merged_temp and os.path.exists(merged_temp):
             os.remove(merged_temp)
+
+
+def processar_pdf_comprovantes_ia(arquivo_pdf):
+    """
+    Recebe um PDF com um comprovante por página, divide-o e usa IA para extrair
+    os dados de cada página conforme o modelo ComprovanteDePagamento.
+
+    Retorna uma lista de dicts com: temp_path, url, pagina, credor_extraido,
+    valor_extraido, data_pagamento.
+    """
+    from .utils import split_pdf_to_temp_pages
+
+    paginas_temp = split_pdf_to_temp_pages(arquivo_pdf)
+    resultados = []
+
+    for pagina_info in paginas_temp:
+        numero_pagina = pagina_info['pagina']
+
+        # Carrega os bytes da página para passar à IA
+        with default_storage.open(pagina_info['temp_path'], 'rb') as f:
+            conteudo = f.read()
+
+        # Chama a IA na página isolada
+        dados_ia = None
+        try:
+            dados_ia = extrair_dados_comprovante_ia(conteudo)
+        except Exception as e:
+            print(f"Erro na extração IA da página {numero_pagina}: {e}")
+
+        resultados.append({
+            **pagina_info,
+            'credor_extraido': dados_ia.get('credor_nome', 'Não identificado') if dados_ia else 'Não identificado',
+            'valor_extraido': dados_ia.get('valor_pago', 0.00) if dados_ia else 0.00,
+            'data_pagamento': dados_ia.get('data_pagamento', '') if dados_ia else '',
+        })
+
+    return resultados
