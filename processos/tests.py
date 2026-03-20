@@ -900,23 +900,48 @@ class ComprovantesExtracaoDebugTest(TestCase):
         """
         ⚠  DEBUG — imprime os campos extraídos no console.
 
-        Cria um comprovante sintético com valor, data de pagamento e CNPJ
-        conhecidos. O credor não estará cadastrado no banco (retorna None).
+        Cria um comprovante sintético com valor, data de pagamento e dois
+        CNPJs: um cadastrado no banco (credor_cadastrado) e um desconhecido.
+        Imprime no console TODOS os CNPJs/CPFs encontrados no texto, indicando
+        para cada um se há correspondência no cadastro de credores.
         Verifique o output no console para confirmar se os campos estão
         sendo extraídos corretamente.
         """
-        mock_storage.exists.return_value = False
-        mock_storage.save.return_value = 'temp/test_comprovante_pag_1_test_comprovante.pdf'
-        mock_storage.url.return_value = '/media/temp/test_comprovante_pag_1_test_comprovante.pdf'
+        import contextlib
+        from processos.models import Credor
+        credor_cadastrado = Credor.objects.create(
+            nome='Fornecedor Teste Ltda',
+            cpf_cnpj='11.222.333/0001-44',
+        )
 
-        pdf = self._make_pdf([
+        pdf_bytes = self._make_pdf([
             "COMPROVANTE DE PAGAMENTO",
-            "CNPJ FAVORECIDO: 99.999.999/0001-99",
+            "CNPJ FAVORECIDO: 11.222.333/0001-44",
+            "CNPJ SACADO: 99.999.999/0001-99",
             "VALOR TOTAL: 1.500,00",
             "DATA DO PAGAMENTO: 15/03/2026",
-        ])
+        ]).read()
 
-        resultados = processar_pdf_comprovantes(pdf)
+        # Captura o conteúdo salvo para devolver no open()
+        saved_content = {}
+
+        def fake_save(path, content):
+            saved_content[path] = content.read() if hasattr(content, 'read') else bytes(content)
+            return path
+
+        def fake_open(path, mode='rb'):
+            @contextlib.contextmanager
+            def _cm():
+                yield io.BytesIO(saved_content.get(path, pdf_bytes))
+            return _cm()
+
+        mock_storage.save.side_effect = fake_save
+        mock_storage.url.side_effect = lambda path: f'/media/{path}'
+        mock_storage.open.side_effect = fake_open
+
+        pdf_file = io.BytesIO(pdf_bytes)
+        pdf_file.name = "test_comprovante.pdf"
+        resultados = processar_pdf_comprovantes(pdf_file)
 
         print("\n" + "=" * 60)
         print("[DEBUG] RESULTADO DA EXTRACAO DE COMPROVANTES")
@@ -928,6 +953,14 @@ class ComprovantesExtracaoDebugTest(TestCase):
             print(f"  Data pagamento: {r['data_pagamento']}")
             print(f"  Caminho temp  : {r['temp_path']}")
             print(f"  URL           : {r['url']}")
+            print("  CNPJs/CPFs encontrados:")
+            for item in r.get('documentos_encontrados', []):
+                match_info = item['credor'].nome if item['credor'] else "SEM CORRESPONDÊNCIA NO CADASTRO"
+                print(f"    {item['doc']}  →  {match_info}")
+            print("  Dados bancários encontrados:")
+            for item in r.get('contas_encontradas', []):
+                match_info = item['credor'].nome if item['credor'] else "SEM CORRESPONDÊNCIA NO CADASTRO"
+                print(f"    AG {item['agencia']} / CC {item['conta']}  →  {match_info}")
             print("-" * 60)
         print("[FIM DO DEBUG]\n")
 
@@ -939,5 +972,103 @@ class ComprovantesExtracaoDebugTest(TestCase):
         self.assertIn('data_pagamento', r)
         self.assertIn('temp_path', r)
         self.assertIn('url', r)
+        self.assertIn('documentos_encontrados', r)
         self.assertAlmostEqual(r['valor_extraido'], 1500.0)
         self.assertEqual(r['data_pagamento'], '2026-03-15')
+        self.assertEqual(r['credor_extraido'], credor_cadastrado.nome)
+
+        docs = {item['doc']: item['credor'] for item in r['documentos_encontrados']}
+        self.assertIn('11.222.333/0001-44', docs)
+        self.assertIn('99.999.999/0001-99', docs)
+        self.assertEqual(docs['11.222.333/0001-44'], credor_cadastrado)
+        self.assertIsNone(docs['99.999.999/0001-99'])
+        self.assertIn('contas_encontradas', r)
+        self.assertEqual(r['contas_encontradas'], [])
+
+    @patch('processos.utils.default_storage')
+    def test_console_print_identificacao_por_dados_bancarios(self, mock_storage):
+        """
+        ⚠  DEBUG — imprime os dados bancários extraídos no console.
+
+        Cria um comprovante sintético sem CNPJ/CPF correspondente no cadastro,
+        mas com dois pares AGENCIA/CONTA: um vinculado a um credor cadastrado e
+        outro desconhecido. Imprime no console TODOS os pares encontrados,
+        indicando para cada um se há correspondência no cadastro de contas
+        bancárias.
+        """
+        import contextlib
+        from processos.models import Credor, ContasBancarias
+
+        credor_por_conta = Credor.objects.create(
+            nome='Prestador Via Conta Ltda',
+            cpf_cnpj='55.666.777/0001-88',
+        )
+        ContasBancarias.objects.create(
+            titular=credor_por_conta,
+            banco='341',
+            agencia='1234-5',
+            conta='98765-0',
+        )
+
+        pdf_bytes = self._make_pdf([
+            "COMPROVANTE DE TRANSFERENCIA",
+            "AGENCIA: 1234-5 CONTA: 98.765-0",
+            "AGENCIA: 9999-9 CONTA: 1111-1",
+            "VALOR TOTAL: 3.200,00",
+            "DATA DO PAGAMENTO: 20/03/2026",
+        ]).read()
+
+        saved_content = {}
+
+        def fake_save(path, content):
+            saved_content[path] = content.read() if hasattr(content, 'read') else bytes(content)
+            return path
+
+        def fake_open(path, mode='rb'):
+            @contextlib.contextmanager
+            def _cm():
+                yield io.BytesIO(saved_content.get(path, pdf_bytes))
+            return _cm()
+
+        mock_storage.save.side_effect = fake_save
+        mock_storage.url.side_effect = lambda path: f'/media/{path}'
+        mock_storage.open.side_effect = fake_open
+
+        pdf_file = io.BytesIO(pdf_bytes)
+        pdf_file.name = "test_comprovante_bancario.pdf"
+        resultados = processar_pdf_comprovantes(pdf_file)
+
+        print("\n" + "=" * 60)
+        print("[DEBUG] RESULTADO DA EXTRACAO — IDENTIFICACAO POR CONTA BANCARIA")
+        print("=" * 60)
+        for r in resultados:
+            print(f"  Pagina        : {r['pagina']}")
+            print(f"  Credor        : {r['credor_extraido']}")
+            print(f"  Valor         : {r['valor_extraido']}")
+            print(f"  Data pagamento: {r['data_pagamento']}")
+            print(f"  Caminho temp  : {r['temp_path']}")
+            print(f"  URL           : {r['url']}")
+            print("  CNPJs/CPFs encontrados:")
+            for item in r.get('documentos_encontrados', []):
+                match_info = item['credor'].nome if item['credor'] else "SEM CORRESPONDÊNCIA NO CADASTRO"
+                print(f"    {item['doc']}  →  {match_info}")
+            print("  Dados bancários encontrados:")
+            for item in r.get('contas_encontradas', []):
+                match_info = item['credor'].nome if item['credor'] else "SEM CORRESPONDÊNCIA NO CADASTRO"
+                print(f"    AG {item['agencia']} / CC {item['conta']}  →  {match_info}")
+            print("-" * 60)
+        print("[FIM DO DEBUG]\n")
+
+        self.assertEqual(len(resultados), 1)
+        r = resultados[0]
+        self.assertEqual(r['pagina'], 1)
+        self.assertIn('contas_encontradas', r)
+        self.assertAlmostEqual(r['valor_extraido'], 3200.0)
+        self.assertEqual(r['data_pagamento'], '2026-03-20')
+        self.assertEqual(r['credor_extraido'], credor_por_conta.nome)
+
+        contas = {(item['agencia'], item['conta']): item['credor'] for item in r['contas_encontradas']}
+        self.assertIn(('1234-5', '98765-0'), contas)
+        self.assertIn(('9999-9', '1111-1'), contas)
+        self.assertEqual(contas[('1234-5', '98765-0')], credor_por_conta)
+        self.assertIsNone(contas[('9999-9', '1111-1')])
