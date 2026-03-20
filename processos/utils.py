@@ -132,26 +132,6 @@ def extract_siscac_data(pdf_file):
 
     return data
 
-def extrair_linha_digitavel(texto):
-    """Procura no texto qualquer bloco grande de números e devolve a linha limpa."""
-    # Busca qualquer sequência que contenha pelo menos 47 números
-    # (podendo estar separados por espaços, pontos ou hifens)
-    blocos = re.findall(r'(?:[0-9][\s\.\-]*){47,}', texto)
-
-    for bloco in blocos:
-        # Tira tudo que não é número
-        numeros = re.sub(r'\D', '', bloco)
-
-        # Regra 1: É conta de consumo (Luz, Água, Telefone)? Tem 48 dígitos e começa com '8'.
-        if len(numeros) == 48 and numeros.startswith('8'):
-            return numeros, 'arrecadacao'
-
-        # Regra 2: É boleto bancário? Pegamos apenas os últimos 47 dígitos
-        # (isso limpa casos como o Bradesco que bota o '237-2' na frente)
-        elif len(numeros) >= 47:
-            return numeros[-47:], 'bancario'
-
-    return None, None
 
 def interpretar_linha(linha, tipo):
     """Calcula o valor e o vencimento baseado no tipo (Banco ou Arrecadação)."""
@@ -232,93 +212,76 @@ def processar_pdf_comprovantes(pdf_file):
     AGENCIA_ORGAO = '3582-3'
     CONTA_ORGAO_LIMPA = '7429-2'
 
+    paginas_temp = split_pdf_to_temp_pages(pdf_file)
     resultados = []
 
-    pdf_writer_source = PyPDF2.PdfReader(pdf_file)
-    pdf_file.seek(0)
+    for pagina_info in paginas_temp:
+        with default_storage.open(pagina_info['temp_path'], 'rb') as f:
+            with pdfplumber.open(f) as pdf_leitor:
+                texto = pdf_leitor.pages[0].extract_text() or ""
 
-    with pdfplumber.open(pdf_file) as pdf_leitor:
-        for i, page in enumerate(pdf_leitor.pages):
-            texto = page.extract_text() or ""
+        # A MÁGICA: Transforma todo o texto da página (com tabelas e colunas) em uma única linha reta
+        texto_flat = re.sub(r'\s+', ' ', texto)
 
-            # A MÁGICA: Transforma todo o texto da página (com tabelas e colunas) em uma única linha reta
-            texto_flat = re.sub(r'\s+', ' ', texto)
+        # --- PARTE A: EXTRAÇÃO DO VALOR ---
+        # Busca as palavras-chave, ignora símbolos perdidos no meio, e captura o padrão "1.500,00"
+        match_valor = re.search(
+            r'(?:VALOR TOTAL|VALOR DO DOCUMENTO|VALOR COBRADO|Valor Total|Valor em Dinheiro)[\s\:\-\.]*([\d]{1,3}(?:\.\d{3})*,\d{2})',
+            texto_flat,
+            re.IGNORECASE
+        )
 
-            # --- PARTE A: EXTRAÇÃO DO VALOR ---
-            # Busca as palavras-chave, ignora símbolos perdidos no meio, e captura o padrão "1.500,00"
-            match_valor = re.search(
-                r'(?:VALOR TOTAL|VALOR DO DOCUMENTO|VALOR COBRADO|Valor Total|Valor em Dinheiro)[\s\:\-\.]*([\d]{1,3}(?:\.\d{3})*,\d{2})',
-                texto_flat,
-                re.IGNORECASE
-            )
+        valor_float = 0.00
+        if match_valor:
+            valor_str = match_valor.group(1).replace('.', '').replace(',', '.')
+            try:
+                valor_float = float(valor_str)
+            except ValueError:
+                pass
 
-            valor_float = 0.00
-            if match_valor:
-                valor_str = match_valor.group(1).replace('.', '').replace(',', '.')
-                try:
-                    valor_float = float(valor_str)
-                except ValueError:
-                    pass
+        # --- PARTE B: IDENTIFICAÇÃO DO CREDOR ---
+        credor_encontrado = None
 
-            # --- PARTE B: IDENTIFICAÇÃO DO CREDOR ---
-            credor_encontrado = None
+        # Método Primário: identificação por CNPJ/CPF
+        padrao_doc = re.compile(r'\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}|\d{3}\.\d{3}\.\d{3}-\d{2}')
+        documentos = padrao_doc.findall(texto_flat)
+        for doc in documentos:
+            if doc != CNPJ_ORGAO:
+                credor_encontrado = Credor.objects.filter(cpf_cnpj=doc).first()
+                if credor_encontrado:
+                    break
 
-            # Método Primário: identificação por CNPJ/CPF
-            padrao_doc = re.compile(r'\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}|\d{3}\.\d{3}\.\d{3}-\d{2}')
-            documentos = padrao_doc.findall(texto_flat)
-            for doc in documentos:
-                if doc != CNPJ_ORGAO:
-                    credor_encontrado = Credor.objects.filter(cpf_cnpj=doc).first()
-                    if credor_encontrado:
+        # Método Secundário: identificação por Conta Bancária
+        if not credor_encontrado:
+            padrao_conta = re.compile(r'AGENCIA:\s*([\d-]+)\s*CONTA:\s*([\d.-]+[Xx]?)')
+            contas = padrao_conta.findall(texto_flat)
+            for agencia, conta in contas:
+                conta_limpa = conta.replace('.', '')
+                if agencia != AGENCIA_ORGAO or conta_limpa != CONTA_ORGAO_LIMPA:
+                    conta_db = ContasBancarias.objects.filter(agencia=agencia, conta=conta_limpa).first()
+                    if conta_db and conta_db.titular:
+                        credor_encontrado = conta_db.titular
                         break
 
-            # Método Secundário: identificação por Conta Bancária
-            if not credor_encontrado:
-                padrao_conta = re.compile(r'AGENCIA:\s*([\d-]+)\s*CONTA:\s*([\d.-]+[Xx]?)')
-                contas = padrao_conta.findall(texto_flat)
-                for agencia, conta in contas:
-                    conta_limpa = conta.replace('.', '')
-                    if agencia != AGENCIA_ORGAO or conta_limpa != CONTA_ORGAO_LIMPA:
-                        conta_db = ContasBancarias.objects.filter(agencia=agencia, conta=conta_limpa).first()
-                        if conta_db and conta_db.titular:
-                            credor_encontrado = conta_db.titular
-                            break
+        # --- PARTE B.2: EXTRAÇÃO DA DATA DE PAGAMENTO ---
+        data_pagamento = ''
+        match_data = re.search(
+            r'(?:DATA\s+(?:DO\s+)?PAGAMENTO|DATA\s+DA\s+OPERA[ÇC][ÃA]O|DATA\s+DE\s+PAGAMENTO|DATA\s+DO\s+MOVIMENTO|DATA\s+EFETIVA[ÇC][ÃA]O|DATA\s+DA\s+TRANSFER[EÊ]NCIA|DATA)[\s:\-\.]*(\d{2}/\d{2}/\d{4})',
+            texto_flat,
+            re.IGNORECASE
+        )
+        if match_data:
+            partes = match_data.group(1).split('/')
+            if len(partes) == 3:
+                data_pagamento = f"{partes[2]}-{partes[1]}-{partes[0]}"
 
-            # --- PARTE B.2: EXTRAÇÃO DA DATA DE PAGAMENTO ---
-            data_pagamento = ''
-            match_data = re.search(
-                r'(?:DATA\s+(?:DO\s+)?PAGAMENTO|DATA\s+DA\s+OPERA[ÇC][ÃA]O|DATA\s+DE\s+PAGAMENTO|DATA\s+DO\s+MOVIMENTO|DATA\s+EFETIVA[ÇC][ÃA]O|DATA\s+DA\s+TRANSFER[EÊ]NCIA|DATA)[\s:\-\.]*(\d{2}/\d{2}/\d{4})',
-                texto_flat,
-                re.IGNORECASE
-            )
-            if match_data:
-                partes = match_data.group(1).split('/')
-                if len(partes) == 3:
-                    data_pagamento = f"{partes[2]}-{partes[1]}-{partes[0]}"
-
-            # --- PARTE C: FATIAMENTO E SALVAMENTO ---
-            writer = PyPDF2.PdfWriter()
-            pypdf_page = pdf_writer_source.pages[i]
-            writer.add_page(pypdf_page)
-
-            temp_filename = f"temp/comprovante_pag_{i + 1}_{pdf_file.name}"
-            temp_pdf = io.BytesIO()
-            writer.write(temp_pdf)
-
-            if default_storage.exists(temp_filename):
-                default_storage.delete(temp_filename)
-
-            path = default_storage.save(temp_filename, ContentFile(temp_pdf.getvalue()))
-
-            # --- PARTE D: EMPACOTAMENTO ---
-            resultados.append({
-                'temp_path': path,
-                'pagina': i + 1,
-                'credor_extraido': credor_encontrado.nome if credor_encontrado else None,
-                'valor_extraido': valor_float,
-                'data_pagamento': data_pagamento,
-                'url': default_storage.url(path)
-            })
+        # --- EMPACOTAMENTO ---
+        resultados.append({
+            **pagina_info,
+            'credor_extraido': credor_encontrado.nome if credor_encontrado else None,
+            'valor_extraido': valor_float,
+            'data_pagamento': data_pagamento,
+        })
     print(resultados)
     return resultados
 
@@ -361,13 +324,18 @@ def gerar_termo_auditoria(processo, usuario_nome="Conselheiro Fiscal"):
     buffer.seek(0)
     return buffer
 
-def fatiar_pdf_manual(arquivo_pdf):
+def split_pdf_to_temp_pages(arquivo_pdf):
     """
-    Recebe um PDF, divide-o página a página e guarda ficheiros temporários.
-    Retorna uma lista de caminhos temporários.
+    Divide um PDF em páginas individuais e salva cada uma em armazenamento
+    temporário (prefixo temp/).
+
+    Retorna uma lista de dicts com:
+      - temp_path: caminho no default_storage
+      - url: URL pública do arquivo temporário
+      - pagina: número da página (1-indexado)
     """
     pdf = PdfReader(arquivo_pdf)
-    caminhos_temporarios = []
+    paginas = []
 
     for numero_pagina in range(len(pdf.pages)):
         writer = PdfWriter()
@@ -378,62 +346,24 @@ def fatiar_pdf_manual(arquivo_pdf):
         buffer.seek(0)
 
         # Gera um nome único para evitar colisões
-        nome_temp = f"temp_comprovante_{uuid.uuid4().hex[:8]}_pag{numero_pagina+1}.pdf"
+        nome_temp = f"temp_comprovante_{uuid.uuid4().hex[:8]}_pag{numero_pagina + 1}.pdf"
         caminho_salvo = default_storage.save(f"temp/{nome_temp}", ContentFile(buffer.read()))
 
-        caminhos_temporarios.append({
-            'temp_path': caminho_salvo,
-            'url': default_storage.url(caminho_salvo), # Para o utilizador poder visualizar
-            'pagina': numero_pagina + 1
-        })
-
-    return caminhos_temporarios
-
-
-def processar_pdf_comprovantes_ia(arquivo_pdf):
-    """
-    Recebe um PDF com um comprovante por página, divide-o e usa IA para extrair
-    os dados de cada página conforme o modelo ComprovanteDePagamento.
-    Retorna uma lista de dicts com: temp_path, url, pagina, credor_extraido,
-    valor_extraido, data_pagamento.
-    """
-    from .ai_utils import extrair_dados_comprovante_ia
-
-    resultados = []
-    pdf = PdfReader(arquivo_pdf)
-
-    for numero_pagina in range(len(pdf.pages)):
-        # 1. Fatia a página individual
-        writer = PdfWriter()
-        writer.add_page(pdf.pages[numero_pagina])
-
-        buffer = io.BytesIO()
-        writer.write(buffer)
-        buffer.seek(0)
-
-        # 2. Salva o arquivo temporário
-        nome_temp = f"temp_comprovante_{uuid.uuid4().hex[:8]}_pag{numero_pagina+1}.pdf"
-        conteudo = buffer.read()
-        caminho_salvo = default_storage.save(f"temp/{nome_temp}", ContentFile(conteudo))
-
-        # 3. Chama a IA na página isolada
-        dados_ia = None
-        try:
-            dados_ia = extrair_dados_comprovante_ia(conteudo)
-        except Exception as e:
-            print(f"Erro na extração IA da página {numero_pagina + 1}: {e}")
-
-        resultado = {
+        paginas.append({
             'temp_path': caminho_salvo,
             'url': default_storage.url(caminho_salvo),
             'pagina': numero_pagina + 1,
-            'credor_extraido': dados_ia.get('credor_nome', 'Não identificado') if dados_ia else 'Não identificado',
-            'valor_extraido': dados_ia.get('valor_pago', 0.00) if dados_ia else 0.00,
-            'data_pagamento': dados_ia.get('data_pagamento', '') if dados_ia else '',
-        }
-        resultados.append(resultado)
+        })
 
-    return resultados
+    return paginas
+
+
+def fatiar_pdf_manual(arquivo_pdf):
+    """
+    Recebe um PDF, divide-o página a página e guarda ficheiros temporários.
+    Retorna uma lista de dicts com temp_path, url e pagina.
+    """
+    return split_pdf_to_temp_pages(arquivo_pdf)
 
 
 # ---------------------------------------------------------------------------

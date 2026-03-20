@@ -12,8 +12,8 @@ from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Sum, Exists, OuterRef
 from ..validators import verificar_turnpike
-from ..utils import processar_pdf_comprovantes, fatiar_pdf_manual, processar_pdf_comprovantes_ia
-from ..ai_utils import extrair_dados_documento, extract_data_with_llm
+from ..utils import processar_pdf_comprovantes, fatiar_pdf_manual
+from ..ai_utils import extrair_dados_documento, extract_data_with_llm, processar_pdf_comprovantes_ia
 from ..invoice_processor import process_invoice_taxes
 from ..models import (
     Processo, DocumentoFiscal, Credor, TiposDeDocumento, DocumentoProcesso,
