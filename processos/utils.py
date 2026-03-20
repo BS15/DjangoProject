@@ -245,11 +245,13 @@ def processar_pdf_comprovantes(pdf_file):
         # Método Primário: identificação por CNPJ/CPF
         padrao_doc = re.compile(r'\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}|\d{3}\.\d{3}\.\d{3}-\d{2}')
         documentos = padrao_doc.findall(texto_flat)
+        documentos_encontrados = []
         for doc in documentos:
             if doc != CNPJ_ORGAO:
-                credor_encontrado = Credor.objects.filter(cpf_cnpj=doc).first()
-                if credor_encontrado:
-                    break
+                credor = Credor.objects.filter(cpf_cnpj=doc).first()
+                documentos_encontrados.append({'doc': doc, 'credor': credor})
+                if credor and not credor_encontrado:
+                    credor_encontrado = credor
 
         # Método Secundário: identificação por Conta Bancária
         if not credor_encontrado:
@@ -281,6 +283,7 @@ def processar_pdf_comprovantes(pdf_file):
             'credor_extraido': credor_encontrado.nome if credor_encontrado else None,
             'valor_extraido': valor_float,
             'data_pagamento': data_pagamento,
+            'documentos_encontrados': documentos_encontrados,
         })
     print(resultados)
     return resultados
