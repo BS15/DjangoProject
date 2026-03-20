@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Processo, DocumentoProcesso, DocumentoFiscal, RetencaoImposto, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos, Pendencia, StatusChoicesPendencias, DadosContribuinte, ContasBancarias
+from .models import Processo, DocumentoProcesso, DocumentoFiscal, RetencaoImposto, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos, Pendencia, StatusChoicesPendencias, DadosContribuinte, ContasBancarias, Devolucao
 from .validators import validar_regras_processo, validar_regras_suprimento, STATUS_BLOQUEADOS_FORM
 
 class ProcessoForm(forms.ModelForm):
@@ -331,3 +331,14 @@ PendenciaFormSet = inlineformset_factory(
     extra=1,
     can_delete=True
 )
+
+class DevolucaoForm(forms.ModelForm):
+    class Meta:
+        model = Devolucao
+        fields = ['valor_devolvido', 'data_devolucao', 'motivo', 'comprovante']
+        widgets = {
+            'valor_devolvido': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'data_devolucao': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date', 'class': 'form-control'}),
+            'motivo': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'comprovante': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }

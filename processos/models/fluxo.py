@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Sum
 from django.utils import timezone
 from django.contrib.auth.models import User
 from simple_history.models import HistoricalRecords
@@ -191,6 +192,11 @@ class Processo(models.Model):
     def __str__(self):
         return f"Processo {self.n_nota_empenho or 'S/N'}"
 
+    @property
+    def valor_efetivo(self):
+        total_devolvido = self.devolucoes.aggregate(total=Sum('valor_devolvido'))['total'] or 0
+        return self.valor_liquido - total_devolvido
+
     def avancar_status(self, novo_status_str):
         from django.core.exceptions import ValidationError
         from processos.validators import verificar_turnpike
@@ -317,3 +323,20 @@ class RegistroAcessoArquivo(models.Model):
         verbose_name = "Registro de Acesso a Arquivo"
         verbose_name_plural = "Registros de Acesso a Arquivos"
         ordering = ['-data_acesso']
+
+
+class Devolucao(models.Model):
+    processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='devolucoes')
+    valor_devolvido = models.DecimalField(max_digits=15, decimal_places=2)
+    data_devolucao = models.DateField()
+    motivo = models.TextField()
+    comprovante = models.FileField(upload_to='devolucoes/', validators=[validar_arquivo_seguro], help_text="Comprovante de depósito/GRU")
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Devolução de R$ {self.valor_devolvido} - Processo {self.processo}"
+
+    class Meta:
+        verbose_name = "Devolução"
+        verbose_name_plural = "Devoluções"
+        ordering = ['-data_devolucao']
