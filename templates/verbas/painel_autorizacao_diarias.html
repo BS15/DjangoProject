@@ -72,7 +72,7 @@
                 <tbody>
                     {% for diaria in diarias %}
                     <tr>
-                        <td class="fw-bold text-primary">{{ diaria.numero_sequencial }}</td>
+                        <td class="fw-bold text-primary">{{ diaria.numero_siscac }}</td>
                         <td class="fw-medium">{{ diaria.beneficiario.nome|truncatechars:30 }}</td>
                         <td>{{ diaria.proponente.nome|default:"—"|truncatechars:30 }}</td>
                         <td>{{ diaria.data_saida|date:"d/m/Y" }}</td>

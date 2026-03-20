@@ -2496,7 +2496,7 @@ def _create_fake_diarias(n, credores_pf, processos):
         processo = random.choice(processos) if processos else None
         Diaria.objects.create(
             processo=processo,
-            numero_sequencial=numero_seq,
+            numero_siscac=numero_seq,
             beneficiario=beneficiario,
             proponente=proponente,
             tipo_solicitacao=random.choice(['INICIAL', 'PRORROGACAO', 'COMPLEMENTACAO']),

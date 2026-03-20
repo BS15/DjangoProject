@@ -666,7 +666,7 @@ def gerar_pdf_pcd(diaria):
     p.drawCentredString(width / 2.0, y, "PROPOSTA DE CONCESSÃO DE DIÁRIAS (PCD)")
     y -= 18
     p.setFont("Helvetica-Bold", 11)
-    p.drawCentredString(width / 2.0, y, f"Nº {diaria.numero_sequencial}")
+    p.drawCentredString(width / 2.0, y, f"Nº {diaria.numero_siscac}")
     y -= 16
     p.setFont("Helvetica", 10)
     p.drawCentredString(width / 2.0, y, f"Tipo: {diaria.get_tipo_solicitacao_display()}")
@@ -1164,7 +1164,6 @@ def sync_diarias_siscac_csv(csv_file):
             numero_siscac=numero_csv,
             defaults={
                 'beneficiario': credor,
-                'numero_sequencial': numero_csv,
                 'data_saida': saida,
                 'data_retorno': retorno,
                 'cidade_destino': destino or '-',

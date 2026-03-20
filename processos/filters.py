@@ -58,7 +58,7 @@ class DiariaFilter(django_filters.FilterSet):
     class Meta:
         model = Diaria
         fields = {
-            'numero_sequencial': ['icontains'],
+            'numero_siscac': ['icontains'],
             'beneficiario': ['exact'],
             'status': ['exact'],
             'cidade_destino': ['icontains'],
@@ -226,7 +226,7 @@ class DocumentoFiscalFilter(django_filters.FilterSet):
         fields = ['numero_nota_fiscal', 'nome_emitente__nome', 'atestada']
 
 class DiariasAutorizacaoFilter(django_filters.FilterSet):
-    numero_sequencial = django_filters.CharFilter(lookup_expr='icontains', label='Nº Sequencial')
+    numero_siscac = django_filters.CharFilter(lookup_expr='icontains', label='Nº SISCAC')
     beneficiario__nome = django_filters.CharFilter(lookup_expr='icontains', label='Nome do Beneficiário')
     proponente__nome = django_filters.CharFilter(lookup_expr='icontains', label='Nome do Proponente')
 
@@ -237,7 +237,7 @@ class DiariasAutorizacaoFilter(django_filters.FilterSet):
 
     class Meta:
         model = Diaria
-        fields = ['numero_sequencial', 'beneficiario__nome', 'proponente__nome', 'autorizada']
+        fields = ['numero_siscac', 'beneficiario__nome', 'proponente__nome', 'autorizada']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
