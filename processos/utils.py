@@ -225,17 +225,17 @@ def processar_pdf_comprovantes(pdf_file):
 
         # --- PARTE A: EXTRAÇÃO DO VALOR ---
         # Busca as palavras-chave, ignora símbolos perdidos no meio, e captura o padrão "1.500,00"
-        match_valor = re.search(
-            r'(?:VALOR TOTAL|VALOR DO DOCUMENTO|VALOR COBRADO|Valor Total|Valor em Dinheiro)[\s\:\-\.]*([\d]{1,3}(?:\.\d{3})*,\d{2})',
-            texto_flat,
+        padrao_valor = re.compile(
+            r'(?:VALOR TOTAL|VALOR DO DOCUMENTO|VALOR COBRADO|VALOR EM DINHEIRO|VALOR(?:\s*:)?\s*(?:R\$)?)\s*([\d.,]+)',
             re.IGNORECASE
         )
 
         valor_float = 0.00
-        if match_valor:
+        for match_valor in padrao_valor.finditer(texto_flat):
             valor_str = match_valor.group(1).replace('.', '').replace(',', '.')
             try:
                 valor_float = float(valor_str)
+                break
             except ValueError:
                 pass
 
