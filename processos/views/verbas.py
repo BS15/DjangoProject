@@ -62,7 +62,7 @@ def add_diaria_view(request):
                 ReembolsoCombustivel.objects.create(
                     diaria=nova_diaria,
                     beneficiario=nova_diaria.beneficiario,
-                    numero_sequencial=nova_diaria.numero_sequencial,
+                    numero_sequencial=nova_diaria.numero_siscac or '',
                     data_saida=nova_diaria.data_saida,
                     data_retorno=nova_diaria.data_retorno,
                     cidade_origem=nova_diaria.cidade_origem,
@@ -342,9 +342,9 @@ def alternar_autorizacao_diaria(request, pk):
         diaria.save()
 
         if diaria.autorizada:
-            messages.success(request, f'Diária #{diaria.numero_sequencial} AUTORIZADA com sucesso!')
+            messages.success(request, f'Diária #{diaria.numero_siscac} AUTORIZADA com sucesso!')
         else:
-            messages.warning(request, f'Autorização da Diária #{diaria.numero_sequencial} foi revogada.')
+            messages.warning(request, f'Autorização da Diária #{diaria.numero_siscac} foi revogada.')
 
     return redirect('painel_autorizacao_diarias')
 
@@ -507,7 +507,7 @@ def gerar_pcd_view(request, pk):
     """
     diaria = get_object_or_404(Diaria, pk=pk)
     pdf_buffer = gerar_pdf_pcd(diaria)
-    nome_arquivo = f"PCD_{diaria.numero_sequencial}.pdf"
+    nome_arquivo = f"PCD_{diaria.numero_siscac}.pdf"
     response = HttpResponse(pdf_buffer, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="{nome_arquivo}"'
     return response

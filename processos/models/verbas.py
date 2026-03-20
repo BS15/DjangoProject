@@ -68,7 +68,6 @@ class Diaria(models.Model):
     ]
 
     processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='diarias', null=True, blank=True)
-    numero_sequencial = models.CharField("Número Sequencial", max_length=50)
     beneficiario = models.ForeignKey('Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
                                      verbose_name="Beneficiário", related_name='diarias_como_beneficiario')
     proponente = models.ForeignKey('Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
@@ -111,7 +110,7 @@ class Diaria(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Diária {self.numero_sequencial} - {self.beneficiario}"
+        return f"Diária {self.numero_siscac} - {self.beneficiario}"
 
 
 # 3. DOCUMENTOS DAS VERBAS (Uma tabela separada para cada)
