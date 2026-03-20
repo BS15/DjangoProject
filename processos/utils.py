@@ -254,16 +254,17 @@ def processar_pdf_comprovantes(pdf_file):
                     credor_encontrado = credor
 
         # Método Secundário: identificação por Conta Bancária
-        if not credor_encontrado:
-            padrao_conta = re.compile(r'AGENCIA:\s*([\d-]+)\s*CONTA:\s*([\d.-]+[Xx]?)')
-            contas = padrao_conta.findall(texto_flat)
-            for agencia, conta in contas:
-                conta_limpa = conta.replace('.', '')
-                if agencia != AGENCIA_ORGAO or conta_limpa != CONTA_ORGAO_LIMPA:
-                    conta_db = ContasBancarias.objects.filter(agencia=agencia, conta=conta_limpa).first()
-                    if conta_db and conta_db.titular:
-                        credor_encontrado = conta_db.titular
-                        break
+        contas_encontradas = []
+        padrao_conta = re.compile(r'AGENCIA:\s*([\d-]+)\s*CONTA:\s*([\d.-]+[Xx]?)')
+        contas = padrao_conta.findall(texto_flat)
+        for agencia, conta in contas:
+            conta_limpa = conta.replace('.', '')
+            if agencia != AGENCIA_ORGAO or conta_limpa != CONTA_ORGAO_LIMPA:
+                conta_db = ContasBancarias.objects.filter(agencia=agencia, conta=conta_limpa).first()
+                titular = conta_db.titular if conta_db else None
+                contas_encontradas.append({'agencia': agencia, 'conta': conta_limpa, 'credor': titular})
+                if titular and not credor_encontrado:
+                    credor_encontrado = titular
 
         # --- PARTE B.2: EXTRAÇÃO DA DATA DE PAGAMENTO ---
         data_pagamento = ''
@@ -284,6 +285,7 @@ def processar_pdf_comprovantes(pdf_file):
             'valor_extraido': valor_float,
             'data_pagamento': data_pagamento,
             'documentos_encontrados': documentos_encontrados,
+            'contas_encontradas': contas_encontradas,
         })
     print(resultados)
     return resultados
