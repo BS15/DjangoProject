@@ -184,8 +184,11 @@
                             <div class="row g-3 mb-3">
                                 <div class="col-md-4 d-flex align-items-end">
                                     <div class="form-check mb-2">
-                                        {{ processo_form.extraorcamentario }}
-                                        <label class="form-check-label fw-bold text-danger">
+                                        <input type="checkbox" class="form-check-input" id="{{ processo_form.extraorcamentario.id_for_label }}"
+                                            {% if processo_form.extraorcamentario.value %}checked{% endif %} disabled>
+                                        <input type="hidden" name="{{ processo_form.extraorcamentario.html_name }}"
+                                            value="{% if processo_form.extraorcamentario.value %}on{% endif %}">
+                                        <label class="form-check-label fw-bold text-danger" for="{{ processo_form.extraorcamentario.id_for_label }}">
                                             <i class="bi bi-exclamation-circle"></i> Despesa Extraorçamentária
                                         </label>
                                     </div>
