@@ -367,6 +367,11 @@
     }
 
     function mostrarPreviewComprovante(url) {
+        // Only load same-origin URLs (server-generated media paths)
+        try {
+            const parsed = new URL(url, window.location.origin);
+            if (parsed.origin !== window.location.origin) return;
+        } catch (e) { return; }
         document.getElementById('preview-placeholder').style.display = 'none';
         const iframe = document.getElementById('preview-iframe');
         iframe.style.display = 'block';
