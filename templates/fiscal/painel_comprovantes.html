@@ -10,13 +10,22 @@
     <style>
         .processo-row { cursor: pointer; transition: background 0.15s; }
         .processo-row:hover { background-color: #e8f4fd !important; }
-        .processo-row.selecionavel-ativo:hover { background-color: #d4edda !important; }
-        .comprovante-card { border: 1px solid #dee2e6; border-radius: 8px; background: #fff; transition: border-color 0.15s, box-shadow 0.15s; }
-        .comprovante-card.selecionado { border-color: #0d6efd; box-shadow: 0 0 0 2px rgba(13,110,253,.25); }
-        .comprovante-card .card-header { background: #f8f9fa; border-bottom: 1px solid #dee2e6; border-radius: 7px 7px 0 0; padding: 8px 12px; }
+        .processo-row.selecionavel-ativo { background-color: #d4edda !important; }
+        .processo-row.selecionavel-ativo:hover { background-color: #b8dfca !important; }
+        .comp-row { cursor: default; transition: background 0.1s; }
+        .comp-row.selecionado { background-color: #cfe2ff !important; }
         .barra-total { position: sticky; top: 0; z-index: 10; }
-        #painel-processos { max-height: 80vh; overflow-y: auto; }
-        #lista-comprovantes-wrap { max-height: 80vh; overflow-y: auto; }
+        #painel-processos { max-height: 72vh; overflow-y: auto; }
+        #lista-comprovantes-wrap { max-height: 62vh; overflow-y: auto; }
+        #preview-card { height: calc(100vh - 130px); min-height: 400px; }
+        #preview-iframe { width: 100%; height: 100%; border: none; }
+        th.sortable-col { cursor: pointer; user-select: none; white-space: nowrap; }
+        th.sortable-col:hover { filter: brightness(0.9); }
+        th.sortable-proc { cursor: pointer; user-select: none; white-space: nowrap; }
+        th.sortable-proc:hover { filter: brightness(1.2); }
+        .filter-row th { background: #f8f9fa; padding: 3px 4px; }
+        .filter-row input { font-size: 0.73rem; padding: 2px 4px; }
+        .sort-icon { font-size: 0.72rem; vertical-align: middle; }
     </style>
 </head>
 <body class="bg-light">
@@ -28,19 +37,38 @@
     </div>
 
     <div class="row g-3">
-        <!-- ====================== PAINEL ESQUERDO: COMPROVANTES ====================== -->
-        <div class="col-lg-6">
+
+        <!-- ====================== COLUNA ESQUERDA: PREVIEW PDF ====================== -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0" id="preview-card">
+                <div class="card-header bg-dark text-white py-2">
+                    <h6 class="mb-0"><i class="bi bi-file-pdf"></i> Pré-visualização do Comprovante</h6>
+                </div>
+                <div class="card-body p-0 d-flex flex-column" style="height: calc(100% - 42px);">
+                    <div id="preview-placeholder" class="flex-grow-1 d-flex align-items-center justify-content-center text-muted">
+                        <div class="text-center px-3">
+                            <i class="bi bi-eye fs-1 d-block mb-3"></i>
+                            <p class="small">Clique em <strong><i class="bi bi-eye"></i> Preview</strong> em um comprovante para visualizar o PDF aqui.</p>
+                        </div>
+                    </div>
+                    <iframe id="preview-iframe" src="about:blank" style="display:none; flex-grow:1;"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====================== COLUNA CENTRAL: COMPROVANTES ====================== -->
+        <div class="col-lg-5">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-primary text-white py-2">
                     <h6 class="mb-0"><i class="bi bi-file-earmark-break"></i> Comprovantes Extraídos do PDF</h6>
                 </div>
-                <div class="card-body pb-2">
+                <div class="card-body pb-2 d-flex flex-column">
                     <!-- Upload Form -->
-                    <form id="form-upload" class="mb-3">
+                    <form id="form-upload" class="mb-2">
                         {% csrf_token %}
                         <div class="input-group input-group-sm">
                             <input type="file" id="pdf_banco" name="pdf_banco" class="form-control" accept=".pdf" required>
-                            <select id="modo-extracao" class="form-select" style="max-width:160px">
+                            <select id="modo-extracao" class="form-select" style="max-width:140px">
                                 <option value="auto">Auto (rápido)</option>
                                 <option value="ia">IA (Gemini)</option>
                                 <option value="manual">Manual (só fatiar)</option>
@@ -49,7 +77,7 @@
                                 <i class="bi bi-scissors"></i> Fatiar PDF
                             </button>
                         </div>
-                        <div id="loading" class="mt-2 text-warning small fw-bold" style="display:none;">
+                        <div id="loading" class="mt-1 text-warning small fw-bold" style="display:none;">
                             <span class="spinner-border spinner-border-sm"></span> Processando PDF...
                         </div>
                     </form>
@@ -64,8 +92,8 @@
                         </button>
                     </div>
 
-                    <!-- Lista de comprovantes -->
-                    <div id="lista-comprovantes-wrap">
+                    <!-- Lista de comprovantes (tabela) -->
+                    <div id="lista-comprovantes-wrap" class="flex-grow-1">
                         <div id="lista-comprovantes">
                             <p class="text-muted text-center small mt-4">
                                 <i class="bi bi-cloud-upload fs-3 d-block mb-2"></i>
@@ -77,26 +105,23 @@
             </div>
         </div>
 
-        <!-- ====================== PAINEL DIREITO: PROCESSOS ====================== -->
-        <div class="col-lg-6">
+        <!-- ====================== COLUNA DIREITA: PROCESSOS ====================== -->
+        <div class="col-lg-3">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-success text-white py-2">
                     <h6 class="mb-0"><i class="bi bi-list-check"></i> Processos Aguardando Comprovante</h6>
                 </div>
                 <div class="card-body pb-2">
-                    <!-- Filtro e ordenação -->
+                    <!-- Filtro -->
                     <div class="input-group input-group-sm mb-2">
                         <span class="input-group-text"><i class="bi bi-search"></i></span>
                         <input type="text" id="filtro-credor" class="form-control" placeholder="Filtrar por credor ou empenho...">
-                        <button class="btn btn-outline-secondary" id="btn-sort" title="Ordenar" onclick="alternarOrdem()">
-                            <i class="bi bi-sort-alpha-down" id="icone-sort"></i>
-                        </button>
                     </div>
 
                     <!-- Instrução -->
                     <div id="instrucao-vincular" class="alert alert-warning py-2 px-3 small mb-2" style="display:none;">
                         <i class="bi bi-info-circle"></i>
-                        Comprovantes selecionados: <strong><span id="txt-qtd-instr">0</span></strong> |
+                        Comprovantes: <strong><span id="txt-qtd-instr">0</span></strong> |
                         Soma: <strong>R$ <span id="txt-soma-instr">0,00</span></strong>
                         <br>Clique em um processo para vincular.
                     </div>
@@ -108,6 +133,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 
@@ -116,9 +142,15 @@
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
     let comprovantesEmMemoria = [];
-    let selecionados = new Set(); // índices dos comprovantes selecionados
-    let ordemAsc = true;
+    let selecionados = new Set();
     let processosVisiveis = [...processosPendentes];
+
+    // Sort/filter state for comprovantes table
+    let compSortCol = null, compSortDir = 'asc';
+    let compColFilters = { pagina: '', credor: '', valor: '', data: '' };
+
+    // Sort state for processos table
+    let procSortCol = null, procSortAsc = true;
 
     // ===================== INICIALIZAÇÃO =====================
     renderizarListaProcessos();
@@ -147,7 +179,9 @@
                 if (data.sucesso) {
                     comprovantesEmMemoria = data.comprovantes || [];
                     selecionados.clear();
-                    renderizarCards();
+                    compSortCol = null;
+                    compColFilters = { pagina: '', credor: '', valor: '', data: '' };
+                    renderizarTabela();
                     atualizarBarraTotal();
                 } else {
                     alert('Erro ao processar PDF: ' + data.erro);
@@ -160,80 +194,189 @@
             });
     });
 
-    // ===================== RENDERIZAÇÃO DOS CARDS =====================
-    function renderizarCards() {
+    // ===================== COMPROVANTES: FILTRAGEM E ORDENAÇÃO =====================
+    function getComprovantesExibidos() {
+        let list = comprovantesEmMemoria.map((c, i) => ({ ...c, _origIdx: i }));
+
+        // Apply per-column filters
+        Object.entries(compColFilters).forEach(([col, val]) => {
+            if (!val) return;
+            const t = val.toLowerCase();
+            list = list.filter(c => {
+                switch (col) {
+                    case 'pagina': return String(c.pagina).includes(t);
+                    case 'credor': return (c.credor_extraido || '').toLowerCase().includes(t);
+                    case 'valor':  return String(parseFloat(c.valor_extraido || 0).toFixed(2)).includes(t);
+                    case 'data':   return (c.data_pagamento || '').toLowerCase().includes(t);
+                    default: return true;
+                }
+            });
+        });
+
+        // Apply sort
+        if (compSortCol) {
+            list.sort((a, b) => {
+                let va, vb;
+                switch (compSortCol) {
+                    case 'pagina': va = a.pagina || 0; vb = b.pagina || 0; break;
+                    case 'credor': va = (a.credor_extraido || '').toLowerCase(); vb = (b.credor_extraido || '').toLowerCase(); break;
+                    case 'valor':  va = parseFloat(a.valor_extraido || 0); vb = parseFloat(b.valor_extraido || 0); break;
+                    case 'data':   va = a.data_pagamento || ''; vb = b.data_pagamento || ''; break;
+                    default: return 0;
+                }
+                if (typeof va === 'number') return compSortDir === 'asc' ? va - vb : vb - va;
+                return compSortDir === 'asc'
+                    ? String(va).localeCompare(String(vb), 'pt-BR')
+                    : String(vb).localeCompare(String(va), 'pt-BR');
+            });
+        }
+        return list;
+    }
+
+    // ===================== RENDERIZAÇÃO DA TABELA DE COMPROVANTES =====================
+    function renderizarTabela() {
         const container = document.getElementById('lista-comprovantes');
         if (!comprovantesEmMemoria.length) {
             container.innerHTML = '<p class="text-muted text-center small">Nenhum comprovante encontrado.</p>';
             return;
         }
 
-        container.innerHTML = '';
-        comprovantesEmMemoria.forEach((comp, idx) => {
-            const credor = comp.credor_extraido || '';
-            const valor = parseFloat(comp.valor_extraido || 0).toFixed(2);
-            const data = comp.data_pagamento || '';
+        const lista = getComprovantesExibidos();
 
-            const card = document.createElement('div');
-            card.className = 'comprovante-card mb-2 p-0';
-            card.setAttribute('data-idx', idx);
-            card.innerHTML = `
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center gap-2">
-                        <input type="checkbox" class="form-check-input comp-check" data-idx="${idx}" style="cursor:pointer">
-                        <strong class="small">Página ${comp.pagina}</strong>
-                    </div>
-                    <a href="${comp.url}" target="_blank" class="btn btn-sm btn-outline-danger py-0 px-2">
-                        <i class="bi bi-file-pdf"></i> Abrir
-                    </a>
-                </div>
-                <div class="px-3 pt-2 pb-3">
-                    <div class="row g-2">
-                        <div class="col-12">
-                            <label class="form-label mb-1 small text-muted fw-bold">Credor</label>
-                            <input type="text" class="form-control form-control-sm comp-credor" data-idx="${idx}" value="${escapeHtml(credor)}" placeholder="Nome do credor...">
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label mb-1 small text-muted fw-bold">Valor Pago (R$)</label>
-                            <input type="number" class="form-control form-control-sm comp-valor" data-idx="${idx}" value="${valor}" step="0.01" min="0">
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label mb-1 small text-muted fw-bold">Data Pagamento</label>
-                            <input type="date" class="form-control form-control-sm comp-data" data-idx="${idx}" value="${data}">
-                        </div>
-                    </div>
-                </div>
-            `;
-            container.appendChild(card);
+        function sortIconComp(col) {
+            if (compSortCol !== col) return '<i class="bi bi-sort-alt text-muted sort-icon ms-1"></i>';
+            return compSortDir === 'asc'
+                ? '<i class="bi bi-sort-down-alt text-warning sort-icon ms-1"></i>'
+                : '<i class="bi bi-sort-up-alt text-warning sort-icon ms-1"></i>';
+        }
+
+        let html = `<table class="table table-sm table-bordered table-hover mb-0" id="tabela-comprovantes">
+            <thead class="table-primary">
+                <tr>
+                    <th class="text-center" style="width:32px">
+                        <input type="checkbox" id="check-all-comp" class="form-check-input" title="Selecionar todos">
+                    </th>
+                    <th class="small sortable-col" data-col="pagina" style="width:50px">Pg${sortIconComp('pagina')}</th>
+                    <th class="small sortable-col" data-col="credor">Credor${sortIconComp('credor')}</th>
+                    <th class="small sortable-col" data-col="valor" style="width:110px">Valor${sortIconComp('valor')}</th>
+                    <th class="small sortable-col" data-col="data" style="width:115px">Data${sortIconComp('data')}</th>
+                    <th class="small text-center" style="width:65px">Ações</th>
+                </tr>
+                <tr class="filter-row">
+                    <th></th>
+                    <th><input type="text" class="form-control col-filter" data-col="pagina" placeholder="Pg..." value="${escapeHtml(compColFilters.pagina)}"></th>
+                    <th><input type="text" class="form-control col-filter" data-col="credor" placeholder="Credor..." value="${escapeHtml(compColFilters.credor)}"></th>
+                    <th><input type="text" class="form-control col-filter" data-col="valor" placeholder="Valor..." value="${escapeHtml(compColFilters.valor)}"></th>
+                    <th><input type="text" class="form-control col-filter" data-col="data" placeholder="Data..." value="${escapeHtml(compColFilters.data)}"></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+        if (!lista.length) {
+            html += `<tr><td colspan="6" class="text-center text-muted small py-3">Nenhum comprovante corresponde ao filtro.</td></tr>`;
+        } else {
+            lista.forEach(comp => {
+                const idx = comp._origIdx;
+                const credor = escapeHtml(comp.credor_extraido || '');
+                const valor = parseFloat(comp.valor_extraido || 0).toFixed(2);
+                const data = comp.data_pagamento || '';
+                const checked = selecionados.has(idx) ? 'checked' : '';
+                const rowCls = selecionados.has(idx) ? ' selecionado' : '';
+                html += `
+                <tr class="comp-row${rowCls}" data-idx="${idx}">
+                    <td class="text-center">
+                        <input type="checkbox" class="form-check-input comp-check" data-idx="${idx}" ${checked} style="cursor:pointer">
+                    </td>
+                    <td class="small text-muted fw-bold">${escapeHtml(String(comp.pagina))}</td>
+                    <td><input type="text" class="form-control form-control-sm comp-credor" data-idx="${idx}" value="${credor}" placeholder="Credor..."></td>
+                    <td><input type="number" class="form-control form-control-sm comp-valor" data-idx="${idx}" value="${valor}" step="0.01" min="0"></td>
+                    <td><input type="date" class="form-control form-control-sm comp-data" data-idx="${idx}" value="${data}"></td>
+                    <td class="text-center text-nowrap">
+                        <button class="btn btn-sm btn-outline-primary py-0 px-1 btn-preview-comp" data-idx="${idx}" title="Pré-visualizar PDF">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <a href="${escapeHtml(comp.url)}" target="_blank" class="btn btn-sm btn-outline-danger py-0 px-1" title="Abrir PDF">
+                            <i class="bi bi-file-pdf"></i>
+                        </a>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+
+        // Sort header events
+        container.querySelectorAll('th.sortable-col').forEach(th => {
+            th.addEventListener('click', function() {
+                const col = this.getAttribute('data-col');
+                if (compSortCol === col) {
+                    compSortDir = compSortDir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    compSortCol = col;
+                    compSortDir = 'asc';
+                }
+                renderizarTabela();
+            });
         });
 
-        // Eventos de checkbox
-        document.querySelectorAll('.comp-check').forEach(cb => {
+        // Column filter events
+        container.querySelectorAll('.col-filter').forEach(input => {
+            input.addEventListener('input', function() {
+                compColFilters[this.getAttribute('data-col')] = this.value;
+                renderizarTabela();
+            });
+        });
+
+        // Checkbox events
+        container.querySelectorAll('.comp-check').forEach(cb => {
             cb.addEventListener('change', function() {
                 const idx = parseInt(this.getAttribute('data-idx'));
-                const card = this.closest('.comprovante-card');
+                const row = this.closest('.comp-row');
                 if (this.checked) {
                     selecionados.add(idx);
-                    card.classList.add('selecionado');
+                    if (row) row.classList.add('selecionado');
                 } else {
                     selecionados.delete(idx);
-                    card.classList.remove('selecionado');
+                    if (row) row.classList.remove('selecionado');
                 }
                 atualizarBarraTotal();
             });
         });
 
-        // Clique no card (fora do checkbox) seleciona/desseleciona
-        document.querySelectorAll('.comprovante-card').forEach(card => {
-            card.addEventListener('click', function(e) {
-                // Ignora cliques em inputs, selects e links
-                if (['INPUT', 'SELECT', 'LABEL', 'A', 'BUTTON'].includes(e.target.tagName)) return;
+        // Check-all event
+        const checkAll = container.querySelector('#check-all-comp');
+        if (checkAll) {
+            checkAll.addEventListener('change', function() {
+                container.querySelectorAll('.comp-check').forEach(cb => {
+                    cb.checked = this.checked;
+                    cb.dispatchEvent(new Event('change'));
+                });
+            });
+        }
+
+        // Preview button events
+        container.querySelectorAll('.btn-preview-comp').forEach(btn => {
+            btn.addEventListener('click', function() {
                 const idx = parseInt(this.getAttribute('data-idx'));
-                const cb = this.querySelector('.comp-check');
-                cb.checked = !cb.checked;
-                cb.dispatchEvent(new Event('change'));
+                const comp = comprovantesEmMemoria[idx];
+                if (comp && comp.url) mostrarPreviewComprovante(comp.url);
             });
         });
+    }
+
+    function mostrarPreviewComprovante(url) {
+        // Only load same-origin URLs (server-generated media paths)
+        try {
+            const parsed = new URL(url, window.location.origin);
+            if (parsed.origin !== window.location.origin) return;
+        } catch (e) { return; }
+        document.getElementById('preview-placeholder').style.display = 'none';
+        const iframe = document.getElementById('preview-iframe');
+        iframe.style.display = 'block';
+        iframe.style.flexGrow = '1';
+        iframe.src = url;
     }
 
     // ===================== BARRA DE TOTAL =====================
@@ -250,13 +393,12 @@
         document.getElementById('txt-qtd-instr').textContent = qtd;
         document.getElementById('txt-soma-instr').textContent = somaFmt;
 
-        // Destaca processos com valor correspondente
         document.querySelectorAll('.processo-row').forEach(row => {
             const vliq = parseFloat(row.getAttribute('data-valor') || 0);
             if (qtd > 0 && Math.abs(soma - vliq) < 0.01) {
-                row.classList.add('table-success', 'selecionavel-ativo');
+                row.classList.add('selecionavel-ativo');
             } else {
-                row.classList.remove('table-success', 'selecionavel-ativo');
+                row.classList.remove('selecionavel-ativo');
             }
         });
     }
@@ -273,49 +415,98 @@
     function limparSelecao() {
         selecionados.clear();
         document.querySelectorAll('.comp-check').forEach(cb => cb.checked = false);
-        document.querySelectorAll('.comprovante-card').forEach(c => c.classList.remove('selecionado'));
+        document.querySelectorAll('.comp-row').forEach(r => r.classList.remove('selecionado'));
         atualizarBarraTotal();
     }
 
     // ===================== LISTA DE PROCESSOS =====================
+    function getProcessosOrdenados() {
+        let lista = [...processosVisiveis];
+        if (procSortCol) {
+            lista.sort((a, b) => {
+                let va = a[procSortCol], vb = b[procSortCol];
+                if (procSortCol === 'valor_liquido') {
+                    va = parseFloat(va || 0); vb = parseFloat(vb || 0);
+                    return procSortAsc ? va - vb : vb - va;
+                }
+                if (procSortCol === 'id') {
+                    va = parseInt(va || 0); vb = parseInt(vb || 0);
+                    return procSortAsc ? va - vb : vb - va;
+                }
+                return procSortAsc
+                    ? String(va || '').localeCompare(String(vb || ''), 'pt-BR')
+                    : String(vb || '').localeCompare(String(va || ''), 'pt-BR');
+            });
+        }
+        return lista;
+    }
+
     function renderizarListaProcessos() {
         const container = document.getElementById('lista-processos');
-        if (!processosVisiveis.length) {
+        const lista = getProcessosOrdenados();
+
+        if (!lista.length) {
             container.innerHTML = '<p class="text-muted text-center small mt-3"><i class="bi bi-check2-all fs-3 d-block mb-1"></i>Nenhum processo aguardando comprovante.</p>';
             return;
         }
 
-        let html = '<table class="table table-sm table-bordered table-hover mb-0"><thead class="table-dark"><tr>' +
-            '<th class="small">#</th>' +
-            '<th class="small">Empenho</th>' +
-            '<th class="small">Credor</th>' +
-            '<th class="small text-end">Valor Líquido</th>' +
-            '<th class="small text-center">Ação</th>' +
-            '</tr></thead><tbody>';
+        function sortIconProc(col) {
+            if (procSortCol !== col) return '<i class="bi bi-sort-alt text-muted sort-icon ms-1"></i>';
+            return procSortAsc
+                ? '<i class="bi bi-sort-down-alt text-warning sort-icon ms-1"></i>'
+                : '<i class="bi bi-sort-up-alt text-warning sort-icon ms-1"></i>';
+        }
 
-        processosVisiveis.forEach(p => {
+        let html = `<table class="table table-sm table-bordered table-hover mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th class="small sortable-proc" data-col="id">#${sortIconProc('id')}</th>
+                    <th class="small sortable-proc" data-col="n_nota_empenho">Empenho${sortIconProc('n_nota_empenho')}</th>
+                    <th class="small sortable-proc" data-col="credor_nome">Credor${sortIconProc('credor_nome')}</th>
+                    <th class="small text-end sortable-proc" data-col="valor_liquido">Valor${sortIconProc('valor_liquido')}</th>
+                    <th class="small text-center">Ação</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+        lista.forEach(p => {
             const vliq = parseFloat(p.valor_liquido || 0);
             html += `
-                <tr class="processo-row" data-id="${p.id}" data-valor="${vliq}">
-                    <td class="small">${p.id}</td>
-                    <td class="small">${escapeHtml(p.n_nota_empenho)}</td>
-                    <td class="small">${escapeHtml(p.credor_nome)}</td>
-                    <td class="small text-end">R$ ${formatarBRL(vliq)}</td>
-                    <td class="small text-center">
-                        <button class="btn btn-sm btn-success py-0 px-2 btn-vincular" data-id="${p.id}" data-valor="${vliq}">
-                            <i class="bi bi-link"></i> Vincular
-                        </button>
-                    </td>
-                </tr>`;
+            <tr class="processo-row" data-id="${p.id}" data-valor="${vliq}">
+                <td class="small">${p.id}</td>
+                <td class="small">${escapeHtml(p.n_nota_empenho)}</td>
+                <td class="small">${escapeHtml(p.credor_nome)}</td>
+                <td class="small text-end">R$ ${formatarBRL(vliq)}</td>
+                <td class="small text-center">
+                    <button class="btn btn-sm btn-success py-0 px-2 btn-vincular" data-id="${p.id}" data-valor="${vliq}">
+                        <i class="bi bi-link"></i>
+                    </button>
+                </td>
+            </tr>`;
         });
 
         html += '</tbody></table>';
         container.innerHTML = html;
 
-        // Event delegation: row click and button click (safe – no user data in handlers)
+        // Sort header events
+        container.querySelectorAll('th.sortable-proc').forEach(th => {
+            th.addEventListener('click', function() {
+                const col = this.getAttribute('data-col');
+                if (procSortCol === col) {
+                    procSortAsc = !procSortAsc;
+                } else {
+                    procSortCol = col;
+                    procSortAsc = true;
+                }
+                renderizarListaProcessos();
+                atualizarBarraTotal();
+            });
+        });
+
+        // Row click and vincular button events
         container.querySelectorAll('.processo-row').forEach(row => {
             row.addEventListener('click', function(e) {
-                if (e.target.closest('.btn-vincular')) return; // handled by button
+                if (e.target.closest('.btn-vincular')) return;
                 const pid = parseInt(this.getAttribute('data-id'));
                 const vliq = parseFloat(this.getAttribute('data-valor'));
                 const proc = processosVisiveis.find(p => p.id === pid);
@@ -333,28 +524,16 @@
         });
     }
 
-    // ===================== FILTRO E ORDENAÇÃO =====================
+    // ===================== FILTRO DE PROCESSOS =====================
     document.getElementById('filtro-credor').addEventListener('input', function() {
         const termo = this.value.toLowerCase().trim();
         processosVisiveis = processosPendentes.filter(p =>
             p.credor_nome.toLowerCase().includes(termo) ||
             p.n_nota_empenho.toLowerCase().includes(termo)
         );
-        if (!ordemAsc) processosVisiveis.sort((a, b) => b.credor_nome.localeCompare(a.credor_nome));
-        else processosVisiveis.sort((a, b) => a.credor_nome.localeCompare(b.credor_nome));
         renderizarListaProcessos();
         atualizarBarraTotal();
     });
-
-    function alternarOrdem() {
-        ordemAsc = !ordemAsc;
-        document.getElementById('icone-sort').className = ordemAsc ? 'bi bi-sort-alpha-down' : 'bi bi-sort-alpha-up';
-        processosVisiveis.sort((a, b) =>
-            ordemAsc ? a.credor_nome.localeCompare(b.credor_nome) : b.credor_nome.localeCompare(a.credor_nome)
-        );
-        renderizarListaProcessos();
-        atualizarBarraTotal();
-    }
 
     // ===================== VINCULAÇÃO =====================
     function solicitarVinculo(processoId, valorLiquido, credorNome) {
@@ -363,7 +542,7 @@
             return;
         }
         if (selecionados.size === 0) {
-            alert('Selecione pelo menos um comprovante no painel esquerdo.');
+            alert('Selecione pelo menos um comprovante no painel central.');
             return;
         }
 
@@ -390,7 +569,6 @@
 
         if (!confirm(msg)) return;
 
-        // Monta payload
         const comprovantesParaEnviar = [...selecionados].map(idx => {
             const credorInput = document.querySelector(`.comp-credor[data-idx="${idx}"]`);
             const valorInput = document.querySelector(`.comp-valor[data-idx="${idx}"]`);
@@ -403,7 +581,6 @@
             };
         });
 
-        // Desabilita botões durante a requisição
         document.querySelectorAll('.processo-row button').forEach(b => b.disabled = true);
 
         fetch('{% url "api_vincular_comprovantes" %}', {
@@ -414,14 +591,12 @@
         .then(r => r.json())
         .then(data => {
             if (data.sucesso) {
-                // Remove comprovantes vinculados da lista em memória
                 const indicesSelecionados = [...selecionados].sort((a, b) => b - a);
                 indicesSelecionados.forEach(idx => comprovantesEmMemoria.splice(idx, 1));
                 selecionados.clear();
-                renderizarCards();
+                renderizarTabela();
                 atualizarBarraTotal();
 
-                // Remove o processo da lista local
                 const pidx = processosPendentes.findIndex(p => p.id === processoId);
                 if (pidx !== -1) processosPendentes.splice(pidx, 1);
                 const vidx = processosVisiveis.findIndex(p => p.id === processoId);
@@ -449,5 +624,6 @@
     }
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

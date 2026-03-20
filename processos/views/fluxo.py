@@ -76,13 +76,30 @@ def download_arquivo_seguro(request, tipo_documento, documento_id):
 
 
 def home_page(request):
-    processos_base = Processo.objects.all().order_by('-id')
+    ORDER_FIELDS = {
+        'id': 'id',
+        'credor': 'credor__nome',
+        'data_empenho': 'data_empenho',
+        'status': 'status__status_choice',
+        'tipo_pagamento': 'tipo_pagamento__tipo_de_pagamento',
+        'valor_liquido': 'valor_liquido',
+    }
+    ordem = request.GET.get('ordem', 'id')
+    direcao = request.GET.get('direcao', 'desc')
+
+    order_field = ORDER_FIELDS.get(ordem, 'id')
+    if direcao == 'desc':
+        order_field = f'-{order_field}'
+
+    processos_base = Processo.objects.all().order_by(order_field)
     meu_filtro = ProcessoFilter(request.GET, queryset=processos_base)
     processos_filtrados = meu_filtro.qs
 
     context = {
         'lista_processos': processos_filtrados,
         'meu_filtro': meu_filtro,
+        'ordem': ordem,
+        'direcao': direcao,
     }
     return render(request, 'home.html', context)
 
