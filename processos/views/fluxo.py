@@ -19,12 +19,12 @@ from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Count, Q, F, Sum, Exists, OuterRef
 from pypdf import PdfWriter
-from ..forms import ProcessoForm, DocumentoFormSet, DocumentoFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet
+from ..forms import ProcessoForm, DocumentoFormSet, DocumentoFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet, DevolucaoForm
 from ..validators import verificar_turnpike, STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
 from ..utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, processar_pdf_comprovantes_ia, gerar_pdf_autorizacao, gerar_pdf_conselho_fiscal, gerar_pdf_pcd, parse_siscac_report, sync_siscac_payments
 from ..ai_utils import extrair_dados_documento, extract_data_with_llm, extrair_codigos_barras_boletos
 from ..invoice_processor import process_invoice_taxes
-from ..models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias, StatusChoicesRetencoes, MeiosDeTransporte, FormasDePagamento, ContasBancarias, Grupos, CargosFuncoes, TagChoices, RegistroAcessoArquivo
+from ..models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias, StatusChoicesRetencoes, MeiosDeTransporte, FormasDePagamento, ContasBancarias, Grupos, CargosFuncoes, TagChoices, RegistroAcessoArquivo, Devolucao
 from ..filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DiariasAutorizacaoFilter, ArquivamentoFilter
 
 
@@ -46,6 +46,9 @@ def download_arquivo_seguro(request, tipo_documento, documento_id):
     elif tipo_documento == 'suprimento':
         doc = get_object_or_404(DespesaSuprimento, id=documento_id)
         arquivo = doc.arquivo
+    elif tipo_documento == 'devolucao':
+        doc = get_object_or_404(Devolucao, id=documento_id)
+        arquivo = doc.comprovante
     else:
         raise Http404
 
@@ -2593,3 +2596,44 @@ def sincronizar_siscac(request):
             except Exception as e:
                 messages.error(request, f'Erro ao processar o relatório SISCAC: {e}')
     return render(request, 'fluxo/sincronizar_siscac.html', context)
+
+
+@login_required
+def registrar_devolucao_view(request, processo_id):
+    processo = get_object_or_404(Processo, id=processo_id)
+
+    if request.method == 'POST':
+        form = DevolucaoForm(request.POST, request.FILES)
+        if form.is_valid():
+            devolucao = form.save(commit=False)
+            devolucao.processo = processo
+            devolucao.save()
+            messages.success(request, 'Devolução registrada com sucesso.')
+            return redirect('process_detail', processo.id)
+    else:
+        form = DevolucaoForm()
+
+    return render(request, 'fluxo/add_devolucao.html', {
+        'form': form,
+        'processo': processo,
+    })
+
+
+@login_required
+def process_detail_view(request, pk):
+    processo = get_object_or_404(Processo, pk=pk)
+    documentos = processo.documentos.all()
+    status_permite_devolucao = {
+        'PAGO - A CONTABILIZAR',
+        'CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL',
+        'APROVADO - PENDENTE ARQUIVAMENTO',
+        'ARQUIVADO',
+    }
+    pode_registrar_devolucao = (
+        processo.status and processo.status.status_choice in status_permite_devolucao
+    )
+    return render(request, 'fluxo/process_detail.html', {
+        'processo': processo,
+        'documentos': documentos,
+        'pode_registrar_devolucao': pode_registrar_devolucao,
+    })
