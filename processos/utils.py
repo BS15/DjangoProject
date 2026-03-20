@@ -226,6 +226,12 @@ def processar_pdf_boleto(pdf_file):
 
 
 def processar_pdf_comprovantes(pdf_file):
+    from .models import Credor, ContasBancarias
+
+    CNPJ_ORGAO = '82.894.098/0001-32'
+    AGENCIA_ORGAO = '3582-3'
+    CONTA_ORGAO_LIMPA = '7429-2'
+
     resultados = []
 
     pdf_writer_source = PyPDF2.PdfReader(pdf_file)
@@ -254,39 +260,29 @@ def processar_pdf_comprovantes(pdf_file):
                 except ValueError:
                     pass
 
-            # --- PARTE B: EXTRAÇÃO DO CREDOR ---
-            credor = "Não identificado automaticamente"
+            # --- PARTE B: IDENTIFICAÇÃO DO CREDOR ---
+            credor_encontrado = None
 
-            # Regra 1: Transferência (Procura "TRANSFERIDO PARA: CLIENTE:" e para no próximo campo)
-            match_transf = re.search(
-                r'TRANSFERIDO PARA:\s*CLIENTE:\s*([A-ZÀ-Ÿ\s\.\-\&]+?)(?:AGENCIA|NR\. DOCUMENTO|CONTA|$)', texto_flat,
-                re.IGNORECASE)
+            # Método Primário: identificação por CNPJ/CPF
+            padrao_doc = re.compile(r'\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}|\d{3}\.\d{3}\.\d{3}-\d{2}')
+            documentos = padrao_doc.findall(texto_flat)
+            for doc in documentos:
+                if doc != CNPJ_ORGAO:
+                    credor_encontrado = Credor.objects.filter(cnpj_cpf=doc).first()
+                    if credor_encontrado:
+                        break
 
-            # Regra 2: Convênios (Procura "Convenio" e para em "Codigo de Barras")
-            match_convenio = re.search(r'Convenio\s+([A-ZÀ-Ÿ\s\.\-\&]+?)\s*Codigo de Barras', texto_flat, re.IGNORECASE)
-
-            # Regra 3: Títulos/Boletos (Pega o nome da Instituição (Banco X ou S.A.) antes da gigante linha digitável)
-            match_banco = re.search(
-                r'((?:BANCO|CAIXA)[A-ZÀ-Ÿ\s\.\-\&]+?|[A-ZÀ-Ÿ\s\.\-\&]+?S\/?\.?A\.?)\s*(?:\d[\s\.\-]*){47,55}',
-                texto_flat, re.IGNORECASE)
-
-            # Regra 4: Termos genéricos (Favorecido, Destinatário, Recebedor)
-            match_fav = re.search(
-                r'(?:Favorecido|Nome|Credor|Destinat[áa]rio|Recebedor|CLIENTE)[\s:]+([A-ZÀ-Ÿ\s\.\-\&]{5,40}?)(?:AGENCIA|DATA|CONTA|CNPJ|CPF|$)',
-                texto_flat, re.IGNORECASE)
-
-            # Aplica a primeira regra que der match
-            if match_transf:
-                credor = match_transf.group(1).strip()
-            elif match_convenio:
-                credor = match_convenio.group(1).strip()
-            elif match_banco:
-                credor = match_banco.group(1).strip()
-            elif match_fav:
-                credor = match_fav.group(1).strip()
-
-            # Remove lixos comuns do final da string
-            credor = re.sub(r'(?:SISTEMA|SISBB|AUTOATENDIMENTO).*', '', credor, flags=re.IGNORECASE).strip()
+            # Método Secundário: identificação por Conta Bancária
+            if not credor_encontrado:
+                padrao_conta = re.compile(r'AGENCIA:\s*([\d-]+)\s*CONTA:\s*([\d.-]+[Xx]?)')
+                contas = padrao_conta.findall(texto_flat)
+                for agencia, conta in contas:
+                    conta_limpa = conta.replace('.', '')
+                    if agencia != AGENCIA_ORGAO or conta_limpa != CONTA_ORGAO_LIMPA:
+                        conta_db = ContasBancarias.objects.filter(agencia=agencia, conta=conta_limpa).first()
+                        if conta_db and conta_db.titular:
+                            credor_encontrado = conta_db.titular
+                            break
 
             # --- PARTE B.2: EXTRAÇÃO DA DATA DE PAGAMENTO ---
             data_pagamento = ''
@@ -318,7 +314,7 @@ def processar_pdf_comprovantes(pdf_file):
             resultados.append({
                 'temp_path': path,
                 'pagina': i + 1,
-                'credor_extraido': credor,
+                'credor_extraido': credor_encontrado.nome if credor_encontrado else None,
                 'valor_extraido': valor_float,
                 'data_pagamento': data_pagamento,
                 'url': default_storage.url(path)
