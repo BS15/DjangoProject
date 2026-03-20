@@ -268,15 +268,25 @@ def processar_pdf_comprovantes(pdf_file):
 
         # --- PARTE B.2: EXTRAÇÃO DA DATA DE PAGAMENTO ---
         data_pagamento = ''
-        match_data = re.search(
-            r'(?:DATA\s+(?:DO\s+)?PAGAMENTO|DATA\s+DA\s+OPERA[ÇC][ÃA]O|DATA\s+DE\s+PAGAMENTO|DATA\s+DO\s+MOVIMENTO|DATA\s+EFETIVA[ÇC][ÃA]O|DATA\s+DA\s+TRANSFER[EÊ]NCIA|DATA)[\s:\-\.]*(\d{2}/\d{2}/\d{4})',
-            texto_flat,
+        padrao_data = re.compile(
+            r'(?:DATA(?:\s*DO PAGAMENTO|\s*DA TRANSFERENCIA)?|DEBITO EM(?:\s*:)?)\s*(\d{2}/\d{2}/\d{4})',
             re.IGNORECASE
         )
+        match_data = padrao_data.search(texto_flat)
         if match_data:
             partes = match_data.group(1).split('/')
             if len(partes) == 3:
                 data_pagamento = f"{partes[2]}-{partes[1]}-{partes[0]}"
+
+        # --- PARTE B.3: EXTRAÇÃO DO NR. AUTENTICACAO (Banco do Brasil) ---
+        numero_comprovante = ''
+        padrao_autenticacao = re.compile(
+            r'NR\.AUTENTICACAO\s*([A-Z0-9]\.[A-Z0-9]{3}\.[A-Z0-9]{3}\.[A-Z0-9]{3}\.[A-Z0-9]{3}\.[A-Z0-9]{3})',
+            re.IGNORECASE
+        )
+        autenticacao_match = padrao_autenticacao.search(texto_flat)
+        if autenticacao_match:
+            numero_comprovante = autenticacao_match.group(1)
 
         # --- EMPACOTAMENTO ---
         resultados.append({
@@ -284,6 +294,7 @@ def processar_pdf_comprovantes(pdf_file):
             'credor_extraido': credor_encontrado.nome if credor_encontrado else None,
             'valor_extraido': valor_float,
             'data_pagamento': data_pagamento,
+            'numero_comprovante': numero_comprovante,
             'documentos_encontrados': documentos_encontrados,
             'contas_encontradas': contas_encontradas,
         })
