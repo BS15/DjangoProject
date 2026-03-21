@@ -2440,8 +2440,11 @@ def _create_fake_processos(n):
 
 def _create_fake_documentos_fiscais(n, processos):
     """Create n fake DocumentoFiscal records linked to existing processos."""
+    from django.contrib.auth.models import User
     credores_pj = list(Credor.objects.filter(tipo='PJ'))
-    credores_func = list(Credor.objects.filter(tipo='PF'))
+    fiscais = list(User.objects.filter(groups__name='FISCAL DE CONTRATO'))
+    if not fiscais:
+        fiscais = list(User.objects.all())
     if not credores_pj:
         credores_pj = list(Credor.objects.all())
 
@@ -2449,7 +2452,7 @@ def _create_fake_documentos_fiscais(n, processos):
     for i in range(n):
         processo = random.choice(processos)
         emitente = random.choice(credores_pj) if credores_pj else None
-        fiscal = random.choice(credores_func) if credores_func else None
+        fiscal = random.choice(fiscais) if fiscais else None
         data_emissao = _fake_generator.date_between(start_date="-1y", end_date="today")
         valor_bruto = Decimal(str(round(random.uniform(100.00, 50_000.00), 2)))
         retencao_pct = Decimal(str(round(random.uniform(0, 0.15), 4)))

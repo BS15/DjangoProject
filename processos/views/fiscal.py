@@ -7,6 +7,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
@@ -28,7 +29,7 @@ def documentos_fiscais_view(request, pk):
     """Manage fiscal documents (Notas Fiscais) for a process."""
     processo = get_object_or_404(Processo, id=pk)
     documentos = processo.documentos.all().order_by('ordem')
-    fiscais_contrato = Credor.objects.filter(grupo__grupo='FUNCIONÁRIOS').order_by('nome')
+    fiscais_contrato = User.objects.filter(groups__name='FISCAL DE CONTRATO').order_by('first_name', 'last_name')
     credores = Credor.objects.all().order_by('nome')
     codigos_imposto = CodigosImposto.objects.all().order_by('codigo')
     source = request.GET.get('source', '')
@@ -116,8 +117,8 @@ def api_salvar_nota_fiscal(request, processo_pk, nota_pk):
     fiscal_id = body.get('fiscal_contrato')
     if fiscal_id:
         try:
-            nota.fiscal_contrato = Credor.objects.get(id=int(fiscal_id))
-        except (Credor.DoesNotExist, ValueError, TypeError):
+            nota.fiscal_contrato = User.objects.get(id=int(fiscal_id))
+        except (User.DoesNotExist, ValueError, TypeError):
             nota.fiscal_contrato = None
     else:
         nota.fiscal_contrato = None
@@ -427,6 +428,15 @@ def painel_liquidacoes_view(request):
     queryset_base = DocumentoFiscal.objects.select_related(
         'processo', 'nome_emitente', 'fiscal_contrato'
     ).all().order_by('-id')
+
+    # RBAC: managers see all; fiscais see only their own; others see nothing
+    is_manager = request.user.groups.filter(name__in=['Ordenadores de Despesa', 'Gestores']).exists()
+    if not is_manager:
+        is_fiscal = request.user.groups.filter(name='FISCAL DE CONTRATO').exists()
+        if is_fiscal:
+            queryset_base = queryset_base.filter(fiscal_contrato=request.user)
+        else:
+            queryset_base = queryset_base.none()
 
     meu_filtro = DocumentoFiscalFilter(request.GET, queryset=queryset_base)
 

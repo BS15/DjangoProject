@@ -1,5 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory
+from django.contrib.auth.models import User
 from .models import Processo, DocumentoProcesso, DocumentoFiscal, RetencaoImposto, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos, Pendencia, StatusChoicesPendencias, DadosContribuinte, ContasBancarias, Devolucao
 from .validators import validar_regras_processo, validar_regras_suprimento, STATUS_BLOQUEADOS_FORM
 
@@ -130,6 +131,8 @@ class DocumentoFiscalForm(forms.ModelForm):
         self.fields['data_emissao'].required = True
         self.fields['valor_bruto'].required = True
         self.fields['valor_liquido'].required = True
+        if 'fiscal_contrato' in self.fields:
+            self.fields['fiscal_contrato'].queryset = User.objects.filter(groups__name='FISCAL DE CONTRATO')
 
     class Meta:
         model = DocumentoFiscal
