@@ -1,0 +1,61 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Importar Diárias em Lote</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
+</head>
+<body class="bg-light">
+{% include 'partials/sidebar.html' %}
+
+<div class="container mt-4 mb-5" style="max-width: 700px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4><i class="bi bi-file-earmark-arrow-up"></i> Importar Diárias em Lote</h4>
+        <a href="{% url 'diarias_list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <a href="{% url 'download_template_diarias_csv' %}" class="btn btn-secondary mb-3">
+                <i class="bi bi-download"></i> Baixar Planilha Modelo
+            </a>
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="csv_file" class="form-label fw-bold">Arquivo CSV</label>
+                    <input type="file" name="csv_file" id="csv_file" class="form-control" accept=".csv" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-upload"></i> Importar Lote
+                </button>
+            </form>
+
+            {% if resultados %}
+                <div class="alert alert-success mt-4">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <strong>{{ resultados.sucessos }}</strong> diária(s) importada(s) com sucesso e enviada(s) para autorização.
+                </div>
+                {% if resultados.erros %}
+                    <div class="alert alert-danger mt-2">
+                        <strong><i class="bi bi-exclamation-triangle-fill"></i> Erros encontrados:</strong>
+                        <ul class="mb-0 mt-2">
+                            {% for erro in resultados.erros %}
+                                <li>{{ erro }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

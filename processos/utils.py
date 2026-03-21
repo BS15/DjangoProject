@@ -1124,3 +1124,92 @@ def sync_diarias_siscac_csv(csv_file):
             resultados['atualizadas'] += 1
 
     return resultados
+
+
+def importar_diarias_lote(csv_file, usuario_logado):
+    import csv
+    import io
+    from datetime import datetime
+    from decimal import Decimal, InvalidOperation
+    from .models import Diaria, Credor, StatusChoicesVerbasIndenizatorias
+
+    resultados = {'sucessos': 0, 'erros': []}
+
+    try:
+        conteudo = io.StringIO(csv_file.read().decode('utf-8'))
+    except UnicodeDecodeError:
+        resultados['erros'].append("Erro de codificação: verifique se o arquivo está salvo em UTF-8.")
+        return resultados
+
+    reader = csv.DictReader(conteudo)
+
+    colunas_requeridas = {
+        'CPF_BENEFICIARIO', 'DATA_SAIDA', 'DATA_RETORNO',
+        'CIDADE_ORIGEM', 'CIDADE_DESTINO', 'OBJETIVO', 'QUANTIDADE_DIARIAS',
+    }
+    if reader.fieldnames is None or not colunas_requeridas.issubset(set(reader.fieldnames)):
+        faltando = colunas_requeridas - set(reader.fieldnames or [])
+        resultados['erros'].append(
+            f"Cabeçalho inválido. Colunas ausentes: {', '.join(sorted(faltando))}."
+        )
+        return resultados
+
+    status_solicitada, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
+        status_choice='SOLICITADA'
+    )
+
+    for row in reader:
+        cpf_limpo = row.get('CPF_BENEFICIARIO', '').replace('.', '').replace('-', '').strip()
+
+        credor = Credor.objects.filter(cpf_cnpj=cpf_limpo, tipo='PF').first()
+        if credor is None:
+            resultados['erros'].append(
+                f"Linha {reader.line_num}: Beneficiário com CPF {cpf_limpo} não encontrado."
+            )
+            continue
+
+        try:
+            data_saida_parsed = datetime.strptime(row['DATA_SAIDA'].strip(), '%d/%m/%Y').date()
+            data_retorno_parsed = datetime.strptime(row['DATA_RETORNO'].strip(), '%d/%m/%Y').date()
+        except ValueError:
+            resultados['erros'].append(
+                f"Linha {reader.line_num}: Data inválida. Use o formato DD/MM/AAAA."
+            )
+            continue
+
+        if data_retorno_parsed < data_saida_parsed:
+            resultados['erros'].append(
+                f"Linha {reader.line_num}: Data de retorno ({row['DATA_RETORNO'].strip()}) "
+                f"não pode ser anterior à data de saída ({row['DATA_SAIDA'].strip()})."
+            )
+            continue
+
+        try:
+            qtd_diarias = Decimal(row['QUANTIDADE_DIARIAS'].strip().replace(',', '.'))
+        except InvalidOperation:
+            resultados['erros'].append(
+                f"Linha {reader.line_num}: Quantidade de diárias inválida: {row['QUANTIDADE_DIARIAS']}."
+            )
+            continue
+
+        if qtd_diarias <= 0:
+            resultados['erros'].append(
+                f"Linha {reader.line_num}: Quantidade de diárias deve ser maior que zero."
+            )
+            continue
+
+        Diaria.objects.create(
+            beneficiario=credor,
+            proponente=usuario_logado,
+            data_saida=data_saida_parsed,
+            data_retorno=data_retorno_parsed,
+            cidade_origem=row['CIDADE_ORIGEM'].strip(),
+            cidade_destino=row['CIDADE_DESTINO'].strip(),
+            objetivo=row['OBJETIVO'].strip(),
+            quantidade_diarias=qtd_diarias,
+            status=status_solicitada,
+            autorizada=False,
+        )
+        resultados['sucessos'] += 1
+
+    return resultados
