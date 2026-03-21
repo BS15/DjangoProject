@@ -721,6 +721,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function processarArquivosEmLote(files) {
+        _lastBatchRows = [];
         Array.from(files).forEach(file => {
             const rows = containerDocumentos.querySelectorAll('.document-row');
             let targetRow = rows[rows.length - 1];
@@ -740,6 +741,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 fileInput.files = dt.files;
                 fileInput.dispatchEvent(new Event('change', { bubbles: true }));
             }
+            if (targetRow) _lastBatchRows.push(targetRow);
         });
         dropzone.querySelector('.dropzone-text').innerHTML = `<i class="bi bi-check2-circle"></i> ${files.length} arquivos inseridos!`;
         setTimeout(() => { dropzone.querySelector('.dropzone-text').innerHTML = "Arraste arquivos aqui para visualizar"; }, 3000);
@@ -842,6 +844,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // BATCH DOCUMENT TYPE - MODAL LOGIC
     // ==========================================
     let _modalBatchTipoInstance = null;
+    let _lastBatchRows = [];
     function getModalBatchTipo() {
         if (!_modalBatchTipoInstance) {
             _modalBatchTipoInstance = new bootstrap.Modal(document.getElementById('modal-batch-tipo'));
@@ -889,13 +892,14 @@ document.addEventListener('DOMContentLoaded', function() {
         selectLote.classList.remove('is-invalid');
 
         const docList = document.getElementById('document-list');
-        if (docList) {
-            docList.querySelectorAll('.document-row').forEach(row => {
-                if (row.style.display === 'none') return;
-                const sel = row.querySelector('select[name$="-tipo"]');
-                if (sel) sel.value = valorSelecionado;
-            });
-        }
+        const targetRows = _lastBatchRows.length > 0
+            ? _lastBatchRows
+            : (docList ? Array.from(docList.querySelectorAll('.document-row')).filter(r => r.style.display !== 'none') : []);
+        targetRows.forEach(row => {
+            const sel = row.querySelector('select[name$="-tipo"]');
+            if (sel) sel.value = valorSelecionado;
+        });
+        _lastBatchRows = [];
         getModalBatchTipo().hide();
     });
 
@@ -904,6 +908,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('btn-batch-tipo').addEventListener('click', function () {
+        _lastBatchRows = [];
         const docList = document.getElementById('document-list');
         let count = 0;
         if (docList) {
