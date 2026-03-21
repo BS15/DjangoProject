@@ -2,6 +2,7 @@ import os
 import json
 import tempfile
 from datetime import date, datetime
+from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
@@ -108,8 +109,8 @@ def api_salvar_nota_fiscal(request, processo_pk, nota_pk):
     vb = body.get('valor_bruto', '')
     if vb:
         try:
-            nota.valor_bruto = float(str(vb).replace(',', '.'))
-        except (ValueError, TypeError):
+            nota.valor_bruto = Decimal(str(vb).replace(',', '.'))
+        except (InvalidOperation, ValueError, TypeError):
             pass
 
     fiscal_id = body.get('fiscal_contrato')
