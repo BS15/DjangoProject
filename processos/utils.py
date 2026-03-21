@@ -642,11 +642,11 @@ def gerar_pdf_pcd(diaria):
         y -= 16
         p.setFont("Helvetica", 11)
         nome_p = diaria.proponente.get_full_name() or diaria.proponente.username
-        cpf_p = diaria.proponente.email or "Não informado"
+        email_p = diaria.proponente.email or "Não informado"
         cargo_p = "Não informado"
         p.drawString(margin_left, y, f"Nome:              {nome_p}")
         y -= 16
-        p.drawString(margin_left, y, f"CPF:               {cpf_p}")
+        p.drawString(margin_left, y, f"E-mail:            {email_p}")
         y -= 16
         p.drawString(margin_left, y, f"Cargo / Função:    {cargo_p}")
         y -= 24
