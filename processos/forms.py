@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 from .models import Processo, DocumentoProcesso, DocumentoFiscal, RetencaoImposto, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos, Pendencia, StatusChoicesPendencias, DadosContribuinte, ContasBancarias, Devolucao
 from .validators import validar_regras_processo, validar_regras_suprimento, STATUS_BLOQUEADOS_FORM

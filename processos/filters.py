@@ -228,7 +228,7 @@ class DocumentoFiscalFilter(django_filters.FilterSet):
 class DiariasAutorizacaoFilter(django_filters.FilterSet):
     numero_siscac = django_filters.CharFilter(lookup_expr='icontains', label='Nº SISCAC')
     beneficiario__nome = django_filters.CharFilter(lookup_expr='icontains', label='Nome do Beneficiário')
-    proponente__nome = django_filters.CharFilter(lookup_expr='icontains', label='Nome do Proponente')
+    proponente__username = django_filters.CharFilter(lookup_expr='icontains', label='Username do Proponente')
 
     autorizada = django_filters.BooleanFilter(
         label='Status de Autorização (Autorizada?)',
@@ -237,7 +237,7 @@ class DiariasAutorizacaoFilter(django_filters.FilterSet):
 
     class Meta:
         model = Diaria
-        fields = ['numero_siscac', 'beneficiario__nome', 'proponente__nome', 'autorizada']
+        fields = ['numero_siscac', 'beneficiario__nome', 'proponente__username', 'autorizada']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 from simple_history.models import HistoricalRecords
 
@@ -70,9 +71,8 @@ class Diaria(models.Model):
     processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='diarias', null=True, blank=True)
     beneficiario = models.ForeignKey('Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
                                      verbose_name="Beneficiário", related_name='diarias_como_beneficiario')
-    proponente = models.ForeignKey('Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
-                                   verbose_name="Proponente", related_name='diarias_como_proponente',
-                                   null=True, blank=True)
+    proponente = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='diarias_propostas', verbose_name="Proponente")
 
     # Dados específicos da Diária
     tipo_solicitacao = models.CharField(max_length=20, choices=TIPO_SOLICITACAO, default='INICIAL')

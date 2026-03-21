@@ -2511,7 +2511,6 @@ def _create_fake_diarias(n, credores_pf, processos):
     created = 0
     for i in range(n):
         beneficiario = random.choice(credores_pf)
-        proponente = random.choice(credores_pf)
         data_saida = _fake_generator.date_between(start_date="-6m", end_date="today")
         dias = random.randint(1, 10)
         data_retorno = data_saida + timedelta(days=dias)
@@ -2523,7 +2522,6 @@ def _create_fake_diarias(n, credores_pf, processos):
             processo=processo,
             numero_siscac=numero_seq,
             beneficiario=beneficiario,
-            proponente=proponente,
             tipo_solicitacao=random.choice(['INICIAL', 'PRORROGACAO', 'COMPLEMENTACAO']),
             data_saida=data_saida,
             data_retorno=data_retorno,

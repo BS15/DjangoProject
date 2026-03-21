@@ -22,7 +22,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2><i class="bi bi-person-check text-primary"></i> Painel de Autorização de Diárias</h2>
-            <p class="text-muted small">Controle de diárias aguardando autorização ou com autorização já concedida.</p>
+            <p class="text-muted small">Diárias com status <strong>SOLICITADA</strong> aguardando aprovação do proponente.</p>
         </div>
         <a href="{% url 'verbas_panel' %}" class="btn btn-outline-secondary">Voltar para Verbas</a>
     </div>
@@ -35,24 +35,6 @@
             </div>
         {% endfor %}
     {% endif %}
-
-    <div class="card shadow-sm border-0 mb-4 bg-white">
-        <div class="card-body py-3">
-            <form method="get" class="row g-3 align-items-end">
-                {% for field in meu_filtro.form %}
-                <div class="col-md-3">
-                    <label class="form-label text-muted small fw-bold mb-1">{{ field.label }}</label>
-                    {{ field }}
-                </div>
-                {% endfor %}
-                <div class="col-md-3">
-                    <button type="submit" class="btn btn-primary fw-bold shadow-sm w-100">
-                        <i class="bi bi-search"></i> Filtrar
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <div class="card shadow-sm border-0">
         <div class="card-body p-0">
@@ -72,11 +54,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for diaria in diarias %}
+                    {% for diaria in diarias_pendentes %}
                     <tr>
                         <td class="fw-bold text-primary">{{ diaria.numero_siscac }}</td>
                         <td class="fw-medium">{{ diaria.beneficiario.nome|truncatechars:30 }}</td>
-                        <td>{{ diaria.proponente.nome|default:"—"|truncatechars:30 }}</td>
+                        <td>{{ diaria.proponente.get_full_name|default:diaria.proponente.username|default:"—"|truncatechars:30 }}</td>
                         <td>{{ diaria.data_saida|date:"d/m/Y" }}</td>
                         <td>{{ diaria.data_retorno|date:"d/m/Y" }}</td>
                         <td>{{ diaria.cidade_destino|truncatechars:30 }}</td>
@@ -89,15 +71,9 @@
                             {% endif %}
                         </td>
                         <td class="text-center">
-                            {% if diaria.autorizada %}
-                                <span class="badge bg-success px-3 py-2 rounded-pill">
-                                    <i class="bi bi-check-circle"></i> Autorizada
-                                </span>
-                            {% else %}
-                                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">
-                                    <i class="bi bi-hourglass"></i> Pendente
-                                </span>
-                            {% endif %}
+                            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">
+                                <i class="bi bi-hourglass"></i> Solicitada
+                            </span>
                         </td>
                         <td class="text-center pe-3 d-flex justify-content-center gap-1">
                             <a href="{% url 'gerenciar_diaria' pk=diaria.id %}" class="btn btn-sm btn-outline-secondary" title="Gerenciar Diária">
@@ -106,29 +82,16 @@
                             <a href="{% url 'gerar_pcd' pk=diaria.id %}" target="_blank" class="btn btn-sm btn-outline-danger" title="Gerar PCD (PDF)">
                                 <i class="bi bi-file-earmark-pdf"></i>
                             </a>
-                            <form method="POST" action="{% url 'alternar_autorizacao_diaria' pk=diaria.id %}" class="m-0">
-                                {% csrf_token %}
-                                {% if diaria.autorizada %}
-                                    <button type="submit" class="btn btn-sm btn-danger shadow-sm"
-                                            onclick="return confirm('Deseja REVOGAR a autorização desta Diária?');"
-                                            title="Revogar Autorização">
-                                        <i class="bi bi-x-circle"></i> Revogar
-                                    </button>
-                                {% else %}
-                                    <button type="submit" class="btn btn-sm btn-success fw-bold shadow-sm"
-                                            onclick="return confirm('Deseja AUTORIZAR esta Diária?');"
-                                            title="Autorizar Diária">
-                                        <i class="bi bi-check-lg"></i> Autorizar
-                                    </button>
-                                {% endif %}
-                            </form>
+                            <a href="{% url 'aprovar_diaria' diaria.id %}" class="btn btn-success btn-sm">
+                                <i class="bi bi-check-lg"></i> Aprovar
+                            </a>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
                         <td colspan="10" class="text-center py-5 text-muted">
                             <i class="bi bi-calendar-x fs-2 d-block mb-2 text-secondary"></i>
-                            Nenhuma diária encontrada com os filtros atuais.
+                            Nenhuma diária pendente encontrada.
                         </td>
                     </tr>
                     {% endfor %}
