@@ -7,62 +7,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
-    <style>
-        /* Estilo para dar um efeito mais limpo aos botões do menu lateral */
-        .offcanvas-body .btn { text-align: left; padding-left: 1rem; border: none; border-radius: 8px; margin-bottom: 0.5rem; transition: background-color 0.2s; }
-        .offcanvas-body .btn:hover { filter: brightness(0.9); }
-        .offcanvas-body .btn i { margin-right: 10px; width: 20px; text-align: center; display: inline-block; }
-    </style>
 </head>
 <body class="bg-light">
 
-<div class="offcanvas offcanvas-start shadow" tabindex="-1" id="menuLateral" aria-labelledby="menuLateralLabel">
-    <div class="offcanvas-header bg-dark text-white">
-        <h5 class="offcanvas-title fw-bold" id="menuLateralLabel"><i class="bi bi-grid-1x2-fill me-2"></i> Painéis do Sistema</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body p-4">
+{% include 'partials/sidebar.html' %}
 
-        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Cadastros Base</h6>
-        <a href="{% url 'a_empenhar' %}" class="btn btn-warning w-100 fw-bold shadow-sm"><i class="bi bi-hourglass-split"></i> Fila: A Empenhar</a>
-        <a href="{% url 'verbas_panel' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-briefcase text-secondary"></i> Verbas Indenizatórias</a>
-        <a href="{% url 'credores_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-people text-info"></i> Lista de Credores</a>
-        <a href="{% url 'add_credor' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-person-plus text-success"></i> Novo Credor</a>
-
-        <hr class="my-4 text-muted">
-
-        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Operações Frequentes</h6>
-        <a href="{% url 'contas_a_pagar' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-cash-coin text-success"></i> Contas a Pagar</a>
-        <a href="{% url 'painel_impostos' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-receipt text-warning"></i> Retenção de Impostos</a>
-        <a href="{% url 'painel_suprimentos' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-wallet2 text-primary"></i> Suprimentos de Fundos</a>
-        <a href="{% url 'painel_pendencias' %}" class="btn btn-danger text-white w-100 fw-bold shadow-sm"><i class="bi bi-exclamation-triangle"></i> Painel de Pendências</a>
-
-        <hr class="my-4 text-muted">
-
-        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Esteira de Aprovação</h6>
-        <a href="{% url 'painel_liquidacoes' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-pen text-primary"></i> Liquidações / Atestes</a>
-        <a href="{% url 'painel_autorizacao_diarias' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-person-check text-primary"></i> Autorização de Diárias</a>
-        <a href="{% url 'painel_conferencia' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-clipboard-check text-info"></i> Painel de Conferência</a>
-        <a href="{% url 'painel_autorizacao' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-check2-square text-success"></i> Autorização de Pagamento</a>
-        <a href="{% url 'painel_contabilizacao' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-calculator text-secondary"></i> Painel de Contabilização</a>
-        <a href="{% url 'painel_conselho' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-bank text-secondary"></i> Conselho Fiscal</a>
-        <a href="{% url 'painel_arquivamento' %}" class="btn btn-dark w-100 fw-bold shadow-sm text-white mt-2"><i class="bi bi-archive-fill"></i> Arquivo Morto / Digital</a>
-
-        <hr class="my-4 text-muted">
-
-        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Controle e Auditoria</h6>
-        <a href="{% url 'auditoria' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-clock-history text-primary"></i> Auditoria / Histórico</a>
-        <a href="{% url 'painel_devolucoes' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-arrow-return-left text-danger"></i> Devoluções ao Erário</a>
-        <a href="{% url 'add_contingencia' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-shield-exclamation text-danger"></i> Nova Contingência</a>
-        <a href="{% url 'sincronizar_siscac' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-arrow-repeat text-primary"></i> Sincronizar SISCAC</a>
-
-        <hr class="my-4 text-muted">
-
-        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Ferramentas de Desenvolvimento</h6>
-        <a href="{% url 'gerar_dados_fake' %}" class="btn btn-warning w-100 fw-bold shadow-sm"><i class="bi bi-database-fill-gear"></i> Gerador de Dados de Teste</a>
-
-    </div>
-</div>
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-4 rounded shadow-sm border border-light">
         <div>
@@ -70,9 +19,6 @@
             <p class="text-muted mb-0 ms-4">Acompanhamento de pagamentos e empenhos</p>
         </div>
         <div class="d-flex gap-3">
-            <button class="btn btn-outline-dark btn-lg shadow-sm fw-bold" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuLateral" aria-controls="menuLateral">
-                <i class="bi bi-list"></i> Menu de Painéis
-            </button>
             <a href="{% url 'add_process' %}" class="btn btn-success btn-lg shadow-sm fw-bold">
                 <i class="bi bi-plus-lg"></i> Novo Processo
             </a>
