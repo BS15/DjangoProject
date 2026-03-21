@@ -845,6 +845,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function processarArquivosEmLote(files) {
+        _lastBatchRows = [];
         Array.from(files).forEach(file => {
             const rows = containerDocumentos.querySelectorAll('.document-row');
             let targetRow = rows[rows.length - 1];
@@ -864,6 +865,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 fileInput.files = dt.files;
                 fileInput.dispatchEvent(new Event('change', { bubbles: true }));
             }
+            if (targetRow) _lastBatchRows.push(targetRow);
         });
         dropzone.querySelector('.dropzone-text').innerHTML = `<i class="bi bi-check2-circle"></i> ${files.length} arquivos inseridos!`;
         setTimeout(() => { dropzone.querySelector('.dropzone-text').innerHTML = "Arraste novos arquivos aqui"; }, 3000);
@@ -1026,6 +1028,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ==========================================
     let _modalBatchTipoInstance = null;
     let _batchApplyAll = false; // true when triggered by file drop (apply to all)
+    let _lastBatchRows = [];
 
     function getModalBatchTipo() {
         if (!_modalBatchTipoInstance) {
@@ -1151,9 +1154,9 @@ document.addEventListener('DOMContentLoaded', function() {
         selectLote.classList.remove('is-invalid');
 
         const checkedRows = getCheckedDocRows();
-        const targetRows = (_batchApplyAll || checkedRows.length === 0)
-            ? getVisibleDocRows()
-            : checkedRows;
+        const targetRows = _batchApplyAll
+            ? _lastBatchRows
+            : (checkedRows.length > 0 ? checkedRows : getVisibleDocRows());
 
         targetRows.forEach(row => {
             const sel = row.querySelector('select[name$="-tipo"]');
@@ -1163,6 +1166,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Uncheck all after applying
         document.getElementById('document-list').querySelectorAll('.doc-select-check:checked').forEach(cb => { cb.checked = false; });
         updateBatchButtonBadge();
+        _lastBatchRows = [];
 
         getModalBatchTipo().hide();
     });
