@@ -202,7 +202,7 @@
                     <label class="small fw-bold text-dark mb-1"><i class="bi bi-person-badge"></i> Fiscal do Contrato <span class="text-warning">(obrigatório se "Enviar para Liquidação")</span></label>
                     <select name="fiscal_contrato___INDEX__" class="form-select form-select-sm fiscal-contrato-select" disabled>
                         <option value="">---------</option>
-                        {% for fc in fiscais_contrato %}<option value="{{ fc.id }}">{{ fc.nome }}</option>{% endfor %}
+                        {% for fc in fiscais_contrato %}<option value="{{ fc.id }}">{{ fc.get_full_name|default:fc.username }}</option>{% endfor %}
                     </select>
                     <small class="text-muted" style="font-size: 0.70rem;">Obrigatório ao enviar para liquidação.</small>
                 </div>

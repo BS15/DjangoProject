@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import date
+from django.contrib.auth.models import User
 from simple_history.models import HistoricalRecords
 from processos.validators import validar_arquivo_seguro
 
@@ -86,13 +87,12 @@ class DocumentoFiscal(models.Model):
     valor_bruto = models.DecimalField(max_digits=12, decimal_places=2)
     valor_liquido = models.DecimalField(max_digits=12, decimal_places=2)
     fiscal_contrato = models.ForeignKey(
-        'Credor', # Recomendado usar string ou a classe se já estiver definida acima
-        on_delete=models.PROTECT,
+        User,
+        on_delete=models.SET_NULL,
         verbose_name="Fiscal do Contrato",
-        related_name="fiscalizadas", # Adicionado para evitar conflito de nomes
+        related_name='notas_fiscalizadas',
         null=True,
         blank=True,
-        limit_choices_to={'grupo__grupo': 'FUNCIONÁRIOS'}
     )
     atestada = models.BooleanField(default=False)
     serie_nota_fiscal = models.CharField(
