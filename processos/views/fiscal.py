@@ -434,7 +434,7 @@ def painel_liquidacoes_view(request):
         'notas': meu_filtro.qs,
         'pode_interagir': request.user.has_perm('processos.pode_atestar_liquidacao'),
     }
-    return render(request, 'fiscal/painel_liquidacoes.html', context)
+    return render(request, 'fluxo/painel_liquidacoes.html', context)
 
 
 @login_required
