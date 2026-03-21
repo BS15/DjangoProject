@@ -477,3 +477,23 @@ a:hover {
 
 /* --- CLOSE BUTTON (modal/alert X) -------------------------- */
 .btn-close-white { filter: invert(1) grayscale(100%) brightness(200%); }
+
+/* --- HAMBURGER MENU BUTTON (fixed top-left) ---------------- */
+.btn-menu-lateral {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1045;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- SIDEBAR OFFCANVAS MENU -------------------------------- */
+.offcanvas-body .btn { text-align: left; padding-left: 1rem; border: none; border-radius: 8px; margin-bottom: 0.5rem; transition: background-color 0.2s; }
+.offcanvas-body .btn:hover { filter: brightness(0.9); }
+.offcanvas-body .btn i { margin-right: 10px; width: 20px; text-align: center; display: inline-block; }
