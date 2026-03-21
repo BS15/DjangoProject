@@ -1,3 +1,4 @@
+import csv
 import os
 from datetime import date, timedelta
 from decimal import Decimal
@@ -14,7 +15,7 @@ from ..models import (
     Processo, Credor, Tabela_Valores_Unitarios_Verbas_Indenizatorias, MeiosDeTransporte,
 )
 from ..filters import DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter
-from ..utils import gerar_pdf_pcd, sync_diarias_siscac_csv
+from ..utils import gerar_pdf_pcd, sync_diarias_siscac_csv, importar_diarias_lote
 
 _EXTENSOES_DOCUMENTO_PERMITIDAS = {'.pdf', '.jpg', '.jpeg', '.png'}
 
@@ -557,3 +558,24 @@ def sincronizar_diarias(request):
             logging.getLogger(__name__).exception('Erro ao processar CSV SISCAC Diárias')
             messages.error(request, 'Erro ao processar o arquivo CSV. Verifique o formato e tente novamente.')
     return render(request, 'verbas/sincronizar_diarias.html', context)
+
+
+@login_required
+def download_template_diarias_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="template_diarias.csv"'
+    writer = csv.writer(response)
+    writer.writerow([
+        'CPF_BENEFICIARIO', 'DATA_SAIDA', 'DATA_RETORNO',
+        'CIDADE_ORIGEM', 'CIDADE_DESTINO', 'OBJETIVO', 'QUANTIDADE_DIARIAS',
+    ])
+    return response
+
+
+@login_required
+def importar_diarias_view(request):
+    context = {}
+    if request.method == 'POST' and request.FILES.get('csv_file'):
+        resultados = importar_diarias_lote(request.FILES['csv_file'], request.user)
+        context['resultados'] = resultados
+    return render(request, 'verbas/importar_diarias.html', context)
