@@ -55,8 +55,9 @@
 
     <form method="post" enctype="multipart/form-data" id="processForm">
         {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next_url }}">
         {{ documento_formset.management_form }}
-        {{ pendencia_formset.management_form }} 
+        {{ pendencia_formset.management_form }}
 
         {% if somente_documentos %}
         <div class="alert alert-warning border-warning shadow-sm mb-3 d-flex align-items-start gap-2" role="alert">
@@ -260,6 +261,16 @@
                                     {% elif boleto_docs_count > 0 %}
                                     <p class="text-muted small mb-0"><i class="bi bi-info-circle"></i> Nenhuma linha digitável extraída ainda. Clique em <strong>Extrair Códigos de Barras</strong> ou salve o processo para extrair automaticamente.</p>
                                     {% endif %}
+                                    </div>
+                                    <div class="mt-3 pt-3 border-top">
+                                        <h6 class="fw-bold mb-2 small"><i class="bi bi-upc-scan"></i> Leitor Automático de Boleto</h6>
+                                        <div class="input-group input-group-sm mb-2">
+                                            <input type="file" id="edit_boleto_upload" class="form-control" accept=".pdf">
+                                            <button type="button" class="btn btn-outline-primary fw-bold" id="btn_processar_boleto_edit">
+                                                Processar PDF
+                                            </button>
+                                        </div>
+                                        <div id="edit_boleto_status" class="small fw-bold"></div>
                                     </div>
                                 </div>
                             </div>
@@ -1020,6 +1031,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('Erro de comunicação ao tentar extrair os códigos de barras.');
                 console.error(err);
             });
+        });
+    }
+
+    // ==========================================
+    // PROCESSAR BOLETO PDF (EDITAR PROCESSO)
+    // ==========================================
+    const btnProcessarBoletoEdit = document.getElementById('btn_processar_boleto_edit');
+    if (btnProcessarBoletoEdit) {
+        btnProcessarBoletoEdit.addEventListener('click', function () {
+            const fileInput = document.getElementById('edit_boleto_upload');
+            const statusEl = document.getElementById('edit_boleto_status');
+            if (!fileInput.files.length) {
+                statusEl.innerHTML = "<span class='text-danger'>Selecione um PDF primeiro.</span>";
+                return;
+            }
+            statusEl.innerHTML = "<span class='text-primary'>Lendo arquivo... Aguarde.</span>";
+            const formData = new FormData();
+            formData.append('boleto_pdf', fileInput.files[0]);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name="csrfmiddlewaretoken"]').value);
+            fetch('{% url "api_processar_boleto" %}', { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.sucesso) {
+                        statusEl.innerHTML = "<span class='text-success'>Boleto lido com sucesso! Valores preenchidos.</span>";
+                        const vlInput = document.querySelector('[name="processo-valor_liquido"]');
+                        const vbInput = document.querySelector('[name="processo-valor_bruto"]');
+                        const vcInput = document.querySelector('[name="processo-data_vencimento"]');
+                        if (vlInput) vlInput.value = data.dados.valor.toFixed(2);
+                        if (vbInput) vbInput.value = data.dados.valor.toFixed(2);
+                        if (data.dados.vencimento && vcInput) vcInput.value = data.dados.vencimento;
+                    } else {
+                        statusEl.innerHTML = `<span class='text-danger'>Erro: ${data.erro}</span>`;
+                    }
+                })
+                .catch(() => {
+                    statusEl.innerHTML = "<span class='text-danger'>Erro na requisição da API.</span>";
+                });
         });
     }
 
