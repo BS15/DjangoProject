@@ -333,6 +333,7 @@ def editar_processo(request, pk):
 
     if request.method == 'POST':
         documento_formset = DocumentoFormSet(request.POST, request.FILES, instance=processo, prefix='documento')
+        next_url = request.POST.get('next', '')
 
         if somente_documentos:
             # Only save document changes; process metadata is left untouched.
@@ -342,6 +343,8 @@ def editar_processo(request, pk):
                         documento_formset.save()
 
                     messages.success(request, f'Documentos do Processo #{pk} atualizados com sucesso!')
+                    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                        return redirect(next_url)
                     return redirect('editar_processo', pk=pk)
                 except Exception as e:
                     print(f"🛑 Erro ao atualizar documentos: {e}")
@@ -379,6 +382,8 @@ def editar_processo(request, pk):
                         pendencia_formset.save()
 
                     messages.success(request, f'Processo #{processo_saved.id} atualizado com sucesso!')
+                    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                        return redirect(next_url)
                     return redirect('editar_processo', pk=processo_saved.id)
 
                 except Exception as e:
@@ -391,6 +396,7 @@ def editar_processo(request, pk):
         processo_form = ProcessoForm(instance=processo, prefix='processo')
         documento_formset = DocumentoFormSet(instance=processo, prefix='documento')
         pendencia_formset = PendenciaFormSet(instance=processo, prefix='pendencia')
+        next_url = request.META.get('HTTP_REFERER', '')
 
     # Boleto indicators – only relevant when forma_pagamento is BOLETO/GERENCIADOR
     boleto_docs_qs = processo.documentos.select_related('tipo').filter(
@@ -414,6 +420,7 @@ def editar_processo(request, pk):
         'boleto_docs_count': boleto_docs_count,
         'boleto_barcodes_list': boleto_barcodes_list,
         'boleto_barcodes_count': boleto_barcodes_count,
+        'next_url': next_url,
     }
 
     return render(request, 'fluxo/editar_processo.html', context)
