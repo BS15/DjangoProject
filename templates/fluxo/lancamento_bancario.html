@@ -55,6 +55,76 @@
         </div>
     </div>
 
+    {# ── Totalizador Geral ── #}
+    {% if totais %}
+    <div class="card shadow-sm border-0 border-top border-primary border-3 mt-2 mb-4">
+        <div class="card-header bg-primary text-white fw-bold section-toggle d-flex align-items-center justify-content-between"
+             data-bs-toggle="collapse" data-bs-target="#collapse-totalizador" aria-expanded="true" aria-controls="collapse-totalizador"
+             style="cursor: pointer;">
+            <span><i class="bi bi-calculator me-2"></i> Totalizador por Forma de Pagamento</span>
+            <i class="bi bi-chevron-down toggle-icon"></i>
+        </div>
+        <div class="collapse show" id="collapse-totalizador">
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-12">
+                        <p class="text-muted small fw-bold mb-2 text-uppercase"><i class="bi bi-hourglass-split me-1 text-primary"></i> A Pagar</p>
+                        <div class="row g-2">
+                            {% for forma, total in totais_a_pagar.items %}
+                            <div class="col-sm-6 col-md-3">
+                                <div class="card border-0 bg-light h-100">
+                                    <div class="card-body text-center py-2">
+                                        <p class="text-muted small fw-bold mb-1 text-uppercase">{{ forma }}</p>
+                                        <p class="fs-6 fw-bold text-primary mb-0">R$ {{ total|floatformat:2 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="col-12 text-muted small">Nenhum pagamento a pagar.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <p class="text-muted small fw-bold mb-2 text-uppercase"><i class="bi bi-check2-all me-1 text-success"></i> Lançados</p>
+                        <div class="row g-2">
+                            {% for forma, total in totais_lancados.items %}
+                            <div class="col-sm-6 col-md-3">
+                                <div class="card border-0 bg-light h-100">
+                                    <div class="card-body text-center py-2">
+                                        <p class="text-muted small fw-bold mb-1 text-uppercase">{{ forma }}</p>
+                                        <p class="fs-6 fw-bold text-success mb-0">R$ {{ total|floatformat:2 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="col-12 text-muted small">Nenhum pagamento lançado.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <hr class="my-2">
+                <div class="row g-2 align-items-center">
+                    <div class="col-auto">
+                        <span class="text-muted small fw-bold text-uppercase"><i class="bi bi-sigma me-1"></i> Total Geral (A Pagar + Lançados):</span>
+                    </div>
+                    {% for forma, total in totais.items %}
+                    <div class="col-auto">
+                        <span class="badge bg-secondary px-3 py-2" style="font-size:0.85rem;">
+                            {{ forma }}: <strong>R$ {{ total|floatformat:2 }}</strong>
+                        </span>
+                    </div>
+                    {% endfor %}
+                    <div class="col-auto ms-auto">
+                        <span class="badge bg-primary px-3 py-2 fs-6">
+                            <i class="bi bi-currency-dollar me-1"></i> R$ {{ total_geral|floatformat:2 }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     {# ── List 1: A PAGAR - AUTORIZADO ── #}
     <div class="mb-4">
         <div class="d-flex align-items-center gap-2 mb-2">
@@ -240,76 +310,6 @@
             {% endif %}
         </div>
     </div>
-
-    {# ── Totalizador Geral ── #}
-    {% if totais %}
-    <div class="card shadow-sm border-0 border-top border-primary border-3 mt-2">
-        <div class="card-header bg-primary text-white fw-bold section-toggle d-flex align-items-center justify-content-between"
-             data-bs-toggle="collapse" data-bs-target="#collapse-totalizador" aria-expanded="true" aria-controls="collapse-totalizador"
-             style="cursor: pointer;">
-            <span><i class="bi bi-calculator me-2"></i> Totalizador por Forma de Pagamento</span>
-            <i class="bi bi-chevron-down toggle-icon"></i>
-        </div>
-        <div class="collapse show" id="collapse-totalizador">
-            <div class="card-body">
-                <div class="row g-3 mb-3">
-                    <div class="col-12">
-                        <p class="text-muted small fw-bold mb-2 text-uppercase"><i class="bi bi-hourglass-split me-1 text-primary"></i> A Pagar</p>
-                        <div class="row g-2">
-                            {% for forma, total in totais_a_pagar.items %}
-                            <div class="col-sm-6 col-md-3">
-                                <div class="card border-0 bg-light h-100">
-                                    <div class="card-body text-center py-2">
-                                        <p class="text-muted small fw-bold mb-1 text-uppercase">{{ forma }}</p>
-                                        <p class="fs-6 fw-bold text-primary mb-0">R$ {{ total|floatformat:2 }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            {% empty %}
-                            <div class="col-12 text-muted small">Nenhum pagamento a pagar.</div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <p class="text-muted small fw-bold mb-2 text-uppercase"><i class="bi bi-check2-all me-1 text-success"></i> Lançados</p>
-                        <div class="row g-2">
-                            {% for forma, total in totais_lancados.items %}
-                            <div class="col-sm-6 col-md-3">
-                                <div class="card border-0 bg-light h-100">
-                                    <div class="card-body text-center py-2">
-                                        <p class="text-muted small fw-bold mb-1 text-uppercase">{{ forma }}</p>
-                                        <p class="fs-6 fw-bold text-success mb-0">R$ {{ total|floatformat:2 }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            {% empty %}
-                            <div class="col-12 text-muted small">Nenhum pagamento lançado.</div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-                <hr class="my-2">
-                <div class="row g-2 align-items-center">
-                    <div class="col-auto">
-                        <span class="text-muted small fw-bold text-uppercase"><i class="bi bi-sigma me-1"></i> Total Geral (A Pagar + Lançados):</span>
-                    </div>
-                    {% for forma, total in totais.items %}
-                    <div class="col-auto">
-                        <span class="badge bg-secondary px-3 py-2" style="font-size:0.85rem;">
-                            {{ forma }}: <strong>R$ {{ total|floatformat:2 }}</strong>
-                        </span>
-                    </div>
-                    {% endfor %}
-                    <div class="col-auto ms-auto">
-                        <span class="badge bg-primary px-3 py-2 fs-6">
-                            <i class="bi bi-currency-dollar me-1"></i> R$ {{ total_geral|floatformat:2 }}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 
 </div>
 
