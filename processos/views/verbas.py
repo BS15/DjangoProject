@@ -13,7 +13,7 @@ from ..models import (
     StatusChoicesVerbasIndenizatorias, StatusChoicesProcesso, TiposDePagamento,
     Processo, Credor, Tabela_Valores_Unitarios_Verbas_Indenizatorias, MeiosDeTransporte,
 )
-from ..filters import DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, DiariasAutorizacaoFilter
+from ..filters import DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter
 from ..utils import gerar_pdf_pcd, sync_diarias_siscac_csv
 
 _EXTENSOES_DOCUMENTO_PERMITIDAS = {'.pdf', '.jpg', '.jpeg', '.png'}
@@ -47,7 +47,13 @@ def add_diaria_view(request):
     if request.method == 'POST':
         form = DiariaForm(request.POST)
         if form.is_valid():
-            nova_diaria = form.save()
+            nova_diaria = form.save(commit=False)
+            status_solicitada, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
+                status_choice='SOLICITADA'
+            )
+            nova_diaria.status = status_solicitada
+            nova_diaria.autorizada = False
+            nova_diaria.save()
             arquivo = request.FILES.get('documento_anexo')
             tipo_id = request.POST.get('tipo_documento_anexo')
             if arquivo and tipo_id:
@@ -319,16 +325,22 @@ def gerenciar_diaria_view(request, pk):
     return render(request, 'verbas/gerenciar_diaria.html', context)
 
 
+@login_required
 def painel_autorizacao_diarias_view(request):
-    queryset_base = Diaria.objects.select_related(
-        'beneficiario', 'proponente', 'processo'
-    ).all().order_by('-id')
+    diarias_pendentes = Diaria.objects.select_related(
+        'beneficiario', 'proponente', 'status', 'processo'
+    ).filter(status__status_choice='SOLICITADA').order_by('-id')
 
-    meu_filtro = DiariasAutorizacaoFilter(request.GET, queryset=queryset_base)
+    is_manager = request.user.groups.filter(name__in=['Gestores', 'Administradores']).exists()
+    if not is_manager:
+        is_proponente = request.user.groups.filter(name='PROPONENTE').exists()
+        if is_proponente:
+            diarias_pendentes = diarias_pendentes.filter(proponente=request.user)
+        else:
+            diarias_pendentes = diarias_pendentes.none()
 
     context = {
-        'meu_filtro': meu_filtro,
-        'diarias': meu_filtro.qs,
+        'diarias_pendentes': diarias_pendentes,
     }
     return render(request, 'verbas/painel_autorizacao_diarias.html', context)
 
@@ -346,6 +358,23 @@ def alternar_autorizacao_diaria(request, pk):
         else:
             messages.warning(request, f'Autorização da Diária #{diaria.numero_siscac} foi revogada.')
 
+    return redirect('painel_autorizacao_diarias')
+
+
+@login_required
+def aprovar_diaria_view(request, diaria_id):
+    diaria = get_object_or_404(Diaria, id=diaria_id)
+    is_manager = request.user.groups.filter(name__in=['Gestores', 'Administradores']).exists()
+    if request.user != diaria.proponente and not is_manager:
+        messages.error(request, 'Você não tem permissão para aprovar esta diária.')
+        return redirect('painel_autorizacao_diarias')
+    status_aprovada, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
+        status_choice='APROVADA POR PROPONENTE'
+    )
+    diaria.status = status_aprovada
+    diaria.autorizada = True
+    diaria.save()
+    messages.success(request, 'Diária aprovada com sucesso.')
     return redirect('painel_autorizacao_diarias')
 
 

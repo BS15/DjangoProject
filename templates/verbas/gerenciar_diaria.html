@@ -67,11 +67,11 @@
                 <div class="card-body">
                     {% if diaria.proponente %}
                         <p class="mb-1"><span class="text-muted small">Nome:</span><br>
-                            <strong>{{ diaria.proponente.nome|default:"—" }}</strong></p>
-                        <p class="mb-1"><span class="text-muted small">CPF/CNPJ:</span><br>
-                            {{ diaria.proponente.cpf_cnpj|default:"—" }}</p>
-                        <p class="mb-0"><span class="text-muted small">Cargo / Função:</span><br>
-                            {{ diaria.proponente.cargo_funcao|default:"—" }}</p>
+                            <strong>{{ diaria.proponente.get_full_name|default:diaria.proponente.username }}</strong></p>
+                        <p class="mb-1"><span class="text-muted small">E-mail:</span><br>
+                            {{ diaria.proponente.email|default:"—" }}</p>
+                        <p class="mb-0"><span class="text-muted small">Username:</span><br>
+                            {{ diaria.proponente.username }}</p>
                     {% else %}
                         <p class="text-muted mb-0">Nenhum proponente informado.</p>
                     {% endif %}

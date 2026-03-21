@@ -641,12 +641,12 @@ def gerar_pdf_pcd(diaria):
         p.drawString(margin_left, y, "PROPONENTE:")
         y -= 16
         p.setFont("Helvetica", 11)
-        nome_p = str(diaria.proponente.nome) if diaria.proponente.nome else "Não informado"
-        cpf_p = str(diaria.proponente.cpf_cnpj) if diaria.proponente.cpf_cnpj else "Não informado"
-        cargo_p = str(diaria.proponente.cargo_funcao) if diaria.proponente.cargo_funcao else "Não informado"
+        nome_p = diaria.proponente.get_full_name() or diaria.proponente.username
+        email_p = diaria.proponente.email or "Não informado"
+        cargo_p = "Não informado"
         p.drawString(margin_left, y, f"Nome:              {nome_p}")
         y -= 16
-        p.drawString(margin_left, y, f"CPF:               {cpf_p}")
+        p.drawString(margin_left, y, f"E-mail:            {email_p}")
         y -= 16
         p.drawString(margin_left, y, f"Cargo / Função:    {cargo_p}")
         y -= 24
