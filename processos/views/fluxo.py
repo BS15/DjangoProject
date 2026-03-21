@@ -272,24 +272,13 @@ def add_process_view(request):
                         documento_formset.save()
                         pendencia_formset.save()
 
-                    # Extrai códigos de barras dos boletos fora da transação para não
-                    # bloquear a conexão com o banco durante a chamada à IA.
-                    try:
-                        n_extraidos, n_falhas = _extrair_e_salvar_codigos_barras(processo)
-                        if n_extraidos > 0:
-                            messages.info(request, f"{n_extraidos} código(s) de barras extraído(s) dos boletos automaticamente.")
-                        if n_falhas > 0:
-                            messages.warning(request, f"Não foi possível extrair o código de barras de {n_falhas} boleto(s). Preencha manualmente se necessário.")
-                    except Exception as barcode_err:
-                        print(f"⚠️ Erro na extração de códigos de barras: {barcode_err}", flush=True)
-
                     messages.success(request, f"Processo #{processo.id} inserido com sucesso!")
                     if request.POST.get('btn_goto_fiscais'):
                         return redirect('documentos_fiscais', pk=processo.id)
                     next_url = request.POST.get('next', '')
                     if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
                         return redirect(next_url)
-                    return redirect('home_page')
+                    return redirect('editar_processo', pk=processo.id)
 
                 except Exception as e:
                     print(f"🛑 Erro CRÍTICO de Banco de Dados ao salvar: {e}", flush=True)
@@ -352,16 +341,6 @@ def editar_processo(request, pk):
                     with transaction.atomic():
                         documento_formset.save()
 
-                    # Extrai códigos de barras de novos boletos fora da transação.
-                    try:
-                        n_extraidos, n_falhas = _extrair_e_salvar_codigos_barras(processo)
-                        if n_extraidos > 0:
-                            messages.info(request, f"{n_extraidos} código(s) de barras extraído(s) dos boletos automaticamente.")
-                        if n_falhas > 0:
-                            messages.warning(request, f"Não foi possível extrair o código de barras de {n_falhas} boleto(s). Preencha manualmente se necessário.")
-                    except Exception as barcode_err:
-                        print(f"⚠️ Erro na extração de códigos de barras: {barcode_err}", flush=True)
-
                     messages.success(request, f'Documentos do Processo #{pk} atualizados com sucesso!')
                     return redirect('editar_processo', pk=pk)
                 except Exception as e:
@@ -398,17 +377,6 @@ def editar_processo(request, pk):
                         processo_saved.save()
                         documento_formset.save()
                         pendencia_formset.save()
-
-                    # Extrai códigos de barras dos boletos fora da transação para não
-                    # bloquear a conexão com o banco durante a chamada à IA.
-                    try:
-                        n_extraidos, n_falhas = _extrair_e_salvar_codigos_barras(processo_saved)
-                        if n_extraidos > 0:
-                            messages.info(request, f"{n_extraidos} código(s) de barras extraído(s) dos boletos automaticamente.")
-                        if n_falhas > 0:
-                            messages.warning(request, f"Não foi possível extrair o código de barras de {n_falhas} boleto(s). Preencha manualmente se necessário.")
-                    except Exception as barcode_err:
-                        print(f"⚠️ Erro na extração de códigos de barras: {barcode_err}", flush=True)
 
                     messages.success(request, f'Processo #{processo_saved.id} atualizado com sucesso!')
                     return redirect('editar_processo', pk=processo_saved.id)
@@ -480,6 +448,47 @@ def api_extrair_codigos_barras_processo(request, pk):
         'n_extraidos': n_extraidos,
         'n_falhas': n_falhas,
         'barcodes': barcodes,
+    })
+
+
+@login_required
+def api_extrair_codigos_barras_upload(request):
+    """
+    AJAX endpoint that extracts barcodes from uploaded boleto PDF files.
+    Accepts multiple files without requiring a saved Processo PK.
+    Used by the add_process page before a processo is saved.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'sucesso': False, 'erro': 'Método não permitido.'}, status=405)
+
+    files = request.FILES.getlist('boleto_files')
+    if not files:
+        return JsonResponse({'sucesso': False, 'erro': 'Nenhum arquivo enviado.'}, status=400)
+
+    barcodes = []
+    n_extraidos = 0
+    n_falhas = 0
+
+    for pdf_file in files:
+        try:
+            dados = processar_pdf_boleto(pdf_file)
+            codigo = dados.get('codigo_barras', '') if dados else ''
+            if codigo:
+                barcodes.append(codigo)
+                n_extraidos += 1
+            else:
+                barcodes.append(None)
+                n_falhas += 1
+        except Exception as e:
+            print(f"⚠️ Erro ao extrair código de barras de '{getattr(pdf_file, 'name', 'arquivo')}': {e}", flush=True)
+            barcodes.append(None)
+            n_falhas += 1
+
+    return JsonResponse({
+        'sucesso': True,
+        'n_extraidos': n_extraidos,
+        'n_falhas': n_falhas,
+        'barcodes': [b for b in barcodes if b],
     })
 
 
