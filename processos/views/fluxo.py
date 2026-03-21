@@ -1886,10 +1886,19 @@ def lancamento_bancario(request):
     for forma, val in totais_lancados.items():
         totais[forma] = totais.get(forma, 0) + val
 
+    total_a_pagar = sum(totais_a_pagar.values())
+    total_lancados = sum(totais_lancados.values())
+    total_geral = total_a_pagar + total_lancados
+
     context = {
         'processos_a_pagar': processos_a_pagar,
         'processos_lancados': processos_lancados,
         'totais': totais,
+        'totais_a_pagar': totais_a_pagar,
+        'totais_lancados': totais_lancados,
+        'total_a_pagar': total_a_pagar,
+        'total_lancados': total_lancados,
+        'total_geral': total_geral,
     }
     return render(request, 'fluxo/lancamento_bancario.html', context)
 
