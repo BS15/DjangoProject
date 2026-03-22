@@ -103,11 +103,16 @@ LOGIN_REDIRECT_URL = '/'
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+# Use PostgreSQL in production (set DB_ENGINE env var) or fall back to SQLite for development.
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': os.getenv('DB_NAME', str(BASE_DIR / 'db.sqlite3')),
+        'USER': os.getenv('DB_USER', ''),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', ''),
+        'PORT': os.getenv('DB_PORT', ''),
     }
 }
 
@@ -168,13 +173,29 @@ CRECI_LETTERHEAD_PATH = os.getenv(
 )
 
 # ---------------------------------------------------------------------------
+# Reverse-proxy / Docker settings
+# ---------------------------------------------------------------------------
+# Comma-separated list of trusted origins for CSRF when running behind a
+# reverse proxy such as Nginx.  Example: http://10.0.0.5,https://myapp.example.com
+_csrf_trusted = os.getenv('CSRF_TRUSTED_ORIGINS', '')
+if _csrf_trusted:
+    CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_trusted.split(',') if o.strip()]
+
+# Trust the X-Forwarded-Proto header set by Nginx so Django knows the original
+# request was HTTPS even though Gunicorn itself only sees HTTP.
+# Only enabled when USE_X_FORWARDED_PROTO is set (i.e., when running behind a trusted proxy).
+if os.getenv('USE_X_FORWARDED_PROTO', 'False').lower() in ('true', '1', 'yes'):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# ---------------------------------------------------------------------------
 # Production security settings
 # These are only activated when DEBUG is False so they don't interfere with
 # local development where HTTPS is typically not available.
 # ---------------------------------------------------------------------------
 if not DEBUG:
-    # Redirect all plain-HTTP requests to HTTPS
-    SECURE_SSL_REDIRECT = True
+    # Allow disabling HTTPS redirect for local-network deployments that do not
+    # use TLS yet (set SECURE_SSL_REDIRECT=False in the environment).
+    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True').lower() in ('true', '1', 'yes')
     # Tell browsers to only connect via HTTPS for 1 year (including subdomains)
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
