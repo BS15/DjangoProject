@@ -1072,3 +1072,71 @@ class ComprovantesExtracaoDebugTest(TestCase):
         self.assertIn(('9999-9', '1111-1'), contas)
         self.assertEqual(contas[('1234-5', '98765-0')], credor_por_conta)
         self.assertIsNone(contas[('9999-9', '1111-1')])
+
+
+class BasePDFDocumentTest(TestCase):
+    """Tests for the BasePDFDocument strategy-pattern base class."""
+
+    def _make_single_page_pdf(self):
+        """Create a minimal single-page PDF in memory and return its bytes."""
+        buf = io.BytesIO()
+        c = canvas.Canvas(buf, pagesize=A4)
+        c.drawString(100, 700, "Template")
+        c.save()
+        buf.seek(0)
+        return buf.read()
+
+    def test_draw_content_not_implemented(self):
+        """Instantiating BasePDFDocument and calling draw_content raises NotImplementedError."""
+        from processos.pdf_engine import BasePDFDocument
+        doc = BasePDFDocument(obj=None)
+        with self.assertRaises(NotImplementedError):
+            doc.draw_content()
+
+    def test_generate_returns_bytes(self):
+        """generate() merges content with letterhead and returns bytes."""
+        from processos.pdf_engine import BasePDFDocument
+        from pypdf import PdfReader
+
+        letterhead_pdf = self._make_single_page_pdf()
+
+        class ConcreteDoc(BasePDFDocument):
+            def draw_content(self):
+                self.canvas.drawString(100, 600, "Hello PDF")
+
+        with patch('processos.pdf_engine.open', return_value=io.BytesIO(letterhead_pdf), create=True):
+            with patch('processos.pdf_engine.settings') as mock_settings:
+                mock_settings.BASE_DIR = ''
+                mock_settings.CRECI_LETTERHEAD_PATH = 'dummy.pdf'
+                with patch('processos.pdf_engine.os.path.join', return_value='dummy.pdf'):
+                    with patch('processos.pdf_engine.PdfReader') as mock_reader_cls:
+                        # First call → content PDF; second call → letterhead PDF
+                        real_reader = PdfReader
+                        call_count = {'n': 0}
+
+                        def side_effect(arg):
+                            call_count['n'] += 1
+                            if call_count['n'] == 1:
+                                return real_reader(arg)
+                            return real_reader(io.BytesIO(letterhead_pdf))
+
+                        mock_reader_cls.side_effect = side_effect
+                        doc = ConcreteDoc(obj=None, letterhead_path='dummy.pdf')
+                        result = doc.generate()
+
+        self.assertIsInstance(result, bytes)
+        self.assertGreater(len(result), 0)
+
+    def test_letterhead_path_defaults_to_settings(self):
+        """letterhead_path falls back to settings.CRECI_LETTERHEAD_PATH when not provided."""
+        from processos.pdf_engine import BasePDFDocument
+        with patch('processos.pdf_engine.settings') as mock_settings:
+            mock_settings.CRECI_LETTERHEAD_PATH = '/path/to/letterhead.pdf'
+            doc = BasePDFDocument(obj=None)
+        self.assertEqual(doc.letterhead_path, '/path/to/letterhead.pdf')
+
+    def test_explicit_letterhead_path_overrides_settings(self):
+        """An explicit letterhead_path argument takes precedence over settings."""
+        from processos.pdf_engine import BasePDFDocument
+        doc = BasePDFDocument(obj=None, letterhead_path='/custom/path.pdf')
+        self.assertEqual(doc.letterhead_path, '/custom/path.pdf')
