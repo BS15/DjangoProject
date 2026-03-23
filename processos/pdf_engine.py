@@ -33,6 +33,10 @@ _COUNCIL_SIG_WIDTH = 145
 _PCD_SIG_Y = 120
 _PCD_SIG_HALF_WIDTH = 130
 
+# Geometry for the SCD signature blocks.
+_SCD_SIG_Y = 300
+_SCD_SIG_LABEL_Y = 286
+
 
 def _formatar_moeda(valor):
     """Formata um valor decimal no padrão monetário brasileiro: R$ 1.234,56"""
@@ -471,6 +475,73 @@ class PCDDocument(BasePDFDocument):
         c.drawCentredString(sig_right_x, _PCD_SIG_Y - 12, "Ordenador(a) de Despesa")
 
 
+class SCDDocument(BasePDFDocument):
+    """Generates the 'Solicitação de Concessão de Diárias (SCD)' PDF for a given Diaria."""
+
+    def draw_content(self):
+        diaria = self.obj
+        c = self.canvas
+        width = self.page_width
+
+        margin_left = 70
+        margin_right = 70
+        text_width = width - margin_left - margin_right
+
+        # --- CABEÇALHO ---
+        c.setFont("Helvetica-Bold", 14)
+        c.drawCentredString(width / 2.0, 750, "SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS - SCD")
+
+        # --- DETALHES DO PROCESSO ---
+        c.setFont("Helvetica", 11)
+        y = 700
+
+        siscac = diaria.numero_siscac or 'N/A'
+        nome_benef = diaria.beneficiario.nome if diaria.beneficiario else 'N/A'
+        cpf_benef = diaria.beneficiario.cpf_cnpj if diaria.beneficiario else 'N/A'
+        proponente = diaria.proponente.get_full_name() if diaria.proponente else 'N/A'
+        data_saida = diaria.data_saida.strftime('%d/%m/%Y') if diaria.data_saida else 'N/A'
+        data_retorno = diaria.data_retorno.strftime('%d/%m/%Y') if diaria.data_retorno else 'N/A'
+        transporte = diaria.meio_de_transporte.nome if diaria.meio_de_transporte else 'N/A'
+
+        fields = [
+            f"Nº SISCAC: {siscac}",
+            f"Beneficiário: {nome_benef} - CPF: {cpf_benef}",
+            f"Proponente: {proponente}",
+            f"Período: {data_saida} a {data_retorno}",
+            f"Trajeto: {diaria.cidade_origem} para {diaria.cidade_destino}",
+            f"Transporte: {transporte}",
+        ]
+        for field in fields:
+            c.drawString(margin_left, y, field)
+            y -= 20
+
+        # --- OBJETIVO ---
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(margin_left, 600, "Objetivo:")
+        _draw_wrapped_text(c, diaria.objetivo or 'N/A', margin_left, 580, text_width,
+                           font_name="Helvetica", font_size=11)
+
+        # --- CÁLCULO ---
+        c.setFont("Helvetica", 11)
+        c.drawString(
+            margin_left, 500,
+            f"Cálculo: {diaria.quantidade_diarias} diárias - Total Estimado: {_formatar_moeda(diaria.valor_total)}",
+        )
+
+        # --- BLOCOS DE ASSINATURA ---
+        sig_left_x = margin_left + _PCD_SIG_HALF_WIDTH
+        sig_right_x = width - margin_right - _PCD_SIG_HALF_WIDTH
+
+        c.setFont("Helvetica", 10)
+        c.line(sig_left_x - _PCD_SIG_HALF_WIDTH, _SCD_SIG_Y,
+               sig_left_x + _PCD_SIG_HALF_WIDTH, _SCD_SIG_Y)
+        c.drawCentredString(sig_left_x, _SCD_SIG_LABEL_Y, "Assinatura do Beneficiário")
+
+        c.line(sig_right_x - _PCD_SIG_HALF_WIDTH, _SCD_SIG_Y,
+               sig_right_x + _PCD_SIG_HALF_WIDTH, _SCD_SIG_Y)
+        c.drawCentredString(sig_right_x, _SCD_SIG_LABEL_Y, "Assinatura do Proponente")
+
+
 class ConselhoFiscalDocument(BasePDFDocument):
     """Generates the 'Parecer do Conselho Fiscal' PDF for a given Processo.
 
@@ -746,6 +817,7 @@ class ReciboDocument(BasePDFDocument):
 
 
 DOCUMENT_REGISTRY = {
+    'scd': SCDDocument,
     'contabilizacao': TermoContabilizacaoDocument,
     'ateste': TermoAtesteDocument,
     'autorizacao': AutorizacaoDocument,
