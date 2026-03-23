@@ -1,0 +1,157 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contas Fixas - System X</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
+</head>
+<body class="bg-light">
+{% include 'partials/sidebar.html' %}
+
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="mb-0 fw-bold text-primary"><i class="bi bi-calendar-check-fill"></i> Contas Fixas</h3>
+            <p class="text-muted mb-0">Acompanhamento de contas recorrentes e faturas mensais</p>
+        </div>
+        <a href="{% url 'home_page' %}" class="btn btn-outline-secondary"><i class="bi bi-house"></i> Voltar à Home</a>
+    </div>
+
+    <!-- Navegação de mês -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-auto">
+                    <label class="form-label small fw-bold text-muted mb-1">Mês</label>
+                    <select name="mes" class="form-select">
+                        <option value="1" {% if mes == 1 %}selected{% endif %}>Janeiro</option>
+                        <option value="2" {% if mes == 2 %}selected{% endif %}>Fevereiro</option>
+                        <option value="3" {% if mes == 3 %}selected{% endif %}>Março</option>
+                        <option value="4" {% if mes == 4 %}selected{% endif %}>Abril</option>
+                        <option value="5" {% if mes == 5 %}selected{% endif %}>Maio</option>
+                        <option value="6" {% if mes == 6 %}selected{% endif %}>Junho</option>
+                        <option value="7" {% if mes == 7 %}selected{% endif %}>Julho</option>
+                        <option value="8" {% if mes == 8 %}selected{% endif %}>Agosto</option>
+                        <option value="9" {% if mes == 9 %}selected{% endif %}>Setembro</option>
+                        <option value="10" {% if mes == 10 %}selected{% endif %}>Outubro</option>
+                        <option value="11" {% if mes == 11 %}selected{% endif %}>Novembro</option>
+                        <option value="12" {% if mes == 12 %}selected{% endif %}>Dezembro</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label class="form-label small fw-bold text-muted mb-1">Ano</label>
+                    <input type="number" name="ano" value="{{ ano }}" class="form-control" min="2020" max="2099">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Buscar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de faturas -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-bottom py-3">
+            <h6 class="mb-0 fw-bold text-secondary">
+                <i class="bi bi-table"></i> Faturas de
+                {% if mes == 1 %}Janeiro{% elif mes == 2 %}Fevereiro{% elif mes == 3 %}Março{% elif mes == 4 %}Abril{% elif mes == 5 %}Maio{% elif mes == 6 %}Junho{% elif mes == 7 %}Julho{% elif mes == 8 %}Agosto{% elif mes == 9 %}Setembro{% elif mes == 10 %}Outubro{% elif mes == 11 %}Novembro{% elif mes == 12 %}Dezembro{% endif %} / {{ ano }}
+            </h6>
+        </div>
+        <div class="card-body p-0">
+            {% if faturas %}
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="px-3 py-3">Vencimento</th>
+                        <th class="px-3 py-3">Credor</th>
+                        <th class="px-3 py-3">Referência</th>
+                        <th class="px-3 py-3">Status</th>
+                        <th class="px-3 py-3">Ação / Processo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fatura in faturas %}
+                    <tr>
+                        <td class="px-3 py-3 fw-bold">{{ fatura.data_vencimento_exata|date:"d/m/Y" }}</td>
+                        <td class="px-3 py-3">{{ fatura.conta_fixa.credor.nome }}</td>
+                        <td class="px-3 py-3">{{ fatura.conta_fixa.referencia }}</td>
+                        <td class="px-3 py-3">
+                            {% if fatura.status == 'PENDENTE' %}
+                                <span class="badge bg-danger">PENDENTE</span>
+                            {% elif fatura.status == 'EM ANDAMENTO' %}
+                                <span class="badge bg-warning text-dark">EM ANDAMENTO</span>
+                            {% elif fatura.status == 'PAGO' %}
+                                <span class="badge bg-success">PAGO</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 py-3">
+                            {% if fatura.processo_vinculado %}
+                                <a href="{% url 'process_detail' fatura.processo_vinculado.pk %}" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-box-arrow-up-right"></i> Processo #{{ fatura.processo_vinculado.pk }}
+                                </a>
+                            {% else %}
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalVincular{{ fatura.pk }}">
+                                    <i class="bi bi-link-45deg"></i> Vincular Processo
+                                </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                <p>Nenhuma fatura encontrada para o período selecionado.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modals de vinculação -->
+{% for fatura in faturas %}
+{% if not fatura.processo_vinculado %}
+<div class="modal fade" id="modalVincular{{ fatura.pk }}" tabindex="-1" aria-labelledby="modalLabel{{ fatura.pk }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel{{ fatura.pk }}">
+                    <i class="bi bi-link-45deg"></i> Vincular Processo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'vincular_processo_fatura' fatura.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="mes" value="{{ mes }}">
+                <input type="hidden" name="ano" value="{{ ano }}">
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">
+                        <strong>Conta:</strong> {{ fatura.conta_fixa.referencia }}<br>
+                        <strong>Credor:</strong> {{ fatura.conta_fixa.credor.nome }}<br>
+                        <strong>Vencimento:</strong> {{ fatura.data_vencimento_exata|date:"d/m/Y" }}
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">ID do Processo</label>
+                        <input type="number" name="processo_id" class="form-control" placeholder="Ex: 123" required>
+                        <div class="form-text">Informe o número do processo a ser vinculado a esta fatura.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-link-45deg"></i> Vincular</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
