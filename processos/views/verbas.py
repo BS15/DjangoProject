@@ -566,7 +566,7 @@ def download_template_diarias_csv(request):
     response['Content-Disposition'] = 'attachment; filename="template_diarias.csv"'
     writer = csv.writer(response)
     writer.writerow([
-        'CPF_BENEFICIARIO', 'DATA_SAIDA', 'DATA_RETORNO',
+        'NOME_BENEFICIARIO', 'DATA_SAIDA', 'DATA_RETORNO',
         'CIDADE_ORIGEM', 'CIDADE_DESTINO', 'OBJETIVO', 'QUANTIDADE_DIARIAS',
     ])
     return response

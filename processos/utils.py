@@ -1150,7 +1150,7 @@ def preview_diarias_lote(csv_file):
     reader = csv.DictReader(conteudo)
 
     colunas_requeridas = {
-        'CPF_BENEFICIARIO', 'DATA_SAIDA', 'DATA_RETORNO',
+        'NOME_BENEFICIARIO', 'DATA_SAIDA', 'DATA_RETORNO',
         'CIDADE_ORIGEM', 'CIDADE_DESTINO', 'OBJETIVO', 'QUANTIDADE_DIARIAS',
     }
     if reader.fieldnames is None or not colunas_requeridas.issubset(set(reader.fieldnames)):
@@ -1161,12 +1161,14 @@ def preview_diarias_lote(csv_file):
         return resultado
 
     for row in reader:
-        cpf = row.get('CPF_BENEFICIARIO', '').strip()
+        nome_planilha = row.get('NOME_BENEFICIARIO', '').strip()
 
-        credor = Credor.objects.filter(cpf_cnpj=cpf, tipo='PF').first()
+        credor = Credor.objects.filter(nome__iexact=nome_planilha, tipo='PF').first()
+        if credor is None:
+            credor = Credor.objects.filter(nome__icontains=nome_planilha, tipo='PF').first()
         if credor is None:
             resultado['erros'].append(
-                f"Linha {reader.line_num}: Beneficiário com CPF {cpf} não encontrado."
+                f"Linha {reader.line_num}: Beneficiário com nome '{nome_planilha}' não encontrado no sistema."
             )
             continue
 
@@ -1203,7 +1205,6 @@ def preview_diarias_lote(csv_file):
         resultado['preview'].append({
             'beneficiario_id': credor.pk,
             'beneficiario_nome': credor.nome,
-            'cpf': cpf,
             'data_saida': data_saida_parsed.strftime('%Y-%m-%d'),
             'data_retorno': data_retorno_parsed.strftime('%Y-%m-%d'),
             'data_saida_display': data_saida_parsed.strftime('%d/%m/%Y'),
@@ -1235,7 +1236,7 @@ def importar_diarias_lote(csv_file, usuario_logado):
     reader = csv.DictReader(conteudo)
 
     colunas_requeridas = {
-        'CPF_BENEFICIARIO', 'DATA_SAIDA', 'DATA_RETORNO',
+        'NOME_BENEFICIARIO', 'DATA_SAIDA', 'DATA_RETORNO',
         'CIDADE_ORIGEM', 'CIDADE_DESTINO', 'OBJETIVO', 'QUANTIDADE_DIARIAS',
     }
     if reader.fieldnames is None or not colunas_requeridas.issubset(set(reader.fieldnames)):
@@ -1250,12 +1251,14 @@ def importar_diarias_lote(csv_file, usuario_logado):
     )
 
     for row in reader:
-        cpf = row.get('CPF_BENEFICIARIO', '').strip()
+        nome_planilha = row.get('NOME_BENEFICIARIO', '').strip()
 
-        credor = Credor.objects.filter(cpf_cnpj=cpf, tipo='PF').first()
+        credor = Credor.objects.filter(nome__iexact=nome_planilha, tipo='PF').first()
+        if credor is None:
+            credor = Credor.objects.filter(nome__icontains=nome_planilha, tipo='PF').first()
         if credor is None:
             resultados['erros'].append(
-                f"Linha {reader.line_num}: Beneficiário com CPF {cpf} não encontrado."
+                f"Linha {reader.line_num}: Beneficiário com nome '{nome_planilha}' não encontrado no sistema."
             )
             continue
 
