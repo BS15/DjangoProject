@@ -1,0 +1,87 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Laboratório de PDFs - System X</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
+</head>
+<body class="bg-light">
+{% include 'partials/sidebar.html' %}
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow-sm">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold" href="{% url 'home_page' %}">System X</a>
+    </div>
+</nav>
+
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-file-earmark-pdf text-danger"></i> Laboratório de PDFs (Faker Data)</h2>
+            <p class="text-muted small">Gere PDFs com dados falsos para testar os layouts sem poluir o banco de dados.</p>
+        </div>
+        <a href="{% url 'home_page' %}" class="btn btn-outline-secondary">Voltar para Home</a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-grid-3x3-gap-fill text-primary"></i> Documentos Disponíveis</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4 col-sm-6">
+                    <a href="{% url 'gerar_pdf_fake' 'pcd' %}" target="_blank" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-file-earmark-text"></i> PCD (Passagem/Diária)
+                    </a>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <a href="{% url 'gerar_pdf_fake' 'autorizacao' %}" target="_blank" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-file-earmark-check"></i> Autorização
+                    </a>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <a href="{% url 'gerar_pdf_fake' 'conselho_fiscal' %}" target="_blank" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-file-earmark-ruled"></i> Conselho Fiscal
+                    </a>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <a href="{% url 'gerar_pdf_fake' 'contabilizacao' %}" target="_blank" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-file-earmark-spreadsheet"></i> Contabilização
+                    </a>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <a href="{% url 'gerar_pdf_fake' 'ateste' %}" target="_blank" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-file-earmark-medical"></i> Ateste
+                    </a>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <a href="{% url 'gerar_pdf_fake' 'recibo_reembolso' %}" target="_blank" class="btn btn-outline-success w-100">
+                        <i class="bi bi-receipt"></i> Recibo Reembolso
+                    </a>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <a href="{% url 'gerar_pdf_fake' 'recibo_auxilio' %}" target="_blank" class="btn btn-outline-success w-100">
+                        <i class="bi bi-receipt"></i> Recibo Auxílio
+                    </a>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <a href="{% url 'gerar_pdf_fake' 'recibo_jeton' %}" target="_blank" class="btn btn-outline-success w-100">
+                        <i class="bi bi-receipt"></i> Recibo Jeton
+                    </a>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <a href="{% url 'gerar_pdf_fake' 'recibo_suprimento' %}" target="_blank" class="btn btn-outline-success w-100">
+                        <i class="bi bi-receipt"></i> Recibo Suprimento
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
