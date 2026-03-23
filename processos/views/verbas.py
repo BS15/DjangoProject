@@ -15,7 +15,7 @@ from ..models import (
     Processo, Credor, Tabela_Valores_Unitarios_Verbas_Indenizatorias, MeiosDeTransporte,
 )
 from ..filters import DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter
-from ..utils import gerar_pdf_pcd, sync_diarias_siscac_csv, importar_diarias_lote
+from ..utils import gerar_pdf_pcd, sync_diarias_siscac_csv, importar_diarias_lote, preview_diarias_lote, confirmar_diarias_lote
 
 _EXTENSOES_DOCUMENTO_PERMITIDAS = {'.pdf', '.jpg', '.jpeg', '.png'}
 
@@ -574,8 +574,32 @@ def download_template_diarias_csv(request):
 
 @login_required
 def importar_diarias_view(request):
+    SESSION_KEY = 'importar_diarias_preview'
     context = {}
-    if request.method == 'POST' and request.FILES.get('csv_file'):
-        resultados = importar_diarias_lote(request.FILES['csv_file'], request.user)
-        context['resultados'] = resultados
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'confirmar':
+            # Step 2: user confirmed – insert the records stored in the session
+            preview_items = request.session.pop(SESSION_KEY, None)
+            if not isinstance(preview_items, list) or not preview_items:
+                messages.error(request, 'Sessão expirada ou prévia não encontrada. Por favor, importe o arquivo novamente.')
+                return redirect('importar_diarias')
+
+            resultados = confirmar_diarias_lote(preview_items, request.user)
+            context['resultados'] = resultados
+
+        elif action == 'cancelar':
+            # User chose to cancel – discard the preview and go back to upload form
+            request.session.pop(SESSION_KEY, None)
+            return redirect('importar_diarias')
+
+        elif request.FILES.get('csv_file'):
+            # Step 1: parse and validate the CSV, but don't insert yet
+            resultado_preview = preview_diarias_lote(request.FILES['csv_file'])
+            request.session[SESSION_KEY] = resultado_preview['preview']
+            context['preview'] = resultado_preview['preview']
+            context['erros_preview'] = resultado_preview['erros']
+
     return render(request, 'verbas/importar_diarias.html', context)

@@ -11,7 +11,7 @@
 <body class="bg-light">
 {% include 'partials/sidebar.html' %}
 
-<div class="container mt-4 mb-5" style="max-width: 700px;">
+<div class="container mt-4 mb-5" style="max-width: 960px;">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4><i class="bi bi-file-earmark-arrow-up"></i> Importar Diárias em Lote</h4>
         <a href="{% url 'diarias_list' %}" class="btn btn-outline-secondary btn-sm">
@@ -19,31 +19,17 @@
         </a>
     </div>
 
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-4">
-            <a href="{% url 'download_template_diarias_csv' %}" class="btn btn-secondary mb-3">
-                <i class="bi bi-download"></i> Baixar Planilha Modelo
-            </a>
-
-            <form method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label for="csv_file" class="form-label fw-bold">Arquivo CSV</label>
-                    <input type="file" name="csv_file" id="csv_file" class="form-control" accept=".csv" required>
-                </div>
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-upload"></i> Importar Lote
-                </button>
-            </form>
-
-            {% if resultados %}
-                <div class="alert alert-success mt-4">
+    {% if resultados %}
+        {# ── Step 3: insertion complete ── #}
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="alert alert-success mb-0">
                     <i class="bi bi-check-circle-fill"></i>
                     <strong>{{ resultados.sucessos }}</strong> diária(s) importada(s) com sucesso e enviada(s) para autorização.
                 </div>
                 {% if resultados.erros %}
-                    <div class="alert alert-danger mt-2">
-                        <strong><i class="bi bi-exclamation-triangle-fill"></i> Erros encontrados:</strong>
+                    <div class="alert alert-danger mt-3 mb-0">
+                        <strong><i class="bi bi-exclamation-triangle-fill"></i> Erros ao confirmar:</strong>
                         <ul class="mb-0 mt-2">
                             {% for erro in resultados.erros %}
                                 <li>{{ erro }}</li>
@@ -51,9 +37,119 @@
                         </ul>
                     </div>
                 {% endif %}
-            {% endif %}
+                <div class="mt-3">
+                    <a href="{% url 'importar_diarias' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-arrow-repeat"></i> Importar outro arquivo
+                    </a>
+                    <a href="{% url 'diarias_list' %}" class="btn btn-primary btn-sm ms-2">
+                        <i class="bi bi-list-ul"></i> Ver lista de Diárias
+                    </a>
+                </div>
+            </div>
         </div>
-    </div>
+
+    {% elif preview is not None %}
+        {# ── Step 2: show preview / confirmation table ── #}
+
+        {% if erros_preview %}
+            <div class="alert alert-warning shadow-sm">
+                <strong><i class="bi bi-exclamation-triangle-fill"></i> Linhas com erro (não serão importadas):</strong>
+                <ul class="mb-0 mt-2">
+                    {% for erro in erros_preview %}
+                        <li>{{ erro }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        {% if preview %}
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-header bg-white fw-bold">
+                    <i class="bi bi-table"></i> Prévia das Diárias a Importar
+                    <span class="badge bg-primary ms-2">{{ preview|length }} registro(s)</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Beneficiário</th>
+                                    <th>CPF</th>
+                                    <th>Data Saída</th>
+                                    <th>Data Retorno</th>
+                                    <th>Origem</th>
+                                    <th>Destino</th>
+                                    <th>Qtd. Diárias</th>
+                                    <th>Objetivo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in preview %}
+                                    <tr>
+                                        <td class="text-muted small">{{ forloop.counter }}</td>
+                                        <td>{{ item.beneficiario_nome }}</td>
+                                        <td class="text-muted small">{{ item.cpf }}</td>
+                                        <td>{{ item.data_saida_display }}</td>
+                                        <td>{{ item.data_retorno_display }}</td>
+                                        <td>{{ item.cidade_origem }}</td>
+                                        <td>{{ item.cidade_destino }}</td>
+                                        <td class="text-center">{{ item.quantidade_diarias }}</td>
+                                        <td class="text-truncate" style="max-width: 200px;" title="{{ item.objetivo }}">{{ item.objetivo }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="confirmar">
+                    <button type="submit" class="btn btn-success fw-bold">
+                        <i class="bi bi-check-lg"></i> Confirmar Importação
+                    </button>
+                </form>
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="cancelar">
+                    <button type="submit" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg"></i> Cancelar
+                    </button>
+                </form>
+            </div>
+        {% else %}
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-circle"></i> Nenhuma linha válida encontrada no arquivo. Verifique os erros acima e tente novamente.
+            </div>
+            <a href="{% url 'importar_diarias' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        {% endif %}
+
+    {% else %}
+        {# ── Step 1: upload form ── #}
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <a href="{% url 'download_template_diarias_csv' %}" class="btn btn-secondary mb-3">
+                    <i class="bi bi-download"></i> Baixar Planilha Modelo
+                </a>
+
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="csv_file" class="form-label fw-bold">Arquivo CSV</label>
+                        <input type="file" name="csv_file" id="csv_file" class="form-control" accept=".csv" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-upload"></i> Carregar e Pré-visualizar
+                    </button>
+                </form>
+            </div>
+        </div>
+    {% endif %}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
