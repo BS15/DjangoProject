@@ -47,6 +47,10 @@ def gerar_pdf_fake_view(request, doc_type):
         obj.n_nota_empenho = fake.numerify(text="2026NE####")
         obj.credor = mock_credor()
         obj.valor_liquido = Decimal(fake.numerify(text="####.##"))
+        obj.credor.conta.banco = "Banco do Brasil"
+        obj.credor.conta.agencia = "1234-5"
+        obj.credor.conta.conta = "98765-4"
+        obj.detalhamento = fake.paragraph(nb_sentences=2)
 
     elif doc_type == 'ateste':
         obj = MagicMock()
