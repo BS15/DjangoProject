@@ -1126,6 +1126,97 @@ def sync_diarias_siscac_csv(csv_file):
     return resultados
 
 
+def preview_diarias_lote(csv_file):
+    """Parse and validate a CSV of diárias without inserting anything.
+
+    Returns a dict with:
+        'preview'  – list of dicts with validated row data (safe for JSON serialisation)
+        'erros'    – list of error strings
+    """
+    import csv
+    import io
+    from datetime import datetime
+    from decimal import Decimal, InvalidOperation
+    from .models import Credor
+
+    resultado = {'preview': [], 'erros': []}
+
+    try:
+        conteudo = io.StringIO(csv_file.read().decode('utf-8'))
+    except UnicodeDecodeError:
+        resultado['erros'].append("Erro de codificação: verifique se o arquivo está salvo em UTF-8.")
+        return resultado
+
+    reader = csv.DictReader(conteudo)
+
+    colunas_requeridas = {
+        'CPF_BENEFICIARIO', 'DATA_SAIDA', 'DATA_RETORNO',
+        'CIDADE_ORIGEM', 'CIDADE_DESTINO', 'OBJETIVO', 'QUANTIDADE_DIARIAS',
+    }
+    if reader.fieldnames is None or not colunas_requeridas.issubset(set(reader.fieldnames)):
+        faltando = colunas_requeridas - set(reader.fieldnames or [])
+        resultado['erros'].append(
+            f"Cabeçalho inválido. Colunas ausentes: {', '.join(sorted(faltando))}."
+        )
+        return resultado
+
+    for row in reader:
+        cpf = row.get('CPF_BENEFICIARIO', '').strip()
+
+        credor = Credor.objects.filter(cpf_cnpj=cpf, tipo='PF').first()
+        if credor is None:
+            resultado['erros'].append(
+                f"Linha {reader.line_num}: Beneficiário com CPF {cpf} não encontrado."
+            )
+            continue
+
+        try:
+            data_saida_parsed = datetime.strptime(row['DATA_SAIDA'].strip(), '%d/%m/%Y').date()
+            data_retorno_parsed = datetime.strptime(row['DATA_RETORNO'].strip(), '%d/%m/%Y').date()
+        except ValueError:
+            resultado['erros'].append(
+                f"Linha {reader.line_num}: Data inválida. Use o formato DD/MM/AAAA."
+            )
+            continue
+
+        if data_retorno_parsed < data_saida_parsed:
+            resultado['erros'].append(
+                f"Linha {reader.line_num}: Data de retorno ({row['DATA_RETORNO'].strip()}) "
+                f"não pode ser anterior à data de saída ({row['DATA_SAIDA'].strip()})."
+            )
+            continue
+
+        try:
+            qtd_diarias = Decimal(row['QUANTIDADE_DIARIAS'].strip().replace(',', '.'))
+        except InvalidOperation:
+            resultado['erros'].append(
+                f"Linha {reader.line_num}: Quantidade de diárias inválida: {row['QUANTIDADE_DIARIAS']}."
+            )
+            continue
+
+        if qtd_diarias <= 0:
+            resultado['erros'].append(
+                f"Linha {reader.line_num}: Quantidade de diárias deve ser maior que zero."
+            )
+            continue
+
+        resultado['preview'].append({
+            'beneficiario_id': credor.pk,
+            'beneficiario_nome': credor.nome,
+            'cpf': cpf,
+            'data_saida': data_saida_parsed.strftime('%Y-%m-%d'),
+            'data_retorno': data_retorno_parsed.strftime('%Y-%m-%d'),
+            'data_saida_display': data_saida_parsed.strftime('%d/%m/%Y'),
+            'data_retorno_display': data_retorno_parsed.strftime('%d/%m/%Y'),
+            'cidade_origem': row['CIDADE_ORIGEM'].strip(),
+            'cidade_destino': row['CIDADE_DESTINO'].strip(),
+            'objetivo': row['OBJETIVO'].strip(),
+            'quantidade_diarias': str(qtd_diarias),
+        })
+
+    return resultado
+
+
 def importar_diarias_lote(csv_file, usuario_logado):
     import csv
     import io
@@ -1207,6 +1298,47 @@ def importar_diarias_lote(csv_file, usuario_logado):
             cidade_destino=row['CIDADE_DESTINO'].strip(),
             objetivo=row['OBJETIVO'].strip(),
             quantidade_diarias=qtd_diarias,
+            status=status_solicitada,
+            autorizada=False,
+        )
+        resultados['sucessos'] += 1
+
+    return resultados
+
+
+def confirmar_diarias_lote(preview_items, usuario_logado):
+    """Insert Diaria records from a list of validated preview dicts.
+
+    Each dict in *preview_items* is the format returned by :func:`preview_diarias_lote`.
+    Returns a dict with 'sucessos' (int) and 'erros' (list of str).
+    """
+    from decimal import Decimal
+    from datetime import datetime
+    from .models import Diaria, Credor, StatusChoicesVerbasIndenizatorias
+
+    resultados = {'sucessos': 0, 'erros': []}
+
+    status_solicitada, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
+        status_choice='SOLICITADA'
+    )
+
+    for item in preview_items:
+        credor = Credor.objects.filter(pk=item['beneficiario_id'], tipo='PF').first()
+        if credor is None:
+            resultados['erros'].append(
+                f"Beneficiário com ID {item['beneficiario_id']} não encontrado ao confirmar."
+            )
+            continue
+
+        Diaria.objects.create(
+            beneficiario=credor,
+            proponente=usuario_logado,
+            data_saida=datetime.strptime(item['data_saida'], '%Y-%m-%d').date(),
+            data_retorno=datetime.strptime(item['data_retorno'], '%Y-%m-%d').date(),
+            cidade_origem=item['cidade_origem'],
+            cidade_destino=item['cidade_destino'],
+            objetivo=item['objetivo'],
+            quantidade_diarias=Decimal(item['quantidade_diarias']),
             status=status_solicitada,
             autorizada=False,
         )
