@@ -50,3 +50,12 @@
 <button class="btn btn-dark shadow btn-menu-lateral" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuLateral" aria-controls="menuLateral" title="Menu">
     <i class="bi bi-list fs-4"></i>
 </button>
+
+{% if total_contas_alerta > 0 %}
+<div class="alert alert-warning alert-dismissible fade show mb-0 rounded-0 border-top-0 border-start-0 border-end-0" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    <strong>Atenção!</strong> Você tem <strong>{{ total_contas_alerta }}</strong> conta{{ total_contas_alerta|pluralize:"","s" }} fixa{{ total_contas_alerta|pluralize:"","s" }} com vencimento próximo ou em atraso.
+    <a href="{% url 'painel_contas_fixas' %}" class="alert-link">Verificar agora</a>.
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
