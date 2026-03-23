@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 from django.contrib.auth.models import User
-from .models import Processo, DocumentoProcesso, DocumentoFiscal, RetencaoImposto, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos, Pendencia, StatusChoicesPendencias, DadosContribuinte, ContasBancarias, Devolucao
+from .models import Processo, DocumentoProcesso, DocumentoFiscal, RetencaoImposto, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos, Pendencia, StatusChoicesPendencias, DadosContribuinte, ContasBancarias, Devolucao, ContaFixa
 from .validators import validar_regras_processo, validar_regras_suprimento, STATUS_BLOQUEADOS_FORM
 
 class ProcessoForm(forms.ModelForm):
@@ -345,4 +345,15 @@ class DevolucaoForm(forms.ModelForm):
             'data_devolucao': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date', 'class': 'form-control'}),
             'motivo': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'comprovante': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }
+
+class ContaFixaForm(forms.ModelForm):
+    class Meta:
+        model = ContaFixa
+        fields = ['credor', 'referencia', 'dia_vencimento', 'ativa']
+        widgets = {
+            'credor': forms.Select(attrs={'class': 'form-select'}),
+            'referencia': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Conta de Luz - Sede'}),
+            'dia_vencimento': forms.NumberInput(attrs={'class': 'form-control', 'min': '1', 'max': '31'}),
+            'ativa': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
