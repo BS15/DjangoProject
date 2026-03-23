@@ -54,7 +54,7 @@
 {% if total_contas_alerta > 0 %}
 <div class="alert alert-warning alert-dismissible fade show mb-0 rounded-0 border-top-0 border-start-0 border-end-0" role="alert">
     <i class="bi bi-exclamation-triangle-fill me-2"></i>
-    <strong>Atenção!</strong> Você tem <strong>{{ total_contas_alerta }}</strong> conta{{ total_contas_alerta|pluralize:"","s" }} fixa{{ total_contas_alerta|pluralize:"","s" }} com vencimento próximo ou em atraso.
+    <strong>Atenção!</strong> Você tem <strong>{{ total_contas_alerta }}</strong> conta{{ total_contas_alerta|pluralize }} fixa{{ total_contas_alerta|pluralize }} com vencimento próximo ou em atraso.
     <a href="{% url 'painel_contas_fixas' %}" class="alert-link">Verificar agora</a>.
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
