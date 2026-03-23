@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 
-from processos.models import FaturaMensal, Processo
+from processos.models import FaturaMensal, Processo, ContaFixa
 from processos.forms import ContaFixaForm
 from processos.utils_contas import gerar_faturas_do_mes
 
@@ -29,6 +29,7 @@ def painel_contas_fixas_view(request):
         'faturas': faturas,
         'mes': mes,
         'ano': ano,
+        'contas_fixas': ContaFixa.objects.select_related('credor').order_by('credor__nome', 'referencia'),
     }
     return render(request, 'contas/painel_contas_fixas.html', context)
 
@@ -69,4 +70,30 @@ def add_conta_fixa_view(request):
         form = ContaFixaForm()
 
     return render(request, 'contas/add_conta_fixa.html', {'form': form})
+
+
+@login_required
+def edit_conta_fixa_view(request, pk):
+    conta = get_object_or_404(ContaFixa, pk=pk)
+    if request.method == 'POST':
+        form = ContaFixaForm(request.POST, instance=conta)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Conta fixa atualizada com sucesso!")
+            return redirect('painel_contas_fixas')
+        else:
+            messages.error(request, "Erro ao atualizar. Verifique os campos.")
+    else:
+        form = ContaFixaForm(instance=conta)
+
+    return render(request, 'contas/edit_conta_fixa.html', {'form': form, 'conta': conta})
+
+
+@login_required
+def excluir_conta_fixa_view(request, pk):
+    conta = get_object_or_404(ContaFixa, pk=pk)
+    if request.method == 'POST':
+        conta.delete()
+        messages.success(request, "Conta fixa excluída com sucesso!")
+    return redirect('painel_contas_fixas')
 

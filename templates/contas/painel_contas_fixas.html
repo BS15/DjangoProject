@@ -114,7 +114,93 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- Gerenciar Contas Fixas -->
+    <div class="card shadow-sm border-0 mt-4">
+        <div class="card-header bg-white border-bottom py-3">
+            <h6 class="mb-0 fw-bold text-secondary">
+                <i class="bi bi-gear"></i> Gerenciar Contas Fixas Cadastradas
+            </h6>
+        </div>
+        <div class="card-body p-0">
+            {% if contas_fixas %}
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="px-3 py-3">Credor</th>
+                        <th class="px-3 py-3">Referência</th>
+                        <th class="px-3 py-3">Dia Vencimento</th>
+                        <th class="px-3 py-3">Status</th>
+                        <th class="px-3 py-3 text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for conta in contas_fixas %}
+                    <tr>
+                        <td class="px-3 py-3">{{ conta.credor.nome }}</td>
+                        <td class="px-3 py-3">{{ conta.referencia }}</td>
+                        <td class="px-3 py-3">Dia {{ conta.dia_vencimento }}</td>
+                        <td class="px-3 py-3">
+                            {% if conta.ativa %}
+                                <span class="badge bg-success">Ativa</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inativa</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                            <a href="{% url 'edit_conta_fixa' conta.pk %}" class="btn btn-sm btn-outline-primary" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir"
+                                    data-bs-toggle="modal" data-bs-target="#modalExcluir{{ conta.pk }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                <p>Nenhuma conta fixa cadastrada.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
+
+<!-- Modals de exclusão -->
+{% for conta in contas_fixas %}
+<div class="modal fade" id="modalExcluir{{ conta.pk }}" tabindex="-1" aria-labelledby="modalExcluirLabel{{ conta.pk }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalExcluirLabel{{ conta.pk }}">
+                    <i class="bi bi-trash"></i> Excluir Conta Fixa
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir a conta fixa abaixo?</p>
+                <p class="text-muted small">
+                    <strong>Credor:</strong> {{ conta.credor.nome }}<br>
+                    <strong>Referência:</strong> {{ conta.referencia }}<br>
+                    <strong>Dia de Vencimento:</strong> Dia {{ conta.dia_vencimento }}
+                </p>
+                <p class="text-danger small"><i class="bi bi-exclamation-triangle"></i> Esta ação não pode ser desfeita. As faturas mensais vinculadas também serão removidas.</p>
+            </div>
+            <form method="post" action="{% url 'excluir_conta_fixa' conta.pk %}">
+                {% csrf_token %}
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Excluir</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
 
 <!-- Modals de vinculação -->
 {% for fatura in faturas %}
