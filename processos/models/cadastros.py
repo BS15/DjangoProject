@@ -1,3 +1,5 @@
+import datetime
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from simple_history.models import HistoricalRecords
 
@@ -91,3 +93,68 @@ class DadosContribuinte(models.Model):
     class Meta:
         verbose_name = "Dados do Contribuinte"
         verbose_name_plural = "Dados do Contribuinte"
+
+
+class ContaFixa(models.Model):
+    credor = models.ForeignKey(
+        'Credor',
+        on_delete=models.PROTECT,
+        verbose_name="Credor/Fornecedor"
+    )
+    referencia = models.CharField(
+        "Referência / Descrição",
+        max_length=200,
+        help_text="Ex: Conta de Luz - Sede"
+    )
+    dia_vencimento = models.IntegerField(
+        "Dia Padrão de Vencimento",
+        validators=[MinValueValidator(1), MaxValueValidator(31)]
+    )
+    ativa = models.BooleanField("Conta Ativa", default=True)
+
+    class Meta:
+        verbose_name = "Conta Fixa"
+        verbose_name_plural = "Contas Fixas"
+
+    def __str__(self):
+        return f"{self.credor.nome} - {self.referencia}"
+
+
+class FaturaMensal(models.Model):
+    conta_fixa = models.ForeignKey(
+        ContaFixa,
+        on_delete=models.CASCADE,
+        related_name='faturas'
+    )
+    mes_referencia = models.DateField("Mês de Referência")
+    processo_vinculado = models.ForeignKey(
+        'Processo',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='faturas_vinculadas'
+    )
+
+    class Meta:
+        verbose_name = "Fatura Mensal"
+        verbose_name_plural = "Faturas Mensais"
+        unique_together = ('conta_fixa', 'mes_referencia')
+
+    def __str__(self):
+        return f"{self.conta_fixa} - {self.mes_referencia.strftime('%m/%Y')}"
+
+    @property
+    def data_vencimento_exata(self):
+        import calendar
+        dia = self.conta_fixa.dia_vencimento
+        ultimo_dia = calendar.monthrange(self.mes_referencia.year, self.mes_referencia.month)[1]
+        dia_efetivo = min(dia, ultimo_dia)
+        return self.mes_referencia.replace(day=dia_efetivo)
+
+    @property
+    def status(self):
+        if not self.processo_vinculado:
+            return 'PENDENTE'
+        if self.processo_vinculado.status and 'PAGO' in self.processo_vinculado.status.status_choice.upper():
+            return 'PAGO'
+        return 'EM ANDAMENTO'
