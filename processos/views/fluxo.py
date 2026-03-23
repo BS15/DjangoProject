@@ -21,7 +21,8 @@ from django.db.models import Count, Q, F, Sum, Exists, OuterRef
 from pypdf import PdfWriter
 from ..forms import ProcessoForm, DocumentoFormSet, DocumentoFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet, DevolucaoForm
 from ..validators import verificar_turnpike, STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
-from ..utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, gerar_pdf_autorizacao, gerar_pdf_conselho_fiscal, gerar_pdf_pcd, parse_siscac_report, sync_siscac_payments
+from ..utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, parse_siscac_report, sync_siscac_payments
+from ..pdf_engine import gerar_documento_pdf
 from ..ai_utils import extrair_dados_documento, extract_data_with_llm, extrair_codigos_barras_boletos, processar_pdf_comprovantes_ia
 from ..invoice_processor import process_invoice_taxes
 from ..models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias, StatusChoicesRetencoes, MeiosDeTransporte, FormasDePagamento, ContasBancarias, Grupos, CargosFuncoes, TagChoices, RegistroAcessoArquivo, Devolucao
@@ -2275,9 +2276,9 @@ def gerar_autorizacao_pagamento_view(request, pk):
     Gera e serve o PDF "Termo de Autorização de Pagamento" para o processo indicado.
     """
     processo = get_object_or_404(Processo, pk=pk)
-    pdf_buffer = gerar_pdf_autorizacao(processo)
+    pdf_bytes = gerar_documento_pdf('autorizacao', processo)
     nome_arquivo = f"Autorizacao_Pagamento_Proc_{processo.id}.pdf"
-    response = HttpResponse(pdf_buffer, content_type='application/pdf')
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="{nome_arquivo}"'
     return response
 
@@ -2289,9 +2290,9 @@ def gerar_parecer_conselho_view(request, pk):
     Gera e serve o PDF "Parecer do Conselho Fiscal" para o processo indicado.
     """
     processo = get_object_or_404(Processo, pk=pk)
-    pdf_buffer = gerar_pdf_conselho_fiscal(processo)
+    pdf_bytes = gerar_documento_pdf('conselho_fiscal', processo)
     nome_arquivo = f"Parecer_Conselho_Fiscal_Proc_{processo.id}.pdf"
-    response = HttpResponse(pdf_buffer, content_type='application/pdf')
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="{nome_arquivo}"'
     return response
 

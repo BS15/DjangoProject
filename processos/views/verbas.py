@@ -15,7 +15,8 @@ from ..models import (
     Processo, Credor, Tabela_Valores_Unitarios_Verbas_Indenizatorias, MeiosDeTransporte,
 )
 from ..filters import DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter
-from ..utils import gerar_pdf_pcd, sync_diarias_siscac_csv, importar_diarias_lote, preview_diarias_lote, confirmar_diarias_lote
+from ..utils import sync_diarias_siscac_csv, importar_diarias_lote, preview_diarias_lote, confirmar_diarias_lote
+from ..pdf_engine import gerar_documento_pdf
 
 _EXTENSOES_DOCUMENTO_PERMITIDAS = {'.pdf', '.jpg', '.jpeg', '.png'}
 
@@ -536,9 +537,9 @@ def gerar_pcd_view(request, pk):
     Gera e serve o PDF "Proposta de Concessão de Diárias (PCD)" para a diária indicada.
     """
     diaria = get_object_or_404(Diaria, pk=pk)
-    pdf_buffer = gerar_pdf_pcd(diaria)
+    pdf_bytes = gerar_documento_pdf('pcd', diaria)
     nome_arquivo = f"PCD_{diaria.numero_siscac}.pdf"
-    response = HttpResponse(pdf_buffer, content_type='application/pdf')
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="{nome_arquivo}"'
     return response
 
