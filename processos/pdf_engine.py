@@ -658,12 +658,103 @@ class ConselhoFiscalDocument(BasePDFDocument):
             c.drawCentredString(sig_x, _COUNCIL_SIG_Y - 12, label)
 
 
+class ReciboDocument(BasePDFDocument):
+    """Generates a 'Recibo de Pagamento' PDF for the four verba types:
+    ReembolsoCombustivel, AuxilioRepresentacao, Jeton, and SuprimentoDeFundos.
+
+    The correct ``tipo_verba``, ``beneficiario``, and ``valor`` are derived
+    automatically from ``self.obj.__class__.__name__``.
+    """
+
+    def draw_content(self):
+        obj = self.obj
+        c = self.canvas
+        page_width = self.page_width
+
+        # --- Dispatch: map class to (tipo_verba, beneficiario, valor) ---
+        _RECIBO_DISPATCH = {
+            'ReembolsoCombustivel': (
+                "Reembolso de Combustível",
+                lambda o: o.beneficiario,
+                lambda o: o.valor_total,
+            ),
+            'AuxilioRepresentacao': (
+                "Auxílio Representação",
+                lambda o: o.beneficiario,
+                lambda o: o.valor_total,
+            ),
+            'Jeton': (
+                "Jeton",
+                lambda o: o.beneficiario,
+                lambda o: o.valor_total,
+            ),
+            'SuprimentoDeFundos': (
+                "Suprimento de Fundos",
+                lambda o: o.suprido,
+                # SuprimentoDeFundos stores the approved amount as valor_liquido
+                lambda o: o.valor_liquido,
+            ),
+        }
+
+        class_name = obj.__class__.__name__
+        dispatch = _RECIBO_DISPATCH.get(class_name)
+        if dispatch is None:
+            raise ValueError(
+                f"ReciboDocument não suporta o tipo '{class_name}'. "
+                f"Tipos aceitos: {', '.join(_RECIBO_DISPATCH)}."
+            )
+        tipo_verba, get_beneficiario, get_valor = dispatch
+        beneficiario = get_beneficiario(obj)
+        valor = get_valor(obj)
+
+        valor_formatado = _formatar_moeda(valor)
+        beneficiario_nome = beneficiario.nome if beneficiario else "N/A"
+        beneficiario_cpf = beneficiario.cpf_cnpj if beneficiario else "N/A"
+
+        # --- CABEÇALHO ---
+        c.setFont("Helvetica-Bold", 14)
+        c.drawCentredString(page_width / 2, 750, "RECIBO DE PAGAMENTO")
+
+        c.setFont("Helvetica-Bold", 12)
+        c.drawCentredString(page_width / 2, 730, tipo_verba.upper())
+
+        # --- TEXTO DA DECLARAÇÃO ---
+        declaration = (
+            f"Recebi do Conselho Regional de Corretores de Imóveis de Santa Catarina - "
+            f"11ª Região (CRECI-SC), a importância líquida de {valor_formatado}, "
+            f"referente ao pagamento de {tipo_verba}."
+        )
+        margin_left = 72
+        text_width = page_width - 2 * margin_left
+        _draw_wrapped_text(
+            c, declaration, margin_left, 650, text_width,
+            font_name="Helvetica", font_size=12,
+        )
+
+        # --- DADOS DO BENEFICIÁRIO ---
+        c.setFont("Helvetica", 11)
+        c.drawString(margin_left, 550, f"Beneficiário / Recebedor: {beneficiario_nome}")
+        c.drawString(margin_left, 534, f"CPF / CNPJ: {beneficiario_cpf}")
+
+        # --- BLOCO DE ASSINATURA ---
+        sig_x = page_width / 2
+        c.line(sig_x - 130, 350, sig_x + 130, 350)
+        c.setFont("Helvetica", 11)
+        c.drawCentredString(sig_x, 365, beneficiario_nome)
+        c.drawCentredString(sig_x, 336, "Assinatura do Recebedor")
+        c.drawCentredString(sig_x, 320, "Local e Data: Florianópolis, _____ / _____ / _________")
+
+
 DOCUMENT_REGISTRY = {
     'contabilizacao': TermoContabilizacaoDocument,
     'ateste': TermoAtesteDocument,
     'autorizacao': AutorizacaoDocument,
     'pcd': PCDDocument,
     'conselho_fiscal': ConselhoFiscalDocument,
+    'recibo_reembolso': ReciboDocument,
+    'recibo_auxilio': ReciboDocument,
+    'recibo_jeton': ReciboDocument,
+    'recibo_suprimento': ReciboDocument,
 }
 
 
