@@ -14,9 +14,11 @@ from ..models import (
     StatusChoicesVerbasIndenizatorias, StatusChoicesProcesso, TiposDePagamento,
     Processo, Credor, Tabela_Valores_Unitarios_Verbas_Indenizatorias, MeiosDeTransporte,
 )
+from django.core.files.base import ContentFile
 from ..filters import DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter
 from ..utils import sync_diarias_siscac_csv, importar_diarias_lote, preview_diarias_lote, confirmar_diarias_lote
 from ..pdf_engine import gerar_documento_pdf
+from ..autentique_service import enviar_documento_para_assinatura, verificar_e_baixar_documento
 
 _EXTENSOES_DOCUMENTO_PERMITIDAS = {'.pdf', '.jpg', '.jpeg', '.png'}
 
@@ -376,7 +378,41 @@ def aprovar_diaria_view(request, diaria_id):
     diaria.status = status_aprovada
     diaria.autorizada = True
     diaria.save()
+
+    pdf_bytes = gerar_documento_pdf('pcd', diaria)
+    signatarios = [{"email": diaria.beneficiario.email, "action": "SIGN"}]
+    try:
+        nome_doc = f"PCD_{diaria.numero_siscac}_{diaria.id}"
+        api_data = enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios)
+        diaria.autentique_id = api_data['id']
+        diaria.autentique_url = api_data['url']
+        diaria.status_assinatura = 'PENDENTE'
+    except Exception as e:
+        messages.warning(request, f"Diária aprovada, mas falha ao enviar para o Autentique: {str(e)}")
+    diaria.save()
+
     messages.success(request, 'Diária aprovada com sucesso.')
+    return redirect('painel_autorizacao_diarias')
+
+
+@login_required
+def sincronizar_assinatura_diaria_view(request, diaria_id):
+    diaria = get_object_or_404(Diaria, id=diaria_id)
+    if not diaria.autentique_id or diaria.status_assinatura == 'ASSINADO':
+        if diaria.status_assinatura == 'ASSINADO':
+            messages.info(request, "Este documento já foi assinado.")
+        else:
+            messages.warning(request, "Esta diária não possui documento enviado para assinatura.")
+        return redirect('painel_autorizacao_diarias')
+    resultado = verificar_e_baixar_documento(diaria.autentique_id)
+    if resultado['assinado']:
+        nome_arquivo = f"PCD_Assinada_{diaria.numero_siscac}.pdf"
+        diaria.arquivo_assinado.save(nome_arquivo, ContentFile(resultado['pdf_bytes']), save=False)
+        diaria.status_assinatura = 'ASSINADO'
+        diaria.save()
+        messages.success(request, "Documento assinado e sincronizado com sucesso!")
+    else:
+        messages.info(request, "O documento ainda está pendente de assinatura no Autentique.")
     return redirect('painel_autorizacao_diarias')
 
 

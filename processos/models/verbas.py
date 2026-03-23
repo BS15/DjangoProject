@@ -89,6 +89,23 @@ class Diaria(models.Model):
     status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
     autorizada = models.BooleanField("Autorizada", default=False)
     numero_siscac = models.CharField("Nº SISCAC", max_length=20, unique=True, null=True, blank=True)
+
+    # Autentique digital signature fields
+    STATUS_ASSINATURA_CHOICES = [
+        ('PENDENTE', 'Pendente de Assinatura'),
+        ('ASSINADO', 'Assinado'),
+    ]
+    autentique_id = models.CharField("ID Autentique", max_length=100, null=True, blank=True)
+    autentique_url = models.URLField("URL Autentique", max_length=500, null=True, blank=True)
+    status_assinatura = models.CharField(
+        "Status de Assinatura", max_length=20,
+        choices=STATUS_ASSINATURA_CHOICES, null=True, blank=True,
+    )
+    arquivo_assinado = models.FileField(
+        "PCD Assinada", upload_to='verbasindenizatorias/diarias/assinadas/',
+        null=True, blank=True,
+    )
+
     history = HistoricalRecords()
 
     def calcular_valor_total(self):
