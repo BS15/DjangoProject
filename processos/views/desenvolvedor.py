@@ -33,7 +33,7 @@ def download_template_csv_credores(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="template_credores.csv"'
     writer = csv.writer(response)
-    writer.writerow(['NOME', 'CPF_CNPJ'])
+    writer.writerow(['NOME', 'CPF_CNPJ', 'GRUPO', 'CARGO_FUNCAO'])
     return response
 
 

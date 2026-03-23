@@ -1,7 +1,7 @@
 import csv
 import io
 
-from processos.models import Credor, ContaFixa
+from processos.models import CargosFuncoes, Credor, ContaFixa, Grupos
 
 
 def importar_credores_csv(csv_file):
@@ -23,9 +23,25 @@ def importar_credores_csv(csv_file):
                 .strip()
             )
             tipo = 'PF' if len(cpf_cnpj_limpo) == 11 else 'PJ'
+            defaults = {'nome': row['NOME'].strip(), 'tipo': tipo}
+
+            grupo_nome = row.get('GRUPO', '').strip()
+            cargo_nome = row.get('CARGO_FUNCAO', '').strip()
+
+            if grupo_nome:
+                grupo_obj, _ = Grupos.objects.get_or_create(grupo=grupo_nome)
+                defaults['grupo'] = grupo_obj
+
+                if cargo_nome:
+                    cargo_obj, _ = CargosFuncoes.objects.get_or_create(
+                        grupo=grupo_obj,
+                        cargo_funcao=cargo_nome,
+                    )
+                    defaults['cargo_funcao'] = cargo_obj
+
             Credor.objects.get_or_create(
                 cpf_cnpj=cpf_cnpj_limpo,
-                defaults={'nome': row['NOME'].strip(), 'tipo': tipo},
+                defaults=defaults,
             )
             resultados['sucessos'] += 1
         except Exception as e:
