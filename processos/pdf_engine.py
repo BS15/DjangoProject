@@ -34,8 +34,8 @@ _PCD_SIG_Y = 120
 _PCD_SIG_HALF_WIDTH = 130
 
 # Geometry for the SCD signature blocks.
-_SCD_SIG_Y = 300
-_SCD_SIG_LABEL_Y = 286
+_SCD_SIG_Y = 200
+_SCD_SIG_LABEL_Y = 186
 
 
 def _formatar_moeda(valor):
@@ -141,12 +141,12 @@ class TermoContabilizacaoDocument(BasePDFDocument):
 
         # --- Header ---
         c.setFont("Helvetica-Bold", 14)
-        c.drawCentredString(page_width / 2, 750, "TERMO DE CONTABILIZAÇÃO")
+        c.drawCentredString(page_width / 2, 620, "TERMO DE CONTABILIZAÇÃO")
 
         # --- Process Details ---
         c.setFont("Helvetica", 11)
         line_height = 20
-        y = 700
+        y = 550
         credor_nome = processo.credor.nome if processo.credor else "N/A"
         details = [
             f"Processo Nº: {processo.id}",
@@ -166,17 +166,17 @@ class TermoContabilizacaoDocument(BasePDFDocument):
         )
         c.setFont("Helvetica", 11)
         wrapped_lines = textwrap.wrap(declaration, width=85)
-        y = 600
+        y = 430
         for line in wrapped_lines:
             c.drawString(72, y, line)
             y -= line_height
 
         # --- Signature Block ---
         sig_x = page_width / 2
-        c.line(sig_x - 120, 320, sig_x + 120, 320)
+        c.line(sig_x - 120, 220, sig_x + 120, 220)
         c.setFont("Helvetica", 11)
-        c.drawCentredString(sig_x, 305, "Assinatura do(a) Contador(a)")
-        c.drawCentredString(sig_x, 280, "Data da Contabilização: _____ / _____ / _________")
+        c.drawCentredString(sig_x, 205, "Assinatura do(a) Contador(a)")
+        c.drawCentredString(sig_x, 180, "Data da Contabilização: _____ / _____ / _________")
 
 
 class TermoAtesteDocument(BasePDFDocument):
@@ -189,12 +189,12 @@ class TermoAtesteDocument(BasePDFDocument):
 
         # --- Header ---
         c.setFont("Helvetica-Bold", 14)
-        c.drawCentredString(page_width / 2, 750, "TERMO DE LIQUIDAÇÃO E ATESTE")
+        c.drawCentredString(page_width / 2, 620, "TERMO DE LIQUIDAÇÃO E ATESTE")
 
         # --- Invoice Details ---
         c.setFont("Helvetica", 11)
         line_height = 20
-        y = 700
+        y = 550
 
         processo_id = (
             documento_fiscal.processo.id if documento_fiscal.processo else "N/A"
@@ -222,7 +222,7 @@ class TermoAtesteDocument(BasePDFDocument):
         )
         c.setFont("Helvetica", 11)
         wrapped_lines = textwrap.wrap(declaration, width=85)
-        y = 600
+        y = 430
         for line in wrapped_lines:
             c.drawString(72, y, line)
             y -= line_height
@@ -234,10 +234,10 @@ class TermoAtesteDocument(BasePDFDocument):
         else:
             fiscal_name = "Fiscal Não Atribuído"
         c.setFont("Helvetica", 11)
-        c.drawCentredString(sig_x, 335, fiscal_name)
-        c.line(sig_x - 120, 320, sig_x + 120, 320)
-        c.drawCentredString(sig_x, 305, "Fiscal do Contrato")
-        c.drawCentredString(sig_x, 280, "Local e Data: Florianópolis, _____ / _____ / _________")
+        c.drawCentredString(sig_x, 235, fiscal_name)
+        c.line(sig_x - 120, 220, sig_x + 120, 220)
+        c.drawCentredString(sig_x, 205, "Fiscal do Contrato")
+        c.drawCentredString(sig_x, 180, "Local e Data: Florianópolis, _____ / _____ / _________")
 
 
 class AutorizacaoDocument(BasePDFDocument):
@@ -489,11 +489,11 @@ class SCDDocument(BasePDFDocument):
 
         # --- CABEÇALHO ---
         c.setFont("Helvetica-Bold", 14)
-        c.drawCentredString(width / 2.0, 750, "SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS - SCD")
+        c.drawCentredString(width / 2.0, 620, "SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS - SCD")
 
         # --- DETALHES DO PROCESSO ---
         c.setFont("Helvetica", 11)
-        y = 700
+        y = 550
 
         siscac = diaria.numero_siscac or 'N/A'
         nome_benef = diaria.beneficiario.nome if diaria.beneficiario else 'N/A'
@@ -517,14 +517,14 @@ class SCDDocument(BasePDFDocument):
 
         # --- OBJETIVO ---
         c.setFont("Helvetica-Bold", 11)
-        c.drawString(margin_left, 600, "Objetivo:")
-        _draw_wrapped_text(c, diaria.objetivo or 'N/A', margin_left, 580, text_width,
+        c.drawString(margin_left, 430, "Objetivo:")
+        _draw_wrapped_text(c, diaria.objetivo or 'N/A', margin_left, 410, text_width,
                            font_name="Helvetica", font_size=11)
 
         # --- CÁLCULO ---
         c.setFont("Helvetica", 11)
         c.drawString(
-            margin_left, 500,
+            margin_left, 380,
             f"Cálculo: {diaria.quantidade_diarias} diárias - Total Estimado: {_formatar_moeda(diaria.valor_total)}",
         )
 
@@ -784,10 +784,10 @@ class ReciboDocument(BasePDFDocument):
 
         # --- CABEÇALHO ---
         c.setFont("Helvetica-Bold", 14)
-        c.drawCentredString(page_width / 2, 750, "RECIBO DE PAGAMENTO")
+        c.drawCentredString(page_width / 2, 620, "RECIBO DE PAGAMENTO")
 
         c.setFont("Helvetica-Bold", 12)
-        c.drawCentredString(page_width / 2, 730, tipo_verba.upper())
+        c.drawCentredString(page_width / 2, 590, tipo_verba.upper())
 
         # --- TEXTO DA DECLARAÇÃO ---
         declaration = (
@@ -798,22 +798,22 @@ class ReciboDocument(BasePDFDocument):
         margin_left = 72
         text_width = page_width - 2 * margin_left
         _draw_wrapped_text(
-            c, declaration, margin_left, 650, text_width,
+            c, declaration, margin_left, 540, text_width,
             font_name="Helvetica", font_size=12,
         )
 
         # --- DADOS DO BENEFICIÁRIO ---
         c.setFont("Helvetica", 11)
-        c.drawString(margin_left, 550, f"Beneficiário / Recebedor: {beneficiario_nome}")
-        c.drawString(margin_left, 534, f"CPF / CNPJ: {beneficiario_cpf}")
+        c.drawString(margin_left, 450, f"Beneficiário / Recebedor: {beneficiario_nome}")
+        c.drawString(margin_left, 434, f"CPF / CNPJ: {beneficiario_cpf}")
 
         # --- BLOCO DE ASSINATURA ---
         sig_x = page_width / 2
-        c.line(sig_x - 130, 350, sig_x + 130, 350)
+        c.line(sig_x - 130, 250, sig_x + 130, 250)
         c.setFont("Helvetica", 11)
-        c.drawCentredString(sig_x, 365, beneficiario_nome)
-        c.drawCentredString(sig_x, 336, "Assinatura do Recebedor")
-        c.drawCentredString(sig_x, 320, "Local e Data: Florianópolis, _____ / _____ / _________")
+        c.drawCentredString(sig_x, 265, beneficiario_nome)
+        c.drawCentredString(sig_x, 236, "Assinatura do Recebedor")
+        c.drawCentredString(sig_x, 220, "Local e Data: Florianópolis, _____ / _____ / _________")
 
 
 DOCUMENT_REGISTRY = {
