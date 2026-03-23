@@ -1159,12 +1159,12 @@ def importar_diarias_lote(csv_file, usuario_logado):
     )
 
     for row in reader:
-        cpf_limpo = row.get('CPF_BENEFICIARIO', '').replace('.', '').replace('-', '').strip()
+        cpf = row.get('CPF_BENEFICIARIO', '').strip()
 
-        credor = Credor.objects.filter(cpf_cnpj=cpf_limpo, tipo='PF').first()
+        credor = Credor.objects.filter(cpf_cnpj=cpf, tipo='PF').first()
         if credor is None:
             resultados['erros'].append(
-                f"Linha {reader.line_num}: Beneficiário com CPF {cpf_limpo} não encontrado."
+                f"Linha {reader.line_num}: Beneficiário com CPF {cpf} não encontrado."
             )
             continue
 
