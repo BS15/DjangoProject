@@ -1,9 +1,11 @@
 import datetime
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 
 from processos.models import FaturaMensal, Processo
+from processos.forms import ContaFixaForm
 from processos.utils_contas import gerar_faturas_do_mes
 
 
@@ -51,4 +53,20 @@ def vincular_processo_fatura_view(request, fatura_id):
     if mes and ano:
         redirect_url += f"?mes={mes}&ano={ano}"
     return redirect(redirect_url)
+
+
+@login_required
+def add_conta_fixa_view(request):
+    if request.method == 'POST':
+        form = ContaFixaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Conta fixa cadastrada com sucesso!")
+            return redirect('painel_contas_fixas')
+        else:
+            messages.error(request, "Erro ao cadastrar. Verifique os campos.")
+    else:
+        form = ContaFixaForm()
+
+    return render(request, 'contas/add_conta_fixa.html', {'form': form})
 
