@@ -32,7 +32,6 @@ class CodigosImposto(models.Model):
     )
 
     aliquota = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    vencimento_padrao = models.PositiveIntegerField(default=1, help_text="Dia de Vencimento Padrão", null=True, blank=True)
     is_active = models.BooleanField(default=True)
     natureza_rendimento = models.CharField(
         max_length=5,
