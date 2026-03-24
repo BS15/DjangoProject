@@ -25,7 +25,7 @@ from ..utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_
 from ..pdf_engine import gerar_documento_pdf
 from ..ai_utils import extrair_dados_documento, extract_data_with_llm, extrair_codigos_barras_boletos, processar_pdf_comprovantes_ia
 from ..invoice_processor import process_invoice_taxes
-from ..models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias, StatusChoicesRetencoes, MeiosDeTransporte, FormasDePagamento, ContasBancarias, CargosFuncoes, TagChoices, RegistroAcessoArquivo, Devolucao
+from ..models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias, StatusChoicesRetencoes, MeiosDeTransporte, FormasDePagamento, ContasBancarias, CargosFuncoes, TagChoices, RegistroAcessoArquivo, Devolucao, ReuniaoConselho
 from ..filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DiariasAutorizacaoFilter, ArquivamentoFilter, DevolucaoFilter
 
 
@@ -1386,10 +1386,14 @@ def recusar_contabilizacao_view(request, pk):
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 def painel_conselho_view(request):
-    processos = Processo.objects.filter(status__status_choice__iexact='CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL').order_by('data_pagamento')
+    reunioes_ativas = ReuniaoConselho.objects.filter(status__in=['AGENDADA', 'EM_ANALISE']).order_by('-numero')
+    processos_sem_reuniao = Processo.objects.filter(
+        status__status_choice__iexact='CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL',
+        reuniao_conselho__isnull=True,
+    ).order_by('data_pagamento')
     context = {
-        'processos': processos,
-        'pendencia_form': PendenciaForm(),
+        'reunioes_ativas': reunioes_ativas,
+        'processos_sem_reuniao': processos_sem_reuniao,
         'pode_interagir': request.user.has_perm('processos.pode_auditar_conselho'),
     }
     return render(request, 'fluxo/conselho.html', context)
@@ -1586,6 +1590,114 @@ def recusar_conselho_view(request, pk):
             messages.error(request, f'Processo #{processo.id} recusado pelo Conselho Fiscal e devolvido para a Contabilidade!')
         else:
             messages.warning(request, 'Erro ao registrar recusa. Verifique os dados da pendência.')
+
+    return redirect('painel_conselho')
+
+
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+def gerenciar_reunioes_view(request):
+    """Lista todas as ReuniaoConselho e permite criar uma nova."""
+    if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_auditar_conselho'):
+            raise PermissionDenied
+        numero = request.POST.get('numero', '').strip()
+        trimestre_referencia = request.POST.get('trimestre_referencia', '').strip()
+        data_reuniao = request.POST.get('data_reuniao') or None
+        if numero and trimestre_referencia:
+            try:
+                ReuniaoConselho.objects.create(
+                    numero=int(numero),
+                    trimestre_referencia=trimestre_referencia,
+                    data_reuniao=data_reuniao,
+                )
+                messages.success(request, f'{numero}ª Reunião criada com sucesso.')
+            except (ValueError, Exception) as e:
+                messages.error(request, f'Erro ao criar reunião: {e}')
+        else:
+            messages.warning(request, 'Preencha o número e o trimestre de referência.')
+        return redirect('gerenciar_reunioes')
+
+    reunioes = ReuniaoConselho.objects.all()
+    context = {
+        'reunioes': reunioes,
+        'pode_interagir': request.user.has_perm('processos.pode_auditar_conselho'),
+    }
+    return render(request, 'processos/gerenciar_reunioes.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+def montar_pauta_reuniao_view(request, reuniao_id):
+    """Permite adicionar processos elegíveis a uma reunião específica."""
+    reuniao = get_object_or_404(ReuniaoConselho, id=reuniao_id)
+
+    if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_auditar_conselho'):
+            raise PermissionDenied
+        processos_ids = request.POST.getlist('processos_selecionados')
+        if processos_ids:
+            updated = Processo.objects.filter(id__in=processos_ids).update(reuniao_conselho=reuniao)
+            messages.success(request, f'{updated} processo(s) adicionado(s) à pauta.')
+        else:
+            messages.warning(request, 'Nenhum processo selecionado.')
+        return redirect('montar_pauta_reuniao', reuniao_id=reuniao_id)
+
+    processos_na_pauta = reuniao.processos_em_pauta.all().order_by('data_pagamento')
+    processos_elegiveis = Processo.objects.filter(
+        status__status_choice__iexact='CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL',
+        reuniao_conselho__isnull=True,
+    ).order_by('data_pagamento')
+
+    context = {
+        'reuniao': reuniao,
+        'processos_na_pauta': processos_na_pauta,
+        'processos_elegiveis': processos_elegiveis,
+        'pode_interagir': request.user.has_perm('processos.pode_auditar_conselho'),
+    }
+    return render(request, 'processos/montar_pauta_conselho.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+def analise_reuniao_view(request, reuniao_id):
+    """Painel de análise para Conselheiros: lista processos de uma reunião específica."""
+    if not request.user.has_perm('processos.pode_auditar_conselho'):
+        raise PermissionDenied
+    reuniao = get_object_or_404(ReuniaoConselho, id=reuniao_id)
+    processos_na_pauta = reuniao.processos_em_pauta.all().order_by('data_pagamento')
+    context = {
+        'reuniao': reuniao,
+        'processos': processos_na_pauta,
+        'pendencia_form': PendenciaForm(),
+        'pode_interagir': True,
+    }
+    return render(request, 'processos/analise_reuniao.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+def iniciar_conselho_reuniao_view(request, reuniao_id):
+    """POST: store process IDs for a specific meeting in session queue."""
+    if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_auditar_conselho'):
+            raise PermissionDenied
+        get_object_or_404(ReuniaoConselho, id=reuniao_id)
+        ids_raw = request.POST.getlist('processo_ids')
+        process_ids = []
+        for pid in ids_raw:
+            try:
+                process_ids.append(int(pid))
+            except (ValueError, TypeError):
+                pass
+
+        if not process_ids:
+            messages.warning(request, 'Selecione ao menos um processo para iniciar a revisão.')
+            return redirect('analise_reuniao', reuniao_id=reuniao_id)
+
+        request.session['conselho_queue'] = process_ids
+        request.session.modified = True
+        return redirect('conselho_processo', pk=process_ids[0])
 
     return redirect('painel_conselho')
 
@@ -2290,7 +2402,8 @@ def gerar_parecer_conselho_view(request, pk):
     Gera e serve o PDF "Parecer do Conselho Fiscal" para o processo indicado.
     """
     processo = get_object_or_404(Processo, pk=pk)
-    pdf_bytes = gerar_documento_pdf('conselho_fiscal', processo)
+    numero_reuniao = processo.reuniao_conselho.numero if processo.reuniao_conselho else None
+    pdf_bytes = gerar_documento_pdf('conselho_fiscal', processo, numero_reuniao=numero_reuniao)
     nome_arquivo = f"Parecer_Conselho_Fiscal_Proc_{processo.id}.pdf"
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="{nome_arquivo}"'

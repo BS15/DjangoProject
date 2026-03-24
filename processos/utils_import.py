@@ -1,8 +1,7 @@
 import csv
 import io
 
-from processos.models import CargosFuncoes, ContasBancarias, Credor, ContaFixa, Grupos
-from processos.models import CargosFuncoes, Credor, ContaFixa
+from processos.models import CargosFuncoes, ContasBancarias, Credor, ContaFixa
 
 
 def importar_credores_csv(csv_file):
