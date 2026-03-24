@@ -1,4 +1,5 @@
 import io
+import logging
 import os
 import textwrap
 
@@ -6,6 +7,8 @@ from django.conf import settings
 from pypdf import PdfReader, PdfWriter
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Shared geometry / formatting helpers
@@ -117,18 +120,29 @@ class BasePDFDocument:
         # 2. Merge with letterhead
         new_pdf = PdfReader(self.packet)
         template_path = os.path.join(settings.BASE_DIR, self.letterhead_path)
-        with open(template_path, "rb") as f:
-            template_pdf = PdfReader(f)
-            page = template_pdf.pages[0]
-            page.merge_page(new_pdf.pages[0])
+        try:
+            with open(template_path, "rb") as f:
+                template_pdf = PdfReader(f)
+                page = template_pdf.pages[0]
+                page.merge_page(new_pdf.pages[0])
 
-            # 3. Write final output
+                # 3. Write final output
+                output = PdfWriter()
+                output.add_page(page)
+                final_packet = io.BytesIO()
+                output.write(final_packet)
+
+            return final_packet.getvalue()
+        except FileNotFoundError:
+            logger.warning(
+                "Letterhead file not found at '%s'. Generating PDF without letterhead.",
+                template_path,
+            )
             output = PdfWriter()
-            output.add_page(page)
+            output.add_page(new_pdf.pages[0])
             final_packet = io.BytesIO()
             output.write(final_packet)
-
-        return final_packet.getvalue()
+            return final_packet.getvalue()
 
 
 class TermoContabilizacaoDocument(BasePDFDocument):

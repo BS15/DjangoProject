@@ -79,6 +79,20 @@
     {% endif %}
     {% endwith %}
 
+    {% if diaria.status.status_choice == 'SOLICITADA' and not tem_assinatura_scd %}
+    <div class="card shadow-sm border-0 mb-4 border-warning">
+        <div class="card-header bg-warning-subtle fw-bold">
+            <i class="bi bi-exclamation-triangle text-warning"></i> Assinatura SCD Pendente
+        </div>
+        <div class="card-body">
+            <p class="mb-2 text-muted small">O envio do documento SCD para assinatura digital falhou ou ainda não foi realizado. Clique abaixo para reenviar.</p>
+            <a href="{% url 'reenviar_assinatura' diaria.pk %}" class="btn btn-warning">
+                <i class="bi bi-send"></i> Reenviar para Assinatura
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
     {% if messages %}
         {% for message in messages %}
             <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
