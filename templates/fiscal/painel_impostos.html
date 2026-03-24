@@ -22,9 +22,11 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Retenção de Impostos</h2>
         <div class="d-flex gap-2">
+            {% if status_agrupamento == 'pendentes' %}
             <button type="submit" form="form-agrupar" class="btn btn-warning fw-bold shadow-sm" onclick="return confirm('Gerar um processo de recolhimento para os impostos selecionados?');">
                 <i class="bi bi-boxes"></i> Agrupar para Pagamento
             </button>
+            {% endif %}
             <a href="{% url 'painel_reinf' %}" class="btn btn-outline-primary fw-bold shadow-sm">
                 <i class="bi bi-file-earmark-text"></i> Painel EFD-Reinf
             </a>
@@ -45,6 +47,15 @@
                     </select>
                 </div>
 
+                <div class="col-md-2 mb-2">
+                    <label class="form-label text-muted small fw-bold mb-1">Status</label>
+                    <select name="status_agrupamento" class="form-select form-select-sm border-secondary" onchange="this.form.submit()">
+                        <option value="pendentes" {% if status_agrupamento == 'pendentes' %}selected{% endif %}>Pendentes</option>
+                        <option value="agrupados" {% if status_agrupamento == 'agrupados' %}selected{% endif %}>Agrupados (Pagos)</option>
+                        <option value="todos" {% if status_agrupamento == 'todos' %}selected{% endif %}>Todos</option>
+                    </select>
+                </div>
+
                 {% for field in meu_filtro.form %}
                 <div class="col-md-2 mb-2">
                     <label class="form-label text-muted small fw-bold mb-1">{{ field.label }}</label>
@@ -56,7 +67,7 @@
                     <button type="submit" class="btn btn-primary btn-sm fw-bold shadow-sm px-4">
                         <i class="bi bi-search"></i> Filtrar Resultados
                     </button>
-                    <a href="?visao={{ visao }}" class="btn btn-outline-secondary btn-sm shadow-sm">Limpar Filtros</a>
+                    <a href="?visao={{ visao }}&status_agrupamento={{ status_agrupamento }}" class="btn btn-outline-secondary btn-sm shadow-sm">Limpar Filtros</a>
                 </div>
             </form>
         </div>
