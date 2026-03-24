@@ -14,50 +14,47 @@ def _get_headers():
 def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios):
     """
     Sends a PDF document to the Autentique API for digital signature.
-
-    Args:
-        pdf_bytes (bytes): The PDF file content.
-        nome_doc (str): The document name.
-        signatarios (list): A list of dicts with 'email' and 'action' keys.
-
-    Returns:
-        dict: A dict with 'id' and 'url' from the Autentique API.
-
-    Raises:
-        Exception: If the API call fails or returns an error.
     """
-    signatarios_input = ", ".join(
-        f'{{email: "{s["email"]}", action: {s["action"]}}}'
-        for s in signatarios
-    )
+    # 1. The exact query from Autentique's documentation
+    query = """
+    mutation CreateDocumentMutation($document: DocumentInput!, $signers: [SignerInput!]!, $file: Upload!) {
+      createDocument(document: $document, signers: $signers, file: $file) {
+        id
+        name
+        signatures {
+          public_id
+          link {
+            short_link
+          }
+        }
+      }
+    }
+    """
 
-    mutation_multipart = (
-        "mutation CreateDocument($file: Upload!) {"
-        "  createDocument("
-        "    document: {"
-        f'      name: "{nome_doc}"'
-        f"      signatories: [{signatarios_input}]"
-        "    }"
-        "    file: $file"
-        "  ) {"
-        "    id"
-        "    name"
-        "    signatures {"
-        "      public_id"
-        "      link {"
-        "        short_link"
-        "      }"
-        "    }"
-        "  }"
-        "}"
-    )
+    # 2. Use proper GraphQL variables to avoid string-escaping bugs
+    variables = {
+        "document": {
+            "name": nome_doc
+        },
+        "signers": signatarios,
+        "file": None
+    }
 
-    operations = json.dumps({"query": mutation_multipart, "variables": {"file": None}})
+    operations = json.dumps({
+        "query": query,
+        "variables": variables
+    })
 
+    # 3. The multipart map linking the physical file to the "file" variable
+    map_dict = json.dumps({
+        "0": ["variables.file"]
+    })
+
+    # 4. The multipart payload
     files = {
         "operations": (None, operations),
-        "map": (None, '{"0": ["variables.file"]}'),
-        "0": (nome_doc + ".pdf", pdf_bytes, "application/pdf"),
+        "map": (None, map_dict),
+        "0": (f"{nome_doc}.pdf", pdf_bytes, "application/pdf"),
     }
 
     response = requests.post(
@@ -65,9 +62,10 @@ def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios):
         headers=_get_headers(),
         files=files,
     )
+    
     response.raise_for_status()
-
     data = response.json()
+    
     if "errors" in data:
         raise Exception(f"Autentique API error: {data['errors']}")
 
