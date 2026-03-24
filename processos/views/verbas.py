@@ -16,6 +16,7 @@ from ..models import (
     DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio,
     StatusChoicesVerbasIndenizatorias, StatusChoicesProcesso, TiposDePagamento,
     Processo, Credor, Tabela_Valores_Unitarios_Verbas_Indenizatorias, MeiosDeTransporte,
+    AssinaturaAutentique,
 )
 from django.core.files.base import ContentFile
 from ..filters import DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter
@@ -70,13 +71,10 @@ def add_diaria_view(request):
                     {"email": nova_diaria.beneficiario.email, "action": "SIGN"},
                     {"email": nova_diaria.proponente.email, "action": "SIGN"},
                 ]
-                api_data = enviar_documento_para_assinatura(
-                    pdf_bytes, f"SCD_{nova_diaria.numero_siscac}", signatarios
+                assinatura = enviar_documento_para_assinatura(
+                    pdf_bytes, f"SCD_{nova_diaria.numero_siscac}", signatarios,
+                    entidade=nova_diaria, tipo_documento='SCD'
                 )
-                nova_diaria.autentique_id = api_data['id']
-                nova_diaria.autentique_url = api_data['url']
-                nova_diaria.status_assinatura = 'PENDENTE'
-                nova_diaria.save(update_fields=['autentique_id', 'autentique_url', 'status_assinatura'])
             except Exception as e:
                 messages.warning(request, f"Diária cadastrada, mas falha ao enviar SCD para assinatura: {str(e)}")
 
@@ -251,12 +249,10 @@ def agrupar_verbas_view(request, tipo_verba):
                     {"email": item.beneficiario.email, "action": "SIGN"},
                     {"email": email_presidente, "action": "SIGN"},
                 ]
-                api_data = enviar_documento_para_assinatura(
-                    pdf_bytes, f"PCD_{item.numero_siscac}", signatarios
+                assinatura = enviar_documento_para_assinatura(
+                    pdf_bytes, f"PCD_{item.numero_siscac}", signatarios,
+                    entidade=item, tipo_documento='PCD'
                 )
-                item.autentique_id = api_data['id']
-                item.autentique_url = api_data['url']
-                item.status_assinatura = 'PENDENTE'
             except Exception as e:
                 messages.warning(request, f"PCD para diária {item.numero_siscac} não enviado: {str(e)}")
         item.save()
@@ -431,24 +427,30 @@ def aprovar_diaria_view(request, diaria_id):
 
 
 @login_required
-def sincronizar_assinatura_diaria_view(request, diaria_id):
-    diaria = get_object_or_404(Diaria, id=diaria_id)
-    if not diaria.autentique_id or diaria.status_assinatura == 'ASSINADO':
-        if diaria.status_assinatura == 'ASSINADO':
-            messages.info(request, "Este documento já foi assinado.")
+def sincronizar_assinatura_view(request, assinatura_id):
+    assinatura = get_object_or_404(AssinaturaAutentique, id=assinatura_id)
+    if assinatura.status == 'ASSINADO':
+        messages.info(request, "Este documento já foi assinado.")
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+    try:
+        resultado = verificar_e_baixar_documento(assinatura.autentique_id)
+        if resultado['assinado']:
+            nome_arquivo = f"{assinatura.tipo_documento}_Assinado_{assinatura.id}.pdf"
+            assinatura.arquivo_assinado.save(nome_arquivo, ContentFile(resultado['pdf_bytes']), save=False)
+            assinatura.status = 'ASSINADO'
+            assinatura.save()
+            messages.success(request, "Documento assinado e sincronizado com sucesso!")
         else:
-            messages.warning(request, "Esta diária não possui documento enviado para assinatura.")
-        return redirect('painel_autorizacao_diarias')
-    resultado = verificar_e_baixar_documento(diaria.autentique_id)
-    if resultado['assinado']:
-        nome_arquivo = f"PCD_Assinada_{diaria.numero_siscac}.pdf"
-        diaria.arquivo_assinado.save(nome_arquivo, ContentFile(resultado['pdf_bytes']), save=False)
-        diaria.status_assinatura = 'ASSINADO'
-        diaria.save()
-        messages.success(request, "Documento assinado e sincronizado com sucesso!")
-    else:
-        messages.info(request, "O documento ainda está pendente de assinatura no Autentique.")
-    return redirect('painel_autorizacao_diarias')
+            messages.info(request, "O documento ainda está pendente de assinatura no Autentique.")
+    except Exception as e:
+        messages.error(request, f"Erro ao verificar assinatura: {str(e)}")
+    return redirect(request.META.get('HTTP_REFERER', '/'))
+
+
+@login_required
+def minhas_solicitacoes_view(request):
+    diarias = Diaria.objects.filter(beneficiario__email=request.user.email).order_by('-id')
+    return render(request, 'verbas/minhas_solicitacoes.html', {'diarias': diarias})
 
 
 def edit_reembolso_view(request, pk):

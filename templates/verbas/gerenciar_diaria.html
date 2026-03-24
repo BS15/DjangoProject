@@ -33,33 +33,51 @@
         </a>
     </div>
 
-    {% if diaria.status_assinatura %}
+    {% with assinaturas=diaria.assinaturas_autentique.all %}
+    {% if assinaturas %}
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-header bg-white fw-bold">
             <i class="bi bi-pen"></i> Documentos e Assinaturas
         </div>
         <div class="card-body">
-            {% if diaria.status_assinatura == 'PENDENTE' %}
-                <p class="mb-2 text-muted small">O documento PCD foi enviado para assinatura digital no Autentique e aguarda a assinatura do beneficiário.</p>
-                <div class="d-flex gap-2 flex-wrap">
-                    {% if diaria.autentique_url %}
-                        <a href="{{ diaria.autentique_url }}" target="_blank" class="btn btn-info">
-                            <i class="bi bi-pen"></i> Assinar no Autentique
-                        </a>
-                    {% endif %}
-                    <a href="{% url 'sincronizar_assinatura_diaria' diaria.id %}" class="btn btn-warning">
-                        <i class="bi bi-arrow-repeat"></i> Sincronizar Assinatura
-                    </a>
+            {% for assinatura in assinaturas %}
+            <div class="mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge {% if assinatura.status == 'ASSINADO' %}bg-success{% else %}bg-warning text-dark{% endif %} rounded-pill fs-6">
+                        {{ assinatura.tipo_documento }}
+                        {% if assinatura.status == 'ASSINADO' %}
+                            <i class="bi bi-check-circle-fill"></i>
+                        {% else %}
+                            <i class="bi bi-hourglass-split"></i>
+                        {% endif %}
+                    </span>
                 </div>
-            {% elif diaria.status_assinatura == 'ASSINADO' %}
-                <p class="mb-2 text-muted small">O documento PCD foi assinado digitalmente.</p>
-                <a href="{{ diaria.arquivo_assinado.url }}" target="_blank" class="btn btn-success">
-                    <i class="bi bi-file-earmark-check"></i> Ver PCD Assinada
-                </a>
-            {% endif %}
+                {% if assinatura.status == 'PENDENTE' %}
+                    <p class="mb-2 text-muted small">Este documento foi enviado para assinatura digital no Autentique e aguarda a assinatura dos signatários.</p>
+                    <div class="d-flex gap-2 flex-wrap">
+                        {% if assinatura.autentique_url %}
+                            <a href="{{ assinatura.autentique_url }}" target="_blank" class="btn btn-info">
+                                <i class="bi bi-pen"></i> Assinar no Autentique
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'sincronizar_assinatura' assinatura.id %}" class="btn btn-warning">
+                            <i class="bi bi-arrow-repeat"></i> Sincronizar Assinatura
+                        </a>
+                    </div>
+                {% elif assinatura.status == 'ASSINADO' %}
+                    <p class="mb-2 text-muted small">Este documento foi assinado digitalmente.</p>
+                    {% if assinatura.arquivo_assinado %}
+                    <a href="{{ assinatura.arquivo_assinado.url }}" target="_blank" class="btn btn-success">
+                        <i class="bi bi-file-earmark-check"></i> Ver Documento Assinado
+                    </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+            {% endfor %}
         </div>
     </div>
     {% endif %}
+    {% endwith %}
 
     {% if messages %}
         {% for message in messages %}

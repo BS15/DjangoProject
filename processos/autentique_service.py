@@ -11,9 +11,11 @@ def _get_headers():
     return {"Authorization": f"Bearer {AUTENTIQUE_API_TOKEN}"}
 
 
-def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios):
+def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, entidade=None, tipo_documento=None):
     """
     Sends a PDF document to the Autentique API for digital signature.
+    If entidade and tipo_documento are provided, creates and returns an
+    AssinaturaAutentique record. Otherwise returns the raw API response dict.
     """
     # 1. The exact query from Autentique's documentation
     query = """
@@ -76,6 +78,19 @@ def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios):
     if doc.get("signatures"):
         link = doc["signatures"][0].get("link", {})
         url = link.get("short_link", "")
+
+    if entidade is not None and tipo_documento is not None:
+        from django.contrib.contenttypes.models import ContentType
+        from processos.models.fluxo import AssinaturaAutentique
+
+        assinatura = AssinaturaAutentique.objects.create(
+            content_type=ContentType.objects.get_for_model(entidade),
+            object_id=entidade.id,
+            tipo_documento=tipo_documento,
+            autentique_id=doc_id,
+            autentique_url=url,
+        )
+        return assinatura
 
     return {"id": doc_id, "url": url}
 

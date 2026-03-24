@@ -2,6 +2,8 @@ from django.db import models
 from django.db.models import Sum
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
 from simple_history.models import HistoricalRecords
 from datetime import date
 from processos.validators import validar_arquivo_seguro
@@ -385,3 +387,23 @@ class Devolucao(models.Model):
         verbose_name = "Devolução"
         verbose_name_plural = "Devoluções"
         ordering = ['-data_devolucao']
+
+
+class AssinaturaAutentique(models.Model):
+    # Generic Relation to link to Diaria, Processo, Reembolso, etc.
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    entidade_relacionada = GenericForeignKey('content_type', 'object_id')
+
+    tipo_documento = models.CharField("Tipo do Documento", max_length=50, help_text="Ex: SCD, PCD, AUTORIZACAO")
+    autentique_id = models.CharField("ID Autentique", max_length=100, unique=True)
+    autentique_url = models.URLField("URL para Assinatura", max_length=500)
+    status = models.CharField("Status", max_length=20, choices=[('PENDENTE', 'Pendente'), ('ASSINADO', 'Assinado')], default='PENDENTE')
+    arquivo_assinado = models.FileField("Arquivo Assinado", upload_to='documentos_assinados/', null=True, blank=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-criado_em']
+
+    def __str__(self):
+        return f"{self.tipo_documento} - {self.autentique_id} ({self.status})"
