@@ -1,7 +1,7 @@
 import csv
 import io
 
-from processos.models import CargosFuncoes, Credor, ContaFixa, Grupos
+from processos.models import CargosFuncoes, ContasBancarias, Credor, ContaFixa, Grupos
 
 
 def importar_credores_csv(csv_file):
@@ -39,10 +39,31 @@ def importar_credores_csv(csv_file):
                     )
                     defaults['cargo_funcao'] = cargo_obj
 
-            Credor.objects.get_or_create(
+            banco = row.get('BANCO', '').strip() or None
+            agencia = row.get('AGENCIA', '').strip() or None
+            conta_num = row.get('CONTA', '').strip() or None
+            pix = row.get('PIX', '').strip() or None
+
+            credor, _ = Credor.objects.get_or_create(
                 cpf_cnpj=cpf_cnpj_limpo,
                 defaults=defaults,
             )
+
+            if banco or agencia or conta_num:
+                conta_bancaria, _ = ContasBancarias.objects.get_or_create(
+                    titular=credor,
+                    banco=banco,
+                    agencia=agencia,
+                    conta=conta_num,
+                )
+                if credor.conta_id != conta_bancaria.pk:
+                    credor.conta = conta_bancaria
+                    credor.save(update_fields=['conta'])
+
+            if pix and credor.chave_pix != pix:
+                credor.chave_pix = pix
+                credor.save(update_fields=['chave_pix'])
+
             resultados['sucessos'] += 1
         except Exception as e:
             resultados['erros'].append(f"Linha {reader.line_num}: {e}")
