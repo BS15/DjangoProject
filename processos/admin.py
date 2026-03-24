@@ -5,7 +5,7 @@ from .models import (
     TiposDePagamento, TiposDeDocumento, Processo, DocumentoProcesso,
     DocumentoFiscal, RetencaoImposto, StatusChoicesVerbasIndenizatorias, Credor,
     ContasBancarias, TiposDeVerbasIndenizatorias,
-    StatusChoicesPendencias, Grupos, CargosFuncoes,
+    StatusChoicesPendencias, CargosFuncoes,
     Tabela_Valores_Unitarios_Verbas_Indenizatorias,
     StatusChoicesRetencoes, TiposDePendencias, Pendencia, ComprovanteDePagamento,
     DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio,
@@ -81,7 +81,6 @@ admin.site.register(DocumentoAuxilio, SimpleHistoryAdmin)
 admin.site.register(DocumentoSuprimentoDeFundos, SimpleHistoryAdmin)
 admin.site.register(StatusChoicesVerbasIndenizatorias)
 admin.site.register(Credor, SimpleHistoryAdmin)
-admin.site.register(Grupos)
 admin.site.register(CargosFuncoes)
 admin.site.register(TiposDeVerbasIndenizatorias)
 admin.site.register(StatusChoicesPendencias)

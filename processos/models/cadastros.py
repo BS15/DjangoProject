@@ -4,27 +4,12 @@ from django.db import models
 from simple_history.models import HistoricalRecords
 
 
-class Grupos(models.Model):
-    grupo = models.CharField(max_length=100, unique=True)
-    is_active = models.BooleanField(default=True)
-
-    def __str__(self):
-        return self.grupo
-
-
 class CargosFuncoes(models.Model):
-    # O VÍNCULO PAI-FILHO:
-    grupo = models.ForeignKey(
-        'Grupos',
-        on_delete=models.PROTECT,
-        related_name='cargos',
-        verbose_name="Grupo Relacionado"
-    )
+    grupo = models.CharField(max_length=100, verbose_name="Grupo Relacionado", blank=True, default='')
     cargo_funcao = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        # Garante que não existam dois cargos iguais dentro do mesmo grupo
         unique_together = ('grupo', 'cargo_funcao')
         verbose_name = "Cargo / Função"
         verbose_name_plural = "Cargos e Funções"
@@ -50,7 +35,6 @@ class Credor(models.Model):
     cpf_cnpj = models.CharField("CPF/CNPJ", max_length=50, null=True, blank=True)
     conta = models.ForeignKey('ContasBancarias', on_delete=models.PROTECT, blank=True, null=True, verbose_name="Conta Credor")
     chave_pix = models.CharField("Chave PIX do credor", max_length=50, null=True, blank=True)
-    grupo = models.ForeignKey('Grupos', on_delete=models.PROTECT, blank=True, null=True)
     cargo_funcao = models.ForeignKey('CargosFuncoes', on_delete=models.PROTECT, blank=True, null=True)
     #Dados de contato
     telefone = models.CharField("Telefone do credor", max_length=50, null=True, blank=True)

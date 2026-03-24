@@ -193,14 +193,13 @@ RetencaoFormSet = inlineformset_factory(
 class CredorForm(forms.ModelForm):
     class Meta:
         model = Credor
-        fields = ['tipo', 'cpf_cnpj', 'nome', 'telefone', 'email', 'conta', 'chave_pix', 'grupo', 'cargo_funcao', 'codigo_servico_padrao']
+        fields = ['tipo', 'cpf_cnpj', 'nome', 'telefone', 'email', 'conta', 'chave_pix', 'cargo_funcao', 'codigo_servico_padrao']
         widgets = {
             'tipo': forms.Select(attrs={'class': 'form-select'}),
             'cpf_cnpj': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apenas números'}),
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
             'telefone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(00) 00000-0000'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'grupo': forms.Select(attrs={'class': 'form-select'}),
             'cargo_funcao': forms.Select(attrs={'class': 'form-select'}),
             'conta': forms.Select(attrs={'class': 'form-select'}),
             'chave_pix': forms.TextInput(attrs={'class': 'form-control'}),

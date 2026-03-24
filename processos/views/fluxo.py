@@ -25,7 +25,7 @@ from ..utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_
 from ..pdf_engine import gerar_documento_pdf
 from ..ai_utils import extrair_dados_documento, extract_data_with_llm, extrair_codigos_barras_boletos, processar_pdf_comprovantes_ia
 from ..invoice_processor import process_invoice_taxes
-from ..models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias, StatusChoicesRetencoes, MeiosDeTransporte, FormasDePagamento, ContasBancarias, Grupos, CargosFuncoes, TagChoices, RegistroAcessoArquivo, Devolucao
+from ..models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias, StatusChoicesRetencoes, MeiosDeTransporte, FormasDePagamento, ContasBancarias, CargosFuncoes, TagChoices, RegistroAcessoArquivo, Devolucao
 from ..filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DiariasAutorizacaoFilter, ArquivamentoFilter, DevolucaoFilter
 
 
@@ -2330,13 +2330,10 @@ def _ensure_fake_lookup_tables():
     for m in ["Veículo Próprio", "Transporte Público", "Aéreo"]:
         MeiosDeTransporte.objects.get_or_create(meio_de_transporte=m)
 
-    grupo_forn, _ = Grupos.objects.get_or_create(grupo="FORNECEDORES")
-    grupo_func, _ = Grupos.objects.get_or_create(grupo="FUNCIONÁRIOS")
-
     for cargo in ["Analista", "Assessor", "Diretor", "Técnico Administrativo"]:
-        CargosFuncoes.objects.get_or_create(grupo=grupo_func, cargo_funcao=cargo)
+        CargosFuncoes.objects.get_or_create(grupo="FUNCIONÁRIOS", cargo_funcao=cargo)
     for cargo in ["Empresa de TI", "Empresa de Limpeza"]:
-        CargosFuncoes.objects.get_or_create(grupo=grupo_forn, cargo_funcao=cargo)
+        CargosFuncoes.objects.get_or_create(grupo="FORNECEDORES", cargo_funcao=cargo)
 
     if not ContasBancarias.objects.exists():
         ContasBancarias.objects.create(
@@ -2354,7 +2351,6 @@ def _ensure_fake_lookup_tables():
         )
 
     if not Credor.objects.filter(tipo='PJ').exists():
-        grupo_forn = Grupos.objects.filter(grupo="FORNECEDORES").first()
         ContasBancarias.objects.get_or_create(
             banco="Caixa Econômica Federal",
             agencia="1234",
@@ -2367,7 +2363,6 @@ def _ensure_fake_lookup_tables():
             nome=_fake_generator.company(),
             cpf_cnpj=_fake_generator.cnpj(),
             tipo='PJ',
-            grupo=grupo_forn,
             conta=conta,
             email=_fake_generator.email(),
             telefone=_fake_generator.phone_number()[:20],
@@ -2375,14 +2370,12 @@ def _ensure_fake_lookup_tables():
         )
 
     if not Credor.objects.filter(tipo='PF').exists():
-        grupo_func = Grupos.objects.filter(grupo="FUNCIONÁRIOS").first()
         conta = ContasBancarias.objects.first()
-        cargo = CargosFuncoes.objects.filter(grupo=grupo_func).first()
+        cargo = CargosFuncoes.objects.filter(grupo="FUNCIONÁRIOS").first()
         Credor.objects.create(
             nome=_fake_generator.name(),
             cpf_cnpj=_fake_generator.cpf(),
             tipo='PF',
-            grupo=grupo_func,
             cargo_funcao=cargo,
             conta=conta,
             email=_fake_generator.email(),
