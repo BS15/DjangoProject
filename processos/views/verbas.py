@@ -6,6 +6,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from ..utils_permissoes import user_in_group
 from django.db import transaction
 from ..forms import DiariaForm, ReembolsoForm, JetonForm, AuxilioForm, ProcessoForm, PendenciaFormSet
 from ..models import (
@@ -335,9 +336,9 @@ def painel_autorizacao_diarias_view(request):
         'beneficiario', 'proponente', 'status', 'processo'
     ).filter(status__status_choice='SOLICITADA').order_by('-id')
 
-    is_manager = request.user.groups.filter(name__in=['Gestores', 'Administradores']).exists()
+    is_manager = user_in_group(request.user, 'Gestores') or user_in_group(request.user, 'Administradores')
     if not is_manager:
-        is_proponente = request.user.groups.filter(name='PROPONENTE').exists()
+        is_proponente = user_in_group(request.user, 'PROPONENTE')
         if is_proponente:
             diarias_pendentes = diarias_pendentes.filter(proponente=request.user)
         else:
@@ -368,7 +369,7 @@ def alternar_autorizacao_diaria(request, pk):
 @login_required
 def aprovar_diaria_view(request, diaria_id):
     diaria = get_object_or_404(Diaria, id=diaria_id)
-    is_manager = request.user.groups.filter(name__in=['Gestores', 'Administradores']).exists()
+    is_manager = user_in_group(request.user, 'Gestores') or user_in_group(request.user, 'Administradores')
     if request.user != diaria.proponente and not is_manager:
         messages.error(request, 'Você não tem permissão para aprovar esta diária.')
         return redirect('painel_autorizacao_diarias')

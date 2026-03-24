@@ -22,6 +22,7 @@ from pypdf import PdfWriter
 from ..forms import ProcessoForm, DocumentoFormSet, DocumentoFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet, DevolucaoForm
 from ..validators import verificar_turnpike, STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
 from ..utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, parse_siscac_report, sync_siscac_payments
+from ..utils_permissoes import group_required
 from ..pdf_engine import gerar_documento_pdf
 from ..ai_utils import extrair_dados_documento, extract_data_with_llm, extrair_codigos_barras_boletos, processar_pdf_comprovantes_ia
 from ..invoice_processor import process_invoice_taxes
@@ -824,6 +825,7 @@ def enviar_para_autorizacao(request):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@group_required('ORDENADOR(A) DE DESPESA')
 def painel_autorizacao_view(request):
     processos = Processo.objects.filter(
         status__status_choice__iexact='A PAGAR - ENVIADO PARA AUTORIZAÇÃO'
@@ -844,6 +846,7 @@ def painel_autorizacao_view(request):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@group_required('ORDENADOR(A) DE DESPESA')
 def autorizar_pagamento(request):
     if request.method == 'POST':
         if not request.user.has_perm('processos.pode_autorizar_pagamento'):
@@ -866,6 +869,7 @@ def autorizar_pagamento(request):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@group_required('ORDENADOR(A) DE DESPESA')
 def recusar_autorizacao_view(request, pk):
     processo = get_object_or_404(Processo, id=pk)
 
@@ -900,6 +904,7 @@ def recusar_autorizacao_view(request, pk):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@group_required('FUNCIONÁRIO(A) CONTAS A PAGAR')
 def painel_conferencia_view(request):
     processos_pagos = Processo.objects.filter(
         status__status_choice__iexact='PAGO - EM CONFERÊNCIA'
@@ -939,6 +944,7 @@ def painel_conferencia_view(request):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@group_required('FUNCIONÁRIO(A) CONTAS A PAGAR')
 def aprovar_conferencia_view(request, pk):
     messages.error(request, 'A aprovação direta foi desativada. Abra o processo para realizar a conferência.')
     return redirect('painel_conferencia')
@@ -946,6 +952,7 @@ def aprovar_conferencia_view(request, pk):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@group_required('FUNCIONÁRIO(A) CONTAS A PAGAR')
 def iniciar_conferencia_view(request):
     """POST: store selected process IDs in session queue, redirect to first process."""
     if request.method == 'POST':
@@ -1001,6 +1008,7 @@ def _build_history_record(record, modelo_label):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@group_required('FUNCIONÁRIO(A) CONTAS A PAGAR')
 def conferencia_processo_view(request, pk):
     """Detailed conferência view for reviewing a single process."""
     HISTORY_TYPE_LABELS = {'+': 'Criação', '~': 'Alteração', '-': 'Exclusão'}
@@ -1137,6 +1145,7 @@ def conferencia_processo_view(request, pk):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@group_required('CONTADOR(A)')
 def painel_contabilizacao_view(request):
     processos = Processo.objects.filter(status__status_choice__iexact='PAGO - A CONTABILIZAR').order_by('data_pagamento')
     context = {
@@ -1150,6 +1159,7 @@ def painel_contabilizacao_view(request):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@group_required('CONTADOR(A)')
 def iniciar_contabilizacao_view(request):
     """POST: store selected process IDs in session queue, redirect to first process."""
     if request.method == 'POST':
@@ -1176,6 +1186,7 @@ def iniciar_contabilizacao_view(request):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@group_required('CONTADOR(A)')
 def contabilizacao_processo_view(request, pk):
     """Detailed contabilização view for reviewing a single process."""
     HISTORY_TYPE_LABELS = {'+': 'Criação', '~': 'Alteração', '-': 'Exclusão'}
@@ -1334,6 +1345,7 @@ def contabilizacao_processo_view(request, pk):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@group_required('CONTADOR(A)')
 def aprovar_contabilizacao_view(request, pk):
     if request.method == 'POST':
         if not request.user.has_perm('processos.pode_contabilizar'):
@@ -1351,6 +1363,7 @@ def aprovar_contabilizacao_view(request, pk):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@group_required('CONTADOR(A)')
 def recusar_contabilizacao_view(request, pk):
     processo = get_object_or_404(Processo, id=pk)
 
@@ -1385,6 +1398,7 @@ def recusar_contabilizacao_view(request, pk):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@group_required('CONSELHEIRO(A) FISCAL')
 def painel_conselho_view(request):
     processos = Processo.objects.filter(status__status_choice__iexact='CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL').order_by('data_pagamento')
     context = {
@@ -1397,6 +1411,7 @@ def painel_conselho_view(request):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@group_required('CONSELHEIRO(A) FISCAL')
 def iniciar_conselho_view(request):
     """POST: store selected process IDs in session queue, redirect to first process."""
     if request.method == 'POST':
@@ -1423,6 +1438,7 @@ def iniciar_conselho_view(request):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@group_required('CONSELHEIRO(A) FISCAL')
 def conselho_processo_view(request, pk):
     """Completely readonly view for Conselho Fiscal — can only approve or reject."""
     HISTORY_TYPE_LABELS = {'+': 'Criação', '~': 'Alteração', '-': 'Exclusão'}
@@ -1541,6 +1557,7 @@ def conselho_processo_view(request, pk):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@group_required('CONSELHEIRO(A) FISCAL')
 def aprovar_conselho_view(request, pk):
     if request.method == 'POST':
         if not request.user.has_perm('processos.pode_auditar_conselho'):
@@ -1558,6 +1575,7 @@ def aprovar_conselho_view(request, pk):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@group_required('CONSELHEIRO(A) FISCAL')
 def recusar_conselho_view(request, pk):
     processo = get_object_or_404(Processo, id=pk)
 
@@ -1592,6 +1610,7 @@ def recusar_conselho_view(request, pk):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@group_required('FUNCIONÁRIO(A) CONTAS A PAGAR')
 def painel_arquivamento_view(request):
     processos_pendentes = Processo.objects.filter(
         status__status_choice__iexact='APROVADO - PENDENTE ARQUIVAMENTO'
@@ -1615,6 +1634,7 @@ def painel_arquivamento_view(request):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@group_required('FUNCIONÁRIO(A) CONTAS A PAGAR')
 def arquivar_processo_view(request, pk):
     if request.method != 'POST':
         return redirect('painel_arquivamento')
