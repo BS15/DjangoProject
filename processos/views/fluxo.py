@@ -16,7 +16,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.db.models import Count, Q, F, Sum, Exists, OuterRef
 from pypdf import PdfWriter
 from ..forms import ProcessoForm, DocumentoFormSet, DocumentoFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet, DevolucaoForm
@@ -1612,8 +1612,10 @@ def gerenciar_reunioes_view(request):
                     data_reuniao=data_reuniao,
                 )
                 messages.success(request, f'{numero}ª Reunião criada com sucesso.')
-            except (ValueError, Exception) as e:
-                messages.error(request, f'Erro ao criar reunião: {e}')
+            except ValueError:
+                messages.error(request, 'Número da reunião inválido.')
+            except IntegrityError as e:
+                messages.error(request, f'Erro de integridade ao criar reunião: {e}')
         else:
             messages.warning(request, 'Preencha o número e o trimestre de referência.')
         return redirect('gerenciar_reunioes')
