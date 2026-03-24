@@ -2,6 +2,7 @@ import csv
 import io
 
 from processos.models import CargosFuncoes, ContasBancarias, Credor, ContaFixa, Grupos
+from processos.models import CargosFuncoes, Credor, ContaFixa
 
 
 def importar_credores_csv(csv_file):
@@ -29,12 +30,9 @@ def importar_credores_csv(csv_file):
             cargo_nome = row.get('CARGO_FUNCAO', '').strip()
 
             if grupo_nome:
-                grupo_obj, _ = Grupos.objects.get_or_create(grupo=grupo_nome)
-                defaults['grupo'] = grupo_obj
-
                 if cargo_nome:
                     cargo_obj, _ = CargosFuncoes.objects.get_or_create(
-                        grupo=grupo_obj,
+                        grupo=grupo_nome,
                         cargo_funcao=cargo_nome,
                     )
                     defaults['cargo_funcao'] = cargo_obj
