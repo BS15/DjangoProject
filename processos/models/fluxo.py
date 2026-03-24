@@ -249,7 +249,7 @@ class Processo(models.Model):
         self.status = novo_status
         self.save(update_fields=['status'])
 
-        if novo_status_str.upper() == 'PAGO':
+        if novo_status_str.upper() == 'PAGO - EM CONFERÊNCIA':
             from processos.models.verbas import StatusChoicesVerbasIndenizatorias
             status_paga, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
                 status_choice='PAGA'
