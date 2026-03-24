@@ -194,30 +194,41 @@ def api_salvar_nota_fiscal(request, processo_pk, nota_pk):
 
 def painel_impostos(request):
     visao = request.GET.get('visao', 'processos')
+    status_agrupamento = request.GET.get('status_agrupamento', 'pendentes')
 
     if visao == 'processos':
-        queryset_base = Processo.objects.filter(
-            notas_fiscais__retencoes__isnull=False,
-            notas_fiscais__retencoes__processo_pagamento__isnull=True
-        ).distinct()
+        queryset_base = Processo.objects.filter(notas_fiscais__retencoes__isnull=False).distinct()
+        if status_agrupamento == 'pendentes':
+            queryset_base = queryset_base.filter(notas_fiscais__retencoes__processo_pagamento__isnull=True)
+        elif status_agrupamento == 'agrupados':
+            queryset_base = queryset_base.filter(notas_fiscais__retencoes__processo_pagamento__isnull=False)
+        # 'todos': no extra filter applied
         meu_filtro = RetencaoProcessoFilter(request.GET, queryset=queryset_base)
         itens = meu_filtro.qs.prefetch_related('notas_fiscais__retencoes__codigo', 'notas_fiscais__retencoes__status')
 
     elif visao == 'notas':
-        queryset_base = DocumentoFiscal.objects.filter(
-            retencoes__isnull=False,
-            retencoes__processo_pagamento__isnull=True
-        ).distinct()
+        queryset_base = DocumentoFiscal.objects.filter(retencoes__isnull=False).distinct()
+        if status_agrupamento == 'pendentes':
+            queryset_base = queryset_base.filter(retencoes__processo_pagamento__isnull=True)
+        elif status_agrupamento == 'agrupados':
+            queryset_base = queryset_base.filter(retencoes__processo_pagamento__isnull=False)
+        # 'todos': no extra filter applied
         meu_filtro = RetencaoNotaFilter(request.GET, queryset=queryset_base)
         itens = meu_filtro.qs.prefetch_related('retencoes__codigo', 'retencoes__status', 'processo')
 
     else:
-        queryset_base = RetencaoImposto.objects.filter(processo_pagamento__isnull=True).order_by('-id')
+        queryset_base = RetencaoImposto.objects.all().order_by('-id')
+        if status_agrupamento == 'pendentes':
+            queryset_base = queryset_base.filter(processo_pagamento__isnull=True)
+        elif status_agrupamento == 'agrupados':
+            queryset_base = queryset_base.filter(processo_pagamento__isnull=False)
+        # 'todos': no extra filter applied
         meu_filtro = RetencaoIndividualFilter(request.GET, queryset=queryset_base)
         itens = meu_filtro.qs.select_related('codigo', 'status', 'nota_fiscal', 'nota_fiscal__processo')
 
     context = {
         'visao': visao,
+        'status_agrupamento': status_agrupamento,
         'meu_filtro': meu_filtro,
         'itens': itens,
     }
