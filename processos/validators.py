@@ -92,7 +92,7 @@ def verificar_turnpike(processo, status_anterior, status_novo):
     # Rule 1: A EMPENHAR → AGUARDANDO LIQUIDAÇÃO                          #
     # Requires at least one "DOCUMENTOS ORÇAMENTÁRIOS" document attached. #
     # ------------------------------------------------------------------ #
-    if anterior == 'A EMPENHAR' and novo.startswith('AGUARDANDO LIQUIDAÇÃO'):
+    if anterior.startswith('A EMPENHAR') and novo.startswith('AGUARDANDO LIQUIDAÇÃO'):
         tem_doc_orcamentario = processo.documentos.filter(
             tipo__tipo_de_documento__iexact='DOCUMENTOS ORÇAMENTÁRIOS'
         ).exists()
@@ -106,7 +106,7 @@ def verificar_turnpike(processo, status_anterior, status_novo):
     # Rule 2: AGUARDANDO LIQUIDAÇÃO → A PAGAR - PENDENTE AUTORIZAÇÃO      #
     # All documentos fiscais linked to the process must have atestada=True.#
     # ------------------------------------------------------------------ #
-    if anterior.startswith('AGUARDANDO LIQUIDAÇÃO') and novo == 'A PAGAR - PENDENTE AUTORIZAÇÃO':
+    if anterior.startswith('AGUARDANDO LIQUIDAÇÃO') and novo.startswith('A PAGAR - PENDENTE AUTORIZAÇÃO'):
         notas = processo.notas_fiscais.all()
         if not notas.exists():
             erros.append(
@@ -130,7 +130,7 @@ def verificar_turnpike(processo, status_anterior, status_novo):
     # Also validates that the sum of comprovantes matches valor_liquido    #
     # (skipped for Suprimento de Fundos processes).                        #
     # ------------------------------------------------------------------ #
-    if anterior == 'LANÇADO - AGUARDANDO COMPROVANTE' and novo == 'PAGO - EM CONFERÊNCIA':
+    if anterior.startswith('LANÇADO') and novo.startswith('PAGO'):
         is_suprimento = (
             processo.tipo_pagamento and
             'SUPRIMENTO' in processo.tipo_pagamento.tipo_de_pagamento.upper()

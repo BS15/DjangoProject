@@ -721,7 +721,7 @@ def a_empenhar_view(request):
                     # Turnpike: check requirements before advancing status
                     processo.save(update_fields=['n_nota_empenho', 'data_empenho'])
                     try:
-                        processo.avancar_status('AGUARDANDO LIQUIDAÇÃO')
+                        processo.avancar_status('AGUARDANDO LIQUIDAÇÃO', usuario=request.user)
                     except ValidationError as ve:
                         raise ValueError(str(ve))
 
@@ -770,7 +770,7 @@ def avancar_para_pagamento_view(request, pk):
 
     try:
         with transaction.atomic():
-            processo.avancar_status('A PAGAR - PENDENTE AUTORIZAÇÃO')
+            processo.avancar_status('A PAGAR - PENDENTE AUTORIZAÇÃO', usuario=request.user)
 
         messages.success(
             request,
@@ -1082,7 +1082,7 @@ def conferencia_processo_view(request, pk):
                     pendencia_formset.save()
 
                     if action == 'confirmar':
-                        processo.avancar_status('PAGO - A CONTABILIZAR')
+                        processo.avancar_status('PAGO - A CONTABILIZAR', usuario=request.user)
                         messages.success(
                             request,
                             f'Processo #{processo.id} confirmado na conferência e enviado para Contabilização!'
@@ -1237,7 +1237,7 @@ def contabilizacao_processo_view(request, pk):
                         pendencia.status = status_pendencia
                         pendencia.save()
 
-                        processo.avancar_status('PAGO - EM CONFERÊNCIA')
+                        processo.avancar_status('PAGO - EM CONFERÊNCIA', usuario=request.user)
 
                     messages.error(
                         request,
@@ -1283,7 +1283,7 @@ def contabilizacao_processo_view(request, pk):
                     pendencia_formset.save()
 
                     if action == 'aprovar':
-                        processo.avancar_status('CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL')
+                        processo.avancar_status('CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL', usuario=request.user)
                         messages.success(
                             request,
                             f'Processo #{processo.id} contabilizado e enviado ao Conselho Fiscal!'
@@ -1482,7 +1482,7 @@ def conselho_processo_view(request, pk):
                 raise PermissionDenied
 
             if action == 'aprovar':
-                processo.avancar_status('APROVADO - PENDENTE ARQUIVAMENTO')
+                processo.avancar_status('APROVADO - PENDENTE ARQUIVAMENTO', usuario=request.user)
                 messages.success(
                     request,
                     f'Processo #{processo.id} aprovado pelo Conselho e liberado para arquivamento!'
@@ -1505,7 +1505,7 @@ def conselho_processo_view(request, pk):
                         pendencia.status = status_pendencia
                         pendencia.save()
 
-                        processo.avancar_status('PAGO - A CONTABILIZAR')
+                        processo.avancar_status('PAGO - A CONTABILIZAR', usuario=request.user)
 
                     messages.error(
                         request,
@@ -1797,7 +1797,7 @@ def arquivar_processo_view(request, pk):
     with transaction.atomic():
         processo.arquivo_final.save(nome_arquivo, ContentFile(pdf_bytes), save=False)
         processo.save(update_fields=['arquivo_final'])
-        processo.avancar_status('ARQUIVADO')
+        processo.avancar_status('ARQUIVADO', usuario=request.user)
 
     messages.success(request, f'Processo #{processo.id} arquivado definitivamente com sucesso!')
     return redirect('painel_arquivamento')
