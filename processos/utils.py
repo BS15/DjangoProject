@@ -853,12 +853,9 @@ def confirmar_diarias_lote(preview_items, usuario_logado):
                 {"email": nova_diaria.proponente.email, "action": "SIGN"},
             ]
             api_data = enviar_documento_para_assinatura(
-                pdf_bytes, f"SCD_{nova_diaria.numero_siscac}", signatarios
+                pdf_bytes, f"SCD_{nova_diaria.numero_siscac}", signatarios,
+                entidade=nova_diaria, tipo_documento='SCD'
             )
-            nova_diaria.autentique_id = api_data['id']
-            nova_diaria.autentique_url = api_data['url']
-            nova_diaria.status_assinatura = 'PENDENTE'
-            nova_diaria.save(update_fields=['autentique_id', 'autentique_url', 'status_assinatura'])
         except Exception as e:
             resultados['erros'].append(
                 f"Diária {nova_diaria.numero_siscac or nova_diaria.id}: SCD não enviado para assinatura ({e})"
