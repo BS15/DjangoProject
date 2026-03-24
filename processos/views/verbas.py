@@ -1,7 +1,9 @@
 import csv
+import logging
 import os
 from datetime import date, timedelta
 from decimal import Decimal
+from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
@@ -20,6 +22,8 @@ from ..filters import DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter
 from ..utils import sync_diarias_siscac_csv, importar_diarias_lote, preview_diarias_lote, confirmar_diarias_lote
 from ..pdf_engine import gerar_documento_pdf
 from ..autentique_service import enviar_documento_para_assinatura, verificar_e_baixar_documento
+
+logger = logging.getLogger(__name__)
 
 _EXTENSOES_DOCUMENTO_PERMITIDAS = {'.pdf', '.jpg', '.jpeg', '.png'}
 
@@ -59,6 +63,23 @@ def add_diaria_view(request):
             nova_diaria.status = status_solicitada
             nova_diaria.autorizada = False
             nova_diaria.save()
+
+            try:
+                pdf_bytes = gerar_documento_pdf('scd', nova_diaria)
+                signatarios = [
+                    {"email": nova_diaria.beneficiario.email, "action": "SIGN"},
+                    {"email": nova_diaria.proponente.email, "action": "SIGN"},
+                ]
+                api_data = enviar_documento_para_assinatura(
+                    pdf_bytes, f"SCD_{nova_diaria.numero_siscac}", signatarios
+                )
+                nova_diaria.autentique_id = api_data['id']
+                nova_diaria.autentique_url = api_data['url']
+                nova_diaria.status_assinatura = 'PENDENTE'
+                nova_diaria.save(update_fields=['autentique_id', 'autentique_url', 'status_assinatura'])
+            except Exception as e:
+                messages.warning(request, f"Diária cadastrada, mas falha ao enviar SCD para assinatura: {str(e)}")
+
             arquivo = request.FILES.get('documento_anexo')
             tipo_id = request.POST.get('tipo_documento_anexo')
             if arquivo and tipo_id:
@@ -213,6 +234,31 @@ def agrupar_verbas_view(request, tipo_verba):
 
     for item in itens:
         item.processo = novo_processo
+        if isinstance(item, Diaria):
+            status_enviada, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
+                status_choice='ENVIADA PARA PAGAMENTO'
+            )
+            item.status = status_enviada
+            try:
+                pdf_bytes = gerar_documento_pdf('pcd', item)
+                email_presidente = getattr(settings, 'PRESIDENTE_EMAIL', None)
+                if not email_presidente:
+                    logger.warning(
+                        "PRESIDENTE_EMAIL não configurado. Usando endereço padrão para assinatura de PCD."
+                    )
+                    email_presidente = 'presidente@creci-sc.gov.br'
+                signatarios = [
+                    {"email": item.beneficiario.email, "action": "SIGN"},
+                    {"email": email_presidente, "action": "SIGN"},
+                ]
+                api_data = enviar_documento_para_assinatura(
+                    pdf_bytes, f"PCD_{item.numero_siscac}", signatarios
+                )
+                item.autentique_id = api_data['id']
+                item.autentique_url = api_data['url']
+                item.status_assinatura = 'PENDENTE'
+            except Exception as e:
+                messages.warning(request, f"PCD para diária {item.numero_siscac} não enviado: {str(e)}")
         item.save()
 
     messages.success(request, f"Processo #{novo_processo.id} gerado com sucesso!")
@@ -374,22 +420,10 @@ def aprovar_diaria_view(request, diaria_id):
         messages.error(request, 'Você não tem permissão para aprovar esta diária.')
         return redirect('painel_autorizacao_diarias')
     status_aprovada, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-        status_choice='APROVADA POR PROPONENTE'
+        status_choice='APROVADA'
     )
     diaria.status = status_aprovada
     diaria.autorizada = True
-    diaria.save()
-
-    pdf_bytes = gerar_documento_pdf('pcd', diaria)
-    signatarios = [{"email": diaria.beneficiario.email, "action": "SIGN"}]
-    try:
-        nome_doc = f"PCD_{diaria.numero_siscac}_{diaria.id}"
-        api_data = enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios)
-        diaria.autentique_id = api_data['id']
-        diaria.autentique_url = api_data['url']
-        diaria.status_assinatura = 'PENDENTE'
-    except Exception as e:
-        messages.warning(request, f"Diária aprovada, mas falha ao enviar para o Autentique: {str(e)}")
     diaria.save()
 
     messages.success(request, 'Diária aprovada com sucesso.')

@@ -209,11 +209,10 @@ class CredorForm(forms.ModelForm):
 class DiariaForm(forms.ModelForm):
     class Meta:
         model = Diaria
-        fields = ['numero_siscac', 'processo', 'status', 'beneficiario', 'proponente', 'tipo_solicitacao', 'data_saida', 'data_retorno', 'cidade_origem', 'cidade_destino', 'objetivo', 'meio_de_transporte', 'quantidade_diarias', 'valor_total']
+        fields = ['numero_siscac', 'processo', 'beneficiario', 'proponente', 'tipo_solicitacao', 'data_saida', 'data_retorno', 'cidade_origem', 'cidade_destino', 'objetivo', 'meio_de_transporte', 'quantidade_diarias', 'valor_total']
         widgets = {
             'numero_siscac': forms.TextInput(attrs={'class': 'form-control'}),
             'processo': forms.Select(attrs={'class': 'form-select'}),
-            'status': forms.Select(attrs={'class': 'form-select'}),
             'beneficiario': forms.Select(attrs={'class': 'form-select'}),
             'proponente': forms.Select(attrs={'class': 'form-select'}),
             'tipo_solicitacao': forms.Select(attrs={'class': 'form-select'}),

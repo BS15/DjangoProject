@@ -247,6 +247,15 @@ class Processo(models.Model):
         self.status = novo_status
         self.save(update_fields=['status'])
 
+        if novo_status_str.upper() == 'PAGO':
+            from processos.models.verbas import StatusChoicesVerbasIndenizatorias
+            status_paga, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
+                status_choice='PAGA'
+            )
+            for diaria in self.diarias.all():
+                diaria.status = status_paga
+                diaria.save(update_fields=['status'])
+
 
 # 2. DOCUMENTO DO PROCESSO
 class DocumentoProcesso(DocumentoBase):

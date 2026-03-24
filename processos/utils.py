@@ -831,7 +831,7 @@ def confirmar_diarias_lote(preview_items, usuario_logado):
             )
             continue
 
-        Diaria.objects.create(
+        nova_diaria = Diaria.objects.create(
             beneficiario=credor,
             proponente=usuario_logado,
             data_saida=datetime.strptime(item['data_saida'], '%Y-%m-%d').date(),
@@ -843,6 +843,27 @@ def confirmar_diarias_lote(preview_items, usuario_logado):
             status=status_solicitada,
             autorizada=False,
         )
+
+        try:
+            from .pdf_engine import gerar_documento_pdf
+            from .autentique_service import enviar_documento_para_assinatura
+            pdf_bytes = gerar_documento_pdf('scd', nova_diaria)
+            signatarios = [
+                {"email": nova_diaria.beneficiario.email, "action": "SIGN"},
+                {"email": nova_diaria.proponente.email, "action": "SIGN"},
+            ]
+            api_data = enviar_documento_para_assinatura(
+                pdf_bytes, f"SCD_{nova_diaria.numero_siscac}", signatarios
+            )
+            nova_diaria.autentique_id = api_data['id']
+            nova_diaria.autentique_url = api_data['url']
+            nova_diaria.status_assinatura = 'PENDENTE'
+            nova_diaria.save(update_fields=['autentique_id', 'autentique_url', 'status_assinatura'])
+        except Exception as e:
+            resultados['erros'].append(
+                f"Diária {nova_diaria.numero_siscac or nova_diaria.id}: SCD não enviado para assinatura ({e})"
+            )
+
         resultados['sucessos'] += 1
 
     return resultados
