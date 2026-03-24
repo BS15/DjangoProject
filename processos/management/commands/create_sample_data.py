@@ -10,7 +10,6 @@ from processos.models import (
     ContasBancarias,
     Credor,
     FormasDePagamento,
-    Grupos,
     Processo,
     StatusChoicesProcesso,
     TagChoices,
@@ -155,15 +154,12 @@ class Command(BaseCommand):
         tipo_pag_list = list(tipo_pag_qs)
 
         # ------------------------------------------------------------------
-        # 2. Grupos & CargosFuncoes
+        # 2. CargosFuncoes
         # ------------------------------------------------------------------
-        grupo_map = {}
         for nome_grupo in GRUPOS:
-            grupo, _ = Grupos.objects.get_or_create(grupo=nome_grupo)
-            grupo_map[nome_grupo] = grupo
             for cargo_nome in CARGOS_POR_GRUPO[nome_grupo]:
                 CargosFuncoes.objects.get_or_create(
-                    grupo=grupo, cargo_funcao=cargo_nome
+                    grupo=nome_grupo, cargo_funcao=cargo_nome
                 )
 
         # ------------------------------------------------------------------
@@ -185,16 +181,16 @@ class Command(BaseCommand):
         # ------------------------------------------------------------------
         self.stdout.write(f"  Creating {n_credores} credores…")
 
-        grupos_list = list(Grupos.objects.all())
+        grupos_list = GRUPOS
 
         credores_pj = []
         credores_pf = []
 
         for i in range(n_credores):
             tipo = "PF" if i % 3 != 0 else "PJ"  # ~2/3 PF, 1/3 PJ
-            grupo = random.choice(grupos_list)
+            nome_grupo = random.choice(grupos_list)
             cargo_choices = list(
-                CargosFuncoes.objects.filter(grupo=grupo)
+                CargosFuncoes.objects.filter(grupo=nome_grupo)
             )
             cargo = random.choice(cargo_choices) if cargo_choices else None
             conta = random.choice(contas)
@@ -211,7 +207,6 @@ class Command(BaseCommand):
                 cpf_cnpj=cpf_cnpj,
                 conta=conta,
                 chave_pix=fake.email(),
-                grupo=grupo,
                 cargo_funcao=cargo,
                 telefone=fake.phone_number()[:20],
                 email=fake.email(),
