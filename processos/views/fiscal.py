@@ -275,7 +275,7 @@ def api_fatiar_comprovantes(request):
     return JsonResponse({'sucesso': False, 'erro': 'Arquivo não enviado.'})
 
 
-@transaction.atomic
+@login_required
 def api_vincular_comprovantes(request):
     if request.method == 'POST':
         try:
@@ -305,54 +305,66 @@ def api_vincular_comprovantes(request):
                 defaults={'tipo_de_documento': 'Comprovante de Pagamento'}
             )
 
+            # Collect temp paths to delete only after a successful DB transaction
+            temp_paths_to_delete = []
             data_pagamento_processo = None
-            for idx, comp in enumerate(comprovantes):
-                temp_path = comp.get('temp_path')
-                if not temp_path:
-                    continue
 
-                valor_pago = comp.get('valor_pago')
-                credor_nome = comp.get('credor_nome') or ''
-                data_pagamento = comp.get('data_pagamento') or None
-                numero_comprovante = comp.get('numero_comprovante') or None
-
-                # Use the first available payment date to update the process
-                if data_pagamento and not data_pagamento_processo:
-                    data_pagamento_processo = data_pagamento
-
-                if default_storage.exists(temp_path):
-                    with default_storage.open(temp_path) as temp_file:
-                        conteudo_arquivo = temp_file.read()
-
-                    nome_arquivo = f"Comprovante_Proc_{processo.id}_{idx + 1}.pdf"
-
-                    DocumentoProcesso.objects.create(
-                        processo=processo,
-                        arquivo=ContentFile(conteudo_arquivo, name=nome_arquivo),
-                        tipo=tipo_comprovante,
-                        ordem=99
-                    )
-
-                    ComprovanteDePagamento.objects.create(
-                        processo=processo,
-                        credor_nome=credor_nome,
-                        valor_pago=valor_pago,
-                        data_pagamento=data_pagamento,
-                        numero_comprovante=numero_comprovante,
-                        arquivo=ContentFile(conteudo_arquivo, name=nome_arquivo),
-                    )
-
-                    default_storage.delete(temp_path)
-
-            # Advance status via avancar_status (includes turnpike validation)
             try:
-                processo.avancar_status('PAGO - EM CONFERÊNCIA')
+                with transaction.atomic():
+                    for idx, comp in enumerate(comprovantes):
+                        temp_path = comp.get('temp_path')
+                        if not temp_path:
+                            continue
+
+                        valor_pago = comp.get('valor_pago')
+                        credor_nome = comp.get('credor_nome') or ''
+                        data_pagamento = comp.get('data_pagamento') or None
+                        numero_comprovante = comp.get('numero_comprovante') or None
+
+                        # Use the first available payment date to update the process
+                        if data_pagamento and not data_pagamento_processo:
+                            data_pagamento_processo = data_pagamento
+
+                        if default_storage.exists(temp_path):
+                            with default_storage.open(temp_path) as temp_file:
+                                conteudo_arquivo = temp_file.read()
+
+                            nome_arquivo = f"Comprovante_Proc_{processo.id}_{idx + 1}.pdf"
+
+                            DocumentoProcesso.objects.create(
+                                processo=processo,
+                                arquivo=ContentFile(conteudo_arquivo, name=nome_arquivo),
+                                tipo=tipo_comprovante,
+                                ordem=99
+                            )
+
+                            ComprovanteDePagamento.objects.create(
+                                processo=processo,
+                                credor_nome=credor_nome,
+                                valor_pago=valor_pago,
+                                data_pagamento=data_pagamento,
+                                numero_comprovante=numero_comprovante,
+                                arquivo=ContentFile(conteudo_arquivo, name=nome_arquivo),
+                            )
+
+                            temp_paths_to_delete.append(temp_path)
+
+                    # Advance status via avancar_status (includes turnpike validation)
+                    processo.avancar_status('PAGO - EM CONFERÊNCIA', usuario=request.user)
+
+                    if data_pagamento_processo:
+                        processo.data_pagamento = data_pagamento_processo
+                        processo.save(update_fields=['data_pagamento'])
+
             except ValidationError as ve:
                 return JsonResponse({'sucesso': False, 'erro': ' '.join(ve.messages)})
 
-            if data_pagamento_processo:
-                processo.data_pagamento = data_pagamento_processo
-                processo.save(update_fields=['data_pagamento'])
+            # Delete temporary files only after the transaction has committed successfully
+            for temp_path in temp_paths_to_delete:
+                try:
+                    default_storage.delete(temp_path)
+                except Exception:
+                    pass
 
             return JsonResponse({
                 'sucesso': True,

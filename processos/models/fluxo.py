@@ -235,28 +235,34 @@ class Processo(models.Model):
         total_devolvido = self.devolucoes.aggregate(total=Sum('valor_devolvido'))['total'] or 0
         return self.valor_liquido - total_devolvido
 
-    def avancar_status(self, novo_status_str):
+    def avancar_status(self, novo_status_str, usuario=None):
         from django.core.exceptions import ValidationError
         from processos.validators import verificar_turnpike
         status_anterior = self.status.status_choice if self.status else ''
         erros = verificar_turnpike(self, status_anterior, novo_status_str)
         if erros:
-            raise ValidationError(' '.join(erros))
+            raise ValidationError(erros)
         novo_status, _ = StatusChoicesProcesso.objects.get_or_create(
             status_choice__iexact=novo_status_str,
             defaults={'status_choice': novo_status_str}
         )
         self.status = novo_status
+
+        if usuario:
+            self._history_user = usuario
+
         self.save(update_fields=['status'])
 
-        if novo_status_str.upper() == 'PAGO':
-        if novo_status_str.upper() == 'PAGO - EM CONFERÊNCIA':
+        if novo_status_str.upper().startswith('PAGO'):
             from processos.models.verbas import StatusChoicesVerbasIndenizatorias
             status_paga, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
                 status_choice='PAGA'
             )
             for diaria in self.diarias.all():
-                diaria.avancar_status('PAGA')
+                diaria.status = status_paga
+                if usuario:
+                    diaria._history_user = usuario
+                diaria.save(update_fields=['status'])
 
 
 # 2. DOCUMENTO DO PROCESSO
