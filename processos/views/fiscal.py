@@ -74,6 +74,7 @@ def api_toggle_documento_fiscal(request, processo_pk, documento_pk):
         })
 
 
+@transaction.atomic
 def api_salvar_nota_fiscal(request, processo_pk, nota_pk):
     """AJAX: Save nota fiscal details (retencoes and ateste pendencia)."""
     if request.method != 'POST':
@@ -155,8 +156,12 @@ def api_salvar_nota_fiscal(request, processo_pk, nota_pk):
                     valor=imp_val,
                     beneficiario_id=beneficiario_id,
                 )
-            except (ValueError, TypeError) as exc:
-                print(f'Erro ao criar retenção: {exc}')
+            except (ValueError, TypeError, InvalidOperation) as exc:
+                # Fail loudly so the transaction rolls back and the user knows to fix the data
+                return JsonResponse({
+                    'status': 'error',
+                    'error': f'Erro ao processar o imposto {c}: Verifique se os valores numéricos são válidos.'
+                }, status=400)
 
     # Recalculate valor_liquido server-side as valor_bruto minus sum of retencoes
     total_retencoes = nota.retencoes.aggregate(total=Sum('valor'))['total'] or 0
@@ -191,17 +196,23 @@ def painel_impostos(request):
     visao = request.GET.get('visao', 'processos')
 
     if visao == 'processos':
-        queryset_base = Processo.objects.filter(notas_fiscais__retencoes__isnull=False).distinct()
+        queryset_base = Processo.objects.filter(
+            notas_fiscais__retencoes__isnull=False,
+            notas_fiscais__retencoes__processo_pagamento__isnull=True
+        ).distinct()
         meu_filtro = RetencaoProcessoFilter(request.GET, queryset=queryset_base)
         itens = meu_filtro.qs.prefetch_related('notas_fiscais__retencoes__codigo', 'notas_fiscais__retencoes__status')
 
     elif visao == 'notas':
-        queryset_base = DocumentoFiscal.objects.filter(retencoes__isnull=False).distinct()
+        queryset_base = DocumentoFiscal.objects.filter(
+            retencoes__isnull=False,
+            retencoes__processo_pagamento__isnull=True
+        ).distinct()
         meu_filtro = RetencaoNotaFilter(request.GET, queryset=queryset_base)
         itens = meu_filtro.qs.prefetch_related('retencoes__codigo', 'retencoes__status', 'processo')
 
     else:
-        queryset_base = RetencaoImposto.objects.all().order_by('-id')
+        queryset_base = RetencaoImposto.objects.filter(processo_pagamento__isnull=True).order_by('-id')
         meu_filtro = RetencaoIndividualFilter(request.GET, queryset=queryset_base)
         itens = meu_filtro.qs.select_related('codigo', 'status', 'nota_fiscal', 'nota_fiscal__processo')
 
@@ -356,6 +367,11 @@ def api_vincular_comprovantes(request):
                         processo.data_pagamento = data_pagamento_processo
                         processo.save(update_fields=['data_pagamento'])
 
+                        # Wake up taxes to recalculate their EFD-Reinf competence based on actual payment
+                        for nota in processo.notas_fiscais.all():
+                            for retencao in nota.retencoes.filter(codigo__regra_competencia='pagamento'):
+                                retencao.save(update_fields=['competencia'])  # save() triggers the internal date logic
+
             except ValidationError as ve:
                 return JsonResponse({'sucesso': False, 'erro': ' '.join(ve.messages)})
 
@@ -428,6 +444,8 @@ def agrupar_impostos_view(request):
         status=status_padrao,
         tipo_pagamento=tipo_pagamento_impostos
     )
+
+    retencoes.update(processo_pagamento=novo_processo)
 
     messages.success(request, f"Processo #{novo_processo.id} para recolhimento gerado com sucesso!")
     return redirect('editar_processo', pk=novo_processo.id)

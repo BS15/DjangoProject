@@ -129,6 +129,15 @@ class RetencaoImposto(models.Model):
     codigo = models.ForeignKey('CodigosImposto', on_delete=models.PROTECT)
     valor = models.DecimalField("Valor Retido", max_digits=12, decimal_places=2)
     status = models.ForeignKey('StatusChoicesRetencoes', on_delete=models.PROTECT, blank=True, null=True)
+    processo_pagamento = models.ForeignKey(
+        'Processo',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='impostos_recolhidos',
+        verbose_name="Processo de Recolhimento",
+        help_text="O Processo agrupado gerado para pagar esta retenção ao órgão arrecadador."
+    )
 
     competencia = models.DateField(
         "Mês de Competência",
