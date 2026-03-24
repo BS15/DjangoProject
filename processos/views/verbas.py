@@ -58,12 +58,9 @@ def add_diaria_view(request):
         form = DiariaForm(request.POST)
         if form.is_valid():
             nova_diaria = form.save(commit=False)
-            status_solicitada, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-                status_choice='SOLICITADA'
-            )
-            nova_diaria.status = status_solicitada
             nova_diaria.autorizada = False
             nova_diaria.save()
+            nova_diaria.avancar_status('SOLICITADA')
 
             try:
                 pdf_bytes = gerar_documento_pdf('scd', nova_diaria)
@@ -233,10 +230,7 @@ def agrupar_verbas_view(request, tipo_verba):
     for item in itens:
         item.processo = novo_processo
         if isinstance(item, Diaria):
-            status_enviada, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-                status_choice='ENVIADA PARA PAGAMENTO'
-            )
-            item.status = status_enviada
+            item.avancar_status('ENVIADA PARA PAGAMENTO')
             try:
                 pdf_bytes = gerar_documento_pdf('pcd', item)
                 email_presidente = getattr(settings, 'PRESIDENTE_EMAIL', None)
@@ -415,12 +409,9 @@ def aprovar_diaria_view(request, diaria_id):
     if request.user != diaria.proponente and not is_manager:
         messages.error(request, 'Você não tem permissão para aprovar esta diária.')
         return redirect('painel_autorizacao_diarias')
-    status_aprovada, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-        status_choice='APROVADA'
-    )
-    diaria.status = status_aprovada
+    diaria.avancar_status('APROVADA')
     diaria.autorizada = True
-    diaria.save()
+    diaria.save(update_fields=['autorizada'])
 
     messages.success(request, 'Diária aprovada com sucesso.')
     return redirect('painel_autorizacao_diarias')

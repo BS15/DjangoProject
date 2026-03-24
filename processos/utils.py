@@ -721,7 +721,7 @@ def importar_diarias_lote(csv_file, usuario_logado):
     import io
     from datetime import datetime
     from decimal import Decimal, InvalidOperation
-    from .models import Diaria, Credor, StatusChoicesVerbasIndenizatorias
+    from .models import Diaria, Credor
 
     resultados = {'sucessos': 0, 'erros': []}
 
@@ -743,10 +743,6 @@ def importar_diarias_lote(csv_file, usuario_logado):
             f"Cabeçalho inválido. Colunas ausentes: {', '.join(sorted(faltando))}."
         )
         return resultados
-
-    status_solicitada, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-        status_choice='SOLICITADA'
-    )
 
     for row in reader:
         nome_planilha = row.get('NOME_BENEFICIARIO', '').strip()
@@ -790,7 +786,7 @@ def importar_diarias_lote(csv_file, usuario_logado):
             )
             continue
 
-        Diaria.objects.create(
+        nova_diaria = Diaria.objects.create(
             beneficiario=credor,
             proponente=usuario_logado,
             data_saida=data_saida_parsed,
@@ -799,9 +795,9 @@ def importar_diarias_lote(csv_file, usuario_logado):
             cidade_destino=row['CIDADE_DESTINO'].strip(),
             objetivo=row['OBJETIVO'].strip(),
             quantidade_diarias=qtd_diarias,
-            status=status_solicitada,
             autorizada=False,
         )
+        nova_diaria.avancar_status('SOLICITADA')
         resultados['sucessos'] += 1
 
     return resultados
@@ -815,13 +811,9 @@ def confirmar_diarias_lote(preview_items, usuario_logado):
     """
     from decimal import Decimal
     from datetime import datetime
-    from .models import Diaria, Credor, StatusChoicesVerbasIndenizatorias
+    from .models import Diaria, Credor
 
     resultados = {'sucessos': 0, 'erros': []}
-
-    status_solicitada, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-        status_choice='SOLICITADA'
-    )
 
     for item in preview_items:
         credor = Credor.objects.filter(pk=item['beneficiario_id'], tipo='PF').first()
@@ -840,9 +832,9 @@ def confirmar_diarias_lote(preview_items, usuario_logado):
             cidade_destino=item['cidade_destino'],
             objetivo=item['objetivo'],
             quantidade_diarias=Decimal(item['quantidade_diarias']),
-            status=status_solicitada,
             autorizada=False,
         )
+        nova_diaria.avancar_status('SOLICITADA')
 
         try:
             from .pdf_engine import gerar_documento_pdf
