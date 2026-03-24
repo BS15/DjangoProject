@@ -127,9 +127,15 @@ def verificar_turnpike(processo, status_anterior, status_novo):
     # ------------------------------------------------------------------ #
     # Rule 3: LANÇADO - AGUARDANDO COMPROVANTE → PAGO - EM CONFERÊNCIA    #
     # Requires at least one "COMPROVANTE DE PAGAMENTO" document attached.  #
-    # Also validates that the sum of comprovantes matches valor_liquido.   #
+    # Also validates that the sum of comprovantes matches valor_liquido    #
+    # (skipped for Suprimento de Fundos processes).                        #
     # ------------------------------------------------------------------ #
     if anterior == 'LANÇADO - AGUARDANDO COMPROVANTE' and novo == 'PAGO - EM CONFERÊNCIA':
+        is_suprimento = (
+            processo.tipo_pagamento and
+            'SUPRIMENTO' in processo.tipo_pagamento.tipo_de_pagamento.upper()
+        )
+
         tem_comprovante = processo.documentos.filter(
             tipo__tipo_de_documento__iexact='COMPROVANTE DE PAGAMENTO'
         ).exists()
@@ -139,17 +145,18 @@ def verificar_turnpike(processo, status_anterior, status_novo):
                 'um documento do tipo "COMPROVANTE DE PAGAMENTO".'
             )
 
-        soma_comprovantes = sum(
-            comp.valor_pago for comp in processo.comprovantes_pagamento.all()
-            if comp.valor_pago is not None
-        )
-        valor_liquido = processo.valor_liquido or 0
-        if abs(float(soma_comprovantes) - float(valor_liquido)) > 0.01:
-            erros.append(
-                f'Soma dos comprovantes de pagamento (R$ {float(soma_comprovantes):.2f}) é diferente do '
-                f'valor líquido do processo (R$ {float(valor_liquido):.2f}). '
-                f'Diferença: R$ {abs(float(soma_comprovantes) - float(valor_liquido)):.2f}.'
+        if not is_suprimento:
+            soma_comprovantes = sum(
+                comp.valor_pago for comp in processo.comprovantes_pagamento.all()
+                if comp.valor_pago is not None
             )
+            valor_liquido = processo.valor_liquido or 0
+            if abs(float(soma_comprovantes) - float(valor_liquido)) > 0.01:
+                erros.append(
+                    f'Soma dos comprovantes de pagamento (R$ {float(soma_comprovantes):.2f}) é diferente do '
+                    f'valor líquido do processo (R$ {float(valor_liquido):.2f}). '
+                    f'Diferença: R$ {abs(float(soma_comprovantes) - float(valor_liquido)):.2f}.'
+                )
 
     return erros
 
