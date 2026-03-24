@@ -23,10 +23,6 @@ class Migration(migrations.Migration):
             name='grupo',
             field=models.CharField(blank=True, default='', max_length=100, verbose_name='Grupo Relacionado'),
         ),
-        migrations.RemoveField(
-            model_name='codigosimposto',
-            name='vencimento_padrao',
-        ),
         migrations.DeleteModel(
             name='Grupos',
         ),
