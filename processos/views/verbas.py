@@ -19,6 +19,7 @@ from ..models import (
     AssinaturaAutentique,
 )
 from django.core.files.base import ContentFile
+from django.core.exceptions import PermissionDenied
 from ..filters import DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter
 from ..utils import sync_diarias_siscac_csv, importar_diarias_lote, preview_diarias_lote, confirmar_diarias_lote
 from ..pdf_engine import gerar_documento_pdf
@@ -362,6 +363,7 @@ def gerenciar_diaria_view(request, pk):
         'diaria': diaria,
         'documentos': documentos,
         'tipos_documento': tipos_doc,
+        'tem_assinatura_scd': diaria.assinaturas_autentique.filter(tipo_documento='SCD').exists(),
     }
     return render(request, 'verbas/gerenciar_diaria.html', context)
 
@@ -420,6 +422,21 @@ def aprovar_diaria_view(request, diaria_id):
 @login_required
 def sincronizar_assinatura_view(request, assinatura_id):
     assinatura = get_object_or_404(AssinaturaAutentique, id=assinatura_id)
+
+    # RBAC: user must be backoffice OR the proponente/beneficiario of the document
+    is_backoffice = request.user.has_perm('processos.acesso_backoffice')
+    entidade = assinatura.entidade_relacionada
+    # proponente is a User FK (direct equality); beneficiario is a Credor with no
+    # User FK, so email comparison is the only available method (mirrors the pattern
+    # in minhas_solicitacoes_view).
+    is_owner = (
+        (hasattr(entidade, 'proponente') and entidade.proponente == request.user) or
+        (hasattr(entidade, 'beneficiario') and entidade.beneficiario and
+         entidade.beneficiario.email == request.user.email)
+    )
+    if not (is_backoffice or is_owner):
+        raise PermissionDenied("Você não tem permissão para sincronizar este documento.")
+
     if assinatura.status == 'ASSINADO':
         messages.info(request, "Este documento já foi assinado.")
         return redirect(request.META.get('HTTP_REFERER', '/'))
@@ -436,6 +453,39 @@ def sincronizar_assinatura_view(request, assinatura_id):
     except Exception as e:
         messages.error(request, f"Erro ao verificar assinatura: {str(e)}")
     return redirect(request.META.get('HTTP_REFERER', '/'))
+
+
+@login_required
+def reenviar_assinatura_view(request, diaria_id):
+    """Re-sends the SCD document to Autentique for a Diaria that has no pending SCD signature."""
+    diaria = get_object_or_404(Diaria, id=diaria_id)
+
+    # RBAC: user must be backoffice OR the proponente/beneficiario of the diaria.
+    # proponente is a User FK (direct equality); beneficiario is a Credor with no
+    # User FK, so email comparison is the only available method.
+    is_backoffice = request.user.has_perm('processos.acesso_backoffice')
+    is_owner = (
+        (diaria.proponente == request.user) or
+        (diaria.beneficiario and diaria.beneficiario.email == request.user.email)
+    )
+    if not (is_backoffice or is_owner):
+        raise PermissionDenied("Você não tem permissão para reenviar este documento.")
+
+    try:
+        pdf_bytes = gerar_documento_pdf('scd', diaria)
+        signatarios = [
+            {"email": diaria.beneficiario.email, "action": "SIGN"},
+            {"email": diaria.proponente.email, "action": "SIGN"},
+        ]
+        enviar_documento_para_assinatura(
+            pdf_bytes, f"SCD_{diaria.numero_siscac}", signatarios,
+            entidade=diaria, tipo_documento='SCD',
+        )
+        messages.success(request, "SCD reenviado para assinatura com sucesso!")
+    except Exception as e:
+        messages.error(request, f"Erro ao reenviar SCD para assinatura: {str(e)}")
+
+    return redirect('gerenciar_diaria', pk=diaria.id)
 
 
 @login_required
