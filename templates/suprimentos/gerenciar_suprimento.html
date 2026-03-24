@@ -22,11 +22,19 @@
                 <span class="badge bg-secondary">Vinculado ao Processo #{{ suprimento.processo.id }}</span>
             {% endif %}
         </div>
-        <a href="{% url 'painel_suprimentos' %}" class="btn btn-outline-secondary">Voltar</a>
+        <div class="d-flex gap-2 align-items-center">
+            {% if suprimento.processo %}
+                <a href="{% url 'registrar_devolucao' suprimento.processo.id %}"
+                   class="btn btn-success fw-bold shadow-sm">
+                    <i class="bi bi-arrow-return-left"></i> Registrar Devolução de Saldo
+                </a>
+            {% endif %}
+            <a href="{% url 'painel_suprimentos' %}" class="btn btn-outline-secondary">Voltar</a>
+        </div>
     </div>
 
     <div class="row mb-4">
-        <div class="col-md-4">
+        <div class="{% if suprimento.processo %}col-md-3{% else %}col-md-4{% endif %}">
             <div class="card shadow-sm border-0 border-start border-primary border-4">
                 <div class="card-body">
                     <h6 class="text-muted mb-1">Numerário Liberado</h6>
@@ -34,7 +42,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="{% if suprimento.processo %}col-md-3{% else %}col-md-4{% endif %}">
             <div class="card shadow-sm border-0 border-start border-danger border-4">
                 <div class="card-body">
                     <h6 class="text-muted mb-1">Total de Despesas Lançadas</h6>
@@ -42,7 +50,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="{% if suprimento.processo %}col-md-3{% else %}col-md-4{% endif %}">
             <div class="card shadow-sm border-0 border-start border-success border-4">
                 <div class="card-body">
                     <h6 class="text-muted mb-1">Saldo Remanescente a Devolver</h6>
@@ -50,6 +58,16 @@
                 </div>
             </div>
         </div>
+        {% if suprimento.processo %}
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 border-start border-warning border-4">
+                <div class="card-body">
+                    <h6 class="text-muted mb-1">Valor Efetivamente Gasto</h6>
+                    <h3 class="text-warning mb-0">R$ {{ suprimento.processo.valor_efetivo|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <div class="row">

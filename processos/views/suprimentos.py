@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from ..forms import SuprimentoForm
 from ..models import SuprimentoDeFundos, DespesaSuprimento, StatusChoicesProcesso
+from ..models.fluxo import Processo, FormasDePagamento, TiposDePagamento
 
 
 def painel_suprimentos_view(request):
@@ -65,7 +66,47 @@ def add_suprimento_view(request):
 
         if form.is_valid():
             try:
-                suprimento = form.save()
+                suprimento = form.save(commit=False)
+                suprimento.save()
+
+                # Determine administrative defaults for the linked Processo
+                nome_delegacia = suprimento.lotacao or 'Unidade Não Especificada'
+                mes = suprimento.data_saida.month
+                ano = suprimento.data_saida.year
+                detalhamento = (
+                    f"Referente a suprimento de fundos da {nome_delegacia} - mês {mes}/{ano}"
+                )
+
+                forma_pgto, _ = FormasDePagamento.objects.get_or_create(
+                    forma_de_pagamento__iexact='CARTÃO PRÉ-PAGO',
+                    defaults={'forma_de_pagamento': 'CARTÃO PRÉ-PAGO'},
+                )
+                tipo_pgto, _ = TiposDePagamento.objects.get_or_create(
+                    tipo_de_pagamento__iexact='SUPRIMENTO DE FUNDOS',
+                    defaults={'tipo_de_pagamento': 'SUPRIMENTO DE FUNDOS'},
+                )
+                status_inicial, _ = StatusChoicesProcesso.objects.get_or_create(
+                    status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
+                    defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'},
+                )
+
+                valor_bruto = suprimento.valor_liquido
+                valor_liquido = suprimento.valor_liquido - suprimento.taxa_saque
+
+                processo = Processo.objects.create(
+                    credor=suprimento.suprido,
+                    valor_bruto=valor_bruto,
+                    valor_liquido=valor_liquido,
+                    forma_pagamento=forma_pgto,
+                    tipo_pagamento=tipo_pgto,
+                    status=status_inicial,
+                    detalhamento=detalhamento,
+                    extraorcamentario=True,
+                )
+
+                suprimento.processo = processo
+                suprimento.save(update_fields=['processo'])
+
                 messages.success(request, 'Suprimento de Fundos cadastrado com sucesso!')
                 return redirect('painel_suprimentos')
             except Exception as e:
