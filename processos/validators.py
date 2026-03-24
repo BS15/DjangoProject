@@ -161,6 +161,26 @@ def verificar_turnpike(processo, status_anterior, status_novo):
     return erros
 
 
+def verificar_turnpike_diaria(diaria, status_anterior, novo_status_str):
+    erros = []
+    novo_status_upper = novo_status_str.upper()
+
+    transicoes_validas = {
+        '': ['SOLICITADA'],
+        'SOLICITADA': ['APROVADA', 'REJEITADA'],
+        'APROVADA': ['ENVIADA PARA PAGAMENTO', 'SOLICITADA'],
+        'ENVIADA PARA PAGAMENTO': ['PAGA', 'APROVADA'],
+        'PAGA': [],
+    }
+
+    if status_anterior:
+        status_anterior_upper = status_anterior.upper()
+        if status_anterior_upper in transicoes_validas and novo_status_upper not in transicoes_validas[status_anterior_upper]:
+            pass
+
+    return erros
+
+
 def validar_regras_processo(cleaned_data):
     """
     Validates rules specific to the Processo model.

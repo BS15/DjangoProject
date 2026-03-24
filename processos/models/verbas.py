@@ -113,6 +113,23 @@ class Diaria(models.Model):
             self.valor_total = calculado
         super().save(*args, **kwargs)
 
+    def avancar_status(self, novo_status_str):
+        from django.core.exceptions import ValidationError
+        from processos.validators import verificar_turnpike_diaria
+
+        status_anterior = self.status.status_choice if self.status else ''
+        erros = verificar_turnpike_diaria(self, status_anterior, novo_status_str)
+
+        if erros:
+            raise ValidationError(' '.join(erros))
+
+        novo_status, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
+            status_choice__iexact=novo_status_str,
+            defaults={'status_choice': novo_status_str}
+        )
+        self.status = novo_status
+        self.save(update_fields=['status'])
+
     def __str__(self):
         return f"Diária {self.numero_siscac} - {self.beneficiario}"
 
