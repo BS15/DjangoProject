@@ -11,7 +11,7 @@ from .models import (
     DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio,
     DocumentoSuprimentoDeFundos, MeiosDeTransporte,
     Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao,
-    SuprimentoDeFundos, DespesaSuprimento, DadosContribuinte,
+    SuprimentoDeFundos, DespesaSuprimento, DadosContribuinte, ReuniaoConselho,
 )
 # ==========================================
 # TABELAS DE PARAMETRIZAÇÃO (CONFIGURAÇÕES)
@@ -110,3 +110,9 @@ class DadosContribuinteAdmin(admin.ModelAdmin):
         if DadosContribuinte.objects.exists():
             return False
         return super().has_add_permission(request)
+
+@admin.register(ReuniaoConselho)
+class ReuniaoConselhoAdmin(admin.ModelAdmin):
+    list_display = ('numero', 'trimestre_referencia', 'data_reuniao', 'status')
+    list_filter = ('status',)
+    ordering = ('-numero',)

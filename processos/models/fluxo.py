@@ -142,6 +142,34 @@ STATUS_CONTINGENCIA = [
 ]
 
 
+class ReuniaoConselho(models.Model):
+    numero = models.IntegerField("Número da Reunião", help_text="Ex: 16 para a 16ª Reunião")
+    data_reuniao = models.DateField("Data da Reunião", null=True, blank=True)
+    trimestre_referencia = models.CharField(
+        "Trimestre/Ano de Referência",
+        max_length=50,
+        help_text="Ex: 1º Trimestre / 2026",
+    )
+    status = models.CharField(
+        "Status",
+        max_length=20,
+        choices=[
+            ('AGENDADA', 'Agendada/Em Montagem'),
+            ('EM_ANALISE', 'Em Análise pelo Conselho'),
+            ('CONCLUIDA', 'Concluída'),
+        ],
+        default='AGENDADA',
+    )
+
+    class Meta:
+        verbose_name = "Reunião do Conselho"
+        verbose_name_plural = "Reuniões do Conselho"
+        ordering = ['-numero']
+
+    def __str__(self):
+        return f"{self.numero}ª Reunião - {self.trimestre_referencia}"
+
+
 class Processo(models.Model):
     # Dados orçamentários
     extraorcamentario = models.BooleanField(
@@ -175,6 +203,14 @@ class Processo(models.Model):
         "Em Contingência",
         default=False,
         help_text="Indica que existe uma Contingência ativa para este processo. Nenhuma operação financeira pode ser realizada enquanto este flag estiver ativo."
+    )
+    reuniao_conselho = models.ForeignKey(
+        'ReuniaoConselho',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='processos_em_pauta',
+        verbose_name="Reunião do Conselho",
     )
     history = HistoricalRecords()
 
