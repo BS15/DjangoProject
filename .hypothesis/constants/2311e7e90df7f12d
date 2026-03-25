@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0017_documentoprocesso_codigo_barras.py
-# hypothesis_version: 6.151.9
-
-['codigo_barras', 'documentoprocesso', 'processos']

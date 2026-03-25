@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0021_grupos_rename_categoriasdecredor_cargosfuncoes_and_more.py
-# hypothesis_version: 6.151.9
-
-[100, 'CargosFuncoes', 'CategoriasDeCredor', 'Grupos', 'ID', 'cargo_funcao', 'cargosfuncoes', 'categoria_credor', 'categoria_de_credor', 'credor', 'grupo', 'id', 'is_active', 'processos', 'processos.grupos', 'retencaoimposto']

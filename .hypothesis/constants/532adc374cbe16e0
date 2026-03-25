@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0057_remove_familia_from_codigosimposto.py
-# hypothesis_version: 6.151.9
-
-['codigosimposto', 'familia', 'processos']

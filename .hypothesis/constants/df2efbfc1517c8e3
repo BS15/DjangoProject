@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/utils_relatorios.py
-# hypothesis_version: 6.151.9
-
-[';', 'Beneficiário', 'Competência', 'Content-Disposition', 'Credor', 'Código', 'Data Pagamento', 'Destino', 'Empenho', 'Erro', 'ID', 'NF', 'Pendente', 'Período', 'Processo Pagamento', 'Processo Pai', 'Proponente', 'Status', 'Tipo não configurado', 'Valor', 'Valor Bruto', 'Valor Líquido', 'Valor Retido', 'diarias', 'impostos', 'processos', 'text/csv', 'utf8', '\ufeff']

@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/invoice_processor.py
-# hypothesis_version: 6.151.9
-
-[0.0, 0.05, 5.8, 5.9, 9.4, 9.5, 100, '6147', '6190', 'BALNEARIO CAMBORIU', 'BLUMENAU', 'CHAPECO', 'CRICIUMA', 'FLORIANOPOLIS', 'INSS_RETIDO', 'IR/PIS/COFINS/CSLL', 'ISS_RETIDO', 'JOINVILLE', 'LAGES', 'NFKD', 'PALHOCA', 'SAO JOSE', 'alertas_usuario', 'codigo', 'cofins', 'csll', 'descricao', 'impostos_federais', 'inss_destacado', 'ir', 'iss', 'pis', 'sucesso_matematico', 'valor', 'valor_bruto', 'valor_destacado', 'valor_liquido']

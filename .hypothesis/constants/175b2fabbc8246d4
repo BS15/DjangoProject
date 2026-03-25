@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0069_contafixa_faturamensal.py
-# hypothesis_version: 6.151.9
-
-[200, 'Conta Ativa', 'Conta Fixa', 'ContaFixa', 'Contas Fixas', 'Credor/Fornecedor', 'Fatura Mensal', 'FaturaMensal', 'Faturas Mensais', 'ID', 'Mês de Referência', 'ativa', 'conta_fixa', 'credor', 'dia_vencimento', 'faturas', 'faturas_vinculadas', 'id', 'mes_referencia', 'processo_vinculado', 'processos', 'processos.contafixa', 'processos.credor', 'processos.processo', 'referencia', 'unique_together', 'verbose_name', 'verbose_name_plural']

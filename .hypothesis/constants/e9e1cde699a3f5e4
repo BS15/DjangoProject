@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0072_add_reuniao_conselho.py
-# hypothesis_version: 6.151.9
-
-['+', '-numero', 'AGENDADA', 'Agendada/Em Montagem', 'CONCLUIDA', 'Concluída', 'Data da Reunião', 'EM_ANALISE', 'ID', 'Número da Reunião', 'ReuniaoConselho', 'Reunião do Conselho', 'Reuniões do Conselho', 'Status', 'data_reuniao', 'historicalprocesso', 'id', 'numero', 'ordering', 'processo', 'processos', 'processos_em_pauta', 'reuniao_conselho', 'status', 'trimestre_referencia', 'verbose_name', 'verbose_name_plural']

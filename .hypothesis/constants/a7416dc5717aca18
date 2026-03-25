@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/views/teste_pdf.py
-# hypothesis_version: 6.151.9
-
-[400, 1000, 9999, '####.##', '+10d', '+5d', '+6d', '1234-5', '2.5', '2026/####', '2026NE####', '98765-4', 'AuxilioRepresentacao', 'Aéreo', 'Banco do Brasil', 'Content-Disposition', 'Jeton', 'NF-####', 'ReembolsoCombustivel', 'SuprimentoDeFundos', 'application/pdf', 'ateste', 'autorizacao', 'conselho_fiscal', 'contabilizacao', 'numero_reuniao', 'pcd', 'pt_BR', 'recibo_', 'recibo_auxilio', 'recibo_jeton', 'recibo_reembolso', 'recibo_suprimento', 'scd', 'today']

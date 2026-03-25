@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0009_alter_processo_ano_exercicio_and_more.py
-# hypothesis_version: 6.151.9
-
-[0.0, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 'ano_exercicio', 'data_empenho', 'extraorcamentario', 'forma_pagamento', 'processo', 'processos', 'processos.tagchoices', 'status', 'tag', 'tipo_pagamento', 'valor_bruto', 'valor_liquido']

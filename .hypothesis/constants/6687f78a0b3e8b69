@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0015_statuschoicesretencoes_and_more.py
-# hypothesis_version: 6.151.9
-
-[100, 'ID', 'Mês de Competência', 'codigosimposto', 'competencia', 'data_pagamento', 'emissao', 'id', 'is_active', 'pagamento', 'processos', 'regra_competencia', 'retencaoimposto', 'status', 'status_choice']

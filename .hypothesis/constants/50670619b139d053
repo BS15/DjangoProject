@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0074_add_processo_pagamento_to_retencao.py
-# hypothesis_version: 6.151.9
-
-['+', 'impostos_recolhidos', 'processo_pagamento', 'processos', 'processos.processo', 'retencaoimposto']

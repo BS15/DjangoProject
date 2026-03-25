@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0040_diaria_valor_total_nullable.py
-# hypothesis_version: 6.151.9
-
-['Valor Total (R$)', 'diaria', 'processos', 'valor_total']

@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0052_add_imutavel_to_documentoprocesso.py
-# hypothesis_version: 6.151.9
-
-['Imutável', 'documentoprocesso', 'imutavel', 'processos']

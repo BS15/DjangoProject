@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0046_rename_notafiscal_to_documentofiscal.py
-# hypothesis_version: 6.151.9
-
-['DocumentoFiscal', 'NotaFiscal', 'processos']

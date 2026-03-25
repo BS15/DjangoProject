@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0005_remove_notafiscal_dados_retencao_and_more.py
-# hypothesis_version: 6.151.9
-
-['6147', '6190', 'ID', 'ISS', 'RetencaoImposto', 'arquivo', 'codigo', 'dados_retencao', 'documentoprocesso', 'id', 'nota_fiscal', 'notafiscal', 'processos', 'processos.notafiscal', 'retencoes', 'valor']

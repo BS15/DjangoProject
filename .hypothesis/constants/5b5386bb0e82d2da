@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0006_codigosimposto_formasdepagamento_statuschoices_and_more.py
-# hypothesis_version: 6.151.9
-
-[100, 'CodigosImposto', 'FormasDePagamento', 'ID', 'StatusChoices', 'TagChoices', 'TiposDeDocumento', 'TiposDePagamento', 'codigo', 'documentoprocesso', 'forma_de_pagamento', 'forma_pagamento', 'id', 'is_active', 'processo', 'processos', 'processos.tagchoices', 'retencaoimposto', 'status', 'status_choice', 'tag', 'tag_choice', 'tipo', 'tipo_de_documento', 'tipo_de_pagamento', 'tipo_pagamento']

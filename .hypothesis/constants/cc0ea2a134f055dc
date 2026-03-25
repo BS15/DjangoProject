@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/autentique_service.py
-# hypothesis_version: 6.151.9
-
-[0.5, 500, 502, 503, 504, '0', 'AUTENTIQUE_API_TOKEN', 'Authorization', 'PENDENTE', 'application/pdf', 'assinado', 'createDocument', 'data', 'document', 'errors', 'file', 'files', 'https://', 'id', 'link', 'map', 'name', 'operations', 'pdf_bytes', 'query', 'short_link', 'signatures', 'signed', 'signers', 'url', 'variables', 'variables.file']

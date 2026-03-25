@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0063_add_numero_siscac_to_diaria.py
-# hypothesis_version: 6.151.9
-
-['Nº SISCAC', 'diaria', 'historicaldiaria', 'numero_siscac', 'processos']
