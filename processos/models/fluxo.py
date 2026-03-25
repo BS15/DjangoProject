@@ -1,3 +1,4 @@
+import os
 from django.db import models
 from django.db.models import Sum
 from django.utils import timezone
@@ -10,6 +11,7 @@ from django.core.exceptions import ValidationError
 from simple_history.models import HistoricalRecords
 from datetime import date
 from processos.validators import validar_arquivo_seguro
+from processos.utils import mesclar_pdfs_em_memoria
 
 
 # Substitua a sua função antiga por esta:
@@ -246,6 +248,44 @@ class Processo(models.Model):
     def valor_efetivo(self):
         total_devolvido = self.devolucoes.aggregate(total=Sum('valor_devolvido'))['total'] or 0
         return self.valor_liquido - total_devolvido
+
+    @property
+    def detalhes_pagamento(self):
+        forma = self.forma_pagamento.forma_de_pagamento.lower() if self.forma_pagamento else ''
+        detalhe_tipo = "Não Especificado"
+        detalhe_valor = "Verifique o processo"
+        codigos_barras = None
+
+        if 'boleto' in forma or 'gerenciador' in forma:
+            detalhe_tipo = "Código de Barras"
+            codigos_barras = [doc.codigo_barras for doc in self.documentos.all() if doc.codigo_barras]
+            detalhe_valor = codigos_barras[0] if codigos_barras else "Não preenchido"
+        elif 'pix' in forma:
+            detalhe_tipo = "Chave PIX"
+            detalhe_valor = self.credor.chave_pix if (self.credor and self.credor.chave_pix) else "Credor sem PIX cadastrado"
+        elif 'transfer' in forma or 'ted' in forma:
+            detalhe_tipo = "Conta Bancária"
+            if self.conta:
+                detalhe_valor = f"Banco: {self.conta.banco} | Ag: {self.conta.agencia} | CC: {self.conta.conta}"
+            else:
+                detalhe_valor = "Nenhuma conta vinculada"
+
+        return {
+            'tipo_formatado': detalhe_tipo,
+            'valor_formatado': detalhe_valor,
+            'codigos_barras': codigos_barras,
+        }
+
+    def gerar_pdf_consolidado(self):
+        lista_caminhos = []
+        for doc in self.documentos.order_by('ordem'):
+            if doc.arquivo and doc.arquivo.name:
+                if os.path.exists(doc.arquivo.path):
+                    lista_caminhos.append(doc.arquivo.path)
+
+        if not lista_caminhos:
+            return None
+        return mesclar_pdfs_em_memoria(lista_caminhos)
 
     def avancar_status(self, novo_status_str, usuario=None):
         from django.core.exceptions import ValidationError
