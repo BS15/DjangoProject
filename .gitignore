@@ -25,4 +25,6 @@ suprimentosdefundos/
 
 # Arquivos estáticos coletados (gerados pelo collectstatic, não devem ser versionados)
 staticfiles/
+
+# Hypothesis internal cache (gerado automaticamente pelos testes de fuzzing)
 .hypothesis/
