@@ -3,6 +3,11 @@ from unittest.mock import patch
 from django.test import TestCase
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
+from ..invoice_processor import process_invoice_taxes, _normalizar_cidade
+from ..models import Processo, StatusChoicesProcesso, TiposDeDocumento, DocumentoProcesso, DocumentoFiscal
+from ..utils import processar_pdf_comprovantes
+from ..validators import verificar_turnpike
+from ..views import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
 from processos.invoice_processor import process_invoice_taxes, _normalizar_cidade
 from processos.models import Processo, StatusChoicesProcesso, TiposDeDocumento, DocumentoProcesso, DocumentoFiscal
 from processos.utils import processar_pdf_comprovantes
@@ -497,6 +502,7 @@ from decimal import Decimal
 from django.contrib.auth.models import User
 from django.test import TestCase
 
+from ..models import (
 from processos.models import (
     CodigosImposto,
     Credor,
@@ -504,6 +510,7 @@ from processos.models import (
     DocumentoFiscal,
     Processo,
 )
+from ..reinf_services import (
 from processos.reinf_services import (
     _build_r2010_xml,
     _build_r4020_xml,
@@ -545,6 +552,7 @@ class GerarLotesReinfHelpersTest(TestCase):
         )
 
     def _make_retencao(self, nota, codigo, valor='50.00', base='1000.00'):
+        from ..models import RetencaoImposto
         from .models import RetencaoImposto
         ret = RetencaoImposto(
             nota_fiscal=nota,
@@ -665,6 +673,7 @@ class GerarLotesReinfIntegrationTest(TestCase):
 
     def _setup_data(self, familia, cnpj, atestada=True, competencia_month=3, competencia_year=2024):
         """Helper to create a full chain: Credor→Processo→DocumentoFiscal→RetencaoImposto."""
+        from ..models import RetencaoImposto
         from .models import RetencaoImposto
 
         codigo = CodigosImposto.objects.create(
@@ -727,6 +736,7 @@ class GerarLotesReinfIntegrationTest(TestCase):
 
     def test_groups_inss_by_cnpj(self):
         """Three INSS retentions for the same CNPJ → single R-2010 file."""
+        from ..models import RetencaoImposto
         from .models import RetencaoImposto
 
         cnpj = '33333333000101'
@@ -804,6 +814,7 @@ class GerarLoteReinfViewTest(TestCase):
         )
 
     def _setup_inss_record(self, cnpj='99999999000101', month=3, year=2024):
+        from ..models import RetencaoImposto
         from .models import RetencaoImposto
 
         codigo = CodigosImposto.objects.create(
@@ -1154,6 +1165,12 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from ..models import (
+    Processo, DocumentoProcesso, DocumentoFiscal, TiposDeDocumento,
+    Credor, RegistroAcessoArquivo,
+)
+from ..models.suprimentos import SuprimentoDeFundos, DespesaSuprimento, StatusChoicesSuprimentoDeFundos
+from ..models.verbas import Diaria, DocumentoDiaria
 from processos.models import (
     Processo, DocumentoProcesso, DocumentoFiscal, TiposDeDocumento,
     Credor, RegistroAcessoArquivo,
