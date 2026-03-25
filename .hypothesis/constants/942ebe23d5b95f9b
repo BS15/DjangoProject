@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/ai_views.py
-# hypothesis_version: 6.151.9
-
-[400, 405, 500, 'BOLETO BANCÁRIO', 'NOTA FISCAL (NF)', 'POST', 'boleto', 'doc_type', 'documento', 'erro', 'extracao_crua', 'nota_fiscal', 'orcamentario', 'sucesso', 'tipo']

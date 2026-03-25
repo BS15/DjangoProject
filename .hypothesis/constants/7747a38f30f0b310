@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0062_add_devolucao_model.py
-# hypothesis_version: 6.151.9
-
-[100, '-data_acesso', '-data_devolucao', 'Devolucao', 'Devolução', 'Devoluções', 'ID', 'Processo Consolidado', 'arquivo', 'arquivo_final', 'comprovante', 'criado_em', 'data_devolucao', 'despesasuprimento', 'devolucoes', 'devolucoes/', 'documentoauxilio', 'documentodiaria', 'documentojeton', 'documentoprocesso', 'documentoreembolso', 'historicalprocesso', 'id', 'motivo', 'ordering', 'processo', 'processos', 'processos.processo', 'valor_devolvido', 'verbose_name', 'verbose_name_plural']

@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/models/suprimentos.py
-# hypothesis_version: 6.151.9
-
-[0.0, 100, 150, 200, 255, 'CNPJ/CPF', 'Credor', 'Data da Compra', 'Lotação', 'Nº Nota Fiscal/Cupom', 'PF', 'Período Final (Ate)', 'Período Inicial (De)', 'Processo', 'Suprido', 'SuprimentoDeFundos', 'Valor Devolvido (R$)', 'Valor Pago (R$)', 'despesas', 'documentos', 'suprimentos', 'tipo']

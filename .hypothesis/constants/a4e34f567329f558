@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/models/fiscal.py
-# hypothesis_version: 6.151.9
-
-[100, 200, 'Beneficiário', 'CodigosImposto', 'Credor', 'Credor (Texto)', 'Data de Pagamento', 'DocumentoFiscal', 'DocumentoProcesso', 'Fiscal do Contrato', 'Mês de Competência', 'NONE', 'Não mapeado', 'Processo', 'S2000', 'S4000', 'Série', 'Série EFD-Reinf', 'Valor Pago', 'Valor Retido', 'codigo', 'emissao', 'impostos_recolhidos', 'nota_fiscal', 'nota_referente', 'notas_fiscais', 'notas_fiscalizadas', 'pagamento', 'retencoes']

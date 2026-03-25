@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0031_alter_notafiscal_cnpj_emitente_and_more.py
-# hypothesis_version: 6.151.9
-
-['Fiscal do Contrato', 'PF', 'cnpj_emitente', 'fiscal_contrato', 'fiscalizadas', 'nome_emitente', 'notafiscal', 'processos', 'processos.credor', 'tipo']

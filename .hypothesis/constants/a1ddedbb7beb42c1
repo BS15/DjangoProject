@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0013_remove_processo_extraorcamentario_and_more.py
-# hypothesis_version: 6.151.9
-
-['data_pagamento', 'extraorcamentario', 'processo', 'processos']

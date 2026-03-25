@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0002_imposto_notafiscal_delete_nota_fiscal_and_more.py
-# hypothesis_version: 6.151.9
-
-[255, '0001_initial', 'Ex: IRRF, ISS, 1708', 'ID', 'Imposto', 'NotaFiscal', 'Nota_Fiscal', 'cnpj_emitente', 'codigo', 'data_emissao', 'id', 'imposto', 'impostos', 'nome_emitente', 'nota_fiscal', 'notas_fiscais', 'numero_nota', 'processo', 'processos', 'processos.notafiscal', 'processos.processo', 'sem_retencao', 'valor', 'valor_bruto', 'valor_liquido']

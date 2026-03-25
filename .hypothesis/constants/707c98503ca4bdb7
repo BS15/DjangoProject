@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0073_add_assinatura_autentique_and_remove_diaria_fields.py
-# hypothesis_version: 6.151.9
-
-[100, 500, '-criado_em', 'ASSINADO', 'Arquivo Assinado', 'Assinado', 'AssinaturaAutentique', 'ID', 'ID Autentique', 'PENDENTE', 'Pendente', 'Status', 'Tipo do Documento', 'URL para Assinatura', 'arquivo_assinado', 'autentique_id', 'autentique_url', 'content_type', 'contenttypes', 'criado_em', 'diaria', 'historicaldiaria', 'id', 'object_id', 'ordering', 'processos', 'status', 'status_assinatura', 'tipo_documento']

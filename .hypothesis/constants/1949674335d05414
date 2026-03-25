@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0037_remove_notafiscal_arquivo_and_more.py
-# hypothesis_version: 6.151.9
-
-['arquivo', 'documento_vinculado', 'nota_referente', 'notafiscal', 'processos']

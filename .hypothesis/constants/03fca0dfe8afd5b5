@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0054_add_serie_reinf_to_codigosimposto.py
-# hypothesis_version: 6.151.9
-
-['NONE', 'Não mapeado', 'S2000', 'S4000', 'Série EFD-Reinf', 'codigosimposto', 'processos', 'serie_reinf']

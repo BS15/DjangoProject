@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/ai_utils.py
-# hypothesis_version: 6.151.9
-
-[0.0, '.pdf', 'BOLETO BANCÁRIO', 'NOTA FISCAL (NF)', 'Não identificado', 'application/json', 'codigo_barras', 'credor_extraido', 'credor_nome', 'data_pagamento', 'gemini-2.5-flash', 'liquidacao', 'ordem_compra', 'pagina', 'rb', 'temp_path', 'valor_extraido', 'valor_pago']

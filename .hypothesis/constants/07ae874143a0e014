@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/validators.py
-# hypothesis_version: 6.151.9
-
-[0.01, 2048, ', ', 'A EMPENHAR', 'A PAGAR - AUTORIZADO', 'APROVADA', 'ARQUIVADO', 'CANCELADO / ANULADO', 'LANÇADO', 'PAGA', 'PAGO', 'REJEITADA', 'SOLICITADA', 'SUPRIMENTO', 'application/pdf', 'data_pagamento', 'data_retorno', 'data_saida', 'data_vencimento', 'image/jpeg', 'image/png', 'valor_bruto', 'valor_liquido']

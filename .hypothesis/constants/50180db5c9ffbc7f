@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0065_alter_documentofiscal_fiscal_contrato_to_user.py
-# hypothesis_version: 6.151.9
-
-['+', 'Fiscal do Contrato', 'documentofiscal', 'fiscal_contrato', 'notas_fiscalizadas', 'processos']

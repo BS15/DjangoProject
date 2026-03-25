@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0028_alter_processo_credor.py
-# hypothesis_version: 6.151.9
-
-['credor', 'processo', 'processos', 'processos.credor']

@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0042_add_contingencia_model_and_em_contingencia_field.py
-# hypothesis_version: 6.151.9
-
-[100, '+', '-', '-data_solicitacao', '-history_date', '-history_id', 'APROVADA', 'Aprovada', 'Changed', 'Contingencia', 'Contingência', 'Contingências', 'Created', 'Deleted', 'Em Contingência', 'ID', 'PENDENTE_CONSELHO', 'PENDENTE_ORDENADOR', 'PENDENTE_SUPERVISOR', 'Pendente Supervisor', 'REJEITADA', 'Rejeitada', 'cont_conselho', 'cont_ordenadas', 'cont_supervisionadas', 'contingencias', 'dados_propostos', 'data_solicitacao', 'em_contingencia', 'get_latest_by', 'historicalprocesso', 'history_date', 'history_id', 'history_type', 'history_user', 'id', 'justificativa', 'ordering', 'parecer_conselho', 'parecer_ordenador', 'parecer_supervisor', 'processo', 'processos', 'processos.processo', 'solicitante', 'status', 'verbose_name', 'verbose_name_plural', '~']

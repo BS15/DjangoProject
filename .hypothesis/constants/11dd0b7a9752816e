@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/models/cadastros.py
-# hypothesis_version: 6.151.9
-
-[100, 200, 255, 'Agência', 'Banco', 'CPF/CNPJ', 'Cargo / Função', 'Cargos e Funções', 'CargosFuncoes', 'Chave PIX do credor', 'Conta', 'Conta Ativa', 'Conta Credor', 'Conta Fixa', 'Contas Fixas', 'ContasBancarias', 'Credor', 'Credor/Fornecedor', 'EM ANDAMENTO', 'EX', 'Email do credor', 'Exterior / Outros', 'Fatura Mensal', 'Faturas Mensais', 'Grupo Relacionado', 'Mês de Referência', 'Nome', 'PAGO', 'PENDENTE', 'PF', 'PJ', 'Pessoa Física (CPF)', 'Processo', 'Telefone do credor', 'Tipo de Pessoa', 'cargo_funcao', 'conta_fixa', 'contas_bancarias', 'faturas', 'faturas_vinculadas', 'grupo', 'mes_referencia']

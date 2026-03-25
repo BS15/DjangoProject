@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/reinf_services.py
-# hypothesis_version: 6.151.9
-
-['1', '1.0', '2', 'N', 'Não informado', 'PF', 'R-4010', 'R-4020', 'Reinf', 'S', 'S2000', 'S4000', 'beneficiario', 'beneficiario__nome', 'cnpjPrestador', 'codigo', 'competencia', 'credor', 'detEvt', 'detPag', 'detRet', 'dtEmiNF', 'evento', 'evtFechaEvPer', 'evtInfoContri', 'evtRetPJ', 'evtServTom', 'fechaEvPer', 'ideContrib', 'ideEstab', 'ideEvento', 'idePJ', 'indRetif', 'infoContrib', 'natRend', 'natureza_codigo', 'naturezas', 'nfSeq', 'nmRazao', 'nota_fiscal', 'nota_fiscal__id', 'notas', 'nrInsc', 'nrNF', 'perApur', 'procEmi', 'retencoes', 'total_base', 'total_bruto', 'total_retido', 'tpAmb', 'tpInsc', 'unicode', 'verProc', 'vrBaseRet', 'vrBruto', 'vrRet']

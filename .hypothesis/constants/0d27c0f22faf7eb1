@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0022_tabela_valores_unitarios_verbas_indenizatorias_and_more.py
-# hypothesis_version: 6.151.9
-
-['ID', 'cargo_funcao', 'id', 'processos', 'proponente', 'proponentes_mapeados', 'tipo', 'unique_together', 'valor_unitario']

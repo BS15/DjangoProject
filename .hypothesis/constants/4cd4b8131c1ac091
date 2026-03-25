@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0026_statuschoicessuprimentodefundos_suprimentodefundos_and_more.py
-# hypothesis_version: 6.151.9
-
-[0.0, 100, 150, 200, 255, 'CNPJ/CPF', 'Data da Compra', 'DespesaSuprimento', 'ID', 'Lotação', 'Nº Nota Fiscal/Cupom', 'Ordem do arquivo', 'PF', 'Período Final (Ate)', 'Período Inicial (De)', 'Suprido', 'SuprimentoDeFundos', 'Valor Devolvido (R$)', 'Valor Pago (R$)', 'abstract', 'arquivo', 'cnpj_cpf', 'data', 'data_devolucao_saldo', 'data_recibo', 'data_retorno', 'data_saida', 'despesas', 'detalhamento', 'documentos', 'estabelecimento', 'id', 'is_active', 'lotacao', 'nota_fiscal', 'ordem', 'ordering', 'processo', 'processos', 'processos.credor', 'processos.processo', 'status', 'status_choice', 'suprido', 'suprimento', 'suprimentos', 'taxa_saque', 'tipo', 'valor', 'valor_devolvido', 'valor_liquido']

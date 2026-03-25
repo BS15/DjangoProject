@@ -1,4 +1,0 @@
-# file: /home/runner/work/DjangoProject/DjangoProject/processos/views/desenvolvedor.py
-# hypothesis_version: 6.151.9
-
-['AGENCIA', 'BANCO', 'CARGO_FUNCAO', 'CONTA', 'CPF_CNPJ', 'Contas Fixas', 'Content-Disposition', 'Credores', 'DETALHAMENTO', 'DIA_VENCIMENTO', 'GRUPO', 'NOME', 'NOME_CREDOR', 'PIX', 'POST', 'erros', 'file_contas', 'file_credores', 'importar_contas', 'importar_credores', 'resultados', 'sucessos', 'text/csv', 'tipo_importacao']
