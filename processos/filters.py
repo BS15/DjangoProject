@@ -54,18 +54,25 @@ class CredorFilter(django_filters.FilterSet):
 
 # Filtro para Diárias
 class DiariaFilter(django_filters.FilterSet):
+    data_saida__gte = django_filters.DateFilter(field_name='data_saida', lookup_expr='gte', label='A partir de (Saída)')
+    data_saida__lte = django_filters.DateFilter(field_name='data_saida', lookup_expr='lte', label='Até (Saída)')
+
     class Meta:
         model = Diaria
         fields = {
             'numero_siscac': ['icontains'],
             'beneficiario': ['exact'],
+            'proponente': ['exact'],
             'status': ['exact'],
             'cidade_destino': ['icontains'],
         }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.form.fields.values():
             field.widget.attrs.update({'class': 'form-control form-control-sm'})
+        self.form.fields['data_saida__gte'].widget.attrs['type'] = 'date'
+        self.form.fields['data_saida__lte'].widget.attrs['type'] = 'date'
 
 # Filtro para Reembolso
 class ReembolsoFilter(django_filters.FilterSet):
