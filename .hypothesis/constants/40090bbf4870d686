@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0004_remove_notafiscal_entidade_imune_isenta_and_more.py
+# hypothesis_version: 6.151.9
+
+['A Pagar', 'Impostos Retidos', 'Impostos a Reter', 'Pago', 'Pendente Assinatura', 'a_pagar', 'assinatura', 'dados_retencao', 'id_unico_interno', 'notafiscal', 'pago', 'processo', 'processos', 'reter', 'retidos', 'tag']

@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0068_add_autentique_fields_to_diaria.py
+# hypothesis_version: 6.151.9
+
+[100, 500, 'ASSINADO', 'Assinado', 'ID Autentique', 'PCD Assinada', 'PENDENTE', 'Status de Assinatura', 'URL Autentique', 'arquivo_assinado', 'autentique_id', 'autentique_url', 'diaria', 'historicaldiaria', 'processos', 'status_assinatura']

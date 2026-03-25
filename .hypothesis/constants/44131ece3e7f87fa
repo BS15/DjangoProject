@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0060_add_registroacessoarquivo.py
+# hypothesis_version: 6.151.9
+
+[500, 'ID', 'data_acesso', 'id', 'ip_address', 'nome_arquivo', 'processos', 'usuario']

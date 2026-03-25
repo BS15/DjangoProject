@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0050_add_reinf_fields.py
+# hypothesis_version: 6.151.9
+
+['Série', 'codigo_servico_inss', 'codigosimposto', 'credor', 'documentofiscal', 'historicalcredor', 'natureza_rendimento', 'processos', 'serie_nota_fiscal']

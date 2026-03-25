@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0043_add_beneficiario_to_retencaoimposto.py
+# hypothesis_version: 6.151.9
+
+['Beneficiário', 'beneficiario', 'processos', 'processos.credor', 'retencaoimposto', 'retencoes']

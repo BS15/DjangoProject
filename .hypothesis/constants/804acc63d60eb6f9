@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/views/relatorios.py
+# hypothesis_version: 6.151.9
+
+['-id', 'csv', 'diarias', 'exportar', 'filtro', 'impostos', 'processos', 'tipo']

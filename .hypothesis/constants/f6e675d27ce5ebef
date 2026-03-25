@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0061_add_pode_arquivar_permission.py
+# hypothesis_version: 6.151.9
+
+['acesso_backoffice', 'permissions', 'pode_arquivar', 'pode_contabilizar', 'processo', 'processos']

@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0019_alter_documentoprocesso_arquivo_and_more.py
+# hypothesis_version: 6.151.9
+
+['DocumentoVerba', 'ID', 'Ordem do arquivo', 'abstract', 'arquivo', 'arquivos/', 'documentoprocesso', 'documentos', 'id', 'ordem', 'ordering', 'processos', 'tipo', 'verba']

@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/pdf_engine.py
+# hypothesis_version: 6.151.9
+
+[0.5, 0.55, 2.0, 110, 120, 130, 145, 160, 180, 186, 200, 205, 220, 235, 236, 250, 265, 380, 410, 430, 434, 450, 540, 550, 590, 620, '%d/%m/%Y', '%d/%m/%Y às %H:%M', '+', ',', '.', 'AuxilioRepresentacao', 'COMPOSIÇÃO DO VALOR:', 'DADOS DA VIAGEM:', 'DADOS DO CREDOR:', 'Fiscal Não Atribuído', 'Fiscal do Contrato', 'Helvetica', 'Helvetica-Bold', 'Helvetica-Oblique', 'Jeton', 'N/A', 'Não informado', 'Não informado.', 'OBJETIVO DA VIAGEM:', 'Objetivo:', 'PROPONENTE:', 'RECIBO DE PAGAMENTO', 'ReembolsoCombustivel', 'Sistema', 'Status atualizado', 'Suprimento de Fundos', 'SuprimentoDeFundos', 'VALORES:', 'X', 'ateste', 'autorizacao', 'conselho_fiscal', 'contabilizacao', 'history_date', 'numero_reuniao', 'pcd', 'rb', 'recibo_auxilio', 'recibo_jeton', 'recibo_reembolso', 'recibo_suprimento', 'scd', 'solicitante', '~']

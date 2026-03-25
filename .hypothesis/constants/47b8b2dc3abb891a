@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0058_remove_codigo_barras_from_processo.py
+# hypothesis_version: 6.151.9
+
+['codigo_barras', 'historicalprocesso', 'processo', 'processos']

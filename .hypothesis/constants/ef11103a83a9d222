@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0029_notafiscal_arquivo.py
+# hypothesis_version: 6.151.9
+
+['arquivo', 'notafiscal', 'processos']

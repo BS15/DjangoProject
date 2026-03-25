@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/admin.py
+# hypothesis_version: 6.151.9
+
+['-numero', 'cnpj', 'codigo', 'credor', 'credor_nome', 'data_empenho', 'data_pagamento', 'data_reuniao', 'forma_de_pagamento', 'forma_pagamento', 'id', 'is_active', 'meio_de_transporte', 'n_nota_empenho', 'numero', 'numero_comprovante', 'processo', 'razao_social', 'status', 'status_choice', 'tag_choice', 'tipo_de_documento', 'tipo_de_pagamento', 'tipo_inscricao', 'tipo_pagamento', 'trimestre_referencia', 'valor_pago']

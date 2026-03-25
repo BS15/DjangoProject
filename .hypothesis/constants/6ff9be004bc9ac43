@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0039_replace_comprovante_credor_fk_with_nome.py
+# hypothesis_version: 6.151.9
+
+[200, 'Credor (Texto)', 'credor', 'credor_nome', 'processos']

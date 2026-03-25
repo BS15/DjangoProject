@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0016_contasbancarias_and_more.py
+# hypothesis_version: 6.151.9
+
+['Agência', 'Banco', 'Conta', 'Conta Credor', 'Conta Sacada', 'ContasBancarias', 'ID', 'agencia', 'agencia_credor', 'banco', 'banco_credor', 'conta', 'conta_credor', 'credor', 'id', 'is_active', 'processo', 'processos']

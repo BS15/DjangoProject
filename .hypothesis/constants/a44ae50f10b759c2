@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0064_remove_numero_sequencial_from_diaria.py
+# hypothesis_version: 6.151.9
+
+['diaria', 'historicaldiaria', 'numero_sequencial', 'processos']

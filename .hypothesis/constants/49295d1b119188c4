@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0025_codigosimposto_aliquota_and_more.py
+# hypothesis_version: 6.151.9
+
+['aliquota', 'codigo', 'codigosimposto', 'processos', 'vencimento_padrao']

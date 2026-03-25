@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0044_meiosdetransporte_diaria_meio_de_transporte.py
+# hypothesis_version: 6.151.9
+
+[100, 'ID', 'Meio de Transporte', 'MeiosDeTransporte', 'diaria', 'id', 'is_active', 'meio_de_transporte', 'processos']

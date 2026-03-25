@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/views/contas.py
+# hypothesis_version: 6.151.9
+
+['POST', 'ano', 'conta', 'conta_fixa__credor', 'contas_fixas', 'credor', 'credor__nome', 'faturas', 'form', 'mes', 'painel_contas_fixas', 'processo_id', 'processo_vinculado', 'referencia']

@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0038_add_comprovante_de_pagamento.py
+# hypothesis_version: 6.151.9
+
+['Credor', 'Data de Pagamento', 'GERENCIADOR', 'ID', 'PIX', 'Processo', 'REMESSA', 'REMESSA BANCÁRIA', 'TED', 'TRANSFERÊNCIA (TED)', 'Tipo de Pagamento', 'Valor Pago', 'arquivo', 'credor', 'data_pagamento', 'id', 'processo', 'processos', 'processos.credor', 'processos.processo', 'tipo_de_pagamento', 'valor_pago', 'verbose_name', 'verbose_name_plural']
