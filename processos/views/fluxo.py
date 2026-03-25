@@ -969,23 +969,7 @@ def recusar_autorizacao_view(request, pk):
             raise PermissionDenied
         form = PendenciaForm(request.POST)
         if form.is_valid():
-            with transaction.atomic():
-                pendencia = form.save(commit=False)
-                pendencia.processo = processo
-
-                status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
-                    status_choice__iexact='A RESOLVER', defaults={'status_choice': 'A RESOLVER'}
-                )
-                pendencia.status = status_pendencia
-                pendencia.save()
-
-                status_devolvido, _ = StatusChoicesProcesso.objects.get_or_create(
-                    status_choice__iexact='AGUARDANDO LIQUIDAÇÃO / ATESTE',
-                    defaults={'status_choice': 'AGUARDANDO LIQUIDAÇÃO / ATESTE'}
-                )
-                processo.status = status_devolvido
-                processo.save()
-
+            _registrar_recusa(request, processo, form, 'AGUARDANDO LIQUIDAÇÃO / ATESTE')
             messages.error(request, f'Processo #{processo.id} não autorizado e devolvido com pendência!')
         else:
             messages.warning(request, 'Erro ao registrar recusa. Verifique os dados da pendência.')
@@ -1047,24 +1031,10 @@ def aprovar_conferencia_view(request, pk):
 def iniciar_conferencia_view(request):
     """POST: store selected process IDs in session queue, redirect to first process."""
     if request.method == 'POST':
-        if not request.user.has_perm('processos.pode_operar_contas_pagar'):
-            raise PermissionDenied
-        ids_raw = request.POST.getlist('processo_ids')
-        process_ids = []
-        for pid in ids_raw:
-            try:
-                process_ids.append(int(pid))
-            except (ValueError, TypeError):
-                pass
-
-        if not process_ids:
-            messages.warning(request, 'Selecione ao menos um processo para iniciar a conferência.')
-            return redirect('painel_conferencia')
-
-        request.session['conferencia_queue'] = process_ids
-        request.session.modified = True
-        return redirect('conferencia_processo', pk=process_ids[0])
-
+        return _iniciar_fila_sessao(
+            request, 'processos.pode_operar_contas_pagar', 'conferencia_queue',
+            'painel_conferencia', 'conferencia_processo'
+        )
     return redirect('painel_conferencia')
 
 
@@ -1097,42 +1067,99 @@ def _build_history_record(record, modelo_label):
     }
 
 
+def _iniciar_fila_sessao(request, permissao, queue_key, fallback_view, detail_view, extra_args=None):
+    """Handles POST requests to start a review queue from a selected list of IDs."""
+    if not request.user.has_perm(permissao):
+        raise PermissionDenied
+
+    ids_raw = request.POST.getlist('processo_ids')
+    process_ids = [int(pid) for pid in ids_raw if pid.isdigit()]
+
+    if not process_ids:
+        messages.warning(request, 'Selecione ao menos um processo para iniciar a revisão.')
+        return redirect(fallback_view, **(extra_args or {}))
+
+    request.session[queue_key] = process_ids
+    request.session.modified = True
+    return redirect(detail_view, pk=process_ids[0])
+
+
+def _handle_queue_navigation(request, pk, action, queue_key, fallback_view):
+    """Handles 'sair', 'pular', and 'voltar' actions for the detailed review views."""
+    queue = request.session.get(queue_key, [])
+    current_index = queue.index(pk) if pk in queue else -1
+    next_pk = queue[current_index + 1] if 0 <= current_index < len(queue) - 1 else None
+    prev_pk = queue[current_index - 1] if current_index > 0 else None
+
+    if action == 'sair':
+        request.session.pop(queue_key, None)
+        request.session.modified = True
+        return redirect(fallback_view)
+
+    if action == 'pular':
+        if next_pk:
+            return redirect(request.resolver_match.view_name, pk=next_pk)
+        messages.info(request, 'Não há mais processos na fila. Retornando ao painel.')
+        request.session.pop(queue_key, None)
+        request.session.modified = True
+        return redirect(fallback_view)
+
+    if action == 'voltar':
+        if prev_pk:
+            return redirect(request.resolver_match.view_name, pk=prev_pk)
+        messages.info(request, 'Não há processo anterior na fila.')
+        return redirect(request.resolver_match.view_name, pk=pk)
+
+    # Return context variables if no navigation action was taken
+    return None, queue, current_index, next_pk, prev_pk
+
+
+def _get_unified_history(pk):
+    """Aggregates and sorts history records for a Processo and its related models."""
+    processo = get_object_or_404(Processo, id=pk)
+    history_records = []
+
+    for record in processo.history.all().select_related('history_user'):
+        history_records.append(_build_history_record(record, 'Processo'))
+    for record in DocumentoProcesso.history.filter(processo_id=pk).select_related('history_user'):
+        history_records.append(_build_history_record(record, 'Documento'))
+    for record in Pendencia.history.filter(processo_id=pk).select_related('history_user'):
+        history_records.append(_build_history_record(record, 'Pendência'))
+    for record in DocumentoFiscal.history.filter(processo_id=pk).select_related('history_user'):
+        history_records.append(_build_history_record(record, 'Nota Fiscal'))
+
+    history_records.sort(key=lambda x: x['history_date'], reverse=True)
+    return history_records
+
+
+def _registrar_recusa(request, processo, form, status_devolucao):
+    """Saves a pendency and rolls back the process status in an atomic transaction."""
+    with transaction.atomic():
+        pendencia = form.save(commit=False)
+        pendencia.processo = processo
+        status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
+            status_choice__iexact='A RESOLVER', defaults={'status_choice': 'A RESOLVER'}
+        )
+        pendencia.status = status_pendencia
+        pendencia.save()
+        processo.avancar_status(status_devolucao, usuario=request.user)
+
+
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
 @group_required('FUNCIONÁRIO(A) CONTAS A PAGAR')
 def conferencia_processo_view(request, pk):
     """Detailed conferência view for reviewing a single process."""
-    HISTORY_TYPE_LABELS = {'+': 'Criação', '~': 'Alteração', '-': 'Exclusão'}
-
     processo = get_object_or_404(Processo, id=pk)
-
-    # Navigation queue
-    queue = request.session.get('conferencia_queue', [])
-    current_index = queue.index(pk) if pk in queue else -1
-    next_pk = queue[current_index + 1] if 0 <= current_index < len(queue) - 1 else None
-    prev_pk = queue[current_index - 1] if current_index > 0 else None
 
     if request.method == 'POST':
         action = request.POST.get('action', '')
 
-        if action == 'sair':
-            request.session.pop('conferencia_queue', None)
-            request.session.modified = True
-            return redirect('painel_conferencia')
+        nav_result = _handle_queue_navigation(request, pk, action, 'conferencia_queue', 'painel_conferencia')
+        if isinstance(nav_result, HttpResponse):
+            return nav_result
 
-        if action == 'pular':
-            if next_pk:
-                return redirect('conferencia_processo', pk=next_pk)
-            messages.info(request, 'Não há mais processos na fila. Retornando ao painel.')
-            request.session.pop('conferencia_queue', None)
-            request.session.modified = True
-            return redirect('painel_conferencia')
-
-        if action == 'voltar':
-            if prev_pk:
-                return redirect('conferencia_processo', pk=prev_pk)
-            messages.info(request, 'Não há processo anterior na fila.')
-            return redirect('conferencia_processo', pk=pk)
+        _, queue, current_index, next_pk, prev_pk = nav_result
 
         if action in ('confirmar', 'salvar'):
             if not request.user.has_perm('processos.pode_operar_contas_pagar'):
@@ -1188,28 +1215,18 @@ def conferencia_processo_view(request, pk):
                         return redirect('conferencia_processo', pk=pk)
             else:
                 messages.error(request, 'Verifique os erros no formulário abaixo.')
+    else:
+        # GET: extract queue context (empty action triggers the tuple-return path)
+        _, queue, current_index, next_pk, prev_pk = _handle_queue_navigation(
+            request, pk, '', 'conferencia_queue', 'painel_conferencia'
+        )
 
     # ── GET (or failed POST) ──────────────────────────────────────────────
     doc_formset = DocumentoFormSet(instance=processo, prefix='documentos')
     pendencia_formset = PendenciaFormSet(instance=processo, prefix='pendencias')
     pendencia_form = PendenciaForm()
 
-    # Build unified history from all related models
-    history_records = []
-
-    for record in processo.history.all().select_related('history_user'):
-        history_records.append(_build_history_record(record, 'Processo'))
-
-    for record in DocumentoProcesso.history.filter(processo_id=pk).select_related('history_user'):
-        history_records.append(_build_history_record(record, 'Documento'))
-
-    for record in Pendencia.history.filter(processo_id=pk).select_related('history_user'):
-        history_records.append(_build_history_record(record, 'Pendência'))
-
-    for record in DocumentoFiscal.history.filter(processo_id=pk).select_related('history_user'):
-        history_records.append(_build_history_record(record, 'Nota Fiscal'))
-
-    history_records.sort(key=lambda x: x['history_date'], reverse=True)
+    history_records = _get_unified_history(pk)
 
     contingencias = Contingencia.objects.filter(processo=processo).select_related(
         'solicitante', 'aprovado_por_supervisor', 'aprovado_por_ordenador', 'aprovado_por_conselho'
@@ -1254,24 +1271,10 @@ def painel_contabilizacao_view(request):
 def iniciar_contabilizacao_view(request):
     """POST: store selected process IDs in session queue, redirect to first process."""
     if request.method == 'POST':
-        if not request.user.has_perm('processos.pode_contabilizar'):
-            raise PermissionDenied
-        ids_raw = request.POST.getlist('processo_ids')
-        process_ids = []
-        for pid in ids_raw:
-            try:
-                process_ids.append(int(pid))
-            except (ValueError, TypeError):
-                pass
-
-        if not process_ids:
-            messages.warning(request, 'Selecione ao menos um processo para iniciar a contabilização.')
-            return redirect('painel_contabilizacao')
-
-        request.session['contabilizacao_queue'] = process_ids
-        request.session.modified = True
-        return redirect('contabilizacao_processo', pk=process_ids[0])
-
+        return _iniciar_fila_sessao(
+            request, 'processos.pode_contabilizar', 'contabilizacao_queue',
+            'painel_contabilizacao', 'contabilizacao_processo'
+        )
     return redirect('painel_contabilizacao')
 
 
@@ -1280,37 +1283,16 @@ def iniciar_contabilizacao_view(request):
 @group_required('CONTADOR(A)')
 def contabilizacao_processo_view(request, pk):
     """Detailed contabilização view for reviewing a single process."""
-    HISTORY_TYPE_LABELS = {'+': 'Criação', '~': 'Alteração', '-': 'Exclusão'}
-
     processo = get_object_or_404(Processo, id=pk)
-
-    # Navigation queue
-    queue = request.session.get('contabilizacao_queue', [])
-    current_index = queue.index(pk) if pk in queue else -1
-    next_pk = queue[current_index + 1] if 0 <= current_index < len(queue) - 1 else None
-    prev_pk = queue[current_index - 1] if current_index > 0 else None
 
     if request.method == 'POST':
         action = request.POST.get('action', '')
 
-        if action == 'sair':
-            request.session.pop('contabilizacao_queue', None)
-            request.session.modified = True
-            return redirect('painel_contabilizacao')
+        nav_result = _handle_queue_navigation(request, pk, action, 'contabilizacao_queue', 'painel_contabilizacao')
+        if isinstance(nav_result, HttpResponse):
+            return nav_result
 
-        if action == 'pular':
-            if next_pk:
-                return redirect('contabilizacao_processo', pk=next_pk)
-            messages.info(request, 'Não há mais processos na fila. Retornando ao painel.')
-            request.session.pop('contabilizacao_queue', None)
-            request.session.modified = True
-            return redirect('painel_contabilizacao')
-
-        if action == 'voltar':
-            if prev_pk:
-                return redirect('contabilizacao_processo', pk=prev_pk)
-            messages.info(request, 'Não há processo anterior na fila.')
-            return redirect('contabilizacao_processo', pk=pk)
+        _, queue, current_index, next_pk, prev_pk = nav_result
 
         if action in ('aprovar', 'rejeitar', 'salvar'):
             if not request.user.has_perm('processos.pode_contabilizar'):
@@ -1319,17 +1301,7 @@ def contabilizacao_processo_view(request, pk):
             if action == 'rejeitar':
                 form = PendenciaForm(request.POST)
                 if form.is_valid():
-                    with transaction.atomic():
-                        pendencia = form.save(commit=False)
-                        pendencia.processo = processo
-                        status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
-                            status_choice__iexact='A RESOLVER', defaults={'status_choice': 'A RESOLVER'}
-                        )
-                        pendencia.status = status_pendencia
-                        pendencia.save()
-
-                        processo.avancar_status('PAGO - EM CONFERÊNCIA', usuario=request.user)
-
+                    _registrar_recusa(request, processo, form, 'PAGO - EM CONFERÊNCIA')
                     messages.error(
                         request,
                         f'Processo #{processo.id} recusado pela Contabilidade e devolvido para a Conferência!'
@@ -1389,27 +1361,18 @@ def contabilizacao_processo_view(request, pk):
                         return redirect('contabilizacao_processo', pk=pk)
             else:
                 messages.error(request, 'Verifique os erros no formulário abaixo.')
+    else:
+        # GET: extract queue context (empty action triggers the tuple-return path)
+        _, queue, current_index, next_pk, prev_pk = _handle_queue_navigation(
+            request, pk, '', 'contabilizacao_queue', 'painel_contabilizacao'
+        )
 
     # ── GET (or failed POST) ──────────────────────────────────────────────
     doc_formset = DocumentoFormSet(instance=processo, prefix='documentos')
     pendencia_formset = PendenciaFormSet(instance=processo, prefix='pendencias')
     pendencia_form = PendenciaForm()
 
-    history_records = []
-
-    for record in processo.history.all().select_related('history_user'):
-        history_records.append(_build_history_record(record, 'Processo'))
-
-    for record in DocumentoProcesso.history.filter(processo_id=pk).select_related('history_user'):
-        history_records.append(_build_history_record(record, 'Documento'))
-
-    for record in Pendencia.history.filter(processo_id=pk).select_related('history_user'):
-        history_records.append(_build_history_record(record, 'Pendência'))
-
-    for record in DocumentoFiscal.history.filter(processo_id=pk).select_related('history_user'):
-        history_records.append(_build_history_record(record, 'Nota Fiscal'))
-
-    history_records.sort(key=lambda x: x['history_date'], reverse=True)
+    history_records = _get_unified_history(pk)
 
     contingencias = Contingencia.objects.filter(processo=processo).select_related(
         'solicitante', 'aprovado_por_supervisor', 'aprovado_por_ordenador', 'aprovado_por_conselho'
@@ -1463,23 +1426,7 @@ def recusar_contabilizacao_view(request, pk):
             raise PermissionDenied
         form = PendenciaForm(request.POST)
         if form.is_valid():
-            with transaction.atomic():
-                pendencia = form.save(commit=False)
-                pendencia.processo = processo
-
-                status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
-                    status_choice__iexact='A RESOLVER', defaults={'status_choice': 'A RESOLVER'}
-                )
-                pendencia.status = status_pendencia
-                pendencia.save()
-
-                status_devolvido, _ = StatusChoicesProcesso.objects.get_or_create(
-                    status_choice__iexact='PAGO - EM CONFERÊNCIA',
-                    defaults={'status_choice': 'PAGO - EM CONFERÊNCIA'}
-                )
-                processo.status = status_devolvido
-                processo.save()
-
+            _registrar_recusa(request, processo, form, 'PAGO - EM CONFERÊNCIA')
             messages.error(request, f'Processo #{processo.id} recusado pela Contabilidade e devolvido para a Conferência!')
         else:
             messages.warning(request, 'Erro ao registrar recusa. Verifique os dados da pendência.')
@@ -1510,24 +1457,10 @@ def painel_conselho_view(request):
 def iniciar_conselho_view(request):
     """POST: store selected process IDs in session queue, redirect to first process."""
     if request.method == 'POST':
-        if not request.user.has_perm('processos.pode_auditar_conselho'):
-            raise PermissionDenied
-        ids_raw = request.POST.getlist('processo_ids')
-        process_ids = []
-        for pid in ids_raw:
-            try:
-                process_ids.append(int(pid))
-            except (ValueError, TypeError):
-                pass
-
-        if not process_ids:
-            messages.warning(request, 'Selecione ao menos um processo para iniciar a revisão.')
-            return redirect('painel_conselho')
-
-        request.session['conselho_queue'] = process_ids
-        request.session.modified = True
-        return redirect('conselho_processo', pk=process_ids[0])
-
+        return _iniciar_fila_sessao(
+            request, 'processos.pode_auditar_conselho', 'conselho_queue',
+            'painel_conselho', 'conselho_processo'
+        )
     return redirect('painel_conselho')
 
 
@@ -1536,37 +1469,16 @@ def iniciar_conselho_view(request):
 @group_required('CONSELHEIRO(A) FISCAL')
 def conselho_processo_view(request, pk):
     """Completely readonly view for Conselho Fiscal — can only approve or reject."""
-    HISTORY_TYPE_LABELS = {'+': 'Criação', '~': 'Alteração', '-': 'Exclusão'}
-
     processo = get_object_or_404(Processo, id=pk)
-
-    # Navigation queue
-    queue = request.session.get('conselho_queue', [])
-    current_index = queue.index(pk) if pk in queue else -1
-    next_pk = queue[current_index + 1] if 0 <= current_index < len(queue) - 1 else None
-    prev_pk = queue[current_index - 1] if current_index > 0 else None
 
     if request.method == 'POST':
         action = request.POST.get('action', '')
 
-        if action == 'sair':
-            request.session.pop('conselho_queue', None)
-            request.session.modified = True
-            return redirect('painel_conselho')
+        nav_result = _handle_queue_navigation(request, pk, action, 'conselho_queue', 'painel_conselho')
+        if isinstance(nav_result, HttpResponse):
+            return nav_result
 
-        if action == 'pular':
-            if next_pk:
-                return redirect('conselho_processo', pk=next_pk)
-            messages.info(request, 'Não há mais processos na fila. Retornando ao painel.')
-            request.session.pop('conselho_queue', None)
-            request.session.modified = True
-            return redirect('painel_conselho')
-
-        if action == 'voltar':
-            if prev_pk:
-                return redirect('conselho_processo', pk=prev_pk)
-            messages.info(request, 'Não há processo anterior na fila.')
-            return redirect('conselho_processo', pk=pk)
+        _, queue, current_index, next_pk, prev_pk = nav_result
 
         if action in ('aprovar', 'rejeitar'):
             if not request.user.has_perm('processos.pode_auditar_conselho'):
@@ -1587,17 +1499,7 @@ def conselho_processo_view(request, pk):
             if action == 'rejeitar':
                 form = PendenciaForm(request.POST)
                 if form.is_valid():
-                    with transaction.atomic():
-                        pendencia = form.save(commit=False)
-                        pendencia.processo = processo
-                        status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
-                            status_choice__iexact='A RESOLVER', defaults={'status_choice': 'A RESOLVER'}
-                        )
-                        pendencia.status = status_pendencia
-                        pendencia.save()
-
-                        processo.avancar_status('PAGO - A CONTABILIZAR', usuario=request.user)
-
+                    _registrar_recusa(request, processo, form, 'PAGO - A CONTABILIZAR')
                     messages.error(
                         request,
                         f'Processo #{processo.id} recusado pelo Conselho Fiscal e devolvido para a Contabilidade!'
@@ -1610,25 +1512,16 @@ def conselho_processo_view(request, pk):
                 else:
                     messages.warning(request, 'Erro ao registrar recusa. Verifique os dados da pendência.')
                     return redirect('conselho_processo', pk=pk)
+    else:
+        # GET: extract queue context (empty action triggers the tuple-return path)
+        _, queue, current_index, next_pk, prev_pk = _handle_queue_navigation(
+            request, pk, '', 'conselho_queue', 'painel_conselho'
+        )
 
     # ── GET (or failed POST) ──────────────────────────────────────────────
     pendencia_form = PendenciaForm()
 
-    history_records = []
-
-    for record in processo.history.all().select_related('history_user'):
-        history_records.append(_build_history_record(record, 'Processo'))
-
-    for record in DocumentoProcesso.history.filter(processo_id=pk).select_related('history_user'):
-        history_records.append(_build_history_record(record, 'Documento'))
-
-    for record in Pendencia.history.filter(processo_id=pk).select_related('history_user'):
-        history_records.append(_build_history_record(record, 'Pendência'))
-
-    for record in DocumentoFiscal.history.filter(processo_id=pk).select_related('history_user'):
-        history_records.append(_build_history_record(record, 'Nota Fiscal'))
-
-    history_records.sort(key=lambda x: x['history_date'], reverse=True)
+    history_records = _get_unified_history(pk)
 
     contingencias = Contingencia.objects.filter(processo=processo).select_related(
         'solicitante', 'aprovado_por_supervisor', 'aprovado_por_ordenador', 'aprovado_por_conselho'
@@ -1679,23 +1572,7 @@ def recusar_conselho_view(request, pk):
             raise PermissionDenied
         form = PendenciaForm(request.POST)
         if form.is_valid():
-            with transaction.atomic():
-                pendencia = form.save(commit=False)
-                pendencia.processo = processo
-
-                status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
-                    status_choice__iexact='A RESOLVER', defaults={'status_choice': 'A RESOLVER'}
-                )
-                pendencia.status = status_pendencia
-                pendencia.save()
-
-                status_devolvido, _ = StatusChoicesProcesso.objects.get_or_create(
-                    status_choice__iexact='PAGO - A CONTABILIZAR',
-                    defaults={'status_choice': 'PAGO - A CONTABILIZAR'}
-                )
-                processo.status = status_devolvido
-                processo.save()
-
+            _registrar_recusa(request, processo, form, 'PAGO - A CONTABILIZAR')
             messages.error(request, f'Processo #{processo.id} recusado pelo Conselho Fiscal e devolvido para a Contabilidade!')
         else:
             messages.warning(request, 'Erro ao registrar recusa. Verifique os dados da pendência.')
@@ -1791,25 +1668,12 @@ def analise_reuniao_view(request, reuniao_id):
 def iniciar_conselho_reuniao_view(request, reuniao_id):
     """POST: store process IDs for a specific meeting in session queue."""
     if request.method == 'POST':
-        if not request.user.has_perm('processos.pode_auditar_conselho'):
-            raise PermissionDenied
         get_object_or_404(ReuniaoConselho, id=reuniao_id)
-        ids_raw = request.POST.getlist('processo_ids')
-        process_ids = []
-        for pid in ids_raw:
-            try:
-                process_ids.append(int(pid))
-            except (ValueError, TypeError):
-                pass
-
-        if not process_ids:
-            messages.warning(request, 'Selecione ao menos um processo para iniciar a revisão.')
-            return redirect('analise_reuniao', reuniao_id=reuniao_id)
-
-        request.session['conselho_queue'] = process_ids
-        request.session.modified = True
-        return redirect('conselho_processo', pk=process_ids[0])
-
+        return _iniciar_fila_sessao(
+            request, 'processos.pode_auditar_conselho', 'conselho_queue',
+            'analise_reuniao', 'conselho_processo',
+            extra_args={'reuniao_id': reuniao_id}
+        )
     return redirect('painel_conselho')
 
 
