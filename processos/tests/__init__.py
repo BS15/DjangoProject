@@ -3,11 +3,11 @@ from unittest.mock import patch
 from django.test import TestCase
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
-from .invoice_processor import process_invoice_taxes, _normalizar_cidade
-from .models import Processo, StatusChoicesProcesso, TiposDeDocumento, DocumentoProcesso, DocumentoFiscal
-from .utils import processar_pdf_comprovantes
-from .validators import verificar_turnpike
-from .views import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
+from processos.invoice_processor import process_invoice_taxes, _normalizar_cidade
+from processos.models import Processo, StatusChoicesProcesso, TiposDeDocumento, DocumentoProcesso, DocumentoFiscal
+from processos.utils import processar_pdf_comprovantes
+from processos.validators import verificar_turnpike
+from processos.views import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
 
 
 class NormalizarCidadeTest(TestCase):
@@ -497,14 +497,14 @@ from decimal import Decimal
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from .models import (
+from processos.models import (
     CodigosImposto,
     Credor,
     DadosContribuinte,
     DocumentoFiscal,
     Processo,
 )
-from .reinf_services import (
+from processos.reinf_services import (
     _build_r2010_xml,
     _build_r4020_xml,
     gerar_lotes_reinf,
@@ -1154,12 +1154,12 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from .models import (
+from processos.models import (
     Processo, DocumentoProcesso, DocumentoFiscal, TiposDeDocumento,
     Credor, RegistroAcessoArquivo,
 )
-from .models.suprimentos import SuprimentoDeFundos, DespesaSuprimento, StatusChoicesSuprimentoDeFundos
-from .models.verbas import Diaria, DocumentoDiaria
+from processos.models.suprimentos import SuprimentoDeFundos, DespesaSuprimento, StatusChoicesSuprimentoDeFundos
+from processos.models.verbas import Diaria, DocumentoDiaria
 
 
 def _make_cap_user(username='cap_user', email='cap@example.com'):
