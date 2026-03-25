@@ -105,14 +105,24 @@ class TiposDePagamento(models.Model):
 class TiposDeDocumento(models.Model):
     # This replaces your hard-coded choices
     tipo_de_pagamento = models.ForeignKey('TiposDePagamento', on_delete=models.PROTECT, blank=True, null=True)
-    tipo_de_documento = models.CharField(max_length=100, unique=True)
+    tipo_de_documento = models.CharField(max_length=100)
 
     # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
     # This prevents old invoices from breaking if a code is retired.
     is_active = models.BooleanField(default=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['tipo_de_documento', 'tipo_de_pagamento'],
+                name='unique_documento_por_pagamento'
+            )
+        ]
+
     def __str__(self):
-        return f"{self.tipo_de_documento}"
+        if self.tipo_de_pagamento:
+            return f"{self.tipo_de_documento} ({self.tipo_de_pagamento})"
+        return f"{self.tipo_de_documento} (Geral)"
 
 
 class TiposDePendencias(models.Model):
