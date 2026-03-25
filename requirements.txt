@@ -12,3 +12,4 @@ PyPDF2==3.0.1
 python-dotenv==1.2.2
 python-magic>=0.4.27
 reportlab>=4.0.0
+hypothesis>=6.0.0

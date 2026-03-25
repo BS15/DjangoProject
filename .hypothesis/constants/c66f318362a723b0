@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0010_categoriasdecredor_contasdepagamentoorgao_and_more.py
+# hypothesis_version: 6.151.9
+
+[100, 'Agência do credor', 'Agência do órgão', 'Banco do credor', 'Banco do órgão', 'CPF/CNPJ', 'CategoriasDeCredor', 'Chave PIX do credor', 'Conta do credor', 'Conta do órgão', 'Email do credor', 'ID', 'Nome', 'Telefone do credor', 'agencia_credor', 'agencia_orgao', 'banco_credor', 'banco_orgao', 'categoria', 'categoria_credor', 'categoria_de_credor', 'chave_pix', 'conta_credor', 'conta_orgao', 'cpf_cnpj', 'credor', 'email', 'id', 'is_active', 'nome', 'processo', 'processos', 'telefone']

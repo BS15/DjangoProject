@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0047_add_proponente_to_diaria.py
+# hypothesis_version: 6.151.9
+
+['Beneficiário', 'PF', 'Proponente', 'beneficiario', 'diaria', 'processos', 'processos.credor', 'proponente', 'tipo']

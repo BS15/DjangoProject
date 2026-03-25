@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0007_credor_categoria_alter_credor_tipo.py
+# hypothesis_version: 6.151.9
+
+['Categoria', 'Credor X', 'EX', 'Exterior / Outros', 'PF', 'PJ', 'Pessoa Física (CPF)', 'Tipo de Pessoa', 'categoria', 'credor', 'processos', 'tipo']

@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0056_add_dadoscontribuinte.py
+# hypothesis_version: 6.151.9
+
+[255, 'DadosContribuinte', 'ID', 'cnpj', 'id', 'processos', 'razao_social', 'tipo_inscricao', 'verbose_name', 'verbose_name_plural']

@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0023_contasbancarias_titular_and_more.py
+# hypothesis_version: 6.151.9
+
+['Agência', 'Banco', 'Conta', 'Titular', 'agencia', 'banco', 'conta', 'contasbancarias', 'processos', 'titular']

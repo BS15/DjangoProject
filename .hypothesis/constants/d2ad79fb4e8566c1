@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0051_comprovante_remove_tipo_add_numero.py
+# hypothesis_version: 6.151.9
+
+[100, 'numero_comprovante', 'processos', 'tipo_de_pagamento']

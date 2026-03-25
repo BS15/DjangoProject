@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0030_alter_cargosfuncoes_options_cargosfuncoes_grupo_and_more.py
+# hypothesis_version: 6.151.9
+
+[100, 'Cargo / Função', 'Cargos e Funções', 'Grupo Relacionado', 'cargo_funcao', 'cargos', 'cargosfuncoes', 'grupo', 'processos', 'processos.grupos', 'verbose_name', 'verbose_name_plural']

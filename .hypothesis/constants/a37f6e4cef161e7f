@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0053_add_rbac_permissions.py
+# hypothesis_version: 6.151.9
+
+['acesso_backoffice', 'permissions', 'pode_contabilizar', 'processo', 'processos']

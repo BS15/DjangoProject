@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0008_remove_processo_path_process_folder.py
+# hypothesis_version: 6.151.9
+
+['path_process_folder', 'processo', 'processos']

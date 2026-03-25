@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0003_rename_numero_nota_notafiscal_numero_nota_fiscal_and_more.py
+# hypothesis_version: 6.151.9
+
+[200, 'Imposto', 'arquivo_pdf', 'detalhamento', 'empenhado', 'id_unico_interno', 'n_pagamento_siscac', 'notafiscal', 'numero_nota', 'numero_nota_fiscal', 'observacao', 'path_process_folder', 'processo', 'processos', 'sem_retencao', 'verba_indenizatoria']

@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/models/verbas.py
+# hypothesis_version: 6.151.9
+
+[100, 200, 'AssinaturaAutentique', 'Autorizada', 'AuxilioRepresentacao', 'Beneficiário', 'COMPLEMENTACAO', 'CargosFuncoes', 'Cidade de Origem', 'Cidade(s) de Destino', 'Complementação', 'Concessão Inicial', 'Conselheiro(a)', 'Credor', 'Data de Retorno', 'Data de Saída', 'Diaria', 'Diária', 'INICIAL', 'Jeton', 'Meio de Transporte', 'MeiosDeTransporte', 'Nº SISCAC', 'Número Sequencial', 'Objetivo', 'Objetivo da Viagem', 'PF', 'PRORROGACAO', 'Processo', 'Proponente', 'Prorrogação', 'ReembolsoCombustivel', 'Valor Total (R$)', 'diarias', 'diarias_propostas', 'diária', 'documentos', 'jetons', 'status', 'status_choice', 'tipo']

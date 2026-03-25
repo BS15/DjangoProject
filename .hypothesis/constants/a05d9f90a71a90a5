@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0075_refactor_tipos_documento_unique_constraint.py
+# hypothesis_version: 6.151.9
+
+[100, 'processos', 'tipo_de_documento', 'tipo_de_pagamento', 'tiposdedocumento']

@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0071_remove_grupos_model_and_credor_grupo_fk.py
+# hypothesis_version: 6.151.9
+
+[100, 'Grupo Relacionado', 'Grupos', 'cargosfuncoes', 'credor', 'grupo', 'historicalcredor', 'processos']

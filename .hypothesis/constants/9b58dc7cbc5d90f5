@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/views/cadastros.py
+# hypothesis_version: 6.151.9
+
+['POST', 'agencia', 'banco', 'conta', 'conta_id', 'cpf_cnpj', 'credor', 'credores', 'credores_list', 'erro', 'filter', 'form', 'home_page', 'nome', 'pix', 'sucesso']

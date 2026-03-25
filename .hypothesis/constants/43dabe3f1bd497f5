@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/utils_import.py
+# hypothesis_version: 6.151.9
+
+['-', '.', '/', 'AGENCIA', 'BANCO', 'CARGO_FUNCAO', 'CONTA', 'CPF_CNPJ', 'DETALHAMENTO', 'DIA_VENCIMENTO', 'GRUPO', 'NOME', 'NOME_CREDOR', 'PF', 'PIX', 'PJ', 'ativa', 'cargo_funcao', 'chave_pix', 'conta', 'dia_vencimento', 'erros', 'latin-1', 'nome', 'sucessos', 'tipo', 'utf-8-sig']

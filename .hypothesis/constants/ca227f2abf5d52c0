@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/DjangoProject/settings.py
+# hypothesis_version: 6.151.9
+
+[31536000, ',', '.env', '/', '/media/', '/static/', '1', '127.0.0.1,localhost', 'ALLOWED_HOSTS', 'APP_DIRS', 'America/Sao_Paulo', 'BACKEND', 'CSRF_TRUSTED_ORIGINS', 'DB_ENGINE', 'DB_HOST', 'DB_NAME', 'DB_PASSWORD', 'DB_PORT', 'DB_USER', 'DEBUG', 'DENY', 'DIRS', 'DjangoProject.urls', 'ENGINE', 'False', 'GEMINI_API_KEY', 'HOST', 'NAME', 'OPTIONS', 'PASSWORD', 'PORT', 'SECRET_KEY', 'SECURE_SSL_REDIRECT', 'STATIC_ROOT', 'True', 'USER', 'context_processors', 'db.sqlite3', 'default', 'django.contrib.admin', 'django.contrib.auth', 'django_filters', 'https', 'media', 'pdf_templates', 'processos', 'pt-br', 'simple_history', 'static', 'staticfiles', 'templates', 'true', 'yes']

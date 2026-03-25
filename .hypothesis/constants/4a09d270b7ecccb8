@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0058_conta_sacada_cnpj_filter.py
+# hypothesis_version: 6.151.9
+
+['Conta Sacada', 'conta', 'contas_bancarias', 'contasbancarias', 'processo', 'processos', 'processos.credor', 'processos_sacados', 'titular']

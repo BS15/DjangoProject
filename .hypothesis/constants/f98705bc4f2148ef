@@ -1,0 +1,4 @@
+# file: /home/runner/work/DjangoProject/DjangoProject/processos/migrations/0014_statuschoicespendencias_tiposdependencias_and_more.py
+# hypothesis_version: 6.151.9
+
+[100, 200, 'Beneficiário(a)', 'ID', 'PF', 'Pendencia', 'StatusChoices', 'TiposDePendencias', 'beneficiario', 'descricao', 'fiscal_contrato', 'id', 'is_active', 'notafiscal', 'pendencias', 'processo', 'processos', 'processos.credor', 'processos.processo', 'status_choice', 'tipo', 'tipo_de_pendencia', 'verba_indenizatoria']
