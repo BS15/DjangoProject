@@ -16,7 +16,7 @@ from processos.validators import validar_arquivo_seguro
 def caminho_documento(instance, filename):
     # 1. Processo Principal
     if hasattr(instance, 'processo') and instance.processo:
-        ano = instance.processo.data_empenho.year if instance.processo.data_empenho else (instance.processo.ano_exercicio or 'sem_ano')
+        ano = instance.processo.data_empenho.year if instance.processo.data_empenho else (instance.processo.ano_exercicio or 9999)
         return f'pagamentos/{ano}/proc_{instance.processo.id}/{filename}'
 
     # 2. Verbas Indenizatórias

@@ -227,6 +227,8 @@ def _make_verba_delete_signal(model_cls):
     @receiver(post_delete, sender=model_cls, weak=False)
     def _auto_delete(sender, instance, **kwargs):
         _delete_file(instance.arquivo)
+    _auto_delete.__name__ = f'auto_delete_file_{model_cls.__name__.lower()}'
+    _auto_delete.__qualname__ = _auto_delete.__name__
     return _auto_delete
 
 
@@ -241,6 +243,8 @@ def _make_verba_presave_signal(model_cls):
             return
         if old.arquivo and old.arquivo.name and old.arquivo.name != instance.arquivo.name:
             _delete_file(old.arquivo)
+    _cleanup_old_file.__name__ = f'cleanup_old_file_{model_cls.__name__.lower()}'
+    _cleanup_old_file.__qualname__ = _cleanup_old_file.__name__
     return _cleanup_old_file
 
 

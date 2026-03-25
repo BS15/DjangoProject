@@ -31,7 +31,8 @@ from ..filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilte
 
 
 def _is_cap_backoffice(user):
-    """Returns True if the user has CAP/backoffice privileges."""
+    """Returns True if the user is active and has CAP/backoffice privileges
+    (superuser, staff, or the 'pode_operar_contas_pagar' permission)."""
     return user.is_active and (
         user.is_superuser
         or user.is_staff
