@@ -2187,6 +2187,7 @@ def desmarcar_lancamento(request):
 from django.views.decorators.http import require_GET
 
 @require_GET
+@xframe_options_sameorigin
 def api_documentos_processo(request, processo_id):
     """Returns a JSON list of documents attached to a Processo, for the iFrame previewer."""
     processo = get_object_or_404(Processo, id=processo_id)
