@@ -597,25 +597,16 @@ def api_extrair_codigos_barras_upload(request):
 @xframe_options_sameorigin
 def visualizar_pdf_processo(request, processo_id):
     processo = get_object_or_404(Processo, id=processo_id)
-    documentos = processo.documentos.all().order_by('ordem')
 
-    lista_caminhos = []
-    for doc in documentos:
-        if doc.arquivo and os.path.exists(doc.arquivo.path):
-            lista_caminhos.append(doc.arquivo.path)
+    pdf_buffer = processo.gerar_pdf_consolidado()
 
-    if not lista_caminhos:
+    if pdf_buffer is None:
         return HttpResponse("Este processo ainda não possui documentos em PDF anexados.", status=404)
 
-    pdf_buffer = mesclar_pdfs_em_memoria(lista_caminhos)
-
-    if pdf_buffer:
-        response = HttpResponse(pdf_buffer, content_type='application/pdf')
-        nome_arquivo = f"Processo_{processo.n_nota_empenho or processo.id}.pdf"
-        response['Content-Disposition'] = f'inline; filename="{nome_arquivo}"'
-        return response
-    else:
-        return HttpResponse("Erro interno ao mesclar os PDFs.", status=500)
+    response = HttpResponse(pdf_buffer, content_type='application/pdf')
+    nome_arquivo = f"Processo_{processo.n_nota_empenho or processo.id}.pdf"
+    response['Content-Disposition'] = f'inline; filename="{nome_arquivo}"'
+    return response
 
 
 @login_required
@@ -1718,35 +1709,13 @@ def arquivar_processo_view(request, pk):
         messages.error(request, f'Processo #{processo.id} não está no status correto para arquivamento.')
         return redirect('painel_arquivamento')
 
-    lista_arquivos = []
-    try:
-        for doc in processo.documentos.order_by('id'):
-            if doc.arquivo and doc.arquivo.name:
-                try:
-                    lista_arquivos.append(doc.arquivo.open('rb'))
-                except (FileNotFoundError, OSError):
-                    pass
+    pdf_buffer = processo.gerar_pdf_consolidado()
 
-        if not lista_arquivos:
-            messages.error(request, f'Processo #{processo.id} não possui documentos para arquivar.')
-            return redirect('painel_arquivamento')
+    if pdf_buffer is None:
+        messages.error(request, f'Processo #{processo.id} não possui documentos para arquivar.')
+        return redirect('painel_arquivamento')
 
-        try:
-            pdf_buffer = mesclar_pdfs_em_memoria(lista_arquivos)
-        except Exception:
-            pdf_buffer = None
-
-        if pdf_buffer is None:
-            messages.error(request, f'Erro ao gerar o PDF consolidado do processo #{processo.id}.')
-            return redirect('painel_arquivamento')
-
-        pdf_bytes = pdf_buffer.read()
-    finally:
-        for f in lista_arquivos:
-            try:
-                f.close()
-            except Exception:
-                pass
+    pdf_bytes = pdf_buffer.read()
 
     nome_arquivo = f'processo_{processo.id}_consolidado.pdf'
     with transaction.atomic():
@@ -1846,46 +1815,13 @@ def api_detalhes_pagamento(request):
 
             resultados = []
             for p in processos:
-                forma = p.forma_pagamento.forma_de_pagamento.lower() if p.forma_pagamento else ''
-
-                detalhe_tipo = "Não Especificado"
-                detalhe_valor = "Verifique o processo"
-                codigos_barras = None
-
-                # LÓGICA DE EXIBIÇÃO BASEADA NA FORMA DE PAGAMENTO
-                if 'boleto' in forma or 'gerenciador' in forma:
-                    detalhe_tipo = "Código de Barras"
-                    # Coleta os códigos de barras de todos os documentos vinculados ao processo
-                    codigos_barras = [
-                        doc.codigo_barras
-                        for doc in p.documentos.all()
-                        if doc.codigo_barras
-                    ]
-                    # detalhe_valor mantém o primeiro código apenas como fallback para outros contextos;
-                    # o front-end usa codigos_barras para exibir todos os códigos individualmente.
-                    detalhe_valor = codigos_barras[0] if codigos_barras else "Não preenchido"
-
-                elif 'pix' in forma:
-                    detalhe_tipo = "Chave PIX"
-                    detalhe_valor = p.credor.chave_pix if (p.credor and p.credor.chave_pix) else "Credor sem PIX cadastrado"
-
-                elif 'transfer' in forma: # Pega transferência, transferencia, etc.
-                    detalhe_tipo = "Conta Bancária"
-                    if p.conta:
-                        detalhe_valor = f"Banco: {p.conta.banco} | Ag: {p.conta.agencia} | CC: {p.conta.conta}"
-                    else:
-                        detalhe_valor = "Nenhuma conta vinculada a este processo"
-
-                # ========================================================
-                # CORREÇÃO: PROTEÇÃO CONTRA "INVALID FORMAT STRING"
-                # ========================================================
                 try:
-                    # Força a conversão para float para evitar que strings quebrem o f-string
                     valor_num = float(p.valor_liquido) if p.valor_liquido else 0.0
-                    # Formata padrão US (1,500.50), depois inverte os sinais para PT-BR (1.500,50)
                     valor_formatado = f"{valor_num:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
                 except (ValueError, TypeError):
                     valor_formatado = "0,00"
+
+                pagamento = p.detalhes_pagamento
 
                 resultados.append({
                     'id': p.id,
@@ -1893,9 +1829,9 @@ def api_detalhes_pagamento(request):
                     'credor': p.credor.nome if p.credor else "Sem Credor",
                     'valor': valor_formatado,
                     'forma': p.forma_pagamento.forma_de_pagamento if p.forma_pagamento else "N/A",
-                    'detalhe_tipo': detalhe_tipo,
-                    'detalhe_valor': detalhe_valor,
-                    'codigos_barras': codigos_barras,
+                    'detalhe_tipo': pagamento['tipo_formatado'],
+                    'detalhe_valor': pagamento['valor_formatado'],
+                    'codigos_barras': pagamento['codigos_barras'],
                 })
 
             return JsonResponse({'sucesso': True, 'dados': resultados})
