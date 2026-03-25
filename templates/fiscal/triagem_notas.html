@@ -74,7 +74,7 @@
                                             <button class="nav-link border fw-bold pdf-tab-btn {% if forloop.first %}active{% endif %}" 
                                                     id="tab-doc-{{ forloop.counter0 }}" 
                                                     data-index="{{ forloop.counter0 }}"
-                                                    data-url="{% if doc.arquivo %}{{ doc.arquivo.url }}{% endif %}" 
+                                                    data-url="{% if doc.arquivo %}{% url 'download_arquivo_seguro' 'processo' doc.id %}{% endif %}" 
                                                     onclick="changePdf(this)" 
                                                     type="button">
                                                 <i class="bi bi-file-text"></i> Nota {{ forloop.counter }}
@@ -83,7 +83,7 @@
                                     {% endfor %}
                                 </ul>
                                 <div class="border rounded bg-white shadow-inner">
-                                    <iframe id="pdf-viewer" src="{% if docs_nota.first.arquivo %}{{ docs_nota.first.arquivo.url }}{% endif %}" width="100%" height="700px" style="border: none; border-radius: 6px;"></iframe>
+                                    <iframe id="pdf-viewer" src="{% if docs_nota.first and docs_nota.first.arquivo %}{% url 'download_arquivo_seguro' 'processo' docs_nota.first.id %}{% endif %}" width="100%" height="700px" style="border: none; border-radius: 6px;"></iframe>
                                 </div>
                             {% else %}
                                 <div class="alert alert-warning m-3 text-center">

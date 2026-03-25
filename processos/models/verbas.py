@@ -1,9 +1,11 @@
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
+from django.db.models.signals import post_delete, pre_save
+from django.dispatch import receiver
 from simple_history.models import HistoricalRecords
 
-from .fluxo import DocumentoBase, caminho_documento
+from .fluxo import DocumentoBase, caminho_documento, _delete_file
 
 
 class StatusChoicesVerbasIndenizatorias(models.Model):
@@ -217,4 +219,36 @@ class DocumentoAuxilio(DocumentoBase):
     history = HistoricalRecords()
 
 
+# ==============================================================================
+# FILE LIFECYCLE SIGNALS – verba documents
+# ==============================================================================
+
+def _make_verba_delete_signal(model_cls):
+    @receiver(post_delete, sender=model_cls, weak=False)
+    def _auto_delete(sender, instance, **kwargs):
+        _delete_file(instance.arquivo)
+    _auto_delete.__name__ = f'auto_delete_file_{model_cls.__name__.lower()}'
+    _auto_delete.__qualname__ = _auto_delete.__name__
+    return _auto_delete
+
+
+def _make_verba_presave_signal(model_cls):
+    @receiver(pre_save, sender=model_cls, weak=False)
+    def _cleanup_old_file(sender, instance, **kwargs):
+        if not instance.pk:
+            return
+        try:
+            old = sender.objects.get(pk=instance.pk)
+        except sender.DoesNotExist:
+            return
+        if old.arquivo and old.arquivo.name and old.arquivo.name != instance.arquivo.name:
+            _delete_file(old.arquivo)
+    _cleanup_old_file.__name__ = f'cleanup_old_file_{model_cls.__name__.lower()}'
+    _cleanup_old_file.__qualname__ = _cleanup_old_file.__name__
+    return _cleanup_old_file
+
+
+for _doc_model in (DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio):
+    _make_verba_delete_signal(_doc_model)
+    _make_verba_presave_signal(_doc_model)
 

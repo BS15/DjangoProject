@@ -1,7 +1,9 @@
 from django.db import models
+from django.db.models.signals import post_delete, pre_save
+from django.dispatch import receiver
 from simple_history.models import HistoricalRecords
 
-from .fluxo import DocumentoBase, caminho_documento
+from .fluxo import DocumentoBase, caminho_documento, _delete_file
 from processos.validators import validar_arquivo_seguro
 
 
@@ -77,3 +79,41 @@ class DespesaSuprimento(models.Model):
 class DocumentoSuprimentoDeFundos(DocumentoBase):
     suprimento = models.ForeignKey('SuprimentoDeFundos', on_delete=models.CASCADE, related_name='documentos')
     history = HistoricalRecords()
+
+
+# ==============================================================================
+# FILE LIFECYCLE SIGNALS – suprimento documents
+# ==============================================================================
+
+@receiver(post_delete, sender=DespesaSuprimento)
+def auto_delete_file_on_delete_despesasuprimento(sender, instance, **kwargs):
+    _delete_file(instance.arquivo)
+
+
+@receiver(pre_save, sender=DespesaSuprimento)
+def cleanup_old_file_on_save_despesasuprimento(sender, instance, **kwargs):
+    if not instance.pk:
+        return
+    try:
+        old = sender.objects.get(pk=instance.pk)
+    except sender.DoesNotExist:
+        return
+    if old.arquivo and old.arquivo.name and old.arquivo.name != instance.arquivo.name:
+        _delete_file(old.arquivo)
+
+
+@receiver(post_delete, sender=DocumentoSuprimentoDeFundos)
+def auto_delete_file_on_delete_docsuprimento(sender, instance, **kwargs):
+    _delete_file(instance.arquivo)
+
+
+@receiver(pre_save, sender=DocumentoSuprimentoDeFundos)
+def cleanup_old_file_on_save_docsuprimento(sender, instance, **kwargs):
+    if not instance.pk:
+        return
+    try:
+        old = sender.objects.get(pk=instance.pk)
+    except sender.DoesNotExist:
+        return
+    if old.arquivo and old.arquivo.name and old.arquivo.name != instance.arquivo.name:
+        _delete_file(old.arquivo)

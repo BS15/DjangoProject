@@ -8,6 +8,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.urls import reverse
 from ..utils_permissoes import user_in_group
 from django.db import transaction
 from ..forms import DiariaForm, ReembolsoForm, JetonForm, AuxilioForm, ProcessoForm, PendenciaFormSet
@@ -307,16 +308,16 @@ def api_add_documento_verba(request, tipo_verba, pk):
         return JsonResponse({'ok': False, 'error': 'Método não permitido.'}, status=405)
 
     MAPA = {
-        'diaria': (Diaria, DocumentoDiaria, 'diaria'),
-        'reembolso': (ReembolsoCombustivel, DocumentoReembolso, 'reembolso'),
-        'jeton': (Jeton, DocumentoJeton, 'jeton'),
-        'auxilio': (AuxilioRepresentacao, DocumentoAuxilio, 'auxilio'),
+        'diaria': (Diaria, DocumentoDiaria, 'diaria', 'verba_diaria_doc'),
+        'reembolso': (ReembolsoCombustivel, DocumentoReembolso, 'reembolso', 'verba_reembolso_doc'),
+        'jeton': (Jeton, DocumentoJeton, 'jeton', 'verba_jeton_doc'),
+        'auxilio': (AuxilioRepresentacao, DocumentoAuxilio, 'auxilio', 'verba_auxilio_doc'),
     }
 
     if tipo_verba not in MAPA:
         return JsonResponse({'ok': False, 'error': 'Tipo de verba inválido.'}, status=400)
 
-    ModeloVerba, ModeloDocumento, fk_name = MAPA[tipo_verba]
+    ModeloVerba, ModeloDocumento, fk_name, tipo_doc_seguro = MAPA[tipo_verba]
     verba = get_object_or_404(ModeloVerba, id=pk)
 
     arquivo = request.FILES.get('arquivo')
@@ -332,7 +333,8 @@ def api_add_documento_verba(request, tipo_verba, pk):
     try:
         kwargs = {fk_name: verba, 'arquivo': arquivo, 'tipo_id': tipo_id}
         doc = ModeloDocumento.objects.create(**kwargs)
-        return JsonResponse({'ok': True, 'doc_id': doc.id, 'arquivo_url': doc.arquivo.url, 'tipo': str(doc.tipo)})
+        arquivo_url = reverse('download_arquivo_seguro', args=[tipo_doc_seguro, doc.id])
+        return JsonResponse({'ok': True, 'doc_id': doc.id, 'arquivo_url': arquivo_url, 'tipo': str(doc.tipo)})
     except Exception as e:
         return JsonResponse({'ok': False, 'error': str(e)}, status=500)
 

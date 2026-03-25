@@ -1140,3 +1140,225 @@ class BasePDFDocumentTest(TestCase):
         from processos.pdf_engine import BasePDFDocument
         doc = BasePDFDocument(obj=None, letterhead_path='/custom/path.pdf')
         self.assertEqual(doc.letterhead_path, '/custom/path.pdf')
+
+
+
+# ---------------------------------------------------------------------------
+# download_arquivo_seguro – authorization tests
+# ---------------------------------------------------------------------------
+
+import io
+from unittest.mock import patch
+from django.contrib.auth.models import User, Group, Permission
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.test import TestCase, override_settings
+from django.urls import reverse
+
+from .models import (
+    Processo, DocumentoProcesso, DocumentoFiscal, TiposDeDocumento,
+    Credor, RegistroAcessoArquivo,
+)
+from .models.suprimentos import SuprimentoDeFundos, DespesaSuprimento, StatusChoicesSuprimentoDeFundos
+from .models.verbas import Diaria, DocumentoDiaria
+
+
+def _make_cap_user(username='cap_user', email='cap@example.com'):
+    user = User.objects.create_user(username=username, password='pass', email=email)
+    perm = Permission.objects.get(codename='pode_operar_contas_pagar')
+    user.user_permissions.add(perm)
+    return user
+
+
+def _make_plain_user(username='plain', email='plain@example.com'):
+    return User.objects.create_user(username=username, password='pass', email=email)
+
+
+def _make_tipo():
+    tipo, _ = TiposDeDocumento.objects.get_or_create(tipo_de_documento='TEST DOC')
+    return tipo
+
+
+def _doc_url(tipo, pk):
+    return reverse('download_arquivo_seguro', args=[tipo, pk])
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class DownloadArquivoSeguroProcessoTest(TestCase):
+    """tipo_documento='processo' — only CAP/backoffice allowed."""
+
+    def setUp(self):
+        self.cap = _make_cap_user()
+        self.plain = _make_plain_user()
+        tipo = _make_tipo()
+        processo = Processo.objects.create()
+        self.doc = DocumentoProcesso.objects.create(
+            processo=processo, tipo=tipo, arquivo='pagamentos/2026/proc_1/test.pdf', ordem=1
+        )
+
+    def test_cap_gets_file(self):
+        self.client.force_login(self.cap)
+        with patch('django.db.models.fields.files.FieldFile.open', return_value=io.BytesIO(b'%PDF')):
+            response = self.client.get(_doc_url('processo', self.doc.id))
+        self.assertNotEqual(response.status_code, 403)
+
+    def test_plain_user_gets_403(self):
+        self.client.force_login(self.plain)
+        response = self.client.get(_doc_url('processo', self.doc.id))
+        self.assertEqual(response.status_code, 403)
+
+    def test_unauthenticated_redirects(self):
+        response = self.client.get(_doc_url('processo', self.doc.id))
+        self.assertEqual(response.status_code, 302)
+
+    def test_no_registro_created_for_unauthorized(self):
+        count_before = RegistroAcessoArquivo.objects.count()
+        self.client.force_login(self.plain)
+        self.client.get(_doc_url('processo', self.doc.id))
+        self.assertEqual(RegistroAcessoArquivo.objects.count(), count_before)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class DownloadArquivoSeguroFiscalTest(TestCase):
+    """tipo_documento='fiscal' — CAP OR matching fiscal_contrato allowed."""
+
+    def setUp(self):
+        self.cap = _make_cap_user()
+        self.fiscal_user = _make_plain_user(username='fiscal', email='fiscal@example.com')
+        self.other_user = _make_plain_user(username='other', email='other@example.com')
+        tipo = _make_tipo()
+        processo = Processo.objects.create()
+        self.doc_processo = DocumentoProcesso.objects.create(
+            processo=processo, tipo=tipo, arquivo='pagamentos/2026/proc_1/nf.pdf', ordem=1
+        )
+        self.doc_fiscal = DocumentoFiscal.objects.create(
+            processo=processo,
+            numero_nota_fiscal='NF-001',
+            data_emissao='2026-01-01',
+            valor_bruto='1000.00',
+            valor_liquido='900.00',
+            documento_vinculado=self.doc_processo,
+            fiscal_contrato=self.fiscal_user,
+        )
+
+    def test_cap_can_access(self):
+        self.client.force_login(self.cap)
+        with patch('django.db.models.fields.files.FieldFile.open', return_value=io.BytesIO(b'%PDF')):
+            response = self.client.get(_doc_url('fiscal', self.doc_fiscal.id))
+        self.assertNotEqual(response.status_code, 403)
+
+    def test_fiscal_contrato_can_access(self):
+        self.client.force_login(self.fiscal_user)
+        with patch('django.db.models.fields.files.FieldFile.open', return_value=io.BytesIO(b'%PDF')):
+            response = self.client.get(_doc_url('fiscal', self.doc_fiscal.id))
+        self.assertNotEqual(response.status_code, 403)
+
+    def test_other_user_gets_403(self):
+        self.client.force_login(self.other_user)
+        response = self.client.get(_doc_url('fiscal', self.doc_fiscal.id))
+        self.assertEqual(response.status_code, 403)
+
+    def test_no_registro_for_rejected_user(self):
+        count_before = RegistroAcessoArquivo.objects.count()
+        self.client.force_login(self.other_user)
+        self.client.get(_doc_url('fiscal', self.doc_fiscal.id))
+        self.assertEqual(RegistroAcessoArquivo.objects.count(), count_before)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class DownloadArquivoSeguroSuprimentoTest(TestCase):
+    """tipo_documento='suprimento' — CAP, or SUPRIDOS+not_encerrado+email_match."""
+
+    def setUp(self):
+        self.cap = _make_cap_user()
+        self.suprido_user = _make_plain_user(username='suprido', email='suprido@example.com')
+        self.other_user = _make_plain_user(username='other2', email='other2@example.com')
+
+        supridos_group, _ = Group.objects.get_or_create(name='SUPRIDOS')
+        self.suprido_user.groups.add(supridos_group)
+
+        self.credor = Credor.objects.create(
+            nome='Suprido Teste', email='suprido@example.com', tipo='PF'
+        )
+        self.suprimento = SuprimentoDeFundos.objects.create(
+            suprido=self.credor,
+            valor_liquido='500.00',
+            taxa_saque='0.00',
+            data_saida='2026-01-01',
+            data_retorno='2026-01-10',
+        )
+        self.despesa = DespesaSuprimento.objects.create(
+            suprimento=self.suprimento,
+            data='2026-01-05',
+            estabelecimento='Loja Teste',
+            detalhamento='Material de escritório',
+            nota_fiscal='NF-100',
+            valor='100.00',
+            arquivo='suprimentosdefundos/suprimento_1/despesas/test.pdf',
+        )
+
+    def test_cap_can_access(self):
+        self.client.force_login(self.cap)
+        with patch('django.db.models.fields.files.FieldFile.open', return_value=io.BytesIO(b'%PDF')):
+            response = self.client.get(_doc_url('suprimento', self.despesa.id))
+        self.assertNotEqual(response.status_code, 403)
+
+    def test_suprido_not_encerrado_email_match_can_access(self):
+        self.client.force_login(self.suprido_user)
+        with patch('django.db.models.fields.files.FieldFile.open', return_value=io.BytesIO(b'%PDF')):
+            response = self.client.get(_doc_url('suprimento', self.despesa.id))
+        self.assertNotEqual(response.status_code, 403)
+
+    def test_suprido_encerrado_gets_403(self):
+        status_enc, _ = StatusChoicesSuprimentoDeFundos.objects.get_or_create(
+            status_choice='ENCERRADO'
+        )
+        self.suprimento.status = status_enc
+        self.suprimento.save()
+        self.client.force_login(self.suprido_user)
+        response = self.client.get(_doc_url('suprimento', self.despesa.id))
+        self.assertEqual(response.status_code, 403)
+
+    def test_suprido_email_mismatch_gets_403(self):
+        wrong_user = _make_plain_user(username='wrong_suprido', email='wrong@example.com')
+        supridos_group = Group.objects.get(name='SUPRIDOS')
+        wrong_user.groups.add(supridos_group)
+        self.client.force_login(wrong_user)
+        response = self.client.get(_doc_url('suprimento', self.despesa.id))
+        self.assertEqual(response.status_code, 403)
+
+    def test_non_supridos_group_gets_403(self):
+        self.client.force_login(self.other_user)
+        response = self.client.get(_doc_url('suprimento', self.despesa.id))
+        self.assertEqual(response.status_code, 403)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class DownloadArquivoSeguroImmutabilityTest(TestCase):
+    """DocumentoProcesso.imutavel enforcement via signals."""
+
+    def setUp(self):
+        tipo = _make_tipo()
+        processo = Processo.objects.create()
+        self.doc = DocumentoProcesso.objects.create(
+            processo=processo, tipo=tipo, arquivo='pagamentos/2026/proc_1/orig.pdf', ordem=1,
+            imutavel=True,
+        )
+
+    def test_immutable_doc_cannot_change_arquivo(self):
+        self.doc.arquivo = 'pagamentos/2026/proc_1/new.pdf'
+        with self.assertRaises(DjangoValidationError):
+            self.doc.save()
+
+    def test_immutable_doc_cannot_be_deleted(self):
+        with self.assertRaises(DjangoValidationError):
+            self.doc.delete()
+
+    def test_mutable_doc_can_be_deleted(self):
+        tipo = _make_tipo()
+        processo = Processo.objects.create()
+        doc = DocumentoProcesso.objects.create(
+            processo=processo, tipo=tipo, arquivo='pagamentos/2026/proc_1/mutable.pdf', ordem=1,
+            imutavel=False,
+        )
+        with patch('processos.models.fluxo._delete_file'):
+            doc.delete()
