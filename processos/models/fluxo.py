@@ -4,6 +4,9 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
+from django.db.models.signals import post_delete, pre_save, pre_delete
+from django.dispatch import receiver
+from django.core.exceptions import ValidationError
 from simple_history.models import HistoricalRecords
 from datetime import date
 from processos.validators import validar_arquivo_seguro
@@ -13,9 +16,8 @@ from processos.validators import validar_arquivo_seguro
 def caminho_documento(instance, filename):
     # 1. Processo Principal
     if hasattr(instance, 'processo') and instance.processo:
-        ano = instance.processo.data_empenho.year if instance.processo.data_empenho else date.today().year
-        mes = instance.processo.data_empenho.month if instance.processo.data_empenho else date.today().month
-        return f'pagamentos/{ano}/{mes:02d}/proc_{instance.processo.id}/{filename}'
+        ano = instance.processo.data_empenho.year if instance.processo.data_empenho else (instance.processo.ano_exercicio or 'sem_ano')
+        return f'pagamentos/{ano}/proc_{instance.processo.id}/{filename}'
 
     # 2. Verbas Indenizatórias
     if hasattr(instance, 'diaria') and instance.diaria:
@@ -413,3 +415,46 @@ class AssinaturaAutentique(models.Model):
 
     def __str__(self):
         return f"{self.tipo_documento} - {self.autentique_id} ({self.status})"
+
+
+# ==============================================================================
+# FILE LIFECYCLE SIGNALS
+# ==============================================================================
+
+def _delete_file(file_field):
+    """Delete a file from storage, ignoring errors if it doesn't exist."""
+    if file_field and file_field.name:
+        try:
+            file_field.storage.delete(file_field.name)
+        except Exception:
+            pass
+
+
+@receiver(post_delete, sender=DocumentoProcesso)
+def auto_delete_file_on_delete_documentoprocesso(sender, instance, **kwargs):
+    _delete_file(instance.arquivo)
+
+
+@receiver(pre_save, sender=DocumentoProcesso)
+def enforce_immutability_and_cleanup_on_save(sender, instance, **kwargs):
+    if not instance.pk:
+        return
+    try:
+        old = sender.objects.get(pk=instance.pk)
+    except sender.DoesNotExist:
+        return
+    if old.imutavel:
+        if instance.arquivo.name != old.arquivo.name:
+            raise ValidationError(
+                "Este documento é imutável e não pode ter seu arquivo substituído."
+            )
+    if old.arquivo and old.arquivo.name and old.arquivo.name != instance.arquivo.name:
+        _delete_file(old.arquivo)
+
+
+@receiver(pre_delete, sender=DocumentoProcesso)
+def prevent_immutable_delete(sender, instance, **kwargs):
+    if instance.imutavel:
+        raise ValidationError(
+            "Este documento é imutável e não pode ser excluído."
+        )

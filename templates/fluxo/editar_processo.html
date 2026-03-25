@@ -148,7 +148,7 @@
                                                 <button type="button" class="btn btn-sm btn-outline-success extract-doc-btn" title="Extrair com IA" style="display: none;"><i class="bi bi-magic"></i> IA</button>
                                                 
                                                 <button type="button" class="btn btn-sm btn-outline-warning text-dark preview-doc-btn" title="Ver no painel" 
-                                                    {% if doc_f.instance.arquivo %} data-url="{{ doc_f.instance.arquivo.url }}" {% else %} style="display: none;" {% endif %}>
+                                                    {% if doc_f.instance.arquivo %} data-url="{% url 'download_arquivo_seguro' 'processo' doc_f.instance.id %}" {% else %} style="display: none;" {% endif %}>
                                                     <i class="bi bi-eye"></i>
                                                 </button>
                                                 <button type="button" class="btn btn-sm btn-outline-danger remove-doc-btn" tabindex="-1" title="Remover Documento"><i class="bi bi-trash"></i></button>

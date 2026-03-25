@@ -134,7 +134,7 @@
                                     <td class="text-muted">{{ doc.id }}</td>
                                     <td>{{ doc.tipo }}</td>
                                     <td class="text-center">
-                                        <a href="{{ doc.arquivo.url }}" target="_blank"
+                                        <a href="{% url 'download_arquivo_seguro' 'verba_jeton_doc' doc.id %}" target="_blank"
                                            class="btn btn-sm btn-outline-primary py-0" title="Visualizar documento">
                                             <i class="bi bi-file-earmark-arrow-down"></i> Abrir
                                         </a>

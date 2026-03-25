@@ -30,6 +30,15 @@ from ..models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, D
 from ..filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DiariasAutorizacaoFilter, ArquivamentoFilter, DevolucaoFilter
 
 
+def _is_cap_backoffice(user):
+    """Returns True if the user has CAP/backoffice privileges."""
+    return user.is_active and (
+        user.is_superuser
+        or user.is_staff
+        or user.has_perm('processos.pode_operar_contas_pagar')
+    )
+
+
 @login_required
 def download_arquivo_seguro(request, tipo_documento, documento_id):
     arquivo = None
@@ -37,20 +46,98 @@ def download_arquivo_seguro(request, tipo_documento, documento_id):
     if tipo_documento == 'processo':
         doc = get_object_or_404(DocumentoProcesso, id=documento_id)
         arquivo = doc.arquivo
+        if not _is_cap_backoffice(request.user):
+            raise PermissionDenied
+
     elif tipo_documento == 'fiscal':
         doc = get_object_or_404(DocumentoFiscal, id=documento_id)
         if not doc.documento_vinculado:
             raise Http404
         arquivo = doc.documento_vinculado.arquivo
+        if not _is_cap_backoffice(request.user):
+            if doc.fiscal_contrato != request.user:
+                raise PermissionDenied
+
     elif tipo_documento == 'comprovante':
         doc = get_object_or_404(ComprovanteDePagamento, id=documento_id)
         arquivo = doc.arquivo
+        if not _is_cap_backoffice(request.user):
+            raise PermissionDenied
+
     elif tipo_documento == 'suprimento':
         doc = get_object_or_404(DespesaSuprimento, id=documento_id)
         arquivo = doc.arquivo
+        if not _is_cap_backoffice(request.user):
+            user_in_supridos = request.user.groups.filter(name='SUPRIDOS').exists()
+            suprimento = doc.suprimento
+            is_encerrado = (
+                suprimento.status is not None
+                and suprimento.status.status_choice.upper() == 'ENCERRADO'
+            )
+            suprido_email = suprimento.suprido.email if suprimento.suprido else None
+            email_match = bool(suprido_email and suprido_email == request.user.email)
+            if not (user_in_supridos and not is_encerrado and email_match):
+                raise PermissionDenied
+
     elif tipo_documento == 'devolucao':
         doc = get_object_or_404(Devolucao, id=documento_id)
         arquivo = doc.comprovante
+        if not _is_cap_backoffice(request.user):
+            raise PermissionDenied
+
+    elif tipo_documento == 'verba_diaria_doc':
+        doc = get_object_or_404(DocumentoDiaria, id=documento_id)
+        arquivo = doc.arquivo
+        if not _is_cap_backoffice(request.user):
+            diaria = doc.diaria
+            email_match = bool(
+                diaria.beneficiario
+                and diaria.beneficiario.email
+                and diaria.beneficiario.email == request.user.email
+            )
+            proponente_match = diaria.proponente == request.user
+            if not (email_match or proponente_match):
+                raise PermissionDenied
+
+    elif tipo_documento == 'verba_reembolso_doc':
+        doc = get_object_or_404(DocumentoReembolso, id=documento_id)
+        arquivo = doc.arquivo
+        if not _is_cap_backoffice(request.user):
+            reembolso = doc.reembolso
+            email_match = bool(
+                reembolso.beneficiario
+                and reembolso.beneficiario.email
+                and reembolso.beneficiario.email == request.user.email
+            )
+            if not email_match:
+                raise PermissionDenied
+
+    elif tipo_documento == 'verba_jeton_doc':
+        doc = get_object_or_404(DocumentoJeton, id=documento_id)
+        arquivo = doc.arquivo
+        if not _is_cap_backoffice(request.user):
+            jeton = doc.jeton
+            email_match = bool(
+                jeton.beneficiario
+                and jeton.beneficiario.email
+                and jeton.beneficiario.email == request.user.email
+            )
+            if not email_match:
+                raise PermissionDenied
+
+    elif tipo_documento == 'verba_auxilio_doc':
+        doc = get_object_or_404(DocumentoAuxilio, id=documento_id)
+        arquivo = doc.arquivo
+        if not _is_cap_backoffice(request.user):
+            auxilio = doc.auxilio
+            email_match = bool(
+                auxilio.beneficiario
+                and auxilio.beneficiario.email
+                and auxilio.beneficiario.email == request.user.email
+            )
+            if not email_match:
+                raise PermissionDenied
+
     else:
         raise Http404
 
@@ -2110,7 +2197,7 @@ def api_documentos_processo(request, processo_id):
                 'ordem': doc.ordem,
                 'tipo': doc.tipo.tipo_de_documento if doc.tipo else 'Documento',
                 'nome': nome,
-                'url': doc.arquivo.url,
+                'url': reverse('download_arquivo_seguro', args=['processo', doc.id]),
             })
 
     # Collect pendencias info

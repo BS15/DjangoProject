@@ -189,7 +189,7 @@
                         </div>
                         <div class="col-auto">
                             {% if doc.arquivo %}
-                            <a href="{{ doc.arquivo.url }}" target="_blank"
+                            <a href="{% url 'download_arquivo_seguro' 'processo' doc.id %}" target="_blank"
                                class="btn btn-sm btn-outline-secondary" title="Ver arquivo">
                                 <i class="bi bi-eye"></i>
                             </a>

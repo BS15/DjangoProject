@@ -108,7 +108,7 @@
                                                 <i class="bi bi-file-earmark text-secondary me-1"></i>
                                                 {{ doc.tipo }}
                                             </span>
-                                            <a href="{{ doc.arquivo.url }}" target="_blank"
+                                            <a href="{% url 'download_arquivo_seguro' 'verba_diaria_doc' doc.id %}" target="_blank"
                                                class="btn btn-sm btn-outline-primary py-0 px-2">
                                                 <i class="bi bi-eye"></i> Ver
                                             </a>
@@ -161,7 +161,7 @@
                                                 <i class="bi bi-file-earmark text-secondary me-1"></i>
                                                 {{ doc.tipo }}
                                             </span>
-                                            <a href="{{ doc.arquivo.url }}" target="_blank"
+                                            <a href="{% url 'download_arquivo_seguro' 'verba_reembolso_doc' doc.id %}" target="_blank"
                                                class="btn btn-sm btn-outline-primary py-0 px-2">
                                                 <i class="bi bi-eye"></i> Ver
                                             </a>
@@ -205,7 +205,7 @@
                                                 <i class="bi bi-file-earmark text-secondary me-1"></i>
                                                 {{ doc.tipo }}
                                             </span>
-                                            <a href="{{ doc.arquivo.url }}" target="_blank"
+                                            <a href="{% url 'download_arquivo_seguro' 'verba_jeton_doc' doc.id %}" target="_blank"
                                                class="btn btn-sm btn-outline-primary py-0 px-2">
                                                 <i class="bi bi-eye"></i> Ver
                                             </a>
@@ -249,7 +249,7 @@
                                                 <i class="bi bi-file-earmark text-secondary me-1"></i>
                                                 {{ doc.tipo }}
                                             </span>
-                                            <a href="{{ doc.arquivo.url }}" target="_blank"
+                                            <a href="{% url 'download_arquivo_seguro' 'verba_auxilio_doc' doc.id %}" target="_blank"
                                                class="btn btn-sm btn-outline-primary py-0 px-2">
                                                 <i class="bi bi-eye"></i> Ver
                                             </a>
