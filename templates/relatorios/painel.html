@@ -1,0 +1,153 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerador de Relatórios - System X</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
+</head>
+<body class="bg-light">
+
+{% include 'partials/sidebar.html' %}
+
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-4 rounded shadow-sm border border-light">
+        <div>
+            <h2 class="mb-0 fw-bold text-dark"><i class="bi bi-file-earmark-spreadsheet text-success me-2"></i> Gerador de Relatórios</h2>
+            <p class="text-muted mb-0 ms-4">Filtre e exporte dados em CSV para análise</p>
+        </div>
+    </div>
+
+    <!-- Seletor de Tipo de Relatório -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body bg-white rounded">
+            <form method="get">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <label class="small fw-bold text-secondary mb-1">Tipo de Relatório</label>
+                        <select name="tipo" class="form-control form-control-sm" onchange="this.form.submit()">
+                            <option value="processos" {% if tipo == 'processos' %}selected{% endif %}>Processos</option>
+                            <option value="diarias" {% if tipo == 'diarias' %}selected{% endif %}>Diárias</option>
+                            <option value="impostos" {% if tipo == 'impostos' %}selected{% endif %}>Impostos Retidos</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Formulário de Filtros -->
+    {% if filtro %}
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white fw-bold text-secondary border-0 pb-0">
+            <i class="bi bi-funnel me-1"></i> Filtros
+        </div>
+        <div class="card-body bg-white rounded">
+            <form method="get" class="row g-2 align-items-end">
+                <input type="hidden" name="tipo" value="{{ tipo }}">
+                {% for field in filtro.form %}
+                <div class="col-md-3 mb-2">
+                    <label class="form-label text-muted small fw-bold mb-1">{{ field.label }}</label>
+                    {{ field }}
+                </div>
+                {% endfor %}
+                <div class="col-md-12 mt-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm fw-bold shadow-sm">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
+                    <a href="{% url 'painel_relatorios' %}?tipo={{ tipo }}" class="btn btn-outline-secondary btn-sm shadow-sm">
+                        <i class="bi bi-x-circle"></i> Limpar Filtros
+                    </a>
+                    <button type="submit" name="exportar" value="csv" class="btn btn-success btn-sm fw-bold shadow-sm ms-auto">
+                        <i class="bi bi-download"></i> Exportar CSV
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pré-visualização -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-0 pb-0">
+            <span class="fw-bold text-secondary"><i class="bi bi-table me-1"></i> Pré-visualização</span>
+            <span class="badge bg-secondary ms-2">{{ filtro.qs.count }} registro(s) encontrado(s) — exibindo até 50</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle mb-0 small">
+                    <thead class="table-dark">
+                        <tr>
+                            {% if tipo == 'processos' %}
+                            <th>ID</th>
+                            <th>Empenho</th>
+                            <th>Credor</th>
+                            <th>Valor Bruto</th>
+                            <th>Valor Líquido</th>
+                            <th>Status</th>
+                            <th>Data Pagamento</th>
+                            {% elif tipo == 'diarias' %}
+                            <th>ID</th>
+                            <th>Beneficiário</th>
+                            <th>Proponente</th>
+                            <th>Período</th>
+                            <th>Destino</th>
+                            <th>Valor</th>
+                            <th>Status</th>
+                            {% elif tipo == 'impostos' %}
+                            <th>ID</th>
+                            <th>NF</th>
+                            <th>Processo Pai</th>
+                            <th>Código</th>
+                            <th>Valor Retido</th>
+                            <th>Competência</th>
+                            <th>Processo Pagamento</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for obj in filtro.qs|slice:":50" %}
+                        <tr>
+                            {% if tipo == 'processos' %}
+                            <td>{{ obj.id }}</td>
+                            <td>{{ obj.n_nota_empenho }}</td>
+                            <td>{{ obj.credor.nome|default:'-' }}</td>
+                            <td>{{ obj.valor_bruto }}</td>
+                            <td>{{ obj.valor_liquido }}</td>
+                            <td>{{ obj.status.status_choice|default:'-' }}</td>
+                            <td>{{ obj.data_pagamento|default:'-' }}</td>
+                            {% elif tipo == 'diarias' %}
+                            <td>{{ obj.id }}</td>
+                            <td>{{ obj.beneficiario.nome|default:'-' }}</td>
+                            <td>{{ obj.proponente.get_full_name|default:'-' }}</td>
+                            <td>{{ obj.data_saida }} a {{ obj.data_retorno }}</td>
+                            <td>{{ obj.cidade_destino }}</td>
+                            <td>{{ obj.valor_total }}</td>
+                            <td>{{ obj.status.status_choice|default:'-' }}</td>
+                            {% elif tipo == 'impostos' %}
+                            <td>{{ obj.id }}</td>
+                            <td>{{ obj.nota_fiscal.numero_nota_fiscal }}</td>
+                            <td>{{ obj.nota_fiscal.processo.id }}</td>
+                            <td>{{ obj.codigo.codigo|default:'-' }}</td>
+                            <td>{{ obj.valor }}</td>
+                            <td>{{ obj.competencia }}</td>
+                            <td>{{ obj.processo_pagamento.id|default:'Pendente' }}</td>
+                            {% endif %}
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">Nenhum registro encontrado com os filtros aplicados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
