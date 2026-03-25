@@ -13,6 +13,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
@@ -41,6 +42,7 @@ def _is_cap_backoffice(user):
 
 
 @login_required
+@xframe_options_sameorigin
 def download_arquivo_seguro(request, tipo_documento, documento_id):
     arquivo = None
 
@@ -592,6 +594,7 @@ def api_extrair_codigos_barras_upload(request):
 # ==========================================
 # DOCUMENTOS FISCAIS: GERENCIAMENTO DE NOTAS FISCAIS
 # ==========================================
+@xframe_options_sameorigin
 def visualizar_pdf_processo(request, processo_id):
     processo = get_object_or_404(Processo, id=processo_id)
     documentos = processo.documentos.all().order_by('ordem')
@@ -2493,6 +2496,7 @@ def analisar_contingencia_view(request, pk):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.pode_autorizar_pagamento'))
+@xframe_options_sameorigin
 def gerar_autorizacao_pagamento_view(request, pk):
     """
     Gera e serve o PDF "Termo de Autorização de Pagamento" para o processo indicado.
@@ -2507,6 +2511,7 @@ def gerar_autorizacao_pagamento_view(request, pk):
 
 @login_required
 @user_passes_test(lambda u: u.has_perm('processos.pode_auditar_conselho'))
+@xframe_options_sameorigin
 def gerar_parecer_conselho_view(request, pk):
     """
     Gera e serve o PDF "Parecer do Conselho Fiscal" para o processo indicado.
