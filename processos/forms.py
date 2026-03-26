@@ -2,8 +2,10 @@ from django import forms
 from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 from django.contrib.auth.models import User
-from .models import Processo, DocumentoProcesso, DocumentoFiscal, RetencaoImposto, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos, Pendencia, StatusChoicesPendencias, DadosContribuinte, ContasBancarias, Devolucao, ContaFixa
+from .models import Processo, DocumentoProcesso, DocumentoFiscal, RetencaoImposto, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos, Pendencia, StatusChoicesPendencias, DadosContribuinte, ContasBancarias, Devolucao, ContaFixa, TiposDePagamento
 from .validators import validar_regras_processo, validar_regras_suprimento, STATUS_BLOQUEADOS_FORM
+
+SUPRIMENTO_DE_FUNDOS = 'SUPRIMENTO DE FUNDOS'
 
 class ProcessoForm(forms.ModelForm):
     class Meta:
@@ -65,6 +67,14 @@ class ProcessoForm(forms.ModelForm):
                     # Anula o "required = True" estabelecido no loop acima para evitar erro no salvamento
                     self.fields['credor'].required = False
         # --- FIM DA LÓGICA DE TRANCAMENTO ---
+
+        # --- BLOQUEAR SELEÇÃO MANUAL DE SUPRIMENTO DE FUNDOS ---
+        qs = TiposDePagamento.objects.exclude(tipo_de_pagamento__iexact=SUPRIMENTO_DE_FUNDOS)
+        if self.instance and self.instance.pk and self.instance.tipo_pagamento:
+            if self.instance.tipo_pagamento.tipo_de_pagamento.upper() == SUPRIMENTO_DE_FUNDOS:
+                qs = TiposDePagamento.objects.all()
+        self.fields['tipo_pagamento'].queryset = qs
+        # --- FIM DO BLOQUEIO ---
 
         # --- FILTRO DE CONTA SACADA POR CNPJ DO ÓRGÃO ---
         contribuinte = DadosContribuinte.objects.first()
