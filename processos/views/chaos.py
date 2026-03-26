@@ -1,8 +1,6 @@
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
 
-@login_required
 def chaos_testing_view(request):
     """Developer chaos-testing tool powered by gremlins.js.
 
@@ -12,6 +10,6 @@ def chaos_testing_view(request):
     - Copy ready-made browser-console snippets for quick in-page injection
     - Follow the inline guide to correlate server-side 500 errors with Django logs
 
-    Access is restricted to authenticated users only.
+    Authentication is enforced globally by GlobalLoginRequiredMiddleware.
     """
     return render(request, 'ferramentas/chaos_testing.html')

@@ -1,11 +1,8 @@
 from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
 from processos.models import Processo, Diaria, RetencaoImposto
 from processos.filters import ProcessoFilter, DiariaFilter, RetencaoIndividualFilter
 from processos.utils_relatorios import gerar_csv_relatorio
 
-
-@login_required
 def painel_relatorios_view(request):
     tipo = request.GET.get('tipo', 'processos')
     exportar = request.GET.get('exportar')

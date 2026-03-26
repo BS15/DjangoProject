@@ -4,7 +4,7 @@ from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.storage import default_storage
@@ -291,7 +291,6 @@ def api_fatiar_comprovantes(request):
     return JsonResponse({'sucesso': False, 'erro': 'Arquivo não enviado.'})
 
 
-@login_required
 def api_vincular_comprovantes(request):
     if request.method == 'POST':
         try:
@@ -456,8 +455,7 @@ def agrupar_impostos_view(request):
     return redirect('editar_processo', pk=novo_processo.id)
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@permission_required('processos.acesso_backoffice', raise_exception=True)
 def painel_liquidacoes_view(request):
     # select_related otimiza a busca no banco, já puxando o processo e o emitente
     queryset_base = DocumentoFiscal.objects.select_related(
@@ -483,8 +481,7 @@ def painel_liquidacoes_view(request):
     return render(request, 'fluxo/painel_liquidacoes.html', context)
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@permission_required('processos.pode_atestar_liquidacao', raise_exception=True)
 def alternar_ateste_nota(request, pk):
     """Permite atestar ou remover o ateste de uma nota diretamente pelo painel"""
     if request.method == 'POST':
@@ -522,7 +519,6 @@ def api_processar_retencoes(request):
     )
 
 
-@login_required
 def painel_reinf_view(request):
     """
     Painel EFD-Reinf — exibe as retenções separadas em:
@@ -569,7 +565,6 @@ def painel_reinf_view(request):
     return render(request, 'fiscal/painel_reinf.html', context)
 
 
-@login_required
 def gerar_lote_reinf_view(request):
     """
     Generate EFD-Reinf XML batch files (lotes) for R-2010 (INSS) and
