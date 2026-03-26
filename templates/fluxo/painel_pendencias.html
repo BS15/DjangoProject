@@ -1,131 +1,95 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Pendências - System X</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
-    <style>
-        .status-nao-resolvido { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
-        .status-resolvido { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
-    </style>
-</head>
-<body class="bg-light">
-{% include 'partials/sidebar.html' %}
+{% extends "layouts/base_list.html" %}
 
+{% block page_title %}Painel de Pendências{% endblock %}
 
-<div class="container mt-4 mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="mb-0 fw-bold text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Painel Central de Pendências</h3>
-            <p class="text-muted mb-0">Acompanhamento e triagem de recusas em processos</p>
-        </div>
-        <a href="{% url 'home_page' %}" class="btn btn-outline-secondary"><i class="bi bi-house"></i> Voltar à Home</a>
+{% block page_heading %}<span class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Painel Central de Pendências</span>{% endblock %}
+
+{% block page_subtitle %}Acompanhamento e triagem de recusas em processos{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'home_page' %}" class="btn btn-outline-secondary"><i class="bi bi-house"></i> Voltar à Home</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-nao-resolvido { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+    .status-resolvido { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+</style>
+{% endblock %}
+
+{% block filter_title %}Filtrar Pendências{% endblock %}
+
+{% block filter_form %}
+    {% for field in meu_filtro.form %}
+    <div class="col-md-3">
+        <label class="form-label small fw-bold text-muted mb-1">{{ field.label }}</label>
+        {{ field }}
     </div>
+    {% endfor %}
+{% endblock %}
 
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white border-bottom py-3">
-            <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-funnel"></i> Filtrar Pendências</h6>
-        </div>
-        <div class="card-body bg-light">
-            <form method="get" class="row g-3 align-items-end">
-                {% for field in meu_filtro.form %}
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold text-muted mb-1">{{ field.label }}</label>
-                    {{ field }}
-                </div>
-                {% endfor %}
-                <div class="col-md-3">
-                    <button type="submit" class="btn btn-primary fw-bold w-100 shadow-sm">
-                        <i class="bi bi-search"></i> Buscar
-                    </button>
-                </div>
-                <div class="col-md-1">
-                    <a href="{% url 'painel_pendencias' %}" class="btn btn-outline-secondary w-100" title="Limpar Filtros">
-                        <i class="bi bi-eraser"></i>
-                    </a>
-                </div>
-            </form>
-        </div>
-    </div>
+{% block table_headers %}
+    <th class="ps-4">ID Processo</th>
+    <th>Credor</th>
+    <th>Status do Processo</th>
+    <th>Tipo de Pendência</th>
+    <th style="width: 30%;">Justificativa / Descrição</th>
+    <th class="text-center">Status</th>
+    <th class="text-center pe-4">Ação</th>
+{% endblock %}
 
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th class="ps-4">ID Processo</th>
-                            <th>Credor</th>
-                            <th>Status do Processo</th>
-                            <th>Tipo de Pendência</th>
-                            <th style="width: 30%;">Justificativa / Descrição</th>
-                            <th class="text-center">Status</th>
-                            <th class="text-center pe-4">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for p in pendencias %}
-                        <tr>
-                            <td class="ps-4 fw-bold">
-                                <a href="{% url 'editar_processo' p.processo.id %}" class="text-decoration-none">
-                                    #{{ p.processo.id }}
-                                </a>
-                            </td>
-                            <td class="fw-medium text-secondary">
-                                {{ p.processo.credor.nome|default:"Não informado"|truncatechars:35 }}
-                            </td>
-                            <td>
-                                <span class="badge bg-secondary bg-opacity-75 px-2 py-1">{{ p.processo.status|default:"—" }}</span>
-                            </td>
-                            <td>
-                                <span class="badge bg-secondary">{{ p.tipo|default:"Geral" }}</span>
-                            </td>
-                            <td>
-                                <div class="small text-wrap" style="max-height: 60px; overflow-y: auto;">
-                                    {{ p.descricao|default:"Sem descrição informada." }}
-                                </div>
-                            </td>
-                            <td class="text-center">
-                                {% if p.status.status_choice == 'A RESOLVER' or not p.status %}
-                                    <span class="badge status-nao-resolvido px-3 py-2 rounded-pill">
-                                        <i class="bi bi-x-circle"></i> Pendente
-                                    </span>
-                                {% else %}
-                                    <span class="badge status-resolvido px-3 py-2 rounded-pill">
-                                        <i class="bi bi-check-circle"></i> Resolvido
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="text-center pe-4">
-                                <a href="{% url 'editar_processo' p.processo.id %}" class="btn btn-sm btn-outline-primary" title="Abrir Processo">
-                                    <i class="bi bi-folder2-open"></i> Acessar
-                                </a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
-                                <i class="bi bi-shield-check fs-1 d-block mb-3 text-success"></i>
-                                Nenhuma pendência encontrada com os filtros atuais.<br>Tudo em ordem por aqui!
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+{% block table_rows %}
+    {% for p in pendencias %}
+    <tr>
+        <td class="ps-4 fw-bold">
+            <a href="{% url 'editar_processo' p.processo.id %}" class="text-decoration-none">
+                #{{ p.processo.id }}
+            </a>
+        </td>
+        <td class="fw-medium text-secondary">
+            {{ p.processo.credor.nome|default:"Não informado"|truncatechars:35 }}
+        </td>
+        <td>
+            <span class="badge bg-secondary bg-opacity-75 px-2 py-1">{{ p.processo.status|default:"—" }}</span>
+        </td>
+        <td>
+            <span class="badge bg-secondary">{{ p.tipo|default:"Geral" }}</span>
+        </td>
+        <td>
+            <div class="small text-wrap" style="max-height: 60px; overflow-y: auto;">
+                {{ p.descricao|default:"Sem descrição informada." }}
             </div>
-        </div>
-    </div>
+        </td>
+        <td class="text-center">
+            {% if p.status.status_choice == 'A RESOLVER' or not p.status %}
+                <span class="badge status-nao-resolvido px-3 py-2 rounded-pill">
+                    <i class="bi bi-x-circle"></i> Pendente
+                </span>
+            {% else %}
+                <span class="badge status-resolvido px-3 py-2 rounded-pill">
+                    <i class="bi bi-check-circle"></i> Resolvido
+                </span>
+            {% endif %}
+        </td>
+        <td class="text-center pe-4">
+            <a href="{% url 'editar_processo' p.processo.id %}" class="btn btn-sm btn-outline-primary" title="Abrir Processo">
+                <i class="bi bi-folder2-open"></i> Acessar
+            </a>
+        </td>
+    </tr>
+    {% empty %}
+    <tr>
+        {# Update colspan to match the number of columns defined in table_headers #}
+        <td colspan="7" class="text-center py-5 text-muted">
+            <i class="bi bi-shield-check fs-1 d-block mb-3 text-success"></i>
+            Nenhuma pendência encontrada com os filtros atuais.<br>Tudo em ordem por aqui!
+        </td>
+    </tr>
+    {% endfor %}
+{% endblock %}
 
-    <div class="mt-3 text-end text-muted small">
-        Total de registros encontrados: <strong>{{ pendencias|length }}</strong>
-    </div>
-
+{% block list_footer %}
+<div class="mt-3 text-end text-muted small">
+    Total de registros encontrados: <strong>{{ pendencias|length }}</strong>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% endblock %}
