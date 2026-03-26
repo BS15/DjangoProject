@@ -1,19 +1,71 @@
-{% extends "layouts/base_list.html" %}
+{% extends "base.html" %}
 
-{# ── Batch form: opens before the table card, closes after it ───────────── #}
+{% block content %}
+<div class="container-fluid mt-4 mb-5">
 
-{% block batch_form_open %}
-<form id="batchForm" method="post" action="{% block batch_form_action %}{% endblock %}">
-    {% csrf_token %}
-{% endblock %}
-
-{% block batch_form_close %}
-    {# Sticky bottom bar with bulk-action buttons #}
-    <div class="position-sticky bottom-0 bg-white border-top shadow-sm px-3 py-2 mt-3 d-flex align-items-center gap-2">
-        {% block batch_actions %}{% endblock %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="mb-0 fw-bold">{% block page_heading %}{% endblock %}</h3>
+            <p class="text-muted mb-0">{% block page_subtitle %}{% endblock %}</p>
+        </div>
+        <div class="d-flex gap-2">
+            {% block page_actions %}{% endblock %}
+        </div>
     </div>
-</form>
-{% endblock %}
+
+    <div class="row g-4 align-items-start">
+
+        {# ── Left sidebar: filters ─────────────────────────────────────── #}
+        <div class="col-lg-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-funnel"></i> Filtros</h6>
+                </div>
+                <div class="card-body p-0">
+                    {% block filter_form %}{% endblock %}
+                </div>
+            </div>
+        </div>
+
+        {# ── Right column: batch form + table ──────────────────────────── #}
+        {# NOTE: Every submit button inside this form should use the         #}
+        {#       HTML5 `formaction` attribute to route to the correct view.  #}
+        <div class="col-lg-9">
+            <form id="batchForm" method="post">
+                {% csrf_token %}
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        {% block table_headers %}{% endblock %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% block table_rows %}{% endblock %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% block table_footer %}{% endblock %}
+                </div>
+                {# ── Sticky bottom action bar ──────────────────────────── #}
+                <div class="position-sticky bottom-0 bg-white border-top shadow-sm px-3 py-2 mt-3 d-flex align-items-center gap-2">
+                    <div class="form-check me-2">
+                        <input type="checkbox" class="form-check-input" id="batchCheckAll">
+                        <label class="form-check-label fw-bold" for="batchCheckAll">Selecionar Todos</label>
+                    </div>
+                    {% block batch_actions %}{% endblock %}
+                </div>
+            </form>
+
+            {% block list_footer %}{% endblock %}
+        </div>
+
+    </div>
+</div>
+{% endblock content %}
 
 {# ── Select-All master checkbox JavaScript ──────────────────────────────── #}
 {% block extra_js %}
