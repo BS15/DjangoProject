@@ -1,6 +1,4 @@
-import os
 import json
-import tempfile
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, get_object_or_404, redirect
@@ -15,8 +13,6 @@ from django.db import transaction
 from django.db.models import Sum, Exists, OuterRef
 from ..validators import verificar_turnpike
 from ..utils import processar_pdf_comprovantes, fatiar_pdf_manual
-from ..ai_utils import extrair_dados_documento, extract_data_with_llm, processar_pdf_comprovantes_ia
-from ..invoice_processor import process_invoice_taxes
 from ..models import (
     Processo, DocumentoFiscal, Credor, TiposDeDocumento, DocumentoProcesso,
     CodigosImposto, RetencaoImposto, StatusChoicesProcesso, TiposDePagamento,
@@ -283,11 +279,9 @@ def api_fatiar_comprovantes(request):
         modo = request.POST.get('modo', 'auto')
 
         try:
-            if modo == 'ia':
-                resultados = processar_pdf_comprovantes_ia(request.FILES['pdf_banco'])
-            elif modo == 'manual':
+            if modo == 'manual':
                 resultados = fatiar_pdf_manual(request.FILES['pdf_banco'])
-            else:  # modo == 'auto' (default): regex extraction, no AI cost
+            else:  # modo == 'auto' or 'ia' (default): regex extraction
                 resultados = processar_pdf_comprovantes(request.FILES['pdf_banco'])
 
             resultados_json = [_serializar_comprovante(r) for r in resultados]
@@ -512,11 +506,7 @@ def alternar_ateste_nota(request, pk):
 
 def api_extrair_nota(request):
     if request.method == 'POST' and request.FILES.get('arquivo'):
-        arquivo = request.FILES['arquivo']
-        dados = extrair_dados_documento(arquivo, DocumentoFiscal)
-
-        if dados:
-            return JsonResponse({'status': 'success', 'dados': dados})
+        return JsonResponse({'status': 'error', 'message': 'Extração por IA não disponível.'}, status=400)
 
     return JsonResponse({'status': 'error', 'message': 'Falha na extração'}, status=400)
 
@@ -527,28 +517,26 @@ def api_extracao_universal(request):
         tipo = request.POST.get('tipo')  # Pega o 'value' do <select> do frontend (empenho, notafiscal, boleto, siscac)
 
         try:
-            # 1. Tratamento Local (SISCAC)
-            # Como o SISCAC provavelmente usa o seu parser nativo (Regex/PyPDF), mantemos a função antiga
+            # Tratamento Local (SISCAC)
             if tipo == 'siscac':
                 from ..utils import extract_siscac_data
                 dados = extract_siscac_data(arquivo)
-
-            # 2. Tratamento Inteligente (IA - Gemini)
-            # Para os demais tipos, o nosso novo ai_utils.py assume o controlo e escolhe o Prompt certo
             else:
-                dados = extrair_dados_documento(arquivo, tipo)
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Extração por IA não disponível para este tipo de documento.'
+                }, status=400)
 
-            # 3. Resposta ao Frontend
+            # Resposta ao Frontend
             if dados:
                 return JsonResponse({'status': 'success', 'dados': dados})
             else:
                 return JsonResponse({
                     'status': 'error',
-                    'message': 'A IA não conseguiu estruturar os dados deste documento. Tente novamente.'
+                    'message': 'Não foi possível estruturar os dados deste documento. Tente novamente.'
                 }, status=400)
 
         except Exception as e:
-            # Imprime o erro no console do PythonAnywhere para facilitar o debug se a API do Gemini falhar
             import traceback
             traceback.print_exc()
             return JsonResponse({'status': 'error', 'message': f"Erro interno: {str(e)}"}, status=500)
@@ -558,8 +546,8 @@ def api_extracao_universal(request):
 
 def api_processar_retencoes(request):
     """
-    Recebe um arquivo PDF de Nota Fiscal, extrai os dados via IA e aplica as
-    regras de negócio de retenções, retornando o JSON padronizado da Etapa 6.
+    Recebe um arquivo PDF de Nota Fiscal e aplica as regras de negócio de
+    retenções, retornando o JSON padronizado da Etapa 6.
     """
     if request.method != 'POST' or not request.FILES.get('arquivo'):
         return JsonResponse(
@@ -567,30 +555,10 @@ def api_processar_retencoes(request):
             status=400,
         )
 
-    arquivo = request.FILES['arquivo']
-
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
-        for chunk in arquivo.chunks():
-            tmp.write(chunk)
-        tmp_path = tmp.name
-
-    try:
-        dados_extraidos = extract_data_with_llm(tmp_path)
-        if dados_extraidos is None:
-            return JsonResponse(
-                {'status': 'error', 'message': 'A IA não conseguiu extrair os dados da nota fiscal.'},
-                status=500,
-            )
-
-        resultado = process_invoice_taxes(dados_extraidos)
-        return JsonResponse({'status': 'success', 'resultado': resultado})
-
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': f'Erro interno: {str(e)}'}, status=500)
-
-    finally:
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
+    return JsonResponse(
+        {'status': 'error', 'message': 'Extração por IA não disponível.'},
+        status=400,
+    )
 
 
 @login_required
