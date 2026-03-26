@@ -2,36 +2,28 @@ import django_filters
 from .models import Processo, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, RetencaoImposto, CodigosImposto, DocumentoFiscal, StatusChoicesRetencoes, StatusChoicesVerbasIndenizatorias, StatusChoicesPendencias, StatusChoicesProcesso, Pendencia, Contingencia, STATUS_CONTINGENCIA, Devolucao
 
 class ProcessoFilter(django_filters.FilterSet):
+    credor_nome = django_filters.CharFilter(field_name='credor__nome', lookup_expr='icontains', label='Credor (Nome)')
+    n_nota_empenho = django_filters.CharFilter(lookup_expr='icontains', label='Nº Empenho')
+
+    # Date Ranges
+    data_empenho = django_filters.DateFromToRangeFilter(label='Data Empenho (De - Até)', widget=django_filters.widgets.RangeWidget(attrs={'type': 'date'}))
+    data_vencimento = django_filters.DateFromToRangeFilter(label='Data Vencimento (De - Até)', widget=django_filters.widgets.RangeWidget(attrs={'type': 'date'}))
+    data_pagamento = django_filters.DateFromToRangeFilter(label='Data Pagamento (De - Até)', widget=django_filters.widgets.RangeWidget(attrs={'type': 'date'}))
+
+    # Value Ranges
+    valor_bruto = django_filters.NumericRangeFilter(label='Valor Bruto (Min - Max)')
+    valor_liquido = django_filters.NumericRangeFilter(label='Valor Líquido (Min - Max)')
+
     class Meta:
         model = Processo
-        # Mapeamos todos os campos agrupando pelo tipo de busca desejada
-        fields = {
-            # Textos (Permite busca parcial ignorando maiúsculas e minúsculas)
-            'n_nota_empenho': ['icontains'],
-            'credor': ['exact'],
-            'n_pagamento_siscac': ['icontains'],
-            'observacao': ['icontains'],
-            'detalhamento': ['icontains'],
-
-            # Chaves Estrangeiras, Booleanos e Opções (Gera Dropdowns exatos)
-            'extraorcamentario': ['exact'],
-            'ano_exercicio': ['exact'],
-            'forma_pagamento': ['exact'],
-            'tipo_pagamento': ['exact'],
-            'status': ['exact'],
-            'tag': ['exact'],
-            'conta': ['exact'],  # <-- O campo novo que criamos já entra aqui
-
-            # Datas e Valores Numéricos
-            'data_empenho': ['exact'],
-            'data_vencimento': ['exact'],
-            'valor_bruto': ['exact'],
-            'valor_liquido': ['exact'],
-        }
+        fields = [
+            'n_nota_empenho', 'n_pagamento_siscac', 'observacao', 'detalhamento',
+            'extraorcamentario', 'ano_exercicio', 'forma_pagamento', 'tipo_pagamento', 'status', 'tag', 'conta',
+            'data_empenho', 'data_vencimento', 'data_pagamento', 'valor_bruto', 'valor_liquido'
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Loop para aplicar o visual do Bootstrap em todos os 17 campos gerados
         for field_name, field in self.form.fields.items():
             field.widget.attrs.update({'class': 'form-control form-control-sm'})
 
@@ -54,25 +46,22 @@ class CredorFilter(django_filters.FilterSet):
 
 # Filtro para Diárias
 class DiariaFilter(django_filters.FilterSet):
-    data_saida__gte = django_filters.DateFilter(field_name='data_saida', lookup_expr='gte', label='A partir de (Saída)')
-    data_saida__lte = django_filters.DateFilter(field_name='data_saida', lookup_expr='lte', label='Até (Saída)')
+    data_saida = django_filters.DateFromToRangeFilter(label='Data Saída (De - Até)', widget=django_filters.widgets.RangeWidget(attrs={'type': 'date'}))
+    beneficiario__nome = django_filters.CharFilter(lookup_expr='icontains', label='Nome do Beneficiário')
+    proponente__username = django_filters.CharFilter(lookup_expr='icontains', label='Username do Proponente')
+    autorizada = django_filters.BooleanFilter(label='Status de Autorização (Autorizada?)', widget=django_filters.widgets.BooleanWidget())
 
     class Meta:
         model = Diaria
-        fields = {
-            'numero_siscac': ['icontains'],
-            'beneficiario': ['exact'],
-            'proponente': ['exact'],
-            'status': ['exact'],
-            'cidade_destino': ['icontains'],
-        }
+        fields = [
+            'numero_siscac', 'beneficiario', 'proponente',
+            'status', 'cidade_destino',
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.form.fields.values():
             field.widget.attrs.update({'class': 'form-control form-control-sm'})
-        self.form.fields['data_saida__gte'].widget.attrs['type'] = 'date'
-        self.form.fields['data_saida__lte'].widget.attrs['type'] = 'date'
 
 # Filtro para Reembolso
 class ReembolsoFilter(django_filters.FilterSet):
@@ -230,48 +219,6 @@ class DocumentoFiscalFilter(django_filters.FilterSet):
     class Meta:
         model = DocumentoFiscal
         fields = ['numero_nota_fiscal', 'nome_emitente__nome', 'atestada']
-
-class DiariasAutorizacaoFilter(django_filters.FilterSet):
-    numero_siscac = django_filters.CharFilter(lookup_expr='icontains', label='Nº SISCAC')
-    beneficiario__nome = django_filters.CharFilter(lookup_expr='icontains', label='Nome do Beneficiário')
-    proponente__username = django_filters.CharFilter(lookup_expr='icontains', label='Username do Proponente')
-
-    autorizada = django_filters.BooleanFilter(
-        label='Status de Autorização (Autorizada?)',
-        widget=django_filters.widgets.BooleanWidget()
-    )
-
-    class Meta:
-        model = Diaria
-        fields = ['numero_siscac', 'beneficiario__nome', 'proponente__username', 'autorizada']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.form.fields.values():
-            field.widget.attrs.update({'class': 'form-control form-control-sm'})
-
-class ArquivamentoFilter(django_filters.FilterSet):
-    credor__nome = django_filters.CharFilter(lookup_expr='icontains', label='Credor')
-    n_nota_empenho = django_filters.CharFilter(lookup_expr='icontains', label='Nº Empenho')
-    data_pagamento__gte = django_filters.DateFilter(
-        field_name='data_pagamento', lookup_expr='gte', label='Data Pagamento (de)'
-    )
-    data_pagamento__lte = django_filters.DateFilter(
-        field_name='data_pagamento', lookup_expr='lte', label='Data Pagamento (até)'
-    )
-    ano_exercicio = django_filters.NumberFilter(label='Ano Exercício')
-
-    class Meta:
-        model = Processo
-        fields = ['credor__nome', 'n_nota_empenho', 'data_pagamento__gte', 'data_pagamento__lte', 'ano_exercicio']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.form.fields.values():
-            field.widget.attrs.update({'class': 'form-control form-control-sm'})
-        self.form.fields['data_pagamento__gte'].widget.attrs['type'] = 'date'
-        self.form.fields['data_pagamento__lte'].widget.attrs['type'] = 'date'
-
 
 class DevolucaoFilter(django_filters.FilterSet):
     processo__id = django_filters.NumberFilter(label="Nº do Processo")

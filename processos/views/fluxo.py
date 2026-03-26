@@ -28,7 +28,7 @@ from ..pdf_engine import gerar_documento_pdf
 from ..ai_utils import extrair_dados_documento, extract_data_with_llm, extrair_codigos_barras_boletos, processar_pdf_comprovantes_ia
 from ..invoice_processor import process_invoice_taxes
 from ..models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias, StatusChoicesRetencoes, MeiosDeTransporte, FormasDePagamento, ContasBancarias, CargosFuncoes, TagChoices, RegistroAcessoArquivo, Devolucao, ReuniaoConselho
-from ..filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DiariasAutorizacaoFilter, ArquivamentoFilter, DevolucaoFilter
+from ..filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DevolucaoFilter
 
 
 def _is_cap_backoffice(user):
@@ -1718,7 +1718,7 @@ def painel_arquivamento_view(request):
         status__status_choice__iexact='ARQUIVADO'
     ).order_by('-id')
 
-    arquivamento_filtro = ArquivamentoFilter(request.GET or None, queryset=arquivados_qs)
+    arquivamento_filtro = ProcessoFilter(request.GET or None, queryset=arquivados_qs)
     processos_arquivados = arquivamento_filtro.qs
 
     return render(request, 'fluxo/arquivamento.html', {
