@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="mb-0 fw-bold">{% block page_heading %}{% endblock %}</h3>
+            <p class="text-muted mb-0">{% block page_subtitle %}{% endblock %}</p>
+        </div>
+        <div class="d-flex gap-2">
+            {% block page_actions %}{% endblock %}
+        </div>
+    </div>
+
+    {% block filter_card %}
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white border-bottom py-3">
+            <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-funnel"></i> {% block filter_title %}Filtrar{% endblock %}</h6>
+        </div>
+        <div class="card-body bg-light">
+            <form method="get" class="row g-3 align-items-end">
+                {% block filter_form %}{% endblock %}
+                <div class="col-md-auto">
+                    <button type="submit" class="btn btn-primary fw-bold shadow-sm">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                    <a href="{{ request.path }}" class="btn btn-outline-secondary ms-1" title="Limpar Filtros">
+                        <i class="bi bi-eraser"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endblock filter_card %}
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            {% block table_headers %}{% endblock %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% block table_rows %}{% endblock %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% block table_footer %}
+        {# Override this block for content below the table within the card (e.g. pagination) #}
+        {% endblock %}
+    </div>
+
+    {% block list_footer %}{% endblock %}
+
+</div>
+{% endblock content %}
