@@ -1,0 +1,24 @@
+{# ─────────────────────────────────────────────────────────────────────────────
+   Partial: _modal_preview_confirm.html
+   Purpose: Save-confirmation modal — summarises Credor and Valor Líquido
+            before the form is submitted.  Populated by
+            window.check_information_alert() defined in process_form.js.
+   Usage:   {% include "fluxo/partials/_modal_preview_confirm.html" %}
+   ─────────────────────────────────────────────────────────────────────────── #}
+<div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Confirmação de Processo</h5>
+            </div>
+            <div class="modal-body">
+                <p><strong>Credor:</strong> <span id="prev_credor"></span></p>
+                <p><strong>Valor Líquido:</strong> R$ <span id="prev_val"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Editar</button>
+                <button type="submit" class="btn btn-primary fw-bold">Prosseguir</button>
+            </div>
+        </div>
+    </div>
+</div>
