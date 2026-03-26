@@ -25,7 +25,7 @@ from ..validators import verificar_turnpike, STATUS_BLOQUEADOS_TOTAL, STATUS_SOM
 from ..utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, parse_siscac_report, sync_siscac_payments
 from ..utils_permissoes import group_required
 from ..pdf_engine import gerar_documento_pdf
-from ..ai_utils import extrair_dados_documento, extract_data_with_llm, extrair_codigos_barras_boletos, processar_pdf_comprovantes_ia
+from ..ai_utils import extrair_dados_documento, extract_data_with_llm, processar_pdf_comprovantes_ia
 from ..invoice_processor import process_invoice_taxes
 from ..models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias, StatusChoicesRetencoes, MeiosDeTransporte, FormasDePagamento, ContasBancarias, CargosFuncoes, TagChoices, RegistroAcessoArquivo, Devolucao, ReuniaoConselho
 from ..filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DevolucaoFilter
@@ -206,12 +206,8 @@ def _normalizar_texto(texto):
 
 def _extrair_e_salvar_codigos_barras(processo):
     """
-    Se o forma_pagamento do processo for Boleto Bancário ou Gerenciador, percorre todos
-    os DocumentoProcesso do tipo boleto, extrai os códigos de barras via IA (mesclando
-    os PDFs num único envio) e persiste o resultado em DocumentoProcesso.codigo_barras.
-
-    Returns:
-        Tupla (n_extraidos, n_falhas).
+    Percorre os DocumentoProcesso do tipo boleto e extrai os códigos de barras 
+    usando extração determinística (processar_pdf_boleto), salvando no banco.
     """
     if not processo.forma_pagamento:
         return 0, 0
@@ -228,37 +224,28 @@ def _extrair_e_salvar_codigos_barras(processo):
     if not boleto_docs:
         return 0, 0
 
-    caminhos = []
-    docs_validos = []
-    for doc in boleto_docs:
-        try:
-            caminhos.append(doc.arquivo.path)
-            docs_validos.append(doc)
-        except Exception:
-            pass
-
-    if not caminhos:
-        return 0, 0
-
-    barcodes = extrair_codigos_barras_boletos(caminhos)
-    if barcodes is None:
-        return 0, len(docs_validos)
-
-    n_docs = len(docs_validos)
     extraidos = 0
     falhas = 0
-    for doc, barcode in zip(docs_validos, barcodes):
-        if barcode:
-            # Truncate to model's max_length (DocumentoProcesso.codigo_barras = max 60 chars)
-            doc.codigo_barras = str(barcode)[:60]
-            doc.save(update_fields=['codigo_barras'])
-            extraidos += 1
-        else:
-            falhas += 1
 
-    # If the LLM returned fewer items than docs (zip stops at the shorter list),
-    # the remaining unprocessed documents are counted as failures.
-    falhas += n_docs - (extraidos + falhas)
+    for doc in boleto_docs:
+        # Skip if it already has a barcode
+        if doc.codigo_barras:
+            continue
+
+        try:
+            with doc.arquivo.open('rb') as pdf_file:
+                dados = processar_pdf_boleto(pdf_file)
+                codigo = dados.get('codigo_barras', '') if dados else ''
+
+                if codigo:
+                    doc.codigo_barras = str(codigo)[:60]
+                    doc.save(update_fields=['codigo_barras'])
+                    extraidos += 1
+                else:
+                    falhas += 1
+        except Exception as e:
+            print(f"Erro ao extrair boleto doc id {doc.id}: {e}")
+            falhas += 1
 
     return extraidos, falhas
 
