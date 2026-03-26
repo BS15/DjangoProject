@@ -47,6 +47,9 @@
     </div>
 </div>
 
+{# Optional modals (e.g. rejection/return dialogs) rendered outside the main form #}
+{% block extra_modals %}{% endblock %}
+
 {# Sticky bottom action bar: Voltar, Pular, Sair and primary actions #}
 <div class="review-action-bar">
     {% block queue_navigation %}{% endblock %}

@@ -8,13 +8,11 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
     <style>
-        #start-contabilizacao-bar { display: none; }
         tr.selected-row { background-color: #eff6ff !important; }
     </style>
 </head>
 <body class="bg-light">
 {% include 'partials/sidebar.html' %}
-
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow-sm">
     <div class="container-fluid px-4">
@@ -40,23 +38,13 @@
         {% endfor %}
     {% endif %}
 
-    <!-- Selection action bar (shown when ≥1 process is checked) -->
-    {% if pode_interagir %}
-    <div id="start-contabilizacao-bar" class="alert alert-primary d-flex align-items-center gap-3 mb-3 shadow-sm">
-        <i class="bi bi-check2-square fs-5"></i>
-        <span><strong id="selected-count">0</strong> processo(s) selecionado(s).</span>
-        <form method="POST" action="{% url 'iniciar_contabilizacao' %}" id="iniciar-form" class="ms-auto d-flex align-items-center gap-2">
-            {% csrf_token %}
-            <div id="hidden-ids-container"></div>
-            <button type="submit" class="btn btn-primary fw-bold shadow-sm">
-                <i class="bi bi-play-fill me-1"></i>Iniciar Contabilização
-            </button>
-        </form>
-        <button type="button" class="btn btn-outline-secondary btn-sm" id="clear-selection">
-            <i class="bi bi-x-lg"></i> Limpar Seleção
-        </button>
-    </div>
-    {% endif %}
+    <!-- Selection action bar -->
+    {% with bar_id="start-contabilizacao-bar"
+            bar_color="primary"
+            iniciar_url_name="iniciar_contabilizacao"
+            iniciar_label="Iniciar Contabilização" %}
+        {% include "fluxo/partials/_painel_selecao_bar.html" %}
+    {% endwith %}
 
     <div class="card shadow-sm border-0">
         <div class="card-body p-0">
@@ -98,7 +86,6 @@
                         <td>{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
                         <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
                         <td class="text-center d-flex justify-content-center gap-1">
-
                             {% if pode_interagir %}
                             <a href="{% url 'contabilizacao_processo' pk=processo.id %}"
                                class="btn btn-sm btn-primary fw-bold shadow-sm"
@@ -106,13 +93,11 @@
                                 <i class="bi bi-calculator"></i> Revisar
                             </a>
                             {% endif %}
-
                             <button type="button" class="btn btn-sm btn-outline-secondary btn-preview"
                                     data-processo-id="{{ processo.id }}"
                                     title="Pré-visualizar Documentos">
                                 <i class="bi bi-eye"></i>
                             </button>
-
                         </td>
                     </tr>
                     {% empty %}
@@ -133,60 +118,8 @@
 {% include 'partials/preview_modal.html' %}
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-(function () {
-    'use strict';
-
-    var bar            = document.getElementById('start-contabilizacao-bar');
-    var countLabel     = document.getElementById('selected-count');
-    var hiddenCont     = document.getElementById('hidden-ids-container');
-    var selectAll      = document.getElementById('select-all');
-    var clearBtn       = document.getElementById('clear-selection');
-    var rowChecks      = document.querySelectorAll('.row-check');
-
-    if (!bar) return;
-
-    function updateBar() {
-        var checked = document.querySelectorAll('.row-check:checked');
-        var n = checked.length;
-        countLabel.textContent = n;
-
-        hiddenCont.innerHTML = '';
-        checked.forEach(function (cb) {
-            var inp = document.createElement('input');
-            inp.type  = 'hidden';
-            inp.name  = 'processo_ids';
-            inp.value = cb.value;
-            hiddenCont.appendChild(inp);
-        });
-
-        rowChecks.forEach(function (cb) {
-            var row = cb.closest('tr');
-            if (cb.checked) {
-                row.classList.add('selected-row');
-            } else {
-                row.classList.remove('selected-row');
-            }
-        });
-
-        bar.style.display = n > 0 ? 'flex' : 'none';
-    }
-
-    rowChecks.forEach(function (cb) {
-        cb.addEventListener('change', updateBar);
-    });
-
-    selectAll && selectAll.addEventListener('change', function () {
-        rowChecks.forEach(function (cb) { cb.checked = selectAll.checked; });
-        updateBar();
-    });
-
-    clearBtn && clearBtn.addEventListener('click', function () {
-        rowChecks.forEach(function (cb) { cb.checked = false; });
-        if (selectAll) selectAll.checked = false;
-        updateBar();
-    });
-})();
-</script>
+{% with js_bar_id="start-contabilizacao-bar" %}
+    {% include "fluxo/partials/_painel_js_selecao.html" %}
+{% endwith %}
 </body>
 </html>
