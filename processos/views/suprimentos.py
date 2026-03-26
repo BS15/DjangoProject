@@ -86,8 +86,8 @@ def add_suprimento_view(request):
                     defaults={'tipo_de_pagamento': 'SUPRIMENTO DE FUNDOS'},
                 )
                 status_inicial, _ = StatusChoicesProcesso.objects.get_or_create(
-                    status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
-                    defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'},
+                    status_choice__iexact='A EMPENHAR',
+                    defaults={'status_choice': 'A EMPENHAR'},
                 )
 
                 valor_bruto = suprimento.valor_liquido
@@ -101,7 +101,7 @@ def add_suprimento_view(request):
                     tipo_pagamento=tipo_pgto,
                     status=status_inicial,
                     detalhamento=detalhamento,
-                    extraorcamentario=True,
+                    extraorcamentario=False,
                 )
 
                 suprimento.processo = processo
