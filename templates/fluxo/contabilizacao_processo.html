@@ -1,30 +1,20 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contabilização — Processo #{{ processo.id }} - System X</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
-    <style>
-        .sticky-panel { position: sticky; top: 12px; }
-        .history-row { font-size: 0.82rem; }
-        .pendencia-row-resolvida { opacity: 0.6; }
-        #empty-doc-form, #empty-pendencia-form { display: none; }
-        .drag-handle { cursor: grab; }
-        .doc-imutavel-badge { font-size: 0.7rem; }
-        .progress-queue { font-size: 0.82rem; }
-        .action-bar { position: sticky; bottom: 0; z-index: 100; background: #fff;
-                      border-top: 2px solid #dee2e6; padding: 0.75rem 1rem; box-shadow: 0 -2px 8px rgba(0,0,0,.07); }
-    </style>
-</head>
-<body class="bg-light">
-{% include 'partials/sidebar.html' %}
+{% extends "layouts/base_review.html" %}
 
+{% block page_title %}Contabilização — Processo #{{ processo.id }}{% endblock %}
 
-<!-- ═══ NAVBAR ═══════════════════════════════════════════════════════════ -->
+{% block review_extra_css %}
+<style>
+    .history-row { font-size: 0.82rem; }
+    .pendencia-row-resolvida { opacity: 0.6; }
+    #empty-doc-form, #empty-pendencia-form { display: none; }
+    .drag-handle { cursor: grab; }
+    .doc-imutavel-badge { font-size: 0.7rem; }
+    .progress-queue { font-size: 0.82rem; }
+</style>
+{% endblock %}
+
+{# ═══ TOP BAR: context navbar + queue progress ═══════════════════════════ #}
+{% block review_topbar %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-0 shadow-sm">
     <div class="container-fluid px-4">
         <a class="navbar-brand fw-bold" href="{% url 'home_page' %}">System X</a>
@@ -34,7 +24,6 @@
     </div>
 </nav>
 
-<!-- ═══ PROGRESS BAR ═════════════════════════════════════════════════════ -->
 {% if queue_length > 0 %}
 <div class="bg-white border-bottom px-4 py-2 d-flex align-items-center gap-3">
     <span class="progress-queue text-muted">
@@ -54,707 +43,161 @@
     </form>
 </div>
 {% endif %}
+{% endblock %}
 
-<!-- ═══ MAIN CONTENT ═════════════════════════════════════════════════════ -->
-<div class="container-fluid px-3 py-3" style="padding-bottom: 90px !important;">
+{# ═══ LEFT PANE: PDF viewer ═══════════════════════════════════════════════ #}
+{% block document_viewer %}
+<div class="review-sticky-panel">
+    <div class="card shadow-sm border-primary">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-2">
+            <span class="fw-bold">
+                <i class="bi bi-file-earmark-pdf me-1"></i>
+                Processo #{{ processo.id }} — PDF Consolidado
+            </span>
+            <a href="{% url 'visualizar_pdf_processo' processo_id=processo.id %}"
+               target="_blank"
+               class="btn btn-sm btn-light text-primary fw-bold">
+                <i class="bi bi-box-arrow-up-right"></i> Abrir em nova aba
+            </a>
+        </div>
+        <div class="card-body p-0">
+            <iframe
+                src="{% url 'visualizar_pdf_processo' processo_id=processo.id %}"
+                width="100%"
+                style="height: calc(100vh - 200px); min-height: 600px; border: none;"
+                title="PDF Consolidado do Processo">
+            </iframe>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
+{# ═══ RIGHT PANE: forms, info, history ═══════════════════════════════════ #}
+{% block review_panel %}
+<form method="post" enctype="multipart/form-data" id="contabilizacao-form">
+    {% csrf_token %}
+    {{ doc_formset.management_form }}
+    {{ pendencia_formset.management_form }}
+
+    {% with badge_color="primary" value_color="text-primary" %}
+        {% include "fluxo/partials/_processo_info_card.html" %}
+    {% endwith %}
+
+    {% with add_btn_class="btn-outline-primary" %}
+        {% include "fluxo/partials/_processo_doc_formset.html" %}
+    {% endwith %}
+
+    {% include "fluxo/partials/_processo_pendencias_formset.html" %}
+
+    {% include "fluxo/partials/_processo_history_card.html" %}
+
+    {% include "fluxo/partials/_processo_contingencias_card.html" %}
+
+</form><!-- #contabilizacao-form -->
+{% endblock %}
+
+{# ═══ REJECTION MODAL ════════════════════════════════════════════════════ #}
+{% block extra_modals %}
+{% with rejeitar_modal_title="Devolver Processo"
+        rejeitar_modal_body="Informe o erro que impede a contabilização. O processo retornará à Conferência."
+        rejeitar_label_tipo="Tipo de Pendência"
+        rejeitar_label_descricao="Descrição do Erro"
+        rejeitar_confirm_label="Confirmar Devolução" %}
+    {% include "fluxo/partials/_processo_rejeitar_modal.html" %}
+{% endwith %}
+{% endblock %}
+
+{# ═══ STICKY ACTION BAR ══════════════════════════════════════════════════ #}
+{% block queue_navigation %}
+<div class="d-flex align-items-center gap-2 flex-wrap">
+
+    {% if pode_interagir %}
+    <!-- Approve → Conselho Fiscal -->
+    <button type="button"
+            class="btn btn-primary fw-bold shadow-sm"
+            id="btn-aprovar"
+            data-action="aprovar"
+            title="Salvar alterações, confirmar contabilização e enviar para o Conselho Fiscal">
+        <i class="bi bi-check2-all me-1"></i>
+        Confirmar e Enviar para Conselho Fiscal
+    </button>
+
+    <!-- Save without advancing -->
+    <button type="button"
+            class="btn btn-outline-secondary fw-bold"
+            id="btn-salvar"
+            data-action="salvar"
+            title="Salvar alterações sem avançar">
+        <i class="bi bi-floppy me-1"></i>
+        Salvar
+    </button>
+
+    <!-- Reject → back to Conferência -->
+    <button type="button"
+            class="btn btn-outline-danger fw-bold"
+            data-bs-toggle="modal"
+            data-bs-target="#modalRejeitar"
+            title="Devolver para a Conferência">
+        <i class="bi bi-arrow-return-left me-1"></i>
+        Devolver para Conferência
+    </button>
     {% endif %}
 
-    <div class="row g-3">
+    <!-- Back to previous -->
+    {% if prev_pk %}
+    <button type="button"
+            class="btn btn-outline-secondary fw-bold"
+            id="btn-voltar"
+            data-action="voltar">
+        <i class="bi bi-skip-start me-1"></i>
+        Voltar — Processo Anterior
+    </button>
+    {% else %}
+    <button type="button"
+            class="btn btn-outline-secondary fw-bold disabled"
+            title="Não há processo anterior na fila">
+        <i class="bi bi-skip-start me-1"></i>
+        Voltar
+    </button>
+    {% endif %}
 
-        <!-- ── LEFT: PDF PREVIEW ─────────────────────────────────────────── -->
-        <div class="col-xl-7 col-lg-6">
-            <div class="sticky-panel">
-                <div class="card shadow-sm border-primary">
-                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-2">
-                        <span class="fw-bold">
-                            <i class="bi bi-file-earmark-pdf me-1"></i>
-                            Processo #{{ processo.id }} — PDF Consolidado
-                        </span>
-                        <a href="{% url 'visualizar_pdf_processo' processo_id=processo.id %}"
-                           target="_blank"
-                           class="btn btn-sm btn-light text-primary fw-bold">
-                            <i class="bi bi-box-arrow-up-right"></i> Abrir em nova aba
-                        </a>
-                    </div>
-                    <div class="card-body p-0">
-                        <iframe
-                            src="{% url 'visualizar_pdf_processo' processo_id=processo.id %}"
-                            width="100%"
-                            style="height: calc(100vh - 200px); min-height: 600px; border: none;"
-                            title="PDF Consolidado do Processo">
-                        </iframe>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Skip -->
+    {% if next_pk %}
+    <button type="button"
+            class="btn btn-outline-secondary fw-bold"
+            id="btn-pular"
+            data-action="pular">
+        <i class="bi bi-skip-end me-1"></i>
+        Pular — Próximo Processo
+    </button>
+    {% else %}
+    <button type="button"
+            class="btn btn-outline-secondary fw-bold disabled"
+            title="Não há mais processos na fila">
+        <i class="bi bi-skip-end me-1"></i>
+        Pular
+    </button>
+    {% endif %}
 
-        <!-- ── RIGHT: INFO + FORMS + HISTORY ─────────────────────────────── -->
-        <div class="col-xl-5 col-lg-6">
-            <form method="post" enctype="multipart/form-data" id="contabilizacao-form">
-                {% csrf_token %}
-                {{ doc_formset.management_form }}
-                {{ pendencia_formset.management_form }}
-
-                <!-- ┌ PROCESS INFO ────────────────────────────────────────┐ -->
-                <div class="card shadow-sm border-0 mb-3">
-                    <div class="card-header bg-light fw-bold text-secondary py-2">
-                        <i class="bi bi-card-heading me-1"></i> Informações do Processo
-                    </div>
-                    <div class="card-body py-2">
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <div class="small text-muted">Credor</div>
-                                <div class="fw-semibold">{{ processo.credor|default:"—" }}</div>
-                            </div>
-                            <div class="col-6">
-                                <div class="small text-muted">Status</div>
-                                <span class="badge bg-primary text-white">
-                                    {{ processo.status|default:"—" }}
-                                </span>
-                            </div>
-                            <div class="col-4">
-                                <div class="small text-muted">Valor Bruto</div>
-                                <div class="fw-semibold">R$ {{ processo.valor_bruto|floatformat:2|default:"—" }}</div>
-                            </div>
-                            <div class="col-4">
-                                <div class="small text-muted">Valor Líquido</div>
-                                <div class="fw-semibold text-primary">R$ {{ processo.valor_liquido|floatformat:2|default:"—" }}</div>
-                            </div>
-                            <div class="col-4">
-                                <div class="small text-muted">Data Pgto</div>
-                                <div class="fw-semibold">{{ processo.data_pagamento|date:"d/m/Y"|default:"—" }}</div>
-                            </div>
-                            {% if processo.n_nota_empenho %}
-                            <div class="col-6">
-                                <div class="small text-muted">Nota de Empenho</div>
-                                <div>{{ processo.n_nota_empenho }}</div>
-                            </div>
-                            {% endif %}
-                            {% if processo.n_pagamento_siscac %}
-                            <div class="col-6">
-                                <div class="small text-muted">N° SISCAC</div>
-                                <div>{{ processo.n_pagamento_siscac }}</div>
-                            </div>
-                            {% endif %}
-                            {% if processo.tipo_pagamento %}
-                            <div class="col-6">
-                                <div class="small text-muted">Tipo de Pagamento</div>
-                                <div>{{ processo.tipo_pagamento }}</div>
-                            </div>
-                            {% endif %}
-                            {% if processo.forma_pagamento %}
-                            <div class="col-6">
-                                <div class="small text-muted">Forma de Pagamento</div>
-                                <div>{{ processo.forma_pagamento }}</div>
-                            </div>
-                            {% endif %}
-                            {% if processo.conta %}
-                            <div class="col-12">
-                                <div class="small text-muted">Conta Sacada</div>
-                                <div>{{ processo.conta }}</div>
-                            </div>
-                            {% endif %}
-                            {% if processo.detalhamento %}
-                            <div class="col-12">
-                                <div class="small text-muted">Detalhamento</div>
-                                <div class="small">{{ processo.detalhamento }}</div>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                <!-- └──────────────────────────────────────────────────────┘ -->
-
-                <!-- ┌ DOCUMENTS ───────────────────────────────────────────┐ -->
-                <div class="card shadow-sm border-0 mb-3">
-                    <div class="card-header bg-light fw-bold text-secondary py-2 d-flex justify-content-between align-items-center">
-                        <span><i class="bi bi-paperclip me-1"></i> Documentos do Processo</span>
-                        <span class="badge bg-secondary">{{ processo.documentos.count }} doc(s)</span>
-                    </div>
-                    <div class="card-body py-2 px-2">
-                        <div id="document-list">
-                            {% for doc_f in doc_formset %}
-                                {% with is_existing=doc_f.instance.pk is_imutavel=doc_f.instance.imutavel %}
-                                <div class="row g-1 align-items-center mb-2 border-bottom pb-2 document-row">
-                                    {% for hidden in doc_f.hidden_fields %}{{ hidden }}{% endfor %}
-
-                                    <div class="col-auto drag-handle ps-1" title="Arrastar para reordenar">
-                                        <i class="bi bi-grip-vertical text-secondary"></i>
-                                    </div>
-
-                                    <div class="col-1">
-                                        <label class="small text-muted d-block">Ord.</label>
-                                        {{ doc_f.ordem }}
-                                    </div>
-
-                                    <div class="col-4">
-                                        <label class="small text-muted d-block">Tipo</label>
-                                        {{ doc_f.tipo }}
-                                    </div>
-
-                                    <div class="col">
-                                        <label class="small text-muted d-block">Arquivo</label>
-                                        {% if is_existing %}
-                                            <span class="small text-success d-block text-truncate"
-                                                  style="max-width:160px;"
-                                                  title="{{ doc_f.instance.arquivo.name }}">
-                                                <i class="bi bi-cloud-check"></i>
-                                                {{ doc_f.instance.arquivo.name|cut:"documentos/" }}
-                                            </span>
-                                            {% if is_imutavel %}
-                                                <span class="badge bg-secondary doc-imutavel-badge">
-                                                    <i class="bi bi-lock-fill"></i> imutável
-                                                </span>
-                                            {% endif %}
-                                        {% else %}
-                                            {{ doc_f.arquivo }}
-                                        {% endif %}
-                                    </div>
-
-                                    <div class="col-auto">
-                                        {% if doc_f.instance.arquivo %}
-                                        <a href="{% url 'download_arquivo_seguro' 'processo' doc_f.instance.id %}"
-                                           target="_blank"
-                                           class="btn btn-sm btn-outline-secondary"
-                                           title="Ver arquivo">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        {% endif %}
-                                        {% if not is_existing %}
-                                        <button type="button"
-                                                class="btn btn-sm btn-outline-danger remove-doc-btn"
-                                                title="Remover">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                        {% endif %}
-                                        <div class="django-delete-checkbox d-none">{{ doc_f.DELETE }}</div>
-                                    </div>
-                                </div>
-                                {% endwith %}
-                            {% endfor %}
-                        </div><!-- #document-list -->
-
-                        <!-- Hidden empty form template for new docs -->
-                        <div id="empty-doc-form" class="row g-1 align-items-center mb-2 border-bottom pb-2 document-row">
-                            <div class="col-auto drag-handle ps-1">
-                                <i class="bi bi-grip-vertical text-secondary"></i>
-                            </div>
-                            <div class="col-1">
-                                <label class="small text-muted d-block">Ord.</label>
-                                <input type="number" name="documentos-__prefix__-ordem" value="1"
-                                       class="form-control form-control-sm" style="width:55px;">
-                            </div>
-                            <div class="col-4">
-                                <label class="small text-muted d-block">Tipo</label>
-                                <select name="documentos-__prefix__-tipo" class="form-select form-select-sm">
-                                    <option value="">---------</option>
-                                    {% for td in tipos_documento %}
-                                    <option value="{{ td.pk }}">{{ td }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col">
-                                <label class="small text-muted d-block">Arquivo</label>
-                                <input type="file" name="documentos-__prefix__-arquivo"
-                                       class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png">
-                            </div>
-                            <div class="col-auto">
-                                <button type="button" class="btn btn-sm btn-outline-danger remove-doc-btn" title="Remover">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                                <input type="hidden" name="documentos-__prefix__-id" value="">
-                            </div>
-                        </div>
-
-                        {% if pode_interagir %}
-                        <button type="button" id="add-doc-btn" class="btn btn-outline-primary btn-sm mt-2">
-                            <i class="bi bi-plus-circle me-1"></i>Adicionar Documento
-                        </button>
-                        {% endif %}
-                    </div>
-                </div>
-                <!-- └──────────────────────────────────────────────────────┘ -->
-
-                <!-- ┌ PENDÊNCIAS ──────────────────────────────────────────┐ -->
-                <div class="card shadow-sm border-0 mb-3">
-                    <div class="card-header bg-light fw-bold text-secondary py-2 d-flex justify-content-between align-items-center">
-                        <span><i class="bi bi-exclamation-triangle me-1"></i> Pendências</span>
-                        <span class="badge bg-warning text-dark">{{ processo.pendencias.count }}</span>
-                    </div>
-                    <div class="card-body py-2 px-2">
-                        <!-- Existing pendências via formset -->
-                        <div id="pendencia-list">
-                            {% for pend_f in pendencia_formset %}
-                                <div class="row g-1 align-items-start mb-2 border-bottom pb-2 pendencia-row
-                                    {% if pend_f.instance.status.status_choice|lower == 'resolvido' %}pendencia-row-resolvida{% endif %}">
-                                    {% for hidden in pend_f.hidden_fields %}{{ hidden }}{% endfor %}
-
-                                    <div class="col-4">
-                                        <label class="small text-muted d-block">Tipo</label>
-                                        {{ pend_f.tipo }}
-                                    </div>
-                                    <div class="col">
-                                        <label class="small text-muted d-block">Descrição</label>
-                                        {{ pend_f.descricao }}
-                                    </div>
-                                    <div class="col-auto d-flex align-items-center mt-3 gap-1">
-                                        {% if pend_f.instance.status %}
-                                            <span class="badge bg-secondary small">{{ pend_f.instance.status }}</span>
-                                        {% endif %}
-                                        <div class="django-delete-checkbox d-none">{{ pend_f.DELETE }}</div>
-                                        {% if pend_f.instance.pk and pode_interagir %}
-                                        <button type="button"
-                                                class="btn btn-sm btn-outline-danger remove-pendencia-btn"
-                                                title="Excluir pendência">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            {% empty %}
-                                <p class="text-muted small mb-0" id="no-pendencia-msg">
-                                    Nenhuma pendência registrada.
-                                </p>
-                            {% endfor %}
-                        </div>
-
-                        {% if pode_interagir %}
-                        <!-- Hidden empty template for new pendência -->
-                        <div id="empty-pendencia-form" class="row g-1 align-items-start mb-2 border-bottom pb-2 pendencia-row">
-                            <div class="col-4">
-                                <label class="small text-muted d-block">Tipo</label>
-                                <select name="pendencias-__prefix__-tipo" class="form-select form-select-sm"></select>
-                            </div>
-                            <div class="col">
-                                <label class="small text-muted d-block">Descrição</label>
-                                <input type="text" name="pendencias-__prefix__-descricao"
-                                       class="form-control form-control-sm"
-                                       placeholder="Descreva a pendência...">
-                            </div>
-                            <div class="col-auto mt-3">
-                                <button type="button" class="btn btn-sm btn-outline-danger remove-pendencia-btn">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                                <input type="hidden" name="pendencias-__prefix__-id" value="">
-                            </div>
-                        </div>
-
-                        <button type="button" id="add-pendencia-btn" class="btn btn-outline-warning btn-sm mt-2 text-dark">
-                            <i class="bi bi-plus-circle me-1"></i>Adicionar Pendência
-                        </button>
-                        {% endif %}
-                    </div>
-                </div>
-                <!-- └──────────────────────────────────────────────────────┘ -->
-
-                <!-- ┌ HISTORY / LOG ───────────────────────────────────────┐ -->
-                <div class="card shadow-sm border-0 mb-3">
-                    <div class="card-header bg-light fw-bold text-secondary py-2"
-                         style="cursor:pointer;"
-                         data-bs-toggle="collapse"
-                         data-bs-target="#history-panel"
-                         aria-expanded="true">
-                        <i class="bi bi-clock-history me-1"></i>
-                        Histórico de Alterações
-                        <span class="badge bg-secondary ms-2">{{ history_records|length }}</span>
-                        <i class="bi bi-chevron-down ms-auto float-end mt-1"></i>
-                    </div>
-                    <div id="history-panel" class="collapse show">
-                        <div class="card-body p-0">
-                            {% if history_records %}
-                            <div style="max-height: 400px; overflow-y: auto;">
-                                <table class="table table-sm table-hover mb-0">
-                                    <thead class="table-light sticky-top">
-                                        <tr class="small text-muted">
-                                            <th>Data/Hora</th>
-                                            <th>Usuário</th>
-                                            <th>Módulo</th>
-                                            <th>Ação</th>
-                                            <th>Objeto</th>
-                                            <th>Campos Alterados</th>
-                                            <th>Observação</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for rec in history_records %}
-                                        <tr class="history-row">
-                                            <td class="text-nowrap">
-                                                {{ rec.history_date|date:"d/m/Y H:i" }}
-                                            </td>
-                                            <td>
-                                                {% if rec.history_user %}
-                                                    {{ rec.history_user.get_full_name|default:rec.history_user.username }}
-                                                {% else %}
-                                                    <span class="text-muted">—</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                <span class="badge
-                                                    {% if rec.modelo == 'Processo' %}bg-primary
-                                                    {% elif rec.modelo == 'Documento' %}bg-success
-                                                    {% elif rec.modelo == 'Pendência' %}bg-danger
-                                                    {% elif rec.modelo == 'Nota Fiscal' %}bg-warning text-dark
-                                                    {% else %}bg-secondary{% endif %}">
-                                                    {{ rec.modelo }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge
-                                                    {% if rec.history_type == '+' %}bg-success
-                                                    {% elif rec.history_type == '-' %}bg-danger
-                                                    {% else %}bg-warning text-dark{% endif %}">
-                                                    {{ rec.history_type_label }}
-                                                </span>
-                                            </td>
-                                            <td style="white-space:normal;word-break:break-word;">
-                                                {{ rec.str_repr }}
-                                            </td>
-                                            <td style="white-space:normal;word-break:break-word;">
-                                                {% if rec.changed_fields %}
-                                                    <ul class="list-unstyled mb-0">
-                                                        {% for chg in rec.changed_fields %}
-                                                        <li><strong>{{ chg.field }}:</strong> <span class="text-danger">{{ chg.old }}</span> → <span class="text-success">{{ chg.new }}</span></li>
-                                                        {% endfor %}
-                                                    </ul>
-                                                {% else %}
-                                                    <span class="text-muted">—</span>
-                                                {% endif %}
-                                            </td>
-                                            <td style="white-space:normal;word-break:break-word;">
-                                                {% if rec.history_change_reason %}
-                                                    {{ rec.history_change_reason }}
-                                                {% else %}
-                                                    <span class="text-muted">—</span>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            {% else %}
-                            <div class="text-muted small p-3">Nenhum registro de histórico encontrado.</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                <!-- └──────────────────────────────────────────────────────┘ -->
-
-                <!-- ┌ CONTINGÊNCIAS ────────────────────────────────────────┐ -->
-                <div class="card shadow-sm border-0 mb-3">
-                    <div class="card-header bg-light fw-bold text-secondary py-2"
-                         style="cursor:pointer;"
-                         data-bs-toggle="collapse"
-                         data-bs-target="#contingencias-panel"
-                         aria-expanded="true">
-                        <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
-                        Contingências
-                        <span class="badge bg-warning text-dark ms-2">{{ contingencias|length }}</span>
-                        <i class="bi bi-chevron-down ms-auto float-end mt-1"></i>
-                    </div>
-                    <div id="contingencias-panel" class="collapse show">
-                        <div class="card-body p-0">
-                            {% if contingencias %}
-                            <div style="max-height: 360px; overflow-y: auto;">
-                                <table class="table table-sm table-hover mb-0">
-                                    <thead class="table-light sticky-top">
-                                        <tr class="small text-muted">
-                                            <th>#</th>
-                                            <th>Data</th>
-                                            <th>Solicitante</th>
-                                            <th>Justificativa</th>
-                                            <th>Status</th>
-                                            <th>Dados Propostos</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for cont in contingencias %}
-                                        <tr>
-                                            <td class="fw-bold text-muted">{{ cont.pk }}</td>
-                                            <td class="text-nowrap">{{ cont.data_solicitacao|date:"d/m/Y H:i" }}</td>
-                                            <td>{{ cont.solicitante.get_full_name|default:cont.solicitante.username }}</td>
-                                            <td style="white-space:normal;word-break:break-word;">{{ cont.justificativa }}</td>
-                                            <td>
-                                                <span class="badge
-                                                    {% if cont.status == 'APROVADA' %}bg-success
-                                                    {% elif cont.status == 'REJEITADA' %}bg-danger
-                                                    {% else %}bg-warning text-dark{% endif %}">
-                                                    {{ cont.get_status_display }}
-                                                </span>
-                                            </td>
-                                            <td style="white-space:normal;word-break:break-word;">
-                                                {% if cont.dados_propostos %}
-                                                    <ul class="list-unstyled mb-0">
-                                                        {% for key, value in cont.dados_propostos.items %}
-                                                        <li><strong>{{ key }}:</strong> {{ value }}</li>
-                                                        {% endfor %}
-                                                    </ul>
-                                                {% else %}
-                                                    <span class="text-muted">—</span>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            {% else %}
-                            <div class="text-muted small p-3">Não há alterações contigenciais registradas para esse processo.</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                <!-- └──────────────────────────────────────────────────────┘ -->
-
-            </form><!-- #contabilizacao-form -->
-        </div><!-- col-right -->
-
-    </div><!-- .row -->
-</div><!-- container -->
-
-<!-- ═══ REJEITAR MODAL ═══════════════════════════════════════════════════ -->
-{% if pode_interagir %}
-<div class="modal fade" id="modalRejeitar" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="post" id="rejeitar-form">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="rejeitar">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title"><i class="bi bi-exclamation-octagon"></i> Devolver Processo #{{ processo.id }}</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-start">
-                    <p class="small text-muted mb-3">Informe o erro que impede a contabilização. O processo retornará à Conferência.</p>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Tipo de Pendência</label>
-                        {{ pendencia_form.tipo }}
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Descrição do Erro</label>
-                        {{ pendencia_form.descricao }}
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-danger fw-bold">Confirmar Devolução</button>
-                </div>
-            </form>
-        </div>
+    <div class="ms-auto d-flex gap-2 align-items-center">
+        <form method="post" id="sair-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="sair">
+            <button type="submit" class="btn btn-outline-danger fw-bold">
+                <i class="bi bi-x-circle me-1"></i>Sair da Contabilização
+            </button>
+        </form>
     </div>
 </div>
-{% endif %}
+{% endblock %}
 
-<!-- ═══ STICKY ACTION BAR ══════════════════════════════════════════════════ -->
-<div class="action-bar">
-    <div class="d-flex align-items-center gap-2 flex-wrap">
-
-        {% if pode_interagir %}
-        <!-- Approve → Conselho Fiscal -->
-        <button type="button"
-                class="btn btn-primary fw-bold shadow-sm"
-                id="btn-aprovar"
-                data-action="aprovar"
-                title="Salvar alterações, confirmar contabilização e enviar para o Conselho Fiscal">
-            <i class="bi bi-check2-all me-1"></i>
-            Confirmar e Enviar para Conselho Fiscal
-        </button>
-
-        <!-- Save without advancing -->
-        <button type="button"
-                class="btn btn-outline-secondary fw-bold"
-                id="btn-salvar"
-                data-action="salvar"
-                title="Salvar alterações sem avançar">
-            <i class="bi bi-floppy me-1"></i>
-            Salvar
-        </button>
-
-        <!-- Reject → back to Conferência -->
-        <button type="button"
-                class="btn btn-outline-danger fw-bold"
-                data-bs-toggle="modal"
-                data-bs-target="#modalRejeitar"
-                title="Devolver para a Conferência">
-            <i class="bi bi-arrow-return-left me-1"></i>
-            Devolver para Conferência
-        </button>
-        {% endif %}
-
-        <!-- Back to previous -->
-        {% if prev_pk %}
-        <button type="button"
-                class="btn btn-outline-secondary fw-bold"
-                id="btn-voltar"
-                data-action="voltar">
-            <i class="bi bi-skip-start me-1"></i>
-            Voltar — Processo Anterior
-        </button>
-        {% else %}
-        <button type="button"
-                class="btn btn-outline-secondary fw-bold disabled"
-                title="Não há processo anterior na fila">
-            <i class="bi bi-skip-start me-1"></i>
-            Voltar
-        </button>
-        {% endif %}
-
-        <!-- Skip -->
-        {% if next_pk %}
-        <button type="button"
-                class="btn btn-outline-secondary fw-bold"
-                id="btn-pular"
-                data-action="pular">
-            <i class="bi bi-skip-end me-1"></i>
-            Pular — Próximo Processo
-        </button>
-        {% else %}
-        <button type="button"
-                class="btn btn-outline-secondary fw-bold disabled"
-                title="Não há mais processos na fila">
-            <i class="bi bi-skip-end me-1"></i>
-            Pular
-        </button>
-        {% endif %}
-
-        <div class="ms-auto d-flex gap-2 align-items-center">
-            <!-- Back to panel (sair) -->
-            <form method="post" id="sair-form">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="sair">
-                <button type="submit" class="btn btn-outline-danger fw-bold">
-                    <i class="bi bi-x-circle me-1"></i>Sair da Contabilização
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- ═══ SCRIPTS ══════════════════════════════════════════════════════════ -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-(function () {
-    'use strict';
-
-    var form = document.getElementById('contabilizacao-form');
-
-    ['btn-aprovar', 'btn-salvar', 'btn-pular', 'btn-voltar'].forEach(function (btnId) {
-        var btn = document.getElementById(btnId);
-        if (!btn) return;
-        btn.addEventListener('click', function () {
-            var action = btn.getAttribute('data-action');
-            var hidden = document.createElement('input');
-            hidden.type = 'hidden';
-            hidden.name = 'action';
-            hidden.value = action;
-            form.appendChild(hidden);
-
-            if (action === 'aprovar') {
-                if (!confirm('Confirmar a contabilização e enviar o Processo #{{ processo.id }} para o Conselho Fiscal?')) {
-                    form.removeChild(hidden);
-                    return;
-                }
-            }
-            form.submit();
-        });
-    });
-
-    // ── Document formset: dynamic add ────────────────────────────────────
-    var docList      = document.getElementById('document-list');
-    var emptyDocForm = document.getElementById('empty-doc-form');
-    var mgmtTotal    = document.getElementById('id_documentos-TOTAL_FORMS');
-    var addDocBtn    = document.getElementById('add-doc-btn');
-
-    if (addDocBtn) {
-        addDocBtn.addEventListener('click', function () {
-            var totalForms = parseInt(mgmtTotal.value, 10);
-            var newRow     = emptyDocForm.cloneNode(true);
-            newRow.id      = '';
-            newRow.style.display = '';
-            newRow.innerHTML = newRow.innerHTML.replace(/__prefix__/g, totalForms);
-            docList.appendChild(newRow);
-            mgmtTotal.value = totalForms + 1;
-            attachRemoveDocBtn(newRow);
-        });
-    }
-
-    function attachRemoveDocBtn(row) {
-        var btn = row.querySelector('.remove-doc-btn');
-        if (!btn) return;
-        btn.addEventListener('click', function () {
-            var delCheck = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
-            if (delCheck) {
-                delCheck.checked = true;
-                row.style.display = 'none';
-            } else {
-                row.remove();
-            }
-        });
-    }
-
-    docList && docList.querySelectorAll('.remove-doc-btn').forEach(function (btn) {
-        attachRemoveDocBtn(btn.closest('.document-row'));
-    });
-
-    // ── Pendência formset: dynamic add ───────────────────────────────────
-    var pendList        = document.getElementById('pendencia-list');
-    var emptyPendForm   = document.getElementById('empty-pendencia-form');
-    var pendMgmtTotal   = document.getElementById('id_pendencias-TOTAL_FORMS');
-    var addPendBtn      = document.getElementById('add-pendencia-btn');
-
-    var tipoOptions = '';
-    var firstTipoSelect = pendList ? pendList.querySelector('select[name$="-tipo"]') : null;
-    if (firstTipoSelect) {
-        tipoOptions = firstTipoSelect.innerHTML;
-    }
-
-    if (addPendBtn) {
-        addPendBtn.addEventListener('click', function () {
-            var totalForms = parseInt(pendMgmtTotal.value, 10);
-            var newRow     = emptyPendForm.cloneNode(true);
-            newRow.id      = '';
-            newRow.style.display = '';
-            newRow.innerHTML = newRow.innerHTML.replace(/__prefix__/g, totalForms);
-            if (tipoOptions) {
-                var sel = newRow.querySelector('select[name$="-tipo"]');
-                if (sel) sel.innerHTML = tipoOptions;
-            }
-            pendList.appendChild(newRow);
-            pendMgmtTotal.value = totalForms + 1;
-            attachRemovePendBtn(newRow);
-
-            var noMsg = document.getElementById('no-pendencia-msg');
-            if (noMsg) noMsg.style.display = 'none';
-        });
-    }
-
-    function attachRemovePendBtn(row) {
-        var btn = row.querySelector('.remove-pendencia-btn');
-        if (!btn) return;
-        btn.addEventListener('click', function () {
-            var delCheck = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
-            if (delCheck) {
-                delCheck.checked = true;
-                row.style.display = 'none';
-            } else {
-                row.remove();
-            }
-        });
-    }
-
-    pendList && pendList.querySelectorAll('.remove-pendencia-btn').forEach(function (btn) {
-        attachRemovePendBtn(btn.closest('.pendencia-row'));
-    });
-
-})();
-</script>
-</body>
-</html>
+{# ═══ JAVASCRIPT ═════════════════════════════════════════════════════════ #}
+{% block extra_js %}
+{% with js_form_id="contabilizacao-form"
+        js_primary_btn="btn-aprovar"
+        js_primary_action="aprovar"
+        js_confirm_msg_prefix="Confirmar a contabilização e enviar o Processo #"
+        js_confirm_msg_suffix=" para o Conselho Fiscal?" %}
+    {% include "fluxo/partials/_processo_formset_js.html" %}
+{% endwith %}
+{% endblock %}
