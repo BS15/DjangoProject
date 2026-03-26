@@ -196,9 +196,9 @@ class CredorForm(forms.ModelForm):
         fields = ['tipo', 'cpf_cnpj', 'nome', 'telefone', 'email', 'conta', 'chave_pix', 'cargo_funcao', 'codigo_servico_padrao']
         widgets = {
             'tipo': forms.Select(attrs={'class': 'form-select'}),
-            'cpf_cnpj': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apenas números'}),
+            'cpf_cnpj': forms.TextInput(attrs={'class': 'form-control mask-cpf-cnpj', 'placeholder': 'Apenas números'}),
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
-            'telefone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(00) 00000-0000'}),
+            'telefone': forms.TextInput(attrs={'class': 'form-control mask-telefone', 'placeholder': '(00) 00000-0000'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'cargo_funcao': forms.Select(attrs={'class': 'form-select'}),
             'conta': forms.Select(attrs={'class': 'form-select'}),
