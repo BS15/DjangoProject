@@ -18,7 +18,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.db import transaction, IntegrityError
-from django.db.models import Count, Q, F, Sum, Exists, OuterRef
+from django.db.models import Count, Q, F, Sum, Exists, OuterRef, ForeignKey
 from pypdf import PdfWriter
 from ..forms import ProcessoForm, DocumentoFormSet, DocumentoFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet, DevolucaoForm
 from ..validators import verificar_turnpike, STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
@@ -1030,22 +1030,60 @@ def iniciar_conferencia_view(request):
 
 
 def _build_history_record(record, modelo_label):
-    """Build an enriched history record dict with changed fields and change reason."""
+    """Build an enriched history record dict, resolving ForeignKeys to human-readable strings."""
     HISTORY_TYPE_LABELS = {'+': 'Criação', '~': 'Alteração', '-': 'Exclusão'}
     changed_fields = []
+
     if record.history_type == '~':
         prev = record.prev_record
         if prev is not None:
             try:
                 delta = record.diff_against(prev)
+                # Get a mapping of field names to actual Field objects
+                model_fields = {f.name: f for f in record.instance._meta.get_fields()}
+
                 for change in delta.changes:
+                    field_name = change.field
+                    old_val = change.old
+                    new_val = change.new
+
+                    # Check if this field is a ForeignKey
+                    field_obj = model_fields.get(field_name)
+                    if isinstance(field_obj, ForeignKey):
+                        related_model = field_obj.related_model
+
+                        # Resolve Old Value
+                        if old_val is not None:
+                            try:
+                                old_obj = related_model.objects.get(pk=old_val)
+                                old_val = str(old_obj)
+                            except related_model.DoesNotExist:
+                                old_val = f"ID {old_val} (Excluído)"
+
+                        # Resolve New Value
+                        if new_val is not None:
+                            try:
+                                new_obj = related_model.objects.get(pk=new_val)
+                                new_val = str(new_obj)
+                            except related_model.DoesNotExist:
+                                new_val = f"ID {new_val} (Excluído)"
+
+                    # Format boolean values to Sim/Não for better readability
+                    if isinstance(old_val, bool): old_val = "Sim" if old_val else "Não"
+                    if isinstance(new_val, bool): new_val = "Sim" if new_val else "Não"
+
+                    # Format None values
+                    if old_val is None: old_val = "N/A"
+                    if new_val is None: new_val = "N/A"
+
                     changed_fields.append({
-                        'field': change.field,
-                        'old': change.old,
-                        'new': change.new,
+                        'field': field_name.replace('_', ' ').title(),  # Make field name readable
+                        'old': old_val,
+                        'new': new_val,
                     })
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Error building history diff: {e}")
+
     return {
         'modelo': modelo_label,
         'history_date': record.history_date,
