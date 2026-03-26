@@ -116,21 +116,6 @@
                         Credor: <span id="modal_credor_display" class="fst-italic"></span>
                     </div>
 
-                    <div class="card border-info mb-4 shadow-sm">
-                        <div class="card-body py-3 bg-white">
-                            <label class="form-label fw-bold text-info small mb-1"><i class="bi bi-robot"></i> Preenchimento Mágico (SISCAC)</label>
-                            <div class="input-group input-group-sm">
-                                <input type="file" class="form-control" id="siscac_file_input" name="siscac_file" accept=".pdf">
-                                <button type="button" class="btn btn-info text-white fw-bold" id="btn_extrair_siscac">
-                                    Extrair Dados
-                                </button>
-                            </div>
-                            <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">
-                                * Ao salvar, este arquivo será anexado automaticamente na Ordem 1 como "DOCUMENTOS ORÇAMENTÁRIOS".
-                            </small>
-                        </div>
-                    </div>
-
                     <div class="mb-3">
                         <label for="n_nota_empenho" class="form-label fw-bold text-dark">Número da Nota de Empenho</label>
                         <input type="text" class="form-control border-primary" id="n_nota_empenho" name="n_nota_empenho" required placeholder="Ex: 2026NE000123">
@@ -174,79 +159,9 @@
                 // Limpa todos os campos ao abrir
                 document.getElementById('n_nota_empenho').value = '';
                 document.getElementById('data_empenho').value = '';
-                document.getElementById('siscac_file_input').value = '';
             });
         }
 
-        // LÓGICA DE EXTRAÇÃO DO SISCAC
-        const btnExtrair = document.getElementById('btn_extrair_siscac');
-        if (btnExtrair) {
-            btnExtrair.addEventListener('click', function() {
-                const fileInput = document.getElementById('siscac_file_input');
-                if (!fileInput.files.length) {
-                    return alert("Selecione o PDF do SISCAC primeiro.");
-                }
-
-                btnExtrair.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Lendo...';
-                btnExtrair.disabled = true;
-
-                const formData = new FormData();
-                formData.append('arquivo', fileInput.files[0]);
-                formData.append('tipo', 'siscac');
-                formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
-
-                fetch("{% url 'api_extracao_universal' %}", {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        // Preenche os campos de empenho
-                        const d = data.dados;
-                        document.getElementById('n_nota_empenho').value = d.n_nota_empenho || '';
-                        document.getElementById('data_empenho').value = formatarDataParaInput(d.data_empenho) || '';
-
-                        // Feedback de sucesso visual no botão
-                        btnExtrair.classList.replace('btn-info', 'btn-success');
-                        btnExtrair.innerHTML = '<i class="bi bi-check-lg"></i> Extraído!';
-                        setTimeout(() => {
-                            btnExtrair.classList.replace('btn-success', 'btn-info');
-                            btnExtrair.innerHTML = 'Extrair Dados';
-                        }, 3000);
-
-                    } else {
-                        alert("Erro na leitura: " + data.message);
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert("Erro de conexão ao tentar ler o arquivo.");
-                })
-                .finally(() => {
-                    if (btnExtrair.innerHTML.includes('Lendo')) {
-                        btnExtrair.innerHTML = 'Extrair Dados';
-                    }
-                    btnExtrair.disabled = false;
-                });
-            });
-        }
-
-        // Converte as datas vindas da IA/SISCAC para o formato do input (YYYY-MM-DD)
-        function formatarDataParaInput(dataStr) {
-            if (!dataStr) return '';
-            // Substitui possíveis barras por hífens para padronizar
-            let padronizado = dataStr.replace(/\//g, '-');
-            const partes = padronizado.split('-');
-
-            if (partes.length === 3) {
-                // Se o ano já estiver no começo, devolve direto
-                if (partes[0].length === 4) return padronizado;
-                // Caso contrário (ex: DD-MM-YYYY), inverte para YYYY-MM-DD
-                return `${partes[2]}-${partes[1]}-${partes[0]}`;
-            }
-            return dataStr;
-        }
     });
 </script>
 
