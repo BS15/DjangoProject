@@ -301,7 +301,6 @@ class GerarLotesReinfHelpersTest(TestCase):
 
     def _make_retencao(self, nota, codigo, valor='50.00', base='1000.00'):
         from ..models import RetencaoImposto
-        from .models import RetencaoImposto
         ret = RetencaoImposto(
             nota_fiscal=nota,
             codigo=codigo,
@@ -422,7 +421,6 @@ class GerarLotesReinfIntegrationTest(TestCase):
     def _setup_data(self, familia, cnpj, atestada=True, competencia_month=3, competencia_year=2024):
         """Helper to create a full chain: Credor→Processo→DocumentoFiscal→RetencaoImposto."""
         from ..models import RetencaoImposto
-        from .models import RetencaoImposto
 
         codigo = CodigosImposto.objects.create(
             codigo=f'TEST_{familia}_{cnpj[:4]}',
@@ -485,7 +483,6 @@ class GerarLotesReinfIntegrationTest(TestCase):
     def test_groups_inss_by_cnpj(self):
         """Three INSS retentions for the same CNPJ → single R-2010 file."""
         from ..models import RetencaoImposto
-        from .models import RetencaoImposto
 
         cnpj = '33333333000101'
         codigo = CodigosImposto.objects.create(
@@ -563,7 +560,6 @@ class GerarLoteReinfViewTest(TestCase):
 
     def _setup_inss_record(self, cnpj='99999999000101', month=3, year=2024):
         from ..models import RetencaoImposto
-        from .models import RetencaoImposto
 
         codigo = CodigosImposto.objects.create(
             codigo='VIEW_INSS',
