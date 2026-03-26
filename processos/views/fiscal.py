@@ -504,45 +504,6 @@ def alternar_ateste_nota(request, pk):
     return redirect('painel_liquidacoes')
 
 
-def api_extrair_nota(request):
-    if request.method == 'POST' and request.FILES.get('arquivo'):
-        return JsonResponse({'status': 'error', 'message': 'Extração por IA não disponível.'}, status=400)
-
-    return JsonResponse({'status': 'error', 'message': 'Falha na extração'}, status=400)
-
-
-def api_extracao_universal(request):
-    if request.method == 'POST' and request.FILES.get('arquivo'):
-        arquivo = request.FILES['arquivo']
-        tipo = request.POST.get('tipo')  # Pega o 'value' do <select> do frontend (empenho, notafiscal, boleto, siscac)
-
-        try:
-            # Tratamento Local (SISCAC)
-            if tipo == 'siscac':
-                from ..utils import extract_siscac_data
-                dados = extract_siscac_data(arquivo)
-            else:
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'Extração por IA não disponível para este tipo de documento.'
-                }, status=400)
-
-            # Resposta ao Frontend
-            if dados:
-                return JsonResponse({'status': 'success', 'dados': dados})
-            else:
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'Não foi possível estruturar os dados deste documento. Tente novamente.'
-                }, status=400)
-
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            return JsonResponse({'status': 'error', 'message': f"Erro interno: {str(e)}"}, status=500)
-
-    return JsonResponse({'status': 'error', 'message': 'Requisição inválida ou arquivo ausente'}, status=400)
-
 
 def api_processar_retencoes(request):
     """

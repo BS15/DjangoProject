@@ -118,7 +118,6 @@
                                         </div>
                                         <div class="col-md-3 text-end d-flex flex-column justify-content-end" style="height: 52px;">
                                             <div class="d-flex justify-content-end gap-1">
-                                                <button type="button" class="btn btn-sm btn-outline-success extract-doc-btn" title="Extrair com IA" style="display: none;"><i class="bi bi-magic"></i> IA</button>
                                                 <button type="button" class="btn btn-sm btn-outline-primary preview-doc-btn" title="Ver no painel esquerdo" style="display: none;"><i class="bi bi-eye"></i></button>
                                                 <button type="button" class="btn btn-sm btn-outline-danger remove-doc-btn" tabindex="-1" title="Remover Documento"><i class="bi bi-trash"></i></button>
                                             </div>
@@ -134,19 +133,6 @@
                             </button>
                         </div>
 
-
-                        <div id="painel_confirmacao_ia" class="card bg-extract my-4 shadow-sm border-success" style="display: none;">
-                            <div class="card-body py-3">
-                                <h6 class="card-title text-success fw-bold"><i class="bi bi-robot"></i> Revisão de Dados Extraídos (IA)</h6>
-                                <div id="dados_preview_container" class="row g-2 mb-3 mt-2"></div>
-                                <div class="d-flex justify-content-end gap-2 border-top pt-2 mt-2">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="cancelarExtracao()">Descartar Leitura</button>
-                                    <button type="button" class="btn btn-sm btn-success fw-bold" id="btn_confirmar_extracao">
-                                        <i class="bi bi-check2-all"></i> Confirmar e Preencher Capa
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
 
                         <div id="payment-info-block">
                             <h5 class="text-secondary border-bottom pb-2 mb-3 mt-4"><i class="bi bi-card-heading"></i> 3. Informações do Processo</h5>
@@ -337,7 +323,6 @@
         </div>
         <div class="col-md-3 text-end d-flex flex-column justify-content-end" style="height: 52px;">
             <div class="d-flex justify-content-end gap-1">
-                <button type="button" class="btn btn-sm btn-outline-success extract-doc-btn" title="Extrair com IA" style="display: none;"><i class="bi bi-magic"></i> IA</button>
                 <button type="button" class="btn btn-sm btn-outline-primary preview-doc-btn" title="Ver no painel esquerdo" style="display: none;"><i class="bi bi-eye"></i></button>
                 <button type="button" class="btn btn-sm btn-outline-danger remove-doc-btn" tabindex="-1" title="Remover Documento"><i class="bi bi-trash"></i></button>
             </div>
@@ -389,8 +374,6 @@
 </div>
 
 <script>
-let dadosTemporariosIA = null;
-let documentoAtualIaFileInput = null; 
 
 function loadPdfIntoViewer(file) {
     const viewer = document.getElementById('pdf-viewer');
@@ -409,12 +392,6 @@ function formatarDataParaInput(dataStr) {
     if (dataStr.includes('-')) { const p = dataStr.split('-'); if (p[0].length === 2) return `${p[2]}-${p[1]}-${p[0]}`; return dataStr; }
     return dataStr;
 }
-
-window.cancelarExtracao = function() {
-    document.getElementById('painel_confirmacao_ia').style.display = 'none';
-    dadosTemporariosIA = null;
-    documentoAtualIaFileInput = null;
-};
 
 document.addEventListener('DOMContentLoaded', function() {
 
@@ -628,65 +605,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (fileInput && fileInput.files.length > 0) loadPdfIntoViewer(fileInput.files[0]);
             }
 
-            const btnExtract = e.target.closest('.extract-doc-btn');
-            if (btnExtract) {
-                const linha = btnExtract.closest('.document-row');
-                const fileInput = linha.querySelector('input[type="file"]');
-                const selectTipoDoc = linha.querySelector('select[name$="-tipo"]');
-                
-                if (!selectTipoDoc || !selectTipoDoc.value) {
-                    alert("⚠️ Selecione o 'Tipo' do documento antes de usar a IA.");
-                    if (selectTipoDoc) selectTipoDoc.focus();
-                    return;
-                }
-
-                let tipoTexto = selectTipoDoc.options[selectTipoDoc.selectedIndex].text.toUpperCase();
-                let tipoIa = '';
-                if (tipoTexto.includes('NOTA FISCAL')) tipoIa = 'NOTA FISCAL (NF)';
-                else if (tipoTexto.includes('ORÇAMENTÁRIO') || tipoTexto.includes('EMPENHO')) tipoIa = 'DOCUMENTOS ORÇAMENTÁRIOS';
-                else if (tipoTexto.includes('BOLETO')) tipoIa = 'BOLETO BANCÁRIO';
-                else { alert("⚠️ A IA suporta apenas extração de: Notas Fiscais, Documentos Orçamentários e Boletos."); return; }
-
-                if (!fileInput || fileInput.files.length === 0) {
-                    alert("⚠️ A extração funciona apenas para arquivos recém-anexados. Anexe o PDF novamente."); return;
-                }
-
-                const formData = new FormData();
-                formData.append('arquivo', fileInput.files[0]);
-                formData.append('tipo', tipoIa);
-                formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
-
-                const originalHtml = btnExtract.innerHTML;
-                btnExtract.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-                btnExtract.disabled = true;
-
-                fetch("{% url 'api_extracao_universal' %}", { method: 'POST', body: formData })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        dadosTemporariosIA = data.dados;
-                        
-                        const container = document.getElementById('dados_preview_container');
-                        container.innerHTML = '';
-                        const payload = data.dados.dados_gerais || data.dados;
-
-                        for (const [key, value] of Object.entries(payload)) {
-                            if (value && typeof value !== 'object') {
-                                const label = key.replace(/_/g, ' ').toUpperCase();
-                                container.innerHTML += `<div class="col-md-3"><div class="p-2 border rounded bg-light"><small class="d-block text-muted" style="font-size: 0.65rem">${label}</small><span class="fw-bold small text-success">${value}</span></div></div>`;
-                            }
-                        }
-                        
-                        const painelConfirmacao = document.getElementById('painel_confirmacao_ia');
-                        painelConfirmacao.style.display = 'block';
-                        painelConfirmacao.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        loadPdfIntoViewer(fileInput.files[0]);
-
-                    } else { alert("Erro: " + data.message); }
-                })
-                .finally(() => { btnExtract.innerHTML = originalHtml; btnExtract.disabled = false; });
-            }
-
             const btnRemove = e.target.closest('.remove-doc-btn');
             if (btnRemove) {
                 const linha = btnRemove.closest('.document-row');
@@ -702,19 +620,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 const row = e.target.closest('.document-row');
                 const displaySpan = row.querySelector('.doc-filename-display');
                 const btnPreview = row.querySelector('.preview-doc-btn');
-                const btnExtract = row.querySelector('.extract-doc-btn');
 
                 if (e.target.files.length > 0) {
                     const file = e.target.files[0];
                     if (displaySpan) displaySpan.innerHTML = `<i class="bi bi-file-earmark-check"></i> Anexado: ${file.name}`;
                     if (file.type === "application/pdf") {
                         if(btnPreview) { btnPreview.style.display = 'inline-block'; btnPreview.removeAttribute('data-url'); }
-                        if(btnExtract) btnExtract.style.display = 'inline-block';
                         loadPdfIntoViewer(file); 
                     }
                 } else {
                     if(btnPreview) btnPreview.style.display = 'none';
-                    if(btnExtract) btnExtract.style.display = 'none';
                 }
             }
         });
@@ -764,30 +679,6 @@ document.addEventListener('DOMContentLoaded', function() {
         dropzone.querySelector('.dropzone-text').innerHTML = `<i class="bi bi-check2-circle"></i> ${files.length} arquivos inseridos!`;
         setTimeout(() => { dropzone.querySelector('.dropzone-text').innerHTML = "Arraste arquivos aqui para visualizar"; }, 3000);
         if (files.length > 0) abrirModalBatchTipo(files.length);
-    }
-
-    // LÓGICA DE AUTOFILL IA
-    const btnConfirmarIA = document.getElementById('btn_confirmar_extracao');
-    if(btnConfirmarIA) {
-        btnConfirmarIA.addEventListener('click', function() {
-            if (!dadosTemporariosIA) return;
-            const d = dadosTemporariosIA.dados_gerais || dadosTemporariosIA;
-
-            const setVal = (id, val) => {
-                const el = document.getElementById(id);
-                if (el && val) el.value = val;
-            };
-
-            setVal('id_processo-n_nota_empenho', d.n_nota_empenho);
-            setVal('id_processo-data_empenho', formatarDataParaInput(d.data_empenho));
-            setVal('id_processo-valor_bruto', d.valor_bruto);
-            setVal('id_processo-valor_liquido', d.valor_liquido);
-            setVal('id_processo-data_vencimento', formatarDataParaInput(d.data_vencimento));
-            setVal('id_processo-detalhamento', d.detalhamento);
-
-            alert("Sucesso! Os dados foram preenchidos na Capa do Processo.");
-            window.cancelarExtracao();
-        });
     }
 
     // ==========================================
