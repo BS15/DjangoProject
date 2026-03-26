@@ -712,38 +712,6 @@ def api_processar_boleto(request):
     return JsonResponse({'sucesso': False, 'erro': 'Arquivo inválido ou não enviado.'})
 
 
-def add_pre_empenho_view(request):
-    if request.method == 'POST':
-        processo_form = ProcessoForm(request.POST)
-
-        if processo_form.is_valid():
-            try:
-                with transaction.atomic():
-                    processo = processo_form.save(commit=False)
-                    status_pre_empenho, created = StatusChoicesProcesso.objects.get_or_create(
-                        status_choice__iexact='A EMPENHAR',
-                        defaults={'status_choice': 'A EMPENHAR'}
-                    )
-                    processo.status = status_pre_empenho
-                    processo.save()
-                    messages.success(request, "Processo salvo com sucesso na fase de Pré-Empenho!")
-                    return redirect('home_page')
-
-            except Exception as e:
-                messages.error(request, f"Erro ao salvar: {e}")
-        else:
-            messages.error(request, "Verifique os erros no formulário.")
-
-    else:
-        processo_form = ProcessoForm()
-
-    context = {
-        'processo_form': processo_form,
-    }
-
-    return render(request, 'fluxo/add_pre_empenho.html', context)
-
-
 @permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
 def a_empenhar_view(request):
     if request.method == 'POST':
