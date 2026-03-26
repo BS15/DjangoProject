@@ -66,6 +66,15 @@ class ProcessoForm(forms.ModelForm):
                     self.fields['credor'].required = False
         # --- FIM DA LÓGICA DE TRANCAMENTO ---
 
+        # --- BLOQUEAR SELEÇÃO MANUAL DE SUPRIMENTO DE FUNDOS ---
+        from .models import TiposDePagamento
+        qs = TiposDePagamento.objects.exclude(tipo_de_pagamento__iexact='SUPRIMENTO DE FUNDOS')
+        if self.instance and self.instance.pk and self.instance.tipo_pagamento:
+            if self.instance.tipo_pagamento.tipo_de_pagamento.upper() == 'SUPRIMENTO DE FUNDOS':
+                qs = TiposDePagamento.objects.all()
+        self.fields['tipo_pagamento'].queryset = qs
+        # --- FIM DO BLOQUEIO ---
+
         # --- FILTRO DE CONTA SACADA POR CNPJ DO ÓRGÃO ---
         contribuinte = DadosContribuinte.objects.first()
         if contribuinte:
