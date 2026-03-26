@@ -1,0 +1,44 @@
+{#
+  _processo_rejeitar_modal.html — Rejection / return modal
+  Parameters (via {% with %}):
+    rejeitar_modal_title    : Modal header title (processo.id is appended automatically)
+    rejeitar_modal_body     : Explanatory text inside modal body
+    rejeitar_label_tipo     : Label for the pendência type field
+    rejeitar_label_descricao: Label for the description/justification field
+    rejeitar_confirm_label  : Submit button label
+  Context: processo, pendencia_form, pode_interagir
+#}
+{% if pode_interagir %}
+<div class="modal fade" id="modalRejeitar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="rejeitar">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-octagon"></i>
+                        {{ rejeitar_modal_title }} #{{ processo.id }}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-start">
+                    <p class="small text-muted mb-3">{{ rejeitar_modal_body }}</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ rejeitar_label_tipo }}</label>
+                        {{ pendencia_form.tipo }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ rejeitar_label_descricao }}</label>
+                        {{ pendencia_form.descricao }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger fw-bold">{{ rejeitar_confirm_label }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}

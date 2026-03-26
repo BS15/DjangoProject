@@ -1,0 +1,68 @@
+{#
+  _painel_js_selecao.html — Row selection JavaScript for panel list pages
+  Parameters (via {% with %}):
+    js_bar_id : HTML id of the selection action bar element
+#}
+<script>
+(function () {
+    'use strict';
+
+    var bar        = document.getElementById('{{ js_bar_id }}');
+    var countLabel = document.getElementById('selected-count');
+    var hiddenCont = document.getElementById('hidden-ids-container');
+    var selectAll  = document.getElementById('select-all');
+    var clearBtn   = document.getElementById('clear-selection');
+    var rowChecks  = document.querySelectorAll('.row-check');
+
+    if (!bar) return;
+
+    function updateBar() {
+        var checked = document.querySelectorAll('.row-check:checked');
+        var n = checked.length;
+        if (countLabel) countLabel.textContent = n;
+
+        if (hiddenCont) {
+            hiddenCont.innerHTML = '';
+            checked.forEach(function (cb) {
+                var inp = document.createElement('input');
+                inp.type  = 'hidden';
+                inp.name  = 'processo_ids';
+                inp.value = cb.value;
+                hiddenCont.appendChild(inp);
+            });
+        }
+
+        rowChecks.forEach(function (cb) {
+            var row = cb.closest('tr');
+            if (row) {
+                if (cb.checked) {
+                    row.classList.add('selected-row');
+                } else {
+                    row.classList.remove('selected-row');
+                }
+            }
+        });
+
+        bar.style.display = n > 0 ? 'flex' : 'none';
+    }
+
+    rowChecks.forEach(function (cb) {
+        cb.addEventListener('change', updateBar);
+    });
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            rowChecks.forEach(function (cb) { cb.checked = selectAll.checked; });
+            updateBar();
+        });
+    }
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function () {
+            rowChecks.forEach(function (cb) { cb.checked = false; });
+            if (selectAll) selectAll.checked = false;
+            updateBar();
+        });
+    }
+}());
+</script>
