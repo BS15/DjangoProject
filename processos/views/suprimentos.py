@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from ..forms import SuprimentoForm
-from ..models import SuprimentoDeFundos, DespesaSuprimento, StatusChoicesProcesso
+from ..models import SuprimentoDeFundos, DespesaSuprimento, StatusChoicesProcesso, StatusChoicesSuprimentoDeFundos
 from ..models.fluxo import Processo, FormasDePagamento, TiposDePagamento
 
 
@@ -14,7 +14,14 @@ def gerenciar_suprimento_view(request, pk):
     suprimento = get_object_or_404(SuprimentoDeFundos, id=pk)
     despesas = suprimento.despesas.all().order_by('data', 'id')
 
+    is_encerrado = suprimento.status and suprimento.status.status_choice.upper() == 'ENCERRADO'
+    pode_editar = not is_encerrado
+
     if request.method == 'POST':
+        if not pode_editar:
+            messages.error(request, "Este suprimento já foi encerrado e não pode receber novas despesas.")
+            return redirect('gerenciar_suprimento', pk=suprimento.id)
+
         data = request.POST.get('data')
         estabelecimento = request.POST.get('estabelecimento')
         detalhamento = request.POST.get('detalhamento')
@@ -37,7 +44,8 @@ def gerenciar_suprimento_view(request, pk):
 
     context = {
         'suprimento': suprimento,
-        'despesas': despesas
+        'despesas': despesas,
+        'pode_editar': pode_editar,
     }
     return render(request, 'suprimentos/gerenciar_suprimento.html', context)
 
@@ -55,6 +63,12 @@ def fechar_suprimento_view(request, pk):
         if processo:
             processo.status = status_conferencia
             processo.save()
+
+        status_encerrado, _ = StatusChoicesSuprimentoDeFundos.objects.get_or_create(
+            status_choice='ENCERRADO'
+        )
+        suprimento.status = status_encerrado
+        suprimento.save(update_fields=['status'])
 
         messages.success(request, f'Prestação de contas do suprimento #{suprimento.id} encerrada e enviada para Conferência!')
         return redirect('painel_suprimentos')

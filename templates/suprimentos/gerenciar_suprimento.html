@@ -72,6 +72,7 @@
 
     <div class="row">
         <div class="col-md-4 mb-4">
+            {% if pode_editar %}
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white fw-bold">
                     <i class="bi bi-receipt"></i> Lançar Nova Despesa
@@ -107,6 +108,17 @@
                     </form>
                 </div>
             </div>
+            {% else %}
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white fw-bold">
+                    <i class="bi bi-lock-fill"></i> Suprimento Encerrado
+                </div>
+                <div class="card-body text-center text-muted">
+                    <i class="bi bi-lock fs-1 text-danger d-block mb-2"></i>
+                    <p class="mb-0">Este suprimento foi encerrado e não aceita novas despesas.</p>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
         <div class="col-md-8">
@@ -114,6 +126,7 @@
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <span class="fw-bold"><i class="bi bi-list-columns"></i> Extrato de Compras</span>
 
+                    {% if pode_editar %}
                     <form method="POST" action="{% url 'fechar_suprimento' pk=suprimento.id %}"
                           onsubmit="return confirm('Deseja encerrar a prestação de contas? O processo será enviado para a Auditoria.');">
                         {% csrf_token %}
@@ -121,6 +134,9 @@
                             <i class="bi bi-lock-fill"></i> Fechar Prestação de Contas
                         </button>
                     </form>
+                    {% else %}
+                    <span class="badge bg-danger fs-6"><i class="bi bi-lock-fill"></i> Encerrado</span>
+                    {% endif %}
                 </div>
                 <div class="card-body p-0">
                     <table class="table table-hover table-striped mb-0 align-middle small">
