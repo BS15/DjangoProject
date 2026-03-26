@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import permission_required
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.storage import default_storage
@@ -21,7 +21,6 @@ from pypdf import PdfWriter
 from ..forms import ProcessoForm, DocumentoFormSet, DocumentoFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet, DevolucaoForm
 from ..validators import verificar_turnpike, STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
 from ..utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, parse_siscac_report, sync_siscac_payments
-from ..utils_permissoes import group_required
 from ..pdf_engine import gerar_documento_pdf
 from ..models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias, StatusChoicesRetencoes, MeiosDeTransporte, FormasDePagamento, ContasBancarias, CargosFuncoes, TagChoices, RegistroAcessoArquivo, Devolucao, ReuniaoConselho
 from ..filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DevolucaoFilter
@@ -37,7 +36,6 @@ def _is_cap_backoffice(user):
     )
 
 
-@login_required
 @xframe_options_sameorigin
 def download_arquivo_seguro(request, tipo_documento, documento_id):
     arquivo = None
@@ -249,6 +247,7 @@ def _extrair_e_salvar_codigos_barras(processo):
 # ==========================================
 # CAPA E DOCUMENTOS DO PROCESSO
 # ==========================================
+@permission_required('processos.acesso_backoffice', raise_exception=True)
 def add_process_view(request):
     initial_data = {}
     siscac_temp_path = None
@@ -383,6 +382,7 @@ def add_process_view(request):
         })
 
 
+@permission_required('processos.acesso_backoffice', raise_exception=True)
 def editar_processo(request, pk):
     processo = get_object_or_404(Processo, id=pk)
     status_inicial = processo.status.status_choice.upper() if processo.status else ''
@@ -501,7 +501,6 @@ def editar_processo(request, pk):
     return render(request, 'fluxo/editar_processo.html', context)
 
 
-@login_required
 def api_extrair_codigos_barras_processo(request, pk):
     """
     AJAX endpoint que dispara a extração de códigos de barras via IA para um processo,
@@ -533,7 +532,6 @@ def api_extrair_codigos_barras_processo(request, pk):
     })
 
 
-@login_required
 def api_extrair_codigos_barras_upload(request):
     """
     AJAX endpoint that extracts barcodes from uploaded boleto PDF files.
@@ -592,8 +590,7 @@ def visualizar_pdf_processo(request, processo_id):
     return response
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
 def contas_a_pagar(request):
     STATUSES_CONTAS_A_PAGAR = [
         'A PAGAR - PENDENTE AUTORIZAÇÃO',
@@ -747,8 +744,7 @@ def add_pre_empenho_view(request):
     return render(request, 'fluxo/add_pre_empenho.html', context)
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
 def a_empenhar_view(request):
     if request.method == 'POST':
         pode_interagir = request.user.has_perm('processos.pode_operar_contas_pagar')
@@ -811,8 +807,7 @@ def a_empenhar_view(request):
     return render(request, 'fluxo/a_empenhar.html', context)
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
 def avancar_para_pagamento_view(request, pk):
     """
     Advance a process from 'AGUARDANDO LIQUIDAÇÃO' to 'A PAGAR - PENDENTE AUTORIZAÇÃO'.
@@ -850,8 +845,7 @@ def avancar_para_pagamento_view(request, pk):
     return redirect('editar_processo', pk=pk)
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
 def enviar_para_autorizacao(request):
     if request.method == 'POST':
         if not request.user.has_perm('processos.pode_operar_contas_pagar'):
@@ -888,9 +882,7 @@ def enviar_para_autorizacao(request):
     return redirect('contas_a_pagar')
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
-@group_required('ORDENADOR(A) DE DESPESA')
+@permission_required('processos.pode_autorizar_pagamento', raise_exception=True)
 def painel_autorizacao_view(request):
     processos = Processo.objects.filter(
         status__status_choice__iexact='A PAGAR - ENVIADO PARA AUTORIZAÇÃO'
@@ -909,9 +901,7 @@ def painel_autorizacao_view(request):
     return render(request, 'fluxo/autorizacao.html', context)
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
-@group_required('ORDENADOR(A) DE DESPESA')
+@permission_required('processos.pode_autorizar_pagamento', raise_exception=True)
 def autorizar_pagamento(request):
     if request.method == 'POST':
         if not request.user.has_perm('processos.pode_autorizar_pagamento'):
@@ -932,9 +922,7 @@ def autorizar_pagamento(request):
     return redirect('painel_autorizacao')
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
-@group_required('ORDENADOR(A) DE DESPESA')
+@permission_required('processos.pode_autorizar_pagamento', raise_exception=True)
 def recusar_autorizacao_view(request, pk):
     processo = get_object_or_404(Processo, id=pk)
 
@@ -951,9 +939,7 @@ def recusar_autorizacao_view(request, pk):
     return redirect('painel_autorizacao')
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
-@group_required('FUNCIONÁRIO(A) CONTAS A PAGAR')
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
 def painel_conferencia_view(request):
     processos_pagos = Processo.objects.filter(
         status__status_choice__iexact='PAGO - EM CONFERÊNCIA'
@@ -991,17 +977,13 @@ def painel_conferencia_view(request):
     return render(request, 'fluxo/conferencia.html', context)
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
-@group_required('FUNCIONÁRIO(A) CONTAS A PAGAR')
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
 def aprovar_conferencia_view(request, pk):
     messages.error(request, 'A aprovação direta foi desativada. Abra o processo para realizar a conferência.')
     return redirect('painel_conferencia')
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
-@group_required('FUNCIONÁRIO(A) CONTAS A PAGAR')
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
 def iniciar_conferencia_view(request):
     """POST: store selected process IDs in session queue, redirect to first process."""
     if request.method == 'POST':
@@ -1157,9 +1139,7 @@ def _registrar_recusa(request, processo, form, status_devolucao):
         processo.avancar_status(status_devolucao, usuario=request.user)
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
-@group_required('FUNCIONÁRIO(A) CONTAS A PAGAR')
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
 def conferencia_processo_view(request, pk):
     """Detailed conferência view for reviewing a single process."""
     processo = get_object_or_404(Processo, id=pk)
@@ -1263,9 +1243,7 @@ def conferencia_processo_view(request, pk):
     return render(request, 'fluxo/conferencia_processo.html', context)
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
-@group_required('CONTADOR(A)')
+@permission_required('processos.pode_contabilizar', raise_exception=True)
 def painel_contabilizacao_view(request):
     processos = Processo.objects.filter(status__status_choice__iexact='PAGO - A CONTABILIZAR').order_by('data_pagamento')
     context = {
@@ -1277,9 +1255,7 @@ def painel_contabilizacao_view(request):
     return render(request, 'fluxo/contabilizacao.html', context)
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
-@group_required('CONTADOR(A)')
+@permission_required('processos.pode_contabilizar', raise_exception=True)
 def iniciar_contabilizacao_view(request):
     """POST: store selected process IDs in session queue, redirect to first process."""
     if request.method == 'POST':
@@ -1290,9 +1266,7 @@ def iniciar_contabilizacao_view(request):
     return redirect('painel_contabilizacao')
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
-@group_required('CONTADOR(A)')
+@permission_required('processos.pode_contabilizar', raise_exception=True)
 def contabilizacao_processo_view(request, pk):
     """Detailed contabilização view for reviewing a single process."""
     processo = get_object_or_404(Processo, id=pk)
@@ -1409,9 +1383,7 @@ def contabilizacao_processo_view(request, pk):
     return render(request, 'fluxo/contabilizacao_processo.html', context)
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
-@group_required('CONTADOR(A)')
+@permission_required('processos.pode_contabilizar', raise_exception=True)
 def aprovar_contabilizacao_view(request, pk):
     if request.method == 'POST':
         if not request.user.has_perm('processos.pode_contabilizar'):
@@ -1427,9 +1399,7 @@ def aprovar_contabilizacao_view(request, pk):
     return redirect('painel_contabilizacao')
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
-@group_required('CONTADOR(A)')
+@permission_required('processos.pode_contabilizar', raise_exception=True)
 def recusar_contabilizacao_view(request, pk):
     processo = get_object_or_404(Processo, id=pk)
 
@@ -1446,9 +1416,7 @@ def recusar_contabilizacao_view(request, pk):
     return redirect('painel_contabilizacao')
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
-@group_required('CONSELHEIRO(A) FISCAL')
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
 def painel_conselho_view(request):
     reunioes_ativas = ReuniaoConselho.objects.filter(status__in=['AGENDADA', 'EM_ANALISE']).order_by('-numero')
     processos_sem_reuniao = Processo.objects.filter(
@@ -1463,9 +1431,7 @@ def painel_conselho_view(request):
     return render(request, 'fluxo/conselho.html', context)
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
-@group_required('CONSELHEIRO(A) FISCAL')
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
 def iniciar_conselho_view(request):
     """POST: store selected process IDs in session queue, redirect to first process."""
     if request.method == 'POST':
@@ -1476,9 +1442,7 @@ def iniciar_conselho_view(request):
     return redirect('painel_conselho')
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
-@group_required('CONSELHEIRO(A) FISCAL')
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
 def conselho_processo_view(request, pk):
     """Completely readonly view for Conselho Fiscal — can only approve or reject."""
     processo = get_object_or_404(Processo, id=pk)
@@ -1555,9 +1519,7 @@ def conselho_processo_view(request, pk):
     return render(request, 'fluxo/conselho_processo.html', context)
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
-@group_required('CONSELHEIRO(A) FISCAL')
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
 def aprovar_conselho_view(request, pk):
     if request.method == 'POST':
         if not request.user.has_perm('processos.pode_auditar_conselho'):
@@ -1573,9 +1535,7 @@ def aprovar_conselho_view(request, pk):
     return redirect('painel_conselho')
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
-@group_required('CONSELHEIRO(A) FISCAL')
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
 def recusar_conselho_view(request, pk):
     processo = get_object_or_404(Processo, id=pk)
 
@@ -1592,8 +1552,7 @@ def recusar_conselho_view(request, pk):
     return redirect('painel_conselho')
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
 def gerenciar_reunioes_view(request):
     """Lista todas as ReuniaoConselho e permite criar uma nova."""
     if request.method == 'POST':
@@ -1626,8 +1585,7 @@ def gerenciar_reunioes_view(request):
     return render(request, 'processos/gerenciar_reunioes.html', context)
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
 def montar_pauta_reuniao_view(request, reuniao_id):
     """Permite adicionar processos elegíveis a uma reunião específica."""
     reuniao = get_object_or_404(ReuniaoConselho, id=reuniao_id)
@@ -1658,8 +1616,7 @@ def montar_pauta_reuniao_view(request, reuniao_id):
     return render(request, 'processos/montar_pauta_conselho.html', context)
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
 def analise_reuniao_view(request, reuniao_id):
     """Painel de análise para Conselheiros: lista processos de uma reunião específica."""
     if not request.user.has_perm('processos.pode_auditar_conselho'):
@@ -1675,8 +1632,7 @@ def analise_reuniao_view(request, reuniao_id):
     return render(request, 'processos/analise_reuniao.html', context)
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
 def iniciar_conselho_reuniao_view(request, reuniao_id):
     """POST: store process IDs for a specific meeting in session queue."""
     if request.method == 'POST':
@@ -1689,9 +1645,7 @@ def iniciar_conselho_reuniao_view(request, reuniao_id):
     return redirect('painel_conselho')
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
-@group_required('FUNCIONÁRIO(A) CONTAS A PAGAR')
+@permission_required('processos.pode_arquivar', raise_exception=True)
 def painel_arquivamento_view(request):
     processos_pendentes = Processo.objects.filter(
         status__status_choice__iexact='APROVADO - PENDENTE ARQUIVAMENTO'
@@ -1713,9 +1667,7 @@ def painel_arquivamento_view(request):
     })
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
-@group_required('FUNCIONÁRIO(A) CONTAS A PAGAR')
+@permission_required('processos.pode_arquivar', raise_exception=True)
 def arquivar_processo_view(request, pk):
     if request.method != 'POST':
         return redirect('painel_arquivamento')
@@ -1861,6 +1813,7 @@ def _build_detalhes_pagamento(processos):
     return detalhes, totais
 
 
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
 def separar_para_lancamento_bancario(request):
     if request.method == 'POST':
         selecionados = request.POST.getlist('processos_selecionados')
@@ -1875,6 +1828,7 @@ def separar_para_lancamento_bancario(request):
     return redirect('contas_a_pagar')
 
 
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
 def lancamento_bancario(request):
     ids = request.session.get('processos_lancamento', [])
 
@@ -1922,6 +1876,7 @@ def lancamento_bancario(request):
     return render(request, 'fluxo/lancamento_bancario.html', context)
 
 
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
 def marcar_como_lancado(request):
     if request.method == 'POST':
         processo_id = request.POST.get('processo_id')
@@ -1942,6 +1897,7 @@ def marcar_como_lancado(request):
     return redirect('lancamento_bancario')
 
 
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
 def desmarcar_lancamento(request):
     if request.method == 'POST':
         processo_id = request.POST.get('processo_id')
@@ -2194,8 +2150,7 @@ def add_contingencia_view(request):
     return render(request, 'fluxo/add_contingencia.html')
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.acesso_backoffice'))
+@permission_required('processos.acesso_backoffice', raise_exception=True)
 def analisar_contingencia_view(request, pk):
     """POST: Approve or reject a pending Contingencia by its PK."""
     _CAMPOS_PERMITIDOS_CONTINGENCIA = {
@@ -2272,8 +2227,7 @@ def analisar_contingencia_view(request, pk):
     return redirect('painel_contingencias')
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.pode_autorizar_pagamento'))
+@permission_required('processos.pode_autorizar_pagamento', raise_exception=True)
 @xframe_options_sameorigin
 def gerar_autorizacao_pagamento_view(request, pk):
     """
@@ -2287,8 +2241,7 @@ def gerar_autorizacao_pagamento_view(request, pk):
     return response
 
 
-@login_required
-@user_passes_test(lambda u: u.has_perm('processos.pode_auditar_conselho'))
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
 @xframe_options_sameorigin
 def gerar_parecer_conselho_view(request, pk):
     """
@@ -2303,7 +2256,6 @@ def gerar_parecer_conselho_view(request, pk):
     return response
 
 
-@login_required
 def sincronizar_siscac(request):
     context = {}
     if request.method == 'POST':
@@ -2340,7 +2292,6 @@ def sincronizar_siscac(request):
     return render(request, 'fluxo/sincronizar_siscac.html', context)
 
 
-@login_required
 def registrar_devolucao_view(request, processo_id):
     processo = get_object_or_404(Processo, id=processo_id)
 
@@ -2361,7 +2312,6 @@ def registrar_devolucao_view(request, processo_id):
     })
 
 
-@login_required
 def process_detail_view(request, pk):
     processo = get_object_or_404(Processo, pk=pk)
     documentos = processo.documentos.all()
@@ -2381,7 +2331,6 @@ def process_detail_view(request, pk):
     })
 
 
-@login_required
 def painel_devolucoes_view(request):
     queryset = Devolucao.objects.select_related('processo', 'processo__credor').order_by('-data_devolucao')
     meu_filtro = DevolucaoFilter(request.GET, queryset=queryset)

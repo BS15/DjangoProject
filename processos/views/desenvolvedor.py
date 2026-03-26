@@ -6,7 +6,6 @@ from decimal import Decimal
 
 from faker import Faker
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -32,8 +31,6 @@ from ..models import (
     TiposDePagamento,
 )
 
-
-@login_required
 def painel_importacao_view(request):
     context = {}
     if request.method == 'POST':
@@ -53,8 +50,6 @@ def painel_importacao_view(request):
             context['tipo_importacao'] = 'Contas Fixas'
     return render(request, 'processos/painel_importacao.html', context)
 
-
-@login_required
 def download_template_csv_credores(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="template_credores.csv"'
@@ -62,8 +57,6 @@ def download_template_csv_credores(request):
     writer.writerow(['NOME', 'CPF_CNPJ', 'GRUPO', 'CARGO_FUNCAO', 'BANCO', 'AGENCIA', 'CONTA', 'PIX'])
     return response
 
-
-@login_required
 def download_template_csv_contas(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="template_contas_fixas.csv"'
@@ -71,10 +64,8 @@ def download_template_csv_contas(request):
     writer.writerow(['NOME_CREDOR', 'DIA_VENCIMENTO', 'DETALHAMENTO'])
     return response
 
-
 _fake_generator = Faker('pt_BR')
 _MIN_FAKE_ANO_EXERCICIO = 2020
-
 
 def _ensure_fake_lookup_tables():
     """Create minimal lookup table records required for fake data generation."""
@@ -158,7 +149,6 @@ def _ensure_fake_lookup_tables():
             chave_pix=_fake_generator.email(),
         )
 
-
 def _create_fake_processos(n):
     """Create n fake Processo records and return the count created."""
     status_list = list(StatusChoicesProcesso.objects.all())
@@ -206,7 +196,6 @@ def _create_fake_processos(n):
         created += 1
     return created
 
-
 def _create_fake_documentos_fiscais(n, processos):
     """Create n fake DocumentoFiscal records linked to existing processos."""
     from django.contrib.auth.models import User
@@ -240,7 +229,6 @@ def _create_fake_documentos_fiscais(n, processos):
         created += 1
     return created
 
-
 def _create_fake_retencoes(n, notas):
     """Create n fake RetencaoImposto records linked to existing DocumentoFiscal records."""
     codigos = list(CodigosImposto.objects.all())
@@ -270,7 +258,6 @@ def _create_fake_retencoes(n, notas):
         )
         created += 1
     return created
-
 
 def _create_fake_diarias(n, credores_pf, processos):
     """Create n fake Diaria records. Links to existing processos when available."""
@@ -307,7 +294,6 @@ def _create_fake_diarias(n, credores_pf, processos):
         )
         created += 1
     return created
-
 
 def gerar_dados_fake_view(request):
     """View to generate fake/sample test data for processes, fiscal documents,
@@ -371,7 +357,6 @@ def gerar_dados_fake_view(request):
         return render(request, 'gerar_dados_fake.html', context)
 
     return render(request, 'gerar_dados_fake.html', context)
-
 
 def gerar_dummy_pdf_view(request, pk):
     """Generates a simple dummy PDF and attaches it as a 'NOTA FISCAL (NF)' document

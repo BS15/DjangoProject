@@ -1,15 +1,12 @@
 import datetime
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 
 from processos.models import FaturaMensal, Processo, ContaFixa
 from processos.forms import ContaFixaForm
 from processos.utils_contas import gerar_faturas_do_mes
 
-
-@login_required
 def painel_contas_fixas_view(request):
     hoje = datetime.date.today()
     mes = int(request.GET.get('mes', hoje.month))
@@ -33,8 +30,6 @@ def painel_contas_fixas_view(request):
     }
     return render(request, 'contas/painel_contas_fixas.html', context)
 
-
-@login_required
 def vincular_processo_fatura_view(request, fatura_id):
     fatura = get_object_or_404(FaturaMensal, id=fatura_id)
     mes = request.POST.get('mes', '')
@@ -55,8 +50,6 @@ def vincular_processo_fatura_view(request, fatura_id):
         redirect_url += f"?mes={mes}&ano={ano}"
     return redirect(redirect_url)
 
-
-@login_required
 def add_conta_fixa_view(request):
     if request.method == 'POST':
         form = ContaFixaForm(request.POST)
@@ -71,8 +64,6 @@ def add_conta_fixa_view(request):
 
     return render(request, 'contas/add_conta_fixa.html', {'form': form})
 
-
-@login_required
 def edit_conta_fixa_view(request, pk):
     conta = get_object_or_404(ContaFixa, pk=pk)
     if request.method == 'POST':
@@ -88,8 +79,6 @@ def edit_conta_fixa_view(request, pk):
 
     return render(request, 'contas/edit_conta_fixa.html', {'form': form, 'conta': conta})
 
-
-@login_required
 def excluir_conta_fixa_view(request, pk):
     conta = get_object_or_404(ContaFixa, pk=pk)
     if request.method == 'POST':

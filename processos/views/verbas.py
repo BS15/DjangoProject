@@ -7,7 +7,6 @@ from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from ..utils_permissoes import user_in_group
 from django.db import transaction
@@ -30,30 +29,25 @@ logger = logging.getLogger(__name__)
 
 _EXTENSOES_DOCUMENTO_PERMITIDAS = {'.pdf', '.jpg', '.jpeg', '.png'}
 
-
 def diarias_list_view(request):
     queryset = Diaria.objects.select_related('beneficiario', 'status', 'processo').all().order_by('-id')
     meu_filtro = DiariaFilter(request.GET, queryset=queryset)
     return render(request, 'verbas/diarias_list.html', {'filter': meu_filtro, 'registros': meu_filtro.qs})
-
 
 def reembolsos_list_view(request):
     queryset = ReembolsoCombustivel.objects.select_related('beneficiario', 'status', 'processo').all().order_by('-id')
     meu_filtro = ReembolsoFilter(request.GET, queryset=queryset)
     return render(request, 'verbas/reembolsos_list.html', {'filter': meu_filtro, 'registros': meu_filtro.qs})
 
-
 def jetons_list_view(request):
     queryset = Jeton.objects.select_related('beneficiario', 'status', 'processo').all().order_by('-id')
     meu_filtro = JetonFilter(request.GET, queryset=queryset)
     return render(request, 'verbas/jetons_list.html', {'filter': meu_filtro, 'registros': meu_filtro.qs})
 
-
 def auxilios_list_view(request):
     queryset = AuxilioRepresentacao.objects.select_related('beneficiario', 'status', 'processo').all().order_by('-id')
     meu_filtro = AuxilioFilter(request.GET, queryset=queryset)
     return render(request, 'verbas/auxilios_list.html', {'filter': meu_filtro, 'registros': meu_filtro.qs})
-
 
 def add_diaria_view(request):
     if request.method == 'POST':
@@ -119,7 +113,6 @@ def add_diaria_view(request):
     tipos_doc = TiposDeDocumento.objects.filter(is_active=True)
     return render(request, 'verbas/add_diaria.html', {'form': form, 'tipos_documento': tipos_doc})
 
-
 def add_reembolso_view(request):
     if request.method == 'POST':
         form = ReembolsoForm(request.POST)
@@ -136,7 +129,6 @@ def add_reembolso_view(request):
 
     tipos_doc = TiposDeDocumento.objects.filter(is_active=True)
     return render(request, 'verbas/add_reembolso.html', {'form': form, 'tipos_documento': tipos_doc})
-
 
 def add_jeton_view(request):
     if request.method == 'POST':
@@ -155,7 +147,6 @@ def add_jeton_view(request):
     tipos_doc = TiposDeDocumento.objects.filter(is_active=True)
     return render(request, 'verbas/add_jeton.html', {'form': form, 'tipos_documento': tipos_doc})
 
-
 def add_auxilio_view(request):
     if request.method == 'POST':
         form = AuxilioForm(request.POST)
@@ -173,10 +164,8 @@ def add_auxilio_view(request):
     tipos_doc = TiposDeDocumento.objects.filter(is_active=True)
     return render(request, 'verbas/add_auxilio.html', {'form': form, 'tipos_documento': tipos_doc})
 
-
 def verbas_panel_view(request):
     return render(request, 'verbas/verbas_panel.html')
-
 
 def agrupar_verbas_view(request, tipo_verba):
     if request.method != 'POST':
@@ -256,7 +245,6 @@ def agrupar_verbas_view(request, tipo_verba):
     messages.success(request, f"Processo #{novo_processo.id} gerado com sucesso!")
     return redirect('editar_processo_verbas', pk=novo_processo.id)
 
-
 def editar_processo_verbas(request, pk):
     processo = get_object_or_404(Processo, id=pk)
 
@@ -301,7 +289,6 @@ def editar_processo_verbas(request, pk):
     }
     return render(request, 'verbas/editar_processo_verbas.html', context)
 
-
 def api_add_documento_verba(request, tipo_verba, pk):
     """AJAX: Adiciona um documento a uma verba indenizatória específica."""
     if request.method != 'POST':
@@ -338,7 +325,6 @@ def api_add_documento_verba(request, tipo_verba, pk):
     except Exception as e:
         return JsonResponse({'ok': False, 'error': str(e)}, status=500)
 
-
 def gerenciar_diaria_view(request, pk):
     diaria = get_object_or_404(Diaria, id=pk)
     documentos = diaria.documentos.select_related('tipo').all()
@@ -369,8 +355,6 @@ def gerenciar_diaria_view(request, pk):
     }
     return render(request, 'verbas/gerenciar_diaria.html', context)
 
-
-@login_required
 def painel_autorizacao_diarias_view(request):
     diarias_pendentes = Diaria.objects.select_related(
         'beneficiario', 'proponente', 'status', 'processo'
@@ -389,7 +373,6 @@ def painel_autorizacao_diarias_view(request):
     }
     return render(request, 'verbas/painel_autorizacao_diarias.html', context)
 
-
 def alternar_autorizacao_diaria(request, pk):
     """Permite autorizar ou revogar a autorização de uma diária diretamente pelo painel"""
     if request.method == 'POST':
@@ -405,8 +388,6 @@ def alternar_autorizacao_diaria(request, pk):
 
     return redirect('painel_autorizacao_diarias')
 
-
-@login_required
 def aprovar_diaria_view(request, diaria_id):
     diaria = get_object_or_404(Diaria, id=diaria_id)
     is_manager = user_in_group(request.user, 'Gestores') or user_in_group(request.user, 'Administradores')
@@ -420,8 +401,6 @@ def aprovar_diaria_view(request, diaria_id):
     messages.success(request, 'Diária aprovada com sucesso.')
     return redirect('painel_autorizacao_diarias')
 
-
-@login_required
 def sincronizar_assinatura_view(request, assinatura_id):
     assinatura = get_object_or_404(AssinaturaAutentique, id=assinatura_id)
 
@@ -456,8 +435,6 @@ def sincronizar_assinatura_view(request, assinatura_id):
         messages.error(request, f"Erro ao verificar assinatura: {str(e)}")
     return redirect(request.META.get('HTTP_REFERER', '/'))
 
-
-@login_required
 def reenviar_assinatura_view(request, diaria_id):
     """Re-sends the SCD document to Autentique for a Diaria that has no pending SCD signature."""
     diaria = get_object_or_404(Diaria, id=diaria_id)
@@ -489,12 +466,9 @@ def reenviar_assinatura_view(request, diaria_id):
 
     return redirect('gerenciar_diaria', pk=diaria.id)
 
-
-@login_required
 def minhas_solicitacoes_view(request):
     diarias = Diaria.objects.filter(beneficiario__email=request.user.email).order_by('-id')
     return render(request, 'verbas/minhas_solicitacoes.html', {'diarias': diarias})
-
 
 def edit_reembolso_view(request, pk):
     reembolso = get_object_or_404(ReembolsoCombustivel, id=pk)
@@ -537,7 +511,6 @@ def edit_reembolso_view(request, pk):
     }
     return render(request, 'verbas/edit_reembolso.html', context)
 
-
 def edit_jeton_view(request, pk):
     jeton = get_object_or_404(Jeton, id=pk)
     documentos = jeton.documentos.select_related('tipo').all()
@@ -578,7 +551,6 @@ def edit_jeton_view(request, pk):
         'tipos_documento': tipos_doc,
     }
     return render(request, 'verbas/edit_jeton.html', context)
-
 
 def edit_auxilio_view(request, pk):
     auxilio = get_object_or_404(AuxilioRepresentacao, id=pk)
@@ -621,7 +593,6 @@ def edit_auxilio_view(request, pk):
     }
     return render(request, 'verbas/edit_auxilio.html', context)
 
-
 def api_valor_unitario_diaria(request, beneficiario_id):
     try:
         credor = Credor.objects.select_related('cargo_funcao').get(id=beneficiario_id)
@@ -646,8 +617,6 @@ def api_valor_unitario_diaria(request, beneficiario_id):
     except Credor.DoesNotExist:
         return JsonResponse({'sucesso': False, 'erro': 'Beneficiário não encontrado', 'valor_unitario': None})
 
-
-@login_required
 def gerar_pcd_view(request, pk):
     """
     Gera e serve o PDF "Proposta de Concessão de Diárias (PCD)" para a diária indicada.
@@ -659,8 +628,6 @@ def gerar_pcd_view(request, pk):
     response['Content-Disposition'] = f'inline; filename="{nome_arquivo}"'
     return response
 
-
-@login_required
 def sincronizar_diarias(request):
     context = {}
     if request.method == 'POST' and 'siscac_csv' in request.FILES:
@@ -676,8 +643,6 @@ def sincronizar_diarias(request):
             messages.error(request, 'Erro ao processar o arquivo CSV. Verifique o formato e tente novamente.')
     return render(request, 'verbas/sincronizar_diarias.html', context)
 
-
-@login_required
 def download_template_diarias_csv(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="template_diarias.csv"'
@@ -688,8 +653,6 @@ def download_template_diarias_csv(request):
     ])
     return response
 
-
-@login_required
 def importar_diarias_view(request):
     SESSION_KEY = 'importar_diarias_preview'
     context = {}
