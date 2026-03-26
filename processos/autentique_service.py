@@ -19,7 +19,7 @@ def _get_robust_session():
     return session
 
 
-def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, entidade=None, tipo_documento=None):
+def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, entidade=None, tipo_documento=None, folder_id=None):
     """
     Sends a PDF document to the Autentique API for digital signature.
     If entidade and tipo_documento are provided, creates and returns an
@@ -41,8 +41,8 @@ def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, entidade=
 
     # 1. The exact query from Autentique's documentation
     query = """
-    mutation CreateDocumentMutation($document: DocumentInput!, $signers: [SignerInput!]!, $file: Upload!) {
-      createDocument(document: $document, signers: $signers, file: $file) {
+    mutation CreateDocumentMutation($document: DocumentInput!, $signers: [SignerInput!]!, $file: Upload!, $folderId: String) {
+      createDocument(document: $document, signers: $signers, file: $file, folderId: $folderId) {
         id
         name
         signatures {
@@ -63,6 +63,9 @@ def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, entidade=
         "signers": signatarios,
         "file": None
     }
+
+    if folder_id:
+        variables["folderId"] = folder_id
 
     operations = json.dumps({
         "query": query,
