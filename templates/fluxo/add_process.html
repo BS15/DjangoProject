@@ -133,10 +133,7 @@
         <div class="row g-4">
 
             {# ── Left column: PDF viewer ──────────────────────────────────── #}
-            {% with viewer_theme="primary"
-                    viewer_placeholder_icon="bi-file-earmark-arrow-up"
-                    viewer_placeholder_title="Nenhum documento selecionado"
-                    viewer_placeholder_text="Faça o upload de um PDF à direita ou clique no ícone de olho para visualizar o arquivo aqui." %}
+            {% with viewer_theme="primary" viewer_placeholder_icon="bi-file-earmark-arrow-up" viewer_placeholder_title="Nenhum documento selecionado" viewer_placeholder_text="Faça o upload de um PDF à direita ou clique no ícone de olho para visualizar o arquivo aqui." %}
                 {% include "fluxo/partials/_pdf_viewer.html" %}
             {% endwith %}
 
