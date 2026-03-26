@@ -96,10 +96,7 @@
         <div class="row g-4">
 
             {# ── Left column: PDF viewer ──────────────────────────────────── #}
-            {% with viewer_theme="warning"
-                    viewer_placeholder_icon="bi-file-earmark-text"
-                    viewer_placeholder_title="Selecione um documento"
-                    viewer_placeholder_text='Clique no ícone de "olho" na lista de anexos para ler o arquivo aqui.' %}
+            {% with viewer_theme="warning" viewer_placeholder_icon="bi-file-earmark-text" viewer_placeholder_title="Selecione um documento" viewer_placeholder_text='Clique no ícone de "olho" na lista de anexos para ler o arquivo aqui.' %}
                 {% include "fluxo/partials/_pdf_viewer.html" %}
             {% endwith %}
 
