@@ -1,0 +1,43 @@
+{% extends "layouts/base_list.html" %}
+
+{# ── Batch form: opens before the table card, closes after it ───────────── #}
+
+{% block batch_form_open %}
+<form id="batchForm" method="post" action="{% block batch_form_action %}{% endblock %}">
+    {% csrf_token %}
+{% endblock %}
+
+{% block batch_form_close %}
+    {# Sticky bottom bar with bulk-action buttons #}
+    <div class="position-sticky bottom-0 bg-white border-top shadow-sm px-3 py-2 mt-3 d-flex align-items-center gap-2">
+        {% block batch_actions %}{% endblock %}
+    </div>
+</form>
+{% endblock %}
+
+{# ── Select-All master checkbox JavaScript ──────────────────────────────── #}
+{% block extra_js %}
+<script>
+(function () {
+    'use strict';
+    var masterCb = document.getElementById('batchCheckAll');
+    if (!masterCb) return;
+
+    var getItems = function () {
+        return Array.from(document.querySelectorAll('.batch-item-check'));
+    };
+
+    masterCb.addEventListener('change', function () {
+        getItems().forEach(function (cb) { cb.checked = masterCb.checked; });
+    });
+
+    document.addEventListener('change', function (e) {
+        if (!e.target.classList.contains('batch-item-check')) return;
+        var items   = getItems();
+        var checked = items.filter(function (cb) { return cb.checked; }).length;
+        masterCb.indeterminate = checked > 0 && checked < items.length;
+        masterCb.checked       = checked === items.length;
+    });
+}());
+</script>
+{% endblock %}

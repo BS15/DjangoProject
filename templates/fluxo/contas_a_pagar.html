@@ -1,269 +1,253 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Contas a Pagar - System X</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
-    <style>
-        .copy-btn { transition: all 0.2s ease-in-out; }
-    </style>
-</head>
-<body class="bg-light">
-{% include 'partials/sidebar.html' %}
+{% extends "layouts/base_batch.html" %}
 
+{% block page_title %}Contas a Pagar{% endblock %}
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow-sm">
-    <div class="container-fluid px-4">
-        <a class="navbar-brand fw-bold" href="{% url 'home_page' %}">System X</a>
-    </div>
-</nav>
+{% block extra_css %}
+<style>
+    .copy-btn { transition: all 0.2s ease-in-out; }
+</style>
+{% endblock %}
 
-<div class="container-fluid px-4 mt-4">
-    
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+{# ── Page heading & top-bar links ─────────────────────────────────────── #}
+{% block page_heading %}<i class="bi bi-wallet2 text-primary me-2"></i> Contas a Pagar{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'painel_autorizacao' %}" class="btn btn-warning fw-bold shadow-sm">
+    <i class="bi bi-person-badge"></i> Painel do Ordenador
+</a>
+<a href="{% url 'painel_comprovantes' %}" class="btn btn-success fw-bold shadow-sm">
+    <i class="bi bi-file-earmark-break"></i> Baixa em Lote de Comprovantes
+</a>
+<a href="{% url 'home_page' %}" class="btn btn-outline-secondary">Voltar para Home</a>
+{% endblock %}
+
+{# ── Sidebar-style grouping filters, shown as a 4-column row ─────────── #}
+{% block filter_card %}
+<div class="row g-3 mb-4">
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white fw-bold text-secondary">
+                <i class="bi bi-funnel me-2"></i> Status
             </div>
-        {% endfor %}
-    {% endif %}
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-wallet2 text-primary me-2"></i> Contas a Pagar</h2>
-        <div class="d-flex gap-2">
-            <a href="{% url 'painel_autorizacao' %}" class="btn btn-warning fw-bold shadow-sm">
-                <i class="bi bi-person-badge"></i> Painel do Ordenador
-            </a>
-            <a href="{% url 'painel_comprovantes' %}" class="btn btn-success fw-bold shadow-sm">
-                <i class="bi bi-file-earmark-break"></i> Baixa em Lote de Comprovantes
-            </a>
-            <a href="{% url 'home_page' %}" class="btn btn-outline-secondary">Voltar para Home</a>
+            <div class="list-group list-group-flush">
+                <a href="?{% if data_selecionada %}data={{ data_selecionada }}&{% endif %}{% if forma_selecionada %}forma={{ forma_selecionada }}&{% endif %}{% if conta_selecionada %}conta={{ conta_selecionada }}{% endif %}"
+                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if not status_selecionado %}active fw-bold{% endif %}">
+                    Todos os Status
+                </a>
+                {% for item in statuses_agrupados %}
+                    <a href="?status={{ item.status__status_choice|urlencode }}{% if data_selecionada %}&data={{ data_selecionada }}{% endif %}{% if forma_selecionada %}&forma={{ forma_selecionada }}{% endif %}{% if conta_selecionada %}&conta={{ conta_selecionada }}{% endif %}"
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center
+                       {% if status_selecionado == item.status__status_choice %}active fw-bold{% endif %}">
+                        {{ item.status__status_choice }}
+                        <span class="badge {% if status_selecionado == item.status__status_choice %}bg-light text-primary{% else %}bg-primary{% endif %} rounded-pill">
+                            {{ item.total }}
+                        </span>
+                    </a>
+                {% endfor %}
+            </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-3 mb-4">
-            <div class="card shadow-sm border-0 mb-3">
-                <div class="card-header bg-white fw-bold text-secondary">
-                    <i class="bi bi-funnel me-2"></i> Status
-                </div>
-                <div class="list-group list-group-flush">
-                    <a href="?{% if data_selecionada %}data={{ data_selecionada }}&{% endif %}{% if forma_selecionada %}forma={{ forma_selecionada }}&{% endif %}{% if conta_selecionada %}conta={{ conta_selecionada }}{% endif %}"
-                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if not status_selecionado %}active fw-bold{% endif %}">
-                        Todos os Status
-                    </a>
-                    {% for item in statuses_agrupados %}
-                        <a href="?status={{ item.status__status_choice|urlencode }}{% if data_selecionada %}&data={{ data_selecionada }}{% endif %}{% if forma_selecionada %}&forma={{ forma_selecionada }}{% endif %}{% if conta_selecionada %}&conta={{ conta_selecionada }}{% endif %}"
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white fw-bold text-secondary">
+                <i class="bi bi-credit-card me-2"></i> Forma de Pagamento
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="?{% if data_selecionada %}data={{ data_selecionada }}&{% endif %}{% if status_selecionado %}status={{ status_selecionado|urlencode }}&{% endif %}{% if conta_selecionada %}conta={{ conta_selecionada }}{% endif %}"
+                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if not forma_selecionada %}active fw-bold{% endif %}">
+                    Todas as Formas
+                </a>
+                {% for item in formas_agrupadas %}
+                    {% if item.forma_pagamento__forma_de_pagamento %}
+                        <a href="?forma={{ item.forma_pagamento__id }}{% if data_selecionada %}&data={{ data_selecionada }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado|urlencode }}{% endif %}{% if conta_selecionada %}&conta={{ conta_selecionada }}{% endif %}"
                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center
-                           {% if status_selecionado == item.status__status_choice %}active fw-bold{% endif %}">
-                            {{ item.status__status_choice }}
-                            <span class="badge {% if status_selecionado == item.status__status_choice %}bg-light text-primary{% else %}bg-primary{% endif %} rounded-pill">
+                           {% if forma_selecionada == item.forma_pagamento__id|stringformat:'s' %}active fw-bold{% endif %}">
+                            {{ item.forma_pagamento__forma_de_pagamento }}
+                            <span class="badge {% if forma_selecionada == item.forma_pagamento__id|stringformat:'s' %}bg-light text-primary{% else %}bg-primary{% endif %} rounded-pill">
                                 {{ item.total }}
                             </span>
                         </a>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="card shadow-sm border-0 mb-3">
-                <div class="card-header bg-white fw-bold text-secondary">
-                    <i class="bi bi-credit-card me-2"></i> Forma de Pagamento
-                </div>
-                <div class="list-group list-group-flush">
-                    <a href="?{% if data_selecionada %}data={{ data_selecionada }}&{% endif %}{% if status_selecionado %}status={{ status_selecionado|urlencode }}&{% endif %}{% if conta_selecionada %}conta={{ conta_selecionada }}{% endif %}"
-                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if not forma_selecionada %}active fw-bold{% endif %}">
-                        Todas as Formas
-                    </a>
-                    {% for item in formas_agrupadas %}
-                        {% if item.forma_pagamento__forma_de_pagamento %}
-                            <a href="?forma={{ item.forma_pagamento__id }}{% if data_selecionada %}&data={{ data_selecionada }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado|urlencode }}{% endif %}{% if conta_selecionada %}&conta={{ conta_selecionada }}{% endif %}"
-                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center
-                               {% if forma_selecionada == item.forma_pagamento__id|stringformat:'s' %}active fw-bold{% endif %}">
-                                {{ item.forma_pagamento__forma_de_pagamento }}
-                                <span class="badge {% if forma_selecionada == item.forma_pagamento__id|stringformat:'s' %}bg-light text-primary{% else %}bg-primary{% endif %} rounded-pill">
-                                    {{ item.total }}
-                                </span>
-                            </a>
-                        {% else %}
-                            <a href="?forma=sem_forma{% if data_selecionada %}&data={{ data_selecionada }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado|urlencode }}{% endif %}{% if conta_selecionada %}&conta={{ conta_selecionada }}{% endif %}"
-                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center text-danger
-                               {% if forma_selecionada == 'sem_forma' %}active text-white fw-bold{% endif %}">
-                                Sem Forma Definida
-                                <span class="badge {% if forma_selecionada == 'sem_forma' %}bg-light text-danger{% else %}bg-danger{% endif %} rounded-pill">
-                                    {{ item.total }}
-                                </span>
-                            </a>
-                        {% endif %}
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="card shadow-sm border-0 mb-3">
-                <div class="card-header bg-white fw-bold text-secondary">
-                    <i class="bi bi-calendar-event me-2"></i> Datas de Pagamento
-                </div>
-                <div class="list-group list-group-flush">
-                    <a href="?{% if forma_selecionada %}forma={{ forma_selecionada }}&{% endif %}{% if status_selecionado %}status={{ status_selecionado|urlencode }}&{% endif %}{% if conta_selecionada %}conta={{ conta_selecionada }}{% endif %}"
-                       class="list-group-item list-group-item-action {% if not data_selecionada %}active fw-bold{% endif %}">
-                        Todas as Datas
-                    </a>
-                    {% for item in datas_agrupadas %}
-                        {% if item.data_pagamento %}
-                            <a href="?data={{ item.data_pagamento|date:'Y-m-d' }}{% if forma_selecionada %}&forma={{ forma_selecionada }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado|urlencode }}{% endif %}{% if conta_selecionada %}&conta={{ conta_selecionada }}{% endif %}"
-                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center
-                               {% if data_selecionada == item.data_pagamento|date:'Y-m-d' %}active fw-bold{% endif %}">
-                                {{ item.data_pagamento|date:"d/m/Y" }}
-                                <span class="badge {% if data_selecionada == item.data_pagamento|date:'Y-m-d' %}bg-light text-primary{% else %}bg-primary{% endif %} rounded-pill">
-                                    {{ item.total }}
-                                </span>
-                            </a>
-                        {% else %}
-                            <a href="?data=sem_data{% if forma_selecionada %}&forma={{ forma_selecionada }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado|urlencode }}{% endif %}{% if conta_selecionada %}&conta={{ conta_selecionada }}{% endif %}"
-                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center text-danger
-                               {% if data_selecionada == 'sem_data' %}active text-white fw-bold{% endif %}">
-                                Sem Data Definida
-                                <span class="badge {% if data_selecionada == 'sem_data' %}bg-light text-danger{% else %}bg-danger{% endif %} rounded-pill">
-                                    {{ item.total }}
-                                </span>
-                            </a>
-                        {% endif %}
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white fw-bold text-secondary">
-                    <i class="bi bi-bank me-2"></i> Conta Sacada
-                </div>
-                <div class="list-group list-group-flush">
-                    <a href="?{% if data_selecionada %}data={{ data_selecionada }}&{% endif %}{% if forma_selecionada %}forma={{ forma_selecionada }}&{% endif %}{% if status_selecionado %}status={{ status_selecionado|urlencode }}{% endif %}"
-                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if not conta_selecionada %}active fw-bold{% endif %}">
-                        Todas as Contas
-                    </a>
-                    {% for item in contas_agrupadas %}
-                        {% if item.conta__id %}
-                            <a href="?conta={{ item.conta__id }}{% if data_selecionada %}&data={{ data_selecionada }}{% endif %}{% if forma_selecionada %}&forma={{ forma_selecionada }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado|urlencode }}{% endif %}"
-                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center
-                               {% if conta_selecionada == item.conta__id|stringformat:'s' %}active fw-bold{% endif %}"
-                               title="{{ item.conta__titular__nome }} — {{ item.conta__banco }} Ag: {{ item.conta__agencia }} Cc: {{ item.conta__conta }}">
-                                <span class="text-truncate me-1" style="max-width: 160px;">
-                                    {{ item.conta__banco|default:"Banco?" }} / {{ item.conta__conta|default:"?" }}
-                                    {% if item.conta__titular__nome %}<small class="d-block text-muted">{{ item.conta__titular__nome|truncatechars:25 }}</small>{% endif %}
-                                </span>
-                                <span class="badge {% if conta_selecionada == item.conta__id|stringformat:'s' %}bg-light text-primary{% else %}bg-primary{% endif %} rounded-pill flex-shrink-0">
-                                    {{ item.total }}
-                                </span>
-                            </a>
-                        {% else %}
-                            <a href="?conta=sem_conta{% if data_selecionada %}&data={{ data_selecionada }}{% endif %}{% if forma_selecionada %}&forma={{ forma_selecionada }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado|urlencode }}{% endif %}"
-                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center text-danger
-                               {% if conta_selecionada == 'sem_conta' %}active text-white fw-bold{% endif %}">
-                                Sem Conta Definida
-                                <span class="badge {% if conta_selecionada == 'sem_conta' %}bg-light text-danger{% else %}bg-danger{% endif %} rounded-pill">
-                                    {{ item.total }}
-                                </span>
-                            </a>
-                        {% endif %}
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-9">
-            <div class="mb-3 d-flex justify-content-between align-items-center">
-                <div>
-                    {% if pode_interagir %}
-                    <button type="submit" form="form-enviar-autorizacao" class="btn btn-primary fw-bold shadow-sm" onclick="return confirm('Enviar os processos selecionados para a mesa do Ordenador de Despesa?');">
-                        <i class="bi bi-send-check"></i> Enviar para Autorização
-                    </button>
+                    {% else %}
+                        <a href="?forma=sem_forma{% if data_selecionada %}&data={{ data_selecionada }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado|urlencode }}{% endif %}{% if conta_selecionada %}&conta={{ conta_selecionada }}{% endif %}"
+                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center text-danger
+                           {% if forma_selecionada == 'sem_forma' %}active text-white fw-bold{% endif %}">
+                            Sem Forma Definida
+                            <span class="badge {% if forma_selecionada == 'sem_forma' %}bg-light text-danger{% else %}bg-danger{% endif %} rounded-pill">
+                                {{ item.total }}
+                            </span>
+                        </a>
                     {% endif %}
-                    
-                    <button type="button" class="btn btn-info text-white fw-bold shadow-sm ms-2" id="btn-visualizar-pagamentos">
-                        <i class="bi bi-eye"></i> Visualizar Dados de Pagamento
-                    </button>
-
-                    <button type="button" class="btn btn-warning fw-bold shadow-sm ms-2" id="btn-separar-lancamento">
-                        <i class="bi bi-bank"></i> Separar para Lançamento Bancário
-                    </button>
-                </div>
+                {% endfor %}
             </div>
-
-            <form id="form-lancamento-bancario" method="POST" action="{% url 'separar_para_lancamento_bancario' %}">
-                {% csrf_token %}
-            </form>
-
-            <form id="form-enviar-autorizacao" method="POST" action="{% url 'enviar_para_autorizacao' %}">
-                {% csrf_token %}
-                <div class="card shadow-sm border-0">
-                    <div class="card-body p-0">
-                        <table class="table table-hover table-striped mb-0 align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    {% if pode_interagir %}
-                                    <th class="text-center" style="width: 40px;">
-                                        <input type="checkbox" class="form-check-input" id="checkAll">
-                                    </th>
-                                    {% endif %}
-                                    <th><a href="#" class="sort-header text-decoration-none text-dark" data-campo="id"># ID {% if ordem == 'id' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt text-primary"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
-                                    <th><a href="#" class="sort-header text-decoration-none text-dark" data-campo="data_pagamento">Data Pagamento {% if ordem == 'data_pagamento' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt text-primary"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
-                                    <th><a href="#" class="sort-header text-decoration-none text-dark" data-campo="credor">Credor {% if ordem == 'credor' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %} text-primary"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
-                                    <th><a href="#" class="sort-header text-decoration-none text-dark" data-campo="status">Status {% if ordem == 'status' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %} text-primary"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
-                                    <th><a href="#" class="sort-header text-decoration-none text-dark" data-campo="tipo_pagamento">Tipo de Pagamento {% if ordem == 'tipo_pagamento' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %} text-primary"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
-                                    <th class="text-end pe-4"><a href="#" class="sort-header text-decoration-none text-dark" data-campo="valor_liquido">Valor Líquido {% if ordem == 'valor_liquido' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt text-primary"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
-                                    <th>Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for processo in lista_processos %}
-                                <tr>
-                                    {% if pode_interagir %}
-                                    <td class="text-center">
-                                        <input type="checkbox" name="processos_selecionados" value="{{ processo.id }}" class="form-check-input check-item">
-                                    </td>
-                                    {% endif %}
-                                    <td class="fw-bold text-muted">#{{ processo.id }}</td>
-                                    <td class="fw-medium text-primary">{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
-                                    <td class="fw-medium">{{ processo.credor|truncatechars:35 }}</td>
-                                    <td>
-                                        <span class="badge bg-primary px-2 py-1">{{ processo.status|default:"-" }}</span>
-                                        {% if processo.has_retencoes %}
-                                            <span class="badge bg-warning text-dark px-2 py-1 ms-1" title="Possui retenções de impostos">Retenções</span>
-                                        {% endif %}
-                                        {% if processo.has_pendencias %}
-                                            <span class="badge bg-danger px-2 py-1 ms-1" title="Possui pendências">Pendências</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ processo.tipo_pagamento|default:"-" }}</td>
-                                    <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
-                                    <td>
-                                        <button type="button" class="btn btn-sm btn-primary fw-bold shadow-sm btn-preview"
-                                                data-processo-id="{{ processo.id }}"
-                                                title="Pré-visualizar Documentos">
-                                            <i class="bi bi-eye"></i> Preview
-                                        </button>
-                                        <a href="{% url 'editar_processo' pk=processo.id %}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="8" class="text-center py-5 text-muted">
-                                        <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-                                        Nenhum processo pendente nesta data.
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </form>
         </div>
     </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white fw-bold text-secondary">
+                <i class="bi bi-calendar-event me-2"></i> Datas de Pagamento
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="?{% if forma_selecionada %}forma={{ forma_selecionada }}&{% endif %}{% if status_selecionado %}status={{ status_selecionado|urlencode }}&{% endif %}{% if conta_selecionada %}conta={{ conta_selecionada }}{% endif %}"
+                   class="list-group-item list-group-item-action {% if not data_selecionada %}active fw-bold{% endif %}">
+                    Todas as Datas
+                </a>
+                {% for item in datas_agrupadas %}
+                    {% if item.data_pagamento %}
+                        <a href="?data={{ item.data_pagamento|date:'Y-m-d' }}{% if forma_selecionada %}&forma={{ forma_selecionada }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado|urlencode }}{% endif %}{% if conta_selecionada %}&conta={{ conta_selecionada }}{% endif %}"
+                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center
+                           {% if data_selecionada == item.data_pagamento|date:'Y-m-d' %}active fw-bold{% endif %}">
+                            {{ item.data_pagamento|date:"d/m/Y" }}
+                            <span class="badge {% if data_selecionada == item.data_pagamento|date:'Y-m-d' %}bg-light text-primary{% else %}bg-primary{% endif %} rounded-pill">
+                                {{ item.total }}
+                            </span>
+                        </a>
+                    {% else %}
+                        <a href="?data=sem_data{% if forma_selecionada %}&forma={{ forma_selecionada }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado|urlencode }}{% endif %}{% if conta_selecionada %}&conta={{ conta_selecionada }}{% endif %}"
+                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center text-danger
+                           {% if data_selecionada == 'sem_data' %}active text-white fw-bold{% endif %}">
+                            Sem Data Definida
+                            <span class="badge {% if data_selecionada == 'sem_data' %}bg-light text-danger{% else %}bg-danger{% endif %} rounded-pill">
+                                {{ item.total }}
+                            </span>
+                        </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white fw-bold text-secondary">
+                <i class="bi bi-bank me-2"></i> Conta Sacada
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="?{% if data_selecionada %}data={{ data_selecionada }}&{% endif %}{% if forma_selecionada %}forma={{ forma_selecionada }}&{% endif %}{% if status_selecionado %}status={{ status_selecionado|urlencode }}{% endif %}"
+                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if not conta_selecionada %}active fw-bold{% endif %}">
+                    Todas as Contas
+                </a>
+                {% for item in contas_agrupadas %}
+                    {% if item.conta__id %}
+                        <a href="?conta={{ item.conta__id }}{% if data_selecionada %}&data={{ data_selecionada }}{% endif %}{% if forma_selecionada %}&forma={{ forma_selecionada }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado|urlencode }}{% endif %}"
+                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center
+                           {% if conta_selecionada == item.conta__id|stringformat:'s' %}active fw-bold{% endif %}"
+                           title="{{ item.conta__titular__nome }} — {{ item.conta__banco }} Ag: {{ item.conta__agencia }} Cc: {{ item.conta__conta }}">
+                            <span class="text-truncate me-1" style="max-width: 160px;">
+                                {{ item.conta__banco|default:"Banco?" }} / {{ item.conta__conta|default:"?" }}
+                                {% if item.conta__titular__nome %}<small class="d-block text-muted">{{ item.conta__titular__nome|truncatechars:25 }}</small>{% endif %}
+                            </span>
+                            <span class="badge {% if conta_selecionada == item.conta__id|stringformat:'s' %}bg-light text-primary{% else %}bg-primary{% endif %} rounded-pill flex-shrink-0">
+                                {{ item.total }}
+                            </span>
+                        </a>
+                    {% else %}
+                        <a href="?conta=sem_conta{% if data_selecionada %}&data={{ data_selecionada }}{% endif %}{% if forma_selecionada %}&forma={{ forma_selecionada }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado|urlencode }}{% endif %}"
+                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center text-danger
+                           {% if conta_selecionada == 'sem_conta' %}active text-white fw-bold{% endif %}">
+                            Sem Conta Definida
+                            <span class="badge {% if conta_selecionada == 'sem_conta' %}bg-light text-danger{% else %}bg-danger{% endif %} rounded-pill">
+                                {{ item.total }}
+                            </span>
+                        </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
 </div>
+{% endblock filter_card %}
+
+{# ── batchForm posts to the authorization endpoint ────────────────────── #}
+{% block batch_form_action %}{% url 'enviar_para_autorizacao' %}{% endblock %}
+
+{# ── Table headers (with master checkbox) ────────────────────────────── #}
+{% block table_headers %}
+{% if pode_interagir %}
+<th class="text-center" style="width: 40px;">
+    <input type="checkbox" class="form-check-input" id="batchCheckAll">
+</th>
+{% endif %}
+<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="id"># ID {% if ordem == 'id' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt"></i>{% else %}<i class="bi bi-sort-alt opacity-50"></i>{% endif %}</a></th>
+<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="data_pagamento">Data Pagamento {% if ordem == 'data_pagamento' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt"></i>{% else %}<i class="bi bi-sort-alt opacity-50"></i>{% endif %}</a></th>
+<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="credor">Credor {% if ordem == 'credor' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %}"></i>{% else %}<i class="bi bi-sort-alt opacity-50"></i>{% endif %}</a></th>
+<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="status">Status {% if ordem == 'status' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %}"></i>{% else %}<i class="bi bi-sort-alt opacity-50"></i>{% endif %}</a></th>
+<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="tipo_pagamento">Tipo de Pagamento {% if ordem == 'tipo_pagamento' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %}"></i>{% else %}<i class="bi bi-sort-alt opacity-50"></i>{% endif %}</a></th>
+<th class="text-end pe-4"><a href="#" class="sort-header text-decoration-none text-white" data-campo="valor_liquido">Valor Líquido {% if ordem == 'valor_liquido' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt"></i>{% else %}<i class="bi bi-sort-alt opacity-50"></i>{% endif %}</a></th>
+<th>Ação</th>
+{% endblock %}
+
+{# ── Table rows (checkboxes bound to processo_ids) ────────────────────── #}
+{% block table_rows %}
+{% for processo in lista_processos %}
+<tr>
+    {% if pode_interagir %}
+    <td class="text-center">
+        <input type="checkbox" name="processos_selecionados" value="{{ processo.id }}" class="form-check-input batch-item-check">
+    </td>
+    {% endif %}
+    <td class="fw-bold text-muted">#{{ processo.id }}</td>
+    <td class="fw-medium text-primary">{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
+    <td class="fw-medium">{{ processo.credor|truncatechars:35 }}</td>
+    <td>
+        <span class="badge bg-primary px-2 py-1">{{ processo.status|default:"-" }}</span>
+        {% if processo.has_retencoes %}
+            <span class="badge bg-warning text-dark px-2 py-1 ms-1" title="Possui retenções de impostos">Retenções</span>
+        {% endif %}
+        {% if processo.has_pendencias %}
+            <span class="badge bg-danger px-2 py-1 ms-1" title="Possui pendências">Pendências</span>
+        {% endif %}
+    </td>
+    <td>{{ processo.tipo_pagamento|default:"-" }}</td>
+    <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
+    <td>
+        <button type="button" class="btn btn-sm btn-primary fw-bold shadow-sm btn-preview"
+                data-processo-id="{{ processo.id }}"
+                title="Pré-visualizar Documentos">
+            <i class="bi bi-eye"></i> Preview
+        </button>
+        <a href="{% url 'editar_processo' pk=processo.id %}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="8" class="text-center py-5 text-muted">
+        <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+        Nenhum processo pendente nesta data.
+    </td>
+</tr>
+{% endfor %}
+{% endblock %}
+
+{# ── Sticky batch action bar ──────────────────────────────────────────── #}
+{% block batch_actions %}
+{% if pode_interagir %}
+<button type="submit" class="btn btn-primary fw-bold shadow-sm"
+        onclick="return confirm('Enviar os processos selecionados para a mesa do Ordenador de Despesa?');">
+    <i class="bi bi-send-check"></i> Enviar para Autorização
+</button>
+{% endif %}
+
+<button type="button" class="btn btn-info text-white fw-bold shadow-sm" id="btn-visualizar-pagamentos">
+    <i class="bi bi-eye"></i> Visualizar Dados de Pagamento
+</button>
+
+<button type="button" class="btn btn-warning fw-bold shadow-sm" id="btn-separar-lancamento">
+    <i class="bi bi-bank"></i> Separar para Lançamento Bancário
+</button>
+
+{# Hidden form used by JS to POST to the bancário endpoint with selected IDs #}
+<form id="form-lancamento-bancario" method="POST" action="{% url 'separar_para_lancamento_bancario' %}" class="d-none">
+    {% csrf_token %}
+</form>
+{% endblock %}
+
+{# ── Modals + extra content below the table ───────────────────────────── #}
+{% block list_footer %}
+{% include 'partials/preview_modal.html' %}
 
 <div class="modal fade" id="pagamentosModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl">
@@ -273,12 +257,10 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body bg-light">
-                
                 <div id="pagamentos-loading" class="text-center py-4" style="display: none;">
                     <div class="spinner-border text-info" role="status"></div>
                     <p class="mt-2 text-muted fw-bold">Analisando processos selecionados...</p>
                 </div>
-                
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered bg-white shadow-sm" id="tabela-pagamentos" style="display: none;">
                         <thead class="table-light">
@@ -290,8 +272,7 @@
                                 <th style="width: 35%;">Dados de Pagamento Bancário</th>
                             </tr>
                         </thead>
-                        <tbody id="pagamentos-tbody">
-                            </tbody>
+                        <tbody id="pagamentos-tbody"></tbody>
                     </table>
                 </div>
             </div>
@@ -301,27 +282,25 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
-{% include 'partials/preview_modal.html' %}
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+{# ── JavaScript: sort headers, separar lançamento, visualizar pagamentos ─ #}
+{% block extra_js %}
+{{ block.super }}
 <script>
-// Sortable headers: current sort state injected from Django context
-const sortOrdemAtual = "{{ ordem }}";
-const sortDirecaoAtual = "{{ direcao }}";
+const sortOrdemAtual    = "{{ ordem }}";
+const sortDirecaoAtual  = "{{ direcao }}";
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
 
-    // ----------------------------------------------------------------------
-    // 0. LÓGICA DOS CABEÇALHOS ORDENÁVEIS
-    // ----------------------------------------------------------------------
-    document.querySelectorAll('.sort-header').forEach(function(link) {
-        link.addEventListener('click', function(e) {
+    // ------------------------------------------------------------------
+    // 1. SORTABLE HEADERS
+    // ------------------------------------------------------------------
+    document.querySelectorAll('.sort-header').forEach(function (link) {
+        link.addEventListener('click', function (e) {
             e.preventDefault();
-            const campo = this.getAttribute('data-campo');
+            const campo  = this.getAttribute('data-campo');
             const params = new URLSearchParams(window.location.search);
-            // Toggle direction if same field, otherwise start ascending
             if (params.get('ordem') === campo) {
                 params.set('direcao', params.get('direcao') === 'asc' ? 'desc' : 'asc');
             } else {
@@ -332,24 +311,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ----------------------------------------------------------------------
-    // 1. LÓGICA DO CHECKBOX "SELECIONAR TODOS"
-    // ----------------------------------------------------------------------
-    const checkAll = document.getElementById('checkAll');
-    if (checkAll) {
-        checkAll.addEventListener('change', function() {
-            var checkboxes = document.querySelectorAll('.check-item');
-            for (var checkbox of checkboxes) {
-                checkbox.checked = this.checked;
-            }
-        });
-    }
-
-    // ----------------------------------------------------------------------
-    // 2. LÓGICA DO BOTÃO "SEPARAR PARA LANÇAMENTO BANCÁRIO"
-    // ----------------------------------------------------------------------
+    // ------------------------------------------------------------------
+    // 2. SEPARAR PARA LANÇAMENTO BANCÁRIO
+    // ------------------------------------------------------------------
     const btnSepararLancamento = document.getElementById('btn-separar-lancamento');
-
     if (btnSepararLancamento) {
         btnSepararLancamento.addEventListener('click', function () {
             const checkboxes = document.querySelectorAll('input[name="processos_selecionados"]:checked');
@@ -361,12 +326,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const form = document.getElementById('form-lancamento-bancario');
-            // Remove any previously added hidden inputs
             form.querySelectorAll('input[name="processos_selecionados"]').forEach(el => el.remove());
             ids.forEach(function (id) {
                 var input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'processos_selecionados';
+                input.type  = 'hidden';
+                input.name  = 'processos_selecionados';
                 input.value = id;
                 form.appendChild(input);
             });
@@ -374,15 +338,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ----------------------------------------------------------------------
-    // 3. LÓGICA DO PAINEL DE VISUALIZAÇÃO DE PAGAMENTOS
-    // ----------------------------------------------------------------------
+    // ------------------------------------------------------------------
+    // 3. VISUALIZAR DADOS DE PAGAMENTO
+    // ------------------------------------------------------------------
     const btnVisualizar = document.getElementById('btn-visualizar-pagamentos');
-    
     if (btnVisualizar) {
-        btnVisualizar.addEventListener('click', function() {
-            
-            // Pega todos os checkboxes de processos que estão selecionados na tabela
+        btnVisualizar.addEventListener('click', function () {
             const checkboxes = document.querySelectorAll('input[name="processos_selecionados"]:checked');
             const ids = Array.from(checkboxes).map(cb => cb.value);
 
@@ -391,18 +352,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Inicia o Modal do Bootstrap
             const modalElement = document.getElementById('pagamentosModal');
             const modal = new bootstrap.Modal(modalElement);
             modal.show();
-            
-            // Gira o Spinner
+
             document.getElementById('pagamentos-loading').style.display = 'block';
-            document.getElementById('tabela-pagamentos').style.display = 'none';
+            document.getElementById('tabela-pagamentos').style.display  = 'none';
             const tbody = document.getElementById('pagamentos-tbody');
             tbody.innerHTML = '';
 
-            // Dispara a requisição Fetch para a API no views.py
             fetch("{% url 'api_detalhes_pagamento' %}", {
                 method: 'POST',
                 headers: {
@@ -414,17 +372,13 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(res => res.json())
             .then(data => {
                 document.getElementById('pagamentos-loading').style.display = 'none';
-                
+
                 if (data.sucesso) {
                     data.dados.forEach(p => {
-                        
-                        // LÓGICA DO BOTÃO DE COPIAR
-                        // Se a API devolveu um Código de Barras ou PIX válido, montamos o HTML com o botão de prancheta
                         let valorHtml = `<span class="fw-bold text-dark">${p.detalhe_valor}</span>`;
-                        
+
                         if (p.detalhe_tipo === 'Código de Barras') {
                             if (p.codigos_barras && p.codigos_barras.length > 0) {
-                                // Renderiza um item por código de barras extraído dos documentos do processo
                                 valorHtml = p.codigos_barras.map(cb => `
                                     <div class="d-flex align-items-center justify-content-between p-2 bg-light rounded border border-secondary border-opacity-25 mb-1">
                                         <span class="fw-bold text-primary font-monospace text-break me-2" style="font-size: 0.9rem;">${cb}</span>
@@ -449,7 +403,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             }
                         }
 
-                        // CONSTRÓI A LINHA DA TABELA (ROW)
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
                             <td>
@@ -466,24 +419,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         `;
                         tbody.appendChild(tr);
                     });
-                    
+
                     document.getElementById('tabela-pagamentos').style.display = 'table';
-                    
-                    // DELEGAÇÃO DO EVENTO "COPIAR"
-                    // Depois da tabela estar montada, ativamos todos os botões de copiar que acabámos de criar
+
                     document.querySelectorAll('.copy-btn').forEach(btn => {
-                        btn.addEventListener('click', function() {
+                        btn.addEventListener('click', function () {
                             const textToCopy = this.getAttribute('data-clipboard');
-                            
-                            // API moderna do navegador para área de transferência
                             navigator.clipboard.writeText(textToCopy).then(() => {
-                                // Feedback visual: Muda o ícone para um Visto Verde
                                 const icone = this.querySelector('i');
                                 icone.classList.replace('bi-clipboard', 'bi-check-lg');
                                 this.classList.replace('btn-outline-secondary', 'btn-success');
                                 this.classList.add('text-white');
-                                
-                                // Retorna ao normal após 2 segundos
                                 setTimeout(() => {
                                     icone.classList.replace('bi-check-lg', 'bi-clipboard');
                                     this.classList.replace('btn-success', 'btn-outline-secondary');
@@ -511,6 +457,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-
-</body>
-</html>
+{% endblock %}

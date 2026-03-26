@@ -34,6 +34,7 @@
     </div>
     {% endblock filter_card %}
 
+    {% block batch_form_open %}{% endblock %}
     <div class="card shadow-sm border-0">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -53,6 +54,7 @@
         {# Override this block for content below the table within the card (e.g. pagination) #}
         {% endblock %}
     </div>
+    {% block batch_form_close %}{% endblock %}
 
     {% block list_footer %}{% endblock %}
 

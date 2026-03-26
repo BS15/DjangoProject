@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .review-sticky-panel { position: sticky; top: 12px; }
+    .review-action-bar {
+        position: sticky;
+        bottom: 0;
+        z-index: 100;
+        background: #fff;
+        border-top: 2px solid #dee2e6;
+        padding: 0.75rem 1rem;
+        box-shadow: 0 -2px 8px rgba(0,0,0,.07);
+    }
+</style>
+{% block review_extra_css %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+
+{# Top bar: queue progress, breadcrumb, or any contextual navigation #}
+{% block review_topbar %}{% endblock %}
+
+<div class="container-fluid px-3 py-3" style="padding-bottom: 80px;">
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-2" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row g-3">
+
+        {# Left pane: document viewer (PDF, image, etc.) #}
+        <div class="col-lg-7">
+            {% block document_viewer %}{% endblock %}
+        </div>
+
+        {# Right pane: review forms, info cards, history #}
+        <div class="col-lg-5">
+            {% block review_panel %}{% endblock %}
+        </div>
+
+    </div>
+</div>
+
+{# Sticky bottom action bar: Voltar, Pular, Sair and primary actions #}
+<div class="review-action-bar">
+    {% block queue_navigation %}{% endblock %}
+</div>
+
+{% endblock content %}
