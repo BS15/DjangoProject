@@ -102,7 +102,7 @@ def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, entidade=
 
     url = ""
     if doc.get("signatures"):
-        link = doc["signatures"][0].get("link", {})
+        link = doc["signatures"][0].get("link") or {}
         url = link.get("short_link", "")
 
     if entidade is not None and tipo_documento is not None:
