@@ -65,7 +65,7 @@ def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, entidade=
     }
 
     if folder_id:
-        variables["folderId"] = folder_id
+        variables["folder_id"] = folder_id
 
     operations = json.dumps({
         "query": query,
