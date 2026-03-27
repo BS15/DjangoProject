@@ -508,9 +508,16 @@ document.addEventListener('DOMContentLoaded', function () {
     var _lastBatchRows  = [];
 
     function getModalBatchTipo() {
-        if (!_modalBatchTipoInstance)
-            _modalBatchTipoInstance = new bootstrap.Modal(
-                document.getElementById('modal-batch-tipo'));
+        if (!_modalBatchTipoInstance) {
+            try {
+                _modalBatchTipoInstance = new bootstrap.Modal(
+                    document.getElementById('modal-batch-tipo'));
+            } catch (e) {
+                /* Bootstrap CDN unavailable — batch-tipo modal is disabled
+                   but file upload and all other features continue to work. */
+                return null;
+            }
+        }
         return _modalBatchTipoInstance;
     }
 
@@ -609,7 +616,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 ? 'Aplicar a ' + checkedRows.length + ' Selecionado(s)'
                 : 'Aplicar a Todos';
         }
-        getModalBatchTipo().show();
+        var modal = getModalBatchTipo();
+        if (modal) modal.show();
     }
 
     var btnConfirmarBatch = document.getElementById('btn-confirmar-batch-tipo');
@@ -634,7 +642,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 .forEach(function (cb) { cb.checked = false; });
             updateBatchButtonBadge();
             _lastBatchRows = [];
-            getModalBatchTipo().hide();
+            var modal = getModalBatchTipo();
+            if (modal) modal.hide();
         });
     }
 
