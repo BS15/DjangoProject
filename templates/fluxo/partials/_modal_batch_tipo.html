@@ -1,4 +1,5 @@
-{# ─────────────────────────────────────────────────────────────────────────────
+{% comment %}
+─────────────────────────────────────────────────────────────────────────────
    Partial: _modal_batch_tipo.html
    Purpose: "Definir Tipo de Documento em Lote" Bootstrap modal — shared by
             both the add and edit process pages.
@@ -12,7 +13,8 @@
                batch_confirm_class="btn-primary" %}
            {% include "fluxo/partials/_modal_batch_tipo.html" %}
        {% endwith %}
-   ─────────────────────────────────────────────────────────────────────────── #}
+─────────────────────────────────────────────────────────────────────────────
+{% endcomment %}
 <div class="modal fade" id="modal-batch-tipo" tabindex="-1"
      aria-labelledby="modalBatchTipoLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">

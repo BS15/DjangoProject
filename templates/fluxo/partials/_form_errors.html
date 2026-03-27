@@ -1,10 +1,12 @@
-{# ─────────────────────────────────────────────────────────────────────────────
+{% comment %}
+─────────────────────────────────────────────────────────────────────────────
    Partial: _form_errors.html
    Purpose: Displays server-side validation errors from processo_form and
             documento_formset in a single danger alert.
    Context variables required: processo_form, documento_formset
    Usage:   {% include "fluxo/partials/_form_errors.html" %}
-   ─────────────────────────────────────────────────────────────────────────── #}
+─────────────────────────────────────────────────────────────────────────────
+{% endcomment %}
 {% if processo_form.errors or documento_formset.errors %}
     <div class="alert alert-danger shadow-sm">
         <h6 class="fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Verifique os campos obrigatórios:</h6>
