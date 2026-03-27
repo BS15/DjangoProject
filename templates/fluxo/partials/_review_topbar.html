@@ -1,0 +1,44 @@
+{#
+  _review_topbar.html — Top navbar + queue-position progress bar for
+  review/processo panels (conferencia, contabilizacao, conselho fiscal).
+
+  Parameters (pass via the "with" tag):
+    topbar_color     : Bootstrap colour token used for navbar bg and progress bar
+                       (success | primary | info)
+    topbar_icon      : Full Bootstrap Icons class, e.g. "bi bi-shield-check"
+    topbar_title     : Panel name text shown in the navbar
+    topbar_sair_label: Label for the quick-exit button inside the queue bar
+
+  Context:
+    queue_length   : total number of processes in the active queue;
+                     when 0 the queue bar is hidden entirely
+    queue_position : 1-based position of the current process in the queue
+#}
+<nav class="navbar navbar-expand-lg navbar-dark bg-{{ topbar_color }} mb-0 shadow-sm">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold" href="{% url 'home_page' %}">System X</a>
+        <span class="navbar-text text-white fw-semibold small">
+            <i class="{{ topbar_icon }} me-1"></i> {{ topbar_title }}
+        </span>
+    </div>
+</nav>
+
+{% if queue_length > 0 %}
+<div class="bg-white border-bottom px-4 py-2 d-flex align-items-center gap-3">
+    <span class="progress-queue text-muted">
+        <i class="bi bi-list-check me-1"></i>
+        Processo <strong>{{ queue_position }}</strong> de <strong>{{ queue_length }}</strong> na fila
+    </span>
+    <div class="progress flex-grow-1" style="height:6px;">
+        <div class="progress-bar bg-{{ topbar_color }}"
+             style="width: {% widthratio queue_position queue_length 100 %}%"></div>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="sair">
+        <button type="submit" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-x-lg me-1"></i>{{ topbar_sair_label }}
+        </button>
+    </form>
+</div>
+{% endif %}
