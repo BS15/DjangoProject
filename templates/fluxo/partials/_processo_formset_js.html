@@ -1,4 +1,4 @@
-{#
+{% comment %}
   _processo_formset_js.html — Formset management + action-button JS
   Parameters (via {% with %}):
     js_form_id            : id of the main <form> element
@@ -7,7 +7,7 @@
     js_confirm_msg_prefix : text before process ID in confirm() message
     js_confirm_msg_suffix : text after process ID in confirm() message
   Context: processo
-#}
+{% endcomment %}
 <script>
 (function () {
     'use strict';

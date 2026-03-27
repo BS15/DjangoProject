@@ -1,4 +1,4 @@
-{#
+{% comment %}
   _painel_selecao_bar.html — Bulk selection action bar for panel list pages
   Parameters (via {% with %}):
     bar_id           : HTML id of this bar element
@@ -6,7 +6,7 @@
     iniciar_url_name : Django URL name for the batch-start POST endpoint
     iniciar_label    : Label text shown on the start button
   Context: pode_interagir
-#}
+{% endcomment %}
 {% if pode_interagir %}
 <div id="{{ bar_id }}" class="alert alert-{{ bar_color }} d-flex align-items-center gap-3 mb-3 shadow-sm" style="display:none !important;">
     <i class="bi bi-check2-square fs-5"></i>
