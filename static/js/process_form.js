@@ -214,11 +214,18 @@ document.addEventListener('DOMContentLoaded', function () {
             if (avisoDocumentos) avisoDocumentos.style.display = 'block';
             return;
         }
-        if (avisoDocumentos) {
-            avisoDocumentos.innerHTML =
-                '<span class="spinner-border spinner-border-sm"></span> Carregando documentos...';
-            avisoDocumentos.style.display = 'block';
-        }
+
+        /* Unlock the document section immediately — do not wait for the API.
+           A network error or sucesso:false must never leave the user stuck
+           staring at a hidden widget after they have already chosen a payment
+           type. */
+        if (avisoDocumentos) avisoDocumentos.style.display = 'none';
+        if (blocoDocumentos) blocoDocumentos.style.display = 'block';
+        showDocSelectControls();
+
+        /* Asynchronously narrow the tipo dropdown to types that belong to
+           the selected payment type.  The block is already visible at this
+           point so a failure here is non-fatal. */
         var apiUrl = (selectTipoPagamento.dataset.apiTiposUrl || '/api/documentos-por-pagamento/');
         fetch(apiUrl + '?tipo_pagamento_id=' + tipoId)
             .then(function (res) { return res.json(); })
@@ -239,9 +246,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (!isUserChange) sel.value = valorAntigo;
                     });
                 }
-                if (avisoDocumentos) avisoDocumentos.style.display = 'none';
-                if (blocoDocumentos) blocoDocumentos.style.display = 'block';
-                showDocSelectControls();
+            })
+            .catch(function () {
+                /* Network error or non-JSON response — the block is already
+                   visible; leave the tipo dropdown with whatever Django
+                   rendered so the user can still operate. */
             });
     }
 
@@ -268,11 +277,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (containerDocumentos) {
-        new Sortable(containerDocumentos, {
-            handle: '.drag-handle',
-            ghostClass: 'bg-light',
-            onEnd: recalcularOrdemDocumentos,
-        });
+        try {
+            new Sortable(containerDocumentos, {
+                handle: '.drag-handle',
+                ghostClass: 'bg-light',
+                onEnd: recalcularOrdemDocumentos,
+            });
+        } catch (e) {
+            /* Sortable.js CDN unavailable — drag-and-drop ordering is disabled
+               but all other document-management features continue to work. */
+        }
         recalcularOrdemDocumentos();
 
         document.getElementById('add-doc-btn').addEventListener('click', function () {
