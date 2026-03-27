@@ -41,8 +41,8 @@ def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, entidade=
 
     # 1. The exact query from Autentique's documentation
     query = """
-    mutation CreateDocumentMutation($document: DocumentInput!, $signers: [SignerInput!]!, $file: Upload!, $folderId: String) {
-      createDocument(document: $document, signers: $signers, file: $file, folderId: $folderId) {
+    mutation CreateDocumentMutation($document: DocumentInput!, $signers: [SignerInput!]!, $file: Upload!, $folder_id: String) {
+      createDocument(document: $document, signers: $signers, file: $file, folder_id: $folder_id) {
         id
         name
         signatures {
