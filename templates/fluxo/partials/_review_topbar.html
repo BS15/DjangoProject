@@ -1,4 +1,4 @@
-{#
+{% comment %}
   _review_topbar.html — Top navbar + queue-position progress bar for
   review/processo panels (conferencia, contabilizacao, conselho fiscal).
 
@@ -13,7 +13,7 @@
     queue_length   : total number of processes in the active queue;
                      when 0 the queue bar is hidden entirely
     queue_position : 1-based position of the current process in the queue
-#}
+{% endcomment %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-{{ topbar_color }} mb-0 shadow-sm">
     <div class="container-fluid px-4">
         <a class="navbar-brand fw-bold" href="{% url 'home_page' %}">System X</a>

@@ -1,4 +1,4 @@
-{#
+{% comment %}
   _panel_header.html — Standard page-heading row for panel list views.
 
   Renders a flex row with the panel title/subtitle on the left and action
@@ -20,7 +20,7 @@
                             e.g. "btn-outline-primary" (defaults to btn-outline-secondary)
 
   Context: none beyond the parameters above
-#}
+{% endcomment %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2><i class="{{ panel_icon }} text-{{ panel_color }}"></i> {{ panel_title }}</h2>
