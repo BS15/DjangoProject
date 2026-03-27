@@ -1,4 +1,5 @@
-{# ─────────────────────────────────────────────────────────────────────────────
+{% comment %}
+─────────────────────────────────────────────────────────────────────────────
    Partial: _pdf_viewer.html
    Purpose: Left-column sticky card that embeds a PDF viewer iframe with a
             placeholder when no document is selected.
@@ -15,7 +16,8 @@
                viewer_placeholder_text="Faça o upload de um PDF..." %}
            {% include "fluxo/partials/_pdf_viewer.html" %}
        {% endwith %}
-   ─────────────────────────────────────────────────────────────────────────── #}
+─────────────────────────────────────────────────────────────────────────────
+{% endcomment %}
 <div class="col-lg-5">
     <div class="sticky-viewer">
         <div class="card shadow-sm border-{{ viewer_theme }} h-100">

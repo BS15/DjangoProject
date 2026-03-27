@@ -1,10 +1,12 @@
-{# ─────────────────────────────────────────────────────────────────────────────
+{% comment %}
+─────────────────────────────────────────────────────────────────────────────
    Partial: _transferencia_block.html
    Purpose: Bank-transfer (TED/DOC) payment-method sub-form: Banco, Agência,
             Conta Corrente, and optional link to a saved creditor account.
    Context variables required: processo_form
    Usage:   {% include "fluxo/partials/_transferencia_block.html" %}
-   ─────────────────────────────────────────────────────────────────────────── #}
+─────────────────────────────────────────────────────────────────────────────
+{% endcomment %}
 <div id="bloco_transferencia" class="row g-3 mb-3 bg-light p-3 border rounded mt-2" style="display: none;">
     <div class="col-md-12 mb-2">
         <h6 class="fw-bold text-primary mb-0"><i class="bi bi-bank"></i> Dados de Transferência Bancária</h6>

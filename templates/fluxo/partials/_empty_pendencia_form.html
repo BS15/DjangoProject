@@ -1,11 +1,13 @@
-{# ─────────────────────────────────────────────────────────────────────────────
+{% comment %}
+─────────────────────────────────────────────────────────────────────────────
    Partial: _empty_pendencia_form.html
    Purpose: Hidden DOM template cloned by JavaScript when the user clicks
             "Adicionar Pendência".  Must be kept outside the <form> so it is
             not submitted, but lives on the page for innerHTML cloning.
    Context variables required: pendencia_formset
    Usage:   {% include "fluxo/partials/_empty_pendencia_form.html" %}
-   ─────────────────────────────────────────────────────────────────────────── #}
+─────────────────────────────────────────────────────────────────────────────
+{% endcomment %}
 <div id="empty-pendencia-form">
     <div class="row g-2 align-items-center mb-2 border-bottom pb-2 pendencia-row bg-white">
         <div class="col-md-4">

@@ -1,4 +1,5 @@
-{# ─────────────────────────────────────────────────────────────────────────────
+{% comment %}
+─────────────────────────────────────────────────────────────────────────────
    Partial: _head_styles.html
    Purpose: Shared <head> content for the process creation/editing pages.
    Usage:
@@ -7,7 +8,8 @@
        {% endwith %}
    After the include the parent template may add a <style> block with any
    page-specific overrides.
-   ─────────────────────────────────────────────────────────────────────────── #}
+─────────────────────────────────────────────────────────────────────────────
+{% endcomment %}
 {% load static %}
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
