@@ -1,0 +1,15 @@
+{#
+  _panel_navbar.html — Main application navigation bar for panel list views.
+
+  Renders the standard bg-primary top navbar with the "System X" brand.
+  Include at the top of the content block in any list panel that extends
+  base.html directly (conferencia, contabilizacao, conselho, etc.).
+
+  Parameters: none
+  Context: none
+#}
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow-sm">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold" href="{% url 'home_page' %}">System X</a>
+    </div>
+</nav>

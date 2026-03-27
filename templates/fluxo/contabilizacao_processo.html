@@ -3,73 +3,21 @@
 {% block page_title %}Contabilização — Processo #{{ processo.id }}{% endblock %}
 
 {% block review_extra_css %}
-<style>
-    .history-row { font-size: 0.82rem; }
-    .pendencia-row-resolvida { opacity: 0.6; }
-    #empty-doc-form, #empty-pendencia-form { display: none; }
-    .drag-handle { cursor: grab; }
-    .doc-imutavel-badge { font-size: 0.7rem; }
-    .progress-queue { font-size: 0.82rem; }
-</style>
+{% include "fluxo/partials/_review_extra_css.html" %}
 {% endblock %}
 
 {# ═══ TOP BAR: context navbar + queue progress ═══════════════════════════ #}
 {% block review_topbar %}
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-0 shadow-sm">
-    <div class="container-fluid px-4">
-        <a class="navbar-brand fw-bold" href="{% url 'home_page' %}">System X</a>
-        <span class="navbar-text text-white fw-semibold small">
-            <i class="bi bi-calculator me-1"></i> Contabilização
-        </span>
-    </div>
-</nav>
-
-{% if queue_length > 0 %}
-<div class="bg-white border-bottom px-4 py-2 d-flex align-items-center gap-3">
-    <span class="progress-queue text-muted">
-        <i class="bi bi-list-check me-1"></i>
-        Processo <strong>{{ queue_position }}</strong> de <strong>{{ queue_length }}</strong> na fila
-    </span>
-    <div class="progress flex-grow-1" style="height:6px;">
-        <div class="progress-bar bg-primary"
-             style="width: {% widthratio queue_position queue_length 100 %}%"></div>
-    </div>
-    <form method="post">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="sair">
-        <button type="submit" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-x-lg me-1"></i>Sair da Contabilização
-        </button>
-    </form>
-</div>
-{% endif %}
+{% with topbar_color="primary" topbar_icon="bi bi-calculator" topbar_title="Contabilização" topbar_sair_label="Sair da Contabilização" %}
+    {% include "fluxo/partials/_review_topbar.html" %}
+{% endwith %}
 {% endblock %}
 
 {# ═══ LEFT PANE: PDF viewer ═══════════════════════════════════════════════ #}
 {% block document_viewer %}
-<div class="review-sticky-panel">
-    <div class="card shadow-sm border-primary">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-2">
-            <span class="fw-bold">
-                <i class="bi bi-file-earmark-pdf me-1"></i>
-                Processo #{{ processo.id }} — PDF Consolidado
-            </span>
-            <a href="{% url 'visualizar_pdf_processo' processo_id=processo.id %}"
-               target="_blank"
-               class="btn btn-sm btn-light text-primary fw-bold">
-                <i class="bi bi-box-arrow-up-right"></i> Abrir em nova aba
-            </a>
-        </div>
-        <div class="card-body p-0">
-            <iframe
-                src="{% url 'visualizar_pdf_processo' processo_id=processo.id %}"
-                width="100%"
-                style="height: calc(100vh - 200px); min-height: 600px; border: none;"
-                title="PDF Consolidado do Processo">
-            </iframe>
-        </div>
-    </div>
-</div>
+{% with viewer_color="primary" %}
+    {% include "fluxo/partials/_review_pdf_viewer.html" %}
+{% endwith %}
 {% endblock %}
 
 {# ═══ RIGHT PANE: forms, info, history ═══════════════════════════════════ #}
@@ -98,11 +46,7 @@
 
 {# ═══ REJECTION MODAL ════════════════════════════════════════════════════ #}
 {% block extra_modals %}
-{% with rejeitar_modal_title="Devolver Processo"
-        rejeitar_modal_body="Informe o erro que impede a contabilização. O processo retornará à Conferência."
-        rejeitar_label_tipo="Tipo de Pendência"
-        rejeitar_label_descricao="Descrição do Erro"
-        rejeitar_confirm_label="Confirmar Devolução" %}
+{% with rejeitar_modal_title="Devolver Processo" rejeitar_modal_body="Informe o erro que impede a contabilização. O processo retornará à Conferência." rejeitar_label_tipo="Tipo de Pendência" rejeitar_label_descricao="Descrição do Erro" rejeitar_confirm_label="Confirmar Devolução" %}
     {% include "fluxo/partials/_processo_rejeitar_modal.html" %}
 {% endwith %}
 {% endblock %}
@@ -143,61 +87,15 @@
     </button>
     {% endif %}
 
-    <!-- Back to previous -->
-    {% if prev_pk %}
-    <button type="button"
-            class="btn btn-outline-secondary fw-bold"
-            id="btn-voltar"
-            data-action="voltar">
-        <i class="bi bi-skip-start me-1"></i>
-        Voltar — Processo Anterior
-    </button>
-    {% else %}
-    <button type="button"
-            class="btn btn-outline-secondary fw-bold disabled"
-            title="Não há processo anterior na fila">
-        <i class="bi bi-skip-start me-1"></i>
-        Voltar
-    </button>
-    {% endif %}
-
-    <!-- Skip -->
-    {% if next_pk %}
-    <button type="button"
-            class="btn btn-outline-secondary fw-bold"
-            id="btn-pular"
-            data-action="pular">
-        <i class="bi bi-skip-end me-1"></i>
-        Pular — Próximo Processo
-    </button>
-    {% else %}
-    <button type="button"
-            class="btn btn-outline-secondary fw-bold disabled"
-            title="Não há mais processos na fila">
-        <i class="bi bi-skip-end me-1"></i>
-        Pular
-    </button>
-    {% endif %}
-
-    <div class="ms-auto d-flex gap-2 align-items-center">
-        <form method="post" id="sair-form">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="sair">
-            <button type="submit" class="btn btn-outline-danger fw-bold">
-                <i class="bi bi-x-circle me-1"></i>Sair da Contabilização
-            </button>
-        </form>
-    </div>
+    {% with nav_sair_label="Sair da Contabilização" %}
+        {% include "fluxo/partials/_review_queue_nav.html" %}
+    {% endwith %}
 </div>
 {% endblock %}
 
 {# ═══ JAVASCRIPT ═════════════════════════════════════════════════════════ #}
 {% block extra_js %}
-{% with js_form_id="contabilizacao-form"
-        js_primary_btn="btn-aprovar"
-        js_primary_action="aprovar"
-        js_confirm_msg_prefix="Confirmar a contabilização e enviar o Processo #"
-        js_confirm_msg_suffix=" para o Conselho Fiscal?" %}
+{% with js_form_id="contabilizacao-form" js_primary_btn="btn-aprovar" js_primary_action="aprovar" js_confirm_msg_prefix="Confirmar a contabilização e enviar o Processo #" js_confirm_msg_suffix=" para o Conselho Fiscal?" %}
     {% include "fluxo/partials/_processo_formset_js.html" %}
 {% endwith %}
 {% endblock %}

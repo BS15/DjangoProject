@@ -3,71 +3,24 @@
 {% block page_title %}Conselho Fiscal — Processo #{{ processo.id }}{% endblock %}
 
 {% block review_extra_css %}
+{% include "fluxo/partials/_review_extra_css.html" %}
 <style>
-    .history-row { font-size: 0.82rem; }
-    .pendencia-row-resolvida { opacity: 0.6; }
-    .progress-queue { font-size: 0.82rem; }
     .readonly-overlay { pointer-events: none; opacity: 0.75; }
 </style>
 {% endblock %}
 
 {# ═══ TOP BAR: context navbar + queue progress ═══════════════════════════ #}
 {% block review_topbar %}
-<nav class="navbar navbar-expand-lg navbar-dark bg-info mb-0 shadow-sm">
-    <div class="container-fluid px-4">
-        <a class="navbar-brand fw-bold" href="{% url 'home_page' %}">System X</a>
-        <span class="navbar-text text-white fw-semibold small">
-            <i class="bi bi-people-fill me-1"></i> Conselho Fiscal
-        </span>
-    </div>
-</nav>
-
-{% if queue_length > 0 %}
-<div class="bg-white border-bottom px-4 py-2 d-flex align-items-center gap-3">
-    <span class="progress-queue text-muted">
-        <i class="bi bi-list-check me-1"></i>
-        Processo <strong>{{ queue_position }}</strong> de <strong>{{ queue_length }}</strong> na fila
-    </span>
-    <div class="progress flex-grow-1" style="height:6px;">
-        <div class="progress-bar bg-info"
-             style="width: {% widthratio queue_position queue_length 100 %}%"></div>
-    </div>
-    <form method="post">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="sair">
-        <button type="submit" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-x-lg me-1"></i>Sair da Revisão
-        </button>
-    </form>
-</div>
-{% endif %}
+{% with topbar_color="info" topbar_icon="bi bi-people-fill" topbar_title="Conselho Fiscal" topbar_sair_label="Sair da Revisão" %}
+    {% include "fluxo/partials/_review_topbar.html" %}
+{% endwith %}
 {% endblock %}
 
 {# ═══ LEFT PANE: PDF viewer ═══════════════════════════════════════════════ #}
 {% block document_viewer %}
-<div class="review-sticky-panel">
-    <div class="card shadow-sm border-info">
-        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center py-2">
-            <span class="fw-bold">
-                <i class="bi bi-file-earmark-pdf me-1"></i>
-                Processo #{{ processo.id }} — PDF Consolidado
-            </span>
-            <a href="{% url 'visualizar_pdf_processo' processo_id=processo.id %}"
-               target="_blank"
-               class="btn btn-sm btn-light text-info fw-bold">
-                <i class="bi bi-box-arrow-up-right"></i> Abrir em nova aba
-            </a>
-        </div>
-        <div class="card-body p-0">
-            <iframe
-                src="{% url 'visualizar_pdf_processo' processo_id=processo.id %}"
-                width="100%"
-                style="height: calc(100vh - 200px); min-height: 600px; border: none;"
-                title="PDF Consolidado do Processo">
-            </iframe>
-        </div>
-    </div>
-</div>
+{% with viewer_color="info" %}
+    {% include "fluxo/partials/_review_pdf_viewer.html" %}
+{% endwith %}
 {% endblock %}
 
 {# ═══ RIGHT PANE: read-only info, docs, pendências, history ══════════════ #}
@@ -94,11 +47,7 @@
 
 {# ═══ REJECTION MODAL ════════════════════════════════════════════════════ #}
 {% block extra_modals %}
-{% with rejeitar_modal_title="Recusar Contas — Processo"
-        rejeitar_modal_body="Aponte a inconsistência identificada pelo Conselho. O processo retornará à Contabilização para ajustes."
-        rejeitar_label_tipo="Tipo de Apontamento"
-        rejeitar_label_descricao="Despacho / Justificativa"
-        rejeitar_confirm_label="Registrar Recusa" %}
+{% with rejeitar_modal_title="Recusar Contas — Processo" rejeitar_modal_body="Aponte a inconsistência identificada pelo Conselho. O processo retornará à Contabilização para ajustes." rejeitar_label_tipo="Tipo de Apontamento" rejeitar_label_descricao="Despacho / Justificativa" rejeitar_confirm_label="Registrar Recusa" %}
     {% include "fluxo/partials/_processo_rejeitar_modal.html" %}
 {% endwith %}
 {% endblock %}
@@ -132,50 +81,8 @@
     </button>
     {% endif %}
 
-    <!-- Back to previous -->
-    {% if prev_pk %}
-    <form method="post" style="display:inline;">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="voltar">
-        <button type="submit" class="btn btn-outline-secondary fw-bold">
-            <i class="bi bi-skip-start me-1"></i>
-            Voltar — Processo Anterior
-        </button>
-    </form>
-    {% else %}
-    <button type="button" class="btn btn-outline-secondary fw-bold disabled"
-            title="Não há processo anterior na fila">
-        <i class="bi bi-skip-start me-1"></i>
-        Voltar
-    </button>
-    {% endif %}
-
-    <!-- Skip -->
-    {% if next_pk %}
-    <form method="post" style="display:inline;">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="pular">
-        <button type="submit" class="btn btn-outline-secondary fw-bold">
-            <i class="bi bi-skip-end me-1"></i>
-            Pular — Próximo Processo
-        </button>
-    </form>
-    {% else %}
-    <button type="button" class="btn btn-outline-secondary fw-bold disabled"
-            title="Não há mais processos na fila">
-        <i class="bi bi-skip-end me-1"></i>
-        Pular
-    </button>
-    {% endif %}
-
-    <div class="ms-auto d-flex gap-2 align-items-center">
-        <form method="post" id="sair-form">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="sair">
-            <button type="submit" class="btn btn-outline-danger fw-bold">
-                <i class="bi bi-x-circle me-1"></i>Sair da Revisão
-            </button>
-        </form>
-    </div>
+    {% with nav_sair_label="Sair da Revisão" nav_use_inline_forms=1 %}
+        {% include "fluxo/partials/_review_queue_nav.html" %}
+    {% endwith %}
 </div>
 {% endblock %}
