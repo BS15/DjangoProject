@@ -1,4 +1,4 @@
-{#
+{% comment %}
   _review_queue_nav.html — Voltar / Pular navigation buttons and Sair exit form
   for review/processo panels.
 
@@ -19,7 +19,7 @@
   Context:
     prev_pk : PK of the previous process in the queue, or falsy if none
     next_pk : PK of the next process in the queue, or falsy if none
-#}
+{% endcomment %}
 
 {# ── Voltar ────────────────────────────────────────────────────────────────── #}
 {% if prev_pk %}

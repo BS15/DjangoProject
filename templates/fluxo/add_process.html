@@ -1,4 +1,4 @@
-{# ─────────────────────────────────────────────────────────────────────────────
+{% comment %} ─────────────────────────────────────────────────────────────────────────────
    Template: add_process.html
    Purpose:  New-process creation form (Tier 3 leaf template).
              Renders a two-column layout: sticky PDF viewer (left) and the
@@ -6,7 +6,7 @@
    View:     add_process_view
    Partials: templates/fluxo/partials/
    JS:       static/js/process_form.js  (shared logic + hook pattern)
-   ─────────────────────────────────────────────────────────────────────────── #}
+   ─────────────────────────────────────────────────────────────────────────── {% endcomment %}
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -35,8 +35,8 @@
     {% include "fluxo/partials/_flash_messages.html" %}
     {% include "fluxo/partials/_form_errors.html" %}
 
-    {# ── Extension hooks (page-specific JS) must be declared BEFORE
-       process_form.js loads so the shared DOMContentLoaded can call them. ── #}
+    {% comment %} ── Extension hooks (page-specific JS) must be declared BEFORE
+       process_form.js loads so the shared DOMContentLoaded can call them. ── {% endcomment %}
     <script>
     window.processFormHooks = {
 

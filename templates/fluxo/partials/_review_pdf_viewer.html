@@ -1,4 +1,4 @@
-{#
+{% comment %}
   _review_pdf_viewer.html — Sticky PDF-viewer card for review/processo panels.
 
   Note: this partial is distinct from _pdf_viewer.html which targets upload
@@ -11,7 +11,7 @@
 
   Context:
     processo : Processo object — processo.id is used for the PDF URL and title
-#}
+{% endcomment %}
 <div class="review-sticky-panel">
     <div class="card shadow-sm border-{{ viewer_color }}">
         <div class="card-header bg-{{ viewer_color }} text-white d-flex justify-content-between align-items-center py-2">
