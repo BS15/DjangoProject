@@ -515,7 +515,7 @@ class SCDDocument(BasePDFDocument):
         proponente = diaria.proponente.get_full_name() if diaria.proponente else 'N/A'
         data_saida = diaria.data_saida.strftime('%d/%m/%Y') if diaria.data_saida else 'N/A'
         data_retorno = diaria.data_retorno.strftime('%d/%m/%Y') if diaria.data_retorno else 'N/A'
-        transporte = diaria.meio_de_transporte.nome if diaria.meio_de_transporte else 'N/A'
+        transporte = diaria.meio_de_transporte.meio_de_transporte if diaria.meio_de_transporte else 'N/A'
 
         fields = [
             f"Nº SISCAC: {siscac}",
