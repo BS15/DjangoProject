@@ -471,40 +471,41 @@
 
 {# ── Add-process-specific JS ──────────────────────────────────────────────── #}
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    /* ── Boleto document counter ──────────────────────────────────────────── */
-    window.atualizarContadorBoletos = function () {
-        var contador = document.getElementById('contador-docs-boleto');
-        if (!contador) return;
-        var count   = 0;
-        var docList = document.getElementById('document-list');
-        if (docList) {
-            docList.querySelectorAll('.document-row').forEach(function (row) {
-                if (row.style.display === 'none') return;
-                var sel = row.querySelector('select[name$="-tipo"]');
-                if (sel && sel.selectedIndex > 0) {
-                    var txt = sel.options[sel.selectedIndex].text
-                        .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
-                    if (txt.includes('BOLETO')) count++;
-                }
-            });
-        }
-        contador.textContent = count;
-        var btnAdd = document.getElementById('btn_extrair_codigos_barras_add');
-        if (btnAdd) {
-            var ehBoleto = window.gerenciarVisibilidadePagamento &&
-                           window.gerenciarVisibilidadePagamento.ehBoleto;
-            // Re-read from the shared function's property set by process_form.js
-            var selectFP = document.getElementById('id_processo-forma_pagamento');
-            if (selectFP && selectFP.selectedIndex >= 0) {
-                var str = selectFP.options[selectFP.selectedIndex].text.toUpperCase()
-                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-                ehBoleto = str.includes('BOLETO') || str.includes('GERENCIADOR');
+/* ── Boleto document counter ─────────────────────────────────────────────── */
+/* Defined at script level (NOT inside DOMContentLoaded) so it is available
+   immediately when process_form.js's DOMContentLoaded handler calls it via
+   the onFormaPagamentoChanged hook. */
+window.atualizarContadorBoletos = function () {
+    var contador = document.getElementById('contador-docs-boleto');
+    if (!contador) return;
+    var count   = 0;
+    var docList = document.getElementById('document-list');
+    if (docList) {
+        docList.querySelectorAll('.document-row').forEach(function (row) {
+            if (row.style.display === 'none') return;
+            var sel = row.querySelector('select[name$="-tipo"]');
+            if (sel && sel.selectedIndex > 0) {
+                var txt = sel.options[sel.selectedIndex].text
+                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+                if (txt.includes('BOLETO')) count++;
             }
-            btnAdd.disabled = !(ehBoleto && count > 0);
+        });
+    }
+    contador.textContent = count;
+    var btnAdd = document.getElementById('btn_extrair_codigos_barras_add');
+    if (btnAdd) {
+        var selectFP = document.getElementById('id_processo-forma_pagamento');
+        var ehBoleto = false;
+        if (selectFP && selectFP.selectedIndex >= 0 && selectFP.selectedIndex < selectFP.options.length) {
+            var str = selectFP.options[selectFP.selectedIndex].text || '';
+            str = str.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            ehBoleto = str.includes('BOLETO') || str.includes('GERENCIADOR');
         }
-    };
+        btnAdd.disabled = !(ehBoleto && count > 0);
+    }
+};
+
+document.addEventListener('DOMContentLoaded', function () {
 
     /* Update counter whenever tipo-select changes inside the document list. */
     var docListElem = document.getElementById('document-list');
