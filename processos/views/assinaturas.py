@@ -32,7 +32,7 @@ def painel_assinaturas_view(request):
             signer_data = (assinatura.dados_signatarios or {}).get(user_email)
             if signer_data:
                 # Attach user's personal link so the template can use it directly
-                assinatura._meu_link = signer_data.get('short_link', '') or assinatura.autentique_url
+                assinatura.meu_link = signer_data.get('short_link', '') or assinatura.autentique_url
                 para_assinar.append(assinatura)
 
     return render(request, 'fluxo/painel_assinaturas.html', {
