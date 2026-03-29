@@ -1,5 +1,5 @@
 import django_filters
-from .models import Processo, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, RetencaoImposto, CodigosImposto, DocumentoFiscal, StatusChoicesRetencoes, StatusChoicesVerbasIndenizatorias, StatusChoicesPendencias, StatusChoicesProcesso, Pendencia, Contingencia, STATUS_CONTINGENCIA, Devolucao
+from .models import Processo, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, RetencaoImposto, CodigosImposto, DocumentoFiscal, StatusChoicesRetencoes, StatusChoicesVerbasIndenizatorias, StatusChoicesPendencias, StatusChoicesProcesso, Pendencia, Contingencia, STATUS_CONTINGENCIA, Devolucao, TiposDePagamento
 
 class ProcessoFilter(django_filters.FilterSet):
     credor_nome = django_filters.CharFilter(field_name='credor__nome', lookup_expr='icontains', label='Credor (Nome)')
@@ -251,6 +251,31 @@ class ContingenciaFilter(django_filters.FilterSet):
     class Meta:
         model = Contingencia
         fields = ['processo__id', 'solicitante__username', 'status']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.form.fields.values():
+            field.widget.attrs.update({'class': 'form-control form-control-sm'})
+
+
+class AEmpenharFilter(django_filters.FilterSet):
+    credor_nome = django_filters.CharFilter(
+        field_name='credor__nome', lookup_expr='icontains', label='Credor'
+    )
+    tipo_pagamento = django_filters.ModelChoiceFilter(
+        queryset=TiposDePagamento.objects.filter(is_active=True),
+        label='Tipo de Pagamento',
+        empty_label='Todos',
+    )
+    data_vencimento = django_filters.DateFromToRangeFilter(
+        label='Vencimento (De – Até)',
+        widget=django_filters.widgets.RangeWidget(attrs={'type': 'date', 'class': 'form-control form-control-sm'}),
+    )
+    valor_liquido = django_filters.NumericRangeFilter(label='Valor Líquido (Min – Max)')
+
+    class Meta:
+        model = Processo
+        fields = ['credor_nome', 'tipo_pagamento', 'data_vencimento', 'valor_liquido']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
