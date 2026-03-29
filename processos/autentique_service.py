@@ -47,6 +47,8 @@ def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, entidade=
         name
         signatures {
           public_id
+          name
+          email
           link {
             short_link
           }
@@ -100,14 +102,35 @@ def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, entidade=
     doc = data["data"]["createDocument"]
     doc_id = doc["id"]
 
+    signers_data = {}
+    for sig in doc.get("signatures", []):
+        email = sig.get("email")
+        link_obj = sig.get("link") or {}
+        if email:
+            signers_data[email] = {
+                "public_id": sig.get("public_id"),
+                "name": sig.get("name"),
+                "short_link": link_obj.get("short_link", "")
+            }
+
+    # Fallback url from the first signer for backward-compat
     url = ""
     if doc.get("signatures"):
         link = doc["signatures"][0].get("link") or {}
         url = link.get("short_link", "")
 
+    from processos.models.fluxo import AssinaturaAutentique
+    if isinstance(entidade, AssinaturaAutentique):
+        assinatura = entidade
+        assinatura.autentique_id = doc_id
+        assinatura.autentique_url = url
+        assinatura.dados_signatarios = signers_data
+        assinatura.status = 'PENDENTE'
+        assinatura.save()
+        return assinatura
+
     if entidade is not None and tipo_documento is not None:
         from django.contrib.contenttypes.models import ContentType
-        from processos.models.fluxo import AssinaturaAutentique
 
         assinatura = AssinaturaAutentique.objects.create(
             content_type=ContentType.objects.get_for_model(entidade),
@@ -115,10 +138,12 @@ def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, entidade=
             tipo_documento=tipo_documento,
             autentique_id=doc_id,
             autentique_url=url,
+            dados_signatarios=signers_data,
+            status='PENDENTE',
         )
         return assinatura
 
-    return {"id": doc_id, "url": url}
+    return {"id": doc_id, "url": url, "signers_data": signers_data}
 
 
 def verificar_e_baixar_documento(autentique_id):

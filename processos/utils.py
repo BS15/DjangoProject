@@ -838,19 +838,25 @@ def confirmar_diarias_lote(preview_items, usuario_logado):
 
         try:
             from .pdf_engine import gerar_documento_pdf
-            from .autentique_service import enviar_documento_para_assinatura
+            from .models.fluxo import AssinaturaAutentique
+            from django.contrib.contenttypes.models import ContentType
+            from django.core.files.base import ContentFile
             pdf_bytes = gerar_documento_pdf('scd', nova_diaria)
-            signatarios = [
-                {"email": nova_diaria.beneficiario.email, "action": "SIGN"},
-                {"email": nova_diaria.proponente.email, "action": "SIGN"},
-            ]
-            api_data = enviar_documento_para_assinatura(
-                pdf_bytes, f"SCD_{nova_diaria.numero_siscac}", signatarios,
-                entidade=nova_diaria, tipo_documento='SCD'
+            assinatura = AssinaturaAutentique(
+                content_type=ContentType.objects.get_for_model(nova_diaria),
+                object_id=nova_diaria.id,
+                tipo_documento='SCD',
+                criador=usuario_logado,
+                status='RASCUNHO',
+            )
+            assinatura.arquivo.save(
+                f"SCD_{nova_diaria.id}.pdf",
+                ContentFile(pdf_bytes),
+                save=True,
             )
         except Exception as e:
             resultados['erros'].append(
-                f"Diária {nova_diaria.numero_siscac or nova_diaria.id}: SCD não enviado para assinatura ({e})"
+                f"Diária {nova_diaria.numero_siscac or nova_diaria.id}: SCD não gerado ({e})"
             )
 
         resultados['sucessos'] += 1

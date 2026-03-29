@@ -448,15 +448,26 @@ class Devolucao(models.Model):
 
 
 class AssinaturaAutentique(models.Model):
+    STATUS_CHOICES = [
+        ('RASCUNHO', 'Rascunho'),
+        ('PENDENTE', 'Pendente'),
+        ('ASSINADO', 'Assinado'),
+        ('REJEITADO', 'Rejeitado'),
+        ('ERRO', 'Erro'),
+    ]
+
     # Generic Relation to link to Diaria, Processo, Reembolso, etc.
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     entidade_relacionada = GenericForeignKey('content_type', 'object_id')
 
+    criador = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assinaturas_criadas')
     tipo_documento = models.CharField("Tipo do Documento", max_length=50, help_text="Ex: SCD, PCD, AUTORIZACAO")
-    autentique_id = models.CharField("ID Autentique", max_length=100, unique=True)
-    autentique_url = models.URLField("URL para Assinatura", max_length=500)
-    status = models.CharField("Status", max_length=20, choices=[('PENDENTE', 'Pendente'), ('ASSINADO', 'Assinado')], default='PENDENTE')
+    autentique_id = models.CharField("ID Autentique", max_length=100, unique=True, null=True, blank=True)
+    autentique_url = models.URLField("URL para Assinatura", max_length=500, blank=True, default='')
+    dados_signatarios = models.JSONField("Dados dos Signatários", default=dict, blank=True, null=True)
+    status = models.CharField("Status", max_length=20, choices=STATUS_CHOICES, default='RASCUNHO')
+    arquivo = models.FileField("Arquivo (Rascunho)", upload_to='assinaturas_rascunho/', null=True, blank=True)
     arquivo_assinado = models.FileField("Arquivo Assinado", upload_to='documentos_assinados/', null=True, blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
 
