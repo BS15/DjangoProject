@@ -117,6 +117,14 @@
                     </div>
 
                     <div class="mb-3">
+                        <label for="siscac_file" class="form-label fw-bold text-dark">
+                            <i class="bi bi-upload me-1"></i> Documento Orçamentário (SISCAC)
+                        </label>
+                        <input type="file" class="form-control border-primary" id="siscac_file" name="siscac_file" accept=".pdf">
+                        <div id="siscac_extract_status" class="mt-1 small"></div>
+                    </div>
+
+                    <div class="mb-3">
                         <label for="n_nota_empenho" class="form-label fw-bold text-dark">Número da Nota de Empenho</label>
                         <input type="text" class="form-control border-primary" id="n_nota_empenho" name="n_nota_empenho" required placeholder="Ex: 2026NE000123">
                     </div>
@@ -159,6 +167,53 @@
                 // Limpa todos os campos ao abrir
                 document.getElementById('n_nota_empenho').value = '';
                 document.getElementById('data_empenho').value = '';
+                document.getElementById('siscac_file').value = '';
+                document.getElementById('siscac_extract_status').innerHTML = '';
+            });
+
+            // Auto-extração ao selecionar arquivo
+            document.getElementById('siscac_file').addEventListener('change', function() {
+                const file = this.files[0];
+                const statusEl = document.getElementById('siscac_extract_status');
+
+                if (!file) {
+                    statusEl.innerHTML = '';
+                    return;
+                }
+
+                statusEl.innerHTML = '<span class="text-primary"><i class="bi bi-hourglass-split"></i> Extraindo dados do documento...</span>';
+
+                const csrfInput = document.querySelector('[name="csrfmiddlewaretoken"]');
+                const formData = new FormData();
+                formData.append('siscac_file', file);
+                if (csrfInput) {
+                    formData.append('csrfmiddlewaretoken', csrfInput.value);
+                }
+
+                fetch('{% url "api_extrair_dados_empenho" %}', { method: 'POST', body: formData })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(errData => { throw errData; });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.sucesso) {
+                            if (data.n_nota_empenho) {
+                                document.getElementById('n_nota_empenho').value = data.n_nota_empenho;
+                            }
+                            if (data.data_empenho) {
+                                document.getElementById('data_empenho').value = data.data_empenho;
+                            }
+                            statusEl.innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> Dados extraídos com sucesso. Confira os campos abaixo.</span>';
+                        } else {
+                            statusEl.innerHTML = '<span class="text-warning"><i class="bi bi-exclamation-triangle"></i> ' + (data.erro || 'Não foi possível extrair os dados. Preencha manualmente.') + '</span>';
+                        }
+                    })
+                    .catch(errData => {
+                        const msg = (errData && errData.erro) ? errData.erro : 'Erro de comunicação ao extrair dados. Preencha manualmente.';
+                        statusEl.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> ' + msg + '</span>';
+                    });
             });
         }
 

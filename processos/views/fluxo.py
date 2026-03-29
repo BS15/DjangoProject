@@ -776,6 +776,54 @@ def a_empenhar_view(request):
 
 
 @permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
+def api_extrair_dados_empenho(request):
+    """
+    AJAX endpoint: receives a SISCAC PDF upload, extracts n_nota_empenho and
+    data_empenho, and returns them as JSON to auto-fill the empenho modal.
+
+    POST params:
+        siscac_file (file): The SISCAC PDF to extract data from.
+
+    Response JSON:
+        sucesso (bool): True on success, False on failure.
+        n_nota_empenho (str): Extracted nota de empenho number (on success).
+        data_empenho (str): Extracted date in ISO format YYYY-MM-DD (on success).
+        erro (str): Error message (on failure).
+
+    HTTP status codes: 200, 400, 405, 422, 500.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'sucesso': False, 'erro': 'Método não permitido.'}, status=405)
+
+    siscac_file = request.FILES.get('siscac_file')
+    if not siscac_file:
+        return JsonResponse({'sucesso': False, 'erro': 'Nenhum arquivo enviado.'}, status=400)
+
+    try:
+        data = extract_siscac_data(siscac_file)
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).exception('Erro ao extrair dados de empenho do arquivo %s', getattr(siscac_file, 'name', ''))
+        return JsonResponse({'sucesso': False, 'erro': 'Erro ao processar o arquivo. Verifique se é um PDF SISCAC válido.'}, status=500)
+
+    n_nota_empenho = data.get('n_nota_empenho') or ''
+    data_empenho = data.get('data_empenho')
+    data_empenho_iso = data_empenho.strftime('%Y-%m-%d') if data_empenho else ''
+
+    if not n_nota_empenho and not data_empenho_iso:
+        return JsonResponse({
+            'sucesso': False,
+            'erro': 'Não foi possível extrair dados de empenho do arquivo. Verifique se é um documento SISCAC válido.',
+        }, status=422)
+
+    return JsonResponse({
+        'sucesso': True,
+        'n_nota_empenho': n_nota_empenho,
+        'data_empenho': data_empenho_iso,
+    })
+
+
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
 def avancar_para_pagamento_view(request, pk):
     """
     Advance a process from 'AGUARDANDO LIQUIDAÇÃO' to 'A PAGAR - PENDENTE AUTORIZAÇÃO'.
