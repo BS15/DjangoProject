@@ -1,4 +1,5 @@
 import io
+import logging
 import os
 import json
 import tempfile
@@ -23,7 +24,7 @@ from ..validators import verificar_turnpike, STATUS_BLOQUEADOS_TOTAL, STATUS_SOM
 from ..utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, parse_siscac_report, sync_siscac_payments
 from ..pdf_engine import gerar_documento_pdf
 from ..models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias, StatusChoicesRetencoes, MeiosDeTransporte, FormasDePagamento, ContasBancarias, CargosFuncoes, TagChoices, RegistroAcessoArquivo, Devolucao, ReuniaoConselho
-from ..filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DevolucaoFilter
+from ..filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DevolucaoFilter, AEmpenharFilter
 
 
 def _is_cap_backoffice(user):
@@ -764,15 +765,82 @@ def a_empenhar_view(request):
 
         return redirect('a_empenhar')
 
-    processos_pendentes = Processo.objects.filter(
+    processos_base = Processo.objects.filter(
         status__status_choice__iexact='A EMPENHAR'
-    ).order_by('data_vencimento', '-id')
+    ).select_related('credor', 'status', 'tipo_pagamento')
+
+    meu_filtro = AEmpenharFilter(request.GET, queryset=processos_base)
+
+    ORDER_FIELDS = {
+        'id': 'id',
+        'credor': 'credor__nome',
+        'valor_liquido': 'valor_liquido',
+        'data_vencimento': 'data_vencimento',
+        'tipo_pagamento': 'tipo_pagamento__tipo_de_pagamento',
+    }
+    ordem = request.GET.get('ordem', 'data_vencimento')
+    direcao = request.GET.get('direcao', 'asc')
+    order_field = ORDER_FIELDS.get(ordem, 'data_vencimento')
+    if direcao == 'desc':
+        order_field = f'-{order_field}'
+
+    processos_pendentes = meu_filtro.qs.order_by(order_field, '-id')
 
     context = {
         'processos': processos_pendentes,
+        'meu_filtro': meu_filtro,
+        'ordem': ordem,
+        'direcao': direcao,
         'pode_interagir': request.user.has_perm('processos.pode_operar_contas_pagar'),
     }
     return render(request, 'fluxo/a_empenhar.html', context)
+
+
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
+def api_extrair_dados_empenho(request):
+    """
+    AJAX endpoint: receives a SISCAC PDF upload, extracts n_nota_empenho and
+    data_empenho, and returns them as JSON to auto-fill the empenho modal.
+
+    POST params:
+        siscac_file (file): The SISCAC PDF to extract data from.
+
+    Response JSON:
+        sucesso (bool): True on success, False on failure.
+        n_nota_empenho (str): Extracted nota de empenho number (on success).
+        data_empenho (str): Extracted date in ISO format YYYY-MM-DD (on success).
+        erro (str): Error message (on failure).
+
+    HTTP status codes: 200, 400, 405, 422, 500.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'sucesso': False, 'erro': 'Método não permitido.'}, status=405)
+
+    siscac_file = request.FILES.get('siscac_file')
+    if not siscac_file:
+        return JsonResponse({'sucesso': False, 'erro': 'Nenhum arquivo enviado.'}, status=400)
+
+    try:
+        data = extract_siscac_data(siscac_file)
+    except Exception as e:
+        logging.getLogger(__name__).exception('Erro ao extrair dados de empenho do arquivo %s', getattr(siscac_file, 'name', ''))
+        return JsonResponse({'sucesso': False, 'erro': 'Erro ao processar o arquivo. Verifique se é um PDF SISCAC válido.'}, status=500)
+
+    n_nota_empenho = data.get('n_nota_empenho') or ''
+    data_empenho = data.get('data_empenho')
+    data_empenho_iso = data_empenho.strftime('%Y-%m-%d') if data_empenho else ''
+
+    if not n_nota_empenho and not data_empenho_iso:
+        return JsonResponse({
+            'sucesso': False,
+            'erro': 'Não foi possível extrair dados de empenho do arquivo. Verifique se é um documento SISCAC válido.',
+        }, status=422)
+
+    return JsonResponse({
+        'sucesso': True,
+        'n_nota_empenho': n_nota_empenho,
+        'data_empenho': data_empenho_iso,
+    })
 
 
 @permission_required('processos.pode_operar_contas_pagar', raise_exception=True)

@@ -34,18 +34,50 @@
         {% endfor %}
     {% endif %}
 
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white border-bottom py-3">
+            <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-funnel"></i> Filtrar</h6>
+        </div>
+        <div class="card-body bg-light">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-secondary mb-1">{{ meu_filtro.form.credor_nome.label }}</label>
+                    {{ meu_filtro.form.credor_nome }}
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-secondary mb-1">{{ meu_filtro.form.tipo_pagamento.label }}</label>
+                    {{ meu_filtro.form.tipo_pagamento }}
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-secondary mb-1">Vencimento De</label>
+                    {{ meu_filtro.form.data_vencimento_0 }}
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-secondary mb-1">Vencimento Até</label>
+                    {{ meu_filtro.form.data_vencimento_1 }}
+                </div>
+                <div class="col-md-3 d-flex gap-2 align-items-end">
+                    <button type="submit" class="btn btn-primary btn-sm fw-bold shadow-sm">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
+                    <a href="{% url 'a_empenhar' %}" class="btn btn-outline-secondary btn-sm shadow-sm">Limpar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="card shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover table-striped align-middle mb-0">
                     <thead class="table-dark">
                         <tr>
-                            <th>ID</th>
-                            <th>Credor</th>
+                            <th><a href="#" class="sort-header text-decoration-none text-white" data-campo="id"># ID {% if ordem == 'id' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
+                            <th><a href="#" class="sort-header text-decoration-none text-white" data-campo="credor">Credor {% if ordem == 'credor' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %} text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
                             <th>Status</th>
-                            <th>Tipo de Pagamento</th>
-                            <th>Valor Líquido</th>
-                            <th>Vencimento</th>
+                            <th><a href="#" class="sort-header text-decoration-none text-white" data-campo="tipo_pagamento">Tipo de Pagamento {% if ordem == 'tipo_pagamento' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %} text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
+                            <th><a href="#" class="sort-header text-decoration-none text-white" data-campo="valor_liquido">Valor Líquido {% if ordem == 'valor_liquido' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
+                            <th><a href="#" class="sort-header text-decoration-none text-white" data-campo="data_vencimento">Vencimento {% if ordem == 'data_vencimento' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
                             <th class="text-center">Ação</th>
                         </tr>
                     </thead>
@@ -117,6 +149,14 @@
                     </div>
 
                     <div class="mb-3">
+                        <label for="siscac_file" class="form-label fw-bold text-dark">
+                            <i class="bi bi-upload me-1"></i> Documento Orçamentário (SISCAC)
+                        </label>
+                        <input type="file" class="form-control border-primary" id="siscac_file" name="siscac_file" accept=".pdf">
+                        <div id="siscac_extract_status" class="mt-1 small"></div>
+                    </div>
+
+                    <div class="mb-3">
                         <label for="n_nota_empenho" class="form-label fw-bold text-dark">Número da Nota de Empenho</label>
                         <input type="text" class="form-control border-primary" id="n_nota_empenho" name="n_nota_empenho" required placeholder="Ex: 2026NE000123">
                     </div>
@@ -142,7 +182,26 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    const sortOrdemAtual   = "{{ ordem }}";
+    const sortDirecaoAtual = "{{ direcao }}";
+
     document.addEventListener('DOMContentLoaded', function() {
+
+        // ── Sortable headers ──────────────────────────────────────────
+        document.querySelectorAll('.sort-header').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const campo  = this.getAttribute('data-campo');
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('ordem') === campo) {
+                    params.set('direcao', params.get('direcao') === 'asc' ? 'desc' : 'asc');
+                } else {
+                    params.set('ordem', campo);
+                    params.set('direcao', 'asc');
+                }
+                window.location.href = '?' + params.toString();
+            });
+        });
         const empenhoModal = document.getElementById('empenhoModal');
 
         if (empenhoModal) {
@@ -159,6 +218,53 @@
                 // Limpa todos os campos ao abrir
                 document.getElementById('n_nota_empenho').value = '';
                 document.getElementById('data_empenho').value = '';
+                document.getElementById('siscac_file').value = '';
+                document.getElementById('siscac_extract_status').innerHTML = '';
+            });
+
+            // Auto-extração ao selecionar arquivo
+            document.getElementById('siscac_file').addEventListener('change', function() {
+                const file = this.files[0];
+                const statusEl = document.getElementById('siscac_extract_status');
+
+                if (!file) {
+                    statusEl.innerHTML = '';
+                    return;
+                }
+
+                statusEl.innerHTML = '<span class="text-primary"><i class="bi bi-hourglass-split"></i> Extraindo dados do documento...</span>';
+
+                const csrfInput = document.querySelector('[name="csrfmiddlewaretoken"]');
+                const formData = new FormData();
+                formData.append('siscac_file', file);
+                if (csrfInput) {
+                    formData.append('csrfmiddlewaretoken', csrfInput.value);
+                }
+
+                fetch('{% url "api_extrair_dados_empenho" %}', { method: 'POST', body: formData })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(errData => { throw errData; });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.sucesso) {
+                            if (data.n_nota_empenho) {
+                                document.getElementById('n_nota_empenho').value = data.n_nota_empenho;
+                            }
+                            if (data.data_empenho) {
+                                document.getElementById('data_empenho').value = data.data_empenho;
+                            }
+                            statusEl.innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> Dados extraídos com sucesso. Confira os campos abaixo.</span>';
+                        } else {
+                            statusEl.innerHTML = '<span class="text-warning"><i class="bi bi-exclamation-triangle"></i> ' + (data.erro || 'Não foi possível extrair os dados. Preencha manualmente.') + '</span>';
+                        }
+                    })
+                    .catch(errData => {
+                        const msg = (errData && errData.erro) ? errData.erro : 'Erro de comunicação ao extrair dados. Preencha manualmente.';
+                        statusEl.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> ' + msg + '</span>';
+                    });
             });
         }
 
