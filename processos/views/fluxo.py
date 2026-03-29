@@ -828,7 +828,7 @@ def api_extrair_dados_empenho(request):
 
     n_nota_empenho = data.get('n_nota_empenho') or ''
     data_empenho = data.get('data_empenho')
-    data_empenho_iso = data_empenho.strftime('%Y-%m-%d') if data_empenho else ''
+    data_empenho_iso = data_empenho if data_empenho else ''
 
     if not n_nota_empenho and not data_empenho_iso:
         return JsonResponse({
