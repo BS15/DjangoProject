@@ -18,6 +18,7 @@ from ..models import (
     Processo, Credor, Tabela_Valores_Unitarios_Verbas_Indenizatorias, MeiosDeTransporte,
     AssinaturaAutentique,
 )
+from django.contrib.contenttypes.models import ContentType
 from django.core.files.base import ContentFile
 from django.core.exceptions import PermissionDenied
 from ..filters import DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter
@@ -60,16 +61,24 @@ def add_diaria_view(request):
 
             try:
                 pdf_bytes = gerar_documento_pdf('scd', nova_diaria)
-                signatarios = [
-                    {"email": nova_diaria.beneficiario.email, "action": "SIGN"},
-                    {"email": nova_diaria.proponente.email, "action": "SIGN"},
-                ]
-                assinatura = enviar_documento_para_assinatura(
-                    pdf_bytes, f"SCD_{nova_diaria.numero_siscac}", signatarios,
-                    entidade=nova_diaria, tipo_documento='SCD'
+                assinatura = AssinaturaAutentique(
+                    content_type=ContentType.objects.get_for_model(nova_diaria),
+                    object_id=nova_diaria.id,
+                    tipo_documento='SCD',
+                    criador=request.user,
+                    status='RASCUNHO',
+                )
+                assinatura.arquivo.save(
+                    f"SCD_{nova_diaria.id}.pdf",
+                    ContentFile(pdf_bytes),
+                    save=True,
+                )
+                messages.info(
+                    request,
+                    'PDF gerado! Acesse o Painel de Assinaturas para enviar ao Autentique.'
                 )
             except Exception as e:
-                messages.warning(request, f"Diária cadastrada, mas falha ao enviar SCD para assinatura: {str(e)}")
+                messages.warning(request, f"Diária cadastrada, mas falha ao gerar SCD: {str(e)}")
 
             arquivo = request.FILES.get('documento_anexo')
             tipo_id = request.POST.get('tipo_documento_anexo')
@@ -224,25 +233,24 @@ def agrupar_verbas_view(request, tipo_verba):
             item.avancar_status('ENVIADA PARA PAGAMENTO')
             try:
                 pdf_bytes = gerar_documento_pdf('pcd', item)
-                email_presidente = getattr(settings, 'PRESIDENTE_EMAIL', None)
-                if not email_presidente:
-                    logger.warning(
-                        "PRESIDENTE_EMAIL não configurado. Usando endereço padrão para assinatura de PCD."
-                    )
-                    email_presidente = 'presidente@creci-sc.gov.br'
-                signatarios = [
-                    {"email": item.beneficiario.email, "action": "SIGN"},
-                    {"email": email_presidente, "action": "SIGN"},
-                ]
-                assinatura = enviar_documento_para_assinatura(
-                    pdf_bytes, f"PCD_{item.numero_siscac}", signatarios,
-                    entidade=item, tipo_documento='PCD'
+                assinatura = AssinaturaAutentique(
+                    content_type=ContentType.objects.get_for_model(item),
+                    object_id=item.id,
+                    tipo_documento='PCD',
+                    criador=request.user,
+                    status='RASCUNHO',
+                )
+                assinatura.arquivo.save(
+                    f"PCD_{item.id}.pdf",
+                    ContentFile(pdf_bytes),
+                    save=True,
                 )
             except Exception as e:
-                messages.warning(request, f"PCD para diária {item.numero_siscac} não enviado: {str(e)}")
+                messages.warning(request, f"PCD para diária {item.numero_siscac} não gerado: {str(e)}")
         item.save()
 
     messages.success(request, f"Processo #{novo_processo.id} gerado com sucesso!")
+    messages.info(request, 'PCDs gerados! Acesse o Painel de Assinaturas para enviar ao Autentique.')
     return redirect('editar_processo_verbas', pk=novo_processo.id)
 
 def editar_processo_verbas(request, pk):
