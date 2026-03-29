@@ -34,7 +34,7 @@ def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, entidade=
             content_type=ct,
             object_id=entidade.id,
             tipo_documento=tipo_documento,
-            status__in=['PENDENTE', 'RASCUNHO'],
+            status='PENDENTE',
         ).first()
         if assinatura_existente:
             return assinatura_existente

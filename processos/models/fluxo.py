@@ -467,6 +467,7 @@ class AssinaturaAutentique(models.Model):
     autentique_url = models.URLField("URL para Assinatura", max_length=500, blank=True, default='')
     dados_signatarios = models.JSONField("Dados dos Signatários", default=dict, blank=True, null=True)
     status = models.CharField("Status", max_length=20, choices=STATUS_CHOICES, default='RASCUNHO')
+    arquivo = models.FileField("Arquivo (Rascunho)", upload_to='assinaturas_rascunho/', null=True, blank=True)
     arquivo_assinado = models.FileField("Arquivo Assinado", upload_to='documentos_assinados/', null=True, blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
 
