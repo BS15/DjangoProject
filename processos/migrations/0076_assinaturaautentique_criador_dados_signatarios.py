@@ -13,10 +13,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='codigosimposto',
-            name='vencimento_padrao',
-        ),
         migrations.AddField(
             model_name='assinaturaautentique',
             name='criador',
