@@ -37,8 +37,8 @@
         </td>
         <td>{{ assinatura.criado_em|date:"d/m/Y H:i" }}</td>
         <td class="text-center">
-            {% if assinatura._meu_link %}
-                <a href="{{ assinatura._meu_link }}" target="_blank" class="btn btn-sm btn-warning fw-bold">
+            {% if assinatura.meu_link %}
+                <a href="{{ assinatura.meu_link }}" target="_blank" class="btn btn-sm btn-warning fw-bold">
                     <i class="bi bi-pen-fill"></i> Assinar Agora
                 </a>
             {% else %}
