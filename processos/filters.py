@@ -267,17 +267,21 @@ class AEmpenharFilter(django_filters.FilterSet):
         label='Tipo de Pagamento',
         empty_label='Todos',
     )
-    data_vencimento = django_filters.DateFromToRangeFilter(
-        label='Vencimento (De – Até)',
-        widget=django_filters.widgets.RangeWidget(attrs={'type': 'date', 'class': 'form-control form-control-sm'}),
+    data_vencimento__gte = django_filters.DateFilter(
+        field_name='data_vencimento', lookup_expr='gte', label='Vencimento De'
+    )
+    data_vencimento__lte = django_filters.DateFilter(
+        field_name='data_vencimento', lookup_expr='lte', label='Vencimento Até'
     )
     valor_liquido = django_filters.NumericRangeFilter(label='Valor Líquido (Min – Max)')
 
     class Meta:
         model = Processo
-        fields = ['credor_nome', 'tipo_pagamento', 'data_vencimento', 'valor_liquido']
+        fields = ['credor_nome', 'tipo_pagamento', 'data_vencimento__gte', 'data_vencimento__lte', 'valor_liquido']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.form.fields.values():
             field.widget.attrs.update({'class': 'form-control form-control-sm'})
+        self.form.fields['data_vencimento__gte'].widget.input_type = 'date'
+        self.form.fields['data_vencimento__lte'].widget.input_type = 'date'
