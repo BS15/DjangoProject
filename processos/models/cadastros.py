@@ -95,6 +95,11 @@ class ContaFixa(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(31)]
     )
     ativa = models.BooleanField("Conta Ativa", default=True)
+    data_inicio = models.DateField(
+        "Data de Início",
+        default=datetime.date.today,
+        help_text="Mês a partir do qual as faturas mensais serão geradas."
+    )
 
     class Meta:
         verbose_name = "Conta Fixa"

@@ -53,6 +53,12 @@
                         <div class="form-text text-muted small">Informe o dia do mês (1 a 31).</div>
                         {{ form.dia_vencimento.errors }}
                     </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">{{ form.data_inicio.label }}</label>
+                        {{ form.data_inicio }}
+                        <div class="form-text text-muted small">{{ form.data_inicio.field.help_text }}</div>
+                        {{ form.data_inicio.errors }}
+                    </div>
                     <div class="col-md-4 d-flex align-items-end">
                         <div class="form-check">
                             {{ form.ativa }}
