@@ -9,6 +9,12 @@ class Migration(migrations.Migration):
     dependencies = [
         ('processos', '0077_assinaturaautentique_arquivo'),
     ]
+
+    operations = [
+        migrations.RemoveField(
+            model_name='codigosimposto',
+            name='vencimento_padrao',
+        ),
         migrations.AddField(
             model_name='contafixa',
             name='data_inicio',
