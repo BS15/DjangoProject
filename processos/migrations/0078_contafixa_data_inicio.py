@@ -9,8 +9,6 @@ class Migration(migrations.Migration):
     dependencies = [
         ('processos', '0077_assinaturaautentique_arquivo'),
     ]
-
-    
         migrations.AddField(
             model_name='contafixa',
             name='data_inicio',
