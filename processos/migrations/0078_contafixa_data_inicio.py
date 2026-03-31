@@ -121,10 +121,6 @@ class Migration(migrations.Migration):
         # (the actual DDL was already executed by the RunPython steps above).
         migrations.SeparateDatabaseAndState(
             state_operations=[
-                migrations.RemoveField(
-                    model_name='codigosimposto',
-                    name='vencimento_padrao',
-                ),
                 migrations.AddField(
                     model_name='contafixa',
                     name='data_inicio',
