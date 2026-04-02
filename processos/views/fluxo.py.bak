@@ -1,0 +1,2226 @@
+import io
+import logging
+import os
+import json
+import tempfile
+import zipfile
+from datetime import datetime
+from decimal import Decimal, InvalidOperation
+from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
+from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
+from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.db import transaction, IntegrityError
+from django.db.models import Count, Q, F, Sum, Exists, OuterRef, ForeignKey
+from pypdf import PdfWriter
+from ..forms import ProcessoForm, DocumentoFormSet, DocumentoFiscalFormSet, RetencaoFormSet, CredorForm, DiariaForm,ReembolsoForm, JetonForm, AuxilioForm, SuprimentoForm, PendenciaForm, PendenciaFormSet, DevolucaoForm
+from ..validators import verificar_turnpike, STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
+from ..utils import extract_siscac_data, mesclar_pdfs_em_memoria, processar_pdf_boleto, processar_pdf_comprovantes, gerar_termo_auditoria, fatiar_pdf_manual, parse_siscac_report, sync_siscac_payments
+from ..pdf_engine import gerar_documento_pdf
+from ..models import Processo, DocumentoFiscal, StatusChoicesProcesso, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, TiposDeDocumento, DocumentoProcesso, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio, CodigosImposto, RetencaoImposto, SuprimentoDeFundos, DespesaSuprimento, StatusChoicesPendencias, Pendencia, TiposDePendencias, ComprovanteDePagamento, Tabela_Valores_Unitarios_Verbas_Indenizatorias, DocumentoSuprimentoDeFundos, TiposDePagamento, Contingencia, StatusChoicesVerbasIndenizatorias, StatusChoicesRetencoes, MeiosDeTransporte, FormasDePagamento, ContasBancarias, CargosFuncoes, TagChoices, RegistroAcessoArquivo, Devolucao, ReuniaoConselho
+from ..filters import ProcessoFilter, CredorFilter, DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter, RetencaoProcessoFilter, RetencaoNotaFilter, RetencaoIndividualFilter, PendenciaFilter, DocumentoFiscalFilter, ContingenciaFilter, DevolucaoFilter, AEmpenharFilter
+
+#AUTHOTIZATION/PERMISSIONS
+def _is_cap_backoffice(user):
+    """Returns True if the user is active and has CAP/backoffice privileges
+    (superuser, staff, or the 'pode_operar_contas_pagar' permission)."""
+    return user.is_active and (
+        user.is_superuser
+        or user.is_staff
+        or user.has_perm('processos.pode_operar_contas_pagar')
+    )
+
+#FILE SECURITY
+@xframe_options_sameorigin
+def download_arquivo_seguro(request, tipo_documento, documento_id):
+    arquivo = None
+
+    if tipo_documento == 'processo':
+        doc = get_object_or_404(DocumentoProcesso, id=documento_id)
+        arquivo = doc.arquivo
+        if not _is_cap_backoffice(request.user):
+            raise PermissionDenied
+
+    elif tipo_documento == 'fiscal':
+        doc = get_object_or_404(DocumentoFiscal, id=documento_id)
+        if not doc.documento_vinculado:
+            raise Http404
+        arquivo = doc.documento_vinculado.arquivo
+        if not _is_cap_backoffice(request.user):
+            if doc.fiscal_contrato != request.user:
+                raise PermissionDenied
+
+    elif tipo_documento == 'comprovante':
+        doc = get_object_or_404(ComprovanteDePagamento, id=documento_id)
+        arquivo = doc.arquivo
+        if not _is_cap_backoffice(request.user):
+            raise PermissionDenied
+
+    elif tipo_documento == 'suprimento':
+        doc = get_object_or_404(DespesaSuprimento, id=documento_id)
+        arquivo = doc.arquivo
+        if not _is_cap_backoffice(request.user):
+            user_in_supridos = request.user.groups.filter(name='SUPRIDOS').exists()
+            suprimento = doc.suprimento
+            is_encerrado = (
+                suprimento.status is not None
+                and suprimento.status.status_choice.upper() == 'ENCERRADO'
+            )
+            suprido_email = suprimento.suprido.email if suprimento.suprido else None
+            email_match = bool(suprido_email and suprido_email == request.user.email)
+            if not (user_in_supridos and not is_encerrado and email_match):
+                raise PermissionDenied
+
+    elif tipo_documento == 'devolucao':
+        doc = get_object_or_404(Devolucao, id=documento_id)
+        arquivo = doc.comprovante
+        if not _is_cap_backoffice(request.user):
+            raise PermissionDenied
+
+    elif tipo_documento == 'verba_diaria_doc':
+        doc = get_object_or_404(DocumentoDiaria, id=documento_id)
+        arquivo = doc.arquivo
+        if not _is_cap_backoffice(request.user):
+            diaria = doc.diaria
+            email_match = bool(
+                diaria.beneficiario
+                and diaria.beneficiario.email
+                and diaria.beneficiario.email == request.user.email
+            )
+            proponente_match = diaria.proponente == request.user
+            if not (email_match or proponente_match):
+                raise PermissionDenied
+
+    elif tipo_documento == 'verba_reembolso_doc':
+        doc = get_object_or_404(DocumentoReembolso, id=documento_id)
+        arquivo = doc.arquivo
+        if not _is_cap_backoffice(request.user):
+            reembolso = doc.reembolso
+            email_match = bool(
+                reembolso.beneficiario
+                and reembolso.beneficiario.email
+                and reembolso.beneficiario.email == request.user.email
+            )
+            if not email_match:
+                raise PermissionDenied
+
+    elif tipo_documento == 'verba_jeton_doc':
+        doc = get_object_or_404(DocumentoJeton, id=documento_id)
+        arquivo = doc.arquivo
+        if not _is_cap_backoffice(request.user):
+            jeton = doc.jeton
+            email_match = bool(
+                jeton.beneficiario
+                and jeton.beneficiario.email
+                and jeton.beneficiario.email == request.user.email
+            )
+            if not email_match:
+                raise PermissionDenied
+
+    elif tipo_documento == 'verba_auxilio_doc':
+        doc = get_object_or_404(DocumentoAuxilio, id=documento_id)
+        arquivo = doc.arquivo
+        if not _is_cap_backoffice(request.user):
+            auxilio = doc.auxilio
+            email_match = bool(
+                auxilio.beneficiario
+                and auxilio.beneficiario.email
+                and auxilio.beneficiario.email == request.user.email
+            )
+            if not email_match:
+                raise PermissionDenied
+
+    else:
+        raise Http404
+
+    if not arquivo or not arquivo.name:
+        raise Http404
+
+    try:
+        file_handle = arquivo.open('rb')
+    except (FileNotFoundError, OSError):
+        raise Http404
+
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0].strip()
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+
+    RegistroAcessoArquivo.objects.create(
+        usuario=request.user,
+        nome_arquivo=arquivo.name,
+        ip_address=ip,
+    )
+
+    return FileResponse(file_handle, as_attachment=False)
+
+#PAGE VIEW. ACCESS TO PROCESS EDITION, PREVIEW AND FILTERING
+def home_page(request):
+    ORDER_FIELDS = {
+        'id': 'id',
+        'credor': 'credor__nome',
+        'data_empenho': 'data_empenho',
+        'status': 'status__status_choice',
+        'tipo_pagamento': 'tipo_pagamento__tipo_de_pagamento',
+        'valor_liquido': 'valor_liquido',
+    }
+    ordem = request.GET.get('ordem', 'id')
+    direcao = request.GET.get('direcao', 'desc')
+
+    order_field = ORDER_FIELDS.get(ordem, 'id')
+    if direcao == 'desc':
+        order_field = f'-{order_field}'
+
+    processos_base = Processo.objects.all().order_by(order_field)
+    meu_filtro = ProcessoFilter(request.GET, queryset=processos_base)
+    processos_filtrados = meu_filtro.qs
+
+    context = {
+        'lista_processos': processos_filtrados,
+        'meu_filtro': meu_filtro,
+        'ordem': ordem,
+        'direcao': direcao,
+    }
+    return render(request, 'home.html', context)
+
+
+import unicodedata
+
+#UTILITY FUNCTION. SHOULD BE MOVED TO UTILS
+def _normalizar_texto(texto):
+    """Remove acentos e converte para maiúsculas para comparações robustas."""
+    return unicodedata.normalize('NFD', texto.upper()).encode('ascii', 'ignore').decode('ascii')
+
+#C(REATE)RUD VIEW.
+@permission_required('processos.acesso_backoffice', raise_exception=True)
+def add_process_view(request):
+    initial_data = {}
+    siscac_temp_path = None
+
+    if request.method == 'POST':
+        btn_extract = 'btn_extract' in request.POST
+        trigger_a_empenhar = request.POST.get('trigger_a_empenhar') == 'on'
+
+        if btn_extract and request.FILES.get('siscac_file'):
+            siscac_file = request.FILES['siscac_file']
+            try:
+                extracted_data = extract_siscac_data(siscac_file)
+                initial_data = extracted_data
+            except Exception as e:
+                print(f"Erro na extração: {e}")
+
+            path = default_storage.save(f"temp/{siscac_file.name}", ContentFile(siscac_file.read()))
+            request.session['temp_siscac_path'] = path
+            request.session['temp_siscac_name'] = siscac_file.name
+
+            processo_form = ProcessoForm(initial=initial_data, prefix='processo')
+            documento_formset = DocumentoFormSet(prefix='documento')
+            pendencia_formset = PendenciaFormSet(prefix='pendencia')
+
+            return render(request, 'fluxo/add_process.html', {
+                'processo_form': processo_form,
+                'documento_formset': documento_formset,
+                'pendencia_formset': pendencia_formset,
+                'extracted_msg': "Dados extraídos! O arquivo SISCAC será anexado automaticamente ao salvar.",
+                'next_url': request.POST.get('next', ''),
+            })
+
+        else:
+            processo_form = ProcessoForm(request.POST, prefix='processo')
+            documento_formset = DocumentoFormSet(request.POST, request.FILES, prefix='documento')
+            pendencia_formset = PendenciaFormSet(request.POST, prefix='pendencia')
+
+            if processo_form.is_valid() and documento_formset.is_valid() and pendencia_formset.is_valid():
+                is_extra = processo_form.cleaned_data.get('extraorcamentario')
+
+                # Validate documento orçamentário before entering the transaction
+                if not is_extra and not trigger_a_empenhar:
+                    has_orcamentario = any(
+                        f.cleaned_data
+                        and not f.cleaned_data.get('DELETE', False)
+                        and f.cleaned_data.get('tipo')
+                        and 'orçament' in f.cleaned_data['tipo'].tipo_de_documento.lower()
+                        for f in documento_formset.forms
+                    )
+                    if not has_orcamentario:
+                        messages.error(
+                            request,
+                            'É necessário anexar um Documento Orçamentário para prosseguir. '
+                            'Se o processo for Extraorçamentário ou "A Empenhar", selecione a opção correspondente.'
+                        )
+                        return render(request, 'fluxo/add_process.html', {
+                            'processo_form': processo_form,
+                            'documento_formset': documento_formset,
+                            'pendencia_formset': pendencia_formset
+                        })
+
+                try:
+                    with transaction.atomic():
+                        processo = processo_form.save(commit=False)
+
+                        if trigger_a_empenhar:
+                            status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
+                                status_choice__iexact='A EMPENHAR', defaults={'status_choice': 'A EMPENHAR'}
+                            )
+                            processo.status = status_obj
+                            processo.n_nota_empenho = None
+                            processo.data_empenho = None
+                            processo.ano_exercicio = None
+
+                        elif is_extra:
+                            status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
+                                status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
+                                defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
+                            )
+                            processo.status = status_obj
+                            processo.n_nota_empenho = None
+                            processo.data_empenho = None
+                            processo.ano_exercicio = None
+
+                        else:
+                            status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
+                                status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
+                                defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
+                            )
+                            processo.status = status_obj
+
+                        processo.save()
+
+                        documento_formset.instance = processo
+                        pendencia_formset.instance = processo
+                        documento_formset.save()
+                        pendencia_formset.save()
+
+                    messages.success(request, f"Processo #{processo.id} inserido com sucesso!")
+                    if request.POST.get('btn_goto_fiscais'):
+                        return redirect('documentos_fiscais', pk=processo.id)
+                    next_url = request.POST.get('next', '')
+                    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                        return redirect(next_url)
+                    return redirect('editar_processo', pk=processo.id)
+
+                except Exception as e:
+                    print(f"🛑 Erro CRÍTICO de Banco de Dados ao salvar: {e}", flush=True)
+                    messages.error(request, "Ocorreu um erro interno ao salvar no banco de dados.")
+
+            else:
+                messages.error(request, "Verifique os erros no formulário (Documentos ou Capa).")
+
+            return render(request, 'fluxo/add_process.html', {
+                'processo_form': processo_form,
+                'documento_formset': documento_formset,
+                'pendencia_formset': pendencia_formset,
+                'next_url': request.POST.get('next', ''),
+            })
+
+    else:
+        processo_form = ProcessoForm(prefix='processo')
+        documento_formset = DocumentoFormSet(prefix='documento')
+        pendencia_formset = PendenciaFormSet(prefix='pendencia')
+        next_url = request.META.get('HTTP_REFERER', '')
+
+        return render(request, 'fluxo/add_process.html', {
+            'processo_form': processo_form,
+            'documento_formset': documento_formset,
+            'pendencia_formset': pendencia_formset,
+            'next_url': next_url,
+        })
+
+#CRU(PDATE)D VIEW.
+@permission_required('processos.acesso_backoffice', raise_exception=True)
+def editar_processo(request, pk):
+    processo = get_object_or_404(Processo, id=pk)
+    status_inicial = processo.status.status_choice.upper() if processo.status else ''
+
+    # Tier 1: Archive / historical – editing is completely blocked.
+    if status_inicial in STATUS_BLOQUEADOS_TOTAL:
+        messages.error(
+            request,
+            f'O processo #{pk} está em status "{processo.status}" e não pode ser editado. '
+            'Alterações nesses processos devem ser tratadas pela interface de contingência.'
+        )
+        return redirect('home_page')
+
+    # Redirect to the dedicated verbas page when this processo is of tipo "VERBAS INDENIZATÓRIAS"
+    if (
+        processo.tipo_pagamento
+        and processo.tipo_pagamento.tipo_de_pagamento.upper() == 'VERBAS INDENIZATÓRIAS'
+    ):
+        return redirect('editar_processo_verbas', pk=pk)
+
+    # Tier 2: Authorised-for-payment – only document inclusion/reordering is allowed.
+    somente_documentos = status_inicial in STATUS_SOMENTE_DOCUMENTOS
+
+    if request.method == 'POST':
+        documento_formset = DocumentoFormSet(request.POST, request.FILES, instance=processo, prefix='documento')
+        next_url = request.POST.get('next', '')
+
+        if somente_documentos:
+            # Only save document changes; process metadata is left untouched.
+            if documento_formset.is_valid():
+                try:
+                    with transaction.atomic():
+                        documento_formset.save()
+
+                    messages.success(request, f'Documentos do Processo #{pk} atualizados com sucesso!')
+                    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                        return redirect(next_url)
+                    return redirect('editar_processo', pk=pk)
+                except Exception as e:
+                    print(f"🛑 Erro ao atualizar documentos: {e}")
+                    messages.error(request, 'Erro interno ao salvar os documentos.')
+            else:
+                messages.error(request, 'Verifique os erros nos documentos.')
+            processo_form = ProcessoForm(instance=processo, prefix='processo')
+            pendencia_formset = PendenciaFormSet(instance=processo, prefix='pendencia')
+        else:
+            # Tier 3: Full editing.
+            confirmar_extra = request.POST.get('confirmar_extra_orcamentario') == 'on'
+            processo_form = ProcessoForm(request.POST, instance=processo, prefix='processo')
+            pendencia_formset = PendenciaFormSet(request.POST, instance=processo, prefix='pendencia')
+
+            if processo_form.is_valid() and documento_formset.is_valid() and pendencia_formset.is_valid():
+                try:
+                    with transaction.atomic():
+                        processo_saved = processo_form.save(commit=False)
+
+                        # When confirming extra-budgetary change from 'A EMPENHAR' status,
+                        # override status and clear budget fields
+                        if confirmar_extra and status_inicial == 'A EMPENHAR':
+                            status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
+                                status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO',
+                                defaults={'status_choice': 'A PAGAR - PENDENTE AUTORIZAÇÃO'}
+                            )
+                            processo_saved.status = status_obj
+                            processo_saved.extraorcamentario = True
+                            processo_saved.n_nota_empenho = None
+                            processo_saved.data_empenho = None
+                            processo_saved.ano_exercicio = None
+
+                        processo_saved.save()
+                        documento_formset.save()
+                        pendencia_formset.save()
+
+                    messages.success(request, f'Processo #{processo_saved.id} atualizado com sucesso!')
+                    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                        return redirect(next_url)
+                    return redirect('editar_processo', pk=processo_saved.id)
+
+                except Exception as e:
+                    print(f"🛑 Erro ao atualizar no banco: {e}")
+                    messages.error(request, 'Erro interno ao salvar as alterações.')
+            else:
+                messages.error(request, 'Verifique os erros no formulário.')
+
+    else:
+        processo_form = ProcessoForm(instance=processo, prefix='processo')
+        documento_formset = DocumentoFormSet(instance=processo, prefix='documento')
+        pendencia_formset = PendenciaFormSet(instance=processo, prefix='pendencia')
+        next_url = request.META.get('HTTP_REFERER', '')
+
+    # Boleto indicators – only relevant when forma_pagamento is BOLETO/GERENCIADOR
+    boleto_docs_qs = processo.documentos.select_related('tipo').filter(
+        tipo__tipo_de_documento__icontains='boleto'
+    )
+    boleto_docs_count = boleto_docs_qs.count()
+    boleto_barcodes_list = [
+        doc.codigo_barras for doc in boleto_docs_qs if doc.codigo_barras
+    ]
+    boleto_barcodes_count = len(boleto_barcodes_list)
+
+    context = {
+        'processo_form': processo_form,
+        'documento_formset': documento_formset,
+        'pendencia_formset': pendencia_formset,
+        'processo': processo,
+        'status_inicial': status_inicial,
+        'somente_documentos': somente_documentos,
+        'aguardando_liquidacao': status_inicial.startswith('AGUARDANDO LIQUIDAÇÃO'),
+        'documentos_fiscais_url': reverse('documentos_fiscais', kwargs={'pk': processo.id}),
+        'boleto_docs_count': boleto_docs_count,
+        'boleto_barcodes_list': boleto_barcodes_list,
+        'boleto_barcodes_count': boleto_barcodes_count,
+        'next_url': next_url,
+    }
+
+    return render(request, 'fluxo/editar_processo.html', context)
+
+#UTILITARY BARCODE EXTRACTION VIEW. 
+#SHOULD BE MOVED TO API'S OR UTILS.
+def api_extrair_codigos_barras_upload(request):
+    """
+    AJAX endpoint that extracts barcodes from uploaded boleto PDF files.
+    Accepts multiple files without requiring a saved Processo PK.
+    Used by the add_process page before a processo is saved.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'sucesso': False, 'erro': 'Método não permitido.'}, status=405)
+
+    files = request.FILES.getlist('boleto_files')
+    if not files:
+        return JsonResponse({'sucesso': False, 'erro': 'Nenhum arquivo enviado.'}, status=400)
+
+    barcodes = []
+    n_extraidos = 0
+    n_falhas = 0
+
+    for pdf_file in files:
+        try:
+            dados = processar_pdf_boleto(pdf_file)
+            codigo = dados.get('codigo_barras', '') if dados else ''
+            if codigo:
+                barcodes.append(codigo)
+                n_extraidos += 1
+            else:
+                barcodes.append(None)
+                n_falhas += 1
+        except Exception as e:
+            print(f"⚠️ Erro ao extrair código de barras de '{getattr(pdf_file, 'name', 'arquivo')}': {e}", flush=True)
+            barcodes.append(None)
+            n_falhas += 1
+
+    return JsonResponse({
+        'sucesso': True,
+        'n_extraidos': n_extraidos,
+        'n_falhas': n_falhas,
+        'barcodes': [b for b in barcodes if b],
+    })
+
+
+# ==========================================
+# DOCUMENTOS FISCAIS: GERENCIAMENTO DE NOTAS FISCAIS
+# ==========================================
+
+#API FUNCTION. 
+#SHOULD BE MOVED TO API'S.
+@xframe_options_sameorigin
+def visualizar_pdf_processo(request, processo_id):
+    processo = get_object_or_404(Processo, id=processo_id)
+
+    pdf_buffer = processo.gerar_pdf_consolidado()
+
+    if pdf_buffer is None:
+        return HttpResponse("Este processo ainda não possui documentos em PDF anexados.", status=404)
+
+    response = HttpResponse(pdf_buffer, content_type='application/pdf')
+    nome_arquivo = f"Processo_{processo.n_nota_empenho or processo.id}.pdf"
+    response['Content-Disposition'] = f'inline; filename="{nome_arquivo}"'
+    return response
+
+#FILTERING/LISTING VIEW.
+#ONLY READ/REDIRECT TO OTHER PAGES. 
+#LOW RISK.
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
+def contas_a_pagar(request):
+    STATUSES_CONTAS_A_PAGAR = [
+        'A PAGAR - PENDENTE AUTORIZAÇÃO',
+        'A PAGAR - ENVIADO PARA AUTORIZAÇÃO',
+        'A PAGAR - AUTORIZADO',
+        'LANÇADO - AGUARDANDO COMPROVANTE',
+    ]
+
+    processos_pendentes = Processo.objects.filter(
+        status__status_choice__in=STATUSES_CONTAS_A_PAGAR
+    )
+
+    datas_agrupadas = processos_pendentes.values('data_pagamento').annotate(
+        total=Count('id')
+    ).order_by('data_pagamento')
+
+    formas_agrupadas = processos_pendentes.values(
+        'forma_pagamento__id',
+        'forma_pagamento__forma_de_pagamento'
+    ).annotate(
+        total=Count('id')
+    ).order_by('forma_pagamento__forma_de_pagamento')
+
+    statuses_agrupados = processos_pendentes.values(
+        'status__status_choice'
+    ).annotate(
+        total=Count('id')
+    ).order_by('status__status_choice')
+
+    contas_agrupadas = processos_pendentes.values(
+        'conta__id',
+        'conta__banco',
+        'conta__agencia',
+        'conta__conta',
+        'conta__titular__nome',
+    ).annotate(
+        total=Count('id')
+    ).order_by('conta__titular__nome', 'conta__banco', 'conta__agencia')
+
+    data_selecionada = request.GET.get('data')
+    forma_selecionada = request.GET.get('forma')
+    status_selecionado = request.GET.get('status')
+    conta_selecionada = request.GET.get('conta')
+    ordem = request.GET.get('ordem', 'id')
+    direcao = request.GET.get('direcao', 'asc')
+
+    lista_processos = processos_pendentes
+
+    if status_selecionado:
+        lista_processos = lista_processos.filter(status__status_choice=status_selecionado)
+
+    if data_selecionada:
+        if data_selecionada == 'sem_data':
+            lista_processos = lista_processos.filter(data_pagamento__isnull=True)
+        else:
+            lista_processos = lista_processos.filter(data_pagamento=data_selecionada)
+
+    if forma_selecionada:
+        if forma_selecionada == 'sem_forma':
+            lista_processos = lista_processos.filter(forma_pagamento__isnull=True)
+        else:
+            try:
+                lista_processos = lista_processos.filter(forma_pagamento__id=int(forma_selecionada))
+            except (ValueError, TypeError):
+                pass
+
+    if conta_selecionada:
+        if conta_selecionada == 'sem_conta':
+            lista_processos = lista_processos.filter(conta__isnull=True)
+        else:
+            try:
+                lista_processos = lista_processos.filter(conta__id=int(conta_selecionada))
+            except (ValueError, TypeError):
+                pass
+
+    ORDER_FIELDS = {
+        'id': 'id',
+        'data_pagamento': 'data_pagamento',
+        'credor': 'credor__nome',
+        'valor_liquido': 'valor_liquido',
+        'status': 'status__status_choice',
+        'tipo_pagamento': 'tipo_pagamento__tipo_de_pagamento',
+    }
+    order_field = ORDER_FIELDS.get(ordem, 'id')
+    if direcao == 'desc':
+        order_field = f'-{order_field}'
+
+    lista_processos = lista_processos.annotate(
+        has_pendencias=Exists(Pendencia.objects.filter(processo=OuterRef('pk'))),
+        has_retencoes=Exists(RetencaoImposto.objects.filter(nota_fiscal__processo=OuterRef('pk'))),
+    ).order_by(order_field)
+
+    context = {
+        'datas_agrupadas': datas_agrupadas,
+        'formas_agrupadas': formas_agrupadas,
+        'statuses_agrupados': statuses_agrupados,
+        'contas_agrupadas': contas_agrupadas,
+        'lista_processos': lista_processos,
+        'data_selecionada': data_selecionada,
+        'forma_selecionada': forma_selecionada,
+        'status_selecionado': status_selecionado,
+        'conta_selecionada': conta_selecionada,
+        'ordem': ordem,
+        'direcao': direcao,
+        'pode_interagir': request.user.has_perm('processos.pode_operar_contas_pagar'),
+    }
+
+    return render(request, 'fluxo/contas_a_pagar.html', context)
+
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
+def a_empenhar_view(request):
+    if request.method == 'POST':
+        pode_interagir = request.user.has_perm('processos.pode_operar_contas_pagar')
+        if not pode_interagir:
+            raise PermissionDenied
+        processo_id = request.POST.get('processo_id')
+        n_nota_empenho = request.POST.get('n_nota_empenho')
+        data_empenho_str = request.POST.get('data_empenho')
+        siscac_file = request.FILES.get('siscac_file')
+
+        if processo_id and n_nota_empenho and data_empenho_str:
+            try:
+                with transaction.atomic():
+                    processo = Processo.objects.get(id=processo_id)
+                    processo.n_nota_empenho = n_nota_empenho
+                    processo.data_empenho = datetime.strptime(data_empenho_str, '%Y-%m-%d').date()
+
+                    if siscac_file:
+                        tipo_doc, _ = TiposDeDocumento.objects.get_or_create(
+                            tipo_de_documento__iexact='DOCUMENTOS ORÇAMENTÁRIOS',
+                            defaults={'tipo_de_documento': 'DOCUMENTOS ORÇAMENTÁRIOS'}
+                        )
+
+                        for doc in processo.documentos.all().order_by('-ordem'):
+                            doc.ordem += 1
+                            doc.save()
+
+                        DocumentoProcesso.objects.create(
+                            processo=processo,
+                            arquivo=siscac_file,
+                            tipo=tipo_doc,
+                            ordem=1
+                        )
+
+                    # Turnpike: check requirements before advancing status
+                    processo.save(update_fields=['n_nota_empenho', 'data_empenho'])
+                    try:
+                        processo.avancar_status('AGUARDANDO LIQUIDAÇÃO', usuario=request.user)
+                    except ValidationError as ve:
+                        raise ValueError(str(ve))
+
+                messages.success(request, f"Empenho registrado com sucesso! Processo #{processo.id} avançou para Aguardando Liquidação.")
+            except Processo.DoesNotExist:
+                messages.error(request, "Processo não encontrado.")
+            except Exception as e:
+                messages.error(request, f"Erro inesperado ao salvar empenho: {str(e)}")
+        else:
+            messages.error(request, "Por favor, preencha o número e a data da nota de empenho para avançar.")
+
+        return redirect('a_empenhar')
+
+    processos_base = Processo.objects.filter(
+        status__status_choice__iexact='A EMPENHAR'
+    ).select_related('credor', 'status', 'tipo_pagamento')
+
+    meu_filtro = AEmpenharFilter(request.GET, queryset=processos_base)
+
+    ORDER_FIELDS = {
+        'id': 'id',
+        'credor': 'credor__nome',
+        'valor_liquido': 'valor_liquido',
+        'data_vencimento': 'data_vencimento',
+        'tipo_pagamento': 'tipo_pagamento__tipo_de_pagamento',
+    }
+    ordem = request.GET.get('ordem', 'data_vencimento')
+    direcao = request.GET.get('direcao', 'asc')
+    order_field = ORDER_FIELDS.get(ordem, 'data_vencimento')
+    if direcao == 'desc':
+        order_field = f'-{order_field}'
+
+    processos_pendentes = meu_filtro.qs.order_by(order_field, '-id')
+
+    context = {
+        'processos': processos_pendentes,
+        'meu_filtro': meu_filtro,
+        'ordem': ordem,
+        'direcao': direcao,
+        'pode_interagir': request.user.has_perm('processos.pode_operar_contas_pagar'),
+    }
+    return render(request, 'fluxo/a_empenhar.html', context)
+
+#API VIEW.
+#SHOULD BE MOVED TO API'S.
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
+def api_extrair_dados_empenho(request):
+    """
+    AJAX endpoint: receives a SISCAC PDF upload, extracts n_nota_empenho and
+    data_empenho, and returns them as JSON to auto-fill the empenho modal.
+
+    POST params:
+        siscac_file (file): The SISCAC PDF to extract data from.
+
+    Response JSON:
+        sucesso (bool): True on success, False on failure.
+        n_nota_empenho (str): Extracted nota de empenho number (on success).
+        data_empenho (str): Extracted date in ISO format YYYY-MM-DD (on success).
+        erro (str): Error message (on failure).
+
+    HTTP status codes: 200, 400, 405, 422, 500.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'sucesso': False, 'erro': 'Método não permitido.'}, status=405)
+
+    siscac_file = request.FILES.get('siscac_file')
+    if not siscac_file:
+        return JsonResponse({'sucesso': False, 'erro': 'Nenhum arquivo enviado.'}, status=400)
+
+    try:
+        data = extract_siscac_data(siscac_file)
+    except Exception as e:
+        logging.getLogger(__name__).exception('Erro ao extrair dados de empenho do arquivo %s', getattr(siscac_file, 'name', ''))
+        return JsonResponse({'sucesso': False, 'erro': 'Erro ao processar o arquivo. Verifique se é um PDF SISCAC válido.'}, status=500)
+
+    n_nota_empenho = data.get('n_nota_empenho') or ''
+    data_empenho = data.get('data_empenho')
+    data_empenho_iso = data_empenho if data_empenho else ''
+
+    if not n_nota_empenho and not data_empenho_iso:
+        return JsonResponse({
+            'sucesso': False,
+            'erro': 'Não foi possível extrair dados de empenho do arquivo. Verifique se é um documento SISCAC válido.',
+        }, status=422)
+
+    return JsonResponse({
+        'sucesso': True,
+        'n_nota_empenho': n_nota_empenho,
+        'data_empenho': data_empenho_iso,
+    })
+
+#TURNPIKE VIEW.
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
+def avancar_para_pagamento_view(request, pk):
+    """
+    Advance a process from 'AGUARDANDO LIQUIDAÇÃO' to 'A PAGAR - PENDENTE AUTORIZAÇÃO'.
+    Turnpike check: all documentos fiscais must be attested (atestada=True).
+    """
+    processo = get_object_or_404(Processo, id=pk)
+
+    if request.method != 'POST':
+        return redirect('editar_processo', pk=pk)
+
+    status_atual = processo.status.status_choice.upper() if processo.status else ''
+
+    if not status_atual.startswith('AGUARDANDO LIQUIDAÇÃO'):
+        messages.error(
+            request,
+            f'O processo #{pk} não está em status "Aguardando Liquidação" '
+            f'(status atual: "{processo.status}"). Ação não permitida.'
+        )
+        return redirect('editar_processo', pk=pk)
+
+    try:
+        with transaction.atomic():
+            processo.avancar_status('A PAGAR - PENDENTE AUTORIZAÇÃO', usuario=request.user)
+
+        messages.success(
+            request,
+            f'Processo #{pk} avançado com sucesso para "A Pagar - Pendente Autorização".'
+        )
+    except ValidationError as ve:
+        for erro in ve.messages:
+            messages.error(request, erro)
+    except Exception as e:
+        messages.error(request, f'Erro ao avançar o processo: {str(e)}')
+
+    return redirect('editar_processo', pk=pk)
+
+#TURNPIKE VIEW.
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
+def enviar_para_autorizacao(request):
+    if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_operar_contas_pagar'):
+            raise PermissionDenied
+        selecionados = request.POST.getlist('processos_selecionados')
+
+        if selecionados:
+            elegiveis = Processo.objects.filter(
+                id__in=selecionados,
+                status__status_choice__iexact='A PAGAR - PENDENTE AUTORIZAÇÃO'
+            )
+            count_elegiveis = elegiveis.count()
+            count_ignorados = len(selecionados) - count_elegiveis
+
+            if count_elegiveis > 0:
+                status_aguardando, _ = StatusChoicesProcesso.objects.get_or_create(
+                    status_choice__iexact='A PAGAR - ENVIADO PARA AUTORIZAÇÃO',
+                    defaults={'status_choice': 'A PAGAR - ENVIADO PARA AUTORIZAÇÃO'}
+                )
+                elegiveis.update(status=status_aguardando)
+                messages.success(request, f'{count_elegiveis} processo(s) enviado(s) para autorização com sucesso.')
+            else:
+                messages.error(request, 'Nenhum dos processos selecionados está com status "A PAGAR - PENDENTE AUTORIZAÇÃO".')
+
+            if count_ignorados > 0:
+                messages.warning(
+                    request,
+                    f'{count_ignorados} processo(s) ignorado(s): apenas processos com status '
+                    f'"A PAGAR - PENDENTE AUTORIZAÇÃO" podem ser enviados para autorização.'
+                )
+        else:
+            messages.warning(request, 'Nenhum processo foi selecionado.')
+
+    return redirect('contas_a_pagar')
+
+
+@permission_required('processos.pode_autorizar_pagamento', raise_exception=True)
+def painel_autorizacao_view(request):
+    processos = Processo.objects.filter(
+        status__status_choice__iexact='A PAGAR - ENVIADO PARA AUTORIZAÇÃO'
+    ).order_by('data_pagamento', 'id')
+
+    processos_autorizados = Processo.objects.filter(
+        status__status_choice__iexact='A PAGAR - AUTORIZADO'
+    ).order_by('data_pagamento', 'id')
+
+    context = {
+        'processos': processos,
+        'processos_autorizados': processos_autorizados,
+        'pendencia_form': PendenciaForm(),
+        'pode_interagir': request.user.has_perm('processos.pode_autorizar_pagamento'),
+    }
+    return render(request, 'fluxo/autorizacao.html', context)
+
+#APPROVAL TURNPIKE VIEW.
+@permission_required('processos.pode_autorizar_pagamento', raise_exception=True)
+def autorizar_pagamento(request):
+    if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_autorizar_pagamento'):
+            raise PermissionDenied
+        selecionados = request.POST.getlist('processos_selecionados')
+
+        if selecionados:
+            status_autorizado, _ = StatusChoicesProcesso.objects.get_or_create(
+                status_choice__iexact='A PAGAR - AUTORIZADO',
+                defaults={'status_choice': 'A PAGAR - AUTORIZADO'}
+            )
+
+            Processo.objects.filter(id__in=selecionados).update(status=status_autorizado)
+            messages.success(request, f'{len(selecionados)} pagamento(s) autorizado(s) com sucesso!')
+        else:
+            messages.warning(request, 'Nenhum processo foi selecionado para autorização.')
+
+    return redirect('painel_autorizacao')
+
+
+@permission_required('processos.pode_autorizar_pagamento', raise_exception=True)
+def recusar_autorizacao_view(request, pk):
+    processo = get_object_or_404(Processo, id=pk)
+
+    if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_autorizar_pagamento'):
+            raise PermissionDenied
+        form = PendenciaForm(request.POST)
+        if form.is_valid():
+            _registrar_recusa(request, processo, form, 'AGUARDANDO LIQUIDAÇÃO / ATESTE')
+            messages.error(request, f'Processo #{processo.id} não autorizado e devolvido com pendência!')
+        else:
+            messages.warning(request, 'Erro ao registrar recusa. Verifique os dados da pendência.')
+
+    return redirect('painel_autorizacao')
+
+
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
+def painel_conferencia_view(request):
+    processos_pagos = Processo.objects.filter(
+        status__status_choice__iexact='PAGO - EM CONFERÊNCIA'
+    ).annotate(
+        tem_pendencia=Exists(
+            Pendencia.objects.filter(
+                processo=OuterRef('pk')
+            ).exclude(status__status_choice__iexact='RESOLVIDO')
+        ),
+        tem_retencao=Exists(
+            RetencaoImposto.objects.filter(
+                nota_fiscal__processo=OuterRef('pk')
+            ).exclude(status__status_choice__iexact='PAGO')
+        )
+    ).order_by('data_pagamento')
+
+    FILTROS_VALIDOS = {'com_pendencia', 'com_retencao', 'com_ambos', 'sem_pendencias'}
+    filtro = request.GET.get('filtro', '')
+    if filtro not in FILTROS_VALIDOS:
+        filtro = ''
+    if filtro == 'com_pendencia':
+        processos_pagos = processos_pagos.filter(tem_pendencia=True)
+    elif filtro == 'com_retencao':
+        processos_pagos = processos_pagos.filter(tem_retencao=True)
+    elif filtro == 'com_ambos':
+        processos_pagos = processos_pagos.filter(tem_pendencia=True, tem_retencao=True)
+    elif filtro == 'sem_pendencias':
+        processos_pagos = processos_pagos.filter(tem_pendencia=False, tem_retencao=False)
+
+    context = {
+        'processos': processos_pagos,
+        'pode_interagir': request.user.has_perm('processos.pode_operar_contas_pagar'),
+        'filtro_ativo': filtro,
+    }
+    return render(request, 'fluxo/conferencia.html', context)
+
+
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
+def aprovar_conferencia_view(request, pk):
+    messages.error(request, 'A aprovação direta foi desativada. Abra o processo para realizar a conferência.')
+    return redirect('painel_conferencia')
+
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
+def iniciar_conferencia_view(request):
+    """POST: store selected process IDs in session queue, redirect to first process."""
+    if request.method == 'POST':
+        return _iniciar_fila_sessao(
+            request, 'processos.pode_operar_contas_pagar', 'conferencia_queue',
+            'painel_conferencia', 'conferencia_processo'
+        )
+    return redirect('painel_conferencia')
+
+#AUDITORIA/LOGGING VIEW.
+#AUXILIARY VIEW.
+def _build_history_record(record, modelo_label):
+    """Build an enriched history record dict, resolving ForeignKeys to human-readable strings."""
+    HISTORY_TYPE_LABELS = {'+': 'Criação', '~': 'Alteração', '-': 'Exclusão'}
+    changed_fields = []
+
+    if record.history_type == '~':
+        prev = record.prev_record
+        if prev is not None:
+            try:
+                delta = record.diff_against(prev)
+                # Get a mapping of field names to actual Field objects
+                model_fields = {f.name: f for f in record.instance._meta.get_fields()}
+
+                for change in delta.changes:
+                    field_name = change.field
+                    old_val = change.old
+                    new_val = change.new
+
+                    # Check if this field is a ForeignKey
+                    field_obj = model_fields.get(field_name)
+                    if isinstance(field_obj, ForeignKey):
+                        related_model = field_obj.related_model
+
+                        # Resolve Old Value
+                        if old_val is not None:
+                            try:
+                                old_obj = related_model.objects.get(pk=old_val)
+                                old_val = str(old_obj)
+                            except related_model.DoesNotExist:
+                                old_val = f"ID {old_val} (Excluído)"
+
+                        # Resolve New Value
+                        if new_val is not None:
+                            try:
+                                new_obj = related_model.objects.get(pk=new_val)
+                                new_val = str(new_obj)
+                            except related_model.DoesNotExist:
+                                new_val = f"ID {new_val} (Excluído)"
+
+                    # Format boolean values to Sim/Não for better readability
+                    if isinstance(old_val, bool): old_val = "Sim" if old_val else "Não"
+                    if isinstance(new_val, bool): new_val = "Sim" if new_val else "Não"
+
+                    # Format None values
+                    if old_val is None: old_val = "N/A"
+                    if new_val is None: new_val = "N/A"
+
+                    changed_fields.append({
+                        'field': field_name.replace('_', ' ').title(),  # Make field name readable
+                        'old': old_val,
+                        'new': new_val,
+                    })
+            except Exception as e:
+                print(f"Error building history diff: {e}")
+
+    return {
+        'modelo': modelo_label,
+        'history_date': record.history_date,
+        'history_user': record.history_user,
+        'history_type': record.history_type,
+        'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
+        'history_change_reason': getattr(record, 'history_change_reason', None),
+        'str_repr': str(record),
+        'changed_fields': changed_fields,
+    }
+
+
+def _iniciar_fila_sessao(request, permissao, queue_key, fallback_view, detail_view, extra_args=None):
+    """Handles POST requests to start a review queue from a selected list of IDs."""
+    if not request.user.has_perm(permissao):
+        raise PermissionDenied
+
+    ids_raw = request.POST.getlist('processo_ids')
+    process_ids = [int(pid) for pid in ids_raw if pid.isdigit()]
+
+    if not process_ids:
+        messages.warning(request, 'Selecione ao menos um processo para iniciar a revisão.')
+        return redirect(fallback_view, **(extra_args or {}))
+
+    request.session[queue_key] = process_ids
+    request.session.modified = True
+    return redirect(detail_view, pk=process_ids[0])
+
+
+def _handle_queue_navigation(request, pk, action, queue_key, fallback_view):
+    """Handles 'sair', 'pular', and 'voltar' actions for the detailed review views."""
+    queue = request.session.get(queue_key, [])
+    current_index = queue.index(pk) if pk in queue else -1
+    next_pk = queue[current_index + 1] if 0 <= current_index < len(queue) - 1 else None
+    prev_pk = queue[current_index - 1] if current_index > 0 else None
+
+    if action == 'sair':
+        request.session.pop(queue_key, None)
+        request.session.modified = True
+        return redirect(fallback_view)
+
+    if action == 'pular':
+        if next_pk:
+            return redirect(request.resolver_match.view_name, pk=next_pk)
+        messages.info(request, 'Não há mais processos na fila. Retornando ao painel.')
+        request.session.pop(queue_key, None)
+        request.session.modified = True
+        return redirect(fallback_view)
+
+    if action == 'voltar':
+        if prev_pk:
+            return redirect(request.resolver_match.view_name, pk=prev_pk)
+        messages.info(request, 'Não há processo anterior na fila.')
+        return redirect(request.resolver_match.view_name, pk=pk)
+
+    # Return context variables if no navigation action was taken
+    return None, queue, current_index, next_pk, prev_pk
+
+#AUDITORIA/LOGGING VIEW.
+def _get_unified_history(pk):
+    """Aggregates and sorts history records for a Processo and its related models."""
+    processo = get_object_or_404(Processo, id=pk)
+    history_records = []
+
+    for record in processo.history.all().select_related('history_user'):
+        history_records.append(_build_history_record(record, 'Processo'))
+    for record in DocumentoProcesso.history.filter(processo_id=pk).select_related('history_user'):
+        history_records.append(_build_history_record(record, 'Documento'))
+    for record in Pendencia.history.filter(processo_id=pk).select_related('history_user'):
+        history_records.append(_build_history_record(record, 'Pendência'))
+    for record in DocumentoFiscal.history.filter(processo_id=pk).select_related('history_user'):
+        history_records.append(_build_history_record(record, 'Nota Fiscal'))
+
+    history_records.sort(key=lambda x: x['history_date'], reverse=True)
+    return history_records
+
+#AUTHORIZATION/APPROVAL VIEW.
+def _registrar_recusa(request, processo, form, status_devolucao):
+    """Saves a pendency and rolls back the process status in an atomic transaction."""
+    with transaction.atomic():
+        pendencia = form.save(commit=False)
+        pendencia.processo = processo
+        status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
+            status_choice__iexact='A RESOLVER', defaults={'status_choice': 'A RESOLVER'}
+        )
+        pendencia.status = status_pendencia
+        pendencia.save()
+        processo.avancar_status(status_devolucao, usuario=request.user)
+
+
+def _salvar_documentos_sem_exclusao(doc_formset, processo):
+    """Persist documents allowing add/reorder but never deleting existing records."""
+    for form in doc_formset.forms:
+        if not form.cleaned_data:
+            continue
+        should_delete = form.cleaned_data.get('DELETE', False)
+        is_existing = bool(form.instance.pk)
+        if should_delete:
+            continue
+        if form.has_changed() or not is_existing:
+            instance = form.save(commit=False)
+            instance.processo = processo
+            instance.save()
+
+
+def _processo_fila_detalhe_view(
+    request,
+    pk,
+    *,
+    permission,
+    queue_key,
+    fallback_view,
+    current_view,
+    template_name,
+    approve_action,
+    approve_status,
+    approve_message,
+    save_action='salvar',
+    save_message=None,
+    reject_action=None,
+    reject_status=None,
+    reject_message=None,
+    editable=True,
+    lock_documents=False,
+):
+    """Shared detailed review view for conferência/contabilização/conselho."""
+    processo = get_object_or_404(Processo, id=pk)
+    can_interact = request.user.has_perm(permission)
+
+    queue = []
+    current_index = -1
+    next_pk = None
+    prev_pk = None
+    doc_formset = None
+    pendencia_formset = None
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+
+        nav_result = _handle_queue_navigation(request, pk, action, queue_key, fallback_view)
+        if isinstance(nav_result, HttpResponse):
+            return nav_result
+
+        _, queue, current_index, next_pk, prev_pk = nav_result
+
+        allowed_actions = {approve_action}
+        if editable:
+            allowed_actions.add(save_action)
+        if reject_action:
+            allowed_actions.add(reject_action)
+
+        if action in allowed_actions:
+            if not can_interact:
+                raise PermissionDenied
+
+            if reject_action and action == reject_action:
+                form = PendenciaForm(request.POST)
+                if form.is_valid():
+                    _registrar_recusa(request, processo, form, reject_status)
+                    messages.error(request, reject_message.format(processo_id=processo.id))
+                    if next_pk:
+                        return redirect(current_view, pk=next_pk)
+                    request.session.pop(queue_key, None)
+                    request.session.modified = True
+                    return redirect(fallback_view)
+                messages.warning(request, 'Erro ao registrar recusa. Verifique os dados da pendência.')
+                return redirect(current_view, pk=pk)
+
+            if editable:
+                doc_formset = DocumentoFormSet(
+                    request.POST, request.FILES,
+                    instance=processo,
+                    prefix='documentos',
+                )
+                pendencia_formset = PendenciaFormSet(
+                    request.POST,
+                    instance=processo,
+                    prefix='pendencias',
+                )
+
+                if doc_formset.is_valid() and pendencia_formset.is_valid():
+                    with transaction.atomic():
+                        _salvar_documentos_sem_exclusao(doc_formset, processo)
+                        if lock_documents:
+                            processo.documentos.all().update(imutavel=True)
+                        pendencia_formset.save()
+
+                        if action == approve_action:
+                            processo.avancar_status(approve_status, usuario=request.user)
+                            messages.success(request, approve_message.format(processo_id=processo.id))
+                            if next_pk:
+                                return redirect(current_view, pk=next_pk)
+                            request.session.pop(queue_key, None)
+                            request.session.modified = True
+                            return redirect(fallback_view)
+
+                        messages.success(request, save_message.format(processo_id=processo.id))
+                        return redirect(current_view, pk=pk)
+
+                messages.error(request, 'Verifique os erros no formulário abaixo.')
+            else:
+                processo.avancar_status(approve_status, usuario=request.user)
+                messages.success(request, approve_message.format(processo_id=processo.id))
+                if next_pk:
+                    return redirect(current_view, pk=next_pk)
+                request.session.pop(queue_key, None)
+                request.session.modified = True
+                return redirect(fallback_view)
+    else:
+        _, queue, current_index, next_pk, prev_pk = _handle_queue_navigation(
+            request, pk, '', queue_key, fallback_view
+        )
+
+    if editable:
+        if doc_formset is None:
+            doc_formset = DocumentoFormSet(instance=processo, prefix='documentos')
+        if pendencia_formset is None:
+            pendencia_formset = PendenciaFormSet(instance=processo, prefix='pendencias')
+
+    history_records = _get_unified_history(pk)
+
+    contingencias = Contingencia.objects.filter(processo=processo).select_related(
+        'solicitante', 'aprovado_por_supervisor', 'aprovado_por_ordenador', 'aprovado_por_conselho'
+    ).order_by('-data_solicitacao')
+
+    context = {
+        'processo': processo,
+        'pendencia_form': PendenciaForm(),
+        'history_records': history_records,
+        'contingencias': contingencias,
+        'queue': queue,
+        'current_index': current_index,
+        'next_pk': next_pk,
+        'prev_pk': prev_pk,
+        'queue_length': len(queue),
+        'queue_position': current_index + 1 if current_index >= 0 else 1,
+        'pode_interagir': can_interact,
+    }
+
+    if editable:
+        context.update({
+            'doc_formset': doc_formset,
+            'pendencia_formset': pendencia_formset,
+            'tipos_documento': TiposDeDocumento.objects.all(),
+        })
+
+    return render(request, template_name, context)
+
+
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
+def conferencia_processo_view(request, pk):
+    return _processo_fila_detalhe_view(
+        request,
+        pk,
+        permission='processos.pode_operar_contas_pagar',
+        queue_key='conferencia_queue',
+        fallback_view='painel_conferencia',
+        current_view='conferencia_processo',
+        template_name='fluxo/conferencia_processo.html',
+        approve_action='confirmar',
+        approve_status='PAGO - A CONTABILIZAR',
+        approve_message='Processo #{processo_id} confirmado na conferência e enviado para Contabilização!',
+        save_action='salvar',
+        save_message='Alterações do Processo #{processo_id} salvas.',
+        editable=True,
+        lock_documents=True,
+    )
+
+
+@permission_required('processos.pode_contabilizar', raise_exception=True)
+def painel_contabilizacao_view(request):
+    processos = Processo.objects.filter(status__status_choice__iexact='PAGO - A CONTABILIZAR').order_by('data_pagamento')
+    context = {
+        'processos': processos,
+        'pendencia_form': PendenciaForm(),
+        'pode_interagir': request.user.has_perm('processos.pode_contabilizar'),
+    }
+
+    return render(request, 'fluxo/contabilizacao.html', context)
+
+
+@permission_required('processos.pode_contabilizar', raise_exception=True)
+def iniciar_contabilizacao_view(request):
+    """POST: store selected process IDs in session queue, redirect to first process."""
+    if request.method == 'POST':
+        return _iniciar_fila_sessao(
+            request, 'processos.pode_contabilizar', 'contabilizacao_queue',
+            'painel_contabilizacao', 'contabilizacao_processo'
+        )
+    return redirect('painel_contabilizacao')
+
+
+@permission_required('processos.pode_contabilizar', raise_exception=True)
+def contabilizacao_processo_view(request, pk):
+    return _processo_fila_detalhe_view(
+        request,
+        pk,
+        permission='processos.pode_contabilizar',
+        queue_key='contabilizacao_queue',
+        fallback_view='painel_contabilizacao',
+        current_view='contabilizacao_processo',
+        template_name='fluxo/contabilizacao_processo.html',
+        approve_action='aprovar',
+        approve_status='CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL',
+        approve_message='Processo #{processo_id} contabilizado e enviado ao Conselho Fiscal!',
+        save_action='salvar',
+        save_message='Alterações do Processo #{processo_id} salvas.',
+        reject_action='rejeitar',
+        reject_status='PAGO - EM CONFERÊNCIA',
+        reject_message='Processo #{processo_id} recusado pela Contabilidade e devolvido para a Conferência!',
+        editable=True,
+    )
+
+#AUTHORIZATION/APPROVAL VIEW.
+@permission_required('processos.pode_contabilizar', raise_exception=True)
+def aprovar_contabilizacao_view(request, pk):
+    if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_contabilizar'):
+            raise PermissionDenied
+        processo = get_object_or_404(Processo, id=pk)
+        status_conselho, _ = StatusChoicesProcesso.objects.get_or_create(
+            status_choice__iexact='CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL',
+            defaults={'status_choice': 'CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL'}
+        )
+        processo.status = status_conselho
+        processo.save()
+        messages.success(request, f'Processo #{processo.id} contabilizado e enviado ao Conselho Fiscal!')
+    return redirect('painel_contabilizacao')
+
+#AUTHORIZATION/APPROVAL VIEW.
+@permission_required('processos.pode_contabilizar', raise_exception=True)
+def recusar_contabilizacao_view(request, pk):
+    processo = get_object_or_404(Processo, id=pk)
+
+    if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_contabilizar'):
+            raise PermissionDenied
+        form = PendenciaForm(request.POST)
+        if form.is_valid():
+            _registrar_recusa(request, processo, form, 'PAGO - EM CONFERÊNCIA')
+            messages.error(request, f'Processo #{processo.id} recusado pela Contabilidade e devolvido para a Conferência!')
+        else:
+            messages.warning(request, 'Erro ao registrar recusa. Verifique os dados da pendência.')
+
+    return redirect('painel_contabilizacao')
+
+
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
+def painel_conselho_view(request):
+    reunioes_ativas = ReuniaoConselho.objects.filter(status__in=['AGENDADA', 'EM_ANALISE']).order_by('-numero')
+    processos_sem_reuniao = Processo.objects.filter(
+        status__status_choice__iexact='CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL',
+        reuniao_conselho__isnull=True,
+    ).order_by('data_pagamento')
+    context = {
+        'reunioes_ativas': reunioes_ativas,
+        'processos_sem_reuniao': processos_sem_reuniao,
+        'pode_interagir': request.user.has_perm('processos.pode_auditar_conselho'),
+    }
+    return render(request, 'fluxo/conselho.html', context)
+
+
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
+def iniciar_conselho_view(request):
+    """POST: store selected process IDs in session queue, redirect to first process."""
+    if request.method == 'POST':
+        return _iniciar_fila_sessao(
+            request, 'processos.pode_auditar_conselho', 'conselho_queue',
+            'painel_conselho', 'conselho_processo'
+        )
+    return redirect('painel_conselho')
+
+
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
+def conselho_processo_view(request, pk):
+    return _processo_fila_detalhe_view(
+        request,
+        pk,
+        permission='processos.pode_auditar_conselho',
+        queue_key='conselho_queue',
+        fallback_view='painel_conselho',
+        current_view='conselho_processo',
+        template_name='fluxo/conselho_processo.html',
+        approve_action='aprovar',
+        approve_status='APROVADO - PENDENTE ARQUIVAMENTO',
+        approve_message='Processo #{processo_id} aprovado pelo Conselho e liberado para arquivamento!',
+        reject_action='rejeitar',
+        reject_status='PAGO - A CONTABILIZAR',
+        reject_message='Processo #{processo_id} recusado pelo Conselho Fiscal e devolvido para a Contabilidade!',
+        editable=False,
+    )
+
+#AUTHORIZATION/APPROVAL VIEW.
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
+def aprovar_conselho_view(request, pk):
+    if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_auditar_conselho'):
+            raise PermissionDenied
+        processo = get_object_or_404(Processo, id=pk)
+        status_arquivamento, _ = StatusChoicesProcesso.objects.get_or_create(
+            status_choice__iexact='APROVADO - PENDENTE ARQUIVAMENTO',
+            defaults={'status_choice': 'APROVADO - PENDENTE ARQUIVAMENTO'}
+        )
+        processo.status = status_arquivamento
+        processo.save()
+        messages.success(request, f'Processo #{processo.id} aprovado pelo Conselho e liberado para arquivamento!')
+    return redirect('painel_conselho')
+
+#AUTHORIZATION/APPROVAL VIEW.
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
+def recusar_conselho_view(request, pk):
+    processo = get_object_or_404(Processo, id=pk)
+
+    if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_auditar_conselho'):
+            raise PermissionDenied
+        form = PendenciaForm(request.POST)
+        if form.is_valid():
+            _registrar_recusa(request, processo, form, 'PAGO - A CONTABILIZAR')
+            messages.error(request, f'Processo #{processo.id} recusado pelo Conselho Fiscal e devolvido para a Contabilidade!')
+        else:
+            messages.warning(request, 'Erro ao registrar recusa. Verifique os dados da pendência.')
+
+    return redirect('painel_conselho')
+
+
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
+def gerenciar_reunioes_view(request):
+    """Lista todas as ReuniaoConselho e permite criar uma nova."""
+    if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_auditar_conselho'):
+            raise PermissionDenied
+        numero = request.POST.get('numero', '').strip()
+        trimestre_referencia = request.POST.get('trimestre_referencia', '').strip()
+        data_reuniao = request.POST.get('data_reuniao') or None
+        if numero and trimestre_referencia:
+            try:
+                ReuniaoConselho.objects.create(
+                    numero=int(numero),
+                    trimestre_referencia=trimestre_referencia,
+                    data_reuniao=data_reuniao,
+                )
+                messages.success(request, f'{numero}ª Reunião criada com sucesso.')
+            except ValueError:
+                messages.error(request, 'Número da reunião inválido.')
+            except IntegrityError as e:
+                messages.error(request, f'Erro de integridade ao criar reunião: {e}')
+        else:
+            messages.warning(request, 'Preencha o número e o trimestre de referência.')
+        return redirect('gerenciar_reunioes')
+
+    reunioes = ReuniaoConselho.objects.all()
+    context = {
+        'reunioes': reunioes,
+        'pode_interagir': request.user.has_perm('processos.pode_auditar_conselho'),
+    }
+    return render(request, 'processos/gerenciar_reunioes.html', context)
+
+
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
+def montar_pauta_reuniao_view(request, reuniao_id):
+    """Permite adicionar processos elegíveis a uma reunião específica."""
+    reuniao = get_object_or_404(ReuniaoConselho, id=reuniao_id)
+
+    if request.method == 'POST':
+        if not request.user.has_perm('processos.pode_auditar_conselho'):
+            raise PermissionDenied
+        processos_ids = request.POST.getlist('processos_selecionados')
+        if processos_ids:
+            updated = Processo.objects.filter(id__in=processos_ids).update(reuniao_conselho=reuniao)
+            messages.success(request, f'{updated} processo(s) adicionado(s) à pauta.')
+        else:
+            messages.warning(request, 'Nenhum processo selecionado.')
+        return redirect('montar_pauta_reuniao', reuniao_id=reuniao_id)
+
+    processos_na_pauta = reuniao.processos_em_pauta.all().order_by('data_pagamento')
+    processos_elegiveis = Processo.objects.filter(
+        status__status_choice__iexact='CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL',
+        reuniao_conselho__isnull=True,
+    ).order_by('data_pagamento')
+
+    context = {
+        'reuniao': reuniao,
+        'processos_na_pauta': processos_na_pauta,
+        'processos_elegiveis': processos_elegiveis,
+        'pode_interagir': request.user.has_perm('processos.pode_auditar_conselho'),
+    }
+    return render(request, 'processos/montar_pauta_conselho.html', context)
+
+
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
+def analise_reuniao_view(request, reuniao_id):
+    """Painel de análise para Conselheiros: lista processos de uma reunião específica."""
+    if not request.user.has_perm('processos.pode_auditar_conselho'):
+        raise PermissionDenied
+    reuniao = get_object_or_404(ReuniaoConselho, id=reuniao_id)
+    processos_na_pauta = reuniao.processos_em_pauta.all().order_by('data_pagamento')
+    context = {
+        'reuniao': reuniao,
+        'processos': processos_na_pauta,
+        'pendencia_form': PendenciaForm(),
+        'pode_interagir': True,
+    }
+    return render(request, 'processos/analise_reuniao.html', context)
+
+
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
+def iniciar_conselho_reuniao_view(request, reuniao_id):
+    """POST: store process IDs for a specific meeting in session queue."""
+    if request.method == 'POST':
+        get_object_or_404(ReuniaoConselho, id=reuniao_id)
+        return _iniciar_fila_sessao(
+            request, 'processos.pode_auditar_conselho', 'conselho_queue',
+            'analise_reuniao', 'conselho_processo',
+            extra_args={'reuniao_id': reuniao_id}
+        )
+    return redirect('painel_conselho')
+
+
+@permission_required('processos.pode_arquivar', raise_exception=True)
+def painel_arquivamento_view(request):
+    processos_pendentes = Processo.objects.filter(
+        status__status_choice__iexact='APROVADO - PENDENTE ARQUIVAMENTO'
+    ).order_by('data_pagamento')
+
+    arquivados_qs = Processo.objects.filter(
+        status__status_choice__iexact='ARQUIVADO'
+    ).order_by('-id')
+
+    arquivamento_filtro = ProcessoFilter(request.GET or None, queryset=arquivados_qs)
+    processos_arquivados = arquivamento_filtro.qs
+
+    return render(request, 'fluxo/arquivamento.html', {
+        'processos_pendentes': processos_pendentes,
+        'processos_arquivados': processos_arquivados,
+        'processos_arquivados_count': processos_arquivados.count(),
+        'arquivamento_filtro': arquivamento_filtro,
+        'pode_interagir': request.user.has_perm('processos.pode_arquivar'),
+    })
+
+
+@permission_required('processos.pode_arquivar', raise_exception=True)
+def arquivar_processo_view(request, pk):
+    if request.method != 'POST':
+        return redirect('painel_arquivamento')
+
+    if not request.user.has_perm('processos.pode_arquivar'):
+        raise PermissionDenied
+
+    processo = get_object_or_404(Processo, id=pk)
+
+    status_atual = processo.status.status_choice if processo.status else ''
+    if status_atual.upper() != 'APROVADO - PENDENTE ARQUIVAMENTO':
+        messages.error(request, f'Processo #{processo.id} não está no status correto para arquivamento.')
+        return redirect('painel_arquivamento')
+
+    pdf_buffer = processo.gerar_pdf_consolidado()
+
+    if pdf_buffer is None:
+        messages.error(request, f'Processo #{processo.id} não possui documentos para arquivar.')
+        return redirect('painel_arquivamento')
+
+    pdf_bytes = pdf_buffer.read()
+
+    nome_arquivo = f'processo_{processo.id}_consolidado.pdf'
+    with transaction.atomic():
+        processo.arquivo_final.save(nome_arquivo, ContentFile(pdf_bytes), save=False)
+        processo.save(update_fields=['arquivo_final'])
+        processo.avancar_status('ARQUIVADO', usuario=request.user)
+
+    messages.success(request, f'Processo #{processo.id} arquivado definitivamente com sucesso!')
+    return redirect('painel_arquivamento')
+
+#API VIEW.
+#SHOULD BE MOVED TO API'S.
+def api_tipos_documento_por_pagamento(request):
+    tipo_pagamento_id = request.GET.get('tipo_pagamento_id')
+
+    if not tipo_pagamento_id:
+        return JsonResponse({'sucesso': False, 'erro': 'ID não fornecido'})
+
+    try:
+        documentos_validos = TiposDeDocumento.objects.filter(
+            tipo_de_pagamento_id=tipo_pagamento_id,
+            is_active=True
+        ).values('id', 'tipo_de_documento').order_by('tipo_de_documento')
+
+        lista_docs = list(documentos_validos)
+        return JsonResponse({'sucesso': True, 'tipos': lista_docs})
+    except Exception as e:
+        return JsonResponse({'sucesso': False, 'erro': str(e)})
+
+
+def painel_pendencias_view(request):
+    queryset_base = Pendencia.objects.select_related(
+        'processo', 'status', 'tipo', 'processo__credor', 'processo__status'
+    ).all().order_by('-id')
+
+    meu_filtro = PendenciaFilter(request.GET, queryset=queryset_base)
+
+    context = {
+        'meu_filtro': meu_filtro,
+        'pendencias': meu_filtro.qs,
+    }
+    return render(request, 'fluxo/painel_pendencias.html', context)
+
+#API VIEW.
+#SHOULD BE MOVED TO API'S.
+def api_detalhes_pagamento(request):
+    if request.method == 'POST':
+        try:
+            dados = json.loads(request.body)
+            processo_ids = dados.get('ids', [])
+
+            # Puxa os processos com os relacionamentos para otimizar a query
+            processos = Processo.objects.filter(id__in=processo_ids).select_related('forma_pagamento', 'conta', 'credor').prefetch_related('documentos')
+
+            resultados = []
+            for p in processos:
+                try:
+                    valor_num = float(p.valor_liquido) if p.valor_liquido else 0.0
+                    valor_formatado = f"{valor_num:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+                except (ValueError, TypeError):
+                    valor_formatado = "0,00"
+
+                pagamento = p.detalhes_pagamento
+
+                resultados.append({
+                    'id': p.id,
+                    'empenho': p.n_nota_empenho or "S/N",
+                    'credor': p.credor.nome if p.credor else "Sem Credor",
+                    'valor': valor_formatado,
+                    'forma': p.forma_pagamento.forma_de_pagamento if p.forma_pagamento else "N/A",
+                    'detalhe_tipo': pagamento['tipo_formatado'],
+                    'detalhe_valor': pagamento['valor_formatado'],
+                    'codigos_barras': pagamento['codigos_barras'],
+                })
+
+            return JsonResponse({'sucesso': True, 'dados': resultados})
+        except Exception as e:
+            # Imprime o erro no console do PythonAnywhere para debug
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'sucesso': False, 'erro': str(e)})
+
+    return JsonResponse({'sucesso': False, 'erro': 'Método inválido'})
+
+#API VIEW.
+#SHOULD BE MOVED TO API'S.
+def _build_detalhes_pagamento(processos):
+    detalhes = []
+    totais = {}
+    for p in processos:
+        forma = p.forma_pagamento.forma_de_pagamento.lower() if p.forma_pagamento else ''
+        forma_nome = p.forma_pagamento.forma_de_pagamento if p.forma_pagamento else 'N/A'
+        tipo = p.tipo_pagamento.tipo_de_pagamento.upper() if p.tipo_pagamento else ''
+
+        if tipo == 'GERENCIADOR/BOLETO BANCÁRIO' or 'boleto' in forma or 'gerenciador' in forma:
+            codigos_barras = [
+                doc.codigo_barras
+                for doc in p.documentos.all()
+                if doc.codigo_barras
+            ]
+            dados_pagamento = {
+                'tipo': 'codigo_barras',
+                'codigos_barras': codigos_barras,
+            }
+        elif 'pix' in forma:
+            dados_pagamento = {
+                'tipo': 'pix',
+                'chave_pix': (p.credor.chave_pix if p.credor and p.credor.chave_pix else ''),
+            }
+        elif 'transfer' in forma or 'ted' in forma:
+            credor_conta = p.credor.conta if p.credor else None
+            dados_pagamento = {
+                'tipo': 'transferencia',
+                'banco': credor_conta.banco if credor_conta else '',
+                'agencia': credor_conta.agencia if credor_conta else '',
+                'conta': credor_conta.conta if credor_conta else '',
+            }
+        else:
+            dados_pagamento = {'tipo': 'remessa'}
+
+        detalhes.append({'processo': p, 'dados_pagamento': dados_pagamento})
+        valor = p.valor_liquido or 0
+        totais[forma_nome] = totais.get(forma_nome, 0) + valor
+    return detalhes, totais
+
+
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
+def separar_para_lancamento_bancario(request):
+    if request.method == 'POST':
+        selecionados = request.POST.getlist('processos_selecionados')
+
+        if not selecionados:
+            messages.warning(request, 'Nenhum processo foi selecionado.')
+            return redirect('contas_a_pagar')
+
+        request.session['processos_lancamento'] = [int(pid) for pid in selecionados]
+        return redirect('lancamento_bancario')
+
+    return redirect('contas_a_pagar')
+
+
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
+def lancamento_bancario(request):
+    ids = request.session.get('processos_lancamento', [])
+
+    if not ids:
+        messages.warning(request, 'Nenhum processo foi selecionado.')
+        return redirect('contas_a_pagar')
+
+    status_autorizado = StatusChoicesProcesso.objects.filter(
+        status_choice__iexact='A PAGAR - AUTORIZADO'
+    ).first()
+    status_lancado = StatusChoicesProcesso.objects.filter(
+        status_choice__iexact='LANÇADO - AGUARDANDO COMPROVANTE'
+    ).first()
+
+    processos_qs = Processo.objects.filter(
+        id__in=ids
+    ).select_related('forma_pagamento', 'tipo_pagamento', 'conta', 'credor__conta', 'status').prefetch_related('documentos').order_by('forma_pagamento__forma_de_pagamento', 'id')
+
+    a_pagar_qs = processos_qs.filter(status=status_autorizado) if status_autorizado else processos_qs.none()
+    lancados_qs = processos_qs.filter(status=status_lancado) if status_lancado else processos_qs.none()
+
+    processos_a_pagar, totais_a_pagar = _build_detalhes_pagamento(a_pagar_qs)
+    processos_lancados, totais_lancados = _build_detalhes_pagamento(lancados_qs)
+
+    totais = {}
+    for forma, val in totais_a_pagar.items():
+        totais[forma] = totais.get(forma, 0) + val
+    for forma, val in totais_lancados.items():
+        totais[forma] = totais.get(forma, 0) + val
+
+    total_a_pagar = sum(totais_a_pagar.values())
+    total_lancados = sum(totais_lancados.values())
+    total_geral = total_a_pagar + total_lancados
+
+    context = {
+        'processos_a_pagar': processos_a_pagar,
+        'processos_lancados': processos_lancados,
+        'totais': totais,
+        'totais_a_pagar': totais_a_pagar,
+        'totais_lancados': totais_lancados,
+        'total_a_pagar': total_a_pagar,
+        'total_lancados': total_lancados,
+        'total_geral': total_geral,
+    }
+    return render(request, 'fluxo/lancamento_bancario.html', context)
+
+
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
+def marcar_como_lancado(request):
+    if request.method == 'POST':
+        processo_id = request.POST.get('processo_id')
+
+        if processo_id:
+            status_lancado, _ = StatusChoicesProcesso.objects.get_or_create(
+                status_choice__iexact='LANÇADO - AGUARDANDO COMPROVANTE',
+                defaults={'status_choice': 'LANÇADO - AGUARDANDO COMPROVANTE'}
+            )
+            updated = Processo.objects.filter(id=processo_id).update(status=status_lancado)
+            if updated:
+                messages.success(request, f'Processo #{processo_id} marcado como lançado com sucesso.')
+            else:
+                messages.warning(request, f'Processo #{processo_id} não encontrado.')
+        else:
+            messages.warning(request, 'ID de processo inválido.')
+
+    return redirect('lancamento_bancario')
+
+
+@permission_required('processos.pode_operar_contas_pagar', raise_exception=True)
+def desmarcar_lancamento(request):
+    if request.method == 'POST':
+        processo_id = request.POST.get('processo_id')
+
+        if processo_id:
+            status_autorizado, _ = StatusChoicesProcesso.objects.get_or_create(
+                status_choice__iexact='A PAGAR - AUTORIZADO',
+                defaults={'status_choice': 'A PAGAR - AUTORIZADO'}
+            )
+            updated = Processo.objects.filter(id=processo_id).update(status=status_autorizado)
+            if updated:
+                messages.success(request, f'Lançamento do Processo #{processo_id} desmarcado.')
+            else:
+                messages.warning(request, f'Processo #{processo_id} não encontrado.')
+        else:
+            messages.warning(request, 'ID de processo inválido.')
+
+    return redirect('lancamento_bancario')
+
+from django.views.decorators.http import require_GET
+
+#API VIEW.
+#SHOULD BE MOVED TO API'S.
+#CHECK IF IS NOT DUPLICATE/REDUNDANT.
+@require_GET
+@xframe_options_sameorigin
+def api_documentos_processo(request, processo_id):
+    """Returns a JSON list of documents attached to a Processo, for the iFrame previewer."""
+    processo = get_object_or_404(Processo, id=processo_id)
+    documentos = processo.documentos.all().order_by('ordem')
+
+    docs_list = []
+    for doc in documentos:
+        if doc.arquivo:
+            nome = doc.arquivo.name.split('/')[-1]
+            docs_list.append({
+                'id': doc.id,
+                'ordem': doc.ordem,
+                'tipo': doc.tipo.tipo_de_documento if doc.tipo else 'Documento',
+                'nome': nome,
+                'url': reverse('download_arquivo_seguro', args=['processo', doc.id]),
+            })
+
+    # Collect pendencias info
+    pendencias_qs = processo.pendencias.select_related('status', 'tipo').all()
+    pendencias_list = [
+        {
+            'tipo': str(p.tipo),
+            'descricao': p.descricao or '',
+            'status': str(p.status) if p.status else '-',
+        }
+        for p in pendencias_qs
+    ]
+
+    # Collect retencoes info (via notas fiscais linked to this processo)
+    retencoes_list = []
+    for nf in processo.notas_fiscais.prefetch_related('retencoes__status', 'retencoes__codigo').all():
+        for ret in nf.retencoes.all():
+            retencoes_list.append({
+                'codigo': str(ret.codigo),
+                'valor': str(ret.valor),
+                'status': str(ret.status) if ret.status else '-',
+            })
+
+    def fmt_date(d):
+        return d.strftime('%d/%m/%Y') if d else '-'
+
+    def fmt_decimal(v):
+        if v is None:
+            return '-'
+        # Format as Brazilian currency: R$ 1.234,56
+        int_part, dec_part = f'{abs(v):.2f}'.split('.')
+        int_formatted = '{:,}'.format(int(int_part)).replace(',', '.')
+        signal = '-' if v < 0 else ''
+        return f'R$ {signal}{int_formatted},{dec_part}'
+
+    return JsonResponse({
+        'processo_id': processo.id,
+        'n_nota_empenho': processo.n_nota_empenho or str(processo.id),
+        'credor': str(processo.credor) if processo.credor else '-',
+        'valor_bruto': fmt_decimal(processo.valor_bruto),
+        'valor_liquido': fmt_decimal(processo.valor_liquido),
+        'data_empenho': fmt_date(processo.data_empenho),
+        'data_vencimento': fmt_date(processo.data_vencimento),
+        'data_pagamento': fmt_date(processo.data_pagamento),
+        'status': str(processo.status) if processo.status else '-',
+        'pendencias': pendencias_list,
+        'retencoes': retencoes_list,
+        'documentos': docs_list,
+    })
+
+
+# ==========================================
+# AUDITORIA: HISTÓRICO DE ALTERAÇÕES
+# ==========================================
+def auditoria_view(request):
+    HISTORY_TYPE_LABELS = {'+': 'Criação', '~': 'Alteração', '-': 'Exclusão'}
+
+    model_configs = [
+        (Processo.history.model, 'Processo'),
+        (DocumentoProcesso.history.model, 'Documento de Processo'),
+        (DocumentoDiaria.history.model, 'Documento de Diária'),
+        (DocumentoReembolso.history.model, 'Documento de Reembolso'),
+        (DocumentoJeton.history.model, 'Documento de Jeton'),
+        (DocumentoAuxilio.history.model, 'Documento de Auxílio'),
+        (DocumentoSuprimentoDeFundos.history.model, 'Documento de Suprimento'),
+    ]
+
+    modelo_filter = request.GET.get('modelo', '').strip()
+    tipo_filter = request.GET.get('tipo_acao', '').strip()
+    data_inicio = request.GET.get('data_inicio', '').strip()
+    data_fim = request.GET.get('data_fim', '').strip()
+    usuario_filter = request.GET.get('usuario', '').strip()
+
+    all_records = []
+    for history_model, label in model_configs:
+        if modelo_filter and modelo_filter != label:
+            continue
+        qs = history_model.objects.select_related('history_user').all()
+        if tipo_filter:
+            qs = qs.filter(history_type=tipo_filter)
+        if data_inicio:
+            qs = qs.filter(history_date__date__gte=data_inicio)
+        if data_fim:
+            qs = qs.filter(history_date__date__lte=data_fim)
+        if usuario_filter:
+            qs = qs.filter(history_user__username__icontains=usuario_filter)
+        for record in qs:
+            all_records.append({
+                'modelo': label,
+                'object_id': record.id,  # original object PK (copied from the tracked model)
+                'history_date': record.history_date,
+                'history_user': record.history_user,
+                'history_type': record.history_type,
+                'history_type_label': HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
+                'history_change_reason': getattr(record, 'history_change_reason', None),
+                'str_repr': str(record),
+            })
+
+    all_records.sort(key=lambda x: x['history_date'], reverse=True)
+    total = len(all_records)
+    all_records = all_records[:500]
+
+    context = {
+        'registros': all_records,
+        'total': total,
+        'modelos_disponiveis': [label for _, label in model_configs],
+        'filtros': {
+            'modelo': modelo_filter,
+            'tipo_acao': tipo_filter,
+            'data_inicio': data_inicio,
+            'data_fim': data_fim,
+            'usuario': usuario_filter,
+        },
+    }
+    return render(request, 'fluxo/auditoria.html', context)
+
+#API VIEW.
+#SHOULD BE MOVED TO API'S.
+#CHECK IF IS NOT DUPLICATE/REDUNDANT.
+def api_processo_detalhes(request):
+    """API endpoint that returns Processo details as JSON for the contingency form."""
+    processo_id = request.GET.get('id', '').strip()
+    if not processo_id:
+        return JsonResponse({'sucesso': False, 'erro': 'ID do processo não informado.'}, status=400)
+
+    try:
+        processo = Processo.objects.select_related(
+            'credor', 'forma_pagamento', 'tipo_pagamento', 'conta', 'status', 'tag'
+        ).get(pk=processo_id)
+    except Processo.DoesNotExist:
+        return JsonResponse({'sucesso': False, 'erro': f'Processo #{processo_id} não encontrado.'}, status=404)
+    except ValueError:
+        return JsonResponse({'sucesso': False, 'erro': 'ID inválido.'}, status=400)
+
+    dados = {
+        'sucesso': True,
+        'processo': {
+            'id': processo.pk,
+            'n_nota_empenho': processo.n_nota_empenho or '—',
+            'credor_id': processo.credor_id,
+            'credor_nome': str(processo.credor) if processo.credor else '—',
+            'data_empenho': str(processo.data_empenho) if processo.data_empenho else None,
+            'valor_bruto': str(processo.valor_bruto) if processo.valor_bruto is not None else '0.00',
+            'valor_liquido': str(processo.valor_liquido) if processo.valor_liquido is not None else '0.00',
+            'ano_exercicio': processo.ano_exercicio,
+            'n_pagamento_siscac': processo.n_pagamento_siscac or '—',
+            'data_vencimento': str(processo.data_vencimento) if processo.data_vencimento else None,
+            'data_pagamento': str(processo.data_pagamento) if processo.data_pagamento else None,
+            'forma_pagamento': str(processo.forma_pagamento) if processo.forma_pagamento else '—',
+            'tipo_pagamento': str(processo.tipo_pagamento) if processo.tipo_pagamento else '—',
+            'observacao': processo.observacao or '—',
+            'conta': str(processo.conta) if processo.conta else '—',
+            'status': str(processo.status) if processo.status else '—',
+            'detalhamento': processo.detalhamento or '—',
+            'tag': str(processo.tag) if processo.tag else '—',
+            'em_contingencia': processo.em_contingencia,
+            'extraorcamentario': processo.extraorcamentario,
+        }
+    }
+    return JsonResponse(dados)
+
+
+def painel_contingencias_view(request):
+    """Displays a filterable list of all Contingencias."""
+    queryset = Contingencia.objects.select_related('processo', 'solicitante').order_by('-data_solicitacao')
+    meu_filtro = ContingenciaFilter(request.GET, queryset=queryset)
+    return render(request, 'fluxo/painel_contingencias.html', {
+        'filter': meu_filtro,
+        'contingencias': meu_filtro.qs,
+    })
+
+
+def add_contingencia_view(request):
+    """Renders the form to request an exceptional correction (Contingency) on a locked Processo."""
+    if request.method == 'POST':
+        processo_id = request.POST.get('processo_id', '').strip()
+        justificativa = request.POST.get('justificativa', '').strip()
+        dados_propostos_raw = request.POST.get('dados_propostos', '{}').strip()
+
+        if not processo_id or not justificativa:
+            messages.error(request, 'Processo e justificativa são obrigatórios.')
+            return redirect('add_contingencia')
+
+        try:
+            pk = int(processo_id)
+        except ValueError:
+            messages.error(request, 'Processo não encontrado.')
+            return redirect('add_contingencia')
+
+        processo = get_object_or_404(Processo, pk=pk)
+
+        try:
+            dados_propostos = json.loads(dados_propostos_raw) if dados_propostos_raw else {}
+        except (json.JSONDecodeError, ValueError):
+            dados_propostos = {}
+
+        contingencia = Contingencia.objects.create(
+            processo=processo,
+            solicitante=request.user,
+            justificativa=justificativa,
+            dados_propostos=dados_propostos,
+            status='PENDENTE_SUPERVISOR',
+        )
+        processo.em_contingencia = True
+        processo.save(update_fields=['em_contingencia'])
+
+        messages.success(
+            request,
+            f'Contingência #{contingencia.pk} aberta com sucesso para o Processo #{processo.pk}. '
+            'Aguardando aprovação do Supervisor.'
+        )
+        return redirect('home_page')
+
+    return render(request, 'fluxo/add_contingencia.html')
+
+
+@permission_required('processos.acesso_backoffice', raise_exception=True)
+def analisar_contingencia_view(request, pk):
+    """POST: Approve or reject a pending Contingencia by its PK."""
+    _CAMPOS_PERMITIDOS_CONTINGENCIA = {
+        'n_nota_empenho', 'data_empenho', 'valor_bruto', 'valor_liquido',
+        'ano_exercicio', 'n_pagamento_siscac', 'data_vencimento', 'data_pagamento',
+        'observacao', 'detalhamento', 'credor_id', 'forma_pagamento_id',
+        'tipo_pagamento_id', 'conta_id', 'tag_id',
+    }
+
+    contingencia = get_object_or_404(Contingencia, pk=pk)
+    processo = contingencia.processo
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '').strip()
+
+        if action == 'aprovar':
+            if 'novo_valor_liquido' in contingencia.dados_propostos:
+                raw_value = contingencia.dados_propostos['novo_valor_liquido']
+                if isinstance(raw_value, str):
+                    raw_value = raw_value.replace('.', '').replace(',', '.')
+                try:
+                    novo_valor_liquido = Decimal(str(raw_value))
+                except (InvalidOperation, ValueError):
+                    messages.error(request, 'O valor líquido proposto na contingência é inválido.')
+                    return redirect('painel_contingencias')
+
+                soma_comprovantes = sum(
+                    comp.valor_pago for comp in processo.comprovantes_pagamento.all()
+                    if comp.valor_pago is not None
+                )
+
+                if abs(novo_valor_liquido - Decimal(str(soma_comprovantes))) > Decimal('0.01'):
+                    messages.error(
+                        request,
+                        'A contingência não pode ser aprovada. O novo valor líquido proposto não corresponde à '
+                        'soma dos comprovantes bancários anexados no sistema. O setor responsável deve anexar '
+                        'os comprovantes restantes antes da aprovação.'
+                    )
+                    return redirect('painel_contingencias')
+
+            campos_alterados = []
+            for campo, valor in contingencia.dados_propostos.items():
+                if campo in _CAMPOS_PERMITIDOS_CONTINGENCIA and hasattr(processo, campo):
+                    setattr(processo, campo, valor)
+                    campos_alterados.append(campo)
+
+            processo.em_contingencia = False
+            campos_alterados.append('em_contingencia')
+            processo.save(update_fields=campos_alterados)
+
+            contingencia.status = 'APROVADA'
+            contingencia.save(update_fields=['status'])
+
+            messages.success(
+                request,
+                f'Contingência #{contingencia.pk} aprovada com sucesso. O Processo #{processo.pk} foi atualizado.'
+            )
+
+        elif action == 'rejeitar':
+            contingencia.status = 'REJEITADA'
+            contingencia.save(update_fields=['status'])
+
+            processo.em_contingencia = False
+            processo.save(update_fields=['em_contingencia'])
+
+            messages.warning(
+                request,
+                f'Contingência #{contingencia.pk} rejeitada.'
+            )
+
+        else:
+            messages.error(request, 'Ação inválida.')
+
+    return redirect('painel_contingencias')
+
+
+@permission_required('processos.pode_autorizar_pagamento', raise_exception=True)
+@xframe_options_sameorigin
+def gerar_autorizacao_pagamento_view(request, pk):
+    """
+    Gera e serve o PDF "Termo de Autorização de Pagamento" para o processo indicado.
+    """
+    processo = get_object_or_404(Processo, pk=pk)
+    pdf_bytes = gerar_documento_pdf('autorizacao', processo)
+    nome_arquivo = f"Autorizacao_Pagamento_Proc_{processo.id}.pdf"
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{nome_arquivo}"'
+    return response
+
+
+@permission_required('processos.pode_auditar_conselho', raise_exception=True)
+@xframe_options_sameorigin
+def gerar_parecer_conselho_view(request, pk):
+    """
+    Gera e serve o PDF "Parecer do Conselho Fiscal" para o processo indicado.
+    """
+    processo = get_object_or_404(Processo, pk=pk)
+    numero_reuniao = processo.reuniao_conselho.numero if processo.reuniao_conselho else None
+    pdf_bytes = gerar_documento_pdf('conselho_fiscal', processo, numero_reuniao=numero_reuniao)
+    nome_arquivo = f"Parecer_Conselho_Fiscal_Proc_{processo.id}.pdf"
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{nome_arquivo}"'
+    return response
+
+#SINCRONIZATION, NOT RELATED TO FLUXO.
+#SHOULD BE MOVED TO A SEPARATE MODULE, MANAGEMENT COMMAND OR API, AS APPROPRIATE.
+def sincronizar_siscac(request):
+    context = {}
+    if request.method == 'POST':
+        if request.POST.get('action') == 'forcar_sync':
+            from ..models import Processo
+            force_sync_ids = request.POST.getlist('force_sync_ids')
+            count = 0
+            errors = 0
+            for item in force_sync_ids:
+                try:
+                    processo_id, siscac_pg = item.split('|', 1)
+                    processo = Processo.objects.get(id=int(processo_id))
+                    processo.n_pagamento_siscac = siscac_pg
+                    processo.save(update_fields=['n_pagamento_siscac'])
+                    count += 1
+                except Exception:
+                    errors += 1
+            if count:
+                messages.success(request, f'{count} processo(s) sincronizado(s) com sucesso.')
+            if errors:
+                messages.error(request, f'{errors} item(ns) não puderam ser sincronizados.')
+            return redirect('sincronizar_siscac')
+        elif 'siscac_pdf' in request.FILES:
+            pdf_file = request.FILES['siscac_pdf']
+            if not pdf_file.name.lower().endswith('.pdf'):
+                messages.error(request, 'O arquivo enviado não é um PDF válido.')
+                return render(request, 'fluxo/sincronizar_siscac.html', context)
+            try:
+                extracted = parse_siscac_report(pdf_file)
+                results = sync_siscac_payments(extracted)
+                context['resultados'] = results
+            except Exception as e:
+                messages.error(request, f'Erro ao processar o relatório SISCAC: {e}')
+    return render(request, 'fluxo/sincronizar_siscac.html', context)
+
+
+def registrar_devolucao_view(request, processo_id):
+    processo = get_object_or_404(Processo, id=processo_id)
+
+    if request.method == 'POST':
+        form = DevolucaoForm(request.POST, request.FILES)
+        if form.is_valid():
+            devolucao = form.save(commit=False)
+            devolucao.processo = processo
+            devolucao.save()
+            messages.success(request, 'Devolução registrada com sucesso.')
+            return redirect('process_detail', processo.id)
+    else:
+        form = DevolucaoForm()
+
+    return render(request, 'fluxo/add_devolucao.html', {
+        'form': form,
+        'processo': processo,
+    })
+
+#API VIEW.
+#SHOULD BE MOVED TO API'S.
+#CHECK IF IS NOT DUPLICATE/REDUNDANT.
+def process_detail_view(request, pk):
+    processo = get_object_or_404(Processo, pk=pk)
+    documentos = processo.documentos.all()
+    status_permite_devolucao = {
+        'PAGO - A CONTABILIZAR',
+        'CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL',
+        'APROVADO - PENDENTE ARQUIVAMENTO',
+        'ARQUIVADO',
+    }
+    pode_registrar_devolucao = (
+        processo.status and processo.status.status_choice in status_permite_devolucao
+    )
+    return render(request, 'fluxo/process_detail.html', {
+        'processo': processo,
+        'documentos': documentos,
+        'pode_registrar_devolucao': pode_registrar_devolucao,
+    })
+
+
+def painel_devolucoes_view(request):
+    queryset = Devolucao.objects.select_related('processo', 'processo__credor').order_by('-data_devolucao')
+    meu_filtro = DevolucaoFilter(request.GET, queryset=queryset)
+    total_valor = meu_filtro.qs.aggregate(total=Sum('valor_devolvido'))['total'] or Decimal('0')
+    return render(request, 'fluxo/devolucoes_list.html', {
+        'filter': meu_filtro,
+        'devolucoes': meu_filtro.qs,
+        'total_valor': total_valor,
+    })
