@@ -1,9 +1,12 @@
+"""Context processors globais usados nos templates do sistema."""
+
 import datetime
 
 from processos.models.cadastros import FaturaMensal
 
 
 def alertas_contas_fixas(request):
+    """Calcula quantidade de faturas pendentes com vencimento próximo para o cabeçalho."""
     if not request.user.is_authenticated:
         return {}
 

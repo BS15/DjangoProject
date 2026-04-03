@@ -1,9 +1,12 @@
+"""Utilitários para geração de faturas mensais de contas fixas."""
+
 import datetime
 from .models import ContaFixa, FaturaMensal
 from django.db.models import Q
 
 
 def gerar_faturas_do_mes(ano, mes):
+    """Gera faturas para contas ativas válidas no mês/ano informado."""
     data_ref = datetime.date(ano, mes, 1)
     contas_ativas = ContaFixa.objects.filter(
         ativa=True

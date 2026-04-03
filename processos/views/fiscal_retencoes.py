@@ -6,34 +6,51 @@ from django.shortcuts import redirect, render
 
 from ..filters import RetencaoIndividualFilter, RetencaoNotaFilter, RetencaoProcessoFilter
 from ..models import Credor, DocumentoFiscal, Processo, RetencaoImposto, StatusChoicesProcesso, TiposDePagamento
+from .helpers import _aplicar_filtro_por_opcao, _normalizar_filtro_opcao
 
 
 def painel_impostos(request):
     visao = request.GET.get("visao", "processos")
-    status_agrupamento = request.GET.get("status_agrupamento", "pendentes")
+    status_agrupamento = _normalizar_filtro_opcao(
+        request.GET.get("status_agrupamento", "pendentes"),
+        {"pendentes", "agrupados"},
+        default="pendentes",
+    )
 
     if visao == "processos":
         queryset_base = Processo.objects.filter(notas_fiscais__retencoes__isnull=False).distinct()
-        if status_agrupamento == "pendentes":
-            queryset_base = queryset_base.filter(notas_fiscais__retencoes__processo_pagamento__isnull=True)
-        elif status_agrupamento == "agrupados":
-            queryset_base = queryset_base.filter(notas_fiscais__retencoes__processo_pagamento__isnull=False)
+        queryset_base = _aplicar_filtro_por_opcao(
+            queryset_base,
+            status_agrupamento,
+            {
+                "pendentes": {"notas_fiscais__retencoes__processo_pagamento__isnull": True},
+                "agrupados": {"notas_fiscais__retencoes__processo_pagamento__isnull": False},
+            },
+        )
         meu_filtro = RetencaoProcessoFilter(request.GET, queryset=queryset_base)
         itens = meu_filtro.qs.prefetch_related("notas_fiscais__retencoes__codigo", "notas_fiscais__retencoes__status")
     elif visao == "notas":
         queryset_base = DocumentoFiscal.objects.filter(retencoes__isnull=False).distinct()
-        if status_agrupamento == "pendentes":
-            queryset_base = queryset_base.filter(retencoes__processo_pagamento__isnull=True)
-        elif status_agrupamento == "agrupados":
-            queryset_base = queryset_base.filter(retencoes__processo_pagamento__isnull=False)
+        queryset_base = _aplicar_filtro_por_opcao(
+            queryset_base,
+            status_agrupamento,
+            {
+                "pendentes": {"retencoes__processo_pagamento__isnull": True},
+                "agrupados": {"retencoes__processo_pagamento__isnull": False},
+            },
+        )
         meu_filtro = RetencaoNotaFilter(request.GET, queryset=queryset_base)
         itens = meu_filtro.qs.prefetch_related("retencoes__codigo", "retencoes__status", "processo")
     else:
         queryset_base = RetencaoImposto.objects.all().order_by("-id")
-        if status_agrupamento == "pendentes":
-            queryset_base = queryset_base.filter(processo_pagamento__isnull=True)
-        elif status_agrupamento == "agrupados":
-            queryset_base = queryset_base.filter(processo_pagamento__isnull=False)
+        queryset_base = _aplicar_filtro_por_opcao(
+            queryset_base,
+            status_agrupamento,
+            {
+                "pendentes": {"processo_pagamento__isnull": True},
+                "agrupados": {"processo_pagamento__isnull": False},
+            },
+        )
         meu_filtro = RetencaoIndividualFilter(request.GET, queryset=queryset_base)
         itens = meu_filtro.qs.select_related("codigo", "status", "nota_fiscal", "nota_fiscal__processo")
 

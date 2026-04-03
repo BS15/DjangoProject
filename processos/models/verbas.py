@@ -1,3 +1,5 @@
+"""Modelos de verbas indenizatórias e seus documentos comprobatórios."""
+
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
@@ -9,6 +11,8 @@ from .fluxo import DocumentoBase, caminho_documento, _delete_file
 
 
 class StatusChoicesVerbasIndenizatorias(models.Model):
+    """Catálogo de estados de verbas indenizatórias."""
+
     # This replaces your hard-coded choices
     status_choice = models.CharField(max_length=100, unique=True)
 
@@ -21,6 +25,8 @@ class StatusChoicesVerbasIndenizatorias(models.Model):
 
 
 class MeiosDeTransporte(models.Model):
+    """Tabela de meios de transporte utilizados em diárias."""
+
     meio_de_transporte = models.CharField(max_length=100, unique=True)
     is_active = models.BooleanField(default=True)
 
@@ -29,6 +35,8 @@ class MeiosDeTransporte(models.Model):
 
 
 class TiposDeVerbasIndenizatorias(models.Model):
+    """Tipos de verba indenizatória suportados pelo sistema."""
+
     # This replaces your hard-coded choices
     tipo_de_verba_indenizatoria = models.CharField(max_length=100, unique=True)
 
@@ -41,13 +49,15 @@ class TiposDeVerbasIndenizatorias(models.Model):
 
 
 class Tabela_Valores_Unitarios_Verbas_Indenizatorias(models.Model):
+    """Tabela de valores unitários por tipo de verba e cargo/função."""
+
     tipo = models.ForeignKey('TiposDeVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
     cargo_funcao = models.ForeignKey('CargosFuncoes', on_delete=models.PROTECT, blank=True, null=True)
     valor_unitario = models.DecimalField(null=True, blank=True, max_digits=12, decimal_places=2)
 
     @classmethod
     def get_valor_para_cargo_diaria(cls, cargo_funcao):
-        """Returns the valor_unitario for the given cargo_funcao for diárias, or None if not found."""
+        """Obtém o valor unitário de diária para o cargo/função informado."""
         tabela = cls.objects.filter(
             cargo_funcao=cargo_funcao,
             tipo__tipo_de_verba_indenizatoria__icontains='diária'
@@ -65,6 +75,8 @@ class Tabela_Valores_Unitarios_Verbas_Indenizatorias(models.Model):
 #Doesn't relate immediately to payments.
 
 class Diaria(models.Model):
+    """Solicitação/execução de diária com cálculo automático de valor."""
+
     TIPO_SOLICITACAO = [
         ('INICIAL', 'Concessão Inicial'),
         ('PRORROGACAO', 'Prorrogação'),
@@ -98,7 +110,7 @@ class Diaria(models.Model):
     history = HistoricalRecords()
 
     def calcular_valor_total(self):
-        """Returns the calculated valor_total based on beneficiario cargo_funcao unit value."""
+        """Calcula o valor total da diária conforme cargo/função do beneficiário."""
         if not self.beneficiario_id or not self.quantidade_diarias:
             return None
         credor = self.beneficiario
@@ -110,12 +122,14 @@ class Diaria(models.Model):
         return None
 
     def save(self, *args, **kwargs):
+        """Atualiza valor total calculado antes da persistência."""
         calculado = self.calcular_valor_total()
         if calculado is not None:
             self.valor_total = calculado
         super().save(*args, **kwargs)
 
     def avancar_status(self, novo_status_str):
+        """Avança status da diária com validação de turnpike específico."""
         from django.core.exceptions import ValidationError
         from processos.validators import verificar_turnpike_diaria
 
@@ -138,11 +152,15 @@ class Diaria(models.Model):
 
 # 3. DOCUMENTOS DAS VERBAS (Uma tabela separada para cada)
 class DocumentoDiaria(DocumentoBase):
+    """Documento comprobatório associado a diária."""
+
     diaria = models.ForeignKey('Diaria', on_delete=models.CASCADE, related_name='documentos')
     history = HistoricalRecords()
 
 
 class ReembolsoCombustivel(models.Model):
+    """Registro de reembolso de combustível vinculado a diária/processo."""
+
     processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='reembolsos_combustivel', null=True,
                                  blank=True)
     diaria = models.ForeignKey('Diaria', on_delete=models.CASCADE, related_name='reembolsos_combustivel', null=True,
@@ -169,11 +187,15 @@ class ReembolsoCombustivel(models.Model):
 
 
 class DocumentoReembolso(DocumentoBase):
+    """Documento comprobatório associado a reembolso."""
+
     reembolso = models.ForeignKey('ReembolsoCombustivel', on_delete=models.CASCADE, related_name='documentos')
     history = HistoricalRecords()
 
 
 class Jeton(models.Model):
+    """Pagamento de jeton para participação em reunião/sessão."""
+
     processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='jetons', null=True, blank=True)
     numero_sequencial = models.CharField("Número Sequencial", max_length=50)
     beneficiario = models.ForeignKey('Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
@@ -191,11 +213,15 @@ class Jeton(models.Model):
 
 
 class DocumentoJeton(DocumentoBase):
+    """Documento comprobatório associado a jeton."""
+
     jeton = models.ForeignKey('Jeton', on_delete=models.CASCADE, related_name='documentos')
     history = HistoricalRecords()
 
 
 class AuxilioRepresentacao(models.Model):
+    """Pagamento de auxílio representação para beneficiário elegível."""
+
     processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='auxilios_representacao', null=True,
                                  blank=True)
     numero_sequencial = models.CharField("Número Sequencial", max_length=50)
@@ -215,6 +241,8 @@ class AuxilioRepresentacao(models.Model):
 
 
 class DocumentoAuxilio(DocumentoBase):
+    """Documento comprobatório associado a auxílio de representação."""
+
     auxilio = models.ForeignKey('AuxilioRepresentacao', on_delete=models.CASCADE, related_name='documentos')
     history = HistoricalRecords()
 

@@ -188,7 +188,7 @@
             <span class="fw-bold">3. Dados da Contingência</span>
         </div>
         <div class="card-body">
-            <form method="post" id="form-contingencia" novalidate>
+            <form method="post" action="{% url 'add_contingencia_action' %}" id="form-contingencia" novalidate>
                 {% csrf_token %}
                 <input type="hidden" name="processo_id" id="campo-processo-id">
                 <input type="hidden" name="dados_propostos" id="campo-dados-propostos">

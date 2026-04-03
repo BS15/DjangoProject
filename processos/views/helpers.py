@@ -3,11 +3,16 @@
 Contem infraestrutura utilizada por multiplos modulos de views.
 """
 
+from decimal import Decimal, InvalidOperation
+
 from django.contrib import messages
+from django.core.files.base import ContentFile
 from django.core.exceptions import PermissionDenied
+from django.db.models import Count
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 
 from ..forms import DocumentoFormSet, PendenciaForm, PendenciaFormSet
 from ..models import (
@@ -22,6 +27,25 @@ from ..models import (
 )
 
 
+_CAMPOS_PERMITIDOS_CONTINGENCIA = {
+    "n_nota_empenho",
+    "data_empenho",
+    "valor_bruto",
+    "valor_liquido",
+    "ano_exercicio",
+    "n_pagamento_siscac",
+    "data_vencimento",
+    "data_pagamento",
+    "observacao",
+    "detalhamento",
+    "credor_id",
+    "forma_pagamento_id",
+    "tipo_pagamento_id",
+    "conta_id",
+    "tag_id",
+}
+
+
 def _normalizar_texto(texto):
     """Remove acentos e converte para maiusculas para comparacoes robustas."""
     import unicodedata
@@ -29,8 +53,236 @@ def _normalizar_texto(texto):
     return unicodedata.normalize("NFD", texto.upper()).encode("ascii", "ignore").decode("ascii")
 
 
+def _obter_campo_ordenacao(request, campos_permitidos, default_ordem="id", default_direcao="desc"):
+    """Extrai e formata o campo de ordenacao com base nos parametros GET.
+
+    Garante que apenas colunas mapeadas em `campos_permitidos` sejam usadas.
+    Retorna o campo pronto para `order_by`, com prefixo `-` quando descendente.
+    """
+    ordem = request.GET.get("ordem", default_ordem)
+    direcao = request.GET.get("direcao", default_direcao)
+    order_field = campos_permitidos.get(ordem, campos_permitidos.get(default_ordem, "id"))
+    return f"-{order_field}" if direcao == "desc" else order_field
+
+
+def _atualizar_status_em_lote(ids, nome_status, usuario, queryset_base=None):
+    """Atualiza em lote garantindo o acionamento de signals (Auditoria) e Turnpikes.
+
+    Itera pelos processos elegíveis chamando avancar_status() para cada um,
+    assegurando que as regras de negócio são respeitadas e o usuário é registrado
+    no histórico de auditoria.
+    """
+    if not ids:
+        return 0
+
+    qs = queryset_base if queryset_base is not None else Processo.objects.filter(id__in=ids)
+    
+    # Executa a transição de domínio para CADA processo, garantindo auditoria
+    count = 0
+    with transaction.atomic():
+        for processo in qs:
+            processo.avancar_status(nome_status, usuario=usuario)
+            count += 1
+            
+    return count
+
+
+def _gerar_agrupamentos_contas_a_pagar(queryset):
+    """Gera agregacoes dos filtros laterais da UI de contas a pagar."""
+    return {
+        "datas_agrupadas": queryset.values("data_pagamento").annotate(total=Count("id")).order_by("data_pagamento"),
+        "formas_agrupadas": queryset.values(
+            "forma_pagamento__id", "forma_pagamento__forma_de_pagamento"
+        ).annotate(total=Count("id")).order_by("forma_pagamento__forma_de_pagamento"),
+        "statuses_agrupados": queryset.values("status__status_choice").annotate(total=Count("id")).order_by(
+            "status__status_choice"
+        ),
+        "contas_agrupadas": queryset.values(
+            "conta__id",
+            "conta__banco",
+            "conta__agencia",
+            "conta__conta",
+            "conta__titular__nome",
+        ).annotate(total=Count("id")).order_by("conta__titular__nome", "conta__banco", "conta__agencia"),
+    }
+
+
+def _aplicar_filtros_contas_a_pagar(queryset, params):
+    """Aplica os filtros manuais de contas a pagar com base nos parametros GET."""
+    qs = queryset
+
+    status = params.get("status")
+    data = params.get("data")
+    forma = params.get("forma")
+    conta = params.get("conta")
+
+    if status:
+        qs = qs.filter(status__status_choice=status)
+
+    if data:
+        qs = qs.filter(data_pagamento__isnull=True) if data == "sem_data" else qs.filter(data_pagamento=data)
+
+    if forma:
+        if forma == "sem_forma":
+            qs = qs.filter(forma_pagamento__isnull=True)
+        elif forma.isdigit():
+            qs = qs.filter(forma_pagamento__id=int(forma))
+
+    if conta:
+        if conta == "sem_conta":
+            qs = qs.filter(conta__isnull=True)
+        elif conta.isdigit():
+            qs = qs.filter(conta__id=int(conta))
+
+    return qs
+
+
+def _normalizar_filtro_opcao(valor, opcoes_validas, default=""):
+    """Normaliza filtro textual para um conjunto fechado de opcoes validas."""
+    return valor if valor in opcoes_validas else default
+
+
+def _aplicar_filtro_por_opcao(queryset, opcao, mapa_filtros):
+    """Aplica filtro por opcao com regras mapeadas (kwargs ou callable)."""
+    regra = mapa_filtros.get(opcao)
+    if not regra:
+        return queryset
+    if callable(regra):
+        return regra(queryset)
+    return queryset.filter(**regra)
+
+
+def _aplicar_filtros_historico(qs, *, tipo_acao="", data_inicio="", data_fim="", usuario=""):
+    """Aplica filtros de auditoria em queryset historico."""
+    if tipo_acao:
+        qs = qs.filter(history_type=tipo_acao)
+    if data_inicio:
+        qs = qs.filter(history_date__date__gte=data_inicio)
+    if data_fim:
+        qs = qs.filter(history_date__date__lte=data_fim)
+    if usuario:
+        qs = qs.filter(history_user__username__icontains=usuario)
+    return qs
+
+
+def _fmt_date_br(d):
+    """Formata datas no padrão brasileiro para payloads de API."""
+    return d.strftime("%d/%m/%Y") if d else "-"
+
+
+def _fmt_decimal_brl(v):
+    """Formata Decimals para moeda BRL com separadores locais."""
+    if v is None:
+        return "-"
+    int_part, dec_part = f"{abs(v):.2f}".split(".")
+    int_formatted = "{:,}".format(int(int_part)).replace(",", ".")
+    signal = "-" if v < 0 else ""
+    return f"R$ {signal}{int_formatted},{dec_part}"
+
+
+def _serializar_documentos_processo_auditoria(processo):
+    """Serializa documentos de processo para consumo da API de auditoria."""
+    documentos = processo.documentos.select_related("tipo").all().order_by("ordem")
+    docs_list = []
+    for doc in documentos:
+        if not doc.arquivo:
+            continue
+        nome = doc.arquivo.name.split("/")[-1]
+        docs_list.append(
+            {
+                "id": doc.id,
+                "ordem": doc.ordem,
+                "tipo": doc.tipo.tipo_de_documento if doc.tipo else "Documento",
+                "nome": nome,
+                "url": reverse("download_arquivo_seguro", args=["processo", doc.id]),
+            }
+        )
+    return docs_list
+
+
+def _serializar_pendencias_processo_auditoria(processo):
+    """Serializa pendências do processo para visualização operacional."""
+    pendencias_qs = processo.pendencias.select_related("status", "tipo").all()
+    return [
+        {
+            "tipo": str(p.tipo),
+            "descricao": p.descricao or "",
+            "status": str(p.status) if p.status else "-",
+        }
+        for p in pendencias_qs
+    ]
+
+
+def _serializar_retencoes_processo_auditoria(processo):
+    """Serializa retenções fiscais vinculadas às notas do processo."""
+    retencoes_list = []
+    notas = processo.notas_fiscais.prefetch_related("retencoes__status", "retencoes__codigo").all()
+    for nf in notas:
+        for ret in nf.retencoes.all():
+            retencoes_list.append(
+                {
+                    "codigo": str(ret.codigo),
+                    "valor": str(ret.valor),
+                    "status": str(ret.status) if ret.status else "-",
+                }
+            )
+    return retencoes_list
+
+
+def _build_payload_documentos_processo_auditoria(processo):
+    """Monta payload completo de documentos/dados auxiliares de auditoria."""
+    return {
+        "processo_id": processo.id,
+        "n_nota_empenho": processo.n_nota_empenho or str(processo.id),
+        "credor": str(processo.credor) if processo.credor else "-",
+        "valor_bruto": _fmt_decimal_brl(processo.valor_bruto),
+        "valor_liquido": _fmt_decimal_brl(processo.valor_liquido),
+        "data_empenho": _fmt_date_br(processo.data_empenho),
+        "data_vencimento": _fmt_date_br(processo.data_vencimento),
+        "data_pagamento": _fmt_date_br(processo.data_pagamento),
+        "status": str(processo.status) if processo.status else "-",
+        "pendencias": _serializar_pendencias_processo_auditoria(processo),
+        "retencoes": _serializar_retencoes_processo_auditoria(processo),
+        "documentos": _serializar_documentos_processo_auditoria(processo),
+    }
+
+
+def _build_payload_processo_detalhes(processo):
+    """Monta payload padronizado de detalhes cadastrais de um processo."""
+    return {
+        "sucesso": True,
+        "processo": {
+            "id": processo.pk,
+            "n_nota_empenho": processo.n_nota_empenho or "—",
+            "credor_id": processo.credor_id,
+            "credor_nome": str(processo.credor) if processo.credor else "—",
+            "data_empenho": str(processo.data_empenho) if processo.data_empenho else None,
+            "valor_bruto": str(processo.valor_bruto) if processo.valor_bruto is not None else "0.00",
+            "valor_liquido": str(processo.valor_liquido) if processo.valor_liquido is not None else "0.00",
+            "ano_exercicio": processo.ano_exercicio,
+            "n_pagamento_siscac": processo.n_pagamento_siscac or "—",
+            "data_vencimento": str(processo.data_vencimento) if processo.data_vencimento else None,
+            "data_pagamento": str(processo.data_pagamento) if processo.data_pagamento else None,
+            "forma_pagamento": str(processo.forma_pagamento) if processo.forma_pagamento else "—",
+            "tipo_pagamento": str(processo.tipo_pagamento) if processo.tipo_pagamento else "—",
+            "observacao": processo.observacao or "—",
+            "conta": str(processo.conta) if processo.conta else "—",
+            "status": str(processo.status) if processo.status else "—",
+            "detalhamento": processo.detalhamento or "—",
+            "tag": str(processo.tag) if processo.tag else "—",
+            "em_contingencia": processo.em_contingencia,
+            "extraorcamentario": processo.extraorcamentario,
+        },
+    }
+
+
 def _build_history_record(record, modelo_label):
-    """Build an enriched history record dict, resolving ForeignKeys to human-readable strings."""
+    """Monta um registro de histórico enriquecido para exibição na interface.
+
+    Resolve alterações em chaves estrangeiras para suas representações legíveis
+    e normaliza valores booleanos e nulos antes de retornar o payload usado
+    nas telas de auditoria.
+    """
     from django.db.models import ForeignKey
 
     HISTORY_TYPE_LABELS = {"+": "Criação", "~": "Alteração", "-": "Exclusão"}
@@ -99,7 +351,12 @@ def _build_history_record(record, modelo_label):
 
 
 def _get_unified_history(pk):
-    """Aggregates and sorts history records for a Processo and its related models."""
+    """Consolida o histórico do processo e dos modelos relacionados.
+
+    Reúne eventos de auditoria do processo, documentos, pendências e notas
+    fiscais, já enriquecidos para exibição e ordenados do mais recente para o
+    mais antigo.
+    """
     processo = get_object_or_404(Processo, id=pk)
     history_records = []
 
@@ -117,10 +374,11 @@ def _get_unified_history(pk):
 
 
 def _iniciar_fila_sessao(request, queue_key, fallback_view, detail_view, extra_args=None):
-    """
-    Stores a list of Processo IDs from POST into the session queue and redirects
-    to the first item's detail view. Handles GET by redirecting to fallback_view.
-    Callers must be protected by @permission_required.
+    """Inicia uma fila de revisão na sessão a partir dos processos enviados via POST.
+
+    Quando há seleção válida, persiste os IDs na sessão e redireciona para a
+    primeira tela de detalhe. Requisições que não sejam POST retornam para a
+    view de fallback.
     """
     if request.method != "POST":
         return redirect(fallback_view, **(extra_args or {}))
@@ -138,7 +396,12 @@ def _iniciar_fila_sessao(request, queue_key, fallback_view, detail_view, extra_a
 
 
 def _handle_queue_navigation(request, pk, action, queue_key, fallback_view):
-    """Handles 'sair', 'pular', and 'voltar' actions for detailed review views."""
+    """Processa a navegação entre itens de uma fila de revisão.
+
+    Trata as ações de saída, avanço e retorno, devolvendo um redirecionamento
+    imediato quando necessário ou os metadados da fila para a renderização da
+    tela atual.
+    """
     queue = request.session.get(queue_key, [])
     current_index = queue.index(pk) if pk in queue else -1
     next_pk = queue[current_index + 1] if 0 <= current_index < len(queue) - 1 else None
@@ -167,7 +430,11 @@ def _handle_queue_navigation(request, pk, action, queue_key, fallback_view):
 
 
 def _registrar_recusa(request, processo, form, status_devolucao):
-    """Saves a pendency and rolls back the process status in an atomic transaction."""
+    """Registra uma pendência e devolve o processo ao status informado.
+
+    A criação da pendência e a transição de status ocorrem em uma única
+    transação para preservar consistência no fluxo administrativo.
+    """
     with transaction.atomic():
         pendencia = form.save(commit=False)
         pendencia.processo = processo
@@ -180,7 +447,11 @@ def _registrar_recusa(request, processo, form, status_devolucao):
 
 
 def _salvar_documentos_sem_exclusao(doc_formset, processo):
-    """Persist documents allowing add/reorder but never deleting existing records."""
+    """Salva documentos do processo sem permitir exclusão física.
+
+    O helper aceita inclusões e atualizações vindas do formset, mas ignora
+    marcações de remoção para respeitar o requisito de imutabilidade do fluxo.
+    """
     for form in doc_formset.forms:
         if not form.cleaned_data:
             continue
@@ -214,7 +485,12 @@ def _processo_fila_detalhe_view(
     editable=True,
     lock_documents=False,
 ):
-    """Shared detailed review view for conferência/contabilização/conselho."""
+    """Renderiza e processa a tela detalhada de revisão em filas operacionais.
+
+    Centraliza a lógica comum de navegação, aprovação, salvamento parcial,
+    recusa com pendência, histórico e montagem de contexto para as etapas de
+    conferência, contabilização e conselho.
+    """
     processo = get_object_or_404(Processo, id=pk)
     can_interact = request.user.has_perm(permission)
 
@@ -342,6 +618,12 @@ def _processo_fila_detalhe_view(
 
 
 def _build_detalhes_pagamento(processos):
+    """Monta os detalhes operacionais de pagamento e consolida totais por forma.
+
+    Classifica cada processo conforme os dados necessários para pagamento
+    eletrônico, como código de barras, PIX, transferência ou remessa, e soma
+    os valores líquidos por forma de pagamento.
+    """
     detalhes = []
     totais = {}
     for p in processos:
@@ -377,24 +659,183 @@ def _build_detalhes_pagamento(processos):
     return detalhes, totais
 
 
+def _consolidar_totais_pagamento(totais_a_pagar, totais_lancados):
+    """Consolida totais por forma de pagamento e calcula somatorios gerais."""
+    totais = {}
+    for origem in (totais_a_pagar, totais_lancados):
+        for forma, valor in origem.items():
+            totais[forma] = totais.get(forma, 0) + valor
+
+    total_a_pagar = sum(totais_a_pagar.values())
+    total_lancados = sum(totais_lancados.values())
+    total_geral = total_a_pagar + total_lancados
+
+    return {
+        "totais": totais,
+        "total_a_pagar": total_a_pagar,
+        "total_lancados": total_lancados,
+        "total_geral": total_geral,
+    }
+
+
+def _processar_acao_lote(
+    request,
+    *,
+    param_name,
+    status_origem_esperado,
+    status_destino,
+    msg_sucesso,
+    msg_vazio,
+    redirect_to,
+    msg_sem_elegiveis=None,
+    msg_ignorados=None,
+):
+    """Executa ação em lote respeitando o status de origem esperado.
+
+    Só aplica a transição aos processos elegíveis no estágio correto do fluxo
+    e comunica, por mensagens, tanto os itens processados quanto os ignorados.
+    """
+    selecionados = request.POST.getlist(param_name)
+    if not selecionados:
+        valor_unico = request.POST.get(param_name)
+        selecionados = [valor_unico] if valor_unico else []
+
+    selecionados = [pid for pid in selecionados if pid]
+    if not selecionados:
+        messages.warning(request, msg_vazio)
+        return redirect(redirect_to)
+
+    elegiveis = Processo.objects.filter(
+        id__in=selecionados,
+        status__status_choice__iexact=status_origem_esperado,
+    )
+    count_elegiveis = elegiveis.count()
+    count_ignorados = len(selecionados) - count_elegiveis
+
+    if count_elegiveis > 0:
+        _atualizar_status_em_lote(
+            selecionados,
+            status_destino,
+            usuario=request.user,
+            queryset_base=elegiveis,
+        )
+        messages.success(request, msg_sucesso.format(count=count_elegiveis, processo_id=selecionados[0]))
+    else:
+        messages.error(
+            request,
+            (msg_sem_elegiveis or "Ação negada: nenhum processo elegível para transição de status.").format(
+                status_origem_esperado=status_origem_esperado,
+                count=0,
+                processo_id=selecionados[0],
+            ),
+        )
+
+    if count_ignorados > 0:
+        messages.warning(
+            request,
+            (msg_ignorados or "{count} processo(s) ignorado(s) por estarem em outro estágio do fluxo.").format(
+                count=count_ignorados,
+                status_origem_esperado=status_origem_esperado,
+            ),
+        )
+
+    return redirect(redirect_to)
+
+
+def _executar_arquivamento_definitivo(processo, usuario):
+    """Gera o PDF consolidado final e arquiva definitivamente o processo.
+
+    O arquivo é salvo no próprio processo e a mudança para o status
+    ``ARQUIVADO`` só ocorre se toda a operação for concluída com sucesso.
+    """
+    pdf_buffer = processo.gerar_pdf_consolidado()
+    if pdf_buffer is None:
+        return False
+
+    pdf_bytes = pdf_buffer.read()
+    nome_arquivo = f"processo_{processo.id}_consolidado.pdf"
+
+    with transaction.atomic():
+        processo.arquivo_final.save(nome_arquivo, ContentFile(pdf_bytes), save=False)
+        processo.save(update_fields=["arquivo_final"])
+        processo.avancar_status("ARQUIVADO", usuario=usuario)
+
+    return True
+
+
+def aplicar_aprovacao_contingencia(contingencia):
+    """Aplica uma contingência aprovada ao processo com validações financeiras.
+
+    Quando houver alteração de valor líquido, valida a compatibilidade com os
+    comprovantes anexados. As atualizações do processo e o encerramento da
+    contingência são persistidos atomicamente.
+    """
+    processo = contingencia.processo
+
+    if "novo_valor_liquido" in contingencia.dados_propostos:
+        raw_value = contingencia.dados_propostos["novo_valor_liquido"]
+        if isinstance(raw_value, str):
+            raw_value = raw_value.replace(".", "").replace(",", ".")
+        try:
+            novo_valor_liquido = Decimal(str(raw_value))
+        except (InvalidOperation, ValueError):
+            return False, "O valor líquido proposto na contingência é inválido."
+
+        soma_comprovantes = sum(
+            comp.valor_pago for comp in processo.comprovantes_pagamento.all() if comp.valor_pago is not None
+        )
+
+        if abs(novo_valor_liquido - Decimal(str(soma_comprovantes))) > Decimal("0.01"):
+            return (
+                False,
+                "A contingência não pode ser aprovada. O novo valor líquido proposto não corresponde à "
+                "soma dos comprovantes bancários anexados no sistema. O setor responsável deve anexar "
+                "os comprovantes restantes antes da aprovação.",
+            )
+
+    with transaction.atomic():
+        campos_alterados = []
+        for campo, valor in contingencia.dados_propostos.items():
+            if campo in _CAMPOS_PERMITIDOS_CONTINGENCIA and hasattr(processo, campo):
+                setattr(processo, campo, valor)
+                campos_alterados.append(campo)
+
+        processo.em_contingencia = False
+        campos_alterados.append("em_contingencia")
+        processo.save(update_fields=campos_alterados)
+
+        contingencia.status = "APROVADA"
+        contingencia.save(update_fields=["status"])
+
+    return True, None
+
+
 def _aprovar_processo_view(request, pk, *, permission, new_status, success_message, redirect_to):
-    """Shared approval handler: advances a Processo to a new status via direct assignment."""
+    """Processa uma aprovação simples por view com troca de status segura.
+
+    Valida permissão, carrega o processo e delega a transição ao método de
+    domínio para garantir turnpike e auditoria.
+    """
     if request.method == "POST":
         if not request.user.has_perm(permission):
             raise PermissionDenied
+        
         processo = get_object_or_404(Processo, id=pk)
-        status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
-            status_choice__iexact=new_status,
-            defaults={"status_choice": new_status},
-        )
-        processo.status = status_obj
-        processo.save()
+        
+        # Delega ao método de domínio (Turnpike + Auditoria)
+        processo.avancar_status(new_status, usuario=request.user)
+        
         messages.success(request, success_message.format(processo_id=processo.id))
+        
     return redirect(redirect_to)
 
 
 def _recusar_processo_view(request, pk, *, permission, status_devolucao, error_message, redirect_to):
-    """Shared refusal handler: registers a Pendencia and rolls the Processo back."""
+    """Processa a recusa de um processo registrando a pendência correspondente.
+
+    Em caso de formulário válido, cria a pendência e devolve o processo ao
+    estágio anterior definido para a etapa atual do fluxo.
+    """
     processo = get_object_or_404(Processo, id=pk)
     if request.method == "POST":
         if not request.user.has_perm(permission):
@@ -410,6 +851,9 @@ def _recusar_processo_view(request, pk, *, permission, status_devolucao, error_m
 
 __all__ = [
     "_normalizar_texto",
+    "_normalizar_filtro_opcao",
+    "_aplicar_filtro_por_opcao",
+    "_aplicar_filtros_historico",
     "_build_history_record",
     "_get_unified_history",
     "_iniciar_fila_sessao",
@@ -418,6 +862,10 @@ __all__ = [
     "_salvar_documentos_sem_exclusao",
     "_processo_fila_detalhe_view",
     "_build_detalhes_pagamento",
+    "_consolidar_totais_pagamento",
+    "_processar_acao_lote",
+    "_executar_arquivamento_definitivo",
+    "aplicar_aprovacao_contingencia",
     "_aprovar_processo_view",
     "_recusar_processo_view",
 ]

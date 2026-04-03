@@ -1,3 +1,5 @@
+"""Formulários de entrada e validação para fluxos financeiros e administrativos."""
+
 from django import forms
 from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
@@ -8,6 +10,8 @@ from .validators import validar_regras_processo, validar_regras_suprimento, STAT
 SUPRIMENTO_DE_FUNDOS = 'SUPRIMENTO DE FUNDOS'
 
 class ProcessoForm(forms.ModelForm):
+    """Formulário principal de Processo com bloqueios por estágio e filtros de domínio."""
+
     class Meta:
         model = Processo
         exclude = ['status']
@@ -31,6 +35,7 @@ class ProcessoForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        """Configura obrigatoriedade, travas por status e querysets contextuais."""
         super().__init__(*args, **kwargs)
 
         # Campos que devem ser SEMPRE obrigatórios no Processo
@@ -88,6 +93,7 @@ class ProcessoForm(forms.ModelForm):
 
     # --- INÍCIO DA RECUPERAÇÃO DE DADOS (BACKEND) ---
     def clean_credor(self):
+        """Preserva o credor original quando o processo está em estágio bloqueado."""
         credor_enviado = self.cleaned_data.get('credor')
         if self.instance and self.instance.pk and self.instance.status:
             if self.instance.status.status_choice.upper() in getattr(self, 'status_bloqueados', []):
@@ -96,6 +102,7 @@ class ProcessoForm(forms.ModelForm):
         return credor_enviado
 
     def clean_valor_liquido(self):
+        """Evita alteração de valor líquido em estágios bloqueados."""
         valor_enviado = self.cleaned_data.get('valor_liquido')
         if self.instance and self.instance.pk and self.instance.status:
             if self.instance.status.status_choice.upper() in getattr(self, 'status_bloqueados', []):
@@ -103,6 +110,7 @@ class ProcessoForm(forms.ModelForm):
         return valor_enviado
 
     def clean_valor_bruto(self):
+        """Evita alteração de valor bruto em estágios bloqueados."""
         valor_enviado = self.cleaned_data.get('valor_bruto')
         if self.instance and self.instance.pk and self.instance.status:
             if self.instance.status.status_choice.upper() in getattr(self, 'status_bloqueados', []):
@@ -111,6 +119,7 @@ class ProcessoForm(forms.ModelForm):
     # --- FIM DA RECUPERAÇÃO DE DADOS ---
 
     def clean(self):
+        """Aplica validações de negócio do processo e agrega erros no formulário."""
         cleaned_data = super().clean()
 
         try:
@@ -124,6 +133,8 @@ class ProcessoForm(forms.ModelForm):
         return cleaned_data
 
 class DocumentoFiscalForm(forms.ModelForm):
+    """Formulário de nota fiscal com campos mínimos para ateste e retenções."""
+
     arquivo_ia = forms.FileField(
         required=False,
         label="Extrair via IA",
@@ -134,6 +145,7 @@ class DocumentoFiscalForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
+        """Define obrigatoriedade e restringe fiscal aos usuários do grupo apropriado."""
         super().__init__(*args, **kwargs)
         # Campos obrigatórios SE a nota fiscal for preenchida
         # O Django só validará estes campos se ao menos um dado for inserido na linha do formset
@@ -201,6 +213,8 @@ RetencaoFormSet = inlineformset_factory(
 # --- DEMAIS FORMULÁRIOS (MANTIDOS CONFORME ORIGINAL COM AJUSTES DE CLEAN) ---
 
 class CredorForm(forms.ModelForm):
+    """Formulário de cadastro de credores com dados bancários e serviço padrão."""
+
     class Meta:
         model = Credor
         fields = ['tipo', 'cpf_cnpj', 'nome', 'telefone', 'email', 'conta', 'chave_pix', 'cargo_funcao', 'codigo_servico_padrao']
@@ -217,6 +231,8 @@ class CredorForm(forms.ModelForm):
         }
 
 class DiariaForm(forms.ModelForm):
+    """Formulário de diárias com valor total calculável no servidor."""
+
     class Meta:
         model = Diaria
         fields = ['numero_siscac', 'processo', 'beneficiario', 'proponente', 'tipo_solicitacao', 'data_saida', 'data_retorno', 'cidade_origem', 'cidade_destino', 'objetivo', 'meio_de_transporte', 'quantidade_diarias', 'valor_total']
@@ -237,6 +253,7 @@ class DiariaForm(forms.ModelForm):
         }
 
     def clean(self):
+        """Permite valor total vazio para cenários de cálculo automático posterior."""
         cleaned_data = super().clean()
         # Allow valor_total to be blank/null when it will be auto-calculated
         if not cleaned_data.get('valor_total'):
@@ -290,6 +307,8 @@ class AuxilioForm(forms.ModelForm):
         }
 
 class SuprimentoForm(forms.ModelForm):
+    """Formulário de suprimento de fundos com validações específicas do regime."""
+
     class Meta:
         model = SuprimentoDeFundos
         fields = ['suprido', 'lotacao', 'valor_liquido', 'taxa_saque', 'data_saida', 'data_retorno', 'data_recibo']
@@ -304,6 +323,7 @@ class SuprimentoForm(forms.ModelForm):
         }
 
     def clean(self):
+        """Executa validações de negócio de suprimento e propaga erros por campo."""
         cleaned_data = super().clean()
         erros_suprimento = validar_regras_suprimento(cleaned_data)
         if erros_suprimento:
@@ -312,6 +332,8 @@ class SuprimentoForm(forms.ModelForm):
         return cleaned_data
 
 class PendenciaForm(forms.ModelForm):
+    """Formulário de pendência que injeta status padrão na criação."""
+
     class Meta:
         model = Pendencia
         # Removemos o 'status' daqui para ele não ir para a tela
@@ -322,6 +344,7 @@ class PendenciaForm(forms.ModelForm):
         }
 
     def save(self, commit=True):
+        """Salva pendência e garante status inicial ``A RESOLVER`` quando ausente."""
         # Interceptamos o salvamento antes de ir para o banco
         pendencia = super().save(commit=False)
 
@@ -345,6 +368,8 @@ PendenciaFormSet = inlineformset_factory(
 )
 
 class DevolucaoForm(forms.ModelForm):
+    """Formulário para registrar devoluções vinculadas a um processo."""
+
     class Meta:
         model = Devolucao
         fields = ['valor_devolvido', 'data_devolucao', 'motivo', 'comprovante']
@@ -356,6 +381,8 @@ class DevolucaoForm(forms.ModelForm):
         }
 
 class ContaFixaForm(forms.ModelForm):
+    """Formulário para manutenção de contas fixas com vencimento mensal."""
+
     class Meta:
         model = ContaFixa
         fields = ['credor', 'referencia', 'dia_vencimento', 'ativa', 'data_inicio']

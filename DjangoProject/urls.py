@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from processos.views import home_page, add_process_view, visualizar_pdf_processo, editar_processo, editar_processo_verbas, api_add_documento_verba, painel_impostos, contas_a_pagar, api_processar_boleto, api_extrair_codigos_barras_processo, api_extrair_codigos_barras_upload, a_empenhar_view, api_extrair_dados_empenho, avancar_para_pagamento_view, add_credor_view, edit_credor_view, credores_list_view, diarias_list_view, reembolsos_list_view, jetons_list_view, auxilios_list_view, add_diaria_view, add_reembolso_view, add_jeton_view, add_auxilio_view, verbas_panel_view, agrupar_verbas_view, agrupar_impostos_view, painel_comprovantes_view, api_fatiar_comprovantes, api_vincular_comprovantes, painel_conferencia_view, aprovar_conferencia_view, iniciar_conferencia_view, conferencia_processo_view, enviar_para_autorizacao, painel_autorizacao_view, autorizar_pagamento, aprovar_contabilizacao_view, aprovar_conselho_view, arquivar_processo_view, painel_conselho_view, painel_arquivamento_view, painel_contabilizacao_view, iniciar_contabilizacao_view, contabilizacao_processo_view, iniciar_conselho_view, conselho_processo_view, painel_suprimentos_view, gerenciar_suprimento_view, fechar_suprimento_view, add_suprimento_view, recusar_contabilizacao_view, recusar_autorizacao_view, recusar_conselho_view, api_dados_credor, api_tipos_documento_por_pagamento, painel_pendencias_view, alternar_ateste_nota, painel_liquidacoes_view, documentos_fiscais_view, api_toggle_documento_fiscal, api_salvar_nota_fiscal, api_detalhes_pagamento, separar_para_lancamento_bancario, lancamento_bancario, marcar_como_lancado, desmarcar_lancamento, api_processar_retencoes, gerar_dummy_pdf_view, api_valor_unitario_diaria, api_documentos_processo, auditoria_view, gerenciar_diaria_view, edit_reembolso_view, edit_jeton_view, edit_auxilio_view, add_contingencia_view, painel_contingencias_view, analisar_contingencia_view, api_processo_detalhes, painel_autorizacao_diarias_view, alternar_autorizacao_diaria, aprovar_diaria_view, gerar_autorizacao_pagamento_view, gerar_parecer_conselho_view, gerar_pcd_view, painel_reinf_view, gerar_lote_reinf_view, gerar_dados_fake_view, sincronizar_siscac, download_arquivo_seguro, registrar_devolucao_view, process_detail_view, painel_devolucoes_view, sincronizar_diarias, importar_diarias_view, download_template_diarias_csv, sincronizar_assinatura_view, reenviar_assinatura_view, minhas_solicitacoes_view, painel_contas_fixas_view, vincular_processo_fatura_view, add_conta_fixa_view, edit_conta_fixa_view, excluir_conta_fixa_view, painel_importacao_view, download_template_csv_credores, download_template_csv_contas, gerenciar_reunioes_view, montar_pauta_reuniao_view, analise_reuniao_view, iniciar_conselho_reuniao_view, painel_relatorios_view, chaos_testing_view, painel_assinaturas_view, disparar_assinatura_view
+from processos.views import home_page, add_process_view, visualizar_pdf_processo, editar_processo, editar_processo_verbas, api_add_documento_verba, painel_impostos, contas_a_pagar, api_extrair_codigos_barras_processo, api_extrair_codigos_barras_upload, a_empenhar_view, registrar_empenho_action, api_extrair_dados_empenho, avancar_para_pagamento_view, add_credor_view, edit_credor_view, credores_list_view, diarias_list_view, reembolsos_list_view, jetons_list_view, auxilios_list_view, add_diaria_view, add_reembolso_view, add_jeton_view, add_auxilio_view, verbas_panel_view, agrupar_verbas_view, agrupar_impostos_view, painel_comprovantes_view, api_fatiar_comprovantes, api_vincular_comprovantes, painel_conferencia_view, aprovar_conferencia_view, iniciar_conferencia_view, conferencia_processo_view, enviar_para_autorizacao, painel_autorizacao_view, autorizar_pagamento, aprovar_contabilizacao_view, aprovar_conselho_view, arquivar_processo_view, painel_conselho_view, painel_arquivamento_view, painel_contabilizacao_view, iniciar_contabilizacao_view, contabilizacao_processo_view, iniciar_conselho_view, conselho_processo_view, painel_suprimentos_view, gerenciar_suprimento_view, adicionar_despesa_action, fechar_suprimento_action, add_suprimento_view, recusar_contabilizacao_view, recusar_autorizacao_view, recusar_conselho_view, api_dados_credor, api_tipos_documento_por_pagamento, painel_pendencias_view, alternar_ateste_nota, painel_liquidacoes_view, documentos_fiscais_view, api_toggle_documento_fiscal, api_salvar_nota_fiscal, api_detalhes_pagamento, separar_para_lancamento_bancario, lancamento_bancario, marcar_como_lancado, desmarcar_lancamento, api_processar_retencoes, gerar_dummy_pdf_view, api_valor_unitario_diaria, api_documentos_processo, auditoria_view, gerenciar_diaria_view, edit_reembolso_view, edit_jeton_view, edit_auxilio_view, add_contingencia_view, add_contingencia_action, painel_contingencias_view, analisar_contingencia_view, api_processo_detalhes, painel_autorizacao_diarias_view, alternar_autorizacao_diaria, aprovar_diaria_view, gerar_autorizacao_pagamento_view, gerar_parecer_conselho_view, gerar_pcd_view, painel_reinf_view, gerar_lote_reinf_view, gerar_dados_fake_view, sincronizar_siscac, sincronizar_siscac_manual_action, sincronizar_siscac_auto_action, download_arquivo_seguro, registrar_devolucao_view, registrar_devolucao_action, process_detail_view, painel_devolucoes_view, sincronizar_diarias, importar_diarias_view, download_template_diarias_csv, sincronizar_assinatura_view, reenviar_assinatura_view, minhas_solicitacoes_view, painel_contas_fixas_view, vincular_processo_fatura_view, add_conta_fixa_view, edit_conta_fixa_view, excluir_conta_fixa_view, painel_importacao_view, download_template_csv_credores, download_template_csv_contas, gerenciar_reunioes_view, gerenciar_reunioes_action, montar_pauta_reuniao_view, montar_pauta_reuniao_action, analise_reuniao_view, iniciar_conselho_reuniao_view, painel_relatorios_view, chaos_testing_view, painel_assinaturas_view, disparar_assinatura_view
 from processos.views import teste_pdf
 
 urlpatterns = [
@@ -18,10 +18,10 @@ path('processo/<int:processo_id>/pdf/', visualizar_pdf_processo, name='visualiza
 path('contas-a-pagar/', contas_a_pagar, name='contas_a_pagar'),
 
 path('retencao-impostos/', painel_impostos, name='painel_impostos'),
-path('api/processar-boleto/', api_processar_boleto, name='api_processar_boleto'),
 path('api/processo/<int:pk>/extrair-codigos-barras/', api_extrair_codigos_barras_processo, name='api_extrair_codigos_barras_processo'),
 path('api/extrair-codigos-barras-upload/', api_extrair_codigos_barras_upload, name='api_extrair_codigos_barras_upload'),
 path('a-empenhar/', a_empenhar_view, name='a_empenhar'),
+path('a-empenhar/registrar-empenho/', registrar_empenho_action, name='registrar_empenho_action'),
 path('api/extrair-dados-empenho/', api_extrair_dados_empenho, name='api_extrair_dados_empenho'),
 path('processo/<int:pk>/avancar-para-pagamento/', avancar_para_pagamento_view, name='avancar_para_pagamento'),
 path('adicionar-credor/', add_credor_view, name='add_credor'),
@@ -65,7 +65,9 @@ path('processos/conselho/<int:pk>/revisar/', conselho_processo_view, name='conse
 path('processos/conselho/<int:pk>/aprovar/', aprovar_conselho_view, name='aprovar_conselho'),
 # Reuniões do Conselho
 path('processos/conselho/reunioes/', gerenciar_reunioes_view, name='gerenciar_reunioes'),
+path('processos/conselho/reunioes/criar/', gerenciar_reunioes_action, name='gerenciar_reunioes_action'),
 path('processos/conselho/reunioes/<int:reuniao_id>/montar-pauta/', montar_pauta_reuniao_view, name='montar_pauta_reuniao'),
+path('processos/conselho/reunioes/<int:reuniao_id>/montar-pauta/adicionar/', montar_pauta_reuniao_action, name='montar_pauta_reuniao_action'),
 path('processos/conselho/reunioes/<int:reuniao_id>/analisar/', analise_reuniao_view, name='analise_reuniao'),
 path('processos/conselho/reunioes/<int:reuniao_id>/iniciar/', iniciar_conselho_reuniao_view, name='iniciar_conselho_reuniao'),
 
@@ -74,7 +76,8 @@ path('processos/arquivamento/', painel_arquivamento_view, name='painel_arquivame
 path('processos/arquivamento/<int:pk>/aprovar/', arquivar_processo_view, name='arquivar_processo'),
 path('suprimentos/', painel_suprimentos_view, name='painel_suprimentos'),
 path('suprimentos/<int:pk>/gerenciar/', gerenciar_suprimento_view, name='gerenciar_suprimento'),
-path('suprimentos/<int:pk>/fechar/', fechar_suprimento_view, name='fechar_suprimento'),
+path('suprimentos/<int:pk>/despesas/adicionar/', adicionar_despesa_action, name='adicionar_despesa_action'),
+path('suprimentos/<int:pk>/fechar/', fechar_suprimento_action, name='fechar_suprimento_action'),
 path('suprimentos/novo/', add_suprimento_view, name='add_suprimento'),
 path('processos/contabilizacao/<int:pk>/recusar/', recusar_contabilizacao_view, name='recusar_contabilizacao'),
 path('processos/autorizacao/<int:pk>/recusar/', recusar_autorizacao_view, name='recusar_autorizacao'),
@@ -102,6 +105,7 @@ path('api/processo/<int:processo_id>/documentos/', api_documentos_processo, name
 path('auditoria/', auditoria_view, name='auditoria'),
 path('contingencias/', painel_contingencias_view, name='painel_contingencias'),
 path('contingencias/nova/', add_contingencia_view, name='add_contingencia'),
+path('contingencias/nova/enviar/', add_contingencia_action, name='add_contingencia_action'),
 path('contingencias/<int:pk>/analisar/', analisar_contingencia_view, name='analisar_contingencia'),
 path('api/processo_detalhes/', api_processo_detalhes, name='api_processo_detalhes'),
 # Documentos PDF oficiais
@@ -117,9 +121,12 @@ path('importar-siscac/template-contas/', download_template_csv_contas, name='tem
 path('testes/pdfs/', teste_pdf.painel_teste_pdfs, name='painel_teste_pdfs'),
 path('testes/pdfs/gerar/<str:doc_type>/', teste_pdf.gerar_pdf_fake_view, name='gerar_pdf_fake'),
 path('fluxo/sincronizar-siscac/', sincronizar_siscac, name='sincronizar_siscac'),
+path('fluxo/sincronizar-siscac/manual/', sincronizar_siscac_manual_action, name='sincronizar_siscac_manual_action'),
+path('fluxo/sincronizar-siscac/auto/', sincronizar_siscac_auto_action, name='sincronizar_siscac_auto_action'),
 path('documentos/secure/<str:tipo_documento>/<int:documento_id>/', download_arquivo_seguro, name='download_arquivo_seguro'),
 path('processo/<int:pk>/', process_detail_view, name='process_detail'),
 path('processo/<int:processo_id>/devolucao/', registrar_devolucao_view, name='registrar_devolucao'),
+path('processo/<int:processo_id>/devolucao/salvar/', registrar_devolucao_action, name='registrar_devolucao_action'),
 path('devolucoes/', painel_devolucoes_view, name='painel_devolucoes'),
 path('verbas/sincronizar-diarias/', sincronizar_diarias, name='sincronizar_diarias'),
 path('verbas/diarias/importar/', importar_diarias_view, name='importar_diarias'),

@@ -3,22 +3,23 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError
 from django.db.models import Exists, OuterRef
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django.views.decorators.http import require_GET, require_POST
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 
 from ..forms import PendenciaForm
 from ..models import (
+    Contingencia,
     Processo,
     ReuniaoConselho,
     RetencaoImposto,
 )
 from ..pdf_engine import gerar_documento_pdf
 from ..filters import ProcessoFilter
-from django.core.files.base import ContentFile
 from ..utils import parse_siscac_report, sync_siscac_payments
 from .support_views import (
     painel_pendencias_view,
@@ -30,13 +31,17 @@ from .support_views import (
     process_detail_view,
 )
 from .helpers import (
+    _aplicar_filtro_por_opcao,
     _aprovar_processo_view,
+    _executar_arquivamento_definitivo,
     _iniciar_fila_sessao,
+    _normalizar_filtro_opcao,
     _processo_fila_detalhe_view,
     _recusar_processo_view,
 )
 
 
+@require_GET
 @permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def painel_conferencia_view(request):
     """Exibe o painel de conferência de processos pagos.
@@ -66,18 +71,20 @@ def painel_conferencia_view(request):
         .order_by("data_pagamento")
     )
 
-    FILTROS_VALIDOS = {"com_pendencia", "com_retencao", "com_ambos", "sem_pendencias"}
-    filtro = request.GET.get("filtro", "")
-    if filtro not in FILTROS_VALIDOS:
-        filtro = ""
-    if filtro == "com_pendencia":
-        processos_pagos = processos_pagos.filter(tem_pendencia=True)
-    elif filtro == "com_retencao":
-        processos_pagos = processos_pagos.filter(tem_retencao=True)
-    elif filtro == "com_ambos":
-        processos_pagos = processos_pagos.filter(tem_pendencia=True, tem_retencao=True)
-    elif filtro == "sem_pendencias":
-        processos_pagos = processos_pagos.filter(tem_pendencia=False, tem_retencao=False)
+    filtro = _normalizar_filtro_opcao(
+        request.GET.get("filtro", ""),
+        {"com_pendencia", "com_retencao", "com_ambos", "sem_pendencias"},
+    )
+    processos_pagos = _aplicar_filtro_por_opcao(
+        processos_pagos,
+        filtro,
+        {
+            "com_pendencia": {"tem_pendencia": True},
+            "com_retencao": {"tem_retencao": True},
+            "com_ambos": {"tem_pendencia": True, "tem_retencao": True},
+            "sem_pendencias": {"tem_pendencia": False, "tem_retencao": False},
+        },
+    )
 
     context = {
         "processos": processos_pagos,
@@ -87,6 +94,7 @@ def painel_conferencia_view(request):
     return render(request, "fluxo/conferencia.html", context)
 
 
+@require_POST
 @permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def iniciar_conferencia_view(request):
     """Inicializa a fila de trabalho da conferência na sessão do usuário.
@@ -100,6 +108,7 @@ def iniciar_conferencia_view(request):
     return _iniciar_fila_sessao(request, "conferencia_queue", "painel_conferencia", "conferencia_processo")
 
 
+@require_POST
 @permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def aprovar_conferencia_view(request, pk):
     """Mantém compatibilidade da rota de aprovação direta da conferência.
@@ -153,6 +162,7 @@ def conferencia_processo_view(request, pk):
     )
 
 
+@require_GET
 @permission_required("processos.pode_contabilizar", raise_exception=True)
 def painel_contabilizacao_view(request):
     """Exibe o painel de processos prontos para contabilização.
@@ -176,6 +186,7 @@ def painel_contabilizacao_view(request):
     return render(request, "fluxo/contabilizacao.html", context)
 
 
+@require_POST
 @permission_required("processos.pode_contabilizar", raise_exception=True)
 def iniciar_contabilizacao_view(request):
     """Inicializa a fila de trabalho da contabilização na sessão.
@@ -231,6 +242,7 @@ def contabilizacao_processo_view(request, pk):
     )
 
 
+@require_POST
 @permission_required("processos.pode_contabilizar", raise_exception=True)
 def aprovar_contabilizacao_view(request, pk):
     """Aprova contabilização por rota direta e avança status do processo.
@@ -254,6 +266,7 @@ def aprovar_contabilizacao_view(request, pk):
     )
 
 
+@require_POST
 @permission_required("processos.pode_contabilizar", raise_exception=True)
 def recusar_contabilizacao_view(request, pk):
     """Recusa contabilização e devolve o processo para conferência.
@@ -275,6 +288,7 @@ def recusar_contabilizacao_view(request, pk):
     )
 
 
+@require_GET
 @permission_required("processos.pode_auditar_conselho", raise_exception=True)
 def painel_conselho_view(request):
     """Exibe o painel do conselho com reuniões ativas e processos pendentes.
@@ -302,6 +316,7 @@ def painel_conselho_view(request):
     return render(request, "fluxo/conselho.html", context)
 
 
+@require_POST
 @permission_required("processos.pode_auditar_conselho", raise_exception=True)
 def iniciar_conselho_view(request):
     """Inicializa a fila de análise do conselho na sessão do usuário.
@@ -349,6 +364,7 @@ def conselho_processo_view(request, pk):
     )
 
 
+@require_POST
 @permission_required("processos.pode_auditar_conselho", raise_exception=True)
 def aprovar_conselho_view(request, pk):
     """Aprova processo no conselho via rota direta.
@@ -370,6 +386,7 @@ def aprovar_conselho_view(request, pk):
     )
 
 
+@require_POST
 @permission_required("processos.pode_auditar_conselho", raise_exception=True)
 def recusar_conselho_view(request, pk):
     """Recusa processo no conselho e devolve para contabilização.
@@ -391,45 +408,10 @@ def recusar_conselho_view(request, pk):
     )
 
 
+@require_GET
 @permission_required("processos.pode_auditar_conselho", raise_exception=True)
 def gerenciar_reunioes_view(request):
-    """Cria e lista reuniões do conselho fiscal.
-
-    POST:
-    - Cria reunião com número, trimestre de referência e data opcional.
-    - Trata erro de valor e integridade (número duplicado, por exemplo).
-
-    GET:
-    - Exibe listagem completa de reuniões cadastradas.
-
-    Args:
-        request: Requisição HTTP atual.
-
-    Returns:
-        HttpResponse ou HttpResponseRedirect conforme método/resultado.
-    """
-    if request.method == "POST":
-        if not request.user.has_perm("processos.pode_auditar_conselho"):
-            raise PermissionDenied
-        numero = request.POST.get("numero", "").strip()
-        trimestre_referencia = request.POST.get("trimestre_referencia", "").strip()
-        data_reuniao = request.POST.get("data_reuniao") or None
-        if numero and trimestre_referencia:
-            try:
-                ReuniaoConselho.objects.create(
-                    numero=int(numero),
-                    trimestre_referencia=trimestre_referencia,
-                    data_reuniao=data_reuniao,
-                )
-                messages.success(request, f"{numero}ª Reunião criada com sucesso.")
-            except ValueError:
-                messages.error(request, "Número da reunião inválido.")
-            except IntegrityError as e:
-                messages.error(request, f"Erro de integridade ao criar reunião: {e}")
-        else:
-            messages.warning(request, "Preencha o número e o trimestre de referência.")
-        return redirect("gerenciar_reunioes")
-
+    """Exibe listagem de reuniões cadastradas do conselho fiscal."""
     reunioes = ReuniaoConselho.objects.all()
     context = {
         "reunioes": reunioes,
@@ -438,36 +420,37 @@ def gerenciar_reunioes_view(request):
     return render(request, "processos/gerenciar_reunioes.html", context)
 
 
+@require_POST
+@permission_required("processos.pode_auditar_conselho", raise_exception=True)
+def gerenciar_reunioes_action(request):
+    """Cria reunião do conselho a partir do formulário do painel."""
+    numero = request.POST.get("numero", "").strip()
+    trimestre_referencia = request.POST.get("trimestre_referencia", "").strip()
+    data_reuniao = request.POST.get("data_reuniao") or None
+
+    if numero and trimestre_referencia:
+        try:
+            ReuniaoConselho.objects.create(
+                numero=int(numero),
+                trimestre_referencia=trimestre_referencia,
+                data_reuniao=data_reuniao,
+            )
+            messages.success(request, f"{numero}ª Reunião criada com sucesso.")
+        except ValueError:
+            messages.error(request, "Número da reunião inválido.")
+        except IntegrityError as e:
+            messages.error(request, f"Erro de integridade ao criar reunião: {e}")
+    else:
+        messages.warning(request, "Preencha o número e o trimestre de referência.")
+
+    return redirect("gerenciar_reunioes")
+
+
+@require_GET
 @permission_required("processos.pode_auditar_conselho", raise_exception=True)
 def montar_pauta_reuniao_view(request, reuniao_id):
-    """Gerencia a pauta de uma reunião específica do conselho.
-
-    POST:
-    - Vincula processos selecionados à reunião.
-
-    GET:
-    - Mostra processos já na pauta.
-    - Mostra processos elegíveis (contabilizados e sem reunião vinculada).
-
-    Args:
-        request: Requisição HTTP atual.
-        reuniao_id: ID da reunião alvo.
-
-    Returns:
-        HttpResponse ou HttpResponseRedirect conforme operação.
-    """
+    """Exibe montagem de pauta de uma reunião específica do conselho."""
     reuniao = get_object_or_404(ReuniaoConselho, id=reuniao_id)
-
-    if request.method == "POST":
-        if not request.user.has_perm("processos.pode_auditar_conselho"):
-            raise PermissionDenied
-        processos_ids = request.POST.getlist("processos_selecionados")
-        if processos_ids:
-            updated = Processo.objects.filter(id__in=processos_ids).update(reuniao_conselho=reuniao)
-            messages.success(request, f"{updated} processo(s) adicionado(s) à pauta.")
-        else:
-            messages.warning(request, "Nenhum processo selecionado.")
-        return redirect("montar_pauta_reuniao", reuniao_id=reuniao_id)
 
     processos_na_pauta = reuniao.processos_em_pauta.all().order_by("data_pagamento")
     processos_elegiveis = Processo.objects.filter(
@@ -482,6 +465,20 @@ def montar_pauta_reuniao_view(request, reuniao_id):
         "pode_interagir": request.user.has_perm("processos.pode_auditar_conselho"),
     }
     return render(request, "processos/montar_pauta_conselho.html", context)
+
+
+@require_POST
+@permission_required("processos.pode_auditar_conselho", raise_exception=True)
+def montar_pauta_reuniao_action(request, reuniao_id):
+    """Vincula processos selecionados à pauta da reunião do conselho."""
+    reuniao = get_object_or_404(ReuniaoConselho, id=reuniao_id)
+    processos_ids = request.POST.getlist("processos_selecionados")
+    if processos_ids:
+        updated = Processo.objects.filter(id__in=processos_ids).update(reuniao_conselho=reuniao)
+        messages.success(request, f"{updated} processo(s) adicionado(s) à pauta.")
+    else:
+        messages.warning(request, "Nenhum processo selecionado.")
+    return redirect("montar_pauta_reuniao", reuniao_id=reuniao_id)
 
 
 @permission_required("processos.pode_auditar_conselho", raise_exception=True)
@@ -508,6 +505,7 @@ def analise_reuniao_view(request, reuniao_id):
     return render(request, "processos/analise_reuniao.html", context)
 
 
+@require_POST
 @permission_required("processos.pode_auditar_conselho", raise_exception=True)
 def iniciar_conselho_reuniao_view(request, reuniao_id):
     """Inicializa fila de análise do conselho restrita a uma reunião.
@@ -522,8 +520,6 @@ def iniciar_conselho_reuniao_view(request, reuniao_id):
     Returns:
         HttpResponseRedirect: Próxima tela do fluxo de análise.
     """
-    if request.method != "POST":
-        return redirect("painel_conselho")
     get_object_or_404(ReuniaoConselho, id=reuniao_id)
     return _iniciar_fila_sessao(
         request,
@@ -558,6 +554,7 @@ def gerar_parecer_conselho_view(request, pk):
     return response
 
 
+@require_GET
 @permission_required("processos.pode_arquivar", raise_exception=True)
 def painel_arquivamento_view(request):
     """Exibe painel de arquivamento com pendentes e histórico arquivado.
@@ -594,15 +591,14 @@ def painel_arquivamento_view(request):
     )
 
 
+@require_POST
 @permission_required("processos.pode_arquivar", raise_exception=True)
 def arquivar_processo_view(request, pk):
     """Executa arquivamento definitivo de um processo elegível.
 
     Etapas:
-    1. Valida método POST e permissão.
-    2. Garante status `APROVADO - PENDENTE ARQUIVAMENTO`.
-    3. Gera PDF consolidado do processo.
-    4. Salva arquivo final e avança status para `ARQUIVADO` em transação.
+    1. Garante status `APROVADO - PENDENTE ARQUIVAMENTO`.
+    2. Delega geração/salvamento de PDF e transição para helper de serviço.
 
     Args:
         request: Requisição HTTP atual.
@@ -611,12 +607,6 @@ def arquivar_processo_view(request, pk):
     Returns:
         HttpResponseRedirect: Retorna ao `painel_arquivamento` com mensagens.
     """
-    if request.method != "POST":
-        return redirect("painel_arquivamento")
-
-    if not request.user.has_perm("processos.pode_arquivar"):
-        raise PermissionDenied
-
     processo = get_object_or_404(Processo, id=pk)
 
     status_atual = processo.status.status_choice if processo.status else ""
@@ -624,71 +614,61 @@ def arquivar_processo_view(request, pk):
         messages.error(request, f"Processo #{processo.id} não está no status correto para arquivamento.")
         return redirect("painel_arquivamento")
 
-    pdf_buffer = processo.gerar_pdf_consolidado()
-
-    if pdf_buffer is None:
+    sucesso = _executar_arquivamento_definitivo(processo, request.user)
+    if not sucesso:
         messages.error(request, f"Processo #{processo.id} não possui documentos para arquivar.")
         return redirect("painel_arquivamento")
-
-    pdf_bytes = pdf_buffer.read()
-
-    nome_arquivo = f"processo_{processo.id}_consolidado.pdf"
-    with transaction.atomic():
-        processo.arquivo_final.save(nome_arquivo, ContentFile(pdf_bytes), save=False)
-        processo.save(update_fields=["arquivo_final"])
-        processo.avancar_status("ARQUIVADO", usuario=request.user)
 
     messages.success(request, f"Processo #{processo.id} arquivado definitivamente com sucesso!")
     return redirect("painel_arquivamento")
 
 
+@require_GET
 def sincronizar_siscac(request):
-    """Sincroniza número de pagamento SISCAC a partir de relatório PDF.
+    """Renderiza o painel de sincronização SISCAC."""
+    return render(request, "fluxo/sincronizar_siscac.html", {})
 
-    Suporta dois modos via POST:
-    - `forcar_sync`: aplica sincronização manual para pares processo|pagamento.
-    - Upload de `siscac_pdf`: extrai dados do relatório e aplica conciliação
-      automática via utilitários de sincronização.
 
-    Args:
-        request: Requisição HTTP atual.
+@require_POST
+def sincronizar_siscac_manual_action(request):
+    """Processa sincronização manual de pares processo|SISCAC selecionados."""
+    force_sync_ids = request.POST.getlist("force_sync_ids")
+    count = 0
+    errors = 0
 
-    Returns:
-        HttpResponse: Página `fluxo/sincronizar_siscac.html` com resultados
-        de sincronização quando disponíveis.
-    """
-    context = {}
-    if request.method == "POST":
-        if request.POST.get("action") == "forcar_sync":
-            force_sync_ids = request.POST.getlist("force_sync_ids")
-            count = 0
-            errors = 0
-            for item in force_sync_ids:
-                try:
-                    processo_id, siscac_pg = item.split("|", 1)
-                    processo = Processo.objects.get(id=int(processo_id))
-                    processo.n_pagamento_siscac = siscac_pg
-                    processo.save(update_fields=["n_pagamento_siscac"])
-                    count += 1
-                except Exception:
-                    errors += 1
-            if count:
-                messages.success(request, f"{count} processo(s) sincronizado(s) com sucesso.")
-            if errors:
-                messages.error(request, f"{errors} item(ns) não puderam ser sincronizados.")
-            return redirect("sincronizar_siscac")
-        elif "siscac_pdf" in request.FILES:
-            pdf_file = request.FILES["siscac_pdf"]
-            if not pdf_file.name.lower().endswith(".pdf"):
-                messages.error(request, "O arquivo enviado não é um PDF válido.")
-                return render(request, "fluxo/sincronizar_siscac.html", context)
-            try:
-                extracted = parse_siscac_report(pdf_file)
-                results = sync_siscac_payments(extracted)
-                context["resultados"] = results
-            except Exception as e:
-                messages.error(request, f"Erro ao processar o relatório SISCAC: {e}")
-    return render(request, "fluxo/sincronizar_siscac.html", context)
+    for item in force_sync_ids:
+        try:
+            processo_id, siscac_pg = item.split("|", 1)
+            updated = Processo.objects.filter(id=int(processo_id)).update(n_pagamento_siscac=siscac_pg)
+            if updated:
+                count += 1
+            else:
+                errors += 1
+        except Exception:
+            errors += 1
+
+    if count:
+        messages.success(request, f"{count} processo(s) sincronizado(s) com sucesso.")
+    if errors:
+        messages.error(request, f"{errors} item(ns) não puderam ser sincronizados.")
+    return redirect("sincronizar_siscac")
+
+
+@require_POST
+def sincronizar_siscac_auto_action(request):
+    """Processa upload do PDF SISCAC e executa sincronização automática."""
+    pdf_file = request.FILES.get("siscac_pdf")
+    if not pdf_file or not pdf_file.name.lower().endswith(".pdf"):
+        messages.error(request, "Nenhum arquivo ou PDF inválido enviado.")
+        return redirect("sincronizar_siscac")
+
+    try:
+        extracted = parse_siscac_report(pdf_file)
+        results = sync_siscac_payments(extracted)
+        return render(request, "fluxo/sincronizar_siscac.html", {"resultados": results})
+    except Exception as e:
+        messages.error(request, f"Erro ao processar o relatório SISCAC: {e}")
+        return redirect("sincronizar_siscac")
 
 
 __all__ = [
@@ -707,11 +687,15 @@ __all__ = [
     "aprovar_conselho_view",
     "recusar_conselho_view",
     "gerenciar_reunioes_view",
+    "gerenciar_reunioes_action",
     "montar_pauta_reuniao_view",
+    "montar_pauta_reuniao_action",
     "analise_reuniao_view",
     "iniciar_conselho_reuniao_view",
     "gerar_parecer_conselho_view",
     "painel_arquivamento_view",
     "arquivar_processo_view",
     "sincronizar_siscac",
+    "sincronizar_siscac_manual_action",
+    "sincronizar_siscac_auto_action",
 ]

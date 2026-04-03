@@ -37,7 +37,7 @@
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body p-4">
             <p class="text-muted mb-3">Selecione o relatório de pagamentos do SISCAC (PDF) para extrair e reconciliar os números PG com os processos cadastrados.</p>
-            <form method="post" enctype="multipart/form-data">
+            <form method="post" action="{% url 'sincronizar_siscac_auto_action' %}" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="mb-3">
                     <label for="siscac_pdf" class="form-label fw-semibold">Relatório SISCAC (PDF)</label>
@@ -135,9 +135,8 @@
         </div>
         <div class="card-body p-0">
             {% if resultados.divergencias %}
-            <form method="POST">
+            <form method="POST" action="{% url 'sincronizar_siscac_manual_action' %}">
                 {% csrf_token %}
-                <input type="hidden" name="action" value="forcar_sync">
                 <div class="table-responsive">
                     <table class="table table-sm table-striped mb-0">
                         <thead class="table-light">

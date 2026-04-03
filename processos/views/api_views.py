@@ -14,37 +14,6 @@ from ..pdf_engine import gerar_documento_pdf
 
 
 @permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
-def api_processar_boleto(request):
-    """Processa um unico boleto PDF enviado via upload e retorna dados extraidos."""
-    if request.method != "POST":
-        return JsonResponse({"sucesso": False, "erro": "Método não permitido."}, status=405)
-
-    boleto_file = (
-        request.FILES.get("boleto_file")
-        or request.FILES.get("file")
-        or request.FILES.get("arquivo")
-    )
-    if not boleto_file:
-        return JsonResponse({"sucesso": False, "erro": "Nenhum arquivo enviado."}, status=400)
-
-    try:
-        dados = processar_pdf_boleto(boleto_file) or {}
-    except Exception:
-        logging.getLogger(__name__).exception(
-            "Erro ao processar boleto no upload %s", getattr(boleto_file, "name", "")
-        )
-        return JsonResponse(
-            {
-                "sucesso": False,
-                "erro": "Erro ao processar boleto. Verifique se o arquivo é um PDF válido.",
-            },
-            status=500,
-        )
-
-    return JsonResponse({"sucesso": True, "dados": dados})
-
-
-@permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def api_extrair_codigos_barras_processo(request, pk):
     """Retorna codigos de barras ja extraidos dos documentos de boleto do processo."""
     processo = get_object_or_404(Processo, id=pk)
@@ -63,14 +32,49 @@ def api_extrair_codigos_barras_processo(request, pk):
     )
 
 
+@permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def api_extrair_codigos_barras_upload(request):
+    """Extrai códigos de barras e dados de boletos de múltiplos (ou único) PDF(s).
+    
+    Aceita tanto uploads em lote via 'boleto_files' quanto upload único via
+    'boleto_file'/'boleto_pdf'. Retorna dados completos para single upload
+    ou array de códigos para batch.
+    """
     if request.method != "POST":
         return JsonResponse({"sucesso": False, "erro": "Método não permitido."}, status=405)
 
+    # Suporta tanto batch (boleto_files) quanto single upload (boleto_file, boleto_pdf)
     files = request.FILES.getlist("boleto_files")
+    if not files:
+        single_file = (
+            request.FILES.get("boleto_file")
+            or request.FILES.get("boleto_pdf")
+            or request.FILES.get("file")
+        )
+        if single_file:
+            files = [single_file]
+    
     if not files:
         return JsonResponse({"sucesso": False, "erro": "Nenhum arquivo enviado."}, status=400)
 
+    # Single file: return full extraction data; batch: return barcodes array
+    if len(files) == 1:
+        try:
+            dados = processar_pdf_boleto(files[0]) or {}
+        except Exception as e:
+            logging.getLogger(__name__).exception(
+                "Erro ao processar boleto no upload %s", getattr(files[0], "name", "")
+            )
+            return JsonResponse(
+                {
+                    "sucesso": False,
+                    "erro": "Erro ao processar boleto. Verifique se o arquivo é um PDF válido.",
+                },
+                status=500,
+            )
+        return JsonResponse({"sucesso": True, "dados": dados})
+    
+    # Batch: extract barcodes from multiple files
     barcodes = []
     n_extraidos = 0
     n_falhas = 0
@@ -86,7 +90,9 @@ def api_extrair_codigos_barras_upload(request):
                 barcodes.append(None)
                 n_falhas += 1
         except Exception as e:
-            print(f"⚠️ Erro ao extrair código de barras de '{getattr(pdf_file, 'name', 'arquivo')}': {e}", flush=True)
+            logging.getLogger(__name__).exception(
+                "Erro ao extrair código de barras de '%s'", getattr(pdf_file, "name", "arquivo")
+            )
             barcodes.append(None)
             n_falhas += 1
 
@@ -236,7 +242,6 @@ def gerar_autorizacao_pagamento_view(request, pk):
 
 
 __all__ = [
-    "api_processar_boleto",
     "api_extrair_codigos_barras_processo",
     "api_extrair_codigos_barras_upload",
     "api_extrair_dados_empenho",

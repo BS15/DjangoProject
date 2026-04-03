@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 
 from ..models import ComprovanteDePagamento, DocumentoProcesso, Processo, TiposDeDocumento
-from ..utils import fatiar_pdf_manual, processar_pdf_comprovantes
+from ..utils import split_pdf_to_temp_pages, processar_pdf_comprovantes
 
 
 def painel_comprovantes_view(request):
@@ -61,7 +61,7 @@ def api_fatiar_comprovantes(request):
 
         try:
             if modo == "manual":
-                resultados = fatiar_pdf_manual(request.FILES["pdf_banco"])
+                resultados = split_pdf_to_temp_pages(request.FILES["pdf_banco"])
             else:
                 resultados = processar_pdf_comprovantes(request.FILES["pdf_banco"])
 

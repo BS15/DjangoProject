@@ -1,3 +1,5 @@
+"""Rotinas de importação em lote para credores e contas fixas."""
+
 import csv
 import io
 
@@ -5,6 +7,7 @@ from processos.models import CargosFuncoes, ContasBancarias, Credor, ContaFixa
 
 
 def importar_credores_csv(csv_file):
+    """Importa credores de CSV, criando vínculos de conta e chave PIX quando disponíveis."""
     resultados = {'sucessos': 0, 'erros': []}
     raw = csv_file.read()
     try:
@@ -68,6 +71,7 @@ def importar_credores_csv(csv_file):
 
 
 def importar_contas_fixas_csv(csv_file):
+    """Importa contas fixas de CSV e as associa aos credores existentes."""
     resultados = {'sucessos': 0, 'erros': []}
     raw = csv_file.read()
     try:

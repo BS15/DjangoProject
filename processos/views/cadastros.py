@@ -1,3 +1,5 @@
+"""Views de cadastro e API auxiliar para dados de credor."""
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.contrib import messages
@@ -7,6 +9,7 @@ from ..filters import CredorFilter
 
 
 def add_credor_view(request):
+    """Cria um novo credor a partir do formulário de cadastro."""
     if request.method == 'POST':
         form = CredorForm(request.POST)
         if form.is_valid():
@@ -22,6 +25,7 @@ def add_credor_view(request):
 
 
 def edit_credor_view(request, pk):
+    """Edita um credor existente identificado pela chave primária."""
     credor = get_object_or_404(Credor, pk=pk)
     if request.method == 'POST':
         form = CredorForm(request.POST, instance=credor)
@@ -38,6 +42,7 @@ def edit_credor_view(request, pk):
 
 
 def credores_list_view(request):
+    """Lista credores com suporte a filtros do ``CredorFilter``."""
     queryset = Credor.objects.all().order_by('nome')
     meu_filtro = CredorFilter(request.GET, queryset=queryset)
 
@@ -49,6 +54,7 @@ def credores_list_view(request):
 
 
 def api_dados_credor(request, credor_id):
+    """Retorna em JSON dados de credor para autofill em formulários."""
     try:
         # select_related otimiza a busca para já trazer a conta junto com o credor
         credor = Credor.objects.select_related('conta').get(id=credor_id)
