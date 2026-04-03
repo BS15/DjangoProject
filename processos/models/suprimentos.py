@@ -1,3 +1,5 @@
+"""Modelos de suprimento de fundos, despesas e documentos associados."""
+
 from django.db import models
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
@@ -8,6 +10,8 @@ from processos.validators import validar_arquivo_seguro
 
 
 class StatusChoicesSuprimentoDeFundos(models.Model):
+    """Catálogo de status para o ciclo de suprimento de fundos."""
+
     # This replaces your hard-coded choices
     status_choice = models.CharField(max_length=100, unique=True)
 
@@ -20,6 +24,8 @@ class StatusChoicesSuprimentoDeFundos(models.Model):
 
 
 class SuprimentoDeFundos(models.Model):
+    """Concessão de suprimento com controle de saldo e prestação de contas."""
+
     processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='suprimentos', null=True,
                                  blank=True)
     suprido = models.ForeignKey('Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
@@ -45,12 +51,14 @@ class SuprimentoDeFundos(models.Model):
     # --- MÁGICA: Propriedades Calculadas Dinamicamente ---
     @property
     def valor_gasto(self):
+        """Soma o valor das despesas vinculadas ao suprimento."""
         # Soma todas as despesas atreladas a este suprimento
         total = sum(despesa.valor for despesa in self.despesas.all())
         return total
 
     @property
     def saldo_remanescente(self):
+        """Calcula saldo remanescente entre valor liberado e gasto."""
         # Calcula quanto sobrou do dinheiro liberado
         return self.valor_liquido - self.valor_gasto
 
@@ -60,6 +68,8 @@ class SuprimentoDeFundos(models.Model):
 
 
 class DespesaSuprimento(models.Model):
+    """Despesa individual registrada dentro de um suprimento de fundos."""
+
     suprimento = models.ForeignKey('SuprimentoDeFundos', on_delete=models.CASCADE, related_name='despesas')
     data = models.DateField("Data da Compra")
     estabelecimento = models.CharField("Estabelecimento (Credor)", max_length=150)
@@ -77,6 +87,8 @@ class DespesaSuprimento(models.Model):
 
 
 class DocumentoSuprimentoDeFundos(DocumentoBase):
+    """Documento geral vinculado ao suprimento (fora das despesas)."""
+
     suprimento = models.ForeignKey('SuprimentoDeFundos', on_delete=models.CASCADE, related_name='documentos')
     history = HistoricalRecords()
 
@@ -87,11 +99,13 @@ class DocumentoSuprimentoDeFundos(DocumentoBase):
 
 @receiver(post_delete, sender=DespesaSuprimento)
 def auto_delete_file_on_delete_despesasuprimento(sender, instance, **kwargs):
+    """Remove arquivo físico ao excluir despesa de suprimento."""
     _delete_file(instance.arquivo)
 
 
 @receiver(pre_save, sender=DespesaSuprimento)
 def cleanup_old_file_on_save_despesasuprimento(sender, instance, **kwargs):
+    """Apaga arquivo antigo ao substituir anexo da despesa."""
     if not instance.pk:
         return
     try:
@@ -104,11 +118,13 @@ def cleanup_old_file_on_save_despesasuprimento(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=DocumentoSuprimentoDeFundos)
 def auto_delete_file_on_delete_docsuprimento(sender, instance, **kwargs):
+    """Remove arquivo físico ao excluir documento de suprimento."""
     _delete_file(instance.arquivo)
 
 
 @receiver(pre_save, sender=DocumentoSuprimentoDeFundos)
 def cleanup_old_file_on_save_docsuprimento(sender, instance, **kwargs):
+    """Apaga arquivo antigo ao substituir anexo do documento de suprimento."""
     if not instance.pk:
         return
     try:

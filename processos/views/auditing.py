@@ -16,12 +16,13 @@ from ..models import (
     DocumentoSuprimentoDeFundos,
     Processo,
 )
-from .helpers import _build_history_record, _get_unified_history
+from .helpers import _aplicar_filtros_historico, _build_history_record, _get_unified_history
 
 
 @require_GET
 @xframe_options_sameorigin
 def api_documentos_processo(request, processo_id):
+    """Retorna documentos e metadados correlatos de um processo para visualização de auditoria."""
     processo = get_object_or_404(Processo, id=processo_id)
     documentos = processo.documentos.all().order_by("ordem")
 
@@ -90,6 +91,7 @@ def api_documentos_processo(request, processo_id):
 
 
 def api_processo_detalhes(request):
+    """Retorna detalhes de um processo por ``id`` informado via query string."""
     processo_id = request.GET.get("id", "").strip()
     if not processo_id:
         return JsonResponse({"sucesso": False, "erro": "ID do processo não informado."}, status=400)
@@ -132,6 +134,7 @@ def api_processo_detalhes(request):
 
 
 def auditoria_view(request):
+    """Renderiza a trilha de auditoria consolidada de modelos financeiros."""
     HISTORY_TYPE_LABELS = {"+": "Criação", "~": "Alteração", "-": "Exclusão"}
 
     model_configs = [
@@ -155,14 +158,13 @@ def auditoria_view(request):
         if modelo_filter and modelo_filter != label:
             continue
         qs = history_model.objects.select_related("history_user").all()
-        if tipo_filter:
-            qs = qs.filter(history_type=tipo_filter)
-        if data_inicio:
-            qs = qs.filter(history_date__date__gte=data_inicio)
-        if data_fim:
-            qs = qs.filter(history_date__date__lte=data_fim)
-        if usuario_filter:
-            qs = qs.filter(history_user__username__icontains=usuario_filter)
+        qs = _aplicar_filtros_historico(
+            qs,
+            tipo_acao=tipo_filter,
+            data_inicio=data_inicio,
+            data_fim=data_fim,
+            usuario=usuario_filter,
+        )
         for record in qs:
             all_records.append(
                 {

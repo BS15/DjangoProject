@@ -3,8 +3,12 @@
 Contem infraestrutura utilizada por multiplos modulos de views.
 """
 
+from decimal import Decimal, InvalidOperation
+
 from django.contrib import messages
+from django.core.files.base import ContentFile
 from django.core.exceptions import PermissionDenied
+from django.db.models import Count
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -22,11 +26,134 @@ from ..models import (
 )
 
 
+_CAMPOS_PERMITIDOS_CONTINGENCIA = {
+    "n_nota_empenho",
+    "data_empenho",
+    "valor_bruto",
+    "valor_liquido",
+    "ano_exercicio",
+    "n_pagamento_siscac",
+    "data_vencimento",
+    "data_pagamento",
+    "observacao",
+    "detalhamento",
+    "credor_id",
+    "forma_pagamento_id",
+    "tipo_pagamento_id",
+    "conta_id",
+    "tag_id",
+}
+
+
 def _normalizar_texto(texto):
     """Remove acentos e converte para maiusculas para comparacoes robustas."""
     import unicodedata
 
     return unicodedata.normalize("NFD", texto.upper()).encode("ascii", "ignore").decode("ascii")
+
+
+def _obter_campo_ordenacao(request, campos_permitidos, default_ordem="id", default_direcao="desc"):
+    """Extrai e formata o campo de ordenacao com base nos parametros GET.
+
+    Garante que apenas colunas mapeadas em `campos_permitidos` sejam usadas.
+    Retorna o campo pronto para `order_by`, com prefixo `-` quando descendente.
+    """
+    ordem = request.GET.get("ordem", default_ordem)
+    direcao = request.GET.get("direcao", default_direcao)
+    order_field = campos_permitidos.get(ordem, campos_permitidos.get(default_ordem, "id"))
+    return f"-{order_field}" if direcao == "desc" else order_field
+
+
+def _atualizar_status_em_lote(ids, nome_status, queryset_base=None):
+    """Atualiza em lote o status de processos e retorna o total de linhas afetadas."""
+    if not ids:
+        return 0
+
+    status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
+        status_choice__iexact=nome_status,
+        defaults={"status_choice": nome_status},
+    )
+
+    qs = queryset_base if queryset_base is not None else Processo.objects.filter(id__in=ids)
+    return qs.update(status=status_obj)
+
+
+def _gerar_agrupamentos_contas_a_pagar(queryset):
+    """Gera agregacoes dos filtros laterais da UI de contas a pagar."""
+    return {
+        "datas_agrupadas": queryset.values("data_pagamento").annotate(total=Count("id")).order_by("data_pagamento"),
+        "formas_agrupadas": queryset.values(
+            "forma_pagamento__id", "forma_pagamento__forma_de_pagamento"
+        ).annotate(total=Count("id")).order_by("forma_pagamento__forma_de_pagamento"),
+        "statuses_agrupados": queryset.values("status__status_choice").annotate(total=Count("id")).order_by(
+            "status__status_choice"
+        ),
+        "contas_agrupadas": queryset.values(
+            "conta__id",
+            "conta__banco",
+            "conta__agencia",
+            "conta__conta",
+            "conta__titular__nome",
+        ).annotate(total=Count("id")).order_by("conta__titular__nome", "conta__banco", "conta__agencia"),
+    }
+
+
+def _aplicar_filtros_contas_a_pagar(queryset, params):
+    """Aplica os filtros manuais de contas a pagar com base nos parametros GET."""
+    qs = queryset
+
+    status = params.get("status")
+    data = params.get("data")
+    forma = params.get("forma")
+    conta = params.get("conta")
+
+    if status:
+        qs = qs.filter(status__status_choice=status)
+
+    if data:
+        qs = qs.filter(data_pagamento__isnull=True) if data == "sem_data" else qs.filter(data_pagamento=data)
+
+    if forma:
+        if forma == "sem_forma":
+            qs = qs.filter(forma_pagamento__isnull=True)
+        elif forma.isdigit():
+            qs = qs.filter(forma_pagamento__id=int(forma))
+
+    if conta:
+        if conta == "sem_conta":
+            qs = qs.filter(conta__isnull=True)
+        elif conta.isdigit():
+            qs = qs.filter(conta__id=int(conta))
+
+    return qs
+
+
+def _normalizar_filtro_opcao(valor, opcoes_validas, default=""):
+    """Normaliza filtro textual para um conjunto fechado de opcoes validas."""
+    return valor if valor in opcoes_validas else default
+
+
+def _aplicar_filtro_por_opcao(queryset, opcao, mapa_filtros):
+    """Aplica filtro por opcao com regras mapeadas (kwargs ou callable)."""
+    regra = mapa_filtros.get(opcao)
+    if not regra:
+        return queryset
+    if callable(regra):
+        return regra(queryset)
+    return queryset.filter(**regra)
+
+
+def _aplicar_filtros_historico(qs, *, tipo_acao="", data_inicio="", data_fim="", usuario=""):
+    """Aplica filtros de auditoria em queryset historico."""
+    if tipo_acao:
+        qs = qs.filter(history_type=tipo_acao)
+    if data_inicio:
+        qs = qs.filter(history_date__date__gte=data_inicio)
+    if data_fim:
+        qs = qs.filter(history_date__date__lte=data_fim)
+    if usuario:
+        qs = qs.filter(history_user__username__icontains=usuario)
+    return qs
 
 
 def _build_history_record(record, modelo_label):
@@ -377,6 +504,148 @@ def _build_detalhes_pagamento(processos):
     return detalhes, totais
 
 
+def _consolidar_totais_pagamento(totais_a_pagar, totais_lancados):
+    """Consolida totais por forma de pagamento e calcula somatorios gerais."""
+    totais = {}
+    for origem in (totais_a_pagar, totais_lancados):
+        for forma, valor in origem.items():
+            totais[forma] = totais.get(forma, 0) + valor
+
+    total_a_pagar = sum(totais_a_pagar.values())
+    total_lancados = sum(totais_lancados.values())
+    total_geral = total_a_pagar + total_lancados
+
+    return {
+        "totais": totais,
+        "total_a_pagar": total_a_pagar,
+        "total_lancados": total_lancados,
+        "total_geral": total_geral,
+    }
+
+
+def _processar_acao_lote(
+    request,
+    *,
+    param_name,
+    status_origem_esperado,
+    status_destino,
+    msg_sucesso,
+    msg_vazio,
+    redirect_to,
+    msg_sem_elegiveis=None,
+    msg_ignorados=None,
+):
+    """Processa acao em lote com validacao de status de origem (turnpike)."""
+    selecionados = request.POST.getlist(param_name)
+    if not selecionados:
+        valor_unico = request.POST.get(param_name)
+        selecionados = [valor_unico] if valor_unico else []
+
+    selecionados = [pid for pid in selecionados if pid]
+    if not selecionados:
+        messages.warning(request, msg_vazio)
+        return redirect(redirect_to)
+
+    elegiveis = Processo.objects.filter(
+        id__in=selecionados,
+        status__status_choice__iexact=status_origem_esperado,
+    )
+    count_elegiveis = elegiveis.count()
+    count_ignorados = len(selecionados) - count_elegiveis
+
+    if count_elegiveis > 0:
+        _atualizar_status_em_lote(
+            selecionados,
+            status_destino,
+            queryset_base=elegiveis,
+        )
+        messages.success(request, msg_sucesso.format(count=count_elegiveis, processo_id=selecionados[0]))
+    else:
+        messages.error(
+            request,
+            (msg_sem_elegiveis or "Ação negada: nenhum processo elegível para transição de status.").format(
+                status_origem_esperado=status_origem_esperado,
+                count=0,
+                processo_id=selecionados[0],
+            ),
+        )
+
+    if count_ignorados > 0:
+        messages.warning(
+            request,
+            (msg_ignorados or "{count} processo(s) ignorado(s) por estarem em outro estágio do fluxo.").format(
+                count=count_ignorados,
+                status_origem_esperado=status_origem_esperado,
+            ),
+        )
+
+    return redirect(redirect_to)
+
+
+def _executar_arquivamento_definitivo(processo, usuario):
+    """Gera PDF final, persiste arquivo e avanca status para ARQUIVADO."""
+    pdf_buffer = processo.gerar_pdf_consolidado()
+    if pdf_buffer is None:
+        return False
+
+    pdf_bytes = pdf_buffer.read()
+    nome_arquivo = f"processo_{processo.id}_consolidado.pdf"
+
+    with transaction.atomic():
+        processo.arquivo_final.save(nome_arquivo, ContentFile(pdf_bytes), save=False)
+        processo.save(update_fields=["arquivo_final"])
+        processo.avancar_status("ARQUIVADO", usuario=usuario)
+
+    return True
+
+
+def _aplicar_aprovacao_contingencia(contingencia):
+    """Executa aprovacao de contingencia com validacao financeira e persistencia atomica."""
+    processo = contingencia.processo
+
+    if "novo_valor_liquido" in contingencia.dados_propostos:
+        raw_value = contingencia.dados_propostos["novo_valor_liquido"]
+        if isinstance(raw_value, str):
+            raw_value = raw_value.replace(".", "").replace(",", ".")
+        try:
+            novo_valor_liquido = Decimal(str(raw_value))
+        except (InvalidOperation, ValueError):
+            return False, "O valor líquido proposto na contingência é inválido."
+
+        soma_comprovantes = sum(
+            comp.valor_pago for comp in processo.comprovantes_pagamento.all() if comp.valor_pago is not None
+        )
+
+        if abs(novo_valor_liquido - Decimal(str(soma_comprovantes))) > Decimal("0.01"):
+            return (
+                False,
+                "A contingência não pode ser aprovada. O novo valor líquido proposto não corresponde à "
+                "soma dos comprovantes bancários anexados no sistema. O setor responsável deve anexar "
+                "os comprovantes restantes antes da aprovação.",
+            )
+
+    with transaction.atomic():
+        campos_alterados = []
+        for campo, valor in contingencia.dados_propostos.items():
+            if campo in _CAMPOS_PERMITIDOS_CONTINGENCIA and hasattr(processo, campo):
+                setattr(processo, campo, valor)
+                campos_alterados.append(campo)
+
+        processo.em_contingencia = False
+        campos_alterados.append("em_contingencia")
+        processo.save(update_fields=campos_alterados)
+
+        contingencia.status = "APROVADA"
+        contingencia.save(update_fields=["status"])
+
+    return True, None
+
+
+def aplicar_aprovacao_contingencia(contingencia):
+    """Wrapper público para aprovação de contingência."""
+    return _aplicar_aprovacao_contingencia(contingencia)
+
+
 def _aprovar_processo_view(request, pk, *, permission, new_status, success_message, redirect_to):
     """Shared approval handler: advances a Processo to a new status via direct assignment."""
     if request.method == "POST":
@@ -410,6 +679,9 @@ def _recusar_processo_view(request, pk, *, permission, status_devolucao, error_m
 
 __all__ = [
     "_normalizar_texto",
+    "_normalizar_filtro_opcao",
+    "_aplicar_filtro_por_opcao",
+    "_aplicar_filtros_historico",
     "_build_history_record",
     "_get_unified_history",
     "_iniciar_fila_sessao",
@@ -418,6 +690,11 @@ __all__ = [
     "_salvar_documentos_sem_exclusao",
     "_processo_fila_detalhe_view",
     "_build_detalhes_pagamento",
+    "_consolidar_totais_pagamento",
+    "_processar_acao_lote",
+    "_executar_arquivamento_definitivo",
+    "_aplicar_aprovacao_contingencia",
+    "aplicar_aprovacao_contingencia",
     "_aprovar_processo_view",
     "_recusar_processo_view",
 ]

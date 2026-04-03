@@ -1,3 +1,5 @@
+"""Utilitários transversais para PDF, extração determinística e sincronização SISCAC."""
+
 import io
 import os
 import pdfplumber
@@ -44,12 +46,14 @@ def mesclar_pdfs_em_memoria(lista_arquivos):
         return None
 
 def safe_split(line, keyword, index=1):
+    """Divide ``line`` por ``keyword`` e devolve a parte desejada com ``strip`` seguro."""
     parts = line.split(keyword)
     if len(parts) > index:
         return parts[index].strip()
     return ""
 
 def parse_br_date(date_str):
+    """Converte data brasileira ``DD/MM/AAAA`` para ``AAAA-MM-DD``."""
     try:
         if not date_str: return None
         return datetime.strptime(date_str.strip(), "%d/%m/%Y").strftime("%Y-%m-%d")
@@ -57,6 +61,7 @@ def parse_br_date(date_str):
         return None
 
 def extract_text_between(full_text, start_anchor, end_anchor):
+    """Extrai texto entre âncoras, com fallback para quebra de linha."""
     try:
         start_idx = full_text.find(start_anchor)
         if start_idx == -1: return ""
@@ -69,6 +74,7 @@ def extract_text_between(full_text, start_anchor, end_anchor):
         return ""
 
 def sort_pages(pdf_file):
+    """Classifica páginas de relatório SISCAC por tipo de bloco identificado no texto."""
 
     pages_dict = {"empenho": [], "liquidacao": [], "pagamento": []}
 
@@ -84,6 +90,7 @@ def sort_pages(pdf_file):
     return pages_dict
 
 def extract_siscac_data(pdf_file):
+    """Extrai campos básicos de empenho, liquidação e pagamento de PDF SISCAC."""
 
     pages_dict = sort_pages(pdf_file)
     data = {}
@@ -163,6 +170,7 @@ def interpretar_linha(linha, tipo):
 
 
 def processar_pdf_boleto(pdf_file):
+    """Localiza linha digitável de boleto/arrecadação em PDF e retorna payload normalizado."""
     leitor = PyPDF2.PdfReader(pdf_file)
     texto = " ".join([pagina.extract_text() for pagina in leitor.pages if pagina.extract_text()])
 
@@ -205,6 +213,7 @@ def processar_pdf_boleto(pdf_file):
 
 
 def processar_pdf_comprovantes(pdf_file):
+    """Fatia comprovantes em páginas e extrai credor, valor, data e autenticação por regex."""
     from .models import Credor, ContasBancarias
 
     CNPJ_ORGAO = '82.894.098/0001-32'
@@ -409,6 +418,7 @@ def merge_canvas_with_template(canvas_io, template_path):
 
 
 def parse_siscac_report(pdf_file):
+    """Lê relatório de pagamentos SISCAC e consolida lançamentos por número de pagamento."""
     pattern_payment = re.compile(
         r'^(20\d{2}PG\d{5})\s+(.*?)\s+(20\d{2}NE\d{5}).*?([\d.,]+)$'
     )
@@ -448,6 +458,7 @@ def parse_siscac_report(pdf_file):
 
 
 def sync_siscac_payments(extracted_payments):
+    """Concilia pagamentos extraídos com processos internos e classifica sucessos/divergências."""
     from .models import Processo
 
     resultados = {'sucessos': [], 'divergencias': [], 'nao_encontrados': [], 'retroativos_corrigidos': 0}
@@ -530,6 +541,7 @@ from decimal import InvalidOperation
 
 
 def sync_diarias_siscac_csv(csv_file):
+    """Importa/atualiza diárias a partir de CSV SISCAC padronizado por ponto e vírgula."""
     from .models import Diaria, Credor, StatusChoicesVerbasIndenizatorias
 
     resultados = {'criadas': 0, 'atualizadas': 0, 'erros': []}

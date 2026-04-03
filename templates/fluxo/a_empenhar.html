@@ -133,7 +133,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
 
-            <form method="post" action="{% url 'a_empenhar' %}" enctype="multipart/form-data">
+            <form method="post" action="{% url 'registrar_empenho_action' %}" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="processo_id" id="modal_processo_id">
 

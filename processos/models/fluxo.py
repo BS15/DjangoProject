@@ -1,3 +1,5 @@
+"""Modelos centrais do fluxo financeiro, auditoria e gestão documental."""
+
 import os
 from django.db import models
 from django.db.models import Sum
@@ -16,6 +18,7 @@ from processos.utils import mesclar_pdfs_em_memoria
 
 # Substitua a sua função antiga por esta:
 def caminho_documento(instance, filename):
+    """Resolve o diretório de upload conforme entidade de negócio vinculada."""
     # 1. Processo Principal
     if hasattr(instance, 'processo') and instance.processo:
         ano = instance.processo.data_empenho.year if instance.processo.data_empenho else (instance.processo.ano_exercicio or 9999)
@@ -45,6 +48,8 @@ def caminho_documento(instance, filename):
 
 
 class StatusChoicesProcesso(models.Model):
+    """Catálogo de status possíveis do processo de pagamento."""
+
     # This replaces your hard-coded choices
     status_choice = models.CharField(max_length=100, unique=True)
 
@@ -57,6 +62,8 @@ class StatusChoicesProcesso(models.Model):
 
 
 class StatusChoicesPendencias(models.Model):
+    """Catálogo de status aplicáveis às pendências."""
+
     # This replaces your hard-coded choices
     status_choice = models.CharField(max_length=100, unique=True)
 
@@ -69,6 +76,8 @@ class StatusChoicesPendencias(models.Model):
 
 
 class TagChoices(models.Model):
+    """Etiquetas administrativas usadas para classificação de processos."""
+
     # This replaces your hard-coded choices
     tag_choice = models.CharField(max_length=100, unique=True)
 
@@ -81,6 +90,8 @@ class TagChoices(models.Model):
 
 
 class FormasDePagamento(models.Model):
+    """Formas de pagamento aceitas no fluxo financeiro."""
+
     # This replaces your hard-coded choices
     forma_de_pagamento = models.CharField(max_length=100, unique=True)
 
@@ -93,6 +104,8 @@ class FormasDePagamento(models.Model):
 
 
 class TiposDePagamento(models.Model):
+    """Tipos de pagamento utilizados para agrupar regras de negócio."""
+
     # This replaces your hard-coded choices
     tipo_de_pagamento = models.CharField(max_length=100, unique=True)
 
@@ -105,6 +118,8 @@ class TiposDePagamento(models.Model):
 
 
 class TiposDeDocumento(models.Model):
+    """Tipos documentais por contexto de pagamento."""
+
     # This replaces your hard-coded choices
     tipo_de_pagamento = models.ForeignKey('TiposDePagamento', on_delete=models.PROTECT, blank=True, null=True)
     tipo_de_documento = models.CharField(max_length=100)
@@ -128,6 +143,8 @@ class TiposDeDocumento(models.Model):
 
 
 class TiposDePendencias(models.Model):
+    """Tipos de pendências operacionais/documentais do processo."""
+
     # This replaces your hard-coded choices
     tipo_de_pendencia = models.CharField(max_length=100, unique=True)
 
@@ -140,6 +157,8 @@ class TiposDePendencias(models.Model):
 
 
 class DocumentoBase(models.Model):
+    """Classe abstrata base para documentos anexados com ordenação."""
+
     arquivo = models.FileField(upload_to=caminho_documento, validators=[validar_arquivo_seguro])
     ordem = models.PositiveIntegerField(default=1, help_text="Ordem do arquivo")
     tipo = models.ForeignKey('TiposDeDocumento', on_delete=models.PROTECT)
@@ -159,6 +178,8 @@ STATUS_CONTINGENCIA = [
 
 
 class ReuniaoConselho(models.Model):
+    """Reunião do conselho fiscal usada para análise em lote de processos."""
+
     numero = models.IntegerField("Número da Reunião", help_text="Ex: 16 para a 16ª Reunião")
     data_reuniao = models.DateField("Data da Reunião", null=True, blank=True)
     trimestre_referencia = models.CharField(
@@ -187,6 +208,8 @@ class ReuniaoConselho(models.Model):
 
 
 class Processo(models.Model):
+    """Entidade principal do ciclo orçamentário e financeiro do pagamento."""
+
     # Dados orçamentários
     extraorcamentario = models.BooleanField(
         "Extraorçamentário",
@@ -246,11 +269,13 @@ class Processo(models.Model):
 
     @property
     def valor_efetivo(self):
+        """Retorna valor líquido descontado das devoluções registradas."""
         total_devolvido = self.devolucoes.aggregate(total=Sum('valor_devolvido'))['total'] or 0
         return self.valor_liquido - total_devolvido
 
     @property
     def detalhes_pagamento(self):
+        """Produz resumo do meio de pagamento para exibição em interface."""
         forma = self.forma_pagamento.forma_de_pagamento.lower() if self.forma_pagamento else ''
         detalhe_tipo = "Não Especificado"
         detalhe_valor = "Verifique o processo"
@@ -277,6 +302,7 @@ class Processo(models.Model):
         }
 
     def gerar_pdf_consolidado(self):
+        """Mescla documentos do processo por ordem e retorna PDF em memória."""
         lista_caminhos = []
         for doc in self.documentos.order_by('ordem'):
             if doc.arquivo and doc.arquivo.name:
@@ -288,6 +314,7 @@ class Processo(models.Model):
         return mesclar_pdfs_em_memoria(lista_caminhos)
 
     def avancar_status(self, novo_status_str, usuario=None):
+        """Avança status validando turnpike e propaga pagamento para diárias vinculadas."""
         from django.core.exceptions import ValidationError
         from processos.validators import verificar_turnpike
         status_anterior = self.status.status_choice if self.status else ''
@@ -319,6 +346,8 @@ class Processo(models.Model):
 
 # 2. DOCUMENTO DO PROCESSO
 class DocumentoProcesso(DocumentoBase):
+    """Documento anexado ao processo com controle de imutabilidade."""
+
     processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='documentos')
     codigo_barras = models.CharField("Código de Barras", max_length=60, null=True, blank=True)
     imutavel = models.BooleanField(
@@ -330,6 +359,8 @@ class DocumentoProcesso(DocumentoBase):
 
 
 class Pendencia(models.Model):
+    """Pendência operacional ou documental atrelada ao processo."""
+
     processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='pendencias')
     status = models.ForeignKey('StatusChoicesPendencias', on_delete=models.PROTECT, blank=True, null=True)
     tipo = models.ForeignKey('TiposDePendencias', on_delete=models.PROTECT)
@@ -341,6 +372,8 @@ class Pendencia(models.Model):
 
 
 class Contingencia(models.Model):
+    """Solicitação formal de retificação com trilha de aprovação multi-etapa."""
+
     # Metadados principais
     processo = models.ForeignKey(
         'Processo',
@@ -416,6 +449,8 @@ class Contingencia(models.Model):
 
 
 class RegistroAcessoArquivo(models.Model):
+    """Log de acesso a arquivos para auditoria e rastreabilidade."""
+
     usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     nome_arquivo = models.CharField(max_length=500)
     data_acesso = models.DateTimeField(auto_now_add=True)
@@ -431,6 +466,8 @@ class RegistroAcessoArquivo(models.Model):
 
 
 class Devolucao(models.Model):
+    """Registro de devolução de valores relacionados ao processo."""
+
     processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='devolucoes')
     valor_devolvido = models.DecimalField(max_digits=15, decimal_places=2)
     data_devolucao = models.DateField()
@@ -448,6 +485,8 @@ class Devolucao(models.Model):
 
 
 class AssinaturaAutentique(models.Model):
+    """Metadados de integração com assinatura eletrônica via Autentique."""
+
     STATUS_CHOICES = [
         ('RASCUNHO', 'Rascunho'),
         ('PENDENTE', 'Pendente'),
@@ -483,7 +522,7 @@ class AssinaturaAutentique(models.Model):
 # ==============================================================================
 
 def _delete_file(file_field):
-    """Delete a file from storage, ignoring errors if it doesn't exist."""
+    """Remove arquivo do storage, ignorando erros quando inexistente."""
     if file_field and file_field.name:
         try:
             file_field.storage.delete(file_field.name)
@@ -493,11 +532,13 @@ def _delete_file(file_field):
 
 @receiver(post_delete, sender=DocumentoProcesso)
 def auto_delete_file_on_delete_documentoprocesso(sender, instance, **kwargs):
+    """Remove arquivo físico quando DocumentoProcesso é excluído."""
     _delete_file(instance.arquivo)
 
 
 @receiver(pre_save, sender=DocumentoProcesso)
 def enforce_immutability_and_cleanup_on_save(sender, instance, **kwargs):
+    """Bloqueia troca de arquivo em documento imutável e limpa versão anterior."""
     if not instance.pk:
         return
     try:
@@ -515,6 +556,7 @@ def enforce_immutability_and_cleanup_on_save(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=DocumentoProcesso)
 def prevent_immutable_delete(sender, instance, **kwargs):
+    """Impede exclusão de documentos marcados como imutáveis."""
     if instance.imutavel:
         raise ValidationError(
             "Este documento é imutável e não pode ser excluído."

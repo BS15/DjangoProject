@@ -1,3 +1,5 @@
+"""Modelos fiscais: notas, retenções e comprovantes de pagamento."""
+
 from django.db import models
 from datetime import date
 from django.contrib.auth.models import User
@@ -6,6 +8,7 @@ from processos.validators import validar_arquivo_seguro
 
 
 def caminho_comprovante(instance, filename):
+    """Monta caminho de upload para comprovantes com fallback seguro."""
     if instance.processo_id:
         try:
             processo = instance.processo
@@ -18,6 +21,8 @@ def caminho_comprovante(instance, filename):
 
 
 class CodigosImposto(models.Model):
+    """Tabela de códigos tributários e metadados de competência/Reinf."""
+
     # This replaces your hard-coded choices
     codigo = models.CharField(max_length=10, unique=True, null=True, blank=True)
 
@@ -59,6 +64,8 @@ class CodigosImposto(models.Model):
 
 
 class StatusChoicesRetencoes(models.Model):
+    """Catálogo de status aplicáveis às retenções de imposto."""
+
     # This replaces your hard-coded choices
     status_choice = models.CharField(max_length=100, unique=True)
 
@@ -71,6 +78,8 @@ class StatusChoicesRetencoes(models.Model):
 
 
 class DocumentoFiscal(models.Model):
+    """Nota fiscal vinculada ao processo com dados para ateste e retenção."""
+
     processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='notas_fiscais')
     nome_emitente = models.ForeignKey('Credor', on_delete=models.PROTECT, blank=True, null=True)
     cnpj_emitente = models.CharField(max_length=20, blank=True) # Permitimos blank=True para o save() cuidar disso
@@ -109,6 +118,7 @@ class DocumentoFiscal(models.Model):
     history = HistoricalRecords()
 
     def save(self, *args, **kwargs):
+        """Sincroniza CNPJ e herda código de serviço padrão do emitente."""
         # Se um emitente foi selecionado e o CNPJ está vazio (ou queremos sempre atualizar)
         if self.nome_emitente:
             self.cnpj_emitente = self.nome_emitente.cpf_cnpj
@@ -122,6 +132,8 @@ class DocumentoFiscal(models.Model):
 
 
 class RetencaoImposto(models.Model):
+    """Imposto retido em nota fiscal com cálculo automático de competência."""
+
     nota_fiscal = models.ForeignKey('DocumentoFiscal', on_delete=models.CASCADE, related_name='retencoes')
     beneficiario = models.ForeignKey('Credor', on_delete=models.PROTECT, blank=True, null=True, verbose_name="Beneficiário", related_name='retencoes')
     rendimento_tributavel = models.DecimalField("Base de Cálculo / Rend. Tributável", null=True, blank=True, max_digits=12, decimal_places=2)
@@ -147,6 +159,7 @@ class RetencaoImposto(models.Model):
     )
 
     def save(self, *args, **kwargs):
+        """Define competência mensal conforme regra do código e datas disponíveis."""
         # 1. Só calcula se os relacionamentos já existirem na memória
         if getattr(self, 'codigo', None) and getattr(self, 'nota_fiscal', None):
             data_base = None
@@ -174,6 +187,8 @@ class RetencaoImposto(models.Model):
 
 
 class ComprovanteDePagamento(models.Model):
+    """Comprovante bancário anexado para lastrear pagamento do processo."""
+
     processo = models.ForeignKey(
         'Processo',
         on_delete=models.CASCADE,

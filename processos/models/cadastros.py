@@ -1,3 +1,5 @@
+"""Modelos cadastrais: credores, contas bancárias e contas fixas mensais."""
+
 import datetime
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -5,6 +7,8 @@ from simple_history.models import HistoricalRecords
 
 
 class CargosFuncoes(models.Model):
+    """Catálogo de grupos e cargos/funções para classificação de credores."""
+
     grupo = models.CharField(max_length=100, verbose_name="Grupo Relacionado", blank=True, default='')
     cargo_funcao = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)
@@ -19,6 +23,8 @@ class CargosFuncoes(models.Model):
 
 
 class ContasBancarias(models.Model):
+    """Conta bancária vinculável ao credor para pagamento e conciliação."""
+
     titular = models.ForeignKey('Credor', on_delete=models.CASCADE, null=True, blank=True, related_name='contas_bancarias')
     banco = models.CharField("Banco", max_length=50, blank=True, null=True)
     agencia = models.CharField("Agência", max_length=50, blank=True, null=True)
@@ -31,6 +37,8 @@ class ContasBancarias(models.Model):
 
 
 class Credor(models.Model):
+    """Entidade favorecida em pagamentos, verbas e retenções."""
+
     nome = models.CharField("Nome", max_length=50, null=True, blank=True)
     cpf_cnpj = models.CharField("CPF/CNPJ", max_length=50, null=True, blank=True)
     conta = models.ForeignKey('ContasBancarias', on_delete=models.PROTECT, blank=True, null=True, verbose_name="Conta Credor")
@@ -67,6 +75,8 @@ class Credor(models.Model):
 
 
 class DadosContribuinte(models.Model):
+    """Identificação fiscal do órgão para filtros e integrações tributárias."""
+
     cnpj = models.CharField(max_length=14)
     razao_social = models.CharField(max_length=255)
     tipo_inscricao = models.IntegerField(default=1)
@@ -80,6 +90,8 @@ class DadosContribuinte(models.Model):
 
 
 class ContaFixa(models.Model):
+    """Configuração de despesa recorrente que gera faturas mensais."""
+
     credor = models.ForeignKey(
         'Credor',
         on_delete=models.PROTECT,
@@ -110,6 +122,8 @@ class ContaFixa(models.Model):
 
 
 class FaturaMensal(models.Model):
+    """Fatura de referência mensal derivada de uma conta fixa."""
+
     conta_fixa = models.ForeignKey(
         ContaFixa,
         on_delete=models.CASCADE,
@@ -134,6 +148,7 @@ class FaturaMensal(models.Model):
 
     @property
     def data_vencimento_exata(self):
+        """Calcula a data de vencimento respeitando o último dia do mês."""
         import calendar
         dia = self.conta_fixa.dia_vencimento
         ultimo_dia = calendar.monthrange(self.mes_referencia.year, self.mes_referencia.month)[1]
@@ -142,6 +157,7 @@ class FaturaMensal(models.Model):
 
     @property
     def status(self):
+        """Retorna estado operacional da fatura: pendente, em andamento ou pago."""
         if not self.processo_vinculado:
             return 'PENDENTE'
         if self.processo_vinculado.status and 'PAGO' in self.processo_vinculado.status.status_choice.upper():
