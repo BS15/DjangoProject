@@ -897,7 +897,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData();
             formData.append('boleto_pdf', fileInput.files[0]);
             formData.append('csrfmiddlewaretoken', document.querySelector('[name="csrfmiddlewaretoken"]').value);
-            fetch('{% url "api_processar_boleto" %}', { method: 'POST', body: formData })
+            fetch('{% url "api_extrair_codigos_barras_upload" %}', { method: 'POST', body: formData })
                 .then(response => response.json())
                 .then(data => {
                     if (data.sucesso) {

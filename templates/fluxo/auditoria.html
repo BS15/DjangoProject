@@ -12,6 +12,8 @@
         .badge-criacao  { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
         .badge-alteracao { background-color: #fff3cd; color: #664d03; border: 1px solid #ffecb5; }
         .badge-exclusao  { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+        .th-sort-link { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: .35rem; }
+        .th-sort-link:hover { text-decoration: underline; color: #cfe2ff; }
     </style>
 </head>
 <body class="bg-light">
@@ -63,6 +65,23 @@
                     <label class="form-label small fw-bold text-muted mb-1">Usuário</label>
                     <input type="text" name="usuario" class="form-control form-control-sm" placeholder="Nome de usuário" value="{{ filtros.usuario }}">
                 </div>
+                <div class="col-md-1">
+                    <label class="form-label small fw-bold text-muted mb-1">Ordenar</label>
+                    <select name="ordem" class="form-control form-control-sm">
+                        <option value="data" {% if ordem == "data" %}selected{% endif %}>Data</option>
+                        <option value="modelo" {% if ordem == "modelo" %}selected{% endif %}>Modelo</option>
+                        <option value="id" {% if ordem == "id" %}selected{% endif %}>ID</option>
+                        <option value="acao" {% if ordem == "acao" %}selected{% endif %}>Ação</option>
+                        <option value="usuario" {% if ordem == "usuario" %}selected{% endif %}>Usuário</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label small fw-bold text-muted mb-1">Direção</label>
+                    <select name="direcao" class="form-control form-control-sm">
+                        <option value="desc" {% if direcao == "desc" %}selected{% endif %}>Desc</option>
+                        <option value="asc" {% if direcao == "asc" %}selected{% endif %}>Asc</option>
+                    </select>
+                </div>
                 <div class="col-md-1 d-flex gap-1">
                     <button type="submit" class="btn btn-primary btn-sm fw-bold flex-fill shadow-sm" title="Buscar">
                         <i class="bi bi-search"></i>
@@ -81,12 +100,66 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-dark">
                         <tr>
-                            <th class="ps-4" style="width:13%;">Data / Hora</th>
-                            <th style="width:18%;">Modelo</th>
-                            <th style="width:8%;">ID Objeto</th>
-                            <th style="width:10%;">Ação</th>
-                            <th style="width:15%;">Usuário</th>
-                            <th>Descrição do Registro</th>
+                            <th class="ps-4" style="width:13%;">
+                                <a class="th-sort-link" href="?{{ sort_base_qs }}ordem=data&amp;direcao={% if ordem == 'data' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
+                                    Data / Hora
+                                    {% if ordem == "data" %}
+                                        <i class="bi {% if direcao == 'asc' %}bi-sort-up{% else %}bi-sort-down{% endif %}"></i>
+                                    {% else %}
+                                        <i class="bi bi-arrow-down-up"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th style="width:18%;">
+                                <a class="th-sort-link" href="?{{ sort_base_qs }}ordem=modelo&amp;direcao={% if ordem == 'modelo' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
+                                    Modelo
+                                    {% if ordem == "modelo" %}
+                                        <i class="bi {% if direcao == 'asc' %}bi-sort-up{% else %}bi-sort-down{% endif %}"></i>
+                                    {% else %}
+                                        <i class="bi bi-arrow-down-up"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th style="width:8%;">
+                                <a class="th-sort-link" href="?{{ sort_base_qs }}ordem=id&amp;direcao={% if ordem == 'id' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
+                                    ID Objeto
+                                    {% if ordem == "id" %}
+                                        <i class="bi {% if direcao == 'asc' %}bi-sort-up{% else %}bi-sort-down{% endif %}"></i>
+                                    {% else %}
+                                        <i class="bi bi-arrow-down-up"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th style="width:10%;">
+                                <a class="th-sort-link" href="?{{ sort_base_qs }}ordem=acao&amp;direcao={% if ordem == 'acao' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
+                                    Ação
+                                    {% if ordem == "acao" %}
+                                        <i class="bi {% if direcao == 'asc' %}bi-sort-up{% else %}bi-sort-down{% endif %}"></i>
+                                    {% else %}
+                                        <i class="bi bi-arrow-down-up"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th style="width:15%;">
+                                <a class="th-sort-link" href="?{{ sort_base_qs }}ordem=usuario&amp;direcao={% if ordem == 'usuario' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
+                                    Usuário
+                                    {% if ordem == "usuario" %}
+                                        <i class="bi {% if direcao == 'asc' %}bi-sort-up{% else %}bi-sort-down{% endif %}"></i>
+                                    {% else %}
+                                        <i class="bi bi-arrow-down-up"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a class="th-sort-link" href="?{{ sort_base_qs }}ordem=descricao&amp;direcao={% if ordem == 'descricao' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
+                                    Descrição do Registro
+                                    {% if ordem == "descricao" %}
+                                        <i class="bi {% if direcao == 'asc' %}bi-sort-up{% else %}bi-sort-down{% endif %}"></i>
+                                    {% else %}
+                                        <i class="bi bi-arrow-down-up"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
                             <th style="width:18%;">Motivo da Alteração</th>
                         </tr>
                     </thead>
