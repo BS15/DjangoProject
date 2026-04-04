@@ -151,6 +151,7 @@ def api_extrair_dados_empenho(request):
     )
 
 
+@permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def api_tipos_documento_por_pagamento(request):
     tipo_pagamento_id = request.GET.get("tipo_pagamento_id")
 
@@ -170,6 +171,7 @@ def api_tipos_documento_por_pagamento(request):
         return JsonResponse({"sucesso": False, "erro": str(e)})
 
 
+@permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def api_detalhes_pagamento(request):
     if request.method == "POST":
         try:
@@ -215,6 +217,7 @@ def api_detalhes_pagamento(request):
     return JsonResponse({"sucesso": False, "erro": "Método inválido"})
 
 
+@permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 @xframe_options_sameorigin
 def visualizar_pdf_processo(request, processo_id):
     processo = get_object_or_404(Processo, id=processo_id)

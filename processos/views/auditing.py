@@ -2,6 +2,7 @@
 
 from urllib.parse import urlencode
 
+from django.contrib.auth.decorators import permission_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.clickjacking import xframe_options_sameorigin
@@ -27,6 +28,7 @@ from .helpers import (
 )
 
 
+@permission_required("processos.pode_auditar_conselho", raise_exception=True)
 @require_GET
 @xframe_options_sameorigin
 def api_documentos_processo(request, processo_id):
@@ -35,6 +37,8 @@ def api_documentos_processo(request, processo_id):
     return JsonResponse(_build_payload_documentos_processo_auditoria(processo))
 
 
+@permission_required("processos.pode_auditar_conselho", raise_exception=True)
+@require_GET
 def api_processo_detalhes(request):
     """Retorna detalhes de um processo por ``id`` informado via query string."""
     processo_id = request.GET.get("id", "").strip()
@@ -53,6 +57,7 @@ def api_processo_detalhes(request):
     return JsonResponse(_build_payload_processo_detalhes(processo))
 
 
+@permission_required("processos.pode_auditar_conselho", raise_exception=True)
 def auditoria_view(request):
     """Renderiza a trilha de auditoria consolidada de modelos financeiros."""
     HISTORY_TYPE_LABELS = {"+": "Criação", "~": "Alteração", "-": "Exclusão"}

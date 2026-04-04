@@ -2,11 +2,13 @@ import io
 import logging
 import os
 import textwrap
+from datetime import date
 
 from django.conf import settings
-from pypdf import PdfReader, PdfWriter
+from pypdf import PdfReader
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
+from .utils.pdf_generation import merge_canvas_with_template
 
 logger = logging.getLogger(__name__)
 
@@ -115,34 +117,18 @@ class BasePDFDocument:
         # 1. Draw specific content
         self.draw_content()
         self.canvas.save()
-        self.packet.seek(0)
+        template_path = None
+        if self.letterhead_path:
+            template_path = os.path.join(settings.BASE_DIR, self.letterhead_path)
+            if not os.path.exists(template_path):
+                logger.warning(
+                    "Letterhead file not found at '%s'. Generating PDF without letterhead.",
+                    template_path,
+                )
+                template_path = None
 
-        # 2. Merge with letterhead
-        new_pdf = PdfReader(self.packet)
-        template_path = os.path.join(settings.BASE_DIR, self.letterhead_path)
-        try:
-            with open(template_path, "rb") as f:
-                template_pdf = PdfReader(f)
-                page = template_pdf.pages[0]
-                page.merge_page(new_pdf.pages[0])
-
-                # 3. Write final output
-                output = PdfWriter()
-                output.add_page(page)
-                final_packet = io.BytesIO()
-                output.write(final_packet)
-
-            return final_packet.getvalue()
-        except FileNotFoundError:
-            logger.warning(
-                "Letterhead file not found at '%s'. Generating PDF without letterhead.",
-                template_path,
-            )
-            output = PdfWriter()
-            output.add_page(new_pdf.pages[0])
-            final_packet = io.BytesIO()
-            output.write(final_packet)
-            return final_packet.getvalue()
+        merged_packet = merge_canvas_with_template(self.packet, template_path)
+        return merged_packet.getvalue()
 
 
 class TermoContabilizacaoDocument(BasePDFDocument):
@@ -743,6 +729,59 @@ class ConselhoFiscalDocument(BasePDFDocument):
             c.drawCentredString(sig_x, _COUNCIL_SIG_Y - 12, label)
 
 
+class TermoAuditoriaDocument(BasePDFDocument):
+    """Generates the 'Termo de Auditoria' PDF for a given Processo."""
+
+    def draw_content(self):
+        processo = self.obj
+        c = self.canvas
+        width = self.page_width
+        height = self.page_height
+
+        margin_left = 70
+        margin_right = 70
+        text_width = width - margin_left - margin_right
+
+        y = height - 160
+
+        c.setFont("Helvetica-Bold", 13)
+        c.drawCentredString(width / 2.0, y, "TERMO DE AUDITORIA")
+        y -= 18
+        c.setFont("Helvetica-Bold", 11)
+        c.drawCentredString(width / 2.0, y, f"PROCESSO Nº {processo.id}")
+        y -= 28
+
+        c.setLineWidth(0.5)
+        c.line(margin_left, y, width - margin_right, y)
+        y -= 20
+
+        c.setFont("Helvetica", 11)
+        c.drawString(margin_left, y, f"Credor: {processo.credor.nome if processo.credor else 'Não informado'}")
+        y -= 16
+        c.drawString(margin_left, y, f"Valor Líquido: {_formatar_moeda(processo.valor_liquido)}")
+        y -= 16
+        c.drawString(
+            margin_left,
+            y,
+            f"Data de Auditoria: {date.today().strftime('%d/%m/%Y')}",
+        )
+        y -= 24
+
+        texto = (
+            "Certifico, para os devidos fins, que o processo foi auditado e que os "
+            "documentos apresentados atendem aos requisitos formais e materiais "
+            "para continuidade do fluxo institucional."
+        )
+        y = _draw_wrapped_text(c, texto, margin_left, y, text_width, font_name="Helvetica", font_size=11)
+        y -= 30
+
+        sig_x = width / 2.0
+        c.setFont("Helvetica", 10)
+        c.drawCentredString(sig_x, _AUTH_SIG_Y + _AUTH_SIG_DATE_OFFSET, "Local e Data: _____________________________, _____ / _____ / _________")
+        c.line(sig_x - _AUTH_SIG_HALF_WIDTH, _AUTH_SIG_Y, sig_x + _AUTH_SIG_HALF_WIDTH, _AUTH_SIG_Y)
+        c.drawCentredString(sig_x, _AUTH_SIG_Y - 14, "Responsável pela Auditoria")
+
+
 class ReciboDocument(BasePDFDocument):
     """Generates a 'Recibo de Pagamento' PDF for the four verba types:
     ReembolsoCombustivel, AuxilioRepresentacao, Jeton, and SuprimentoDeFundos.
@@ -833,6 +872,7 @@ class ReciboDocument(BasePDFDocument):
 DOCUMENT_REGISTRY = {
     'scd': SCDDocument,
     'contabilizacao': TermoContabilizacaoDocument,
+    'auditoria': TermoAuditoriaDocument,
     'ateste': TermoAtesteDocument,
     'autorizacao': AutorizacaoDocument,
     'pcd': PCDDocument,

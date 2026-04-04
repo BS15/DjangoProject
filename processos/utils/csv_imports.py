@@ -9,6 +9,8 @@ import io
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
+from django.db.models import Max
+
 
 def _parse_diaria_row(row, line_num):
     """Valida uma única linha de Diária. Retorna (dict_válido, msg_erro)."""
@@ -58,6 +60,42 @@ _COLUNAS_REQUERIDAS = {
     'NOME_BENEFICIARIO', 'DATA_SAIDA', 'DATA_RETORNO',
     'CIDADE_ORIGEM', 'CIDADE_DESTINO', 'OBJETIVO', 'QUANTIDADE_DIARIAS',
 }
+
+
+def _gerar_anexar_scd_e_criar_assinatura(diaria, usuario_logado):
+    """Gera SCD, anexa em DocumentoDiaria e cria rascunho de assinatura Autentique."""
+    from processos.models import DocumentoDiaria, TiposDeDocumento
+    from processos.models.fluxo import AssinaturaAutentique
+    from processos.pdf_engine import gerar_documento_pdf
+    from django.contrib.contenttypes.models import ContentType
+    from django.core.files.base import ContentFile
+
+    pdf_bytes = gerar_documento_pdf('scd', diaria)
+
+    tipo_scd, _ = TiposDeDocumento.objects.get_or_create(
+        tipo_de_documento__iexact='SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS (SCD)',
+        defaults={'tipo_de_documento': 'SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS (SCD)'},
+    )
+    proxima_ordem = (diaria.documentos.aggregate(max_ordem=Max('ordem'))['max_ordem'] or 0) + 1
+    DocumentoDiaria.objects.create(
+        diaria=diaria,
+        arquivo=ContentFile(pdf_bytes, name=f"SCD_{diaria.id}.pdf"),
+        tipo=tipo_scd,
+        ordem=proxima_ordem,
+    )
+
+    assinatura = AssinaturaAutentique(
+        content_type=ContentType.objects.get_for_model(diaria),
+        object_id=diaria.id,
+        tipo_documento='SCD',
+        criador=usuario_logado,
+        status='RASCUNHO',
+    )
+    assinatura.arquivo.save(
+        f"SCD_{diaria.id}.pdf",
+        ContentFile(pdf_bytes),
+        save=True,
+    )
 
 
 def _open_diaria_csv(csv_file):
@@ -145,6 +183,12 @@ def importar_diarias_lote(csv_file, usuario_logado):
             autorizada=False,
         )
         nova_diaria.avancar_status('SOLICITADA')
+        try:
+            _gerar_anexar_scd_e_criar_assinatura(nova_diaria, usuario_logado)
+        except Exception as e:
+            resultados['erros'].append(
+                f"Diária {nova_diaria.numero_siscac or nova_diaria.id}: SCD não gerado ({e})"
+            )
         resultados['sucessos'] += 1
 
     return resultados
@@ -182,23 +226,7 @@ def confirmar_diarias_lote(preview_items, usuario_logado):
         nova_diaria.avancar_status('SOLICITADA')
 
         try:
-            from processos.pdf_engine import gerar_documento_pdf
-            from processos.models.fluxo import AssinaturaAutentique
-            from django.contrib.contenttypes.models import ContentType
-            from django.core.files.base import ContentFile
-            pdf_bytes = gerar_documento_pdf('scd', nova_diaria)
-            assinatura = AssinaturaAutentique(
-                content_type=ContentType.objects.get_for_model(nova_diaria),
-                object_id=nova_diaria.id,
-                tipo_documento='SCD',
-                criador=usuario_logado,
-                status='RASCUNHO',
-            )
-            assinatura.arquivo.save(
-                f"SCD_{nova_diaria.id}.pdf",
-                ContentFile(pdf_bytes),
-                save=True,
-            )
+            _gerar_anexar_scd_e_criar_assinatura(nova_diaria, usuario_logado)
         except Exception as e:
             resultados['erros'].append(
                 f"Diária {nova_diaria.numero_siscac or nova_diaria.id}: SCD não gerado ({e})"

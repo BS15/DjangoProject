@@ -2,6 +2,7 @@
 
 import json
 
+from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
@@ -13,6 +14,7 @@ from ..models import ComprovanteDePagamento, DocumentoProcesso, Processo, TiposD
 from ..utils import split_pdf_to_temp_pages, processar_pdf_comprovantes
 
 
+@permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def painel_comprovantes_view(request):
     processos_lancados = Processo.objects.filter(
         status__status_choice__iexact="LANÇADO - AGUARDANDO COMPROVANTE"
@@ -55,6 +57,7 @@ def serializar_comprovante(comp):
 _serializar_comprovante = serializar_comprovante
 
 
+@permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def api_fatiar_comprovantes(request):
     if request.method == "POST" and request.FILES.get("pdf_banco"):
         modo = request.POST.get("modo", "auto")
@@ -72,6 +75,7 @@ def api_fatiar_comprovantes(request):
     return JsonResponse({"sucesso": False, "erro": "Arquivo não enviado."})
 
 
+@permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def api_vincular_comprovantes(request):
     if request.method == "POST":
         try:

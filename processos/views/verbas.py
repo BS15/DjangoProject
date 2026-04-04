@@ -21,6 +21,7 @@ from ..models import (
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.base import ContentFile
 from django.core.exceptions import PermissionDenied
+from django.db.models import Max
 from ..filters import DiariaFilter, ReembolsoFilter, JetonFilter, AuxilioFilter
 from ..utils import sync_diarias_siscac_csv, importar_diarias_lote, preview_diarias_lote, confirmar_diarias_lote
 from ..pdf_engine import gerar_documento_pdf
@@ -29,6 +30,21 @@ from ..autentique_service import enviar_documento_para_assinatura, verificar_e_b
 logger = logging.getLogger(__name__)
 
 _EXTENSOES_DOCUMENTO_PERMITIDAS = {'.pdf', '.jpg', '.jpeg', '.png'}
+
+
+def _anexar_scd_na_diaria(diaria, pdf_bytes):
+    """Anexa o SCD gerado na lista de documentos da diária na próxima ordem."""
+    tipo_scd, _ = TiposDeDocumento.objects.get_or_create(
+        tipo_de_documento__iexact='SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS (SCD)',
+        defaults={'tipo_de_documento': 'SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS (SCD)'},
+    )
+    proxima_ordem = (diaria.documentos.aggregate(max_ordem=Max('ordem'))['max_ordem'] or 0) + 1
+    DocumentoDiaria.objects.create(
+        diaria=diaria,
+        arquivo=ContentFile(pdf_bytes, name=f"SCD_{diaria.id}.pdf"),
+        tipo=tipo_scd,
+        ordem=proxima_ordem,
+    )
 
 def diarias_list_view(request):
     queryset = Diaria.objects.select_related('beneficiario', 'status', 'processo').all().order_by('-id')
@@ -61,6 +77,7 @@ def add_diaria_view(request):
 
             try:
                 pdf_bytes = gerar_documento_pdf('scd', nova_diaria)
+                _anexar_scd_na_diaria(nova_diaria, pdf_bytes)
                 assinatura = AssinaturaAutentique(
                     content_type=ContentType.objects.get_for_model(nova_diaria),
                     object_id=nova_diaria.id,
