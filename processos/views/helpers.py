@@ -107,6 +107,19 @@ def _gerar_agrupamentos_contas_a_pagar(queryset):
     }
 
 
+def _obter_estatisticas_boletos(processo):
+    """Retorna estatísticas de boletos e códigos de barras de um processo."""
+    boleto_docs_qs = processo.documentos.select_related("tipo").filter(
+        tipo__tipo_de_documento__icontains="boleto"
+    )
+    boleto_barcodes_list = [doc.codigo_barras for doc in boleto_docs_qs if doc.codigo_barras]
+    return {
+        "boleto_docs_count": boleto_docs_qs.count(),
+        "boleto_barcodes_list": boleto_barcodes_list,
+        "boleto_barcodes_count": len(boleto_barcodes_list),
+    }
+
+
 def _aplicar_filtros_contas_a_pagar(queryset, params):
     """Aplica os filtros manuais de contas a pagar com base nos parametros GET."""
     qs = queryset
@@ -632,10 +645,10 @@ def _build_detalhes_pagamento(processos):
         tipo = p.tipo_pagamento.tipo_de_pagamento.upper() if p.tipo_pagamento else ""
 
         if tipo == "GERENCIADOR/BOLETO BANCÁRIO" or "boleto" in forma or "gerenciador" in forma:
-            codigos_barras = [doc.codigo_barras for doc in p.documentos.all() if doc.codigo_barras]
+            estatisticas_boletos = _obter_estatisticas_boletos(p)
             dados_pagamento = {
                 "tipo": "codigo_barras",
-                "codigos_barras": codigos_barras,
+                "codigos_barras": estatisticas_boletos["boleto_barcodes_list"],
             }
         elif "pix" in forma:
             dados_pagamento = {
@@ -851,6 +864,7 @@ def _recusar_processo_view(request, pk, *, permission, status_devolucao, error_m
 
 __all__ = [
     "_normalizar_texto",
+    "_obter_estatisticas_boletos",
     "_normalizar_filtro_opcao",
     "_aplicar_filtro_por_opcao",
     "_aplicar_filtros_historico",

@@ -19,6 +19,7 @@ from .helpers import aplicar_aprovacao_contingencia
 
 
 @require_GET
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def painel_pendencias_view(request: HttpRequest) -> HttpResponse:
     queryset_base = Pendencia.objects.select_related(
         "processo", "status", "tipo", "processo__credor", "processo__status"
@@ -34,6 +35,7 @@ def painel_pendencias_view(request: HttpRequest) -> HttpResponse:
 
 
 @require_GET
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def painel_contingencias_view(request: HttpRequest) -> HttpResponse:
     queryset = Contingencia.objects.select_related("processo", "solicitante").order_by("-data_solicitacao")
     meu_filtro = ContingenciaFilter(request.GET, queryset=queryset)
@@ -48,12 +50,14 @@ def painel_contingencias_view(request: HttpRequest) -> HttpResponse:
 
 
 @require_GET
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def add_contingencia_view(request: HttpRequest) -> HttpResponse:
     """Renderiza o formulário para abertura de contingência."""
     return render(request, "fluxo/add_contingencia.html")
 
 
 @require_POST
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def add_contingencia_action(request: HttpRequest) -> HttpResponse:
     """Cria uma contingência (correção manual) para um processo."""
     processo_id = cast(str, request.POST.get("processo_id", "")).strip()
@@ -128,6 +132,7 @@ def analisar_contingencia_view(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @require_GET
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def painel_devolucoes_view(request: HttpRequest) -> HttpResponse:
     queryset = Devolucao.objects.select_related("processo", "processo__credor").order_by("-data_devolucao")
     meu_filtro = DevolucaoFilter(request.GET, queryset=queryset)
@@ -144,6 +149,7 @@ def painel_devolucoes_view(request: HttpRequest) -> HttpResponse:
 
 
 @require_GET
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def registrar_devolucao_view(request: HttpRequest, processo_id: int) -> HttpResponse:
     """Renderiza formulário para registrar devolução vinculada ao processo."""
     processo = get_object_or_404(Processo, id=processo_id)
@@ -153,6 +159,7 @@ def registrar_devolucao_view(request: HttpRequest, processo_id: int) -> HttpResp
 
 
 @require_POST
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def registrar_devolucao_action(request: HttpRequest, processo_id: int) -> HttpResponse:
     """Persiste devolução vinculada ao processo a partir do POST do formulário."""
     processo = get_object_or_404(Processo, id=processo_id)
@@ -169,6 +176,7 @@ def registrar_devolucao_action(request: HttpRequest, processo_id: int) -> HttpRe
 
 
 @require_GET
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def process_detail_view(request: HttpRequest, pk: int) -> HttpResponse:
     processo: Any = get_object_or_404(Processo, pk=pk)
     documentos = processo.documentos.all()

@@ -1,8 +1,9 @@
 """Modelos centrais do fluxo financeiro, auditoria e gestão documental."""
 
+import logging
 import os
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Max, Sum
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
@@ -14,6 +15,9 @@ from simple_history.models import HistoricalRecords
 from datetime import date
 from processos.validators import validar_arquivo_seguro
 from processos.utils import mesclar_pdfs_em_memoria
+
+
+logger = logging.getLogger(__name__)
 
 
 # Substitua a sua função antiga por esta:
@@ -313,6 +317,148 @@ class Processo(models.Model):
             return None
         return mesclar_pdfs_em_memoria(lista_caminhos)
 
+    def _obter_tipo_documento_gerado(self, nome_tipo_documento):
+        """Resolve (ou cria) o tipo de documento para anexos gerados automaticamente."""
+        if self.tipo_pagamento_id:
+            doc_tipo = TiposDeDocumento.objects.filter(
+                tipo_de_documento__iexact=nome_tipo_documento,
+                tipo_de_pagamento=self.tipo_pagamento,
+            ).first()
+            if doc_tipo:
+                return doc_tipo
+
+        doc_tipo_geral = TiposDeDocumento.objects.filter(
+            tipo_de_documento__iexact=nome_tipo_documento,
+            tipo_de_pagamento__isnull=True,
+        ).first()
+        if doc_tipo_geral:
+            return doc_tipo_geral
+
+        return TiposDeDocumento.objects.create(
+            tipo_de_documento=nome_tipo_documento,
+            tipo_de_pagamento=self.tipo_pagamento if self.tipo_pagamento_id else None,
+        )
+
+    def _anexar_pdf_gerado(self, pdf_bytes, nome_arquivo, tipo_documento_nome):
+        """Anexa PDF gerado como DocumentoProcesso na próxima ordem disponível."""
+        from django.core.files.base import ContentFile
+
+        if self.documentos.filter(arquivo__icontains=nome_arquivo).exists():
+            return False
+
+        proxima_ordem = (self.documentos.aggregate(max_ordem=Max("ordem"))["max_ordem"] or 0) + 1
+        tipo_documento = self._obter_tipo_documento_gerado(tipo_documento_nome)
+
+        DocumentoProcesso.objects.create(
+            processo=self,
+            arquivo=ContentFile(pdf_bytes, name=nome_arquivo),
+            tipo=tipo_documento,
+            ordem=proxima_ordem,
+        )
+        return True
+
+    def _gerar_anexo_por_tipo(self, doc_type, obj, nome_arquivo, tipo_documento_nome, **kwargs):
+        """Gera PDF via engine e anexa ao processo sem duplicar arquivo."""
+        from processos.pdf_engine import gerar_documento_pdf
+
+        if self.documentos.filter(arquivo__icontains=nome_arquivo).exists():
+            return False
+
+        pdf_bytes = gerar_documento_pdf(doc_type, obj, **kwargs)
+        return self._anexar_pdf_gerado(pdf_bytes, nome_arquivo, tipo_documento_nome)
+
+    def _gerar_documentos_automaticos(self, status_anterior, novo_status):
+        """Gera e anexa documentos automáticos conforme transição de status."""
+        try:
+            if novo_status == "A PAGAR - AUTORIZADO":
+                self._gerar_anexo_por_tipo(
+                    "autorizacao",
+                    self,
+                    f"Termo_Autorizacao_Proc_{self.id}.pdf",
+                    "TERMO DE AUTORIZAÇÃO DE PAGAMENTO",
+                )
+
+            if novo_status == "CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL":
+                self._gerar_anexo_por_tipo(
+                    "contabilizacao",
+                    self,
+                    f"Termo_Contabilizacao_Proc_{self.id}.pdf",
+                    "TERMO DE CONTABILIZAÇÃO",
+                )
+                self._gerar_anexo_por_tipo(
+                    "auditoria",
+                    self,
+                    f"Termo_Auditoria_Proc_{self.id}.pdf",
+                    "TERMO DE AUDITORIA",
+                )
+
+            if novo_status == "APROVADO - PENDENTE ARQUIVAMENTO":
+                numero_reuniao = self.reuniao_conselho.numero if self.reuniao_conselho else None
+                self._gerar_anexo_por_tipo(
+                    "conselho_fiscal",
+                    self,
+                    f"Parecer_Conselho_Fiscal_Proc_{self.id}.pdf",
+                    "PARECER DO CONSELHO FISCAL",
+                    numero_reuniao=numero_reuniao,
+                )
+
+            entrou_em_pago = not status_anterior.startswith("PAGO") and novo_status.startswith("PAGO")
+            if entrou_em_pago:
+                for diaria in self.diarias.all():
+                    identificador = diaria.numero_siscac or diaria.id
+                    self._gerar_anexo_por_tipo(
+                        "pcd",
+                        diaria,
+                        f"PCD_{identificador}.pdf",
+                        "PROPOSTA DE CONCESSÃO DE DIÁRIAS (PCD)",
+                    )
+
+                for reembolso in self.reembolsos_combustivel.all():
+                    identificador = reembolso.numero_sequencial or reembolso.id
+                    self._gerar_anexo_por_tipo(
+                        "recibo_reembolso",
+                        reembolso,
+                        f"Recibo_Reembolso_{identificador}.pdf",
+                        "RECIBO DE PAGAMENTO",
+                    )
+
+                for jeton in self.jetons.all():
+                    identificador = jeton.numero_sequencial or jeton.id
+                    self._gerar_anexo_por_tipo(
+                        "recibo_jeton",
+                        jeton,
+                        f"Recibo_Jeton_{identificador}.pdf",
+                        "RECIBO DE PAGAMENTO",
+                    )
+
+                for auxilio in self.auxilios_representacao.all():
+                    identificador = auxilio.numero_sequencial or auxilio.id
+                    self._gerar_anexo_por_tipo(
+                        "recibo_auxilio",
+                        auxilio,
+                        f"Recibo_Auxilio_{identificador}.pdf",
+                        "RECIBO DE PAGAMENTO",
+                    )
+
+                for suprimento in self.suprimentos.all():
+                    self._gerar_anexo_por_tipo(
+                        "recibo_suprimento",
+                        suprimento,
+                        f"Recibo_Suprimento_{suprimento.id}.pdf",
+                        "RECIBO DE PAGAMENTO",
+                    )
+        except Exception:
+            logger.exception(
+                "Falha ao gerar anexos automáticos do processo %s na transição '%s' -> '%s'",
+                self.id,
+                status_anterior,
+                novo_status,
+            )
+
+    def disparar_documentos_automaticos_por_status(self, status_anterior, novo_status):
+        """Dispara geração automática de documentos para transições feitas fora de ``avancar_status``."""
+        self._gerar_documentos_automaticos((status_anterior or "").upper(), (novo_status or "").upper())
+
     def avancar_status(self, novo_status_str, usuario=None):
         """Avança status validando turnpike e propaga pagamento para diárias vinculadas."""
         from django.core.exceptions import ValidationError
@@ -332,7 +478,11 @@ class Processo(models.Model):
 
         self.save(update_fields=['status'])
 
-        if novo_status_str.upper().startswith('PAGO'):
+        status_anterior_norm = (status_anterior or "").upper()
+        novo_status_norm = (novo_status_str or "").upper()
+        self._gerar_documentos_automaticos(status_anterior_norm, novo_status_norm)
+
+        if novo_status_norm.startswith('PAGO'):
             from processos.models.verbas import StatusChoicesVerbasIndenizatorias
             status_paga, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
                 status_choice='PAGA'

@@ -1,6 +1,7 @@
 """Views relacionadas a retencoes e agrupamento de impostos."""
 
 from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 
@@ -9,6 +10,7 @@ from ..models import Credor, DocumentoFiscal, Processo, RetencaoImposto, StatusC
 from .helpers import _aplicar_filtro_por_opcao, _normalizar_filtro_opcao
 
 
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def painel_impostos(request):
     visao = request.GET.get("visao", "processos")
     status_agrupamento = _normalizar_filtro_opcao(
@@ -63,6 +65,7 @@ def painel_impostos(request):
     return render(request, "fiscal/painel_impostos.html", context)
 
 
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def agrupar_impostos_view(request):
     if request.method != "POST":
         return redirect("painel_impostos")
@@ -121,6 +124,7 @@ def agrupar_impostos_view(request):
     return redirect("editar_processo", pk=novo_processo.id)
 
 
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def api_processar_retencoes(request):
     """
     Recebe um arquivo PDF de Nota Fiscal e aplica as regras de negócio de

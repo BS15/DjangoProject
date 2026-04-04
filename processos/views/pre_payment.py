@@ -16,6 +16,7 @@ from ..filters import AEmpenharFilter
 from ..forms import DocumentoFormSet, PendenciaFormSet, ProcessoForm
 from ..models import Processo, StatusChoicesProcesso, TiposDeDocumento, DocumentoProcesso
 from ..validators import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
+from .helpers import _obter_estatisticas_boletos
 
 
 def _obter_campo_ordenacao(request, campos_permitidos, default_ordem="id", default_direcao="desc"):
@@ -151,23 +152,6 @@ def home_page(request):
         "direcao": request.GET.get("direcao", "desc"),
     }
     return render(request, "home.html", context)
-
-
-def _obter_estatisticas_boletos(processo):
-    """Retorna um dict com contagem de boletos e lista de códigos de barras presentes.
-
-    Chaves: `boleto_docs_count`, `boleto_barcodes_list`, `boleto_barcodes_count`.
-    Pronto para ser desempacotado no contexto da view com `**`.
-    """
-    boleto_docs_qs = processo.documentos.select_related("tipo").filter(
-        tipo__tipo_de_documento__icontains="boleto"
-    )
-    boleto_barcodes_list = [doc.codigo_barras for doc in boleto_docs_qs if doc.codigo_barras]
-    return {
-        "boleto_docs_count": boleto_docs_qs.count(),
-        "boleto_barcodes_list": boleto_barcodes_list,
-        "boleto_barcodes_count": len(boleto_barcodes_list),
-    }
 
 
 def _verificar_documento_orcamentario(documento_formset, is_extra, trigger_a_empenhar):

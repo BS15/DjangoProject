@@ -15,6 +15,7 @@ import json
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 
+from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import Sum
@@ -34,6 +35,7 @@ from ..models import (
 )
 
 
+@permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def documentos_fiscais_view(request, pk):
     """Renderiza a tela de gestão de documentos fiscais de um processo.
 
@@ -67,6 +69,7 @@ def documentos_fiscais_view(request, pk):
     return render(request, "fiscal/documentos_fiscais.html", context)
 
 
+@permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def api_toggle_documento_fiscal(request, processo_pk, documento_pk):
     """Alterna o vínculo fiscal de um documento do processo.
 
@@ -117,6 +120,8 @@ def api_toggle_documento_fiscal(request, processo_pk, documento_pk):
             }
         )
 
+
+@permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 @transaction.atomic
 def api_salvar_nota_fiscal(request, processo_pk, nota_pk):
     """Salva os dados da nota fiscal, retenções e pendência de ateste.

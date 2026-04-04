@@ -21,7 +21,6 @@ from .text_helpers import (
 from .pdf_generation import (
     mesclar_pdfs_em_memoria,
     merge_canvas_with_template,
-    gerar_termo_auditoria,
 )
 
 from .pdf_extraction import (
@@ -55,7 +54,6 @@ __all__ = [
     # pdf_generation
     "mesclar_pdfs_em_memoria",
     "merge_canvas_with_template",
-    "gerar_termo_auditoria",
     # pdf_extraction
     "sort_pages",
     "extract_siscac_data",

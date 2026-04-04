@@ -3,11 +3,13 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
 from ..forms import CredorForm
 from ..models import Credor
 from ..filters import CredorFilter
 
 
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def add_credor_view(request):
     """Cria um novo credor a partir do formulário de cadastro."""
     if request.method == 'POST':
@@ -24,6 +26,7 @@ def add_credor_view(request):
     return render(request, 'cadastros/add_credor.html', {'form': form})
 
 
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def edit_credor_view(request, pk):
     """Edita um credor existente identificado pela chave primária."""
     credor = get_object_or_404(Credor, pk=pk)
@@ -41,6 +44,7 @@ def edit_credor_view(request, pk):
     return render(request, 'cadastros/edit_credor.html', {'form': form, 'credor': credor})
 
 
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def credores_list_view(request):
     """Lista credores com suporte a filtros do ``CredorFilter``."""
     queryset = Credor.objects.all().order_by('nome')
@@ -53,6 +57,7 @@ def credores_list_view(request):
     return render(request, 'cadastros/credores_list.html', context)
 
 
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def api_dados_credor(request, credor_id):
     """Retorna em JSON dados de credor para autofill em formulários."""
     try:

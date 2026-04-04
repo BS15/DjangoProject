@@ -5,6 +5,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Any, Mapping
 
 from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
@@ -106,12 +107,17 @@ def _encerrar_prestacao_suprimento(suprimento: Any) -> None:
     with transaction.atomic():
         processo = suprimento.processo
         if processo:
+            status_anterior = processo.status.status_choice if processo.status else ""
             status_conferencia, _ = StatusChoicesProcesso.objects.get_or_create(
                 status_choice__iexact="PAGO - EM CONFERÊNCIA",
                 defaults={"status_choice": "PAGO - EM CONFERÊNCIA"},
             )
             processo.status = status_conferencia
             processo.save(update_fields=["status"])
+            processo.disparar_documentos_automaticos_por_status(
+                status_anterior,
+                "PAGO - EM CONFERÊNCIA",
+            )
 
         status_encerrado, _ = StatusChoicesSuprimentoDeFundos.objects.get_or_create(status_choice="ENCERRADO")
         suprimento.status = status_encerrado
@@ -119,6 +125,7 @@ def _encerrar_prestacao_suprimento(suprimento: Any) -> None:
 
 
 @require_GET
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def painel_suprimentos_view(request: HttpRequest) -> HttpResponse:
     """Exibe painel resumido com os suprimentos cadastrados."""
     suprimentos = SuprimentoDeFundos.objects.all().order_by("-id")
@@ -126,6 +133,7 @@ def painel_suprimentos_view(request: HttpRequest) -> HttpResponse:
 
 
 @require_GET
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def gerenciar_suprimento_view(request: HttpRequest, pk: int) -> HttpResponse:
     """Exibe detalhes operacionais de um suprimento e suas despesas."""
     suprimento: Any = get_object_or_404(SuprimentoDeFundos, id=pk)
@@ -140,6 +148,7 @@ def gerenciar_suprimento_view(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @require_POST
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def adicionar_despesa_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Registra manualmente uma despesa de suprimento a partir de dados do POST."""
     suprimento: Any = get_object_or_404(SuprimentoDeFundos, id=pk)
@@ -160,6 +169,7 @@ def adicionar_despesa_action(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @require_POST
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def fechar_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Encerra a prestação de contas e avança o processo vinculado para conferência."""
     suprimento: Any = get_object_or_404(SuprimentoDeFundos, id=pk)
@@ -176,6 +186,7 @@ def fechar_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
     return redirect("painel_suprimentos")
 
 
+@permission_required("processos.acesso_backoffice", raise_exception=True)
 def add_suprimento_view(request: HttpRequest) -> HttpResponse:
     """Cria um suprimento e o processo financeiro vinculado."""
     form = SuprimentoForm(request.POST or None)
