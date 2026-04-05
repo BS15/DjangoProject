@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, redirect, render
 
 from ...filters import JetonFilter
@@ -12,10 +13,12 @@ from .verbas_shared import (
 )
 
 
+@permission_required("processos.pode_visualizar_verbas", raise_exception=True)
 def jetons_list_view(request):
     return _render_lista_verba(request, Jeton, JetonFilter, 'verbas/jetons_list.html')
 
 
+@permission_required("processos.pode_gerenciar_jetons", raise_exception=True)
 def add_jeton_view(request):
     if request.method == 'POST':
         form = JetonForm(request.POST)
@@ -34,6 +37,7 @@ def add_jeton_view(request):
     return render(request, 'verbas/add_jeton.html', {'form': form, 'tipos_documento': tipos_doc})
 
 
+@permission_required("processos.pode_gerenciar_jetons", raise_exception=True)
 def edit_jeton_view(request, pk):
     jeton = get_object_or_404(Jeton, id=pk)
     documentos = jeton.documentos.select_related('tipo').all()

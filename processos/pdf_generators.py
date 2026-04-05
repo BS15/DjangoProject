@@ -12,34 +12,16 @@ from .utils.pdf_multipurpose_tools import merge_canvas_with_template
 from .utils.text_helpers import format_brl_currency as _formatar_moeda
 
 logger = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# Shared geometry / formatting helpers
-# ---------------------------------------------------------------------------
-
-# Proporção aproximada largura/tamanho-de-fonte para cálculo de quebra de linha (Helvetica).
 _CHAR_WIDTH_RATIO = 0.55
-
-# Altura reservada (em pontos) para os blocos de assinatura no rodapé.
 _SIGNATURE_BLOCK_HEIGHT = 160
-
-# Número máximo de entradas da trilha de auditoria exibidas no Parecer do Conselho.
 _MAX_AUDIT_TRAIL_ENTRIES = 10
-
-# Geometria do bloco de assinatura único (Termo de Autorização).
 _AUTH_SIG_Y = 120
 _AUTH_SIG_HALF_WIDTH = 130
 _AUTH_SIG_DATE_OFFSET = 32
-
-# Geometria dos blocos de assinatura triplos (Parecer do Conselho Fiscal).
 _COUNCIL_SIG_Y = 110
 _COUNCIL_SIG_WIDTH = 145
-
-# Geometry for the PCD signature blocks.
 _PCD_SIG_Y = 120
 _PCD_SIG_HALF_WIDTH = 130
-
-# Geometry for the SCD signature blocks.
 _SCD_SIG_Y = 200
 _SCD_SIG_LABEL_Y = 186
 
@@ -83,15 +65,15 @@ def _contar_paginas_documentos(processo):
 
 class BasePDFDocument:
     """
-    Base class for PDF document generation using the Strategy Pattern.
+    Classe base para geração de documentos PDF no padrão Strategy.
 
-    Subclasses override ``draw_content`` to render their specific document
-    layout onto ``self.canvas``.  ``generate`` then merges the result with
-    the organisation letterhead and returns the final PDF bytes.
+    Subclasses devem sobrescrever ``draw_content`` para desenhar o layout no
+    canvas e usar ``generate`` para obter o PDF final em bytes.
     """
 
     def __init__(self, obj, letterhead_path=None, **kwargs):
-        self.obj = obj  # The database instance (Processo, Diaria, etc.)
+        """Inicializa contexto de renderização para a entidade informada."""
+        self.obj = obj
         self.packet = io.BytesIO()
         self.canvas = canvas.Canvas(self.packet, pagesize=A4)
         self.page_width, self.page_height = A4
@@ -99,15 +81,11 @@ class BasePDFDocument:
         self.kwargs = kwargs
 
     def draw_content(self):
-        """To be implemented by subclasses."""
+        """Desenha o conteúdo específico do documento no canvas atual."""
         raise NotImplementedError("Subclasses must implement draw_content()")
 
     def generate(self):
-        """
-        Renders the document content, merges it with the letterhead template
-        and returns the final PDF as bytes.
-        """
-        # 1. Draw specific content
+        """Renderiza o conteúdo e retorna o PDF final mesclado ao timbrado."""
         self.draw_content()
         self.canvas.save()
         template_path = None
@@ -125,18 +103,17 @@ class BasePDFDocument:
 
 
 class TermoContabilizacaoDocument(BasePDFDocument):
-    """Generates the 'Termo de Contabilização' PDF for a given Processo."""
+    """Gera o PDF do Termo de Contabilização para um processo."""
 
     def draw_content(self):
+        """Desenha corpo do Termo de Contabilização no canvas."""
         processo = self.obj
         c = self.canvas
         page_width = self.page_width
 
-        # --- Header ---
         c.setFont("Helvetica-Bold", 14)
         c.drawCentredString(page_width / 2, 620, "TERMO DE CONTABILIZAÇÃO")
 
-        # --- Process Details ---
         c.setFont("Helvetica", 11)
         line_height = 20
         y = 550
@@ -151,7 +128,6 @@ class TermoContabilizacaoDocument(BasePDFDocument):
             c.drawString(72, y, line)
             y -= line_height
 
-        # --- Declaration Text ---
         declaration = (
             "Certifico que a despesa referente ao Processo acima identificado foi devidamente "
             "registrada e contabilizada no sistema financeiro nesta data, em estrita conformidade "
@@ -164,7 +140,6 @@ class TermoContabilizacaoDocument(BasePDFDocument):
             c.drawString(72, y, line)
             y -= line_height
 
-        # --- Signature Block ---
         sig_x = page_width / 2
         c.line(sig_x - 120, 220, sig_x + 120, 220)
         c.setFont("Helvetica", 11)
@@ -173,18 +148,17 @@ class TermoContabilizacaoDocument(BasePDFDocument):
 
 
 class TermoAtesteDocument(BasePDFDocument):
-    """Generates the 'Termo de Liquidação e Ateste' PDF for a given DocumentoFiscal."""
+    """Gera o PDF do Termo de Liquidação e Ateste para documento fiscal."""
 
     def draw_content(self):
+        """Desenha corpo do Termo de Liquidação e Ateste no canvas."""
         documento_fiscal = self.obj
         c = self.canvas
         page_width = self.page_width
 
-        # --- Header ---
         c.setFont("Helvetica-Bold", 14)
         c.drawCentredString(page_width / 2, 620, "TERMO DE LIQUIDAÇÃO E ATESTE")
 
-        # --- Invoice Details ---
         c.setFont("Helvetica", 11)
         line_height = 20
         y = 550
@@ -207,7 +181,6 @@ class TermoAtesteDocument(BasePDFDocument):
             c.drawString(72, y, line)
             y -= line_height
 
-        # --- Declaration Text ---
         declaration = (
             "Atesto, para os devidos fins e sob as penas da lei, que os serviços referenciados "
             "no documento fiscal supra foram efetivamente prestados, ou os materiais entregues, "
@@ -220,7 +193,6 @@ class TermoAtesteDocument(BasePDFDocument):
             c.drawString(72, y, line)
             y -= line_height
 
-        # --- Signature Block ---
         sig_x = page_width / 2
         if documento_fiscal.fiscal_contrato:
             fiscal_name = documento_fiscal.fiscal_contrato.get_full_name()
@@ -234,9 +206,10 @@ class TermoAtesteDocument(BasePDFDocument):
 
 
 class AutorizacaoDocument(BasePDFDocument):
-    """Generates the 'Termo de Autorização de Pagamento' PDF for a given Processo."""
+    """Gera o PDF do Termo de Autorização de Pagamento para um processo."""
 
     def draw_content(self):
+        """Desenha corpo do Termo de Autorização de Pagamento no canvas."""
         processo = self.obj
         c = self.canvas
         width = self.page_width
@@ -248,7 +221,6 @@ class AutorizacaoDocument(BasePDFDocument):
 
         y = height - 160
 
-        # --- CABEÇALHO ---
         c.setFont("Helvetica-Bold", 13)
         c.drawCentredString(width / 2.0, y, "TERMO DE AUTORIZAÇÃO DE PAGAMENTO")
         y -= 18
@@ -260,7 +232,6 @@ class AutorizacaoDocument(BasePDFDocument):
         c.line(margin_left, y, width - margin_right, y)
         y -= 20
 
-        # --- DADOS DO CREDOR ---
         c.setFont("Helvetica-Bold", 11)
         c.drawString(margin_left, y, "DADOS DO CREDOR:")
         y -= 16
@@ -274,7 +245,6 @@ class AutorizacaoDocument(BasePDFDocument):
         c.drawString(margin_left, y, f"CPF / CNPJ:           {cpf_cnpj}")
         y -= 24
 
-        # --- COMPOSIÇÃO DO VALOR ---
         c.setFont("Helvetica-Bold", 11)
         c.drawString(margin_left, y, "COMPOSIÇÃO DO VALOR:")
         y -= 16
@@ -292,7 +262,6 @@ class AutorizacaoDocument(BasePDFDocument):
         c.drawString(margin_left, y, f"Valor Líquido a Pagar:          {_formatar_moeda(valor_liquido)}")
         y -= 24
 
-        # --- DADOS BANCÁRIOS DO CREDOR ---
         conta_credor = processo.credor.conta if processo.credor else None
         if conta_credor:
             c.setFont("Helvetica-Bold", 11)
@@ -306,7 +275,6 @@ class AutorizacaoDocument(BasePDFDocument):
             c.drawString(margin_left, y, f"Conta:    {conta_credor.conta or 'Não informado'}")
             y -= 24
 
-        # --- DETALHAMENTO ---
         c.setFont("Helvetica-Bold", 11)
         c.drawString(margin_left, y, "DETALHAMENTO / JUSTIFICATIVA:")
         y -= 16
@@ -314,7 +282,6 @@ class AutorizacaoDocument(BasePDFDocument):
         y = _draw_wrapped_text(c, detalhamento, margin_left, y, text_width, font_name="Helvetica", font_size=11)
         y -= 20
 
-        # --- BOILERPLATE LEGAL ---
         c.setLineWidth(0.5)
         c.line(margin_left, y, width - margin_right, y)
         y -= 16
@@ -325,7 +292,6 @@ class AutorizacaoDocument(BasePDFDocument):
         )
         _draw_wrapped_text(c, boilerplate, margin_left, y, text_width, font_name="Helvetica-Oblique", font_size=10)
 
-        # --- BLOCO DE ASSINATURA ---
         sig_x = width / 2.0
         c.setFont("Helvetica", 10)
         c.drawCentredString(sig_x, _AUTH_SIG_Y + _AUTH_SIG_DATE_OFFSET, "Local e Data: _____________________________, _____ / _____ / _________")
@@ -334,9 +300,10 @@ class AutorizacaoDocument(BasePDFDocument):
 
 
 class PCDDocument(BasePDFDocument):
-    """Generates the 'Proposta de Concessão de Diárias (PCD)' PDF for a given Diaria."""
+    """Gera o PDF da Proposta de Concessão de Diárias (PCD)."""
 
     def draw_content(self):
+        """Desenha corpo da PCD no canvas."""
         diaria = self.obj
         c = self.canvas
         width = self.page_width
@@ -348,7 +315,6 @@ class PCDDocument(BasePDFDocument):
 
         y = height - 160
 
-        # --- CABEÇALHO ---
         c.setFont("Helvetica-Bold", 13)
         c.drawCentredString(width / 2.0, y, "PROPOSTA DE CONCESSÃO DE DIÁRIAS (PCD)")
         y -= 18
@@ -363,7 +329,6 @@ class PCDDocument(BasePDFDocument):
         c.line(margin_left, y, width - margin_right, y)
         y -= 20
 
-        # --- DADOS DO BENEFICIÁRIO ---
         nome = str(diaria.beneficiario.nome) if diaria.beneficiario and diaria.beneficiario.nome else "Não informado"
         cpf = str(diaria.beneficiario.cpf_cnpj) if diaria.beneficiario and diaria.beneficiario.cpf_cnpj else "Não informado"
         cargo = str(diaria.beneficiario.cargo_funcao) if diaria.beneficiario and diaria.beneficiario.cargo_funcao else "Não informado"
@@ -379,7 +344,6 @@ class PCDDocument(BasePDFDocument):
         c.drawString(margin_left, y, f"Cargo / Função:    {cargo}")
         y -= 24
 
-        # --- DADOS DO PROPONENTE ---
         if diaria.proponente:
             c.setFont("Helvetica-Bold", 11)
             c.drawString(margin_left, y, "PROPONENTE:")
@@ -387,7 +351,7 @@ class PCDDocument(BasePDFDocument):
             c.setFont("Helvetica", 11)
             nome_p = diaria.proponente.get_full_name() or diaria.proponente.username
             email_p = diaria.proponente.email or "Não informado"
-            cargo_p = "Não informado"  # Proponent position not stored on the User model
+            cargo_p = "Não informado"
             c.drawString(margin_left, y, f"Nome:              {nome_p}")
             y -= 16
             c.drawString(margin_left, y, f"E-mail:            {email_p}")
@@ -395,7 +359,6 @@ class PCDDocument(BasePDFDocument):
             c.drawString(margin_left, y, f"Cargo / Função:    {cargo_p}")
             y -= 24
 
-        # --- DADOS DA VIAGEM ---
         c.setFont("Helvetica-Bold", 11)
         c.drawString(margin_left, y, "DADOS DA VIAGEM:")
         y -= 16
@@ -417,7 +380,6 @@ class PCDDocument(BasePDFDocument):
             y -= 16
         y -= 8
 
-        # --- OBJETIVO DA VIAGEM ---
         c.setFont("Helvetica-Bold", 11)
         c.drawString(margin_left, y, "OBJETIVO DA VIAGEM:")
         y -= 16
@@ -425,7 +387,6 @@ class PCDDocument(BasePDFDocument):
                                font_name="Helvetica", font_size=11)
         y -= 20
 
-        # --- VALORES ---
         c.setFont("Helvetica-Bold", 11)
         c.drawString(margin_left, y, "VALORES:")
         y -= 16
@@ -436,7 +397,6 @@ class PCDDocument(BasePDFDocument):
         c.drawString(margin_left, y, f"Valor Total:             {_formatar_moeda(diaria.valor_total)}")
         y -= 28
 
-        # --- BOILERPLATE LEGAL ---
         c.setLineWidth(0.5)
         c.line(margin_left, y, width - margin_right, y)
         y -= 14
@@ -446,13 +406,11 @@ class PCDDocument(BasePDFDocument):
         )
         _draw_wrapped_text(c, boilerplate, margin_left, y, text_width, font_name="Helvetica-Oblique", font_size=10)
 
-        # --- BLOCOS DE ASSINATURA ---
         sig_left_x = margin_left + _PCD_SIG_HALF_WIDTH
         sig_right_x = width - margin_right - _PCD_SIG_HALF_WIDTH
 
         c.setFont("Helvetica", 9)
 
-        # Beneficiário (left) — pre-filled identification
         c.drawCentredString(sig_left_x, _PCD_SIG_Y + 38, nome)
         c.drawCentredString(sig_left_x, _PCD_SIG_Y + 26, f"CPF: {cpf}")
         c.drawCentredString(sig_left_x, _PCD_SIG_Y + 14, cargo)
@@ -460,7 +418,6 @@ class PCDDocument(BasePDFDocument):
                sig_left_x + _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y)
         c.drawCentredString(sig_left_x, _PCD_SIG_Y - 12, "Assinatura do(a) Beneficiário(a)")
 
-        # Ordenador de Despesa (right)
         c.drawCentredString(sig_right_x, _PCD_SIG_Y + 14,
                             "Local e Data: _____ / _____ / _________")
         c.line(sig_right_x - _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y,
@@ -469,9 +426,10 @@ class PCDDocument(BasePDFDocument):
 
 
 class SCDDocument(BasePDFDocument):
-    """Generates the 'Solicitação de Concessão de Diárias (SCD)' PDF for a given Diaria."""
+    """Gera o PDF da Solicitação de Concessão de Diárias (SCD)."""
 
     def draw_content(self):
+        """Desenha corpo da SCD no canvas."""
         diaria = self.obj
         c = self.canvas
         width = self.page_width
@@ -480,11 +438,9 @@ class SCDDocument(BasePDFDocument):
         margin_right = 70
         text_width = width - margin_left - margin_right
 
-        # --- CABEÇALHO ---
         c.setFont("Helvetica-Bold", 14)
         c.drawCentredString(width / 2.0, 620, "SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS - SCD")
 
-        # --- DETALHES DO PROCESSO ---
         c.setFont("Helvetica", 11)
         y = 550
 
@@ -508,20 +464,17 @@ class SCDDocument(BasePDFDocument):
             c.drawString(margin_left, y, field)
             y -= 20
 
-        # --- OBJETIVO ---
         c.setFont("Helvetica-Bold", 11)
         c.drawString(margin_left, 430, "Objetivo:")
         _draw_wrapped_text(c, diaria.objetivo or 'N/A', margin_left, 410, text_width,
                            font_name="Helvetica", font_size=11)
 
-        # --- CÁLCULO ---
         c.setFont("Helvetica", 11)
         c.drawString(
             margin_left, 380,
             f"Cálculo: {diaria.quantidade_diarias} diárias - Total Estimado: {_formatar_moeda(diaria.valor_total)}",
         )
 
-        # --- BLOCOS DE ASSINATURA ---
         sig_left_x = margin_left + _PCD_SIG_HALF_WIDTH
         sig_right_x = width - margin_right - _PCD_SIG_HALF_WIDTH
 
@@ -536,14 +489,13 @@ class SCDDocument(BasePDFDocument):
 
 
 class ConselhoFiscalDocument(BasePDFDocument):
-    """Generates the 'Parecer do Conselho Fiscal' PDF for a given Processo.
+    """Gera o PDF do parecer do Conselho Fiscal para um processo.
 
-    Accepts an optional ``numero_reuniao`` keyword argument (via ``**kwargs``)
-    to display the meeting number in the document header, e.g.:
-        gerar_documento_pdf('conselho_fiscal', processo, numero_reuniao=5)
+    Aceita ``numero_reuniao`` em ``kwargs`` para exibir a reunião no cabeçalho.
     """
 
     def draw_content(self):
+        """Desenha corpo do parecer do Conselho Fiscal no canvas."""
         processo = self.obj
         c = self.canvas
         width = self.page_width
@@ -552,12 +504,10 @@ class ConselhoFiscalDocument(BasePDFDocument):
         margin_left = 70
         margin_right = 70
         text_width = width - margin_left - margin_right
-        # Limite inferior para conteúdo (acima dos blocos de assinatura)
         y_min = _SIGNATURE_BLOCK_HEIGHT
 
         y = height - 160
 
-        # --- CABEÇALHO ---
         c.setFont("Helvetica-Bold", 13)
         c.drawCentredString(width / 2.0, y, "PARECER DE AUDITORIA - CONSELHO FISCAL")
         y -= 18
@@ -578,7 +528,6 @@ class ConselhoFiscalDocument(BasePDFDocument):
         c.line(margin_left, y, width - margin_right, y)
         y -= 18
 
-        # --- INTEGRIDADE DOCUMENTAL ---
         total_docs, total_pages = _contar_paginas_documentos(processo)
 
         c.setFont("Helvetica-Bold", 11)
@@ -592,7 +541,6 @@ class ConselhoFiscalDocument(BasePDFDocument):
         y = _draw_wrapped_text(c, integridade_texto, margin_left, y, text_width, font_name="Helvetica", font_size=11)
         y -= 20
 
-        # --- TRILHA DE AUDITORIA ---
         c.setFont("Helvetica-Bold", 11)
         c.drawString(margin_left, y, "TRILHA DE AUDITORIA (TRANSIÇÕES DE STATUS):")
         y -= 16
@@ -630,7 +578,6 @@ class ConselhoFiscalDocument(BasePDFDocument):
 
         y -= 16
 
-        # --- CONTINGÊNCIAS ---
         if y > y_min:
             c.setFont("Helvetica-Bold", 11)
             c.drawString(margin_left, y, "CONTINGÊNCIAS E RETIFICAÇÕES EXCEPCIONAIS:")
@@ -699,7 +646,6 @@ class ConselhoFiscalDocument(BasePDFDocument):
 
         y -= 10
 
-        # --- BOILERPLATE LEGAL ---
         if y > y_min:
             c.setLineWidth(0.5)
             c.line(margin_left, y, width - margin_right, y)
@@ -710,7 +656,6 @@ class ConselhoFiscalDocument(BasePDFDocument):
             )
             _draw_wrapped_text(c, boilerplate, margin_left, y, text_width, font_name="Helvetica-Oblique", font_size=10)
 
-        # --- BLOCOS DE ASSINATURA (3 conselheiros) ---
         positions = [
             (margin_left + _COUNCIL_SIG_WIDTH / 2, "Conselheiro(a) Fiscal 1"),
             (width / 2.0, "Conselheiro(a) Fiscal 2"),
@@ -723,9 +668,10 @@ class ConselhoFiscalDocument(BasePDFDocument):
 
 
 class TermoAuditoriaDocument(BasePDFDocument):
-    """Generates the 'Termo de Auditoria' PDF for a given Processo."""
+    """Gera o PDF do Termo de Auditoria para um processo."""
 
     def draw_content(self):
+        """Desenha corpo do Termo de Auditoria no canvas."""
         processo = self.obj
         c = self.canvas
         width = self.page_width
@@ -776,19 +722,14 @@ class TermoAuditoriaDocument(BasePDFDocument):
 
 
 class ReciboDocument(BasePDFDocument):
-    """Generates a 'Recibo de Pagamento' PDF for the four verba types:
-    ReembolsoCombustivel, AuxilioRepresentacao, Jeton, and SuprimentoDeFundos.
-
-    The correct ``tipo_verba``, ``beneficiario``, and ``valor`` are derived
-    automatically from ``self.obj.__class__.__name__``.
-    """
+    """Gera PDF de recibo para reembolso, auxílio, jeton e suprimento."""
 
     def draw_content(self):
+        """Desenha corpo do recibo com dispatch por tipo de objeto."""
         obj = self.obj
         c = self.canvas
         page_width = self.page_width
 
-        # --- Dispatch: map class to (tipo_verba, beneficiario, valor) ---
         _RECIBO_DISPATCH = {
             'ReembolsoCombustivel': (
                 "Reembolso de Combustível",
@@ -808,7 +749,6 @@ class ReciboDocument(BasePDFDocument):
             'SuprimentoDeFundos': (
                 "Suprimento de Fundos",
                 lambda o: o.suprido,
-                # SuprimentoDeFundos stores the approved amount as valor_liquido
                 lambda o: o.valor_liquido,
             ),
         }
@@ -828,14 +768,12 @@ class ReciboDocument(BasePDFDocument):
         beneficiario_nome = beneficiario.nome if beneficiario else "N/A"
         beneficiario_cpf = beneficiario.cpf_cnpj if beneficiario else "N/A"
 
-        # --- CABEÇALHO ---
         c.setFont("Helvetica-Bold", 14)
         c.drawCentredString(page_width / 2, 620, "RECIBO DE PAGAMENTO")
 
         c.setFont("Helvetica-Bold", 12)
         c.drawCentredString(page_width / 2, 590, tipo_verba.upper())
 
-        # --- TEXTO DA DECLARAÇÃO ---
         declaration = (
             f"Recebi do Conselho Regional de Corretores de Imóveis de Santa Catarina - "
             f"11ª Região (CRECI-SC), a importância líquida de {valor_formatado}, "
@@ -848,12 +786,10 @@ class ReciboDocument(BasePDFDocument):
             font_name="Helvetica", font_size=12,
         )
 
-        # --- DADOS DO BENEFICIÁRIO ---
         c.setFont("Helvetica", 11)
         c.drawString(margin_left, 450, f"Beneficiário / Recebedor: {beneficiario_nome}")
         c.drawString(margin_left, 434, f"CPF / CNPJ: {beneficiario_cpf}")
 
-        # --- BLOCO DE ASSINATURA ---
         sig_x = page_width / 2
         c.line(sig_x - 130, 250, sig_x + 130, 250)
         c.setFont("Helvetica", 11)
@@ -878,10 +814,7 @@ DOCUMENT_REGISTRY = {
 
 
 def gerar_documento_pdf(doc_type, obj, **kwargs):
-    """
-    Factory function that instantiates the appropriate document class and
-    generates the PDF, returning the final merged PDF as bytes.
-    """
+    """Instancia a classe de documento adequada e retorna o PDF em bytes."""
     doc_class = DOCUMENT_REGISTRY.get(doc_type.lower())
     if not doc_class:
         raise ValueError(f"Tipo de documento '{doc_type}' não reconhecido.")

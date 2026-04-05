@@ -3,6 +3,7 @@ import logging
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from ..models.fluxo import AssinaturaAutentique
 from ..services import construir_signatarios_padrao, disparar_assinatura_rascunho
@@ -11,11 +12,11 @@ logger = logging.getLogger(__name__)
 
 
 def painel_assinaturas_view(request):
-    """
-    Dashboard showing:
-    - meus_documentos: signatures created by the current user
-    - para_assinar: PENDENTE signatures where the user's email is a key in dados_signatarios,
-      enriched with that user's specific signing link from dados_signatarios.
+    """Exibe painel de assinaturas do usuário atual.
+
+    Inclui:
+    - meus_documentos: assinaturas criadas pelo usuário.
+    - para_assinar: assinaturas pendentes com link pessoal do usuário.
     """
     meus_documentos = AssinaturaAutentique.objects.filter(
         criador=request.user
@@ -31,7 +32,6 @@ def painel_assinaturas_view(request):
         for assinatura in pendentes:
             signer_data = (assinatura.dados_signatarios or {}).get(user_email)
             if signer_data:
-                # Attach user's personal link so the template can use it directly
                 assinatura.meu_link = signer_data.get('short_link', '') or assinatura.autentique_url
                 para_assinar.append(assinatura)
 
@@ -41,29 +41,19 @@ def painel_assinaturas_view(request):
     })
 
 
+@require_POST
 def disparar_assinatura_view(request, assinatura_id):
-    """
-    POST-only view. Dispatches a RASCUNHO AssinaturaAutentique to Autentique.
+    """Dispara um rascunho de assinatura para a Autentique via POST.
 
-    Reads the draft PDF from assinatura.arquivo, reconstructs the signatarios
-    list from the related entity, then calls enviar_documento_para_assinatura
-    passing the AssinaturaAutentique instance directly so the service updates
-    it in-place (sets autentique_id, dados_signatarios, status='PENDENTE').
+    Apenas o criador do rascunho pode realizar o envio.
     """
-    if request.method != 'POST':
-        return redirect('painel_assinaturas')
-
     assinatura = get_object_or_404(AssinaturaAutentique, id=assinatura_id, status='RASCUNHO')
 
-    # Only the creator or backoffice can dispatch
-    is_backoffice = request.user.has_perm('processos.acesso_backoffice')
-    is_criador = assinatura.criador == request.user
-    if not (is_backoffice or is_criador):
-        raise PermissionDenied("Você não tem permissão para disparar esta assinatura.")
+    if assinatura.criador != request.user:
+        raise PermissionDenied("Apenas o criador do documento pode disparar esta assinatura.")
 
     entidade = assinatura.entidade_relacionada
 
-    # Build the signatarios list from the related entity
     signatarios = construir_signatarios_padrao(entidade)
     if not signatarios:
         messages.error(request, "Não foi possível determinar os signatários para este documento.")

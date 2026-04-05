@@ -144,6 +144,54 @@ class PermissionDeniedTest(TestCase):
         response = self.client.get('/processos/lancamento-bancario/')
         self.assertEqual(response.status_code, 403)
 
+    # --- Verbas indenizatórias ---
+
+    def test_verbas_panel_403(self):
+        response = self.client.get('/verbas/')
+        self.assertEqual(response.status_code, 403)
+
+    def test_diarias_list_403(self):
+        response = self.client.get('/verbas/diarias/')
+        self.assertEqual(response.status_code, 403)
+
+    def test_add_diaria_403(self):
+        response = self.client.get('/verbas/diarias/nova/')
+        self.assertEqual(response.status_code, 403)
+
+    def test_importar_diarias_403(self):
+        response = self.client.get('/verbas/diarias/importar/')
+        self.assertEqual(response.status_code, 403)
+
+    def test_painel_autorizacao_diarias_403(self):
+        response = self.client.get('/verbas/diarias/autorizacao/')
+        self.assertEqual(response.status_code, 403)
+
+    def test_sincronizar_diarias_403(self):
+        response = self.client.get('/verbas/sincronizar-diarias/')
+        self.assertEqual(response.status_code, 403)
+
+    def test_sincronizar_siscac_403(self):
+        response = self.client.get('/fluxo/sincronizar-siscac/')
+        self.assertEqual(response.status_code, 403)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class DebugOnlyRoutesTest(TestCase):
+    def setUp(self):
+        self.user = _make_user('debugcheck')
+        self.client.login(username='debugcheck', password='testpass123')
+
+    def test_dev_and_test_routes_absent_when_not_debug(self):
+        for url in (
+            '/dados-fake/',
+            '/testes/pdfs/',
+            '/ferramentas/chaos-testing/',
+            '/processo/1/gerar-dummy-pdf/',
+        ):
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 404)
+
 
 # ---------------------------------------------------------------------------
 # Permission-required views: privileged user can access
@@ -198,5 +246,41 @@ class PrivilegedAccessTest(TestCase):
     def test_contas_a_pagar_allowed(self):
         self._login_with_perm('pode_operar_contas_pagar')
         response = self.client.get('/contas-a-pagar/')
+        self.assertNotEqual(response.status_code, 403)
+        self.assertNotIn('/accounts/login/', response.get('Location', ''))
+
+    def test_verbas_panel_allowed(self):
+        self._login_with_perm('pode_visualizar_verbas')
+        response = self.client.get('/verbas/')
+        self.assertNotEqual(response.status_code, 403)
+        self.assertNotIn('/accounts/login/', response.get('Location', ''))
+
+    def test_add_diaria_allowed(self):
+        self._login_with_perm('pode_criar_diarias')
+        response = self.client.get('/verbas/diarias/nova/')
+        self.assertNotEqual(response.status_code, 403)
+        self.assertNotIn('/accounts/login/', response.get('Location', ''))
+
+    def test_importar_diarias_allowed(self):
+        self._login_with_perm('pode_importar_diarias')
+        response = self.client.get('/verbas/diarias/importar/')
+        self.assertNotEqual(response.status_code, 403)
+        self.assertNotIn('/accounts/login/', response.get('Location', ''))
+
+    def test_painel_autorizacao_diarias_allowed(self):
+        self._login_with_perm('pode_autorizar_diarias')
+        response = self.client.get('/verbas/diarias/autorizacao/')
+        self.assertNotEqual(response.status_code, 403)
+        self.assertNotIn('/accounts/login/', response.get('Location', ''))
+
+    def test_sincronizar_diarias_allowed(self):
+        self._login_with_perm('pode_sincronizar_diarias_siscac')
+        response = self.client.get('/verbas/sincronizar-diarias/')
+        self.assertNotEqual(response.status_code, 403)
+        self.assertNotIn('/accounts/login/', response.get('Location', ''))
+
+    def test_sincronizar_siscac_allowed(self):
+        self._login_with_perm('pode_operar_contas_pagar')
+        response = self.client.get('/fluxo/sincronizar-siscac/')
         self.assertNotEqual(response.status_code, 403)
         self.assertNotIn('/accounts/login/', response.get('Location', ''))

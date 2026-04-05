@@ -1,8 +1,4 @@
-"""CSV parsing and batch import utilities for Verbas Indenizatórias.
-
-The DRY fix: _parse_diaria_row is a single shared validator used by both
-the preview and the direct import flows, eliminating ~90% duplication.
-"""
+"""Utilitários para parse e importação em lote de verbas indenizatórias via CSV."""
 
 import csv
 import io
@@ -13,7 +9,11 @@ from django.db.models import Max
 
 
 def _parse_diaria_row(row, line_num):
-    """Valida uma única linha de Diária. Retorna (dict_válido, msg_erro)."""
+    """Valida e converte uma linha de CSV de diária.
+
+    Retorna ``(dict_valido, None)`` em caso de sucesso ou ``(None, erro)``
+    quando a linha não atende às regras.
+    """
     from processos.models import Credor
 
     nome = row.get('NOME_BENEFICIARIO', '').strip()
@@ -63,7 +63,7 @@ _COLUNAS_REQUERIDAS = {
 
 
 def _gerar_anexar_scd_e_criar_assinatura(diaria, usuario_logado):
-    """Gera SCD, anexa em DocumentoDiaria e cria rascunho de assinatura Autentique."""
+    """Gera SCD da diária, anexa o PDF e cria rascunho de assinatura digital."""
     from processos.models import DocumentoDiaria, TiposDeDocumento
     from processos.services import criar_assinatura_rascunho, gerar_documento_bytes
     from django.core.files.base import ContentFile
@@ -91,7 +91,7 @@ def _gerar_anexar_scd_e_criar_assinatura(diaria, usuario_logado):
 
 
 def _open_diaria_csv(csv_file):
-    """Decodifica e abre um CSV de diárias, retornando (reader, erro_str)."""
+    """Abre CSV de diárias em UTF-8 e valida o cabeçalho obrigatório."""
     try:
         conteudo = io.StringIO(csv_file.read().decode('utf-8'))
     except UnicodeDecodeError:
@@ -107,7 +107,7 @@ def _open_diaria_csv(csv_file):
 
 
 def preview_diarias_lote(csv_file):
-    """Parse e valida um CSV de diárias sem inserir nada.
+    """Lê e valida um CSV de diárias sem inserir registros no banco.
 
     Retorna um dict com:
         'preview'  – lista de dicts com os dados validados (seguros para JSON)
@@ -144,7 +144,7 @@ def preview_diarias_lote(csv_file):
 
 
 def importar_diarias_lote(csv_file, usuario_logado):
-    """Importa diárias diretamente de CSV, criando registros no banco.
+    """Importa diárias de CSV, cria registros e tenta anexar SCD automático.
 
     Retorna um dict com 'sucessos' (int) e 'erros' (lista de str).
     """
@@ -187,7 +187,7 @@ def importar_diarias_lote(csv_file, usuario_logado):
 
 
 def confirmar_diarias_lote(preview_items, usuario_logado):
-    """Insere registros de Diária a partir de uma lista de dicts de preview validados.
+    """Confirma o preview e insere diárias validadas no banco.
 
     Cada dict em *preview_items* está no formato retornado por :func:`preview_diarias_lote`.
     Retorna um dict com 'sucessos' (int) e 'erros' (lista de str).

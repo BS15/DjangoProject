@@ -11,6 +11,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db.models.signals import post_delete, pre_save, pre_delete
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from simple_history.models import HistoricalRecords
 from datetime import date
 from processos.validators import validar_arquivo_seguro
@@ -20,15 +21,12 @@ from processos.utils import mesclar_pdfs_em_memoria
 logger = logging.getLogger(__name__)
 
 
-# Substitua a sua função antiga por esta:
 def caminho_documento(instance, filename):
     """Resolve o diretório de upload conforme entidade de negócio vinculada."""
-    # 1. Processo Principal
     if hasattr(instance, 'processo') and instance.processo:
         ano = instance.processo.data_empenho.year if instance.processo.data_empenho else (instance.processo.ano_exercicio or 9999)
         return f'pagamentos/{ano}/proc_{instance.processo.id}/{filename}'
 
-    # 2. Verbas Indenizatórias
     if hasattr(instance, 'diaria') and instance.diaria:
         return f'verbasindenizatorias/diarias/diaria_{instance.diaria.id}/{filename}'
     if hasattr(instance, 'reembolso') and instance.reembolso:
@@ -38,27 +36,20 @@ def caminho_documento(instance, filename):
     if hasattr(instance, 'auxilio') and instance.auxilio:
         return f'verbasindenizatorias/auxilios/auxilio_{instance.auxilio.id}/{filename}'
 
-    # 3. Suprimentos de Fundos
-    # A) Arquivos das Despesas (A Solicitação + Nota Fiscal unificada)
     if instance.__class__.__name__ == 'DespesaSuprimento':
         return f'suprimentosdefundos/suprimento_{instance.suprimento.id}/despesas/{filename}'
 
-    # B) Arquivos Gerais do Suprimento Pai (Portarias, comprovante de depósito, etc)
     if hasattr(instance, 'suprimento') and instance.suprimento:
         return f'suprimentosdefundos/suprimento_{instance.suprimento.id}/{filename}'
 
-    # 4. Fallback (Segurança)
     return f'documentos_avulsos/{filename}'
 
 
 class StatusChoicesProcesso(models.Model):
     """Catálogo de status possíveis do processo de pagamento."""
 
-    # This replaces your hard-coded choices
     status_choice = models.CharField(max_length=100, unique=True)
 
-    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
-    # This prevents old invoices from breaking if a code is retired.
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -68,11 +59,8 @@ class StatusChoicesProcesso(models.Model):
 class StatusChoicesPendencias(models.Model):
     """Catálogo de status aplicáveis às pendências."""
 
-    # This replaces your hard-coded choices
     status_choice = models.CharField(max_length=100, unique=True)
 
-    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
-    # This prevents old invoices from breaking if a code is retired.
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -82,11 +70,8 @@ class StatusChoicesPendencias(models.Model):
 class TagChoices(models.Model):
     """Etiquetas administrativas usadas para classificação de processos."""
 
-    # This replaces your hard-coded choices
     tag_choice = models.CharField(max_length=100, unique=True)
 
-    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
-    # This prevents old invoices from breaking if a code is retired.
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -96,11 +81,8 @@ class TagChoices(models.Model):
 class FormasDePagamento(models.Model):
     """Formas de pagamento aceitas no fluxo financeiro."""
 
-    # This replaces your hard-coded choices
     forma_de_pagamento = models.CharField(max_length=100, unique=True)
 
-    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
-    # This prevents old invoices from breaking if a code is retired.
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -110,11 +92,8 @@ class FormasDePagamento(models.Model):
 class TiposDePagamento(models.Model):
     """Tipos de pagamento utilizados para agrupar regras de negócio."""
 
-    # This replaces your hard-coded choices
     tipo_de_pagamento = models.CharField(max_length=100, unique=True)
 
-    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
-    # This prevents old invoices from breaking if a code is retired.
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -124,12 +103,9 @@ class TiposDePagamento(models.Model):
 class TiposDeDocumento(models.Model):
     """Tipos documentais por contexto de pagamento."""
 
-    # This replaces your hard-coded choices
     tipo_de_pagamento = models.ForeignKey('TiposDePagamento', on_delete=models.PROTECT, blank=True, null=True)
     tipo_de_documento = models.CharField(max_length=100)
 
-    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
-    # This prevents old invoices from breaking if a code is retired.
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -149,11 +125,8 @@ class TiposDeDocumento(models.Model):
 class TiposDePendencias(models.Model):
     """Tipos de pendências operacionais/documentais do processo."""
 
-    # This replaces your hard-coded choices
     tipo_de_pendencia = models.CharField(max_length=100, unique=True)
 
-    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
-    # This prevents old invoices from breaking if a code is retired.
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -176,6 +149,7 @@ STATUS_CONTINGENCIA = [
     ('PENDENTE_SUPERVISOR', 'Pendente Supervisor'),
     ('PENDENTE_ORDENADOR', 'Pendente Ordenador de Despesa'),
     ('PENDENTE_CONSELHO', 'Pendente Conselho Fiscal'),
+    ('PENDENTE_CONTADOR', 'Pendente Revisão da Contadora'),
     ('APROVADA', 'Aprovada'),
     ('REJEITADA', 'Rejeitada'),
 ]
@@ -214,30 +188,27 @@ class ReuniaoConselho(models.Model):
 class Processo(models.Model):
     """Entidade principal do ciclo orçamentário e financeiro do pagamento."""
 
-    # Dados orçamentários
     extraorcamentario = models.BooleanField(
         "Extraorçamentário",
         default=False,
         help_text="Marque se este processo não utiliza dotação orçamentária (ex: cauções)."
     )
     n_nota_empenho = models.CharField(max_length=50, blank=True, null=True)
-    credor = models.ForeignKey('Credor', on_delete=models.PROTECT, blank=True, null=True)
+    credor = models.ForeignKey('Credor', on_delete=models.PROTECT, blank=False, null=False)
     data_empenho = models.DateField(default=timezone.now, blank=True, null=True)
-    valor_bruto = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
-    valor_liquido = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, blank=True, null=True)
+    valor_bruto = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, validators=[MinValueValidator(0)])
+    valor_liquido = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, validators=[MinValueValidator(0)])
     ano_exercicio = models.IntegerField(choices=[(y, y) for y in range(2020, 2030)], default=2026, blank=True, null=True)
 
-    # Dados de pagamento
     n_pagamento_siscac = models.CharField(max_length=50, blank=True, null=True)
     data_vencimento = models.DateField(blank=True, null=True)
     data_pagamento = models.DateField(blank=True, null=True)
-    forma_pagamento = models.ForeignKey('FormasDePagamento', on_delete=models.PROTECT, blank=True, null=True)
-    tipo_pagamento = models.ForeignKey('TiposDePagamento', on_delete=models.PROTECT, blank=True, null=True)
+    forma_pagamento = models.ForeignKey('FormasDePagamento', on_delete=models.PROTECT, blank=False, null=False)
+    tipo_pagamento = models.ForeignKey('TiposDePagamento', on_delete=models.PROTECT, blank=False, null=False)
     observacao = models.CharField(max_length=200, blank=True, null=True)
     conta = models.ForeignKey('ContasBancarias', on_delete=models.SET_NULL, null=True, blank=True, related_name='processos_sacados', verbose_name="Conta Sacada")
 
-    # Informações administrativas
-    status = models.ForeignKey('StatusChoicesProcesso', on_delete=models.PROTECT, blank=True, null=True)
+    status = models.ForeignKey('StatusChoicesProcesso', on_delete=models.PROTECT, blank=False, null=False)
     detalhamento = models.CharField(max_length=200, blank=True, null=True)
     tag = models.ForeignKey('TagChoices', on_delete=models.PROTECT, blank=True, null=True)
 
@@ -261,15 +232,54 @@ class Processo(models.Model):
         permissions = [
             ("acesso_backoffice", "Pode acessar as telas gerais do sistema financeiro"),
             ("pode_operar_contas_pagar", "Pode empenhar, triar notas e fazer conferência"),
+            ("pode_aprovar_contingencia_supervisor", "Pode aprovar contingências na etapa de supervisão/gerência"),
             ("pode_atestar_liquidacao", "Pode atestar notas fiscais (Fiscal do Contrato)"),
             ("pode_autorizar_pagamento", "Pode autorizar pagamentos (Ordenador)"),
             ("pode_contabilizar", "Pode registrar a contabilização (Contador)"),
             ("pode_auditar_conselho", "Pode aprovar no Conselho Fiscal"),
             ("pode_arquivar", "Pode realizar o arquivamento definitivo de processos"),
+            ("pode_visualizar_verbas", "Pode visualizar painéis e listas de verbas indenizatórias"),
+            ("pode_criar_diarias", "Pode cadastrar solicitações de diárias"),
+            ("pode_importar_diarias", "Pode importar diárias em lote"),
+            ("pode_gerenciar_diarias", "Pode editar diárias e seus documentos"),
+            ("pode_autorizar_diarias", "Pode autorizar e aprovar diárias"),
+            ("pode_gerenciar_reembolsos", "Pode cadastrar e editar reembolsos de combustível"),
+            ("pode_gerenciar_jetons", "Pode cadastrar e editar jetons"),
+            ("pode_gerenciar_auxilios", "Pode cadastrar e editar auxílios representação"),
+            ("pode_agrupar_verbas", "Pode agrupar verbas em processos de pagamento"),
+            ("pode_gerenciar_processos_verbas", "Pode editar processos originados de verbas indenizatórias"),
+            ("pode_sincronizar_diarias_siscac", "Pode sincronizar/importar diárias via SISCAC"),
         ]
 
     def __str__(self):
         return f"Processo {self.n_nota_empenho or 'S/N'}"
+
+    def clean(self):
+        """Valida integridade dos dados do processo antes de salvar."""
+        errors = {}
+
+        if self.valor_liquido and self.valor_bruto:
+            if self.valor_liquido > self.valor_bruto:
+                errors['valor_liquido'] = 'Valor líquido não pode ser maior que o valor bruto.'
+
+        if self.data_pagamento and self.data_vencimento:
+            if self.data_pagamento < self.data_vencimento:
+                errors['data_pagamento'] = 'Data de pagamento não pode ser anterior à data de vencimento.'
+
+        if not self.credor_id:
+            errors['credor'] = 'Credor é obrigatório.'
+
+        if not self.forma_pagamento_id:
+            errors['forma_pagamento'] = 'Forma de pagamento é obrigatória.'
+
+        if not self.tipo_pagamento_id:
+            errors['tipo_pagamento'] = 'Tipo de pagamento é obrigatório.'
+
+        if not self.status_id:
+            errors['status'] = 'Status é obrigatório.'
+
+        if errors:
+            raise ValidationError(errors)
 
     @property
     def valor_efetivo(self):
@@ -497,7 +507,6 @@ class Processo(models.Model):
                 diaria.save(update_fields=['status'])
 
 
-# 2. DOCUMENTO DO PROCESSO
 class DocumentoProcesso(DocumentoBase):
     """Documento anexado ao processo com controle de imutabilidade."""
 
@@ -527,7 +536,6 @@ class Pendencia(models.Model):
 class Contingencia(models.Model):
     """Solicitação formal de retificação com trilha de aprovação multi-etapa."""
 
-    # Metadados principais
     processo = models.ForeignKey(
         'Processo',
         on_delete=models.CASCADE,
@@ -543,20 +551,20 @@ class Contingencia(models.Model):
         help_text="Motivo detalhado para a quebra de fluxo/retificação."
     )
 
-    # O Payload (JSON com as mudanças propostas)
     dados_propostos = models.JSONField(
         default=dict,
         help_text="Dicionário JSON contendo o estado exato dos campos que serão alterados no Processo (ex: {'credor_id': 5})."
     )
 
-    # Status FSM
     status = models.CharField(
         max_length=30,
         choices=STATUS_CONTINGENCIA,
         default='PENDENTE_SUPERVISOR'
     )
+    exige_aprovacao_ordenador = models.BooleanField(default=False)
+    exige_aprovacao_conselho = models.BooleanField(default=False)
+    exige_revisao_contadora = models.BooleanField(default=True)
 
-    # Etapa 1: Assinatura do Supervisor
     parecer_supervisor = models.TextField(blank=True, null=True)
     aprovado_por_supervisor = models.ForeignKey(
         User,
@@ -567,7 +575,6 @@ class Contingencia(models.Model):
     )
     data_aprovacao_supervisor = models.DateTimeField(null=True, blank=True)
 
-    # Etapa 2: Assinatura do Ordenador de Despesa
     parecer_ordenador = models.TextField(blank=True, null=True)
     aprovado_por_ordenador = models.ForeignKey(
         User,
@@ -578,7 +585,6 @@ class Contingencia(models.Model):
     )
     data_aprovacao_ordenador = models.DateTimeField(null=True, blank=True)
 
-    # Etapa 3: Assinatura do Conselho Fiscal (Condicional)
     parecer_conselho = models.TextField(blank=True, null=True)
     aprovado_por_conselho = models.ForeignKey(
         User,
@@ -589,7 +595,16 @@ class Contingencia(models.Model):
     )
     data_aprovacao_conselho = models.DateTimeField(null=True, blank=True)
 
-    # Trilha de auditoria
+    parecer_contadora = models.TextField(blank=True, null=True)
+    revisado_por_contadora = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name='cont_revisadas_contadora',
+        null=True,
+        blank=True
+    )
+    data_revisao_contadora = models.DateTimeField(null=True, blank=True)
+
     history = HistoricalRecords()
 
     def __str__(self):
@@ -604,10 +619,11 @@ class Contingencia(models.Model):
 class RegistroAcessoArquivo(models.Model):
     """Log de acesso a arquivos para auditoria e rastreabilidade."""
 
-    usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    usuario = models.ForeignKey(User, on_delete=models.PROTECT, null=True)
     nome_arquivo = models.CharField(max_length=500)
     data_acesso = models.DateTimeField(auto_now_add=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.usuario} acessou {self.nome_arquivo}"
@@ -622,11 +638,22 @@ class Devolucao(models.Model):
     """Registro de devolução de valores relacionados ao processo."""
 
     processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='devolucoes')
-    valor_devolvido = models.DecimalField(max_digits=15, decimal_places=2)
+    valor_devolvido = models.DecimalField(max_digits=15, decimal_places=2, validators=[MinValueValidator(0.01)])
     data_devolucao = models.DateField()
     motivo = models.TextField()
     comprovante = models.FileField(upload_to='devolucoes/', validators=[validar_arquivo_seguro], help_text="Comprovante de depósito/GRU")
     criado_em = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    def clean(self):
+        """Valida que devolução não excede valor líquido do processo."""
+        if self.processo_id:
+            total_devolvido = self.processo.devolucoes.exclude(pk=self.pk).aggregate(t=Sum('valor_devolvido'))['t'] or 0
+            total_com_esta = total_devolvido + self.valor_devolvido
+            if total_com_esta > self.processo.valor_liquido:
+                raise ValidationError(
+                    f'Total de devoluções ({total_com_esta}) não pode exceder valor líquido ({self.processo.valor_liquido}).'
+                )
 
     def __str__(self):
         return f"Devolução de R$ {self.valor_devolvido} - Processo {self.processo}"
@@ -648,12 +675,11 @@ class AssinaturaAutentique(models.Model):
         ('ERRO', 'Erro'),
     ]
 
-    # Generic Relation to link to Diaria, Processo, Reembolso, etc.
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     entidade_relacionada = GenericForeignKey('content_type', 'object_id')
 
-    criador = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assinaturas_criadas')
+    criador = models.ForeignKey(User, on_delete=models.PROTECT, related_name='assinaturas_criadas')
     tipo_documento = models.CharField("Tipo do Documento", max_length=50, help_text="Ex: SCD, PCD, AUTORIZACAO")
     autentique_id = models.CharField("ID Autentique", max_length=100, unique=True, null=True, blank=True)
     autentique_url = models.URLField("URL para Assinatura", max_length=500, blank=True, default='')
@@ -662,6 +688,7 @@ class AssinaturaAutentique(models.Model):
     arquivo = models.FileField("Arquivo (Rascunho)", upload_to='assinaturas_rascunho/', null=True, blank=True)
     arquivo_assinado = models.FileField("Arquivo Assinado", upload_to='documentos_assinados/', null=True, blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
 
     class Meta:
         ordering = ['-criado_em']
@@ -669,10 +696,6 @@ class AssinaturaAutentique(models.Model):
     def __str__(self):
         return f"{self.tipo_documento} - {self.autentique_id} ({self.status})"
 
-
-# ==============================================================================
-# FILE LIFECYCLE SIGNALS
-# ==============================================================================
 
 def _delete_file(file_field):
     """Remove arquivo do storage, ignorando erros quando inexistente."""

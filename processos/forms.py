@@ -16,7 +16,6 @@ class ProcessoForm(forms.ModelForm):
         model = Processo
         exclude = ['status']
         widgets = {
-            # Ajustado para form-check-input para não esticar o checkbox
             'extraorcamentario': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'n_nota_empenho': forms.TextInput(attrs={'class': 'form-control'}),
             'credor': forms.Select(attrs={'class': 'form-select'}),
@@ -38,7 +37,6 @@ class ProcessoForm(forms.ModelForm):
         """Configura obrigatoriedade, travas por status e querysets contextuais."""
         super().__init__(*args, **kwargs)
 
-        # Campos que devem ser SEMPRE obrigatórios no Processo
         campos_obrigatorios = [
             'credor', 'valor_bruto', 'valor_liquido',
             'data_vencimento', 'data_pagamento',
@@ -51,7 +49,6 @@ class ProcessoForm(forms.ModelForm):
             else:
                 self.fields[field_name].required = False
 
-        # --- INÍCIO DA LÓGICA DE TRANCAMENTO (BLINDAGEM) ---
         self.status_bloqueados = STATUS_BLOQUEADOS_FORM
 
         if self.instance and self.instance.pk and self.instance.status:
@@ -59,29 +56,22 @@ class ProcessoForm(forms.ModelForm):
 
             if status_atual in self.status_bloqueados:
 
-                # Bloqueia os campos numéricos (adiciona readonly e um fundo cinzento)
                 for campo in ['valor_liquido', 'valor_bruto']:
                     if campo in self.fields:
                         self.fields[campo].widget.attrs['readonly'] = True
                         self.fields[campo].widget.attrs['class'] = self.fields[campo].widget.attrs.get('class', '') + ' bg-light'
 
-                # Bloqueia a lista suspensa do Credor (usando disabled)
                 if 'credor' in self.fields:
                     self.fields['credor'].widget.attrs['disabled'] = 'disabled'
                     self.fields['credor'].widget.attrs['class'] = self.fields['credor'].widget.attrs.get('class', '') + ' bg-light'
-                    # Anula o "required = True" estabelecido no loop acima para evitar erro no salvamento
                     self.fields['credor'].required = False
-        # --- FIM DA LÓGICA DE TRANCAMENTO ---
 
-        # --- BLOQUEAR SELEÇÃO MANUAL DE SUPRIMENTO DE FUNDOS ---
         qs = TiposDePagamento.objects.exclude(tipo_de_pagamento__iexact=SUPRIMENTO_DE_FUNDOS)
         if self.instance and self.instance.pk and self.instance.tipo_pagamento:
             if self.instance.tipo_pagamento.tipo_de_pagamento.upper() == SUPRIMENTO_DE_FUNDOS:
                 qs = TiposDePagamento.objects.all()
         self.fields['tipo_pagamento'].queryset = qs
-        # --- FIM DO BLOQUEIO ---
 
-        # --- FILTRO DE CONTA SACADA POR CNPJ DO ÓRGÃO ---
         contribuinte = DadosContribuinte.objects.first()
         if contribuinte:
             self.fields['conta'].queryset = ContasBancarias.objects.filter(
@@ -89,15 +79,12 @@ class ProcessoForm(forms.ModelForm):
             )
         else:
             self.fields['conta'].queryset = ContasBancarias.objects.none()
-        # --- FIM DO FILTRO ---
 
-    # --- INÍCIO DA RECUPERAÇÃO DE DADOS (BACKEND) ---
     def clean_credor(self):
         """Preserva o credor original quando o processo está em estágio bloqueado."""
         credor_enviado = self.cleaned_data.get('credor')
         if self.instance and self.instance.pk and self.instance.status:
             if self.instance.status.status_choice.upper() in getattr(self, 'status_bloqueados', []):
-                # Ignora o que veio da tela e fixa o valor original do banco
                 return self.instance.credor
         return credor_enviado
 
@@ -116,7 +103,6 @@ class ProcessoForm(forms.ModelForm):
             if self.instance.status.status_choice.upper() in getattr(self, 'status_bloqueados', []):
                 return self.instance.valor_bruto
         return valor_enviado
-    # --- FIM DA RECUPERAÇÃO DE DADOS ---
 
     def clean(self):
         """Aplica validações de negócio do processo e agrega erros no formulário."""
@@ -128,7 +114,7 @@ class ProcessoForm(forms.ModelForm):
                 for field, error in erros_processo.items():
                     self.add_error(field, error)
         except NameError:
-            pass # Prevenção caso a função validar_regras_processo não esteja definida no escopo atual
+            pass
 
         return cleaned_data
 
@@ -147,8 +133,6 @@ class DocumentoFiscalForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         """Define obrigatoriedade e restringe fiscal aos usuários do grupo apropriado."""
         super().__init__(*args, **kwargs)
-        # Campos obrigatórios SE a nota fiscal for preenchida
-        # O Django só validará estes campos se ao menos um dado for inserido na linha do formset
         self.fields['numero_nota_fiscal'].required = True
         self.fields['nome_emitente'].required = True
         self.fields['data_emissao'].required = True
@@ -172,8 +156,6 @@ class DocumentoFiscalForm(forms.ModelForm):
             'atestada': forms.CheckboxInput(attrs={'class': 'form-check-input fs-5'}),
             'codigo_servico_inss': forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Somente quando há retenção INSS'}),
         }
-
-# --- FORMSETS ---
 
 DocumentoFormSet = inlineformset_factory(
     Processo,
@@ -209,8 +191,6 @@ RetencaoFormSet = inlineformset_factory(
     extra=1,
     can_delete=True
 )
-
-# --- DEMAIS FORMULÁRIOS (MANTIDOS CONFORME ORIGINAL COM AJUSTES DE CLEAN) ---
 
 class CredorForm(forms.ModelForm):
     """Formulário de cadastro de credores com dados bancários e serviço padrão."""
@@ -255,12 +235,12 @@ class DiariaForm(forms.ModelForm):
     def clean(self):
         """Permite valor total vazio para cenários de cálculo automático posterior."""
         cleaned_data = super().clean()
-        # Allow valor_total to be blank/null when it will be auto-calculated
         if not cleaned_data.get('valor_total'):
             cleaned_data['valor_total'] = None
         return cleaned_data
 
 class ReembolsoForm(forms.ModelForm):
+    """Formulário de reembolso de combustível com dados de deslocamento."""
     class Meta:
         model = ReembolsoCombustivel
         fields = ['numero_sequencial', 'processo', 'diaria', 'status', 'beneficiario', 'data_saida', 'data_retorno', 'cidade_origem', 'cidade_destino', 'distancia_km', 'preco_combustivel', 'objetivo', 'valor_total']
@@ -281,6 +261,7 @@ class ReembolsoForm(forms.ModelForm):
         }
 
 class JetonForm(forms.ModelForm):
+    """Formulário para lançamentos de jeton."""
     class Meta:
         model = Jeton
         fields = ['numero_sequencial', 'processo', 'status', 'beneficiario', 'reuniao', 'valor_total']
@@ -294,6 +275,7 @@ class JetonForm(forms.ModelForm):
         }
 
 class AuxilioForm(forms.ModelForm):
+    """Formulário para auxílios de representação."""
     class Meta:
         model = AuxilioRepresentacao
         fields = ['numero_sequencial', 'processo', 'status', 'beneficiario', 'objetivo', 'valor_total']
@@ -336,7 +318,6 @@ class PendenciaForm(forms.ModelForm):
 
     class Meta:
         model = Pendencia
-        # Removemos o 'status' daqui para ele não ir para a tela
         fields = ['tipo', 'descricao']
         widgets = {
             'tipo': forms.Select(attrs={'class': 'form-select form-select-sm'}),
@@ -345,10 +326,8 @@ class PendenciaForm(forms.ModelForm):
 
     def save(self, commit=True):
         """Salva pendência e garante status inicial ``A RESOLVER`` quando ausente."""
-        # Interceptamos o salvamento antes de ir para o banco
         pendencia = super().save(commit=False)
 
-        # Se a pendência não tem status (acabou de ser criada), injetamos o padrão
         if not pendencia.status:
             status_obj, _ = StatusChoicesPendencias.objects.get_or_create(
                 status_choice__iexact='A RESOLVER',

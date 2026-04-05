@@ -3,11 +3,6 @@ from django.core.exceptions import ValidationError
 
 from .utils import format_brl_currency
 
-
-# ============================================================
-# FILE SECURITY VALIDATOR
-# ============================================================
-
 ALLOWED_MIME_TYPES = {
     'application/pdf',
     'image/jpeg',
@@ -17,9 +12,11 @@ ALLOWED_MIME_TYPES = {
 
 def validar_arquivo_seguro(file):
     """
-    Validates that the uploaded file's true MIME type (determined by magic bytes)
-    is in the allowed list.  Raises ValidationError if the file type is not
-    permitted or appears to be spoofed.
+    Valida o tipo real do arquivo enviado com base em magic bytes.
+
+    Aceita apenas arquivos PDF, JPEG e PNG. Lança ``ValidationError`` quando
+    o MIME detectado não estiver na lista permitida ou quando a validação não
+    puder ser executada.
     """
     if not file:
         return
@@ -40,11 +37,6 @@ def validar_arquivo_seguro(file):
             f"Apenas PDF, JPEG e PNG são aceitos."
         )
 
-
-# ============================================================
-# STATUS CONSTANTS
-# ============================================================
-
 STATUS_BLOQUEADOS_TOTAL = {
     'CANCELADO / ANULADO',
     'ARQUIVADO',
@@ -64,36 +56,17 @@ STATUS_BLOQUEADOS_FORM = list(STATUS_BLOQUEADOS_TOTAL | STATUS_SOMENTE_DOCUMENTO
     'PAGO - EM CONTABILIZAÇÃO',
 })
 
-
-# ============================================================
-# TURNPIKE: Status-transition gate checks
-# ============================================================
-
 def verificar_turnpike(processo, status_anterior, status_novo):
     """
-    Validates business rules that must be satisfied before a process is allowed
-    to advance to a new status ("turnpike" / porteira).
+    Valida as regras de transição de status do processo (turnpike).
 
-    Parameters
-    ----------
-    processo      : Processo instance (already saved in DB; documents/notas are
-                    assumed to reflect the final state before the status change).
-    status_anterior : str – current status label (case-insensitive).
-    status_novo     : str – target status label (case-insensitive).
-
-    Returns
-    -------
-    list[str] – list of human-readable error messages.  Empty list means OK.
+    Retorna uma lista de mensagens de erro; lista vazia indica transição válida.
     """
     erros = []
 
     anterior = status_anterior.upper().strip()
     novo = status_novo.upper().strip()
 
-    # ------------------------------------------------------------------ #
-    # Rule 1: A EMPENHAR → AGUARDANDO LIQUIDAÇÃO                          #
-    # Requires at least one "DOCUMENTOS ORÇAMENTÁRIOS" document attached. #
-    # ------------------------------------------------------------------ #
     if anterior.startswith('A EMPENHAR') and novo.startswith('AGUARDANDO LIQUIDAÇÃO'):
         tem_doc_orcamentario = processo.documentos.filter(
             tipo__tipo_de_documento__iexact='DOCUMENTOS ORÇAMENTÁRIOS'
@@ -104,10 +77,6 @@ def verificar_turnpike(processo, status_anterior, status_novo):
                 'um documento do tipo "DOCUMENTOS ORÇAMENTÁRIOS".'
             )
 
-    # ------------------------------------------------------------------ #
-    # Rule 2: AGUARDANDO LIQUIDAÇÃO → A PAGAR - PENDENTE AUTORIZAÇÃO      #
-    # All documentos fiscais linked to the process must have atestada=True.#
-    # ------------------------------------------------------------------ #
     if anterior.startswith('AGUARDANDO LIQUIDAÇÃO') and novo.startswith('A PAGAR - PENDENTE AUTORIZAÇÃO'):
         notas = processo.notas_fiscais.all()
         if not notas.exists():
@@ -126,12 +95,6 @@ def verificar_turnpike(processo, status_anterior, status_novo):
                     f'"A Pagar - Pendente Autorização". Documento(s) pendente(s): {nomes}.'
                 )
 
-    # ------------------------------------------------------------------ #
-    # Rule 3: LANÇADO - AGUARDANDO COMPROVANTE → PAGO - EM CONFERÊNCIA    #
-    # Requires at least one "COMPROVANTE DE PAGAMENTO" document attached.  #
-    # Also validates that the sum of comprovantes matches valor_liquido    #
-    # (skipped for Suprimento de Fundos processes).                        #
-    # ------------------------------------------------------------------ #
     if anterior.startswith('LANÇADO') and novo.startswith('PAGO'):
         is_suprimento = (
             processo.tipo_pagamento and
@@ -164,6 +127,10 @@ def verificar_turnpike(processo, status_anterior, status_novo):
 
 
 def verificar_turnpike_diaria(diaria, status_anterior, novo_status_str):
+    """Valida transições de status permitidas para diárias.
+
+    A função retorna lista de erros; quando vazia, a transição está autorizada.
+    """
     erros = []
     novo_status_upper = novo_status_str.upper()
 
@@ -185,8 +152,9 @@ def verificar_turnpike_diaria(diaria, status_anterior, novo_status_str):
 
 def validar_regras_processo(cleaned_data):
     """
-    Validates rules specific to the Processo model.
-    Returns a dictionary of errors.
+    Valida regras de negócio do formulário de processo.
+
+    Retorna um dicionário no formato ``{campo: ValidationError}``.
     """
     errors = {}
 
@@ -195,13 +163,11 @@ def validar_regras_processo(cleaned_data):
     valor_bruto = cleaned_data.get('valor_bruto')
     valor_liquido = cleaned_data.get('valor_liquido')
 
-    # Rule 1: Data de pagamento must not be over data de vencimento
     if data_pagamento and data_vencimento and data_pagamento > data_vencimento:
         errors['data_pagamento'] = ValidationError(
             "A data de pagamento não pode ser posterior à data de vencimento."
         )
 
-    # Rule 2: Valor bruto must not be inferior to valor liquido
     if valor_bruto is not None and valor_liquido is not None and valor_bruto < valor_liquido:
         errors['valor_bruto'] = ValidationError(
             "O valor bruto não pode ser inferior ao valor líquido."
@@ -212,15 +178,15 @@ def validar_regras_processo(cleaned_data):
 
 def validar_regras_suprimento(cleaned_data):
     """
-    Validates rules specific to the SuprimentoDeFundos model.
-    Returns a dictionary of errors.
+    Valida regras de negócio do formulário de suprimento de fundos.
+
+    Retorna um dicionário no formato ``{campo: ValidationError}``.
     """
     errors = {}
 
     data_saida = cleaned_data.get('data_saida')
     data_retorno = cleaned_data.get('data_retorno')
 
-    # Rule: Data de retorno cannot be before data de saida
     if data_saida and data_retorno and data_retorno < data_saida:
         errors['data_retorno'] = ValidationError(
             "O período final (data de retorno) não pode ser anterior ao inicial (data de saída)."

@@ -33,11 +33,11 @@ def api_extrair_codigos_barras_processo(request, pk):
     Não executa OCR nem reprocessamento de PDF; apenas leitura de dados já
     extraídos anteriormente.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP autenticada.
         pk: ID do processo alvo.
 
-    Returns:
+    Retorna:
         JsonResponse: Payload com `sucesso`, `processo_id`, quantidade de
         documentos de boleto, quantidade efetivamente extraída e lista de
         códigos encontrados.
@@ -74,16 +74,15 @@ def api_extrair_codigos_barras_upload(request):
     - `400` quando nenhum arquivo é enviado.
     - `500` em erro interno de processamento do PDF.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP contendo arquivos multipart.
 
-    Returns:
+    Retorna:
         JsonResponse: Estrutura de sucesso/erro adequada ao modo de envio.
     """
     if request.method != "POST":
         return JsonResponse({"sucesso": False, "erro": "Método não permitido."}, status=405)
 
-    # Suporta tanto batch (boleto_files) quanto single upload (boleto_file, boleto_pdf)
     files = request.FILES.getlist("boleto_files")
     if not files:
         single_file = (
@@ -97,7 +96,6 @@ def api_extrair_codigos_barras_upload(request):
     if not files:
         return JsonResponse({"sucesso": False, "erro": "Nenhum arquivo enviado."}, status=400)
 
-    # Single file: return full extraction data; batch: return barcodes array
     if len(files) == 1:
         try:
             dados = processar_pdf_boleto(files[0]) or {}
@@ -114,7 +112,6 @@ def api_extrair_codigos_barras_upload(request):
             )
         return JsonResponse({"sucesso": True, "dados": dados})
     
-    # Batch: extract barcodes from multiple files
     barcodes = []
     n_extraidos = 0
     n_falhas = 0
@@ -160,10 +157,10 @@ def api_extrair_dados_empenho(request):
     - `500` para falha técnica no parser.
     - `422` quando o arquivo é processado, mas não contém dados de empenho.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP contendo `siscac_file`.
 
-    Returns:
+    Retorna:
         JsonResponse: Em sucesso, retorna `n_nota_empenho` e `data_empenho` em
         formato ISO (`YYYY-MM-DD`).
     """
@@ -218,10 +215,10 @@ def api_tipos_documento_por_pagamento(request):
     retornando apenas os campos necessários (`id` e `tipo_de_documento`) em
     ordem alfabética.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP com query param `tipo_pagamento_id`.
 
-    Returns:
+    Retorna:
         JsonResponse: `sucesso=True` com lista em `tipos` ou `sucesso=False`
         com mensagem de erro quando o parâmetro é ausente ou ocorre exceção.
     """
@@ -257,10 +254,10 @@ def api_detalhes_pagamento(request):
     Em caso de exceção, captura o erro e devolve mensagem no payload para
     tratamento no frontend.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP com corpo JSON.
 
-    Returns:
+    Retorna:
         JsonResponse: `sucesso=True` com lista em `dados` quando o `POST` é
         válido; caso contrário, `sucesso=False` com descrição do erro.
     """
@@ -313,11 +310,11 @@ def visualizar_pdf_processo(request, processo_id):
     `Processo.gerar_pdf_consolidado()`. Se o processo não tiver documentos PDF
     compatíveis, responde com `404` e mensagem textual.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP autenticada.
         processo_id: ID do processo para geração do consolidado.
 
-    Returns:
+    Retorna:
         HttpResponse: Conteúdo `application/pdf` inline quando disponível.
     """
     processo = get_object_or_404(Processo, id=processo_id)
@@ -339,11 +336,11 @@ def gerar_autorizacao_pagamento_view(request, pk):
     Utiliza o motor de documentos (`gerar_documento_pdf`) com template lógico
     `autorizacao` e retorna o resultado para visualização inline.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP autenticada com permissão de autorização.
         pk: ID do processo para o qual a autorização será gerada.
 
-    Returns:
+    Retorna:
         HttpResponse: PDF inline com nome de arquivo padronizado.
     """
     processo = get_object_or_404(Processo, pk=pk)

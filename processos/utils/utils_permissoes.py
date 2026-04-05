@@ -12,7 +12,7 @@ def user_in_group(user, group_name):
 
 
 def group_required(*group_names):
-    """Decorator for views that checks whether a user has a particular group, requiring login."""
+    """Decorator de view que exige autenticação e pertencimento a um dos grupos."""
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):

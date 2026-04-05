@@ -3,6 +3,7 @@
 import logging
 
 from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
 from django.shortcuts import render
 
 from ...utils import sync_diarias_siscac_csv
@@ -10,6 +11,7 @@ from ...utils import sync_diarias_siscac_csv
 logger = logging.getLogger(__name__)
 
 
+@permission_required("processos.pode_sincronizar_diarias_siscac", raise_exception=True)
 def sincronizar_diarias(request):
     """Sincroniza diárias via CSV SISCAC."""
     context = {}

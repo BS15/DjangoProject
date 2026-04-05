@@ -1,9 +1,11 @@
 import csv
 
 from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from ...filters import DiariaFilter
 from ...forms import DiariaForm
@@ -24,7 +26,6 @@ from ...services import (
     sincronizar_assinatura,
 )
 from ...utils import confirmar_diarias_lote, preview_diarias_lote
-from ...utils.utils_permissoes import user_in_group
 from .verbas_shared import (
     _anexar_documento,
     _anexar_scd_na_diaria,
@@ -33,10 +34,12 @@ from .verbas_shared import (
     _render_lista_verba,
 )
 
+@permission_required("processos.pode_visualizar_verbas", raise_exception=True)
 def diarias_list_view(request):
     return _render_lista_verba(request, Diaria, DiariaFilter, 'verbas/diarias_list.html')
 
 
+@permission_required("processos.pode_importar_diarias", raise_exception=True)
 def download_template_diarias_csv(request):
     """Baixa modelo CSV para importação em lote de diárias."""
     response = HttpResponse(content_type='text/csv')
@@ -56,6 +59,7 @@ def download_template_diarias_csv(request):
     return response
 
 
+@permission_required("processos.pode_importar_diarias", raise_exception=True)
 def importar_diarias_view(request):
     """Importa diárias em lote com pré-visualização e confirmação."""
     session_key = 'importar_diarias_preview'
@@ -86,6 +90,7 @@ def importar_diarias_view(request):
     return render(request, 'verbas/importar_diarias.html', context)
 
 
+@permission_required("processos.pode_criar_diarias", raise_exception=True)
 def add_diaria_view(request):
     if request.method == 'POST':
         form = DiariaForm(request.POST)
@@ -153,6 +158,7 @@ def add_diaria_view(request):
     return render(request, 'verbas/add_diaria.html', {'form': form, 'tipos_documento': tipos_doc})
 
 
+@permission_required("processos.pode_gerenciar_diarias", raise_exception=True)
 def gerenciar_diaria_view(request, pk):
     diaria = get_object_or_404(Diaria, id=pk)
     documentos = diaria.documentos.select_related('tipo').all()
@@ -171,42 +177,34 @@ def gerenciar_diaria_view(request, pk):
     return render(request, 'verbas/gerenciar_diaria.html', context)
 
 
+@permission_required("processos.pode_autorizar_diarias", raise_exception=True)
 def painel_autorizacao_diarias_view(request):
     diarias_pendentes = Diaria.objects.select_related(
         'beneficiario', 'proponente', 'status', 'processo'
     ).filter(status__status_choice='SOLICITADA').order_by('-id')
 
-    is_manager = user_in_group(request.user, 'Gestores') or user_in_group(request.user, 'Administradores')
-    if not is_manager:
-        is_proponente = user_in_group(request.user, 'PROPONENTE')
-        if is_proponente:
-            diarias_pendentes = diarias_pendentes.filter(proponente=request.user)
-        else:
-            diarias_pendentes = diarias_pendentes.none()
-
     return render(request, 'verbas/painel_autorizacao_diarias.html', {'diarias_pendentes': diarias_pendentes})
 
 
+@require_POST
+@permission_required("processos.pode_autorizar_diarias", raise_exception=True)
 def alternar_autorizacao_diaria(request, pk):
-    if request.method == 'POST':
-        diaria = get_object_or_404(Diaria, id=pk)
-        diaria.autorizada = not diaria.autorizada
-        diaria.save()
+    diaria = get_object_or_404(Diaria, id=pk)
+    diaria.autorizada = not diaria.autorizada
+    diaria.save()
 
-        if diaria.autorizada:
-            messages.success(request, f'Diária #{diaria.numero_siscac} AUTORIZADA com sucesso!')
-        else:
-            messages.warning(request, f'Autorização da Diária #{diaria.numero_siscac} foi revogada.')
+    if diaria.autorizada:
+        messages.success(request, f'Diária #{diaria.numero_siscac} AUTORIZADA com sucesso!')
+    else:
+        messages.warning(request, f'Autorização da Diária #{diaria.numero_siscac} foi revogada.')
 
     return redirect('painel_autorizacao_diarias')
 
 
+@require_POST
+@permission_required("processos.pode_autorizar_diarias", raise_exception=True)
 def aprovar_diaria_view(request, diaria_id):
     diaria = get_object_or_404(Diaria, id=diaria_id)
-    is_manager = user_in_group(request.user, 'Gestores') or user_in_group(request.user, 'Administradores')
-    if request.user != diaria.proponente and not is_manager:
-        messages.error(request, 'Você não tem permissão para aprovar esta diária.')
-        return redirect('painel_autorizacao_diarias')
 
     diaria.avancar_status('APROVADA')
     diaria.autorizada = True
@@ -219,7 +217,7 @@ def aprovar_diaria_view(request, diaria_id):
 def sincronizar_assinatura_view(request, assinatura_id):
     assinatura = get_object_or_404(AssinaturaAutentique, id=assinatura_id)
 
-    is_backoffice = request.user.has_perm('processos.acesso_backoffice')
+    is_backoffice = request.user.has_perm('processos.pode_gerenciar_diarias')
     entidade = assinatura.entidade_relacionada
     is_owner = (
         (hasattr(entidade, 'proponente') and entidade.proponente == request.user)
@@ -250,7 +248,7 @@ def sincronizar_assinatura_view(request, assinatura_id):
 def reenviar_assinatura_view(request, diaria_id):
     diaria = get_object_or_404(Diaria, id=diaria_id)
 
-    is_backoffice = request.user.has_perm('processos.acesso_backoffice')
+    is_backoffice = request.user.has_perm('processos.pode_gerenciar_diarias')
     is_owner = (
         (diaria.proponente == request.user)
         or (diaria.beneficiario and diaria.beneficiario.email == request.user.email)
@@ -282,6 +280,7 @@ def minhas_solicitacoes_view(request):
     return render(request, 'verbas/minhas_solicitacoes.html', {'diarias': diarias})
 
 
+@permission_required("processos.pode_criar_diarias", raise_exception=True)
 def api_valor_unitario_diaria(request, beneficiario_id):
     try:
         credor = Credor.objects.select_related('cargo_funcao').get(id=beneficiario_id)
@@ -310,6 +309,7 @@ def api_valor_unitario_diaria(request, beneficiario_id):
         return JsonResponse({'sucesso': False, 'erro': 'Beneficiário não encontrado', 'valor_unitario': None})
 
 
+@permission_required("processos.pode_gerenciar_diarias", raise_exception=True)
 def gerar_pcd_view(request, pk):
     diaria = get_object_or_404(Diaria, pk=pk)
     nome_arquivo = f"PCD_{diaria.numero_siscac}.pdf"

@@ -52,22 +52,38 @@ _VERBA_CONFIG = {
     },
 }
 
+_VERBA_PERMISSION_MAP = {
+    'diaria': 'processos.pode_gerenciar_diarias',
+    'reembolso': 'processos.pode_gerenciar_reembolsos',
+    'jeton': 'processos.pode_gerenciar_jetons',
+    'auxilio': 'processos.pode_gerenciar_auxilios',
+}
+
 
 def _get_tipos_documento_ativos():
+    """Retorna os tipos de documento ativos disponíveis para anexação."""
     return TiposDeDocumento.objects.filter(is_active=True)
 
 
+def _get_permissao_gestao_verba(tipo_verba):
+    """Resolve a permissão Django necessária para gerenciar o tipo de verba."""
+    return _VERBA_PERMISSION_MAP.get(tipo_verba)
+
+
 def _extensao_documento_permitida(nome_arquivo):
+    """Valida se a extensão do arquivo está entre os formatos permitidos."""
     _, ext = os.path.splitext(nome_arquivo.lower())
     return ext in _EXTENSOES_DOCUMENTO_PERMITIDAS
 
 
 def _anexar_documento(modelo_documento, fk_name, entidade, arquivo, tipo_id):
+    """Cria o registro de documento vinculado à entidade de verba informada."""
     kwargs = {fk_name: entidade, 'arquivo': arquivo, 'tipo_id': tipo_id}
     return modelo_documento.objects.create(**kwargs)
 
 
 def _processar_upload_documento(request, entidade, modelo_documento, fk_name):
+    """Processa upload de documento, valida entrada e persiste o anexo."""
     arquivo = request.FILES.get('arquivo')
     tipo_id = request.POST.get('tipo')
     if not arquivo or not tipo_id:
@@ -88,6 +104,7 @@ def _processar_upload_documento(request, entidade, modelo_documento, fk_name):
 
 
 def _render_lista_verba(request, model, filter_class, template_name):
+    """Renderiza listagem filtrável padrão para módulos de verbas indenizatórias."""
     queryset = model.objects.select_related('beneficiario', 'status', 'processo').order_by('-id')
     return render_filtered_list(
         request,
@@ -100,6 +117,7 @@ def _render_lista_verba(request, model, filter_class, template_name):
 
 
 def _obter_credor_agrupamento(itens):
+    """Obtém o credor de agrupamento para lote, criando credor padrão quando necessário."""
     beneficiario_ids = {item.beneficiario_id for item in itens if item.beneficiario_id}
     if len(beneficiario_ids) <= 1:
         return next((item.beneficiario for item in itens if item.beneficiario_id), None)
@@ -112,6 +130,7 @@ def _obter_credor_agrupamento(itens):
 
 
 def _anexar_scd_na_diaria(diaria, pdf_bytes):
+    """Anexa o PDF de SCD na diária com ordem sequencial de documentos."""
     tipo_scd, _ = TiposDeDocumento.objects.get_or_create(
         tipo_de_documento__iexact='SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS (SCD)',
         defaults={'tipo_de_documento': 'SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS (SCD)'},

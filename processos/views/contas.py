@@ -11,6 +11,7 @@ from processos.utils.utils_contas import gerar_faturas_do_mes
 
 @permission_required("processos.acesso_backoffice", raise_exception=True)
 def painel_contas_fixas_view(request):
+    """Exibe painel mensal de contas fixas e faturas geradas automaticamente."""
     hoje = datetime.date.today()
     mes = int(request.GET.get('mes', hoje.month))
     ano = int(request.GET.get('ano', hoje.year))
@@ -36,6 +37,7 @@ def painel_contas_fixas_view(request):
 
 @permission_required("processos.acesso_backoffice", raise_exception=True)
 def vincular_processo_fatura_view(request, fatura_id):
+    """Vincula manualmente uma fatura mensal a um processo existente."""
     fatura = get_object_or_404(FaturaMensal, id=fatura_id)
     mes = request.POST.get('mes', '')
     ano = request.POST.get('ano', '')
@@ -58,6 +60,7 @@ def vincular_processo_fatura_view(request, fatura_id):
 
 @permission_required("processos.acesso_backoffice", raise_exception=True)
 def add_conta_fixa_view(request):
+    """Cadastra nova conta fixa para geração recorrente de faturas."""
     if request.method == 'POST':
         form = ContaFixaForm(request.POST)
         if form.is_valid():
@@ -74,6 +77,7 @@ def add_conta_fixa_view(request):
 
 @permission_required("processos.acesso_backoffice", raise_exception=True)
 def edit_conta_fixa_view(request, pk):
+    """Atualiza dados cadastrais de uma conta fixa existente."""
     conta = get_object_or_404(ContaFixa, pk=pk)
     if request.method == 'POST':
         form = ContaFixaForm(request.POST, instance=conta)
@@ -91,6 +95,7 @@ def edit_conta_fixa_view(request, pk):
 
 @permission_required("processos.acesso_backoffice", raise_exception=True)
 def excluir_conta_fixa_view(request, pk):
+    """Exclui conta fixa mediante confirmação por requisição POST."""
     conta = get_object_or_404(ContaFixa, pk=pk)
     if request.method == 'POST':
         conta.delete()

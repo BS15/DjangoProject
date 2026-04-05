@@ -40,6 +40,7 @@
                                 <span class="badge
                                     {% if cont.status == 'APROVADA' %}bg-success
                                     {% elif cont.status == 'REJEITADA' %}bg-danger
+                                    {% elif cont.status == 'PENDENTE_CONTADOR' %}bg-info text-dark
                                     {% else %}bg-warning text-dark{% endif %}">
                                     {{ cont.get_status_display }}
                                 </span>

@@ -1,10 +1,33 @@
 """Modelos fiscais: notas, retenções e comprovantes de pagamento."""
 
+import re
 from django.db import models
 from datetime import date
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from simple_history.models import HistoricalRecords
 from processos.validators import validar_arquivo_seguro
+
+
+def validar_cpf_cnpj(value):
+    """Valida formato básico de CPF/CNPJ (apenas dígitos e separadores)."""
+    if not value:
+        return
+    clean = re.sub(r'[\.\-\/]', '', value)
+    if not re.match(r'^\d{11}(\d{2})?$', clean):
+        raise ValidationError(
+            'CPF deve ter 11 dígitos e CNPJ deve ter 13 dígitos.',
+            code='invalid_cpf_cnpj'
+        )
+    
+    if len(clean) == 11:
+        if clean == clean[0] * 11:
+            raise ValidationError('CPF inválido (dígitos repetidos).', code='invalid_cpf')
+    
+    elif len(clean) == 14:
+        if clean == clean[0] * 14:
+            raise ValidationError('CNPJ inválido (dígitos repetidos).', code='invalid_cnpj')
 
 
 def caminho_comprovante(instance, filename):
@@ -23,7 +46,6 @@ def caminho_comprovante(instance, filename):
 class CodigosImposto(models.Model):
     """Tabela de códigos tributários e metadados de competência/Reinf."""
 
-    # This replaces your hard-coded choices
     codigo = models.CharField(max_length=10, unique=True, null=True, blank=True)
 
     REGRA_COMPETENCIA_CHOICES = [
@@ -66,11 +88,7 @@ class CodigosImposto(models.Model):
 class StatusChoicesRetencoes(models.Model):
     """Catálogo de status aplicáveis às retenções de imposto."""
 
-    # This replaces your hard-coded choices
     status_choice = models.CharField(max_length=100, unique=True)
-
-    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
-    # This prevents old invoices from breaking if a code is retired.
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -82,7 +100,7 @@ class DocumentoFiscal(models.Model):
 
     processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='notas_fiscais')
     nome_emitente = models.ForeignKey('Credor', on_delete=models.PROTECT, blank=True, null=True)
-    cnpj_emitente = models.CharField(max_length=20, blank=True) # Permitimos blank=True para o save() cuidar disso
+    cnpj_emitente = models.CharField(max_length=20, blank=False, validators=[validar_cpf_cnpj])
     numero_nota_fiscal = models.CharField(max_length=50)
     documento_vinculado = models.OneToOneField(
         'DocumentoProcesso',
@@ -92,8 +110,8 @@ class DocumentoFiscal(models.Model):
         verbose_name="Documento PDF da Nota"
     )
     data_emissao = models.DateField()
-    valor_bruto = models.DecimalField(max_digits=12, decimal_places=2)
-    valor_liquido = models.DecimalField(max_digits=12, decimal_places=2)
+    valor_bruto = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0.01)])
+    valor_liquido = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
     fiscal_contrato = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -117,15 +135,33 @@ class DocumentoFiscal(models.Model):
     )
     history = HistoricalRecords()
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['processo', 'numero_nota_fiscal', 'serie_nota_fiscal'],
+                name='unique_nf_por_processo',
+                condition=models.Q(serie_nota_fiscal__isnull=False)
+            ),
+        ]
+
     def save(self, *args, **kwargs):
         """Sincroniza CNPJ e herda código de serviço padrão do emitente."""
-        # Se um emitente foi selecionado e o CNPJ está vazio (ou queremos sempre atualizar)
         if self.nome_emitente:
             self.cnpj_emitente = self.nome_emitente.cpf_cnpj
-        # Smart Inheritance: auto-fill codigo_servico_inss from the credor's default if not set
         if not self.codigo_servico_inss and self.nome_emitente and self.nome_emitente.codigo_servico_padrao:
             self.codigo_servico_inss = self.nome_emitente.codigo_servico_padrao
         super().save(*args, **kwargs)
+
+    def clean(self):
+        """Valida integridade dos dados da nota antes de salvar."""
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        errors = {}
+        if self.valor_liquido and self.valor_bruto:
+            if self.valor_liquido > self.valor_bruto:
+                errors['valor_liquido'] = 'Valor líquido não pode ser maior que o valor bruto.'
+        
+        if errors:
+            raise DjangoValidationError(errors)
 
     def __str__(self):
         return f"NF {self.numero_nota_fiscal} - {self.nome_emitente}"
@@ -136,10 +172,10 @@ class RetencaoImposto(models.Model):
 
     nota_fiscal = models.ForeignKey('DocumentoFiscal', on_delete=models.CASCADE, related_name='retencoes')
     beneficiario = models.ForeignKey('Credor', on_delete=models.PROTECT, blank=True, null=True, verbose_name="Beneficiário", related_name='retencoes')
-    rendimento_tributavel = models.DecimalField("Base de Cálculo / Rend. Tributável", null=True, blank=True, max_digits=12, decimal_places=2)
+    rendimento_tributavel = models.DecimalField("Base de Cálculo / Rend. Tributável", null=True, blank=True, max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
     data_pagamento = models.DateField(blank=True, null=True)
     codigo = models.ForeignKey('CodigosImposto', on_delete=models.PROTECT)
-    valor = models.DecimalField("Valor Retido", max_digits=12, decimal_places=2)
+    valor = models.DecimalField("Valor Retido", max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
     status = models.ForeignKey('StatusChoicesRetencoes', on_delete=models.PROTECT, blank=True, null=True)
     processo_pagamento = models.ForeignKey(
         'Processo',
@@ -160,24 +196,15 @@ class RetencaoImposto(models.Model):
 
     def save(self, *args, **kwargs):
         """Define competência mensal conforme regra do código e datas disponíveis."""
-        # 1. Só calcula se os relacionamentos já existirem na memória
         if getattr(self, 'codigo', None) and getattr(self, 'nota_fiscal', None):
             data_base = None
-
-            # 2. Avalia a regra do imposto (INSS, ISS = Emissão / IRRF, CSRF = Pagamento)
             if self.codigo.regra_competencia == 'emissao':
                 data_base = self.nota_fiscal.data_emissao
 
             elif self.codigo.regra_competencia == 'pagamento':
-                # Tenta pegar a data de pagamento da própria retenção.
-                # Se estiver vazia, tenta puxar do Processo pai.
                 data_base = self.data_pagamento or self.nota_fiscal.processo.data_pagamento
-
-            # 3. Se encontrou uma data válida, "trava" no dia 1º daquele mês e ano
             if data_base:
                 self.competencia = date(data_base.year, data_base.month, 1)
-
-        # 4. Chama o salvamento original do Django para gravar no banco de dados
         super().save(*args, **kwargs)
 
     history = HistoricalRecords()
@@ -212,7 +239,8 @@ class ComprovanteDePagamento(models.Model):
         max_digits=12,
         decimal_places=2,
         null=True,
-        blank=True
+        blank=True,
+        validators=[MinValueValidator(0)]
     )
     data_pagamento = models.DateField("Data de Pagamento", null=True, blank=True)
     arquivo = models.FileField(

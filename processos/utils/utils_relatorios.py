@@ -5,13 +5,12 @@ from django.http import HttpResponse
 
 
 def gerar_csv_relatorio(queryset, tipo_relatorio):
-    """Gera um ``HttpResponse`` CSV para o tipo de relatório solicitado."""
+    """Gera resposta CSV para o tipo de relatório solicitado."""
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="relatorio_{tipo_relatorio}.csv"'
-    response.write('\ufeff'.encode('utf8'))  # BOM for Excel UTF-8 compatibility
+    response.write('\ufeff'.encode('utf8'))
     writer = csv.writer(response, delimiter=';')
 
-    # Mapeamento: 'tipo': (['Cabeçalhos'], lambda obj: ['Valores'])
     mapa_relatorios = {
         'processos': (
             ['ID', 'Empenho', 'Credor', 'Valor Bruto', 'Valor Líquido', 'Status', 'Data Pagamento'],

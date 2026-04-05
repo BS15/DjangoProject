@@ -6,21 +6,21 @@ class BaseStyledFilterSet(django_filters.FilterSet):
     """Base de filtros com estilo Bootstrap consistente."""
 
     def __init__(self, *args, **kwargs):
+        """Aplica classes Bootstrap em todos os campos do formulário de filtro."""
         super().__init__(*args, **kwargs)
         for field in self.form.fields.values():
             field.widget.attrs.update({'class': 'form-control form-control-sm'})
 
 
 class ProcessoFilter(BaseStyledFilterSet):
+    """Filtro completo para listagem de processos de pagamento."""
     credor_nome = django_filters.CharFilter(field_name='credor__nome', lookup_expr='icontains', label='Credor (Nome)')
     n_nota_empenho = django_filters.CharFilter(lookup_expr='icontains', label='Nº Empenho')
 
-    # Date Ranges
     data_empenho = django_filters.DateFromToRangeFilter(label='Data Empenho (De - Até)', widget=django_filters.widgets.RangeWidget(attrs={'type': 'date'}))
     data_vencimento = django_filters.DateFromToRangeFilter(label='Data Vencimento (De - Até)', widget=django_filters.widgets.RangeWidget(attrs={'type': 'date'}))
     data_pagamento = django_filters.DateFromToRangeFilter(label='Data Pagamento (De - Até)', widget=django_filters.widgets.RangeWidget(attrs={'type': 'date'}))
 
-    # Value Ranges
     valor_bruto = django_filters.RangeFilter(label='Valor Bruto (Min - Max)')
     valor_liquido = django_filters.RangeFilter(label='Valor Líquido (Min - Max)')
 
@@ -34,17 +34,18 @@ class ProcessoFilter(BaseStyledFilterSet):
 
 
 class CredorFilter(BaseStyledFilterSet):
+    """Filtro para pesquisa de credores por dados cadastrais principais."""
     class Meta:
         model = Credor
         fields = {
-            'nome': ['icontains'],       # Busca parcial ignorando maiúsculas
-            'cpf_cnpj': ['icontains'],   # Busca parcial
-            'tipo': ['exact'],           # Dropdown exato (PF, PJ, EX)
-            'cargo_funcao': ['exact'],   # Dropdown por cargo/função
+            'nome': ['icontains'],
+            'cpf_cnpj': ['icontains'],
+            'tipo': ['exact'],
+            'cargo_funcao': ['exact'],
         }
 
-# Filtro para Diárias
 class DiariaFilter(BaseStyledFilterSet):
+    """Filtro para listagem de diárias com critérios operacionais."""
     data_saida = django_filters.DateFromToRangeFilter(label='Data Saída (De - Até)', widget=django_filters.widgets.RangeWidget(attrs={'type': 'date'}))
     beneficiario__nome = django_filters.CharFilter(lookup_expr='icontains', label='Nome do Beneficiário')
     proponente__username = django_filters.CharFilter(lookup_expr='icontains', label='Username do Proponente')
@@ -57,8 +58,8 @@ class DiariaFilter(BaseStyledFilterSet):
             'status', 'cidade_destino',
         ]
 
-# Filtro para Reembolso
 class ReembolsoFilter(BaseStyledFilterSet):
+    """Filtro para reembolsos de combustível."""
     class Meta:
         model = ReembolsoCombustivel
         fields = {
@@ -66,8 +67,9 @@ class ReembolsoFilter(BaseStyledFilterSet):
             'beneficiario': ['exact'],
             'status': ['exact'],
         }
-# Filtro para Jeton
+
 class JetonFilter(BaseStyledFilterSet):
+    """Filtro para lançamentos de jeton."""
     class Meta:
         model = Jeton
         fields = {
@@ -76,8 +78,9 @@ class JetonFilter(BaseStyledFilterSet):
             'reuniao': ['icontains'],
             'status': ['exact'],
         }
-# Filtro para Auxílio Representação
+
 class AuxilioFilter(BaseStyledFilterSet):
+    """Filtro para auxílios de representação."""
     class Meta:
         model = AuxilioRepresentacao
         fields = {
@@ -87,7 +90,7 @@ class AuxilioFilter(BaseStyledFilterSet):
         }
 
 class RetencaoNotaFilter(BaseStyledFilterSet):
-    """ Filtro para quando a visão for 'Agrupar por Nota Fiscal' """
+    """Filtro de retenções na visão agrupada por documento fiscal."""
     mes = django_filters.NumberFilter(field_name='data_emissao', lookup_expr='month', label='Mês da Emissão')
     ano = django_filters.NumberFilter(field_name='data_emissao', lookup_expr='year', label='Ano da Emissão')
     processo = django_filters.CharFilter(field_name='processo__id', lookup_expr='exact', label='Nº do Processo')
@@ -110,11 +113,11 @@ class RetencaoNotaFilter(BaseStyledFilterSet):
 
     class Meta:
         model = DocumentoFiscal
-        fields = ['mes', 'ano', 'processo', 'emitente', 'beneficiario', 'imposto', 'status']  # <-- Adicione aqui
+        fields = ['mes', 'ano', 'processo', 'emitente', 'beneficiario', 'imposto', 'status']
 
 
 class RetencaoProcessoFilter(BaseStyledFilterSet):
-    """ Filtro para quando a visão for 'Agrupar por Processo' """
+    """Filtro de retenções na visão agrupada por processo."""
     mes = django_filters.NumberFilter(field_name='notas_fiscais__data_emissao', lookup_expr='month', label='Mês da Emissão')
     ano = django_filters.NumberFilter(field_name='notas_fiscais__data_emissao', lookup_expr='year', label='Ano da Emissão')
     processo = django_filters.CharFilter(field_name='id', lookup_expr='exact', label='Nº do Processo')
@@ -137,7 +140,7 @@ class RetencaoProcessoFilter(BaseStyledFilterSet):
 
 
 class RetencaoIndividualFilter(BaseStyledFilterSet):
-    """ Filtro para a visão granular (Listar Impostos Individuais) """
+    """Filtro granular para listagem individual de impostos retidos."""
     mes = django_filters.NumberFilter(field_name='nota_fiscal__data_emissao', lookup_expr='month', label='Mês (Emissão NF)')
     ano = django_filters.NumberFilter(field_name='nota_fiscal__data_emissao', lookup_expr='year', label='Ano (Emissão NF)')
     processo = django_filters.CharFilter(field_name='nota_fiscal__processo__id', lookup_expr='exact', label='Nº do Processo')
@@ -164,8 +167,8 @@ class RetencaoIndividualFilter(BaseStyledFilterSet):
 
 
 class PendenciaFilter(BaseStyledFilterSet):
+    """Filtro de pendências por processo, credor e classificação."""
     processo__id = django_filters.NumberFilter(label="ID do Processo")
-    # Permite buscar pelo nome do credor do processo atrelado à pendência
     processo__credor__nome = django_filters.CharFilter(lookup_expr='icontains', label="Credor")
 
     class Meta:
@@ -173,11 +176,10 @@ class PendenciaFilter(BaseStyledFilterSet):
         fields = ['status', 'tipo', 'processo__id', 'processo__credor__nome']
 
 class DocumentoFiscalFilter(BaseStyledFilterSet):
+    """Filtro para documentos fiscais por número, emitente e ateste."""
     numero_nota_fiscal = django_filters.CharFilter(lookup_expr='icontains', label='Nº da Nota')
-    # Permite buscar parte do nome do credor
     nome_emitente__nome = django_filters.CharFilter(lookup_expr='icontains', label='Nome do Emitente')
 
-    # Filtro para o campo booleano (Atestada = Sim/Não/Qualquer)
     atestada = django_filters.BooleanFilter(
         label='Status de Liquidação (Atestada?)',
         widget=django_filters.widgets.BooleanWidget()
@@ -188,6 +190,7 @@ class DocumentoFiscalFilter(BaseStyledFilterSet):
         fields = ['numero_nota_fiscal', 'nome_emitente__nome', 'atestada']
 
 class DevolucaoFilter(BaseStyledFilterSet):
+    """Filtro para devoluções com critérios por período, processo e credor."""
     processo__id = django_filters.NumberFilter(label="Nº do Processo")
     processo__credor__nome = django_filters.CharFilter(lookup_expr='icontains', label="Credor")
     data_devolucao__gte = django_filters.DateFilter(
@@ -203,12 +206,14 @@ class DevolucaoFilter(BaseStyledFilterSet):
         fields = ['processo__id', 'processo__credor__nome', 'data_devolucao__gte', 'data_devolucao__lte', 'motivo']
 
     def __init__(self, *args, **kwargs):
+        """Inicializa filtros de devolução com widgets de data no formato nativo."""
         super().__init__(*args, **kwargs)
         self.form.fields['data_devolucao__gte'].widget.attrs['type'] = 'date'
         self.form.fields['data_devolucao__lte'].widget.attrs['type'] = 'date'
 
 
 class ContingenciaFilter(BaseStyledFilterSet):
+    """Filtro para acompanhamento de solicitações de contingência."""
     processo__id = django_filters.NumberFilter(label="Nº do Processo")
     solicitante__username = django_filters.CharFilter(lookup_expr='icontains', label="Solicitante")
     status = django_filters.ChoiceFilter(choices=STATUS_CONTINGENCIA, label="Status", empty_label="Todos os Status")
@@ -237,6 +242,7 @@ class AEmpenharFilter(ProcessoFilter):
         fields = ['credor_nome', 'tipo_pagamento', 'data_vencimento__gte', 'data_vencimento__lte', 'valor_liquido']
 
     def __init__(self, *args, **kwargs):
+        """Configura campos de vencimento com input nativo de data."""
         super().__init__(*args, **kwargs)
         self.form.fields['data_vencimento__gte'].widget.input_type = 'date'
         self.form.fields['data_vencimento__lte'].widget.input_type = 'date'

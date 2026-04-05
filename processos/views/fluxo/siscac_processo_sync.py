@@ -3,6 +3,7 @@
 from decimal import Decimal
 
 from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
 from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST
@@ -84,12 +85,14 @@ def sync_siscac_payments(extracted_payments):
 
 
 @require_GET
+@permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def sincronizar_siscac(request):
     """Renderiza o painel de sincronização SISCAC."""
     return render(request, "fluxo/sincronizar_siscac.html", {})
 
 
 @require_POST
+@permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def sincronizar_siscac_manual_action(request):
     """Processa sincronização manual de pares processo|SISCAC selecionados."""
     force_sync_ids = request.POST.getlist("force_sync_ids")
@@ -115,6 +118,7 @@ def sincronizar_siscac_manual_action(request):
 
 
 @require_POST
+@permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def sincronizar_siscac_auto_action(request):
     """Processa upload do PDF SISCAC e executa sincronização automática."""
     pdf_file = request.FILES.get("siscac_pdf")

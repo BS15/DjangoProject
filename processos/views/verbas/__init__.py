@@ -1,10 +1,13 @@
 import logging
 
 from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
+from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.db import transaction
+from django.views.decorators.http import require_POST
 
 from ...forms import PendenciaFormSet, ProcessoForm
 from ...models import (
@@ -22,6 +25,7 @@ from .verbas_shared import (
     _VERBA_CONFIG,
     _anexar_documento,
     _extensao_documento_permitida,
+    _get_permissao_gestao_verba,
     _get_tipos_documento_ativos,
     _obter_credor_agrupamento,
 )
@@ -36,14 +40,14 @@ from .verbas_jeton import *
 from .verbas_auxilio import *
 
 
+@permission_required("processos.pode_visualizar_verbas", raise_exception=True)
 def verbas_panel_view(request):
     return render(request, 'verbas/verbas_panel.html')
 
 
+@require_POST
+@permission_required("processos.pode_agrupar_verbas", raise_exception=True)
 def agrupar_verbas_view(request, tipo_verba):
-    if request.method != 'POST':
-        return redirect('verbas_panel')
-
     selecionados = request.POST.getlist('verbas_selecionadas')
 
     config = _VERBA_CONFIG.get(tipo_verba)
@@ -119,6 +123,7 @@ def agrupar_verbas_view(request, tipo_verba):
     return redirect('editar_processo_verbas', pk=novo_processo.id)
 
 
+@permission_required("processos.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas(request, pk):
     processo = get_object_or_404(Processo, id=pk)
 
@@ -162,13 +167,15 @@ def editar_processo_verbas(request, pk):
     return render(request, 'verbas/editar_processo_verbas.html', context)
 
 
+@require_POST
 def api_add_documento_verba(request, tipo_verba, pk):
-    if request.method != 'POST':
-        return JsonResponse({'ok': False, 'error': 'Método não permitido.'}, status=405)
-
     config = _VERBA_CONFIG.get(tipo_verba)
     if not config:
         return JsonResponse({'ok': False, 'error': 'Tipo de verba inválido.'}, status=400)
+
+    permissao = _get_permissao_gestao_verba(tipo_verba)
+    if not permissao or not request.user.has_perm(permissao):
+        raise PermissionDenied('Você não tem permissão para anexar documentos nesta verba.')
 
     modelo_verba = config['model']
     modelo_documento = config['doc_model']

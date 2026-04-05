@@ -20,14 +20,12 @@ def _get_robust_session():
 
 
 def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, folder_id=None):
-    """Submits a PDF to the Autentique API for digital signature.
+    """Envia PDF para assinatura digital na API da Autentique.
 
-    Pure HTTP client — no model persistence.
+    Cliente HTTP puro, sem persistência de modelos.
 
-    Returns:
-        dict: {"id": str, "url": str, "signers_data": dict}
+    Retorna um dicionário com id, url e dados de signatários.
     """
-    # 1. The exact query from Autentique's documentation
     query = """
     mutation CreateDocumentMutation($document: DocumentInput!, $signers: [SignerInput!]!, $file: Upload!, $folder_id: UUID) {
       createDocument(document: $document, signers: $signers, file: $file, folder_id: $folder_id) {
@@ -45,7 +43,6 @@ def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, folder_id
     }
     """
 
-    # 2. Use proper GraphQL variables to avoid string-escaping bugs
     variables = {
         "document": {
             "name": nome_doc
@@ -62,12 +59,10 @@ def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, folder_id
         "variables": variables
     })
 
-    # 3. The multipart map linking the physical file to the "file" variable
     map_dict = json.dumps({
         "0": ["variables.file"]
     })
 
-    # 4. The multipart payload
     files = {
         "operations": (None, operations),
         "map": (None, map_dict),
@@ -101,7 +96,6 @@ def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, folder_id
                 "short_link": link_obj.get("short_link", "")
             }
 
-    # Fallback url from the first signer for backward-compat
     url = ""
     if doc.get("signatures"):
         link = doc["signatures"][0].get("link") or {}
@@ -113,19 +107,20 @@ def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, folder_id
 
 def verificar_e_baixar_documento(autentique_id):
     """
-    Checks the signature status of a document on Autentique and downloads
-    the signed PDF if all signatures are complete.
+    Verifica status de assinatura de um documento na Autentique.
 
-    Args:
-        autentique_id (str): The document ID on Autentique.
+    Quando todas as assinaturas estiverem concluídas, baixa o PDF assinado.
 
-    Returns:
-        dict: A dict with:
-            - 'assinado' (bool): True if the document is fully signed.
-            - 'pdf_bytes' (bytes or None): The signed PDF bytes if assinado is True.
+    Parâmetros:
+        autentique_id: Identificador do documento na Autentique.
 
-    Raises:
-        Exception: If the API call fails or returns an error.
+    Retorna:
+        dicionário com:
+        - assinado (bool): indica se o documento foi totalmente assinado.
+        - pdf_bytes (bytes ou None): conteúdo do PDF assinado quando disponível.
+
+    Exceções:
+        Exception: quando a API retorna erro ou a requisição falha.
     """
     query = """
     query GetDocument($id: UUID!) {
