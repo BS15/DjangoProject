@@ -3,7 +3,7 @@
 Contem infraestrutura utilizada por multiplos modulos de views.
 """
 
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
 from django.contrib import messages
 from django.core.files.base import ContentFile
@@ -14,8 +14,8 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
-from ..forms import DocumentoFormSet, PendenciaForm, PendenciaFormSet
-from ..models import (
+from ...forms import DocumentoFormSet, PendenciaForm, PendenciaFormSet
+from ...models import (
     Contingencia,
     DocumentoFiscal,
     DocumentoProcesso,
@@ -25,6 +25,7 @@ from ..models import (
     StatusChoicesProcesso,
     TiposDeDocumento,
 )
+from ...utils import format_br_date, format_brl_currency, parse_brl_decimal
 
 
 _CAMPOS_PERMITIDOS_CONTINGENCIA = {
@@ -44,13 +45,6 @@ _CAMPOS_PERMITIDOS_CONTINGENCIA = {
     "conta_id",
     "tag_id",
 }
-
-
-def _normalizar_texto(texto):
-    """Remove acentos e converte para maiusculas para comparacoes robustas."""
-    import unicodedata
-
-    return unicodedata.normalize("NFD", texto.upper()).encode("ascii", "ignore").decode("ascii")
 
 
 def _obter_campo_ordenacao(request, campos_permitidos, default_ordem="id", default_direcao="desc"):
@@ -150,11 +144,6 @@ def _aplicar_filtros_contas_a_pagar(queryset, params):
     return qs
 
 
-def _normalizar_filtro_opcao(valor, opcoes_validas, default=""):
-    """Normaliza filtro textual para um conjunto fechado de opcoes validas."""
-    return valor if valor in opcoes_validas else default
-
-
 def _aplicar_filtro_por_opcao(queryset, opcao, mapa_filtros):
     """Aplica filtro por opcao com regras mapeadas (kwargs ou callable)."""
     regra = mapa_filtros.get(opcao)
@@ -176,21 +165,6 @@ def _aplicar_filtros_historico(qs, *, tipo_acao="", data_inicio="", data_fim="",
     if usuario:
         qs = qs.filter(history_user__username__icontains=usuario)
     return qs
-
-
-def _fmt_date_br(d):
-    """Formata datas no padrão brasileiro para payloads de API."""
-    return d.strftime("%d/%m/%Y") if d else "-"
-
-
-def _fmt_decimal_brl(v):
-    """Formata Decimals para moeda BRL com separadores locais."""
-    if v is None:
-        return "-"
-    int_part, dec_part = f"{abs(v):.2f}".split(".")
-    int_formatted = "{:,}".format(int(int_part)).replace(",", ".")
-    signal = "-" if v < 0 else ""
-    return f"R$ {signal}{int_formatted},{dec_part}"
 
 
 def _serializar_documentos_processo_auditoria(processo):
@@ -242,18 +216,46 @@ def _serializar_retencoes_processo_auditoria(processo):
     return retencoes_list
 
 
-def _build_payload_documentos_processo_auditoria(processo):
-    """Monta payload completo de documentos/dados auxiliares de auditoria."""
+def _serializar_processo_base(processo):
+    """Serializa campos centrais comuns do processo para reutilização em múltiplos payloads.
+    
+    Consolidar essa lógica em uma função base elimina duplicação entre os builders
+    de auditoria e detalhes, garantindo consistência na formatação de datas,
+    moedas e tratamento de nulls.
+    """
     return {
         "processo_id": processo.id,
         "n_nota_empenho": processo.n_nota_empenho or str(processo.id),
+        "credor_id": processo.credor_id,
         "credor": str(processo.credor) if processo.credor else "-",
-        "valor_bruto": _fmt_decimal_brl(processo.valor_bruto),
-        "valor_liquido": _fmt_decimal_brl(processo.valor_liquido),
-        "data_empenho": _fmt_date_br(processo.data_empenho),
-        "data_vencimento": _fmt_date_br(processo.data_vencimento),
-        "data_pagamento": _fmt_date_br(processo.data_pagamento),
+        "valor_bruto": format_brl_currency(processo.valor_bruto),
+        "valor_liquido": format_brl_currency(processo.valor_liquido),
+        "data_empenho": format_br_date(processo.data_empenho),
+        "data_vencimento": format_br_date(processo.data_vencimento),
+        "data_pagamento": format_br_date(processo.data_pagamento),
         "status": str(processo.status) if processo.status else "-",
+        "ano_exercicio": processo.ano_exercicio,
+        "n_pagamento_siscac": processo.n_pagamento_siscac or "-",
+        "forma_pagamento": str(processo.forma_pagamento) if processo.forma_pagamento else "-",
+        "tipo_pagamento": str(processo.tipo_pagamento) if processo.tipo_pagamento else "-",
+        "observacao": processo.observacao or "-",
+        "conta": str(processo.conta) if processo.conta else "-",
+        "detalhamento": processo.detalhamento or "-",
+        "tag": str(processo.tag) if processo.tag else "-",
+        "em_contingencia": processo.em_contingencia,
+        "extraorcamentario": processo.extraorcamentario,
+    }
+
+
+def _build_payload_documentos_processo_auditoria(processo):
+    """Monta payload completo de documentos/dados auxiliares de auditoria.
+    
+    Utiliza a serialização base e adiciona dados específicos de auditoria:
+    pendências, retenções e documentos anexados.
+    """
+    base = _serializar_processo_base(processo)
+    return {
+        **base,
         "pendencias": _serializar_pendencias_processo_auditoria(processo),
         "retencoes": _serializar_retencoes_processo_auditoria(processo),
         "documentos": _serializar_documentos_processo_auditoria(processo),
@@ -261,31 +263,14 @@ def _build_payload_documentos_processo_auditoria(processo):
 
 
 def _build_payload_processo_detalhes(processo):
-    """Monta payload padronizado de detalhes cadastrais de um processo."""
+    """Monta payload padronizado de detalhes cadastrais de um processo.
+    
+    Utiliza a serialização base consolidada em um wrapper de estrutura
+    de resposta API padronizada.
+    """
     return {
         "sucesso": True,
-        "processo": {
-            "id": processo.pk,
-            "n_nota_empenho": processo.n_nota_empenho or "—",
-            "credor_id": processo.credor_id,
-            "credor_nome": str(processo.credor) if processo.credor else "—",
-            "data_empenho": str(processo.data_empenho) if processo.data_empenho else None,
-            "valor_bruto": str(processo.valor_bruto) if processo.valor_bruto is not None else "0.00",
-            "valor_liquido": str(processo.valor_liquido) if processo.valor_liquido is not None else "0.00",
-            "ano_exercicio": processo.ano_exercicio,
-            "n_pagamento_siscac": processo.n_pagamento_siscac or "—",
-            "data_vencimento": str(processo.data_vencimento) if processo.data_vencimento else None,
-            "data_pagamento": str(processo.data_pagamento) if processo.data_pagamento else None,
-            "forma_pagamento": str(processo.forma_pagamento) if processo.forma_pagamento else "—",
-            "tipo_pagamento": str(processo.tipo_pagamento) if processo.tipo_pagamento else "—",
-            "observacao": processo.observacao or "—",
-            "conta": str(processo.conta) if processo.conta else "—",
-            "status": str(processo.status) if processo.status else "—",
-            "detalhamento": processo.detalhamento or "—",
-            "tag": str(processo.tag) if processo.tag else "—",
-            "em_contingencia": processo.em_contingencia,
-            "extraorcamentario": processo.extraorcamentario,
-        },
+        "processo": _serializar_processo_base(processo),
     }
 
 
@@ -787,11 +772,8 @@ def aplicar_aprovacao_contingencia(contingencia):
 
     if "novo_valor_liquido" in contingencia.dados_propostos:
         raw_value = contingencia.dados_propostos["novo_valor_liquido"]
-        if isinstance(raw_value, str):
-            raw_value = raw_value.replace(".", "").replace(",", ".")
-        try:
-            novo_valor_liquido = Decimal(str(raw_value))
-        except (InvalidOperation, ValueError):
+        novo_valor_liquido = parse_brl_decimal(raw_value)
+        if novo_valor_liquido is None:
             return False, "O valor líquido proposto na contingência é inválido."
 
         soma_comprovantes = sum(
@@ -863,9 +845,8 @@ def _recusar_processo_view(request, pk, *, permission, status_devolucao, error_m
 
 
 __all__ = [
-    "_normalizar_texto",
+    "_obter_campo_ordenacao",
     "_obter_estatisticas_boletos",
-    "_normalizar_filtro_opcao",
     "_aplicar_filtro_por_opcao",
     "_aplicar_filtros_historico",
     "_build_history_record",

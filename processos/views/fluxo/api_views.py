@@ -1,4 +1,15 @@
-"""Views de API do fluxo (exceto auditoria/historico, em modulo proprio)."""
+"""Views de API do fluxo de pagamentos (exceto auditoria/histórico).
+
+Este módulo concentra endpoints auxiliares usados pela interface do fluxo para:
+- extração de códigos de barras e metadados de boletos;
+- extração de dados de empenho a partir de PDF SISCAC;
+- carregamento dinâmico de tipos documentais por tipo de pagamento;
+- montagem de payload resumido para painéis de pagamento;
+- visualização/geração de PDFs operacionais.
+
+As regras de segurança seguem o padrão do projeto com `permission_required` e
+respostas em `JsonResponse` para chamadas assíncronas.
+"""
 
 import json
 import logging
@@ -8,14 +19,29 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 
-from ..models import Processo, TiposDeDocumento
-from ..utils import extract_siscac_data, processar_pdf_boleto
-from ..pdf_engine import gerar_documento_pdf
+from ...models import Processo, TiposDeDocumento
+from ...utils import extract_siscac_data, format_brl_amount, processar_pdf_boleto
+from ...pdf_engine import gerar_documento_pdf
 
 
 @permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def api_extrair_codigos_barras_processo(request, pk):
-    """Retorna codigos de barras ja extraidos dos documentos de boleto do processo."""
+    """Retorna códigos de barras já persistidos nos documentos de um processo.
+
+    Consulta os documentos vinculados ao processo, filtra apenas tipos cujo nome
+    contenha "boleto" e devolve os valores de `codigo_barras` já armazenados.
+    Não executa OCR nem reprocessamento de PDF; apenas leitura de dados já
+    extraídos anteriormente.
+
+    Args:
+        request: Requisição HTTP autenticada.
+        pk: ID do processo alvo.
+
+    Returns:
+        JsonResponse: Payload com `sucesso`, `processo_id`, quantidade de
+        documentos de boleto, quantidade efetivamente extraída e lista de
+        códigos encontrados.
+    """
     processo = get_object_or_404(Processo, id=pk)
     boleto_docs_qs = processo.documentos.select_related("tipo").filter(
         tipo__tipo_de_documento__icontains="boleto"
@@ -34,11 +60,25 @@ def api_extrair_codigos_barras_processo(request, pk):
 
 @permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def api_extrair_codigos_barras_upload(request):
-    """Extrai códigos de barras e dados de boletos de múltiplos (ou único) PDF(s).
-    
-    Aceita tanto uploads em lote via 'boleto_files' quanto upload único via
-    'boleto_file'/'boleto_pdf'. Retorna dados completos para single upload
-    ou array de códigos para batch.
+    """Extrai dados de boleto a partir de upload único ou em lote de PDFs.
+
+    Contrato do endpoint:
+    - Aceita `POST` com arquivos em `boleto_files` (lote) ou
+      `boleto_file`/`boleto_pdf`/`file` (único).
+    - Em upload único, retorna o dicionário completo produzido por
+      `processar_pdf_boleto` em `dados`.
+    - Em lote, retorna lista de códigos válidos e contadores de sucesso/falha.
+
+    Regras de resposta:
+    - `405` para método inválido.
+    - `400` quando nenhum arquivo é enviado.
+    - `500` em erro interno de processamento do PDF.
+
+    Args:
+        request: Requisição HTTP contendo arquivos multipart.
+
+    Returns:
+        JsonResponse: Estrutura de sucesso/erro adequada ao modo de envio.
     """
     if request.method != "POST":
         return JsonResponse({"sucesso": False, "erro": "Método não permitido."}, status=405)
@@ -108,6 +148,25 @@ def api_extrair_codigos_barras_upload(request):
 
 @permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def api_extrair_dados_empenho(request):
+    """Extrai número e data de empenho a partir de PDF SISCAC enviado pelo usuário.
+
+    Endpoint utilizado para preenchimento automático dos campos de empenho na
+    camada de pré-pagamento. Invoca `extract_siscac_data` e valida se ao menos
+    um dos campos esperados (`n_nota_empenho` ou `data_empenho`) foi obtido.
+
+    Regras de resposta:
+    - `405` para método diferente de `POST`.
+    - `400` sem arquivo em `siscac_file`.
+    - `500` para falha técnica no parser.
+    - `422` quando o arquivo é processado, mas não contém dados de empenho.
+
+    Args:
+        request: Requisição HTTP contendo `siscac_file`.
+
+    Returns:
+        JsonResponse: Em sucesso, retorna `n_nota_empenho` e `data_empenho` em
+        formato ISO (`YYYY-MM-DD`).
+    """
     if request.method != "POST":
         return JsonResponse({"sucesso": False, "erro": "Método não permitido."}, status=405)
 
@@ -153,6 +212,19 @@ def api_extrair_dados_empenho(request):
 
 @permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def api_tipos_documento_por_pagamento(request):
+    """Lista tipos de documento ativos vinculados a um tipo de pagamento.
+
+    Endpoint de apoio para formulários dinâmicos (dropdown dependente),
+    retornando apenas os campos necessários (`id` e `tipo_de_documento`) em
+    ordem alfabética.
+
+    Args:
+        request: Requisição HTTP com query param `tipo_pagamento_id`.
+
+    Returns:
+        JsonResponse: `sucesso=True` com lista em `tipos` ou `sucesso=False`
+        com mensagem de erro quando o parâmetro é ausente ou ocorre exceção.
+    """
     tipo_pagamento_id = request.GET.get("tipo_pagamento_id")
 
     if not tipo_pagamento_id:
@@ -173,6 +245,25 @@ def api_tipos_documento_por_pagamento(request):
 
 @permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def api_detalhes_pagamento(request):
+    """Monta resumo de detalhes de pagamento para uma lista de processos.
+
+    Espera `POST` JSON com `ids` e retorna payload normalizado para exibição em
+    painéis de pagamento/autorização, incluindo:
+    - dados básicos do processo e credor;
+    - valor líquido formatado em padrão brasileiro;
+    - forma de pagamento;
+    - detalhes derivados de `processo.detalhes_pagamento`.
+
+    Em caso de exceção, captura o erro e devolve mensagem no payload para
+    tratamento no frontend.
+
+    Args:
+        request: Requisição HTTP com corpo JSON.
+
+    Returns:
+        JsonResponse: `sucesso=True` com lista em `dados` quando o `POST` é
+        válido; caso contrário, `sucesso=False` com descrição do erro.
+    """
     if request.method == "POST":
         try:
             dados = json.loads(request.body)
@@ -186,11 +277,7 @@ def api_detalhes_pagamento(request):
 
             resultados = []
             for p in processos:
-                try:
-                    valor_num = float(p.valor_liquido) if p.valor_liquido else 0.0
-                    valor_formatado = f"{valor_num:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-                except (ValueError, TypeError):
-                    valor_formatado = "0,00"
+                valor_formatado = format_brl_amount(p.valor_liquido, empty_value="0,00")
 
                 pagamento = p.detalhes_pagamento
 
@@ -220,6 +307,19 @@ def api_detalhes_pagamento(request):
 @permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 @xframe_options_sameorigin
 def visualizar_pdf_processo(request, processo_id):
+    """Renderiza o PDF consolidado de documentos anexados ao processo.
+
+    Gera visualização inline no navegador usando o consolidado retornado por
+    `Processo.gerar_pdf_consolidado()`. Se o processo não tiver documentos PDF
+    compatíveis, responde com `404` e mensagem textual.
+
+    Args:
+        request: Requisição HTTP autenticada.
+        processo_id: ID do processo para geração do consolidado.
+
+    Returns:
+        HttpResponse: Conteúdo `application/pdf` inline quando disponível.
+    """
     processo = get_object_or_404(Processo, id=processo_id)
 
     pdf_buffer = processo.gerar_pdf_consolidado()
@@ -236,6 +336,18 @@ def visualizar_pdf_processo(request, processo_id):
 @permission_required("processos.pode_autorizar_pagamento", raise_exception=True)
 @xframe_options_sameorigin
 def gerar_autorizacao_pagamento_view(request, pk):
+    """Gera e exibe o PDF de autorização de pagamento de um processo.
+
+    Utiliza o motor de documentos (`gerar_documento_pdf`) com template lógico
+    `autorizacao` e retorna o resultado para visualização inline.
+
+    Args:
+        request: Requisição HTTP autenticada com permissão de autorização.
+        pk: ID do processo para o qual a autorização será gerada.
+
+    Returns:
+        HttpResponse: PDF inline com nome de arquivo padronizado.
+    """
     processo = get_object_or_404(Processo, pk=pk)
     pdf_bytes = gerar_documento_pdf("autorizacao", processo)
     nome_arquivo = f"Autorizacao_Pagamento_Proc_{processo.id}.pdf"

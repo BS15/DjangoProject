@@ -271,6 +271,7 @@ const sortOrdemAtual    = "{{ ordem }}";
 const sortDirecaoAtual  = "{{ direcao }}";
 
 document.addEventListener('DOMContentLoaded', function () {
+    const barcodeApiBase = "{% url 'api_extrair_codigos_barras_processo' pk=0 %}".replace('/0/', '/');
 
     // ------------------------------------------------------------------
     // 1. SORTABLE HEADERS
@@ -336,10 +337,29 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: JSON.stringify({ ids: ids })
             })
             .then(res => res.json())
-            .then(data => {
+            .then(async (data) => {
                 document.getElementById('pagamentos-loading').style.display = 'none';
 
                 if (data.sucesso) {
+                    const processosComBoleto = data.dados.filter(
+                        p => p.detalhe_tipo === 'Código de Barras' && (!p.codigos_barras || p.codigos_barras.length === 0)
+                    );
+
+                    await Promise.all(
+                        processosComBoleto.map(async (p) => {
+                            try {
+                                const resp = await fetch(`${barcodeApiBase}${p.id}/`);
+                                const payload = await resp.json();
+                                if (payload.sucesso && Array.isArray(payload.barcodes) && payload.barcodes.length > 0) {
+                                    p.codigos_barras = payload.barcodes;
+                                    p.detalhe_valor = payload.barcodes[0];
+                                }
+                            } catch (err) {
+                                console.error(`Falha ao buscar códigos do processo ${p.id}:`, err);
+                            }
+                        })
+                    );
+
                     data.dados.forEach(p => {
                         let valorHtml = `<span class="fw-bold text-dark">${p.detalhe_valor}</span>`;
 

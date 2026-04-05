@@ -23,15 +23,15 @@
             </div>
             <div class="col-4">
                 <div class="small text-muted">Valor Bruto</div>
-                <div class="fw-semibold">R$ {{ processo.valor_bruto|floatformat:2|default:"—" }}</div>
+                <div class="fw-semibold">{{ processo.valor_bruto|br_currency:"—" }}</div>
             </div>
             <div class="col-4">
                 <div class="small text-muted">Valor Líquido</div>
-                <div class="fw-semibold {{ value_color }}">R$ {{ processo.valor_liquido|floatformat:2|default:"—" }}</div>
+                <div class="fw-semibold {{ value_color }}">{{ processo.valor_liquido|br_currency:"—" }}</div>
             </div>
             <div class="col-4">
                 <div class="small text-muted">Data Pgto</div>
-                <div class="fw-semibold">{{ processo.data_pagamento|date:"d/m/Y"|default:"—" }}</div>
+                <div class="fw-semibold">{{ processo.data_pagamento|br_date:"—" }}</div>
             </div>
             {% if processo.n_nota_empenho %}
             <div class="col-6">

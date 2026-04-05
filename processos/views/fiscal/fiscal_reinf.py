@@ -19,7 +19,7 @@ def painel_reinf_view(request):
     O parametro todos=1 ignora o filtro de competencia e retorna
     todos os lancamentos de todas as competencias.
     """
-    from ..reinf_services import get_serie_2000_data, get_serie_4000_data
+    from ...reinf_services import get_serie_2000_data, get_serie_4000_data
 
     today = date.today()
     todos = request.GET.get("todos") == "1"
@@ -68,7 +68,7 @@ def gerar_lote_reinf_view(request):
     import io
     import zipfile
 
-    from ..reinf_services import gerar_lotes_reinf
+    from ...reinf_services import gerar_lotes_reinf
 
     today = date.today()
     try:

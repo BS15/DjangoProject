@@ -1,7 +1,7 @@
 """Utilitários para geração de faturas mensais de contas fixas."""
 
 import datetime
-from .models import ContaFixa, FaturaMensal
+from ..models import ContaFixa, FaturaMensal
 from django.db.models import Q
 
 

@@ -11,16 +11,17 @@ from django.views.decorators.http import require_GET, require_POST
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 
-from ..forms import PendenciaForm
-from ..models import (
+from ...forms import PendenciaForm
+from ...models import (
     Contingencia,
     Processo,
     ReuniaoConselho,
     RetencaoImposto,
 )
-from ..pdf_engine import gerar_documento_pdf
-from ..filters import ProcessoFilter
-from ..utils import parse_siscac_report, sync_siscac_payments
+from ...utils import normalize_choice
+from ...pdf_engine import gerar_documento_pdf
+from ...filters import ProcessoFilter
+from ..shared import apply_filterset
 from .support_views import (
     painel_pendencias_view,
     painel_contingencias_view,
@@ -35,7 +36,6 @@ from .helpers import (
     _aprovar_processo_view,
     _executar_arquivamento_definitivo,
     _iniciar_fila_sessao,
-    _normalizar_filtro_opcao,
     _processo_fila_detalhe_view,
     _recusar_processo_view,
 )
@@ -71,7 +71,7 @@ def painel_conferencia_view(request):
         .order_by("data_pagamento")
     )
 
-    filtro = _normalizar_filtro_opcao(
+    filtro = normalize_choice(
         request.GET.get("filtro", ""),
         {"com_pendencia", "com_retencao", "com_ambos", "sem_pendencias"},
     )
@@ -575,7 +575,7 @@ def painel_arquivamento_view(request):
 
     arquivados_qs = Processo.objects.filter(status__status_choice__iexact="ARQUIVADO").order_by("-id")
 
-    arquivamento_filtro = ProcessoFilter(request.GET or None, queryset=arquivados_qs)
+    arquivamento_filtro = apply_filterset(request, ProcessoFilter, arquivados_qs)
     processos_arquivados = arquivamento_filtro.qs
 
     return render(
@@ -593,8 +593,8 @@ def painel_arquivamento_view(request):
 
 @require_POST
 @permission_required("processos.pode_arquivar", raise_exception=True)
-def arquivar_processo_view(request, pk):
-    """Executa arquivamento definitivo de um processo elegível.
+def arquivar_processo_action(request, pk):
+    """Executa o arquivamento definitivo de um processo elegível.
 
     Etapas:
     1. Garante status `APROVADO - PENDENTE ARQUIVAMENTO`.
@@ -624,51 +624,27 @@ def arquivar_processo_view(request, pk):
 
 
 @require_GET
-def sincronizar_siscac(request):
-    """Renderiza o painel de sincronização SISCAC."""
-    return render(request, "fluxo/sincronizar_siscac.html", {})
+@permission_required("processos.pode_arquivar", raise_exception=True)
+def arquivar_processo_view(request, pk):
+    """Exibe a ficha de conferência pré-arquivamento de um processo.
 
+    Não executa nenhuma mutação. A execução efetiva ocorre em
+    `arquivar_processo_action`, mantendo separação explícita de
+    responsabilidades entre leitura/revisão e ação de arquivamento.
+    """
+    processo = get_object_or_404(Processo, id=pk)
+    status_atual = processo.status.status_choice if processo.status else ""
+    elegivel = status_atual.upper() == "APROVADO - PENDENTE ARQUIVAMENTO"
 
-@require_POST
-def sincronizar_siscac_manual_action(request):
-    """Processa sincronização manual de pares processo|SISCAC selecionados."""
-    force_sync_ids = request.POST.getlist("force_sync_ids")
-    count = 0
-    errors = 0
-
-    for item in force_sync_ids:
-        try:
-            processo_id, siscac_pg = item.split("|", 1)
-            updated = Processo.objects.filter(id=int(processo_id)).update(n_pagamento_siscac=siscac_pg)
-            if updated:
-                count += 1
-            else:
-                errors += 1
-        except Exception:
-            errors += 1
-
-    if count:
-        messages.success(request, f"{count} processo(s) sincronizado(s) com sucesso.")
-    if errors:
-        messages.error(request, f"{errors} item(ns) não puderam ser sincronizados.")
-    return redirect("sincronizar_siscac")
-
-
-@require_POST
-def sincronizar_siscac_auto_action(request):
-    """Processa upload do PDF SISCAC e executa sincronização automática."""
-    pdf_file = request.FILES.get("siscac_pdf")
-    if not pdf_file or not pdf_file.name.lower().endswith(".pdf"):
-        messages.error(request, "Nenhum arquivo ou PDF inválido enviado.")
-        return redirect("sincronizar_siscac")
-
-    try:
-        extracted = parse_siscac_report(pdf_file)
-        results = sync_siscac_payments(extracted)
-        return render(request, "fluxo/sincronizar_siscac.html", {"resultados": results})
-    except Exception as e:
-        messages.error(request, f"Erro ao processar o relatório SISCAC: {e}")
-        return redirect("sincronizar_siscac")
+    return render(
+        request,
+        "fluxo/arquivar_processo.html",
+        {
+            "processo": processo,
+            "elegivel_para_arquivamento": elegivel,
+            "pode_interagir": request.user.has_perm("processos.pode_arquivar"),
+        },
+    )
 
 
 __all__ = [
@@ -695,7 +671,5 @@ __all__ = [
     "gerar_parecer_conselho_view",
     "painel_arquivamento_view",
     "arquivar_processo_view",
-    "sincronizar_siscac",
-    "sincronizar_siscac_manual_action",
-    "sincronizar_siscac_auto_action",
+    "arquivar_processo_action",
 ]

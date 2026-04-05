@@ -18,6 +18,7 @@ from django.core.files.storage import default_storage
 from django.db.models import Q
 
 from .text_helpers import (
+    parse_brl_decimal,
     extract_text_between,
     normalize_account,
     normalize_document,
@@ -83,15 +84,15 @@ def extract_siscac_data(pdf_file):
             data['data_empenho'] = parse_br_date(raw_date)
             data['ano_exercicio'] = extract_text_between(text, "Ano do Exercício:", "\n")
             data['credor'] = extract_text_between(text, "Credor:", "\n")
-            total_bruto = 0.0
+            total_bruto = Decimal("0")
 
             for p_idx in pages_dict["empenho"]:
                 p_text = pdf.pages[p_idx].extract_text()
                 val_str = extract_text_between(p_text, "Valor:", "\n")
                 if val_str:
-                    total_bruto += float(val_str.replace(".", "").replace(",", "."))
+                    total_bruto += parse_brl_decimal(val_str, default=Decimal("0"))
 
-            data['valor_bruto'] = total_bruto
+            data['valor_bruto'] = float(total_bruto)
 
         obs_list = []
         for p_idx in pages_dict["liquidacao"]:
@@ -100,19 +101,18 @@ def extract_siscac_data(pdf_file):
 
         data['observacao'] = obs_list
 
-        total_liquido = 0.0
+        total_liquido = Decimal("0")
         for p_idx in pages_dict["pagamento"]:
             text = pdf.pages[p_idx].extract_text()
             val_str = extract_text_between(text, "Valor Líquido:", "\n")
             if val_str:
                 try:
-                    clean_val = val_str.replace("R$", "").strip()
-                    total_liquido += float(clean_val.replace(".", "").replace(",", "."))
+                    total_liquido += parse_brl_decimal(val_str, default=Decimal("0"))
                 except Exception:
                     pass
 
         if total_liquido > 0:
-            data['valor_liquido'] = total_liquido
+            data['valor_liquido'] = float(total_liquido)
 
     return data
 
@@ -348,8 +348,8 @@ def processar_pdf_comprovantes(pdf_file):
 
         # --- PARTE A: EXTRAÇÃO DO VALOR ---
         padrao_valor = re.compile(
-            r'(?:VALOR TOTAL|VALOR DO DOCUMENTO|VALOR COBRADO|VALOR EM DINHEIRO|VALOR(?:\s*:)?\s*(?:R\$)?)\s*([\d.,]+)',
-            re.IGNORECASE
+            r'(?:VALOR TOTAL|VALOR DO DOCUMENTO|VALOR COBRADO|VALOR EM DINHEIRO|VALOR)\s*:?\s*(?:R\$\s*)?([\d.,]+)',
+            re.IGNORECASE,
         )
 
         valor_float = 0.00
@@ -392,8 +392,8 @@ def processar_pdf_comprovantes(pdf_file):
         # --- PARTE B.2: EXTRAÇÃO DA DATA DE PAGAMENTO ---
         data_pagamento = ''
         padrao_data = re.compile(
-            r'(?:DATA(?:\s*DO PAGAMENTO|\s*DA TRANSFERENCIA)?|DEBITO EM(?:\s*:)?)\s*(\d{2}/\d{2}/\d{4})',
-            re.IGNORECASE
+            r'(?:DATA(?:\s*DO PAGAMENTO|\s*DA TRANSFERENCIA)?|DEBITO EM)\s*:?\s*(\d{2}/\d{2}/\d{4})',
+            re.IGNORECASE,
         )
         match_data = padrao_data.search(texto_flat)
         if match_data:

@@ -12,10 +12,37 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
-from ..filters import ContingenciaFilter, DevolucaoFilter, PendenciaFilter
-from ..forms import DevolucaoForm
-from ..models import Contingencia, Devolucao, Pendencia, Processo
-from .helpers import aplicar_aprovacao_contingencia
+from ...filters import ContingenciaFilter, DevolucaoFilter, PendenciaFilter, ProcessoFilter
+from ...forms import DevolucaoForm
+from ...models import Contingencia, Devolucao, Pendencia, Processo
+from ..shared import apply_filterset, render_filtered_list
+from .helpers import _obter_campo_ordenacao, aplicar_aprovacao_contingencia
+
+
+def home_page(request: HttpRequest) -> HttpResponse:
+    """Lista processos no painel inicial com filtro e ordenacao segura."""
+    order_field = _obter_campo_ordenacao(
+        request,
+        campos_permitidos={
+            "id": "id",
+            "credor": "credor__nome",
+            "data_empenho": "data_empenho",
+            "status": "status__status_choice",
+            "tipo_pagamento": "tipo_pagamento__tipo_de_pagamento",
+            "valor_liquido": "valor_liquido",
+        },
+    )
+
+    processos_base = Processo.objects.all().order_by(order_field)
+    meu_filtro = apply_filterset(request, ProcessoFilter, processos_base)
+
+    context: dict[str, Any] = {
+        "lista_processos": meu_filtro.qs,
+        "meu_filtro": meu_filtro,
+        "ordem": request.GET.get("ordem", "id"),
+        "direcao": request.GET.get("direcao", "desc"),
+    }
+    return render(request, "home.html", context)
 
 
 @require_GET
@@ -24,28 +51,26 @@ def painel_pendencias_view(request: HttpRequest) -> HttpResponse:
     queryset_base = Pendencia.objects.select_related(
         "processo", "status", "tipo", "processo__credor", "processo__status"
     ).all().order_by("-id")
-
-    meu_filtro = PendenciaFilter(request.GET, queryset=queryset_base)
-
-    context: dict[str, Any] = {
-        "meu_filtro": meu_filtro,
-        "pendencias": meu_filtro.qs,
-    }
-    return render(request, "fluxo/painel_pendencias.html", context)
+    return render_filtered_list(
+        request,
+        queryset=queryset_base,
+        filter_class=PendenciaFilter,
+        template_name="fluxo/painel_pendencias.html",
+        items_key="pendencias",
+    )
 
 
 @require_GET
 @permission_required("processos.acesso_backoffice", raise_exception=True)
 def painel_contingencias_view(request: HttpRequest) -> HttpResponse:
     queryset = Contingencia.objects.select_related("processo", "solicitante").order_by("-data_solicitacao")
-    meu_filtro = ContingenciaFilter(request.GET, queryset=queryset)
-    return render(
+    return render_filtered_list(
         request,
-        "fluxo/painel_contingencias.html",
-        {
-            "filter": meu_filtro,
-            "contingencias": meu_filtro.qs,
-        },
+        queryset=queryset,
+        filter_class=ContingenciaFilter,
+        template_name="fluxo/painel_contingencias.html",
+        items_key="contingencias",
+        filter_key="filter",
     )
 
 
@@ -135,7 +160,7 @@ def analisar_contingencia_view(request: HttpRequest, pk: int) -> HttpResponse:
 @permission_required("processos.acesso_backoffice", raise_exception=True)
 def painel_devolucoes_view(request: HttpRequest) -> HttpResponse:
     queryset = Devolucao.objects.select_related("processo", "processo__credor").order_by("-data_devolucao")
-    meu_filtro = DevolucaoFilter(request.GET, queryset=queryset)
+    meu_filtro = apply_filterset(request, DevolucaoFilter, queryset)
     total_valor = meu_filtro.qs.aggregate(total=Sum("valor_devolvido"))["total"] or Decimal("0")
     return render(
         request,
@@ -199,6 +224,7 @@ def process_detail_view(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 __all__ = [
+    "home_page",
     "painel_pendencias_view",
     "painel_contingencias_view",
     "add_contingencia_view",

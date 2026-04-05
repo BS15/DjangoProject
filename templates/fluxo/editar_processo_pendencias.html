@@ -1,0 +1,44 @@
+{% extends "layouts/base_form.html" %}
+
+{% block page_heading %}Editar Pendências do Processo #{{ processo.id }}{% endblock %}
+{% block page_subtitle %}Cadastre e atualize pendências administrativas do processo.{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'editar_processo' pk=processo.id %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i> Voltar ao Hub de Edição
+</a>
+{% endblock %}
+
+{% block form_fields %}
+<input type="hidden" name="next" value="{{ next_url }}">
+{{ pendencia_formset.management_form }}
+
+<div class="table-responsive">
+    <table class="table table-sm align-middle">
+        <thead>
+            <tr>
+                <th style="width: 260px;">Tipo</th>
+                <th>Descrição</th>
+                <th style="width: 100px;">Excluir</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pen_f in pendencia_formset %}
+            <tr>
+                {% for hidden in pen_f.hidden_fields %}{{ hidden }}{% endfor %}
+                <td>{{ pen_f.tipo }}</td>
+                <td>{{ pen_f.descricao }}</td>
+                <td class="text-center">{{ pen_f.DELETE }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block form_actions %}
+<a href="{% url 'editar_processo' pk=processo.id %}" class="btn btn-secondary px-4">Cancelar</a>
+<button type="submit" class="btn btn-success px-4 fw-bold">
+    <i class="bi bi-check-lg"></i> Salvar Pendências
+</button>
+{% endblock %}

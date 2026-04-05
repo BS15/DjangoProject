@@ -1,6 +1,8 @@
 import magic
 from django.core.exceptions import ValidationError
 
+from .utils import format_brl_currency
+
 
 # ============================================================
 # FILE SECURITY VALIDATOR
@@ -153,9 +155,9 @@ def verificar_turnpike(processo, status_anterior, status_novo):
             valor_liquido = processo.valor_liquido or 0
             if abs(float(soma_comprovantes) - float(valor_liquido)) > 0.01:
                 erros.append(
-                    f'Soma dos comprovantes de pagamento (R$ {float(soma_comprovantes):.2f}) é diferente do '
-                    f'valor líquido do processo (R$ {float(valor_liquido):.2f}). '
-                    f'Diferença: R$ {abs(float(soma_comprovantes) - float(valor_liquido)):.2f}.'
+                    f'Soma dos comprovantes de pagamento ({format_brl_currency(soma_comprovantes)}) é diferente do '
+                    f'valor líquido do processo ({format_brl_currency(valor_liquido)}). '
+                    f'Diferença: {format_brl_currency(abs(float(soma_comprovantes) - float(valor_liquido)))}.'
                 )
 
     return erros

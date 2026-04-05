@@ -74,8 +74,8 @@
                     <tr>
                         <td class="fw-bold text-primary">{{ nf.numero_nota_fiscal }}</td>
                         <td class="fw-medium">{{ nf.nome_emitente.nome|default:"Não Informado"|truncatechars:35 }}</td>
-                        <td>{{ nf.data_emissao|date:"d/m/Y" }}</td>
-                        <td class="text-end fw-bold text-dark">R$ {{ nf.valor_liquido|floatformat:2 }}</td>
+                        <td>{{ nf.data_emissao|br_date }}</td>
+                        <td class="text-end fw-bold text-dark">{{ nf.valor_liquido|br_currency }}</td>
                         <td>
                             <i class="bi bi-person-badge text-secondary"></i> 
                             {{ nf.fiscal_contrato.get_full_name|default:nf.fiscal_contrato.username|default:"<small class='text-muted'>Não designado</small>"|safe }}

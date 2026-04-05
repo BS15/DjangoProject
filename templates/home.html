@@ -86,7 +86,7 @@
                         </td>
                         <td class="fw-bold text-muted">#{{ processo.id }}</td>
                         <td class="fw-medium">{{ processo.credor|default:"-"|truncatechars:30 }}</td>
-                        <td>{{ processo.data_empenho|date:"d/m/Y"|default:"-" }}</td>
+                        <td>{{ processo.data_empenho|br_date }}</td>
                         <td>
                             {% if processo.status.status_choice == 'ARQUIVADO' %}
                                 <span class="badge bg-secondary px-3 py-2"><i class="bi bi-archive-fill"></i> Arquivado</span>
@@ -98,7 +98,7 @@
                         </td>
                         <td>{{ processo.tipo_pagamento|default:"-" }}</td>
                         <td class="text-end pe-4 fw-bold text-dark">
-                            R$ {{ processo.valor_liquido|floatformat:2 }}
+                            {{ processo.valor_liquido|br_currency }}
                         </td>
                         <td class="text-center">
                             <button class="btn btn-sm btn-primary fw-bold shadow-sm btn-preview"

@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404, render
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_GET
 
-from ..models import (
+from ...models import (
     DocumentoAuxilio,
     DocumentoDiaria,
     DocumentoFiscal,
@@ -18,13 +18,13 @@ from ..models import (
     DocumentoSuprimentoDeFundos,
     Processo,
 )
+from ...utils import normalize_choice
 from .helpers import (
     _aplicar_filtros_historico,
     _build_history_record,
     _build_payload_documentos_processo_auditoria,
     _build_payload_processo_detalhes,
     _get_unified_history,
-    _normalizar_filtro_opcao,
 )
 
 
@@ -73,12 +73,12 @@ def auditoria_view(request):
     ]
 
     modelos_disponiveis = [label for _, label in model_configs]
-    modelo_filter = _normalizar_filtro_opcao(
+    modelo_filter = normalize_choice(
         request.GET.get("modelo", "").strip(),
         {*modelos_disponiveis, ""},
         default="",
     )
-    tipo_filter = _normalizar_filtro_opcao(
+    tipo_filter = normalize_choice(
         request.GET.get("tipo_acao", "").strip(),
         {"", "+", "~", "-"},
         default="",
@@ -86,12 +86,12 @@ def auditoria_view(request):
     data_inicio = request.GET.get("data_inicio", "").strip()
     data_fim = request.GET.get("data_fim", "").strip()
     usuario_filter = request.GET.get("usuario", "").strip()
-    ordem = _normalizar_filtro_opcao(
+    ordem = normalize_choice(
         request.GET.get("ordem", "data"),
         {"data", "modelo", "id", "acao", "usuario", "descricao"},
         default="data",
     )
-    direcao = _normalizar_filtro_opcao(
+    direcao = normalize_choice(
         request.GET.get("direcao", "desc"),
         {"asc", "desc"},
         default="desc",
