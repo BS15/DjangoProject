@@ -9,6 +9,7 @@ from pypdf import PdfReader
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from .utils.pdf_generation import merge_canvas_with_template
+from .utils.text_helpers import format_brl_currency as _formatar_moeda
 
 logger = logging.getLogger(__name__)
 
@@ -41,14 +42,6 @@ _PCD_SIG_HALF_WIDTH = 130
 # Geometry for the SCD signature blocks.
 _SCD_SIG_Y = 200
 _SCD_SIG_LABEL_Y = 186
-
-
-def _formatar_moeda(valor):
-    """Formata um valor decimal no padrão monetário brasileiro: R$ 1.234,56"""
-    if valor is None:
-        valor = 0
-    return f"R$ {float(valor):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-
 
 def _draw_wrapped_text(p, text, x, y, max_width, font_name="Helvetica", font_size=11, leading=16):
     """

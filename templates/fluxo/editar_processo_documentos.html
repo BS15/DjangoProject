@@ -1,0 +1,56 @@
+{% extends "layouts/base_form.html" %}
+
+{% block page_heading %}Editar Documentos do Processo #{{ processo.id }}{% endblock %}
+{% block page_subtitle %}Gerencie anexos e ordem dos documentos do processo.{% endblock %}
+{% block form_enctype %}multipart/form-data{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'editar_processo' pk=processo.id %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i> Voltar ao Hub de Edição
+</a>
+{% endblock %}
+
+{% block form_fields %}
+<input type="hidden" name="next" value="{{ next_url }}">
+{{ documento_formset.management_form }}
+
+<div class="alert alert-light border small">
+    Status atual: <strong>{{ status_inicial|default:"-" }}</strong>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-sm align-middle">
+        <thead>
+            <tr>
+                <th style="width: 80px;">Ordem</th>
+                <th style="width: 240px;">Tipo</th>
+                <th>Arquivo</th>
+                <th style="width: 100px;">Excluir</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for doc_f in documento_formset %}
+            <tr>
+                {% for hidden in doc_f.hidden_fields %}{{ hidden }}{% endfor %}
+                <td>{{ doc_f.ordem }}</td>
+                <td>{{ doc_f.tipo }}</td>
+                <td>
+                    {{ doc_f.arquivo }}
+                    {% if doc_f.instance.arquivo %}
+                    <div class="form-text mt-1">Atual: {{ doc_f.instance.arquivo.name|cut:"documentos/" }}</div>
+                    {% endif %}
+                </td>
+                <td class="text-center">{{ doc_f.DELETE }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block form_actions %}
+<a href="{% url 'editar_processo' pk=processo.id %}" class="btn btn-secondary px-4">Cancelar</a>
+<button type="submit" class="btn btn-success px-4 fw-bold">
+    <i class="bi bi-check-lg"></i> Salvar Documentos
+</button>
+{% endblock %}

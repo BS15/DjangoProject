@@ -10,8 +10,8 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 
-from ..models import ComprovanteDePagamento, DocumentoProcesso, Processo, TiposDeDocumento
-from ..utils import split_pdf_to_temp_pages, processar_pdf_comprovantes
+from ...models import ComprovanteDePagamento, DocumentoProcesso, Processo, TiposDeDocumento
+from ...utils import split_pdf_to_temp_pages, processar_pdf_comprovantes
 
 
 @permission_required("processos.pode_operar_contas_pagar", raise_exception=True)

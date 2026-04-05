@@ -17,4 +17,3 @@ from .fiscal_documentos import *
 from .fiscal_liquidacoes import *
 from .fiscal_reinf import *
 from .fiscal_retencoes import *
-

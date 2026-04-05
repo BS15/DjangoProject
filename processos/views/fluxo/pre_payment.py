@@ -8,28 +8,15 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import F
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET, require_POST
 
-from ..filters import AEmpenharFilter
-from ..forms import DocumentoFormSet, PendenciaFormSet, ProcessoForm
-from ..models import Processo, StatusChoicesProcesso, TiposDeDocumento, DocumentoProcesso
-from ..validators import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
-from .helpers import _obter_estatisticas_boletos
-
-
-def _obter_campo_ordenacao(request, campos_permitidos, default_ordem="id", default_direcao="desc"):
-    """Extrai e formata o campo de ordenação a partir dos parâmetros GET.
-
-    Garante que apenas colunas mapeadas em `campos_permitidos` sejam usadas,
-    prevenindo sortings arbitrários. Retorna a string de campo pronta para
-    `queryset.order_by()`, com prefixo `-` quando descendente.
-    """
-    ordem = request.GET.get("ordem", default_ordem)
-    direcao = request.GET.get("direcao", default_direcao)
-    order_field = campos_permitidos.get(ordem, campos_permitidos.get(default_ordem, "id"))
-    return f"-{order_field}" if direcao == "desc" else order_field
+from ...filters import AEmpenharFilter
+from ...forms import DocumentoFormSet, PendenciaFormSet, ProcessoForm
+from ...models import Processo, StatusChoicesProcesso, TiposDeDocumento, DocumentoProcesso
+from ...validators import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
+from .helpers import _obter_campo_ordenacao
+from ..shared import apply_filterset
 
 
 def _salvar_processo_completo(processo_form, mutator_func=None, **formsets):
@@ -122,54 +109,11 @@ def _aplicar_confirmacao_extra_orcamentario(processo, confirmar_extra, status_in
         processo.ano_exercicio = None
 
 
-def home_page(request):
-    """Lista todos os processos com filtro e ordenação via parâmetros GET.
-
-    Parâmetros GET reconhecidos: `ordem` (coluna) e `direcao` (`asc`/`desc`).
-    Delega a filtragem ao `ProcessoFilter`.
-    """
-    from ..filters import ProcessoFilter
-
-    order_field = _obter_campo_ordenacao(
-        request,
-        campos_permitidos={
-            "id": "id",
-            "credor": "credor__nome",
-            "data_empenho": "data_empenho",
-            "status": "status__status_choice",
-            "tipo_pagamento": "tipo_pagamento__tipo_de_pagamento",
-            "valor_liquido": "valor_liquido",
-        },
-    )
-
-    processos_base = Processo.objects.all().order_by(order_field)
-    meu_filtro = ProcessoFilter(request.GET, queryset=processos_base)
-
-    context = {
-        "lista_processos": meu_filtro.qs,
-        "meu_filtro": meu_filtro,
-        "ordem": request.GET.get("ordem", "id"),
-        "direcao": request.GET.get("direcao", "desc"),
-    }
-    return render(request, "home.html", context)
-
-
-def _verificar_documento_orcamentario(documento_formset, is_extra, trigger_a_empenhar):
-    """Retorna `True` se a regra de documento orçamentário estiver satisfeita.
-
-    Processos extraorçamentários ou marcados `A EMPENHAR` estão isentos da regra.
-    Para os demais, pelo menos um formulário do formset deve ter tipo cujo nome
-    contenha "orçament" e não estar marcado para deleção.
-    """
-    if is_extra or trigger_a_empenhar:
-        return True
-    return any(
-        f.cleaned_data
-        and not f.cleaned_data.get("DELETE", False)
-        and f.cleaned_data.get("tipo")
-        and "orçament" in f.cleaned_data["tipo"].tipo_de_documento.lower()
-        for f in documento_formset.forms
-    )
+def _redirect_seguro_ou_fallback(request, next_url, fallback_name, pk):
+    """Redireciona para `next` quando seguro; caso contrário usa rota fallback."""
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        return redirect(next_url)
+    return redirect(fallback_name, pk=pk)
 
 
 def _configurar_status_novo_processo(processo, trigger_a_empenhar, is_extra):
@@ -195,10 +139,12 @@ def _configurar_status_novo_processo(processo, trigger_a_empenhar, is_extra):
 def add_process_view(request):
     """Cria um novo processo de pagamento.
 
-    Em POST válido, persiste capa + documentos + pendências em transação atômica
-    e define o status inicial: `A EMPENHAR` (via checkbox) ou
-    `A PAGAR - PENDENTE AUTORIZAÇÃO`. Processos padrão (não extraorçamentários e
-    não "a empenhar") exigem ao menos um documento orçamentário no formset.
+    Em POST válido, persiste inicialmente apenas a capa do processo e define o
+    status inicial: `A EMPENHAR` (via checkbox) ou
+    `A PAGAR - PENDENTE AUTORIZAÇÃO`.
+
+    A anexação de documentos/pendências ocorre na etapa de edição. As travas de
+    avanço permanecem centralizadas no turnpike (`verificar_turnpike`).
 
     Redireciona para fiscais se `btn_goto_fiscais` estiver presente, para `next`
     se seguro, ou para a tela de edição. Qualquer falha renderiza o formulário
@@ -215,38 +161,32 @@ def add_process_view(request):
     if request.method == "POST":
         trigger_a_empenhar = request.POST.get("trigger_a_empenhar") == "on"
 
-        if processo_form.is_valid() and documento_formset.is_valid() and pendencia_formset.is_valid():
+        if processo_form.is_valid():
             is_extra = processo_form.cleaned_data.get("extraorcamentario")
 
-            if not _verificar_documento_orcamentario(documento_formset, is_extra, trigger_a_empenhar):
-                messages.error(
-                    request,
-                    "É necessário anexar um Documento Orçamentário para prosseguir. "
-                    "Se o processo for Extraorçamentário ou \"A Empenhar\", selecione a opção correspondente.",
+            try:
+                def mutator(processo_instancia):
+                    _configurar_status_novo_processo(processo_instancia, trigger_a_empenhar, is_extra)
+
+                processo = _salvar_processo_completo(
+                    processo_form,
+                    mutator_func=mutator,
                 )
-            else:
-                try:
-                    def mutator(processo_instancia):
-                        _configurar_status_novo_processo(processo_instancia, trigger_a_empenhar, is_extra)
 
-                    processo = _salvar_processo_completo(
-                        processo_form,
-                        mutator_func=mutator,
-                        docs=documento_formset,
-                        pends=pendencia_formset,
-                    )
-
-                    messages.success(request, f"Processo #{processo.id} inserido com sucesso!")
-                    if request.POST.get("btn_goto_fiscais"):
-                        return redirect("documentos_fiscais", pk=processo.id)
-                    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
-                        return redirect(next_url)
-                    return redirect("editar_processo", pk=processo.id)
-                except Exception as e:
-                    print(f"🛑 Erro CRÍTICO de Banco de Dados ao salvar: {e}", flush=True)
-                    messages.error(request, "Ocorreu um erro interno ao salvar no banco de dados.")
+                messages.success(
+                    request,
+                    f"Processo #{processo.id} inserido com sucesso! Complete documentos, fiscais e pendências na etapa de edição.",
+                )
+                if request.POST.get("btn_goto_fiscais"):
+                    return redirect("documentos_fiscais", pk=processo.id)
+                if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                    return redirect(next_url)
+                return redirect("editar_processo", pk=processo.id)
+            except Exception as e:
+                print(f"🛑 Erro CRÍTICO de Banco de Dados ao salvar: {e}", flush=True)
+                messages.error(request, "Ocorreu um erro interno ao salvar no banco de dados.")
         else:
-            messages.error(request, "Verifique os erros no formulário (Documentos ou Capa).")
+            messages.error(request, "Verifique os erros no formulário da capa do processo.")
 
     return render(
         request,
@@ -262,19 +202,14 @@ def add_process_view(request):
 
 @permission_required("processos.acesso_backoffice", raise_exception=True)
 def editar_processo(request, pk):
-    """Edita um processo existente respeitando as travas do workflow.
+    """Hub de edição modular do processo.
 
-    Modos de operação (determinados por `_validar_regras_edicao_processo`):
-    - **Bloqueado**: redireciona para home sem renderizar o formulário.
-    - **Verbas indenizatórias**: delega ao editor específico.
-    - **Somente documentos** (`STATUS_SOMENTE_DOCUMENTOS`): apenas o
-      `DocumentoFormSet` é vinculado ao POST; capa e pendências carregam
-      somente da instância.
-    - **Edição completa**: todos os formsets vinculados ao POST; suporta a
-      confirmação de transição para extraorçamentário via checkbox.
-
-    Segue o padrão Single Exit Point — erros de validação ou falhas de banco
-    caem no único `render()` ao final, com os formulários e erros intactos.
+    Esta tela não persiste dados de capa/documentos/pendências diretamente.
+    Ela centraliza o acesso aos spokes especializados:
+    - `editar_processo_capa_view`
+    - `editar_processo_documentos_view`
+    - `editar_processo_pendencias_view`
+    - `documentos_fiscais_view`
     """
     processo = get_object_or_404(Processo, id=pk)
     status_inicial = processo.status.status_choice.upper() if processo.status else ""
@@ -282,64 +217,174 @@ def editar_processo(request, pk):
     if redirecionamento:
         return redirecionamento
 
-    post_data = request.POST if request.method == "POST" else None
-    files_data = request.FILES if request.method == "POST" else None
-    next_url = request.POST.get("next") or request.META.get("HTTP_REFERER", "")
-
-    documento_formset = DocumentoFormSet(post_data, files_data, instance=processo, prefix="documento")
-    processo_post_data = post_data if not somente_documentos else None
-    processo_form = ProcessoForm(processo_post_data, instance=processo, prefix="processo")
-    pendencia_formset = PendenciaFormSet(processo_post_data, instance=processo, prefix="pendencia")
-
     if request.method == "POST":
-        if somente_documentos:
-            if documento_formset.is_valid():
-                try:
-                    with transaction.atomic():
-                        documento_formset.save()
-                    messages.success(request, f"Documentos do Processo #{pk} atualizados com sucesso!")
-                    return redirect(next_url) if url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}) else redirect("editar_processo", pk=pk)
-                except Exception as e:
-                    print(f"🛑 Erro ao atualizar documentos: {e}")
-                    messages.error(request, "Erro interno ao salvar os documentos.")
-            else:
-                messages.error(request, "Verifique os erros nos documentos.")
-        else:
-            if processo_form.is_valid() and documento_formset.is_valid() and pendencia_formset.is_valid():
-                confirmar_extra = request.POST.get("confirmar_extra_orcamentario") == "on"
-                try:
-                    def _mutator(proc):
-                        _aplicar_confirmacao_extra_orcamentario(proc, confirmar_extra, status_inicial)
+        # Compatibilidade transitória: encaminha POST legado para os spokes.
+        if any(key.startswith("documento-") for key in request.POST.keys()) or request.FILES:
+            messages.info(request, "A edição foi modularizada. Você foi redirecionado para o spoke de documentos.")
+            return redirect("editar_processo_documentos", pk=pk)
+        if any(key.startswith("pendencia-") for key in request.POST.keys()):
+            messages.info(request, "A edição foi modularizada. Você foi redirecionado para o spoke de pendências.")
+            return redirect("editar_processo_pendencias", pk=pk)
+        if any(key.startswith("processo-") for key in request.POST.keys()):
+            messages.info(request, "A edição foi modularizada. Você foi redirecionado para o spoke da capa.")
+            return redirect("editar_processo_capa", pk=pk)
+        messages.info(request, "Use os módulos de edição disponíveis no hub do processo.")
+        return redirect("editar_processo", pk=pk)
 
-                    processo_saved = _salvar_processo_completo(
-                        processo_form,
-                        mutator_func=_mutator,
-                        docs=documento_formset,
-                        pends=pendencia_formset,
-                    )
-
-                    messages.success(request, f"Processo #{processo_saved.id} atualizado com sucesso!")
-                    return redirect(next_url) if url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}) else redirect("editar_processo", pk=processo_saved.id)
-                except Exception as e:
-                    print(f"🛑 Erro ao atualizar no banco: {e}")
-                    messages.error(request, "Erro interno ao salvar as alterações.")
-            else:
-                messages.error(request, "Verifique os erros no formulário.")
+    total_documentos = processo.documentos.count()
+    total_notas = processo.notas_fiscais.count()
+    notas_nao_atestadas = processo.notas_fiscais.filter(atestada=False).count()
+    total_pendencias = processo.pendencias.count()
+    pendencias_abertas = processo.pendencias.filter(status__status_choice__iexact="A RESOLVER").count()
 
     context = {
-        "processo_form": processo_form,
-        "documento_formset": documento_formset,
-        "pendencia_formset": pendencia_formset,
         "processo": processo,
         "status_inicial": status_inicial,
         "somente_documentos": somente_documentos,
         "aguardando_liquidacao": status_inicial.startswith("AGUARDANDO LIQUIDAÇÃO"),
-        "documentos_fiscais_url": reverse("documentos_fiscais", kwargs={"pk": processo.id}),
-        "next_url": next_url,
-        **_obter_estatisticas_boletos(processo),
+        "total_documentos": total_documentos,
+        "total_notas": total_notas,
+        "notas_nao_atestadas": notas_nao_atestadas,
+        "total_pendencias": total_pendencias,
+        "pendencias_abertas": pendencias_abertas,
     }
 
-    return render(request, "fluxo/editar_processo.html", context)
+    return render(request, "fluxo/editar_processo_hub.html", context)
+
+
+@permission_required("processos.acesso_backoffice", raise_exception=True)
+def editar_processo_capa_view(request, pk):
+    """Spoke de edição da capa do processo."""
+    processo = get_object_or_404(Processo, id=pk)
+    status_inicial = processo.status.status_choice.upper() if processo.status else ""
+    redirecionamento, somente_documentos = _validar_regras_edicao_processo(request, processo, status_inicial)
+    if redirecionamento:
+        return redirecionamento
+
+    if somente_documentos:
+        messages.error(
+            request,
+            "Neste status, apenas documentos podem ser alterados. Use a tela específica de documentos.",
+        )
+        return redirect("editar_processo_documentos", pk=pk)
+
+    post_data = request.POST if request.method == "POST" else None
+    next_url = request.POST.get("next") or request.GET.get("next") or ""
+    processo_form = ProcessoForm(post_data, instance=processo, prefix="processo")
+
+    if request.method == "POST":
+        if processo_form.is_valid():
+            confirmar_extra = request.POST.get("confirmar_extra_orcamentario") == "on"
+            try:
+                def _mutator(proc):
+                    _aplicar_confirmacao_extra_orcamentario(proc, confirmar_extra, status_inicial)
+
+                processo_saved = _salvar_processo_completo(
+                    processo_form,
+                    mutator_func=_mutator,
+                )
+                messages.success(request, f"Capa do Processo #{processo_saved.id} atualizada com sucesso!")
+                return _redirect_seguro_ou_fallback(request, next_url, "editar_processo", processo_saved.id)
+            except Exception as e:
+                print(f"🛑 Erro ao atualizar capa: {e}")
+                messages.error(request, "Erro interno ao salvar a capa do processo.")
+        else:
+            messages.error(request, "Verifique os erros na capa do processo.")
+
+    return render(
+        request,
+        "fluxo/editar_processo_capa.html",
+        {
+            "processo": processo,
+            "processo_form": processo_form,
+            "status_inicial": status_inicial,
+            "next_url": next_url,
+        },
+    )
+
+
+@permission_required("processos.acesso_backoffice", raise_exception=True)
+def editar_processo_documentos_view(request, pk):
+    """Spoke de edição de anexos do processo."""
+    processo = get_object_or_404(Processo, id=pk)
+    status_inicial = processo.status.status_choice.upper() if processo.status else ""
+    redirecionamento, _ = _validar_regras_edicao_processo(request, processo, status_inicial)
+    if redirecionamento:
+        return redirecionamento
+
+    post_data = request.POST if request.method == "POST" else None
+    files_data = request.FILES if request.method == "POST" else None
+    next_url = request.POST.get("next") or request.GET.get("next") or ""
+    documento_formset = DocumentoFormSet(post_data, files_data, instance=processo, prefix="documento")
+
+    if request.method == "POST":
+        if documento_formset.is_valid():
+            try:
+                with transaction.atomic():
+                    documento_formset.save()
+                messages.success(request, f"Documentos do Processo #{pk} atualizados com sucesso!")
+                return _redirect_seguro_ou_fallback(request, next_url, "editar_processo", pk)
+            except Exception as e:
+                print(f"🛑 Erro ao atualizar documentos: {e}")
+                messages.error(request, "Erro interno ao salvar os documentos.")
+        else:
+            messages.error(request, "Verifique os erros nos documentos.")
+
+    return render(
+        request,
+        "fluxo/editar_processo_documentos.html",
+        {
+            "processo": processo,
+            "documento_formset": documento_formset,
+            "status_inicial": status_inicial,
+            "next_url": next_url,
+        },
+    )
+
+
+@permission_required("processos.acesso_backoffice", raise_exception=True)
+def editar_processo_pendencias_view(request, pk):
+    """Spoke de edição de pendências do processo."""
+    processo = get_object_or_404(Processo, id=pk)
+    status_inicial = processo.status.status_choice.upper() if processo.status else ""
+    redirecionamento, somente_documentos = _validar_regras_edicao_processo(request, processo, status_inicial)
+    if redirecionamento:
+        return redirecionamento
+
+    if somente_documentos:
+        messages.error(
+            request,
+            "Neste status, apenas documentos podem ser alterados.",
+        )
+        return redirect("editar_processo_documentos", pk=pk)
+
+    post_data = request.POST if request.method == "POST" else None
+    next_url = request.POST.get("next") or request.GET.get("next") or ""
+    pendencia_formset = PendenciaFormSet(post_data, instance=processo, prefix="pendencia")
+
+    if request.method == "POST":
+        if pendencia_formset.is_valid():
+            try:
+                with transaction.atomic():
+                    pendencia_formset.save()
+                messages.success(request, f"Pendências do Processo #{pk} atualizadas com sucesso!")
+                return _redirect_seguro_ou_fallback(request, next_url, "editar_processo", pk)
+            except Exception as e:
+                print(f"🛑 Erro ao atualizar pendências: {e}")
+                messages.error(request, "Erro interno ao salvar as pendências.")
+        else:
+            messages.error(request, "Verifique os erros nas pendências.")
+
+    return render(
+        request,
+        "fluxo/editar_processo_pendencias.html",
+        {
+            "processo": processo,
+            "pendencia_formset": pendencia_formset,
+            "status_inicial": status_inicial,
+            "next_url": next_url,
+        },
+    )
 
 
 @require_GET
@@ -362,7 +407,7 @@ def a_empenhar_view(request):
     processos_base = Processo.objects.filter(status__status_choice__iexact="A EMPENHAR").select_related(
         "credor", "status", "tipo_pagamento"
     )
-    meu_filtro = AEmpenharFilter(request.GET, queryset=processos_base)
+    meu_filtro = apply_filterset(request, AEmpenharFilter, processos_base)
 
     context = {
         "processos": meu_filtro.qs.order_by(order_field, "-id"),
@@ -448,9 +493,11 @@ def avancar_para_pagamento_view(request, pk):
 
 
 __all__ = [
-    "home_page",
     "add_process_view",
     "editar_processo",
+    "editar_processo_capa_view",
+    "editar_processo_documentos_view",
+    "editar_processo_pendencias_view",
     "a_empenhar_view",
     "registrar_empenho_action",
     "avancar_para_pagamento_view",

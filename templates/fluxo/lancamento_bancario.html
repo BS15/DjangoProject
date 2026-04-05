@@ -319,24 +319,94 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.copy-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var text = this.getAttribute('data-clipboard');
-            navigator.clipboard.writeText(text).then(function () {
-                var icon = btn.querySelector('i');
-                icon.classList.replace('bi-clipboard', 'bi-check-lg');
-                btn.classList.replace('btn-outline-secondary', 'btn-success');
-                btn.classList.add('text-white');
-                setTimeout(function () {
-                    icon.classList.replace('bi-check-lg', 'bi-clipboard');
-                    btn.classList.replace('btn-success', 'btn-outline-secondary');
-                    btn.classList.remove('text-white');
-                }, 2000);
-            }).catch(function () {
-                alert('Não foi possível copiar automaticamente. Selecione o texto e use Ctrl+C.');
+    const barcodeApiBase = "{% url 'api_extrair_codigos_barras_processo' pk=0 %}".replace('/0/', '/');
+
+    function buildBarcodeItemHtml(codigo) {
+        return `
+            <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
+                <span class="font-monospace text-primary text-break small fw-bold me-2">${codigo}</span>
+                <button class="btn btn-sm btn-outline-secondary copy-btn flex-shrink-0 px-2 py-1 no-print" data-clipboard="${codigo}" title="Copiar">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </li>
+        `;
+    }
+
+    function bindCopyButtons(scope) {
+        scope.querySelectorAll('.copy-btn').forEach(function (btn) {
+            if (btn.dataset.boundCopy === '1') {
+                return;
+            }
+            btn.dataset.boundCopy = '1';
+            btn.addEventListener('click', function () {
+                var text = this.getAttribute('data-clipboard');
+                navigator.clipboard.writeText(text).then(function () {
+                    var icon = btn.querySelector('i');
+                    icon.classList.replace('bi-clipboard', 'bi-check-lg');
+                    btn.classList.replace('btn-outline-secondary', 'btn-success');
+                    btn.classList.add('text-white');
+                    setTimeout(function () {
+                        icon.classList.replace('bi-check-lg', 'bi-clipboard');
+                        btn.classList.replace('btn-success', 'btn-outline-secondary');
+                        btn.classList.remove('text-white');
+                    }, 2000);
+                }).catch(function () {
+                    alert('Não foi possível copiar automaticamente. Selecione o texto e use Ctrl+C.');
+                });
             });
         });
+    }
+
+    document.querySelectorAll('.js-refresh-barcodes').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const processoId = this.dataset.processoId;
+            const listEl = document.getElementById(`barcodeList_${processoId}`);
+            const emptyEl = document.getElementById(`barcodeEmpty_${processoId}`);
+            const statusEl = document.getElementById(`barcodeStatus_${processoId}`);
+
+            if (!processoId || !listEl) {
+                return;
+            }
+
+            this.disabled = true;
+            if (statusEl) {
+                statusEl.textContent = 'Atualizando...';
+            }
+
+            fetch(`${barcodeApiBase}${processoId}/`)
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (!data.sucesso) {
+                        throw new Error(data.erro || 'Falha ao carregar códigos.');
+                    }
+
+                    const codigos = data.barcodes || [];
+                    listEl.innerHTML = codigos.map(buildBarcodeItemHtml).join('');
+                    listEl.classList.toggle('d-none', codigos.length === 0);
+
+                    if (emptyEl) {
+                        emptyEl.classList.toggle('d-none', codigos.length > 0);
+                    }
+                    if (statusEl) {
+                        statusEl.textContent = codigos.length > 0
+                            ? `${codigos.length} código(s) atualizado(s).`
+                            : 'Nenhum código salvo nos documentos de boleto.';
+                    }
+                    bindCopyButtons(listEl);
+                })
+                .catch(function (err) {
+                    if (statusEl) {
+                        statusEl.textContent = 'Erro ao atualizar códigos.';
+                    }
+                    console.error(err);
+                })
+                .finally(() => {
+                    this.disabled = false;
+                });
+        });
     });
+
+    bindCopyButtons(document);
 
     var sortState = {};
 

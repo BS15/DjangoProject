@@ -6,8 +6,8 @@ from django.db.models import Exists, OuterRef
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
-from ..forms import PendenciaForm
-from ..models import Pendencia, Processo, RetencaoImposto, StatusChoicesProcesso
+from ...forms import PendenciaForm
+from ...models import Pendencia, Processo, RetencaoImposto, StatusChoicesProcesso
 from .helpers import (
     _aplicar_filtros_contas_a_pagar,
     _atualizar_status_em_lote,
@@ -264,6 +264,7 @@ def autorizar_pagamento(request):
     )
 
 
+@require_POST
 @permission_required("processos.pode_autorizar_pagamento", raise_exception=True)
 def recusar_autorizacao_view(request, pk):
     """Recusa a autorização de um processo e o devolve ao fluxo de correção.

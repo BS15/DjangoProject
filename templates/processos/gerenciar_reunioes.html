@@ -88,7 +88,7 @@
                     <tr>
                         <td class="ps-3 fw-bold">{{ reuniao.numero }}ª</td>
                         <td>{{ reuniao.trimestre_referencia }}</td>
-                        <td>{{ reuniao.data_reuniao|date:"d/m/Y"|default:"-" }}</td>
+                        <td>{{ reuniao.data_reuniao|br_date }}</td>
                         <td>
                             {% if reuniao.status == 'AGENDADA' %}
                                 <span class="badge bg-secondary">{{ reuniao.get_status_display }}</span>

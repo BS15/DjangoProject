@@ -5,8 +5,9 @@ from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 
-from ..filters import DocumentoFiscalFilter
-from ..models import DocumentoFiscal
+from ...filters import DocumentoFiscalFilter
+from ...models import DocumentoFiscal
+from ..shared import render_filtered_list
 
 
 @permission_required("processos.acesso_backoffice", raise_exception=True)
@@ -23,14 +24,16 @@ def painel_liquidacoes_view(request):
         else:
             queryset_base = queryset_base.none()
 
-    meu_filtro = DocumentoFiscalFilter(request.GET, queryset=queryset_base)
-
-    context = {
-        "meu_filtro": meu_filtro,
-        "notas": meu_filtro.qs,
-        "pode_interagir": request.user.has_perm("processos.pode_atestar_liquidacao"),
-    }
-    return render(request, "fluxo/painel_liquidacoes.html", context)
+    return render_filtered_list(
+        request,
+        queryset=queryset_base,
+        filter_class=DocumentoFiscalFilter,
+        template_name="fluxo/painel_liquidacoes.html",
+        items_key="notas",
+        extra_context={
+            "pode_interagir": request.user.has_perm("processos.pode_atestar_liquidacao"),
+        },
+    )
 
 
 @permission_required("processos.pode_atestar_liquidacao", raise_exception=True)

@@ -1,7 +1,7 @@
 """Views e helpers do fluxo de suprimentos de fundos."""
 
 from datetime import datetime
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import Any, Mapping
 
 from django.contrib import messages
@@ -16,6 +16,7 @@ from django.views.decorators.http import require_GET, require_POST
 from ..forms import SuprimentoForm
 from ..models import DespesaSuprimento, StatusChoicesProcesso, StatusChoicesSuprimentoDeFundos, SuprimentoDeFundos
 from ..models.fluxo import FormasDePagamento, Processo, TiposDePagamento
+from ..utils import parse_brl_decimal
 
 
 def _suprimento_encerrado(suprimento: Any) -> bool:
@@ -85,11 +86,9 @@ def _salvar_despesa_manual(
     except ValueError as exc:
         raise ValidationError("Data da despesa inválida.") from exc
 
-    valor_normalizado = valor_raw.replace(".", "").replace(",", ".") if "," in valor_raw else valor_raw
-    try:
-        valor = Decimal(valor_normalizado)
-    except (InvalidOperation, ValueError) as exc:
-        raise ValidationError("Valor da despesa inválido.") from exc
+    valor = parse_brl_decimal(valor_raw)
+    if valor is None:
+        raise ValidationError("Valor da despesa inválido.")
 
     return DespesaSuprimento.objects.create(
         suprimento=suprimento,

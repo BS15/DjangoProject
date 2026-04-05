@@ -1,7 +1,7 @@
 """Facade de compatibilidade para imports legados do modulo de fluxo.
 
 Mantem suporte a imports historicos como:
-	from processos.views.fluxo import <view>
+    from processos.views.fluxo import <view>
 
 Mesmo com a separacao por dominio em modulos dedicados.
 """
@@ -15,6 +15,7 @@ from .support_views import *
 from .pre_payment import *
 from .payment import *
 from .post_payment import *
+from .siscac_processo_sync import *
 
 # Endpoints auxiliares transversais
 from .api_views import *

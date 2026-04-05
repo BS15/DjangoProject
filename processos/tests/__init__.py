@@ -1,6 +1,7 @@
 import io
 from unittest.mock import patch
 from django.test import TestCase
+from django.contrib.auth.models import User, Permission
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from processos.models import Processo, StatusChoicesProcesso, TiposDeDocumento, DocumentoProcesso, DocumentoFiscal
@@ -12,13 +13,19 @@ from processos.views import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
 class AuditoriaViewTest(TestCase):
     """Testa a view de auditoria que exibe o histórico do django-simple-history."""
 
+    def setUp(self):
+        self.user = User.objects.create_user(username='auditor', password='123456')
+        perm = Permission.objects.get(codename='pode_auditar_conselho')
+        self.user.user_permissions.add(perm)
+        self.client.login(username='auditor', password='123456')
+
     def test_auditoria_retorna_200(self):
         response = self.client.get('/auditoria/')
         self.assertEqual(response.status_code, 200)
 
     def test_auditoria_usa_template_correto(self):
         response = self.client.get('/auditoria/')
-        self.assertTemplateUsed(response, 'auditoria.html')
+        self.assertTemplateUsed(response, 'fluxo/auditoria.html')
 
     def test_auditoria_contexto_tem_chaves_esperadas(self):
         response = self.client.get('/auditoria/')
@@ -36,6 +43,12 @@ class AuditoriaViewTest(TestCase):
 
 class EditarProcessoRestrictionsTest(TestCase):
     """Tests for the edit-permission tiers on editar_processo view."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='backoffice', password='123456')
+        perm = Permission.objects.get(codename='acesso_backoffice')
+        self.user.user_permissions.add(perm)
+        self.client.login(username='backoffice', password='123456')
 
     def _make_processo(self, status_text):
         status_obj = StatusChoicesProcesso.objects.create(status_choice=status_text)
@@ -551,6 +564,8 @@ class GerarLoteReinfViewTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(username='testuser', password='testpass')
+        perm = Permission.objects.get(codename='acesso_backoffice')
+        self.user.user_permissions.add(perm)
         self.client.login(username='testuser', password='testpass')
         self.contribuinte = DadosContribuinte.objects.create(
             cnpj='00000000000191',

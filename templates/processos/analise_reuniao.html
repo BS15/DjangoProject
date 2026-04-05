@@ -26,7 +26,7 @@
         <div>
             <h2><i class="bi bi-people-fill text-info"></i> Análise - {{ reuniao }}</h2>
             <p class="text-muted small mb-0">
-                {% if reuniao.data_reuniao %}Data: {{ reuniao.data_reuniao|date:"d/m/Y" }} &mdash; {% endif %}
+                {% if reuniao.data_reuniao %}Data: {{ reuniao.data_reuniao|br_date }} &mdash; {% endif %}
                 {{ reuniao.trimestre_referencia }}
             </p>
         </div>
@@ -94,8 +94,8 @@
                         <td><span class="badge bg-info px-2 py-1">{{ processo.status|default:"-" }}</span></td>
                         <td>{{ processo.tipo_pagamento|default:"-" }}</td>
                         <td>{{ processo.n_pagamento_siscac|default:"-" }}</td>
-                        <td>{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
-                        <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
+                        <td>{{ processo.data_pagamento|br_date }}</td>
+                        <td class="text-end pe-4 fw-bold text-dark">{{ processo.valor_liquido|br_currency }}</td>
                         <td class="text-center d-flex justify-content-center gap-1">
                             <a href="{% url 'conselho_processo' pk=processo.id %}"
                                class="btn btn-sm btn-info text-white fw-bold shadow-sm"

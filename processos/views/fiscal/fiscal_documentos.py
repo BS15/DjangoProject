@@ -22,7 +22,7 @@ from django.db.models import Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 
-from ..models import (
+from ...models import (
     CodigosImposto,
     Credor,
     DocumentoFiscal,
@@ -33,6 +33,16 @@ from ..models import (
     StatusChoicesPendencias,
     TiposDePendencias,
 )
+
+
+def _status_bloqueia_exclusao_nota_fiscal(processo):
+    """Indica se o processo já está em estágio onde exclusão de nota é proibida."""
+    if not processo.status:
+        return False
+
+    status_atual = (processo.status.status_choice or "").upper()
+    prefixos_bloqueados = ("PAGO", "CONTABILIZADO", "APROVADO", "ARQUIVADO")
+    return any(status_atual.startswith(prefixo) for prefixo in prefixos_bloqueados)
 
 
 @permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
@@ -57,6 +67,7 @@ def documentos_fiscais_view(request, pk):
     credores = Credor.objects.all().order_by("nome")
     codigos_imposto = CodigosImposto.objects.all().order_by("codigo")
     source = request.GET.get("source", "")
+    pode_remover_nota_fiscal = not _status_bloqueia_exclusao_nota_fiscal(processo)
 
     context = {
         "processo": processo,
@@ -65,6 +76,7 @@ def documentos_fiscais_view(request, pk):
         "credores": credores,
         "codigos_imposto": codigos_imposto,
         "source": source,
+        "pode_remover_nota_fiscal": pode_remover_nota_fiscal,
     }
     return render(request, "fiscal/documentos_fiscais.html", context)
 
@@ -100,6 +112,19 @@ def api_toggle_documento_fiscal(request, processo_pk, documento_pk):
 
     try:
         nota = doc.nota_referente
+
+        if _status_bloqueia_exclusao_nota_fiscal(processo):
+            return JsonResponse(
+                {
+                    "status": "blocked",
+                    "message": (
+                        "Não é permitido remover documento fiscal após a etapa de pagamento. "
+                        "Use a interface de contingência para ajustes auditáveis."
+                    ),
+                },
+                status=409,
+            )
+
         nota.retencoes.all().delete()
         nota.delete()
         return JsonResponse({"status": "removed", "message": "Documento fiscal removido."})

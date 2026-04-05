@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import permission_required
 from ..forms import CredorForm
 from ..models import Credor
 from ..filters import CredorFilter
+from .shared import render_filtered_list
 
 
 @permission_required("processos.acesso_backoffice", raise_exception=True)
@@ -48,13 +49,14 @@ def edit_credor_view(request, pk):
 def credores_list_view(request):
     """Lista credores com suporte a filtros do ``CredorFilter``."""
     queryset = Credor.objects.all().order_by('nome')
-    meu_filtro = CredorFilter(request.GET, queryset=queryset)
-
-    context = {
-        'filter': meu_filtro,
-        'credores': meu_filtro.qs,
-    }
-    return render(request, 'cadastros/credores_list.html', context)
+    return render_filtered_list(
+        request,
+        queryset=queryset,
+        filter_class=CredorFilter,
+        template_name='cadastros/credores_list.html',
+        items_key='credores',
+        filter_key='filter',
+    )
 
 
 @permission_required("processos.acesso_backoffice", raise_exception=True)

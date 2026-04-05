@@ -11,7 +11,8 @@ from django.core.files.base import ContentFile
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from processos.utils_import import importar_contas_fixas_csv, importar_credores_csv
+from processos.utils.utils_import import importar_contas_fixas_csv, importar_credores_csv
+from ..utils import format_brl_currency
 from ..models import (
     CargosFuncoes,
     CodigosImposto,
@@ -391,7 +392,11 @@ def gerar_dummy_pdf_view(request, pk):
     c.setFont("Helvetica-Bold", 12)
     c.drawString(60, height - 160, f"Processo Nº:  {processo.id}")
     c.drawString(60, height - 185, f"Credor:       {processo.credor}")
-    c.drawString(60, height - 210, f"Valor Bruto:  R$ {processo.valor_bruto:,.2f}" if processo.valor_bruto else "Valor Bruto:  ---")
+    c.drawString(
+        60,
+        height - 210,
+        f"Valor Bruto:  {format_brl_currency(processo.valor_bruto)}" if processo.valor_bruto else "Valor Bruto:  ---",
+    )
     c.drawString(60, height - 235, f"Gerado em:    {tz.now().strftime('%d/%m/%Y %H:%M')}")
 
     c.setFont("Helvetica-Oblique", 10)

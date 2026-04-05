@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -86,6 +87,7 @@ TEMPLATES = [
         ,
         'APP_DIRS': True,
         'OPTIONS': {
+            'builtins': ['processos.templatetags.formatting'],
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.template.context_processors.static',
@@ -209,3 +211,10 @@ if not DEBUG:
     X_FRAME_OPTIONS = 'DENY'
     # Prevent browsers from guessing content types (MIME-sniffing protection)
     SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# Test-run compatibility: avoid forced HTTPS redirects in Django test client
+# requests so legacy tests can exercise view logic directly.
+if "test" in sys.argv:
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False

@@ -1,0 +1,90 @@
+{% extends "layouts/base_detail.html" %}
+
+{% block detail_breadcrumb %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home_page' %}">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Hub de Edição do Processo #{{ processo.id }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block detail_header %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+    <div>
+        <h4 class="mb-1 text-warning fw-bold"><i class="bi bi-diagram-3"></i> Hub de Edição</h4>
+        <div class="text-muted small">Processo #{{ processo.id }} | Credor: {{ processo.credor|default:"-" }}</div>
+    </div>
+    <span class="badge bg-secondary fs-6">{{ processo.status|default:"Sem status" }}</span>
+</div>
+<hr class="my-3">
+<div class="row g-3 small">
+    <div class="col-md-3"><strong>Documentos:</strong> {{ total_documentos }}</div>
+    <div class="col-md-3"><strong>Notas Fiscais:</strong> {{ total_notas }}</div>
+    <div class="col-md-3"><strong>NF não atestadas:</strong> {{ notas_nao_atestadas }}</div>
+    <div class="col-md-3"><strong>Pendências abertas:</strong> {{ pendencias_abertas }} / {{ total_pendencias }}</div>
+</div>
+{% if somente_documentos %}
+<div class="alert alert-warning mt-3 mb-0 py-2">
+    <i class="bi bi-lock"></i> Neste status, apenas o módulo de documentos está habilitado.
+</div>
+{% endif %}
+{% endblock %}
+
+{% block detail_body %}
+<div class="card shadow-sm mb-3">
+    <div class="card-header bg-light fw-bold"><i class="bi bi-grid"></i> Módulos de Edição</div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                    <h6 class="fw-bold mb-2">Capa</h6>
+                    <p class="text-muted small mb-3">Dados principais do processo (credor, valores, datas, forma de pagamento).</p>
+                    {% if somente_documentos %}
+                    <button class="btn btn-outline-secondary btn-sm" disabled>Bloqueado neste status</button>
+                    {% else %}
+                    <a href="{% url 'editar_processo_capa' pk=processo.id %}?next={% url 'editar_processo' pk=processo.id %}" class="btn btn-outline-primary btn-sm">Abrir módulo</a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                    <h6 class="fw-bold mb-2">Documentos</h6>
+                    <p class="text-muted small mb-3">Inclusão, atualização e ordenação de anexos do processo.</p>
+                    <a href="{% url 'editar_processo_documentos' pk=processo.id %}?next={% url 'editar_processo' pk=processo.id %}" class="btn btn-outline-primary btn-sm">Abrir módulo</a>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                    <h6 class="fw-bold mb-2">Pendências</h6>
+                    <p class="text-muted small mb-3">Registro e tratamento de pendências administrativas.</p>
+                    {% if somente_documentos %}
+                    <button class="btn btn-outline-secondary btn-sm" disabled>Bloqueado neste status</button>
+                    {% else %}
+                    <a href="{% url 'editar_processo_pendencias' pk=processo.id %}?next={% url 'editar_processo' pk=processo.id %}" class="btn btn-outline-primary btn-sm">Abrir módulo</a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                    <h6 class="fw-bold mb-2">Documentos Fiscais</h6>
+                    <p class="text-muted small mb-3">Gestão de notas fiscais, ateste e retenções.</p>
+                    <a href="{% url 'documentos_fiscais' pk=processo.id %}" class="btn btn-outline-info btn-sm">Abrir módulo</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block detail_actions %}
+<a href="{% url 'home_page' %}" class="btn btn-outline-dark"><i class="bi bi-arrow-left"></i> Voltar para Home</a>
+{% if aguardando_liquidacao %}
+<form method="post" action="{% url 'avancar_para_pagamento' pk=processo.id %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-success">
+        <i class="bi bi-check2-circle"></i> Avançar para Pagamento
+    </button>
+</form>
+{% endif %}
+{% endblock %}

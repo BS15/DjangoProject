@@ -6,7 +6,7 @@ from django.urls import reverse
 
 from processos.models import FaturaMensal, Processo, ContaFixa
 from processos.forms import ContaFixaForm
-from processos.utils_contas import gerar_faturas_do_mes
+from processos.utils.utils_contas import gerar_faturas_do_mes
 
 
 @permission_required("processos.acesso_backoffice", raise_exception=True)

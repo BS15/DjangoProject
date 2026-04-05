@@ -87,16 +87,16 @@
                     </div>
                     <div class="col-sm-6 col-md-4">
                         <div class="small text-muted">Valor Bruto</div>
-                        <div class="fw-semibold">R$ {{ processo.valor_bruto|floatformat:2|default:"—" }}</div>
+                        <div class="fw-semibold">{{ processo.valor_bruto|br_currency:"—" }}</div>
                     </div>
                     <div class="col-sm-6 col-md-4">
                         <div class="small text-muted">Valor Líquido</div>
-                        <div class="fw-semibold text-success">R$ {{ processo.valor_liquido|floatformat:2|default:"—" }}</div>
+                        <div class="fw-semibold text-success">{{ processo.valor_liquido|br_currency:"—" }}</div>
                     </div>
                     {% if processo.data_empenho %}
                     <div class="col-sm-6 col-md-4">
                         <div class="small text-muted">Data de Empenho</div>
-                        <div>{{ processo.data_empenho|date:"d/m/Y" }}</div>
+                        <div>{{ processo.data_empenho|br_date }}</div>
                     </div>
                     {% endif %}
                     {% if processo.n_nota_empenho %}
@@ -182,6 +182,13 @@
                 </div>
             {% endif %}
 
+            {% if not pode_remover_nota_fiscal %}
+                <div class="alert alert-info border-info small">
+                    <i class="bi bi-shield-lock"></i>
+                    Este processo já está em etapa pós-pagamento. A exclusão de Documento Fiscal está bloqueada para preservar a trilha de auditoria.
+                </div>
+            {% endif %}
+
             {% for doc in documentos %}
             {% with nota=doc.nota_referente %}
             <div class="card shadow-sm mb-3 doc-card {% if nota %}is-fiscal{% endif %}" id="doc-card-{{ doc.id }}" data-doc-id="{{ doc.id }}">
@@ -204,7 +211,8 @@
                         <button type="button"
                                 class="btn btn-sm fw-bold toggle-fiscal-btn {% if nota %}btn-outline-danger{% else %}btn-outline-success{% endif %}"
                                 data-doc-id="{{ doc.id }}"
-                                data-toggle-url="{% url 'api_toggle_documento_fiscal' processo_pk=processo.id documento_pk=doc.id %}">
+                                data-toggle-url="{% url 'api_toggle_documento_fiscal' processo_pk=processo.id documento_pk=doc.id %}"
+                                {% if nota and not pode_remover_nota_fiscal %}disabled title="Remoção bloqueada após pagamento"{% endif %}>
                             {% if nota %}
                                 <i class="bi bi-x-circle"></i> Remover Documento Fiscal
                             {% else %}
@@ -602,8 +610,17 @@ document.addEventListener('click', function(e) {
     })
     .then(r => r.json())
     .then(data => {
-        // Reload page to reflect changes (simplest approach)
-        location.reload();
+        if (data.status === 'created' || data.status === 'removed') {
+            location.reload();
+            return;
+        }
+
+        btn.disabled = false;
+        if (data && data.message) {
+            alert(data.message);
+            return;
+        }
+        alert('Não foi possível alternar o documento fiscal.');
     })
     .catch(err => {
         console.error(err);
