@@ -4,8 +4,8 @@ from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 
-from ..autentique_service import enviar_documento_para_assinatura
 from ..models.fluxo import AssinaturaAutentique
+from ..services import construir_signatarios_padrao, disparar_assinatura_rascunho
 
 logger = logging.getLogger(__name__)
 
@@ -64,33 +64,15 @@ def disparar_assinatura_view(request, assinatura_id):
     entidade = assinatura.entidade_relacionada
 
     # Build the signatarios list from the related entity
-    signatarios = _build_signatarios(entidade)
+    signatarios = construir_signatarios_padrao(entidade)
     if not signatarios:
         messages.error(request, "Não foi possível determinar os signatários para este documento.")
-        return redirect('painel_assinaturas')
-
-    # Get PDF bytes from the stored draft file
-    if not assinatura.arquivo:
-        messages.error(request, "Nenhum arquivo de rascunho encontrado para este documento.")
-        return redirect('painel_assinaturas')
-
-    try:
-        with assinatura.arquivo.open('rb') as f:
-            pdf_bytes = f.read()
-    except Exception as exc:
-        logger.exception("Erro ao ler arquivo de rascunho da assinatura %s", assinatura_id)
-        messages.error(request, f"Erro ao ler o arquivo: {exc}")
         return redirect('painel_assinaturas')
 
     nome_doc = f"{assinatura.tipo_documento}_{assinatura_id}"
 
     try:
-        enviar_documento_para_assinatura(
-            pdf_bytes,
-            nome_doc,
-            signatarios,
-            entidade=assinatura,  # pass the instance directly → in-place update
-        )
+        disparar_assinatura_rascunho(assinatura, signatarios, nome_doc=nome_doc)
         messages.success(request, "Documento enviado para assinatura com sucesso!")
     except Exception as exc:
         logger.exception("Erro ao disparar assinatura %s para Autentique", assinatura_id)
@@ -100,36 +82,3 @@ def disparar_assinatura_view(request, assinatura_id):
 
     return redirect('painel_assinaturas')
 
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-def _build_signatarios(entidade):
-    """
-    Reconstruct the signatarios list from a related entity.
-
-    Returns a list of dicts in the format expected by enviar_documento_para_assinatura::
-
-        [{"email": "user@example.com", "action": "SIGN"}, ...]
-
-    Currently handles entities that expose ``beneficiario`` (a Credor with an
-    ``email`` attribute) and/or ``proponente`` (a User with an ``email``
-    attribute).  Unknown entity types that expose neither attribute will yield
-    an empty list.
-    """
-    if entidade is None:
-        return []
-
-    signatarios = []
-
-    # Diaria: beneficiario (Credor with email) + proponente (User)
-    beneficiario = getattr(entidade, 'beneficiario', None)
-    if beneficiario and getattr(beneficiario, 'email', None):
-        signatarios.append({"email": beneficiario.email, "action": "SIGN"})
-
-    proponente = getattr(entidade, 'proponente', None)
-    if proponente and getattr(proponente, 'email', None):
-        signatarios.append({"email": proponente.email, "action": "SIGN"})
-
-    return signatarios

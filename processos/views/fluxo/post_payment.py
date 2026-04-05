@@ -19,7 +19,7 @@ from ...models import (
     RetencaoImposto,
 )
 from ...utils import normalize_choice
-from ...pdf_engine import gerar_documento_pdf
+from ...services import gerar_resposta_pdf
 from ...filters import ProcessoFilter
 from ..shared import apply_filterset
 from .support_views import (
@@ -547,11 +547,14 @@ def gerar_parecer_conselho_view(request, pk):
     """
     processo = get_object_or_404(Processo, pk=pk)
     numero_reuniao = processo.reuniao_conselho.numero if processo.reuniao_conselho else None
-    pdf_bytes = gerar_documento_pdf("conselho_fiscal", processo, numero_reuniao=numero_reuniao)
     nome_arquivo = f"Parecer_Conselho_Fiscal_Proc_{processo.id}.pdf"
-    response = HttpResponse(pdf_bytes, content_type="application/pdf")
-    response["Content-Disposition"] = f'inline; filename="{nome_arquivo}"'
-    return response
+    return gerar_resposta_pdf(
+        "conselho_fiscal",
+        processo,
+        nome_arquivo,
+        inline=True,
+        numero_reuniao=numero_reuniao,
+    )
 
 
 @require_GET

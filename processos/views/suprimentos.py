@@ -24,8 +24,8 @@ def _suprimento_encerrado(suprimento: Any) -> bool:
     return bool(suprimento.status and suprimento.status.status_choice.upper() == "ENCERRADO")
 
 
-def _criar_suprimento_e_processo_vinculado(form_suprimento: SuprimentoForm) -> Any:
-    """Cria o suprimento e o processo vinculado em transacao atomica."""
+def _persistir_suprimento_com_processo(form_suprimento: SuprimentoForm) -> Any:
+    """Persiste suprimento e cria o processo financeiro vinculado em transacao atomica."""
     with transaction.atomic():
         suprimento: Any = form_suprimento.save(commit=False)
         status_aberto, _ = StatusChoicesSuprimentoDeFundos.objects.get_or_create(status_choice="ABERTO")
@@ -101,8 +101,8 @@ def _salvar_despesa_manual(
     )
 
 
-def _encerrar_prestacao_suprimento(suprimento: Any) -> None:
-    """Atualiza suprimento e processo para o estado de encerramento."""
+def _atualizar_status_apos_fechamento(suprimento: Any) -> None:
+    """Atualiza status do suprimento e do processo vinculado apos o fechamento da prestacao."""
     with transaction.atomic():
         processo = suprimento.processo
         if processo:
@@ -177,7 +177,7 @@ def fechar_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
         messages.warning(request, f"Suprimento #{suprimento.id} já está encerrado.")
         return redirect("painel_suprimentos")
 
-    _encerrar_prestacao_suprimento(suprimento)
+    _atualizar_status_apos_fechamento(suprimento)
     messages.success(
         request,
         f"Prestação de contas do suprimento #{suprimento.id} encerrada e enviada para Conferência!",
@@ -192,7 +192,7 @@ def add_suprimento_view(request: HttpRequest) -> HttpResponse:
 
     if request.method == "POST" and form.is_valid():
         try:
-            _criar_suprimento_e_processo_vinculado(form)
+            _persistir_suprimento_com_processo(form)
             messages.success(request, "Suprimento de Fundos cadastrado com sucesso!")
             return redirect("painel_suprimentos")
         except Exception as e:

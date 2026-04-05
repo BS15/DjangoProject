@@ -21,7 +21,7 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from ...models import Processo, TiposDeDocumento
 from ...utils import extract_siscac_data, format_brl_amount, processar_pdf_boleto
-from ...pdf_engine import gerar_documento_pdf
+from ...services import gerar_resposta_pdf, montar_resposta_pdf
 
 
 @permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
@@ -327,10 +327,8 @@ def visualizar_pdf_processo(request, processo_id):
     if pdf_buffer is None:
         return HttpResponse("Este processo ainda não possui documentos em PDF anexados.", status=404)
 
-    response = HttpResponse(pdf_buffer, content_type="application/pdf")
     nome_arquivo = f"Processo_{processo.n_nota_empenho or processo.id}.pdf"
-    response["Content-Disposition"] = f'inline; filename="{nome_arquivo}"'
-    return response
+    return montar_resposta_pdf(pdf_buffer, nome_arquivo, inline=True)
 
 
 @permission_required("processos.pode_autorizar_pagamento", raise_exception=True)
@@ -349,11 +347,8 @@ def gerar_autorizacao_pagamento_view(request, pk):
         HttpResponse: PDF inline com nome de arquivo padronizado.
     """
     processo = get_object_or_404(Processo, pk=pk)
-    pdf_bytes = gerar_documento_pdf("autorizacao", processo)
     nome_arquivo = f"Autorizacao_Pagamento_Proc_{processo.id}.pdf"
-    response = HttpResponse(pdf_bytes, content_type="application/pdf")
-    response["Content-Disposition"] = f'inline; filename="{nome_arquivo}"'
-    return response
+    return gerar_resposta_pdf("autorizacao", processo, nome_arquivo, inline=True)
 
 
 __all__ = [

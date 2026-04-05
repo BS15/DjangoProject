@@ -1,138 +1,94 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fila: A Empenhar - System X</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
-</head>
-<body class="bg-light">
-{% include 'partials/sidebar.html' %}
+{% extends "layouts/base_list.html" %}
 
+{% block page_title %}Fila: A Empenhar{% endblock %}
 
-<div class="container mt-4 mb-5">
+{% block page_heading %}<i class="bi bi-hourglass-split text-warning me-2"></i> Processos a Empenhar{% endblock %}
+{% block page_subtitle %}Fila operacional de processos pendentes de empenho.{% endblock %}
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4><i class="bi bi-hourglass-split text-warning"></i> Processos a Empenhar</h4>
-        <div class="d-flex gap-2">
-            <a href="{% url 'add_process' %}" class="btn btn-success btn-sm fw-bold shadow-sm">
-                <i class="bi bi-plus-lg"></i> Novo Processo
-            </a>
-            <a href="/" class="btn btn-outline-secondary btn-sm shadow-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
-        </div>
-    </div>
+{% block page_actions %}
+<a href="{% url 'add_process' %}" class="btn btn-success btn-sm fw-bold shadow-sm">
+    <i class="bi bi-plus-lg"></i> Novo Processo
+</a>
+<a href="{% url 'home_page' %}" class="btn btn-outline-secondary btn-sm shadow-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+{% endblock %}
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
-
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white border-bottom py-3">
-            <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-funnel"></i> Filtrar</h6>
-        </div>
-        <div class="card-body bg-light">
-            <form method="get" class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold text-secondary mb-1">{{ meu_filtro.form.credor_nome.label }}</label>
-                    {{ meu_filtro.form.credor_nome }}
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label small fw-bold text-secondary mb-1">{{ meu_filtro.form.tipo_pagamento.label }}</label>
-                    {{ meu_filtro.form.tipo_pagamento }}
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label small fw-bold text-secondary mb-1">Vencimento De</label>
-                    {{ meu_filtro.form.data_vencimento__gte }}
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label small fw-bold text-secondary mb-1">Vencimento Até</label>
-                    {{ meu_filtro.form.data_vencimento__lte }}
-                </div>
-                <div class="col-md-3 d-flex gap-2 align-items-end">
-                    <button type="submit" class="btn btn-primary btn-sm fw-bold shadow-sm">
-                        <i class="bi bi-search"></i> Filtrar
-                    </button>
-                    <a href="{% url 'a_empenhar' %}" class="btn btn-outline-secondary btn-sm shadow-sm">Limpar</a>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-striped align-middle mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th><a href="#" class="sort-header text-decoration-none text-white" data-campo="id"># ID {% if ordem == 'id' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
-                            <th><a href="#" class="sort-header text-decoration-none text-white" data-campo="credor">Credor {% if ordem == 'credor' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %} text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
-                            <th>Status</th>
-                            <th><a href="#" class="sort-header text-decoration-none text-white" data-campo="tipo_pagamento">Tipo de Pagamento {% if ordem == 'tipo_pagamento' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %} text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
-                            <th><a href="#" class="sort-header text-decoration-none text-white" data-campo="valor_liquido">Valor Líquido {% if ordem == 'valor_liquido' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
-                            <th><a href="#" class="sort-header text-decoration-none text-white" data-campo="data_vencimento">Vencimento {% if ordem == 'data_vencimento' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
-                            <th class="text-center">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for p in processos %}
-                        <tr>
-                            <td>#{{ p.id }}</td>
-                            <td class="fw-bold">{{ p.credor|default:"---" }}</td>
-                            <td><span class="badge bg-warning px-2 py-1">{{ p.status|default:"---" }}</span></td>
-                            <td>{{ p.tipo_pagamento|default:"---" }}</td>
-                            <td class="text-success fw-bold">R$ {{ p.valor_liquido|default:"0,00" }}</td>
-                            <td>
-                                {% if p.data_vencimento %}
-                                    {{ p.data_vencimento|date:"d/m/Y" }}
-                                {% else %}
-                                    <span class="text-muted">---</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-center d-flex justify-content-center gap-1">
-                                <button class="btn btn-sm btn-primary fw-bold shadow-sm btn-preview"
-                                        data-processo-id="{{ p.id }}"
-                                        title="Pré-visualizar Documentos">
-                                    <i class="bi bi-eye"></i> Preview
-                                </button>
-                                {% if pode_interagir %}
-                                <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#empenhoModal"
-                                        data-id="{{ p.id }}"
-                                        data-credor="{{ p.credor }}">
-                                    <i class="bi bi-pencil-square"></i> Inserir Empenho
-                                </button>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="7" class="text-center text-muted py-5">
-                                <i class="bi bi-check-circle fs-2 d-block mb-2 text-success"></i>
-                                Nenhum processo aguardando empenho no momento. Fila limpa!
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+{% block filter_form %}
+{% for field in meu_filtro.form %}
+<div class="col-md-3">
+    <label class="form-label small fw-bold text-secondary mb-1">{{ field.label }}</label>
+    {{ field }}
 </div>
+{% endfor %}
+{% endblock %}
+
+{% block table_headers %}
+<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="id"># ID {% if ordem == 'id' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
+<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="credor">Credor {% if ordem == 'credor' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %} text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
+<th>Status</th>
+<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="tipo_pagamento">Tipo de Pagamento {% if ordem == 'tipo_pagamento' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %} text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
+<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="valor_liquido">Valor Líquido {% if ordem == 'valor_liquido' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
+<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="data_vencimento">Vencimento {% if ordem == 'data_vencimento' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
+<th class="text-center">Ação</th>
+{% endblock %}
+
+{% block table_rows %}
+{% for p in processos %}
+<tr>
+    <td>#{{ p.id }}</td>
+    <td class="fw-bold">{{ p.credor|default:"---" }}</td>
+    <td><span class="badge bg-warning px-2 py-1">{{ p.status|default:"---" }}</span></td>
+    <td>{{ p.tipo_pagamento|default:"---" }}</td>
+    <td class="text-success fw-bold">R$ {{ p.valor_liquido|default:"0,00" }}</td>
+    <td>
+        {% if p.data_vencimento %}
+            {{ p.data_vencimento|date:"d/m/Y" }}
+        {% else %}
+            <span class="text-muted">---</span>
+        {% endif %}
+    </td>
+    <td class="text-center d-flex justify-content-center gap-1">
+        <button class="btn btn-sm btn-primary fw-bold shadow-sm btn-preview"
+                data-processo-id="{{ p.id }}"
+                title="Pré-visualizar Documentos">
+            <i class="bi bi-eye"></i> Preview
+        </button>
+        {% if pode_interagir %}
+        <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm"
+                data-bs-toggle="modal"
+                data-bs-target="#empenhoModal"
+                data-id="{{ p.id }}"
+                data-credor="{{ p.credor }}">
+            <i class="bi bi-pencil-square"></i> Inserir Empenho
+        </button>
+        {% endif %}
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="7" class="text-center text-muted py-5">
+        <i class="bi bi-check-circle fs-2 d-block mb-2 text-success"></i>
+        Nenhum processo aguardando empenho no momento. Fila limpa!
+    </td>
+</tr>
+{% endfor %}
+{% endblock %}
+
+{% block list_footer %}
+{% include 'partials/preview_modal.html' %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm mt-3" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
 
 {% if pode_interagir %}
 <div class="modal fade" id="empenhoModal" tabindex="-1" aria-labelledby="empenhoModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
-
             <form method="post" action="{% url 'registrar_empenho_action' %}" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="processo_id" id="modal_processo_id">
@@ -177,10 +133,10 @@
     </div>
 </div>
 {% endif %}
+{% endblock %}
 
-{% include 'partials/preview_modal.html' %}
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}
+{{ block.super }}
 <script>
     const sortOrdemAtual   = "{{ ordem }}";
     const sortDirecaoAtual = "{{ direcao }}";
@@ -270,6 +226,4 @@
 
     });
 </script>
-
-</body>
-</html>
+{% endblock %}

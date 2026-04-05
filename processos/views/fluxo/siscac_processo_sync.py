@@ -1,11 +1,86 @@
-"""Views dedicadas à sincronização SISCAC."""
+"""Views e lógica de negócio dedicadas à sincronização SISCAC."""
+
+from decimal import Decimal
 
 from django.contrib import messages
+from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
 from ...models import Processo
-from ...utils import parse_siscac_report, sync_siscac_payments
+from ...utils.pdf_extractors import parse_siscac_report
+from ...utils.text_helpers import decimals_equal_money, names_bidirectional_match
+
+
+def sync_siscac_payments(extracted_payments):
+    """Concilia pagamentos extraídos com processos internos e classifica sucessos/divergências."""
+    resultados = {"sucessos": [], "divergencias": [], "nao_encontrados": [], "retroativos_corrigidos": 0}
+    matched_processo_ids = []
+
+    for payment in extracted_payments:
+        if payment["comprovante"] is None:
+            continue
+
+        candidates = Processo.objects.filter(
+            comprovantes_pagamento__numero_comprovante=payment["comprovante"],
+            n_nota_empenho=payment["nota_empenho"],
+        ).select_related("credor")
+
+        for processo in candidates:
+            if processo.credor is None or not processo.credor.nome:
+                continue
+
+            credor_match = names_bidirectional_match(processo.credor.nome, payment["credor"])
+            valor_decimal = payment["valor_total"].quantize(Decimal("0.01"))
+            valor_match = decimals_equal_money(valor_decimal, processo.valor_liquido)
+
+            if credor_match and valor_match:
+                if processo.n_pagamento_siscac != payment["siscac_pg"]:
+                    if processo.n_pagamento_siscac:
+                        resultados["retroativos_corrigidos"] += 1
+                    processo.n_pagamento_siscac = payment["siscac_pg"]
+                    processo.save(update_fields=["n_pagamento_siscac"])
+                resultados["sucessos"].append({
+                    "id": processo.id,
+                    "siscac_pg": payment["siscac_pg"],
+                    "credor": processo.credor.nome,
+                    "valor": processo.valor_liquido,
+                })
+                matched_processo_ids.append(processo.id)
+            else:
+                resultados["divergencias"].append({
+                    "processo_id": processo.id,
+                    "siscac_pg": payment["siscac_pg"],
+                    "credor_siscac": payment["credor"],
+                    "valor_siscac": valor_decimal,
+                    "credor_sistema": processo.credor.nome,
+                    "valor_sistema": processo.valor_liquido,
+                })
+                matched_processo_ids.append(processo.id)
+
+    status_pagos = [
+        "PAGO - EM CONFERÊNCIA",
+        "PAGO - A CONTABILIZAR",
+        "CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL",
+        "APROVADO - PENDENTE ARQUIVAMENTO",
+        "ARQUIVADO",
+    ]
+    orphans = (
+        Processo.objects.filter(status__status_choice__in=status_pagos)
+        .filter(Q(n_pagamento_siscac__isnull=True) | Q(n_pagamento_siscac__exact=""))
+        .exclude(id__in=matched_processo_ids)
+        .select_related("credor")
+    )
+
+    for orphan in orphans:
+        resultados["nao_encontrados"].append({
+            "id": orphan.id,
+            "credor": orphan.credor.nome if orphan.credor else "—",
+            "data_pagamento": orphan.data_pagamento,
+            "valor_liquido": orphan.valor_liquido,
+        })
+
+    return resultados
 
 
 @require_GET
@@ -57,6 +132,7 @@ def sincronizar_siscac_auto_action(request):
 
 
 __all__ = [
+    "sync_siscac_payments",
     "sincronizar_siscac",
     "sincronizar_siscac_manual_action",
     "sincronizar_siscac_auto_action",

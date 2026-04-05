@@ -26,12 +26,12 @@ from .text_helpers import (
     extract_text_between,
 )
 
-from .pdf_generation import (
+from .pdf_multipurpose_tools import (
     mesclar_pdfs_em_memoria,
     merge_canvas_with_template,
 )
 
-from .pdf_extraction import (
+from .pdf_extractors import (
     sort_pages,
     extract_siscac_data,
     interpretar_linha,
@@ -39,7 +39,6 @@ from .pdf_extraction import (
     split_pdf_to_temp_pages,
     processar_pdf_comprovantes,
     parse_siscac_report,
-    sync_siscac_payments,
 )
 
 from .siscac_diarias_sync import sync_diarias_siscac_csv
@@ -84,7 +83,6 @@ __all__ = [
     "split_pdf_to_temp_pages",
     "processar_pdf_comprovantes",
     "parse_siscac_report",
-    "sync_siscac_payments",
     # csv_imports
     "sync_diarias_siscac_csv",
     "preview_diarias_lote",

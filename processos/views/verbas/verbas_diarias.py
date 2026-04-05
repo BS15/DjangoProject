@@ -1,13 +1,10 @@
 import csv
 
 from django.contrib import messages
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
-from django.core.files.base import ContentFile
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from ...autentique_service import enviar_documento_para_assinatura, verificar_e_baixar_documento
 from ...filters import DiariaFilter
 from ...forms import DiariaForm
 from ...models import (
@@ -19,7 +16,13 @@ from ...models import (
     StatusChoicesVerbasIndenizatorias,
     Tabela_Valores_Unitarios_Verbas_Indenizatorias,
 )
-from ...pdf_engine import gerar_documento_pdf
+from ...services import (
+    criar_assinatura_rascunho,
+    enviar_para_assinatura,
+    gerar_documento_bytes,
+    gerar_resposta_pdf,
+    sincronizar_assinatura,
+)
 from ...utils import confirmar_diarias_lote, preview_diarias_lote
 from ...utils.utils_permissoes import user_in_group
 from .verbas_shared import (
@@ -93,19 +96,14 @@ def add_diaria_view(request):
             nova_diaria.avancar_status('SOLICITADA')
 
             try:
-                pdf_bytes = gerar_documento_pdf('scd', nova_diaria)
+                pdf_bytes = gerar_documento_bytes('scd', nova_diaria)
                 _anexar_scd_na_diaria(nova_diaria, pdf_bytes)
-                assinatura = AssinaturaAutentique(
-                    content_type=ContentType.objects.get_for_model(nova_diaria),
-                    object_id=nova_diaria.id,
+                criar_assinatura_rascunho(
+                    entidade=nova_diaria,
                     tipo_documento='SCD',
                     criador=request.user,
-                    status='RASCUNHO',
-                )
-                assinatura.arquivo.save(
-                    f"SCD_{nova_diaria.id}.pdf",
-                    ContentFile(pdf_bytes),
-                    save=True,
+                    pdf_bytes=pdf_bytes,
+                    nome_arquivo=f"SCD_{nova_diaria.id}.pdf",
                 )
                 messages.info(
                     request,
@@ -239,12 +237,8 @@ def sincronizar_assinatura_view(request, assinatura_id):
         return redirect(request.META.get('HTTP_REFERER', '/'))
 
     try:
-        resultado = verificar_e_baixar_documento(assinatura.autentique_id)
-        if resultado['assinado']:
-            nome_arquivo = f"{assinatura.tipo_documento}_Assinado_{assinatura.id}.pdf"
-            assinatura.arquivo_assinado.save(nome_arquivo, ContentFile(resultado['pdf_bytes']), save=False)
-            assinatura.status = 'ASSINADO'
-            assinatura.save()
+        status_sync = sincronizar_assinatura(assinatura)
+        if status_sync == 'signed':
             messages.success(request, 'Documento assinado e sincronizado com sucesso!')
         else:
             messages.info(request, 'O documento ainda está pendente de assinatura no Autentique.')
@@ -265,17 +259,16 @@ def reenviar_assinatura_view(request, diaria_id):
         raise PermissionDenied('Você não tem permissão para reenviar este documento.')
 
     try:
-        pdf_bytes = gerar_documento_pdf('scd', diaria)
         signatarios = [
             {'email': diaria.beneficiario.email, 'action': 'SIGN'},
             {'email': diaria.proponente.email, 'action': 'SIGN'},
         ]
-        enviar_documento_para_assinatura(
-            pdf_bytes,
-            f"SCD_{diaria.numero_siscac}",
-            signatarios,
+        enviar_para_assinatura(
             entidade=diaria,
             tipo_documento='SCD',
+            nome_doc=f"SCD_{diaria.numero_siscac}",
+            signatarios=signatarios,
+            doc_type='scd',
         )
         messages.success(request, 'SCD reenviado para assinatura com sucesso!')
     except Exception as e:
@@ -319,10 +312,7 @@ def api_valor_unitario_diaria(request, beneficiario_id):
 
 def gerar_pcd_view(request, pk):
     diaria = get_object_or_404(Diaria, pk=pk)
-    pdf_bytes = gerar_documento_pdf('pcd', diaria)
     nome_arquivo = f"PCD_{diaria.numero_siscac}.pdf"
-    response = HttpResponse(pdf_bytes, content_type='application/pdf')
-    response['Content-Disposition'] = f'inline; filename="{nome_arquivo}"'
-    return response
+    return gerar_resposta_pdf('pcd', diaria, nome_arquivo, inline=True)
 
 

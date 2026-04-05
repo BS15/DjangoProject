@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from faker import Faker
 
-from processos.pdf_engine import gerar_documento_pdf
+from processos.pdf_generators import gerar_documento_pdf
 
 fake = Faker('pt_BR')
 
