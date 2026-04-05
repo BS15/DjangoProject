@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, redirect, render
 
 from ...filters import ReembolsoFilter
@@ -12,10 +13,12 @@ from .verbas_shared import (
 )
 
 
+@permission_required("processos.pode_visualizar_verbas", raise_exception=True)
 def reembolsos_list_view(request):
     return _render_lista_verba(request, ReembolsoCombustivel, ReembolsoFilter, 'verbas/reembolsos_list.html')
 
 
+@permission_required("processos.pode_gerenciar_reembolsos", raise_exception=True)
 def add_reembolso_view(request):
     if request.method == 'POST':
         form = ReembolsoForm(request.POST)
@@ -34,6 +37,7 @@ def add_reembolso_view(request):
     return render(request, 'verbas/add_reembolso.html', {'form': form, 'tipos_documento': tipos_doc})
 
 
+@permission_required("processos.pode_gerenciar_reembolsos", raise_exception=True)
 def edit_reembolso_view(request, pk):
     reembolso = get_object_or_404(ReembolsoCombustivel, id=pk)
     documentos = reembolso.documentos.select_related('tipo').all()

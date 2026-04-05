@@ -8,8 +8,10 @@ class GlobalLoginRequiredMiddleware:
 
     Unauthenticated requests are redirected to settings.LOGIN_URL with the
     current path preserved as the ``next`` query parameter, UNLESS the request
-    is already targeting the login page itself or a static/media asset (so the
-    browser can still load CSS/JS and images on the login page).
+    is already targeting the login page itself or a static asset.
+
+    Uploaded files are intentionally not exempted: all protected documents must
+    be served through the audited secure-download endpoint.
     """
 
     def __init__(self, get_response):
@@ -19,14 +21,12 @@ class GlobalLoginRequiredMiddleware:
         if not request.user.is_authenticated:
             login_url = getattr(settings, 'LOGIN_URL', '/accounts/login/')
             static_url = getattr(settings, 'STATIC_URL', '/static/')
-            media_url = getattr(settings, 'MEDIA_URL', '/media/')
 
             path = request.path_info
-            # Allow the login page itself and all static/media assets through.
+            # Allow the login page itself and static assets through.
             if (
                 not path.startswith(login_url)
                 and not path.startswith(static_url)
-                and not path.startswith(media_url)
             ):
                 return redirect_to_login(request.get_full_path())
 

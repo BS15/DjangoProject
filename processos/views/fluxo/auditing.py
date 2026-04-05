@@ -3,12 +3,19 @@
 from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import permission_required
+from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_GET
 
 from ...models import (
+    AssinaturaAutentique,
+    ComprovanteDePagamento,
+    ContasBancarias,
+    CargosFuncoes,
+    DadosContribuinte,
+    Devolucao,
     DocumentoAuxilio,
     DocumentoDiaria,
     DocumentoFiscal,
@@ -16,6 +23,11 @@ from ...models import (
     DocumentoProcesso,
     DocumentoReembolso,
     DocumentoSuprimentoDeFundos,
+    FaturaMensal,
+    ContaFixa,
+    RetencaoImposto,
+    RegistroAcessoArquivo,
+    SuprimentoDeFundos,
     Processo,
 )
 from ...utils import normalize_choice
@@ -37,10 +49,15 @@ def api_documentos_processo(request, processo_id):
     return JsonResponse(_build_payload_documentos_processo_auditoria(processo))
 
 
-@permission_required("processos.pode_auditar_conselho", raise_exception=True)
 @require_GET
 def api_processo_detalhes(request):
     """Retorna detalhes de um processo por ``id`` informado via query string."""
+    if not (
+        request.user.has_perm("processos.pode_auditar_conselho")
+        or request.user.has_perm("processos.acesso_backoffice")
+    ):
+        raise PermissionDenied
+
     processo_id = request.GET.get("id", "").strip()
     if not processo_id:
         return JsonResponse({"sucesso": False, "erro": "ID do processo não informado."}, status=400)
@@ -64,12 +81,24 @@ def auditoria_view(request):
 
     model_configs = [
         (Processo.history.model, "Processo"),
+        (ContasBancarias.history.model, "Conta Bancária"),
+        (CargosFuncoes.history.model, "Cargo/Função"),
+        (DadosContribuinte.history.model, "Dados do Contribuinte"),
+        (ContaFixa.history.model, "Conta Fixa"),
+        (FaturaMensal.history.model, "Fatura Mensal"),
         (DocumentoProcesso.history.model, "Documento de Processo"),
+        (DocumentoFiscal.history.model, "Documento Fiscal"),
+        (RetencaoImposto.history.model, "Retenção de Imposto"),
+        (ComprovanteDePagamento.history.model, "Comprovante de Pagamento"),
+        (Devolucao.history.model, "Devolução"),
+        (SuprimentoDeFundos.history.model, "Suprimento de Fundos"),
         (DocumentoDiaria.history.model, "Documento de Diária"),
         (DocumentoReembolso.history.model, "Documento de Reembolso"),
         (DocumentoJeton.history.model, "Documento de Jeton"),
         (DocumentoAuxilio.history.model, "Documento de Auxílio"),
         (DocumentoSuprimentoDeFundos.history.model, "Documento de Suprimento"),
+        (RegistroAcessoArquivo.history.model, "Registro de Acesso a Arquivo"),
+        (AssinaturaAutentique.history.model, "Assinatura Autentique"),
     ]
 
     modelos_disponiveis = [label for _, label in model_configs]

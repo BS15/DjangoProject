@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, redirect, render
 
 from ...filters import AuxilioFilter
@@ -12,10 +13,12 @@ from .verbas_shared import (
 )
 
 
+@permission_required("processos.pode_visualizar_verbas", raise_exception=True)
 def auxilios_list_view(request):
     return _render_lista_verba(request, AuxilioRepresentacao, AuxilioFilter, 'verbas/auxilios_list.html')
 
 
+@permission_required("processos.pode_gerenciar_auxilios", raise_exception=True)
 def add_auxilio_view(request):
     if request.method == 'POST':
         form = AuxilioForm(request.POST)
@@ -34,6 +37,7 @@ def add_auxilio_view(request):
     return render(request, 'verbas/add_auxilio.html', {'form': form, 'tipos_documento': tipos_doc})
 
 
+@permission_required("processos.pode_gerenciar_auxilios", raise_exception=True)
 def edit_auxilio_view(request, pk):
     auxilio = get_object_or_404(AuxilioRepresentacao, id=pk)
     documentos = auxilio.documentos.select_related('tipo').all()

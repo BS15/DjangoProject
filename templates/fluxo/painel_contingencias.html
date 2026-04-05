@@ -62,6 +62,7 @@
                             <th>Data da Solicitação</th>
                             <th>Justificativa</th>
                             <th>Status</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -81,14 +82,62 @@
                                     <span class="badge bg-success">{{ contingencia.get_status_display }}</span>
                                 {% elif contingencia.status == 'REJEITADA' %}
                                     <span class="badge bg-danger">{{ contingencia.get_status_display }}</span>
+                                {% elif contingencia.status == 'PENDENTE_CONTADOR' %}
+                                    <span class="badge bg-info text-dark">{{ contingencia.get_status_display }}</span>
                                 {% else %}
                                     <span class="badge bg-warning text-dark">{{ contingencia.get_status_display }}</span>
+                                {% endif %}
+                                <div class="small text-muted mt-1">
+                                    Fluxo:
+                                    Supervisor
+                                    {% if contingencia.exige_aprovacao_ordenador %} -> Ordenador{% endif %}
+                                    {% if contingencia.exige_aprovacao_conselho %} -> Conselho{% endif %}
+                                    {% if contingencia.exige_revisao_contadora %} -> Contadora{% endif %}
+                                </div>
+                            </td>
+                            <td style="min-width: 280px;">
+                                {% if contingencia.status == 'PENDENTE_SUPERVISOR' and perms.processos.pode_aprovar_contingencia_supervisor %}
+                                    <form method="post" action="{% url 'analisar_contingencia' contingencia.pk %}" class="d-grid gap-2">
+                                        {% csrf_token %}
+                                        <textarea name="parecer" class="form-control form-control-sm" rows="2" placeholder="Parecer da supervisão (opcional)"></textarea>
+                                        <div class="d-flex gap-2">
+                                            <button type="submit" name="action" value="aprovar" class="btn btn-success btn-sm w-100">Aprovar (Supervisor)</button>
+                                            <button type="submit" name="action" value="rejeitar" class="btn btn-outline-danger btn-sm w-100">Rejeitar</button>
+                                        </div>
+                                    </form>
+                                {% elif contingencia.status == 'PENDENTE_ORDENADOR' and perms.processos.pode_autorizar_pagamento %}
+                                    <form method="post" action="{% url 'analisar_contingencia' contingencia.pk %}" class="d-grid gap-2">
+                                        {% csrf_token %}
+                                        <textarea name="parecer" class="form-control form-control-sm" rows="2" placeholder="Parecer do ordenador (opcional)"></textarea>
+                                        <div class="d-flex gap-2">
+                                            <button type="submit" name="action" value="aprovar" class="btn btn-success btn-sm w-100">Aprovar (Ordenador)</button>
+                                            <button type="submit" name="action" value="rejeitar" class="btn btn-outline-danger btn-sm w-100">Rejeitar</button>
+                                        </div>
+                                    </form>
+                                {% elif contingencia.status == 'PENDENTE_CONSELHO' and perms.processos.pode_auditar_conselho %}
+                                    <form method="post" action="{% url 'analisar_contingencia' contingencia.pk %}" class="d-grid gap-2">
+                                        {% csrf_token %}
+                                        <textarea name="parecer" class="form-control form-control-sm" rows="2" placeholder="Parecer do conselho fiscal (opcional)"></textarea>
+                                        <div class="d-flex gap-2">
+                                            <button type="submit" name="action" value="aprovar" class="btn btn-success btn-sm w-100">Aprovar (Conselho)</button>
+                                            <button type="submit" name="action" value="rejeitar" class="btn btn-outline-danger btn-sm w-100">Rejeitar</button>
+                                        </div>
+                                    </form>
+                                {% elif contingencia.status == 'PENDENTE_CONTADOR' and perms.processos.pode_contabilizar %}
+                                    <form method="post" action="{% url 'analisar_contingencia' contingencia.pk %}" class="d-grid gap-2">
+                                        {% csrf_token %}
+                                        <textarea name="parecer" class="form-control form-control-sm" rows="2" required placeholder="Parecer obrigatório da contadora para revisão"></textarea>
+                                        <button type="submit" name="action" value="revisar_contadora" class="btn btn-primary btn-sm w-100">Concluir Revisão Contábil</button>
+                                        <button type="submit" name="action" value="rejeitar" class="btn btn-outline-danger btn-sm w-100">Rejeitar</button>
+                                    </form>
+                                {% else %}
+                                    <span class="text-muted small">Sem ação disponível para seu perfil ou etapa já concluída.</span>
                                 {% endif %}
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">
+                            <td colspan="7" class="text-center text-muted py-4">
                                 <i class="bi bi-exclamation-circle fs-4 d-block mb-2"></i>
                                 Nenhuma contingência encontrada com estes filtros.
                             </td>

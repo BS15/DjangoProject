@@ -93,7 +93,6 @@ def construir_signatarios_padrao(entidade, extra_emails=None):
             if email:
                 emails.append(email)
 
-    # Deduplicação preservando ordem para manter previsibilidade de links.
     vistos = set()
     signatarios = []
     for email in emails:
@@ -110,7 +109,6 @@ def enviar_para_assinatura(entidade, tipo_documento, nome_doc, signatarios, doc_
     from processos.autentique_service import enviar_documento_para_assinatura
     from processos.models.fluxo import AssinaturaAutentique
 
-    # Idempotência: evita duplicar envios para assinatura pendente já existente.
     ct = ContentType.objects.get_for_model(entidade)
     assinatura_existente = AssinaturaAutentique.objects.filter(
         content_type=ct,
@@ -163,8 +161,7 @@ def disparar_assinatura_rascunho(assinatura, signatarios, nome_doc=None):
 def sincronizar_assinatura(assinatura):
     """Sincroniza assinatura no Autentique e atualiza arquivo assinado quando concluída.
 
-    Returns:
-        str: `signed`, `pending` ou `already_signed`.
+    Retorna uma string de estado: signed, pending ou already_signed.
     """
     from processos.autentique_service import verificar_e_baixar_documento
 

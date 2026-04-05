@@ -3,24 +3,29 @@
 Contem infraestrutura utilizada por multiplos modulos de views.
 """
 
+from datetime import datetime
 from decimal import Decimal
 
 from django.contrib import messages
 from django.core.files.base import ContentFile
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Count
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 
 from ...forms import DocumentoFormSet, PendenciaForm, PendenciaFormSet
 from ...models import (
+    ComprovanteDePagamento,
     Contingencia,
+    Devolucao,
     DocumentoFiscal,
     DocumentoProcesso,
     Pendencia,
     Processo,
+    RetencaoImposto,
     StatusChoicesPendencias,
     StatusChoicesProcesso,
     TiposDeDocumento,
@@ -45,6 +50,133 @@ _CAMPOS_PERMITIDOS_CONTINGENCIA = {
     "conta_id",
     "tag_id",
 }
+
+_STATUS_CONTINGENCIA_FINAL = {"APROVADA", "REJEITADA"}
+_STATUS_PRE_AUTORIZACAO = {
+    "A EMPENHAR",
+    "AGUARDANDO LIQUIDAÇÃO",
+    "A PAGAR - PENDENTE AUTORIZAÇÃO",
+    "A PAGAR - ENVIADO PARA AUTORIZAÇÃO",
+}
+
+
+def determinar_requisitos_contingencia(status_processo):
+    """Define quais níveis de aprovação a contingência deve cumprir.
+
+    Regras:
+    - Pré-autorização: Supervisor (sem revisão contábil)
+    - Pós-autorização e antes de aprovação final do conselho: Supervisor + Ordenador + revisão contábil
+    - Após aprovação do conselho fiscal: Supervisor + Ordenador + Conselho + revisão contábil
+    """
+    status_norm = (status_processo or "").upper().strip()
+
+    if status_norm in {"APROVADO - PENDENTE ARQUIVAMENTO", "ARQUIVADO"}:
+        return True, True, True
+
+    if status_norm in _STATUS_PRE_AUTORIZACAO:
+        return False, False, False
+
+    return True, False, True
+
+
+def proximo_status_contingencia(contingencia):
+    """Calcula o próximo estado da contingência após uma aprovação da etapa atual."""
+    if contingencia.status == "PENDENTE_SUPERVISOR":
+        if contingencia.exige_aprovacao_ordenador:
+            return "PENDENTE_ORDENADOR"
+        if contingencia.exige_revisao_contadora:
+            return "PENDENTE_CONTADOR"
+        return "APROVADA"
+
+    if contingencia.status == "PENDENTE_ORDENADOR":
+        if contingencia.exige_aprovacao_conselho:
+            return "PENDENTE_CONSELHO"
+        if contingencia.exige_revisao_contadora:
+            return "PENDENTE_CONTADOR"
+        return "APROVADA"
+
+    if contingencia.status == "PENDENTE_CONSELHO":
+        if contingencia.exige_revisao_contadora:
+            return "PENDENTE_CONTADOR"
+        return "APROVADA"
+
+    return contingencia.status
+
+
+def sincronizar_flag_contingencia_processo(processo):
+    """Mantém o flag ``em_contingencia`` alinhado com contingências ativas."""
+    possui_ativa = processo.contingencias.exclude(status__in=_STATUS_CONTINGENCIA_FINAL).exists()
+    if processo.em_contingencia != possui_ativa:
+        processo.em_contingencia = possui_ativa
+        processo.save(update_fields=["em_contingencia"])
+
+
+def normalizar_dados_propostos_contingencia(dados_propostos):
+    """Normaliza e valida o payload de mudanças da contingência.
+
+    Retorna apenas campos permitidos e converte tipos para evitar erros na
+    aplicação final da contingência.
+    """
+    if not isinstance(dados_propostos, dict):
+        return {}
+
+    normalizado = {}
+    aliases = {"novo_valor_liquido": "valor_liquido"}
+    campos_data = {"data_empenho", "data_vencimento", "data_pagamento"}
+    campos_decimal = {"valor_bruto", "valor_liquido"}
+    campos_inteiros = {
+        "ano_exercicio",
+        "credor_id",
+        "forma_pagamento_id",
+        "tipo_pagamento_id",
+        "conta_id",
+        "tag_id",
+    }
+
+    for campo_raw, valor_raw in dados_propostos.items():
+        campo = aliases.get(campo_raw, campo_raw)
+        if campo not in _CAMPOS_PERMITIDOS_CONTINGENCIA:
+            continue
+
+        valor = valor_raw
+        if isinstance(valor, str):
+            valor = valor.strip()
+            if valor == "":
+                continue
+
+        if campo in campos_decimal:
+            valor_decimal = parse_brl_decimal(valor)
+            if valor_decimal is None:
+                raise ValidationError(f"Valor inválido para o campo '{campo}'.")
+            normalizado[campo] = valor_decimal
+            continue
+
+        if campo in campos_data:
+            if isinstance(valor, str):
+                data_ok = None
+                for fmt in ("%Y-%m-%d", "%d/%m/%Y"):
+                    try:
+                        data_ok = datetime.strptime(valor, fmt).date()
+                        break
+                    except ValueError:
+                        continue
+                if data_ok is None:
+                    raise ValidationError(f"Data inválida para o campo '{campo}'.")
+                normalizado[campo] = data_ok
+                continue
+
+            raise ValidationError(f"Data inválida para o campo '{campo}'.")
+
+        if campo in campos_inteiros:
+            try:
+                normalizado[campo] = int(valor)
+            except (TypeError, ValueError):
+                raise ValidationError(f"Valor inválido para o campo '{campo}'.")
+            continue
+
+        normalizado[campo] = valor
+
+    return normalizado
 
 
 def _obter_campo_ordenacao(request, campos_permitidos, default_ordem="id", default_direcao="desc"):
@@ -366,6 +498,12 @@ def _get_unified_history(pk):
         history_records.append(_build_history_record(record, "Pendência"))
     for record in DocumentoFiscal.history.filter(processo_id=pk).select_related("history_user"):
         history_records.append(_build_history_record(record, "Nota Fiscal"))
+    for record in RetencaoImposto.history.filter(nota_fiscal__processo_id=pk).select_related("history_user"):
+        history_records.append(_build_history_record(record, "Retenção de Imposto"))
+    for record in ComprovanteDePagamento.history.filter(processo_id=pk).select_related("history_user"):
+        history_records.append(_build_history_record(record, "Comprovante de Pagamento"))
+    for record in Devolucao.history.filter(processo_id=pk).select_related("history_user"):
+        history_records.append(_build_history_record(record, "Devolução"))
 
     history_records.sort(key=lambda x: x["history_date"], reverse=True)
     return history_records
@@ -770,8 +908,8 @@ def aplicar_aprovacao_contingencia(contingencia):
     """
     processo = contingencia.processo
 
-    if "novo_valor_liquido" in contingencia.dados_propostos:
-        raw_value = contingencia.dados_propostos["novo_valor_liquido"]
+    if "valor_liquido" in contingencia.dados_propostos:
+        raw_value = contingencia.dados_propostos["valor_liquido"]
         novo_valor_liquido = parse_brl_decimal(raw_value)
         if novo_valor_liquido is None:
             return False, "O valor líquido proposto na contingência é inválido."
@@ -795,12 +933,15 @@ def aplicar_aprovacao_contingencia(contingencia):
                 setattr(processo, campo, valor)
                 campos_alterados.append(campo)
 
-        processo.em_contingencia = False
-        campos_alterados.append("em_contingencia")
+        if not campos_alterados:
+            return False, "Nenhum campo válido foi informado para atualização no processo."
+
         processo.save(update_fields=campos_alterados)
 
         contingencia.status = "APROVADA"
         contingencia.save(update_fields=["status"])
+
+        sincronizar_flag_contingencia_processo(processo)
 
     return True, None
 
@@ -860,6 +1001,10 @@ __all__ = [
     "_consolidar_totais_pagamento",
     "_processar_acao_lote",
     "_executar_arquivamento_definitivo",
+    "determinar_requisitos_contingencia",
+    "proximo_status_contingencia",
+    "sincronizar_flag_contingencia_processo",
+    "normalizar_dados_propostos_contingencia",
     "aplicar_aprovacao_contingencia",
     "_aprovar_processo_view",
     "_recusar_processo_view",

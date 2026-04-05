@@ -50,10 +50,10 @@ def painel_conferencia_view(request):
     existência de pendência e retenções não pagas. Também aceita filtro GET
     (`filtro`) para recortes operacionais no painel.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
 
-    Returns:
+    Retorna:
         HttpResponse: Renderização de `fluxo/conferencia.html`.
     """
     processos_pagos = (
@@ -99,10 +99,10 @@ def painel_conferencia_view(request):
 def iniciar_conferencia_view(request):
     """Inicializa a fila de trabalho da conferência na sessão do usuário.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
 
-    Returns:
+    Retorna:
         HttpResponseRedirect: Próximo processo da fila de conferência ou painel.
     """
     return _iniciar_fila_sessao(request, "conferencia_queue", "painel_conferencia", "conferencia_processo")
@@ -116,11 +116,11 @@ def aprovar_conferencia_view(request, pk):
     A aprovação direta foi desativada e a conferência deve ocorrer pela tela
     de revisão do processo. Esta view apenas notifica e redireciona.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
         pk: ID do processo (não utilizado no fluxo atual).
 
-    Returns:
+    Retorna:
         HttpResponseRedirect: Redireciona para `painel_conferencia`.
     """
     messages.error(request, "A aprovação direta foi desativada. Abra o processo para realizar a conferência.")
@@ -136,11 +136,11 @@ def conferencia_processo_view(request, pk):
     - Permite salvar alterações intermediárias.
     - Mantém edição habilitada com bloqueio de documentos.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
         pk: ID do processo em análise.
 
-    Returns:
+    Retorna:
         HttpResponse: Tela de detalhe da conferência ou redirecionamentos de
         fluxo definidos pelo helper.
     """
@@ -170,10 +170,10 @@ def painel_contabilizacao_view(request):
     Lista processos em `PAGO - A CONTABILIZAR` e disponibiliza formulário de
     pendência para operações auxiliares da interface.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
 
-    Returns:
+    Retorna:
         HttpResponse: Renderização de `fluxo/contabilizacao.html`.
     """
     processos = Processo.objects.filter(status__status_choice__iexact="PAGO - A CONTABILIZAR").order_by("data_pagamento")
@@ -191,10 +191,10 @@ def painel_contabilizacao_view(request):
 def iniciar_contabilizacao_view(request):
     """Inicializa a fila de trabalho da contabilização na sessão.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
 
-    Returns:
+    Retorna:
         HttpResponseRedirect: Próximo processo da fila de contabilização.
     """
     return _iniciar_fila_sessao(
@@ -214,11 +214,11 @@ def contabilizacao_processo_view(request, pk):
     - Recusar: devolve para `PAGO - EM CONFERÊNCIA`.
     - Salvar: mantém alterações sem transição de status.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
         pk: ID do processo em análise.
 
-    Returns:
+    Retorna:
         HttpResponse: Tela de detalhe da contabilização ou redirecionamento
         conforme processamento do helper.
     """
@@ -249,11 +249,11 @@ def aprovar_contabilizacao_view(request, pk):
 
     Wrapper de conveniência para aprovação direta fora da tela de fila.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
         pk: ID do processo a aprovar.
 
-    Returns:
+    Retorna:
         HttpResponseRedirect: Retorna ao `painel_contabilizacao`.
     """
     return _aprovar_processo_view(
@@ -271,11 +271,11 @@ def aprovar_contabilizacao_view(request, pk):
 def recusar_contabilizacao_view(request, pk):
     """Recusa contabilização e devolve o processo para conferência.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
         pk: ID do processo recusado.
 
-    Returns:
+    Retorna:
         HttpResponseRedirect: Retorna ao `painel_contabilizacao`.
     """
     return _recusar_processo_view(
@@ -297,10 +297,10 @@ def painel_conselho_view(request):
     - reuniões com status AGENDADA/EM_ANALISE;
     - processos contabilizados ainda sem reunião vinculada.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
 
-    Returns:
+    Retorna:
         HttpResponse: Renderização de `fluxo/conselho.html`.
     """
     reunioes_ativas = ReuniaoConselho.objects.filter(status__in=["AGENDADA", "EM_ANALISE"]).order_by("-numero")
@@ -321,10 +321,10 @@ def painel_conselho_view(request):
 def iniciar_conselho_view(request):
     """Inicializa a fila de análise do conselho na sessão do usuário.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
 
-    Returns:
+    Retorna:
         HttpResponseRedirect: Próximo processo da fila do conselho.
     """
     return _iniciar_fila_sessao(request, "conselho_queue", "painel_conselho", "conselho_processo")
@@ -339,11 +339,11 @@ def conselho_processo_view(request, pk):
     - Recusa: devolução para `PAGO - A CONTABILIZAR`.
     - Edição desabilitada nesta fase.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
         pk: ID do processo em análise.
 
-    Returns:
+    Retorna:
         HttpResponse: Tela de detalhe do conselho ou redirecionamentos de fila.
     """
     return _processo_fila_detalhe_view(
@@ -369,11 +369,11 @@ def conselho_processo_view(request, pk):
 def aprovar_conselho_view(request, pk):
     """Aprova processo no conselho via rota direta.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
         pk: ID do processo a aprovar.
 
-    Returns:
+    Retorna:
         HttpResponseRedirect: Retorna ao `painel_conselho`.
     """
     return _aprovar_processo_view(
@@ -391,11 +391,11 @@ def aprovar_conselho_view(request, pk):
 def recusar_conselho_view(request, pk):
     """Recusa processo no conselho e devolve para contabilização.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
         pk: ID do processo recusado.
 
-    Returns:
+    Retorna:
         HttpResponseRedirect: Retorna ao `painel_conselho`.
     """
     return _recusar_processo_view(
@@ -485,11 +485,11 @@ def montar_pauta_reuniao_action(request, reuniao_id):
 def analise_reuniao_view(request, reuniao_id):
     """Exibe painel de análise dos processos da pauta da reunião.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
         reuniao_id: ID da reunião em análise.
 
-    Returns:
+    Retorna:
         HttpResponse: Renderização de `processos/analise_reuniao.html`.
     """
     if not request.user.has_perm("processos.pode_auditar_conselho"):
@@ -513,11 +513,11 @@ def iniciar_conselho_reuniao_view(request, reuniao_id):
     Exige POST e encaminha argumentos extras ao helper de fila para manter o
     contexto da reunião durante a navegação entre processos.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
         reuniao_id: ID da reunião usada como escopo da fila.
 
-    Returns:
+    Retorna:
         HttpResponseRedirect: Próxima tela do fluxo de análise.
     """
     get_object_or_404(ReuniaoConselho, id=reuniao_id)
@@ -538,11 +538,11 @@ def gerar_parecer_conselho_view(request, pk):
     O documento é renderizado para exibição inline no navegador com proteção
     de clickjacking apropriada ao uso interno do sistema.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
         pk: ID do processo para geração do parecer.
 
-    Returns:
+    Retorna:
         HttpResponse: Conteúdo PDF inline.
     """
     processo = get_object_or_404(Processo, pk=pk)
@@ -566,10 +566,10 @@ def painel_arquivamento_view(request):
     - processos prontos para arquivamento definitivo;
     - lista filtrável de processos já arquivados.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
 
-    Returns:
+    Retorna:
         HttpResponse: Renderização de `fluxo/arquivamento.html`.
     """
     processos_pendentes = Processo.objects.filter(status__status_choice__iexact="APROVADO - PENDENTE ARQUIVAMENTO").order_by(
@@ -603,11 +603,11 @@ def arquivar_processo_action(request, pk):
     1. Garante status `APROVADO - PENDENTE ARQUIVAMENTO`.
     2. Delega geração/salvamento de PDF e transição para helper de serviço.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
         pk: ID do processo a arquivar.
 
-    Returns:
+    Retorna:
         HttpResponseRedirect: Retorna ao `painel_arquivamento` com mensagens.
     """
     processo = get_object_or_404(Processo, id=pk)

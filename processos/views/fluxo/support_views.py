@@ -6,17 +6,51 @@ from typing import Any, cast
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Sum
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
 from ...filters import ContingenciaFilter, DevolucaoFilter, PendenciaFilter, ProcessoFilter
 from ...forms import DevolucaoForm
 from ...models import Contingencia, Devolucao, Pendencia, Processo
 from ..shared import apply_filterset, render_filtered_list
-from .helpers import _obter_campo_ordenacao, aplicar_aprovacao_contingencia
+from .helpers import (
+    _obter_campo_ordenacao,
+    aplicar_aprovacao_contingencia,
+    determinar_requisitos_contingencia,
+    normalizar_dados_propostos_contingencia,
+    proximo_status_contingencia,
+    sincronizar_flag_contingencia_processo,
+)
+
+
+def _usuario_pode_acessar_painel_contingencias(user):
+    return any(
+        user.has_perm(perm)
+        for perm in (
+            "processos.acesso_backoffice",
+            "processos.pode_aprovar_contingencia_supervisor",
+            "processos.pode_autorizar_pagamento",
+            "processos.pode_auditar_conselho",
+            "processos.pode_contabilizar",
+        )
+    )
+
+
+def _validar_permissao_por_etapa(user, status_contingencia):
+    if status_contingencia == "PENDENTE_SUPERVISOR":
+        return user.has_perm("processos.pode_aprovar_contingencia_supervisor")
+    if status_contingencia == "PENDENTE_ORDENADOR":
+        return user.has_perm("processos.pode_autorizar_pagamento")
+    if status_contingencia == "PENDENTE_CONSELHO":
+        return user.has_perm("processos.pode_auditar_conselho")
+    if status_contingencia == "PENDENTE_CONTADOR":
+        return user.has_perm("processos.pode_contabilizar")
+    return False
 
 
 def home_page(request: HttpRequest) -> HttpResponse:
@@ -61,9 +95,18 @@ def painel_pendencias_view(request: HttpRequest) -> HttpResponse:
 
 
 @require_GET
-@permission_required("processos.acesso_backoffice", raise_exception=True)
 def painel_contingencias_view(request: HttpRequest) -> HttpResponse:
-    queryset = Contingencia.objects.select_related("processo", "solicitante").order_by("-data_solicitacao")
+    if not _usuario_pode_acessar_painel_contingencias(request.user):
+        raise PermissionDenied
+
+    queryset = Contingencia.objects.select_related(
+        "processo",
+        "solicitante",
+        "aprovado_por_supervisor",
+        "aprovado_por_ordenador",
+        "aprovado_por_conselho",
+        "revisado_por_contadora",
+    ).order_by("-data_solicitacao")
     return render_filtered_list(
         request,
         queryset=queryset,
@@ -105,6 +148,15 @@ def add_contingencia_action(request: HttpRequest) -> HttpResponse:
     except (json.JSONDecodeError, ValueError):
         dados_propostos = {}
 
+    try:
+        dados_propostos = normalizar_dados_propostos_contingencia(dados_propostos)
+    except ValidationError as exc:
+        messages.error(request, f"Dados propostos inválidos: {exc}")
+        return redirect("add_contingencia")
+
+    status_atual_processo = processo.status.status_choice if processo.status else ""
+    exige_aprovacao_ordenador, exige_aprovacao_conselho, exige_revisao_contadora = determinar_requisitos_contingencia(status_atual_processo)
+
     with transaction.atomic():
         contingencia = Contingencia.objects.create(
             processo=processo,
@@ -112,44 +164,191 @@ def add_contingencia_action(request: HttpRequest) -> HttpResponse:
             justificativa=justificativa,
             dados_propostos=dados_propostos,
             status="PENDENTE_SUPERVISOR",
+            exige_aprovacao_ordenador=exige_aprovacao_ordenador,
+            exige_aprovacao_conselho=exige_aprovacao_conselho,
+            exige_revisao_contadora=exige_revisao_contadora,
         )
-        processo.em_contingencia = True
-        processo.save(update_fields=["em_contingencia"])
+        sincronizar_flag_contingencia_processo(processo)
+
+    cadeia = ["Supervisor/Gerência"]
+    if exige_aprovacao_ordenador:
+        cadeia.append("Ordenador de Despesa")
+    if exige_aprovacao_conselho:
+        cadeia.append("Conselho Fiscal")
+    if exige_revisao_contadora:
+        cadeia.append("Revisão da Contadora")
 
     messages.success(
         request,
         f"Contingência #{contingencia.pk} aberta com sucesso para o Processo #{processo.pk}. "
-        "Aguardando aprovação do Supervisor.",
+        f"Fluxo exigido: {' -> '.join(cadeia)}.",
     )
     return redirect("home_page")
 
 
 @require_POST
-@permission_required("processos.acesso_backoffice", raise_exception=True)
 def analisar_contingencia_view(request: HttpRequest, pk: int) -> HttpResponse:
     """Aprova ou rejeita uma contingência pendente."""
     contingencia = get_object_or_404(Contingencia, pk=pk)
     action = cast(str, request.POST.get("action", "")).strip()
+    parecer = cast(str, request.POST.get("parecer", "")).strip()
+
+    if contingencia.status in {"APROVADA", "REJEITADA"}:
+        messages.warning(request, "Esta contingência já foi finalizada e não pode ser alterada.")
+        return redirect("painel_contingencias")
+
+    if action in {"aprovar", "rejeitar"}:
+        if not _validar_permissao_por_etapa(request.user, contingencia.status):
+            raise PermissionDenied
 
     if action == "aprovar":
-        sucesso, msg_erro = aplicar_aprovacao_contingencia(contingencia)
-        if sucesso:
+        with transaction.atomic():
+            contingencia._history_user = request.user
+
+            if contingencia.status == "PENDENTE_SUPERVISOR":
+                proximo_status = proximo_status_contingencia(contingencia)
+                contingencia.aprovado_por_supervisor = request.user
+                contingencia.parecer_supervisor = parecer or contingencia.parecer_supervisor
+                contingencia.data_aprovacao_supervisor = timezone.now()
+                if proximo_status == "APROVADA":
+                    contingencia.save(
+                        update_fields=[
+                            "aprovado_por_supervisor",
+                            "parecer_supervisor",
+                            "data_aprovacao_supervisor",
+                        ]
+                    )
+                    sucesso, msg_erro = aplicar_aprovacao_contingencia(contingencia)
+                    if not sucesso:
+                        transaction.set_rollback(True)
+                        messages.error(request, msg_erro)
+                        return redirect("painel_contingencias")
+                else:
+                    contingencia.status = proximo_status
+                    contingencia.save(
+                        update_fields=[
+                            "aprovado_por_supervisor",
+                            "parecer_supervisor",
+                            "data_aprovacao_supervisor",
+                            "status",
+                        ]
+                    )
+            elif contingencia.status == "PENDENTE_ORDENADOR":
+                proximo_status = proximo_status_contingencia(contingencia)
+                contingencia.aprovado_por_ordenador = request.user
+                contingencia.parecer_ordenador = parecer or contingencia.parecer_ordenador
+                contingencia.data_aprovacao_ordenador = timezone.now()
+                if proximo_status == "APROVADA":
+                    contingencia.save(
+                        update_fields=[
+                            "aprovado_por_ordenador",
+                            "parecer_ordenador",
+                            "data_aprovacao_ordenador",
+                        ]
+                    )
+                    sucesso, msg_erro = aplicar_aprovacao_contingencia(contingencia)
+                    if not sucesso:
+                        transaction.set_rollback(True)
+                        messages.error(request, msg_erro)
+                        return redirect("painel_contingencias")
+                else:
+                    contingencia.status = proximo_status
+                    contingencia.save(
+                        update_fields=[
+                            "aprovado_por_ordenador",
+                            "parecer_ordenador",
+                            "data_aprovacao_ordenador",
+                            "status",
+                        ]
+                    )
+            elif contingencia.status == "PENDENTE_CONSELHO":
+                proximo_status = proximo_status_contingencia(contingencia)
+                contingencia.aprovado_por_conselho = request.user
+                contingencia.parecer_conselho = parecer or contingencia.parecer_conselho
+                contingencia.data_aprovacao_conselho = timezone.now()
+                if proximo_status == "APROVADA":
+                    contingencia.save(
+                        update_fields=[
+                            "aprovado_por_conselho",
+                            "parecer_conselho",
+                            "data_aprovacao_conselho",
+                        ]
+                    )
+                    sucesso, msg_erro = aplicar_aprovacao_contingencia(contingencia)
+                    if not sucesso:
+                        transaction.set_rollback(True)
+                        messages.error(request, msg_erro)
+                        return redirect("painel_contingencias")
+                else:
+                    contingencia.status = proximo_status
+                    contingencia.save(
+                        update_fields=[
+                            "aprovado_por_conselho",
+                            "parecer_conselho",
+                            "data_aprovacao_conselho",
+                            "status",
+                        ]
+                    )
+            else:
+                messages.error(request, "Esta contingência deve ser revisada pela contadora para concluir.")
+                return redirect("painel_contingencias")
+
+            sincronizar_flag_contingencia_processo(contingencia.processo)
+
+        if contingencia.status == "PENDENTE_CONTADOR":
             messages.success(
                 request,
-                f"Contingência #{contingencia.pk} aprovada com sucesso. O Processo #{contingencia.processo.pk} foi atualizado.",
+                f"Etapa aprovada na Contingência #{contingencia.pk}. Aguardando revisão obrigatória da contadora.",
+            )
+        elif contingencia.status == "APROVADA":
+            messages.success(
+                request,
+                f"Contingência #{contingencia.pk} aprovada e aplicada ao Processo #{contingencia.processo.pk}.",
             )
         else:
-            messages.error(request, msg_erro)
+            messages.success(request, f"Etapa aprovada na Contingência #{contingencia.pk}.")
+
     elif action == "rejeitar":
         with transaction.atomic():
+            contingencia._history_user = request.user
             contingencia.status = "REJEITADA"
             contingencia.save(update_fields=["status"])
 
-            processo = contingencia.processo
-            processo.em_contingencia = False
-            processo.save(update_fields=["em_contingencia"])
+            sincronizar_flag_contingencia_processo(contingencia.processo)
 
         messages.warning(request, f"Contingência #{contingencia.pk} rejeitada.")
+
+    elif action == "revisar_contadora":
+        if contingencia.status != "PENDENTE_CONTADOR":
+            messages.error(request, "A revisão contábil só pode ser feita quando a contingência estiver pendente da contadora.")
+            return redirect("painel_contingencias")
+
+        if not request.user.has_perm("processos.pode_contabilizar"):
+            raise PermissionDenied
+
+        if not parecer:
+            messages.error(request, "A revisão da contadora exige um parecer de revisão.")
+            return redirect("painel_contingencias")
+
+        with transaction.atomic():
+            contingencia._history_user = request.user
+            contingencia.parecer_contadora = parecer
+            contingencia.revisado_por_contadora = request.user
+            contingencia.data_revisao_contadora = timezone.now()
+            contingencia.save(
+                update_fields=["parecer_contadora", "revisado_por_contadora", "data_revisao_contadora"]
+            )
+
+            sucesso, msg_erro = aplicar_aprovacao_contingencia(contingencia)
+            if not sucesso:
+                transaction.set_rollback(True)
+                messages.error(request, msg_erro)
+                return redirect("painel_contingencias")
+
+        messages.success(
+            request,
+            f"Contingência #{contingencia.pk} revisada pela contadora e aplicada ao Processo #{contingencia.processo.pk}.",
+        )
     else:
         messages.error(request, "Ação inválida.")
 

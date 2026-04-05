@@ -1,17 +1,7 @@
-"""
-reinf_services.py
+"""Serviços de agregação e geração XML para painel EFD-Reinf.
 
-Aggregation logic for the EFD-Reinf panel (ReinfPanelView).
-
-Série 2000 – Previdenciário (INSS / R-2010)
---------------------------------------------
-Groups RetencaoImposto records whose CodigosImposto.serie_reinf == 'S2000'
-by:  Credor (prestador / emitente da NF)  →  DocumentoFiscal  →  [retencoes]
-
-Série 4000 – Retenções Federais (IRRF / CSRF / R-4010 / R-4020)
------------------------------------------------------------------
-Groups RetencaoImposto records whose CodigosImposto.serie_reinf == 'S4000'
-by:  Credor (beneficiário)  →  Natureza do Rendimento (Tabela 01)  →  [retencoes]
+Série 2000: agrupa retenções previdenciárias por credor emitente e nota.
+Série 4000: agrupa retenções federais por beneficiário e natureza do rendimento.
 """
 
 import xml.dom.minidom
@@ -23,35 +13,15 @@ from .models import RetencaoImposto, DadosContribuinte
 
 
 def _build_competencia_date(month: int, year: int) -> date:
-    """Return the first-day-of-month Date used internally as competência."""
+    """Retorna a data do primeiro dia do mês usada como competência."""
     return date(year, month, 1)
 
 
 def get_serie_2000_data(month: int | None, year: int | None) -> list:
-    """
-    Return aggregated data for Série 2000 (INSS / R-2010).
+    """Retorna dados agregados da Série 2000 (INSS / R-2010).
 
-    When *month* and *year* are both ``None`` all entries are returned
-    regardless of competência (clear-filter / show-all mode).
-
-    Structure returned:
-    [
-      {
-        "credor": <Credor instance>,           # Prestador (emitente da NF)
-        "notas": [
-          {
-            "nota_fiscal": <DocumentoFiscal>,
-            "retencoes": [<RetencaoImposto>, ...],
-            "total_bruto":  <Decimal>,
-            "total_base":   <Decimal>,
-            "total_retido": <Decimal>,
-          },
-          ...
-        ],
-        "total_retido": <Decimal>,
-      },
-      ...
-    ]
+    Quando mês e ano forem ``None``, retorna todos os registros sem filtrar
+    por competência.
     """
     qs = RetencaoImposto.objects.filter(codigo__serie_reinf='S2000')
     if month is not None and year is not None:
@@ -73,7 +43,6 @@ def get_serie_2000_data(month: int | None, year: int | None) -> list:
         )
     )
 
-    # --- group: credor → nf → retencoes ---
     credor_map: dict = defaultdict(lambda: defaultdict(list))
     for r in retencoes:
         credor = r.nota_fiscal.nome_emitente
@@ -106,30 +75,10 @@ def get_serie_2000_data(month: int | None, year: int | None) -> list:
 
 
 def get_serie_4000_data(month: int | None, year: int | None) -> list:
-    """
-    Return aggregated data for Série 4000 (IRRF / CSRF / R-4010 / R-4020).
+    """Retorna dados agregados da Série 4000 (IRRF / CSRF / R-4010 / R-4020).
 
-    When *month* and *year* are both ``None`` all entries are returned
-    regardless of competência (clear-filter / show-all mode).
-
-    Structure returned:
-    [
-      {
-        "beneficiario": <Credor instance>,
-        "evento": "R-4010" | "R-4020",     # derived from credor.tipo
-        "naturezas": [
-          {
-            "natureza_codigo": "15001",     # Tabela 01 do SPED
-            "retencoes": [<RetencaoImposto>, ...],
-            "total_bruto":  <Decimal>,
-            "total_retido": <Decimal>,
-          },
-          ...
-        ],
-        "total_retido": <Decimal>,
-      },
-      ...
-    ]
+    Quando mês e ano forem ``None``, retorna todos os registros sem filtrar
+    por competência.
     """
     qs = RetencaoImposto.objects.filter(codigo__serie_reinf='S4000')
     if month is not None and year is not None:
@@ -151,7 +100,6 @@ def get_serie_4000_data(month: int | None, year: int | None) -> list:
         )
     )
 
-    # --- group: beneficiario → natureza → retencoes ---
     benef_map: dict = defaultdict(lambda: defaultdict(list))
     for r in retencoes:
         beneficiario = r.beneficiario
@@ -172,7 +120,6 @@ def get_serie_4000_data(month: int | None, year: int | None) -> list:
                 'total_bruto': total_bruto,
                 'total_retido': total_retido,
             })
-        # Determine event type: R-4010 (PF) or R-4020 (PJ)
         evento = 'R-4010' if (beneficiario and beneficiario.tipo == 'PF') else 'R-4020'
         result.append({
             'beneficiario': beneficiario,
@@ -183,18 +130,8 @@ def get_serie_4000_data(month: int | None, year: int | None) -> list:
 
     return result
 
-
-# ---------------------------------------------------------------------------
-# XML batch generation – R-2010 (INSS) and R-4020 (Federais)
-# ---------------------------------------------------------------------------
-
 def _build_r2010_xml(cnpj: str, retencoes: list, month: int, year: int) -> str:
-    """
-    Build a minimal R-2010 (INSS / Série 2000) XML skeleton for a single
-    provider CNPJ, listing every retention record for that CNPJ.
-
-    Returns a pretty-printed XML string.
-    """
+    """Monta XML mínimo R-2010 para um CNPJ com suas retenções."""
     root = ET.Element(
         'Reinf',
         xmlns='http://www.reinf.esocial.gov.br/schemas/evtServTom/v2_01_01',
@@ -234,12 +171,7 @@ def _build_r2010_xml(cnpj: str, retencoes: list, month: int, year: int) -> str:
 
 
 def _build_r4020_xml(cnpj: str, retencoes: list, month: int, year: int) -> str:
-    """
-    Build a minimal R-4020 (Federal taxes / Série 4000) XML skeleton for a
-    single provider CNPJ.  Retentions are sub-grouped by *natureza_rendimento*.
-
-    Returns a pretty-printed XML string.
-    """
+    """Monta XML mínimo R-4020 para um CNPJ com retenções federais."""
     root = ET.Element(
         'Reinf',
         xmlns='http://www.reinf.esocial.gov.br/schemas/evtRetPJ/v2_01_01',
@@ -280,25 +212,16 @@ def _build_r4020_xml(cnpj: str, retencoes: list, month: int, year: int) -> str:
 
 def gerar_lotes_reinf(month: int, year: int) -> dict:
     """
-    Generate EFD-Reinf XML batch files (lotes) for a given month/year.
+        Gera lotes XML EFD-Reinf para o mês/ano informados.
 
-    Business rules:
-    - Requires a DadosContribuinte record; uses the first record returned by
-      the database (the system is designed to hold a single configuration row).
-      Raises ValueError if no record is configured.
-    - Only includes RetencaoImposto records whose competência matches the
-      given month/year AND whose associated DocumentoFiscal is atestada.
-    - INSS retentions (CodigosImposto.serie_reinf == 'S2000') → R-2010 events.
-    - Federal retentions (CodigosImposto.serie_reinf == 'S4000') → R-4020 events.
-    - One XML file is produced per unique provider CNPJ within each family.
+        Regras aplicadas:
+        - Exige cadastro em ``DadosContribuinte``; lança ``ValueError`` se ausente.
+        - Considera apenas retenções da competência informada e com nota atestada.
+        - Série S2000 gera eventos R-2010.
+        - Série S4000 gera eventos R-4020.
+        - Gera um XML por CNPJ prestador em cada série.
 
-    Returns:
-        dict mapping filename (str) → XML content (str), including:
-        - 'R-1000_Cadastro_Empresa.xml'
-        - 'INSS_R2010/R2010_CNPJ_{cnpj}_{yyyymm}.xml' (one per INSS provider)
-        - 'INSS_R2010/R2099_Fechamento.xml'
-        - 'Federais_R4020/R4020_CNPJ_{cnpj}_{yyyymm}.xml' (one per Federal provider)
-        - 'Federais_R4020/R4099_Fechamento.xml'
+        Retorna dicionário ``{nome_arquivo: conteudo_xml}``.
     """
     contribuinte = DadosContribuinte.objects.first()
     if contribuinte is None:
@@ -330,8 +253,6 @@ def gerar_lotes_reinf(month: int, year: int) -> dict:
         elif ret.codigo.serie_reinf == 'S4000':
             federal_por_cnpj[provider_cnpj].append(ret)
 
-    # True when at least one retention was processed for the given category;
-    # propagated to closing events (R-2099 / R-4099) to indicate movement.
     has_inss_movement = bool(inss_por_cnpj)
     has_federal_movement = bool(federal_por_cnpj)
 
@@ -358,12 +279,7 @@ def gerar_lotes_reinf(month: int, year: int) -> dict:
 
 
 def _build_r1000_xml(contribuinte: DadosContribuinte) -> str:
-    """
-    Build a skeleton R-1000 (evtInfoContri – Starter event) XML for the
-    given taxpayer (DadosContribuinte instance).
-
-    Returns a pretty-printed XML string.
-    """
+    """Monta XML R-1000 básico a partir dos dados do contribuinte."""
     root = ET.Element(
         'Reinf',
         xmlns='http://www.reinf.esocial.gov.br/schemas/evtInfoContribuinte/v2_01_01',
@@ -389,11 +305,7 @@ def _build_r1000_xml(contribuinte: DadosContribuinte) -> str:
 
 
 def _build_r2099_xml(cnpj_contribuinte: str, month: int, year: int, has_movement: bool = True) -> str:
-    """
-    Build a skeleton R-2099 (evtFechaEvPer – INSS closing event) XML.
-
-    Returns a pretty-printed XML string.
-    """
+    """Monta XML de fechamento R-2099 para eventos previdenciários."""
     root = ET.Element(
         'Reinf',
         xmlns='http://www.reinf.esocial.gov.br/schemas/evtFechaEvPer/v2_01_01',
@@ -420,11 +332,7 @@ def _build_r2099_xml(cnpj_contribuinte: str, month: int, year: int, has_movement
 
 
 def _build_r4099_xml(cnpj_contribuinte: str, month: int, year: int, has_movement: bool = True) -> str:
-    """
-    Build a skeleton R-4099 (evtFechaEvPer – Federal taxes closing event) XML.
-
-    Returns a pretty-printed XML string.
-    """
+    """Monta XML de fechamento R-4099 para retenções federais."""
     root = ET.Element(
         'Reinf',
         xmlns='http://www.reinf.esocial.gov.br/schemas/evtFechaEvPerFed/v2_01_01',

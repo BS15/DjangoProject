@@ -1,6 +1,7 @@
-"""Pure Python text normalization and formatting helpers.
+"""Utilitários puros para normalização e formatação de texto e valores.
 
-No PDFs, no databases - just deterministic data normalization.
+Não acessa banco de dados nem processamento de PDF; foco em transformação
+determinística de strings, datas e números.
 """
 
 import re
@@ -15,7 +16,7 @@ def _digits_only(value):
 
 
 def normalize_text(value, *, collapse_spaces=True):
-    """Remove acentos e padroniza caixa/espaços para comparações textuais."""
+    """Normaliza texto removendo acentos e padronizando caixa e espaçamento."""
     if not value:
         return ""
 
@@ -32,7 +33,7 @@ def normalize_document(value):
 
 
 def normalize_account(agencia, conta):
-    """Normaliza dados bancários (agência/conta) para comparação segura."""
+    """Normaliza agência e conta para comparação robusta de dados bancários."""
     agencia_norm = (agencia or "").strip().replace(" ", "")
     conta_norm = (conta or "").strip().replace(" ", "").replace(".", "")
     return agencia_norm.upper(), conta_norm.upper()
@@ -44,7 +45,7 @@ def normalize_name_for_match(value):
 
 
 def names_bidirectional_match(left, right):
-    """Retorna True quando um nome contém o outro após normalização."""
+    """Retorna verdadeiro quando um nome contém o outro após normalização."""
     left_norm = normalize_name_for_match(left)
     right_norm = normalize_name_for_match(right)
     if not left_norm or not right_norm:
@@ -53,24 +54,24 @@ def names_bidirectional_match(left, right):
 
 
 def decimals_equal_money(left, right):
-    """Compara valores monetários com precisão de centavos."""
+    """Compara dois valores monetários com precisão de centavos."""
     if left is None or right is None:
         return False
     return Decimal(left).quantize(Decimal("0.01")) == Decimal(right).quantize(Decimal("0.01"))
 
 
 def normalize_choice(value, valid_choices, default=""):
-    """Mantém apenas valores pertencentes a um conjunto fechado de opções."""
+    """Retorna o valor quando válido ou aplica valor padrão para opções inválidas."""
     return value if value in valid_choices else default
 
 
 def format_br_date(value, empty_value="-"):
-    """Formata datas em ``DD/MM/AAAA`` para payloads e respostas de UI."""
+    """Formata data em DD/MM/AAAA para exibição em interface."""
     return value.strftime("%d/%m/%Y") if value else empty_value
 
 
 def format_brl_currency(value, empty_value="-"):
-    """Formata número decimal no padrão monetário brasileiro."""
+    """Formata valor no padrão monetário brasileiro com símbolo de real."""
     if value is None:
         return empty_value
 
@@ -81,7 +82,7 @@ def format_brl_currency(value, empty_value="-"):
 
 
 def format_brl_amount(value, empty_value="-", include_symbol=False):
-    """Formata valor no padrão brasileiro com prefixo monetário opcional."""
+    """Formata valor no padrão brasileiro com símbolo opcional."""
     formatted = format_brl_currency(value, empty_value=empty_value)
     if formatted == empty_value or include_symbol:
         return formatted
@@ -89,7 +90,7 @@ def format_brl_amount(value, empty_value="-", include_symbol=False):
 
 
 def parse_brl_decimal(value, default=None):
-    """Converte texto monetário brasileiro em ``Decimal`` de forma tolerante."""
+    """Converte texto numérico brasileiro em Decimal com tratamento tolerante."""
     if value is None:
         return default
 
@@ -111,7 +112,7 @@ def parse_brl_decimal(value, default=None):
 
 
 def safe_split(line, keyword, index=1):
-    """Divide ``line`` por ``keyword`` e devolve a parte desejada com ``strip`` seguro."""
+    """Divide uma linha por palavra-chave e retorna parte indexada com segurança."""
     parts = line.split(keyword)
     if len(parts) > index:
         return parts[index].strip()
@@ -119,7 +120,7 @@ def safe_split(line, keyword, index=1):
 
 
 def parse_br_date(date_str):
-    """Converte data brasileira ``DD/MM/AAAA`` para ``AAAA-MM-DD``."""
+    """Converte data no formato DD/MM/AAAA para AAAA-MM-DD."""
     try:
         if not date_str:
             return None
@@ -129,7 +130,7 @@ def parse_br_date(date_str):
 
 
 def extract_text_between(full_text, start_anchor, end_anchor):
-    """Extrai texto entre âncoras, com fallback para quebra de linha."""
+    """Extrai trecho entre âncoras de início e fim com fallback para quebra de linha."""
     try:
         start_idx = full_text.find(start_anchor)
         if start_idx == -1:

@@ -2,14 +2,14 @@ from django.shortcuts import render
 
 
 def chaos_testing_view(request):
-    """Developer chaos-testing tool powered by gremlins.js.
+    """Ferramenta de caos para desenvolvimento baseada em gremlins.js.
 
-    Renders an interactive page that lets a developer:
-    - Load any target URL (add_process, conferencia_processo) inside an iframe
-    - Inject gremlins.js (via CDN) into that iframe and fire a configurable horde
-    - Copy ready-made browser-console snippets for quick in-page injection
-    - Follow the inline guide to correlate server-side 500 errors with Django logs
+    Renderiza página interativa para:
+    - carregar URL alvo em iframe;
+    - injetar gremlins.js via CDN e executar horda configurável;
+    - copiar snippets de console para testes rápidos;
+    - orientar correlação de erros HTTP 500 com logs do Django.
 
-    Authentication is enforced globally by GlobalLoginRequiredMiddleware.
+    A autenticação é aplicada globalmente pelo middleware de login.
     """
     return render(request, 'ferramentas/chaos_testing.html')

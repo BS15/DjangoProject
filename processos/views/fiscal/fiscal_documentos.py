@@ -49,16 +49,16 @@ def _status_bloqueia_exclusao_nota_fiscal(processo):
 def documentos_fiscais_view(request, pk):
     """Renderiza a tela de gestão de documentos fiscais de um processo.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP atual.
         pk: Identificador do Processo.
 
-    Returns:
+    Retorna:
         HttpResponse: Renderização do template fiscal/documentos_fiscais.html
         com dados auxiliares para seleção de fiscal de contrato, credor e
         códigos de imposto.
 
-    Side effects:
+    Efeitos colaterais:
         Nenhum. Apenas leitura de dados.
     """
     processo = get_object_or_404(Processo, id=pk)
@@ -90,18 +90,18 @@ def api_toggle_documento_fiscal(request, processo_pk, documento_pk):
       retenções associadas.
     - Se não possuir, cria uma nova DocumentoFiscal com valores iniciais.
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP; aceita apenas POST.
         processo_pk: ID do Processo ao qual o documento pertence.
         documento_pk: ID do DocumentoProcesso que será alternado.
 
-    Returns:
+    Retorna:
         JsonResponse:
         - 405 quando o método não é POST.
         - status=removed quando remove a nota fiscal existente.
         - status=created quando cria nova nota fiscal.
 
-    Side effects:
+    Efeitos colaterais:
         Cria ou remove registros de DocumentoFiscal e RetencaoImposto.
     """
     if request.method != "POST":
@@ -165,18 +165,18 @@ def api_salvar_nota_fiscal(request, processo_pk, nota_pk):
     4. Mantém pendência "ATESTE DE LIQUIDAÇÃO" coerente com o ateste das notas
        do processo (cria quando necessário e remove quando não há pendências).
 
-    Args:
+    Parâmetros:
         request: Requisição HTTP; aceita apenas POST.
         processo_pk: ID do Processo dono da nota fiscal.
         nota_pk: ID da DocumentoFiscal que será atualizada.
 
-    Returns:
+    Retorna:
         JsonResponse:
         - 405 para método inválido.
         - 400 quando algum valor de retenção é inválido.
         - status=ok quando a atualização conclui com sucesso.
 
-    Side effects:
+    Efeitos colaterais:
         Persiste alterações em DocumentoFiscal, RetencaoImposto e Pendencia.
         A função é atômica: em caso de erro, as mudanças do bloco transacional
         são revertidas.

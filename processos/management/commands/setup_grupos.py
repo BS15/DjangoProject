@@ -6,11 +6,49 @@ from processos.models.fluxo import Processo
 
 
 GRUPOS_PERMISSOES = {
-    'FUNCIONÁRIO(A) CONTAS A PAGAR': ['acesso_backoffice', 'pode_operar_contas_pagar', 'pode_arquivar'],
+    'FUNCIONÁRIO(A) CONTAS A PAGAR': [
+        'acesso_backoffice',
+        'pode_operar_contas_pagar',
+        'pode_aprovar_contingencia_supervisor',
+        'pode_arquivar',
+    ],
     'FISCAL DE CONTRATO': ['acesso_backoffice', 'pode_atestar_liquidacao'],
     'ORDENADOR(A) DE DESPESA': ['acesso_backoffice', 'pode_autorizar_pagamento'],
     'CONTADOR(A)': ['acesso_backoffice', 'pode_contabilizar'],
     'CONSELHEIRO(A) FISCAL': ['acesso_backoffice', 'pode_auditar_conselho'],
+    'GESTOR(A) DE VERBAS - CONSULTA': ['acesso_backoffice', 'pode_visualizar_verbas'],
+    'GESTOR(A) DE VERBAS - DIÁRIAS': [
+        'acesso_backoffice',
+        'pode_visualizar_verbas',
+        'pode_criar_diarias',
+        'pode_importar_diarias',
+        'pode_gerenciar_diarias',
+        'pode_autorizar_diarias',
+        'pode_agrupar_verbas',
+        'pode_gerenciar_processos_verbas',
+        'pode_sincronizar_diarias_siscac',
+    ],
+    'GESTOR(A) DE VERBAS - REEMBOLSOS': [
+        'acesso_backoffice',
+        'pode_visualizar_verbas',
+        'pode_gerenciar_reembolsos',
+        'pode_agrupar_verbas',
+        'pode_gerenciar_processos_verbas',
+    ],
+    'GESTOR(A) DE VERBAS - JETONS': [
+        'acesso_backoffice',
+        'pode_visualizar_verbas',
+        'pode_gerenciar_jetons',
+        'pode_agrupar_verbas',
+        'pode_gerenciar_processos_verbas',
+    ],
+    'GESTOR(A) DE VERBAS - AUXÍLIOS': [
+        'acesso_backoffice',
+        'pode_visualizar_verbas',
+        'pode_gerenciar_auxilios',
+        'pode_agrupar_verbas',
+        'pode_gerenciar_processos_verbas',
+    ],
 }
 
 

@@ -1,4 +1,4 @@
-"""PDF merging utilities used by the financial backoffice."""
+"""Utilitários de mesclagem de PDF usados no backoffice financeiro."""
 
 import io
 

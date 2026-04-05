@@ -6,6 +6,8 @@ from django.db import models
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from simple_history.models import HistoricalRecords
+from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 from .fluxo import DocumentoBase, caminho_documento, _delete_file
 
@@ -13,11 +15,8 @@ from .fluxo import DocumentoBase, caminho_documento, _delete_file
 class StatusChoicesVerbasIndenizatorias(models.Model):
     """Catálogo de estados de verbas indenizatórias."""
 
-    # This replaces your hard-coded choices
     status_choice = models.CharField(max_length=100, unique=True)
 
-    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
-    # This prevents old invoices from breaking if a code is retired.
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -37,11 +36,8 @@ class MeiosDeTransporte(models.Model):
 class TiposDeVerbasIndenizatorias(models.Model):
     """Tipos de verba indenizatória suportados pelo sistema."""
 
-    # This replaces your hard-coded choices
     tipo_de_verba_indenizatoria = models.CharField(max_length=100, unique=True)
 
-    # Pro-tip for administrative systems: Never delete tax codes, just deactivate them.
-    # This prevents old invoices from breaking if a code is retired.
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -69,11 +65,6 @@ class Tabela_Valores_Unitarios_Verbas_Indenizatorias(models.Model):
         return None
 
 
-#Model for indenizatory payments - handles pendencies.
-#Is "activated" when payment type is verbas indenizatórias.
-#This should be for administrative handling.
-#Doesn't relate immediately to payments.
-
 class Diaria(models.Model):
     """Solicitação/execução de diária com cálculo automático de valor."""
 
@@ -89,7 +80,6 @@ class Diaria(models.Model):
     proponente = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                    related_name='diarias_propostas', verbose_name="Proponente")
 
-    # Dados específicos da Diária
     tipo_solicitacao = models.CharField(max_length=20, choices=TIPO_SOLICITACAO, default='INICIAL')
     data_saida = models.DateField("Data de Saída")
     data_retorno = models.DateField("Data de Retorno")
@@ -97,7 +87,7 @@ class Diaria(models.Model):
     cidade_destino = models.CharField("Cidade(s) de Destino", max_length=100)
     objetivo = models.CharField("Objetivo da Viagem", max_length=200)
 
-    quantidade_diarias = models.DecimalField("Quantidade de Diárias", max_digits=4, decimal_places=1)
+    quantidade_diarias = models.DecimalField("Quantidade de Diárias", max_digits=4, decimal_places=1, validators=[MinValueValidator(0.1)])
     valor_total = models.DecimalField("Valor Total (R$)", max_digits=12, decimal_places=2, blank=True, null=True)
     meio_de_transporte = models.ForeignKey('MeiosDeTransporte', on_delete=models.PROTECT, blank=True, null=True,
                                            verbose_name="Meio de Transporte")
@@ -108,6 +98,17 @@ class Diaria(models.Model):
     assinaturas_autentique = GenericRelation('AssinaturaAutentique')
 
     history = HistoricalRecords()
+
+    def clean(self):
+        """Valida que data_retorno é posterior ou igual a data_saida."""
+        errors = {}
+
+        if self.data_retorno and self.data_saida:
+            if self.data_retorno < self.data_saida:
+                errors['data_retorno'] = 'Data de retorno não pode ser anterior à data de saída.'
+
+        if errors:
+            raise DjangoValidationError(errors)
 
     def calcular_valor_total(self):
         """Calcula o valor total da diária conforme cargo/função do beneficiário."""
@@ -150,7 +151,6 @@ class Diaria(models.Model):
         return f"Diária {self.numero_siscac} - {self.beneficiario}"
 
 
-# 3. DOCUMENTOS DAS VERBAS (Uma tabela separada para cada)
 class DocumentoDiaria(DocumentoBase):
     """Documento comprobatório associado a diária."""
 
@@ -174,10 +174,10 @@ class ReembolsoCombustivel(models.Model):
     cidade_origem = models.CharField("Cidade de Origem", max_length=50)
     cidade_destino = models.CharField("Cidade(s) de Destino", max_length=100)
 
-    distancia_km = models.DecimalField("Distância Percorrida (KM)", max_digits=6, decimal_places=2)
-    preco_combustivel = models.DecimalField("Preço Médio do Combustível (R$)", max_digits=5, decimal_places=2)
+    distancia_km = models.DecimalField("Distância Percorrida (KM)", max_digits=6, decimal_places=2, validators=[MinValueValidator(0.1)])
+    preco_combustivel = models.DecimalField("Preço Médio do Combustível (R$)", max_digits=5, decimal_places=2, validators=[MinValueValidator(0.01)])
 
-    valor_total = models.DecimalField("Valor do Reembolso (R$)", max_digits=12, decimal_places=2)
+    valor_total = models.DecimalField("Valor do Reembolso (R$)", max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
     objetivo = models.CharField("Objetivo", max_length=200, blank=True, null=True)
     status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
     history = HistoricalRecords()
@@ -201,10 +201,9 @@ class Jeton(models.Model):
     beneficiario = models.ForeignKey('Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
                                      verbose_name="Conselheiro(a)")
 
-    # Dados específicos do Jeton
     reuniao = models.CharField("Reunião/Sessão de Referência", max_length=7)
 
-    valor_total = models.DecimalField("Valor Total (R$)", max_digits=12, decimal_places=2)
+    valor_total = models.DecimalField("Valor Total (R$)", max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
     status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
     history = HistoricalRecords()
 
@@ -228,11 +227,10 @@ class AuxilioRepresentacao(models.Model):
     beneficiario = models.ForeignKey('Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
                                      verbose_name="Beneficiário")
 
-    # Dados específicos do Auxílio
     objetivo = models.CharField("Evento/Motivo da Representação", max_length=200, blank=True, null=True,
                                             help_text="Preencha se for representação em evento específico")
 
-    valor_total = models.DecimalField("Valor Total (R$)", max_digits=12, decimal_places=2)
+    valor_total = models.DecimalField("Valor Total (R$)", max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
     status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
     history = HistoricalRecords()
 
@@ -247,13 +245,11 @@ class DocumentoAuxilio(DocumentoBase):
     history = HistoricalRecords()
 
 
-# ==============================================================================
-# FILE LIFECYCLE SIGNALS – verba documents
-# ==============================================================================
-
 def _make_verba_delete_signal(model_cls):
+    """Cria e registra sinal de exclusão para remover arquivo físico do documento."""
     @receiver(post_delete, sender=model_cls, weak=False)
     def _auto_delete(sender, instance, **kwargs):
+        """Remove arquivo do storage quando o registro de documento é excluído."""
         _delete_file(instance.arquivo)
     _auto_delete.__name__ = f'auto_delete_file_{model_cls.__name__.lower()}'
     _auto_delete.__qualname__ = _auto_delete.__name__
@@ -261,8 +257,10 @@ def _make_verba_delete_signal(model_cls):
 
 
 def _make_verba_presave_signal(model_cls):
+    """Cria e registra sinal pre_save para limpar arquivo antigo substituído."""
     @receiver(pre_save, sender=model_cls, weak=False)
     def _cleanup_old_file(sender, instance, **kwargs):
+        """Apaga versão anterior do arquivo quando há substituição no mesmo registro."""
         if not instance.pk:
             return
         try:

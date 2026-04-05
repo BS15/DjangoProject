@@ -36,6 +36,7 @@ from ..models import (
 
 @permission_required("processos.acesso_backoffice", raise_exception=True)
 def painel_importacao_view(request):
+    """Renderiza painel de importação em lote de credores e contas fixas."""
     context = {}
     if request.method == 'POST':
         if 'importar_credores' in request.POST:
@@ -57,6 +58,7 @@ def painel_importacao_view(request):
 
 @permission_required("processos.acesso_backoffice", raise_exception=True)
 def download_template_csv_credores(request):
+    """Disponibiliza template CSV para importação de credores."""
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="template_credores.csv"'
     writer = csv.writer(response)
@@ -66,6 +68,7 @@ def download_template_csv_credores(request):
 
 @permission_required("processos.acesso_backoffice", raise_exception=True)
 def download_template_csv_contas(request):
+    """Disponibiliza template CSV para importação de contas fixas."""
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="template_contas_fixas.csv"'
     writer = csv.writer(response)
@@ -76,7 +79,7 @@ _fake_generator = Faker('pt_BR')
 _MIN_FAKE_ANO_EXERCICIO = 2020
 
 def _ensure_fake_lookup_tables():
-    """Create minimal lookup table records required for fake data generation."""
+    """Garante dados mínimos de catálogos para geração de registros fictícios."""
     for s in [
         "AGUARDANDO LIQUIDAÇÃO / ATESTE",
         "A PAGAR - PENDENTE AUTORIZAÇÃO",
@@ -158,7 +161,7 @@ def _ensure_fake_lookup_tables():
         )
 
 def _create_fake_processos(n):
-    """Create n fake Processo records and return the count created."""
+    """Cria ``n`` processos fictícios e retorna a quantidade criada."""
     status_list = list(StatusChoicesProcesso.objects.all())
     tag_list = list(TagChoices.objects.all())
     forma_list = list(FormasDePagamento.objects.all())
@@ -205,7 +208,7 @@ def _create_fake_processos(n):
     return created
 
 def _create_fake_documentos_fiscais(n, processos):
-    """Create n fake DocumentoFiscal records linked to existing processos."""
+    """Cria ``n`` documentos fiscais fictícios vinculados aos processos informados."""
     from django.contrib.auth.models import User
     credores_pj = list(Credor.objects.filter(tipo='PJ'))
     fiscais = list(User.objects.filter(groups__name='FISCAL DE CONTRATO'))
@@ -238,7 +241,7 @@ def _create_fake_documentos_fiscais(n, processos):
     return created
 
 def _create_fake_retencoes(n, notas):
-    """Create n fake RetencaoImposto records linked to existing DocumentoFiscal records."""
+    """Cria ``n`` retenções fictícias vinculadas aos documentos fiscais informados."""
     codigos = list(CodigosImposto.objects.all())
     status_list = list(StatusChoicesRetencoes.objects.all())
     credores = list(Credor.objects.all())
@@ -268,7 +271,7 @@ def _create_fake_retencoes(n, notas):
     return created
 
 def _create_fake_diarias(n, credores_pf, processos):
-    """Create n fake Diaria records. Links to existing processos when available."""
+    """Cria ``n`` diárias fictícias e vincula a processos existentes quando possível."""
     status_list = list(StatusChoicesVerbasIndenizatorias.objects.all())
     transportes = list(MeiosDeTransporte.objects.all())
 
@@ -304,8 +307,7 @@ def _create_fake_diarias(n, credores_pf, processos):
     return created
 
 def gerar_dados_fake_view(request):
-    """View to generate fake/sample test data for processes, fiscal documents,
-    tax retentions and diarias via a web form."""
+    """Gera dados fictícios de processos, fiscais, retenções e diárias via formulário."""
     context = {'resultados': None}
 
     if request.method == 'POST':
@@ -367,8 +369,7 @@ def gerar_dados_fake_view(request):
     return render(request, 'gerar_dados_fake.html', context)
 
 def gerar_dummy_pdf_view(request, pk):
-    """Generates a simple dummy PDF and attaches it as a 'NOTA FISCAL (NF)' document
-    to the processo, so the triagem page can be accessed and tested immediately."""
+    """Gera PDF fictício e anexa ao processo como documento de nota fiscal para testes."""
     from reportlab.lib.pagesizes import A4
     from reportlab.pdfgen import canvas as rl_canvas
     from django.utils import timezone as tz

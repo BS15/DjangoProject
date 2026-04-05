@@ -1,7 +1,6 @@
-"""PDF reading and text extraction utilities.
+"""Utilitários para leitura e extração de texto em documentos PDF.
 
-Strictly for *reading* PDFs. Imports: pdfplumber, PyPDF2/pypdf.
-Also includes SISCAC payment reconciliation which operates on extracted data.
+Inclui rotinas de extração para boletos, comprovantes e relatórios SISCAC.
 """
 
 import io
@@ -22,11 +21,6 @@ from .text_helpers import (
     normalize_account,
     normalize_document,
 )
-
-'''============================'''
-'''MULTIPURPOSE EXTRACTION TOOLS'''
-'''============================'''
-
 
 def split_pdf_to_temp_pages(arquivo_pdf):
     """
@@ -59,10 +53,6 @@ def split_pdf_to_temp_pages(arquivo_pdf):
         })
 
     return paginas
-
-'''============================'''
-'''SISCAC EXTRACTION - DOCUMENTOS ORÇAMENTÁRIOS'''
-'''============================'''
 
 def extract_siscac_data(pdf_file):
     """Extrai campos básicos de empenho, liquidação e pagamento de PDF SISCAC."""
@@ -131,10 +121,6 @@ def sort_pages(pdf_file):
 
 
 
-'''============================'''
-'''SISCAC EXTRACTION - RELATÓRIO DE PAGAMENTOS'''
-'''============================'''
-
 def parse_siscac_report(pdf_file):
     """Lê relatório de pagamentos SISCAC e consolida lançamentos por número de pagamento."""
     pattern_payment = re.compile(
@@ -174,10 +160,6 @@ def parse_siscac_report(pdf_file):
 
     return list(payments.values())
 
-'''============================'''
-'''DOCUMENTO FINANCEIRO EXTRACTION - BOLETO'''
-'''============================'''
-
 def interpretar_linha(linha, tipo):
     """Calcula o valor e o vencimento baseado no tipo (Banco ou Arrecadação)."""
     if tipo == 'bancario':
@@ -189,7 +171,6 @@ def interpretar_linha(linha, tipo):
             base_data = datetime(1997, 10, 7)
             data_vencimento = base_data + timedelta(days=fator_vencimento)
 
-            # Resolve a virada do calendário da Febraban (Fev/2025)
             if data_vencimento.year < 2015:
                 data_vencimento += timedelta(days=9000)
 
@@ -198,7 +179,6 @@ def interpretar_linha(linha, tipo):
         return {'valor': valor_liquido, 'vencimento': vencimento}
 
     elif tipo == 'arrecadacao':
-        # Arrecadação tem 4 blocos de 12. Ignoramos o último dígito de cada bloco.
         payload = linha[0:11] + linha[12:23] + linha[24:35] + linha[36:47]
         valor_liquido = float(payload[4:15]) / 100
         return {'valor': valor_liquido, 'vencimento': ''}
@@ -220,15 +200,12 @@ def processar_pdf_boleto(pdf_file):
 
         codigo_encontrado = None
 
-        # Regra 1: Conta de Consumo (Ex: Celesc, Vivo) - Exatos 48 dígitos começando com '8'
         if len(numeros) == 48 and numeros.startswith('8'):
             codigo_encontrado = numeros
 
-        # Regra 2: Boleto Bancário Padrão - Exatos 47 dígitos
         elif len(numeros) == 47:
             codigo_encontrado = numeros
 
-        # Regra 3: Bancário com prefixo grudado (Ex: Bradesco) - Pegamos os últimos 47
         elif 47 < len(numeros) <= 55:
             codigo_encontrado = numeros[-47:]
 
@@ -240,10 +217,6 @@ def processar_pdf_boleto(pdf_file):
             }
 
     raise ValueError("Linha digitável válida não encontrada no PDF.")
-
-'''============================'''
-'''DOCUMENTO FINANCEIRO EXTRACTION - COMPROVANTE DE PAGAMENTO'''
-'''============================'''
 
 def processar_pdf_comprovantes(pdf_file):
     """Fatia comprovantes em páginas e extrai credor, valor, data e autenticação por regex."""
@@ -266,7 +239,6 @@ def processar_pdf_comprovantes(pdf_file):
 
         texto_flat = re.sub(r'\s+', ' ', texto)
 
-        # --- PARTE A: EXTRAÇÃO DO VALOR ---
         padrao_valor = re.compile(
             r'(?:VALOR TOTAL|VALOR DO DOCUMENTO|VALOR COBRADO|VALOR EM DINHEIRO|VALOR)\s*:?\s*(?:R\$\s*)?([\d.,]+)',
             re.IGNORECASE,
@@ -281,10 +253,8 @@ def processar_pdf_comprovantes(pdf_file):
             except ValueError:
                 pass
 
-        # --- PARTE B: IDENTIFICAÇÃO DO CREDOR ---
         credor_encontrado = None
 
-        # Método Primário: identificação por CNPJ/CPF
         padrao_doc = re.compile(r'\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}|\d{3}\.\d{3}\.\d{3}-\d{2}')
         documentos = padrao_doc.findall(texto_flat)
         documentos_encontrados = []
@@ -296,7 +266,6 @@ def processar_pdf_comprovantes(pdf_file):
                 if credor and not credor_encontrado:
                     credor_encontrado = credor
 
-        # Método Secundário: identificação por Conta Bancária
         contas_encontradas = []
         padrao_conta = re.compile(r'AGENCIA:\s*([\d-]+)\s*CONTA:\s*([\d.-]+[Xx]?)')
         contas = padrao_conta.findall(texto_flat)
@@ -309,7 +278,6 @@ def processar_pdf_comprovantes(pdf_file):
                 if titular and not credor_encontrado:
                     credor_encontrado = titular
 
-        # --- PARTE B.2: EXTRAÇÃO DA DATA DE PAGAMENTO ---
         data_pagamento = ''
         padrao_data = re.compile(
             r'(?:DATA(?:\s*DO PAGAMENTO|\s*DA TRANSFERENCIA)?|DEBITO EM)\s*:?\s*(\d{2}/\d{2}/\d{4})',
@@ -321,7 +289,6 @@ def processar_pdf_comprovantes(pdf_file):
             if len(partes) == 3:
                 data_pagamento = f"{partes[2]}-{partes[1]}-{partes[0]}"
 
-        # --- PARTE B.3: EXTRAÇÃO DO NR. AUTENTICACAO (Banco do Brasil) ---
         numero_comprovante = ''
         padrao_autenticacao = re.compile(
             r'NR\.AUTENTICACAO\s*([A-Z0-9]\.[A-Z0-9]{3}\.[A-Z0-9]{3}\.[A-Z0-9]{3}\.[A-Z0-9]{3}\.[A-Z0-9]{3})',
@@ -331,7 +298,6 @@ def processar_pdf_comprovantes(pdf_file):
         if autenticacao_match:
             numero_comprovante = autenticacao_match.group(1)
 
-        # --- EMPACOTAMENTO ---
         resultados.append({
             **pagina_info,
             'credor_extraido': credor_encontrado.nome if credor_encontrado else None,

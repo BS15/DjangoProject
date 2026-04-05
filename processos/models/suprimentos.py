@@ -4,6 +4,8 @@ from django.db import models
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from simple_history.models import HistoricalRecords
+from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 from .fluxo import DocumentoBase, caminho_documento, _delete_file
 from processos.validators import validar_arquivo_seguro
@@ -32,8 +34,8 @@ class SuprimentoDeFundos(models.Model):
                                 verbose_name="Suprido")
 
     # Valores Iniciais
-    valor_liquido = models.DecimalField("Valor do Numerário Liberado (R$)", max_digits=10, decimal_places=2)
-    taxa_saque = models.DecimalField("Valor da Taxa de Saque (R$)", max_digits=5, decimal_places=2, default=0.00)
+    valor_liquido = models.DecimalField("Valor do Numerário Liberado (R$)", max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    taxa_saque = models.DecimalField("Valor da Taxa de Saque (R$)", max_digits=5, decimal_places=2, default=0.00, validators=[MinValueValidator(0)])
 
     # Período
     lotacao = models.CharField("Lotação", max_length=200, blank=True, null=True)
@@ -44,7 +46,7 @@ class SuprimentoDeFundos(models.Model):
     # Fechamento (Preenchido ao encerrar o mês)
     data_devolucao_saldo = models.DateField("Data de Devolução de Saldo Remanescente", blank=True, null=True)
     valor_devolvido = models.DecimalField("Valor Devolvido (R$)", max_digits=10, decimal_places=2, blank=True,
-                                          null=True)
+                                          null=True, validators=[MinValueValidator(0)])
 
     status = models.ForeignKey('StatusChoicesSuprimentoDeFundos', on_delete=models.PROTECT, blank=True, null=True)
 
@@ -65,6 +67,20 @@ class SuprimentoDeFundos(models.Model):
     def __str__(self):
         return f"Suprimento: {self.suprido} - Valor: R$ {self.valor_liquido}"
     history = HistoricalRecords()
+    def clean(self):
+        """Valida que data_retorno é posterior ou igual a data_saida."""
+        errors = {}
+        
+        if self.data_retorno and self.data_saida:
+            if self.data_retorno < self.data_saida:
+                errors['data_retorno'] = 'Data de retorno não pode ser anterior à data de saída.'
+        
+        if self.data_devolucao_saldo and self.data_recibo:
+            if self.data_devolucao_saldo < self.data_recibo:
+                errors['data_devolucao_saldo'] = 'Data de devolução não pode ser anterior à data de carga na conta.'
+        
+        if errors:
+            raise DjangoValidationError(errors)
 
 
 class DespesaSuprimento(models.Model):
@@ -76,7 +92,7 @@ class DespesaSuprimento(models.Model):
     cnpj_cpf = models.CharField("CNPJ/CPF", max_length=20, blank=True, null=True)
     detalhamento = models.CharField("Material/Serviço Adquirido", max_length=255)
     nota_fiscal = models.CharField("Nº Nota Fiscal/Cupom", max_length=50)
-    valor = models.DecimalField("Valor Pago (R$)", max_digits=10, decimal_places=2)
+    valor = models.DecimalField("Valor Pago (R$)", max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
 
     # NOVO CAMPO: O arquivo único contendo Solicitação + Nota Fiscal
     arquivo = models.FileField("Arquivo Único (Solicitação + NF)", upload_to=caminho_documento, blank=True, null=True, validators=[validar_arquivo_seguro])
