@@ -1,8 +1,6 @@
 import logging
 
 from django.contrib import messages
-from django.contrib.contenttypes.models import ContentType
-from django.core.files.base import ContentFile
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -10,7 +8,6 @@ from django.db import transaction
 
 from ...forms import PendenciaFormSet, ProcessoForm
 from ...models import (
-    AssinaturaAutentique,
     AuxilioRepresentacao,
     Diaria,
     Jeton,
@@ -19,7 +16,7 @@ from ...models import (
     StatusChoicesProcesso,
     TiposDePagamento,
 )
-from ...pdf_engine import gerar_documento_pdf
+from ...services import criar_assinatura_rascunho, gerar_documento_bytes
 from .verbas_shared import (
     _CREDOR_AGRUPAMENTO_MULTIPLO,
     _VERBA_CONFIG,
@@ -105,18 +102,13 @@ def agrupar_verbas_view(request, tipo_verba):
             if isinstance(item, Diaria):
                 item.avancar_status('ENVIADA PARA PAGAMENTO')
                 try:
-                    pdf_bytes = gerar_documento_pdf('pcd', item)
-                    assinatura = AssinaturaAutentique(
-                        content_type=ContentType.objects.get_for_model(item),
-                        object_id=item.id,
+                    pdf_bytes = gerar_documento_bytes('pcd', item)
+                    criar_assinatura_rascunho(
+                        entidade=item,
                         tipo_documento='PCD',
                         criador=request.user,
-                        status='RASCUNHO',
-                    )
-                    assinatura.arquivo.save(
-                        f"PCD_{item.id}.pdf",
-                        ContentFile(pdf_bytes),
-                        save=True,
+                        pdf_bytes=pdf_bytes,
+                        nome_arquivo=f"PCD_{item.id}.pdf",
                     )
                 except Exception as e:
                     messages.warning(request, f"PCD para diária {item.numero_siscac} não gerado: {str(e)}")

@@ -218,10 +218,9 @@ class ContingenciaFilter(BaseStyledFilterSet):
         fields = ['processo__id', 'solicitante__username', 'status']
 
 
-class AEmpenharFilter(BaseStyledFilterSet):
-    credor_nome = django_filters.CharFilter(
-        field_name='credor__nome', lookup_expr='icontains', label='Credor'
-    )
+class AEmpenharFilter(ProcessoFilter):
+    """Filtro enxuto da fila `A EMPENHAR`, reaproveitando `ProcessoFilter`."""
+
     tipo_pagamento = django_filters.ModelChoiceFilter(
         queryset=TiposDePagamento.objects.filter(is_active=True),
         label='Tipo de Pagamento',
@@ -233,10 +232,8 @@ class AEmpenharFilter(BaseStyledFilterSet):
     data_vencimento__lte = django_filters.DateFilter(
         field_name='data_vencimento', lookup_expr='lte', label='Vencimento Até'
     )
-    valor_liquido = django_filters.RangeFilter(label='Valor Líquido (Min – Max)')
 
-    class Meta:
-        model = Processo
+    class Meta(ProcessoFilter.Meta):
         fields = ['credor_nome', 'tipo_pagamento', 'data_vencimento__gte', 'data_vencimento__lte', 'valor_liquido']
 
     def __init__(self, *args, **kwargs):

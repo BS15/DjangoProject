@@ -65,12 +65,10 @@ _COLUNAS_REQUERIDAS = {
 def _gerar_anexar_scd_e_criar_assinatura(diaria, usuario_logado):
     """Gera SCD, anexa em DocumentoDiaria e cria rascunho de assinatura Autentique."""
     from processos.models import DocumentoDiaria, TiposDeDocumento
-    from processos.models.fluxo import AssinaturaAutentique
-    from processos.pdf_engine import gerar_documento_pdf
-    from django.contrib.contenttypes.models import ContentType
+    from processos.services import criar_assinatura_rascunho, gerar_documento_bytes
     from django.core.files.base import ContentFile
 
-    pdf_bytes = gerar_documento_pdf('scd', diaria)
+    pdf_bytes = gerar_documento_bytes('scd', diaria)
 
     tipo_scd, _ = TiposDeDocumento.objects.get_or_create(
         tipo_de_documento__iexact='SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS (SCD)',
@@ -83,18 +81,12 @@ def _gerar_anexar_scd_e_criar_assinatura(diaria, usuario_logado):
         tipo=tipo_scd,
         ordem=proxima_ordem,
     )
-
-    assinatura = AssinaturaAutentique(
-        content_type=ContentType.objects.get_for_model(diaria),
-        object_id=diaria.id,
+    criar_assinatura_rascunho(
+        entidade=diaria,
         tipo_documento='SCD',
         criador=usuario_logado,
-        status='RASCUNHO',
-    )
-    assinatura.arquivo.save(
-        f"SCD_{diaria.id}.pdf",
-        ContentFile(pdf_bytes),
-        save=True,
+        pdf_bytes=pdf_bytes,
+        nome_arquivo=f"SCD_{diaria.id}.pdf",
     )
 
 

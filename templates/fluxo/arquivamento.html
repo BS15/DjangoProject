@@ -1,144 +1,124 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Arquivamento - System X</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
-</head>
-<body class="bg-light">
-{% include 'partials/sidebar.html' %}
+{% extends "layouts/base_list.html" %}
 
-<div class="container mt-4 mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2><i class="bi bi-archive-fill text-secondary"></i> Arquivo Morto / Digital</h2>
-            <p class="text-muted small">Gestão de arquivamento definitivo e acesso a processos consolidados.</p>
+{% block page_title %}Arquivamento{% endblock %}
+
+{% block page_heading %}<i class="bi bi-archive-fill text-secondary me-2"></i> Arquivo Morto / Digital{% endblock %}
+{% block page_subtitle %}Gestão de arquivamento definitivo e acesso a processos consolidados.{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'home_page' %}" class="btn btn-outline-secondary">Voltar para Home</a>
+{% endblock %}
+
+{% block filter_title %}Filtrar Processos Arquivados{% endblock %}
+
+{% block filter_form %}
+{% for field in arquivamento_filtro.form %}
+<div class="col-md-2">
+    <label class="form-label small fw-bold text-muted mb-1">{{ field.label }}</label>
+    {{ field }}
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block table_headers %}
+<th># ID</th>
+<th>Empenho</th>
+<th>Credor</th>
+<th>Data Pag.</th>
+<th class="text-end pe-4">Valor</th>
+<th class="text-center">Acesso ao Processo</th>
+{% endblock %}
+
+{% block table_rows %}
+{% for processo in processos_arquivados %}
+<tr>
+    <td class="fw-bold text-muted">#{{ processo.id }}</td>
+    <td>{{ processo.n_nota_empenho|default:"-" }}</td>
+    <td class="fw-medium">{{ processo.credor|truncatechars:40 }}</td>
+    <td>{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
+    <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
+    <td class="text-center">
+        {% if processo.arquivo_final %}
+            <a href="{{ processo.arquivo_final.url }}" target="_blank" class="btn btn-sm btn-danger fw-bold shadow-sm">
+                <i class="bi bi-file-earmark-pdf-fill"></i> Baixar Processo Integral
+            </a>
+        {% else %}
+            <span class="badge bg-secondary">Arquivado no formato antigo</span>
+        {% endif %}
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="6" class="text-center py-5 text-muted">Nenhum processo encontrado com os filtros aplicados.</td>
+</tr>
+{% endfor %}
+{% endblock %}
+
+{% block table_footer %}
+<div class="p-2 text-end text-muted small border-top">
+    Total de registros: <strong>{{ processos_arquivados_count }}</strong>
+</div>
+{% endblock %}
+
+{% block list_footer %}
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm mt-3" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-        <a href="{% url 'home_page' %}" class="btn btn-outline-secondary">Voltar para Home</a>
+    {% endfor %}
+{% endif %}
+
+<div class="card shadow-sm border-0 mt-4">
+    <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-inbox"></i> Aguardando Arquivamento</h6>
+        <span class="badge bg-danger rounded-pill">{{ processos_pendentes.count }}</span>
     </div>
-
-    <ul class="nav nav-tabs mb-3" id="arquivoTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active fw-bold text-dark" id="pendentes-tab" data-bs-toggle="tab" data-bs-target="#pendentes" type="button" role="tab" aria-selected="true">
-                <i class="bi bi-inbox"></i> Aguardando Arquivamento
-                <span class="badge bg-danger rounded-pill ms-1">{{ processos_pendentes.count }}</span>
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold text-secondary" id="arquivados-tab" data-bs-toggle="tab" data-bs-target="#arquivados" type="button" role="tab" aria-selected="false">
-                <i class="bi bi-folder2-open"></i> Já Arquivados
-            </button>
-        </li>
-    </ul>
-
-    <div class="tab-content" id="arquivoTabsContent">
-
-        <div class="tab-pane fade show active" id="pendentes" role="tabpanel" aria-labelledby="pendentes-tab">
-            <div class="card shadow-sm border-0"><div class="card-body p-0">
-                <table class="table table-hover table-striped mb-0 align-middle">
-                    <thead class="table-light"><tr><th># ID</th><th>Empenho</th><th>Credor</th><th>Data Pag.</th><th class="text-end pe-4">Valor</th><th class="text-center">Ações</th></tr></thead>
-                    <tbody>
-                        {% for processo in processos_pendentes %}
-                        <tr>
-                            <td class="fw-bold text-muted">#{{ processo.id }}</td>
-                            <td>{{ processo.n_nota_empenho|default:"-" }}</td>
-                            <td class="fw-medium">{{ processo.credor|truncatechars:40 }}</td>
-                            <td>{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
-                            <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
-                            <td class="text-center d-flex justify-content-center gap-1">
-                                {% if pode_interagir %}
-                                <a href="{% url 'arquivar_processo' pk=processo.id %}" class="btn btn-sm btn-outline-secondary fw-bold shadow-sm">
-                                    <i class="bi bi-search"></i> Revisar
-                                </a>
-                                <form method="POST" action="{% url 'arquivar_processo_action' pk=processo.id %}" onsubmit="return confirm('ATENÇÃO: O processo será unificado em um PDF blindado. Confirmar o arquivamento definitivo?');">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-dark fw-bold shadow-sm"><i class="bi bi-folder-check"></i> Arquivar e Unificar</button>
-                                </form>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}<tr><td colspan="6" class="text-center py-5 text-muted"><i class="bi bi-check2-all fs-2 d-block mb-2 text-success"></i>Nenhum processo pendente de arquivamento.</td></tr>{% endfor %}
-                    </tbody>
-                </table>
-            </div></div>
-        </div>
-
-        <div class="tab-pane fade" id="arquivados" role="tabpanel" aria-labelledby="arquivados-tab">
-
-            <div class="card shadow-sm border-0 mb-3">
-                <div class="card-header bg-white border-bottom py-2">
-                    <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-funnel"></i> Filtrar Processos Arquivados</h6>
-                </div>
-                <div class="card-body bg-light py-3">
-                    <form method="get" class="row g-2 align-items-end">
-                        {% for field in arquivamento_filtro.form %}
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold text-muted mb-1">{{ field.label }}</label>
-                            {{ field }}
-                        </div>
-                        {% endfor %}
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary btn-sm fw-bold w-100 shadow-sm">
-                                <i class="bi bi-search"></i> Buscar
-                            </button>
-                        </div>
-                        <div class="col-auto">
-                            <a href="{% url 'painel_arquivamento' %}#arquivados" class="btn btn-outline-secondary btn-sm" title="Limpar Filtros">
-                                <i class="bi bi-eraser"></i>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th># ID</th>
+                        <th>Empenho</th>
+                        <th>Credor</th>
+                        <th>Data Pag.</th>
+                        <th class="text-end pe-4">Valor</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for processo in processos_pendentes %}
+                    <tr>
+                        <td class="fw-bold text-muted">#{{ processo.id }}</td>
+                        <td>{{ processo.n_nota_empenho|default:"-" }}</td>
+                        <td class="fw-medium">{{ processo.credor|truncatechars:40 }}</td>
+                        <td>{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
+                        <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
+                        <td class="text-center d-flex justify-content-center gap-1">
+                            {% if pode_interagir %}
+                            <a href="{% url 'arquivar_processo' pk=processo.id %}" class="btn btn-sm btn-outline-secondary fw-bold shadow-sm">
+                                <i class="bi bi-search"></i> Revisar
                             </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="card shadow-sm border-0"><div class="card-body p-0">
-                <table class="table table-hover table-striped mb-0 align-middle">
-                    <thead class="table-light"><tr><th># ID</th><th>Empenho</th><th>Credor</th><th>Data Pag.</th><th class="text-end pe-4">Valor</th><th class="text-center">Acesso ao Processo</th></tr></thead>
-                    <tbody>
-                        {% for processo in processos_arquivados %}
-                        <tr>
-                            <td class="fw-bold text-muted">#{{ processo.id }}</td>
-                            <td>{{ processo.n_nota_empenho|default:"-" }}</td>
-                            <td class="fw-medium">{{ processo.credor|truncatechars:40 }}</td>
-                            <td>{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
-                            <td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
-                            <td class="text-center">
-                                {% if processo.arquivo_final %}
-                                    <a href="{{ processo.arquivo_final.url }}" target="_blank" class="btn btn-sm btn-danger fw-bold shadow-sm">
-                                        <i class="bi bi-file-earmark-pdf-fill"></i> Baixar Processo Integral
-                                    </a>
-                                {% else %}
-                                    <span class="badge bg-secondary">Arquivado no formato antigo</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}<tr><td colspan="6" class="text-center py-5 text-muted">Nenhum processo encontrado com os filtros aplicados.</td></tr>{% endfor %}
-                    </tbody>
-                </table>
-                <div class="p-2 text-end text-muted small border-top">
-                    Total de registros: <strong>{{ processos_arquivados_count }}</strong>
-                </div>
-            </div></div>
+                            <form method="POST" action="{% url 'arquivar_processo_action' pk=processo.id %}" onsubmit="return confirm('ATENÇÃO: O processo será unificado em um PDF blindado. Confirmar o arquivamento definitivo?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-dark fw-bold shadow-sm"><i class="bi bi-folder-check"></i> Arquivar e Unificar</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-check2-all fs-2 d-block mb-2 text-success"></i>
+                            Nenhum processo pendente de arquivamento.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-
     </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    // Auto-activate the "Já Arquivados" tab if any filter params are present in the URL
-    (function () {
-        const params = new URLSearchParams(window.location.search);
-        const ignored = new Set(['page']);
-        const hasFilter = Array.from(params.keys()).some(k => !ignored.has(k));
-        if (hasFilter) {
-            const tab = new bootstrap.Tab(document.getElementById('arquivados-tab'));
-            tab.show();
-        }
-    })();
-</script>
-</body>
-</html>
+{% endblock %}

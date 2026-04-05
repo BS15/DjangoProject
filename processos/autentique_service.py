@@ -19,26 +19,14 @@ def _get_robust_session():
     return session
 
 
-def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, entidade=None, tipo_documento=None, folder_id=None):
-    """
-    Sends a PDF document to the Autentique API for digital signature.
-    If entidade and tipo_documento are provided, creates and returns an
-    AssinaturaAutentique record. Otherwise returns the raw API response dict.
-    """
-    # Idempotency: return existing pending signature to prevent duplicates
-    if entidade and tipo_documento:
-        from django.contrib.contenttypes.models import ContentType
-        from processos.models.fluxo import AssinaturaAutentique
-        ct = ContentType.objects.get_for_model(entidade)
-        assinatura_existente = AssinaturaAutentique.objects.filter(
-            content_type=ct,
-            object_id=entidade.id,
-            tipo_documento=tipo_documento,
-            status='PENDENTE',
-        ).first()
-        if assinatura_existente:
-            return assinatura_existente
+def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, folder_id=None):
+    """Submits a PDF to the Autentique API for digital signature.
 
+    Pure HTTP client — no model persistence.
+
+    Returns:
+        dict: {"id": str, "url": str, "signers_data": dict}
+    """
     # 1. The exact query from Autentique's documentation
     query = """
     mutation CreateDocumentMutation($document: DocumentInput!, $signers: [SignerInput!]!, $file: Upload!, $folder_id: UUID) {
@@ -119,31 +107,8 @@ def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, entidade=
         link = doc["signatures"][0].get("link") or {}
         url = link.get("short_link", "")
 
-    from processos.models.fluxo import AssinaturaAutentique
-    if isinstance(entidade, AssinaturaAutentique):
-        assinatura = entidade
-        assinatura.autentique_id = doc_id
-        assinatura.autentique_url = url
-        assinatura.dados_signatarios = signers_data
-        assinatura.status = 'PENDENTE'
-        assinatura.save()
-        return assinatura
-
-    if entidade is not None and tipo_documento is not None:
-        from django.contrib.contenttypes.models import ContentType
-
-        assinatura = AssinaturaAutentique.objects.create(
-            content_type=ContentType.objects.get_for_model(entidade),
-            object_id=entidade.id,
-            tipo_documento=tipo_documento,
-            autentique_id=doc_id,
-            autentique_url=url,
-            dados_signatarios=signers_data,
-            status='PENDENTE',
-        )
-        return assinatura
-
     return {"id": doc_id, "url": url, "signers_data": signers_data}
+
 
 
 def verificar_e_baixar_documento(autentique_id):

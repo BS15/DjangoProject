@@ -8,7 +8,8 @@ from unittest.mock import MagicMock, patch
 from django.test import TestCase
 
 from processos.models import ComprovanteDePagamento, ContasBancarias, Credor, Processo, StatusChoicesProcesso
-from processos.utils import processar_pdf_comprovantes, sync_siscac_payments
+from processos.utils import processar_pdf_comprovantes
+from processos.views.fluxo.siscac_processo_sync import sync_siscac_payments
 
 
 class SiscacSyncDecisionMatrixTest(TestCase):

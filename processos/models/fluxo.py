@@ -359,13 +359,16 @@ class Processo(models.Model):
 
     def _gerar_anexo_por_tipo(self, doc_type, obj, nome_arquivo, tipo_documento_nome, **kwargs):
         """Gera PDF via engine e anexa ao processo sem duplicar arquivo."""
-        from processos.pdf_engine import gerar_documento_pdf
+        from processos.services import gerar_e_anexar_documento_processo
 
-        if self.documentos.filter(arquivo__icontains=nome_arquivo).exists():
-            return False
-
-        pdf_bytes = gerar_documento_pdf(doc_type, obj, **kwargs)
-        return self._anexar_pdf_gerado(pdf_bytes, nome_arquivo, tipo_documento_nome)
+        return gerar_e_anexar_documento_processo(
+            self,
+            doc_type,
+            obj,
+            nome_arquivo,
+            tipo_documento_nome,
+            **kwargs,
+        )
 
     def _gerar_documentos_automaticos(self, status_anterior, novo_status):
         """Gera e anexa documentos automáticos conforme transição de status."""
