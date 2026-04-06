@@ -1,13 +1,20 @@
 import io
 from unittest.mock import patch
-from django.test import TestCase
+from django.conf import settings
+from django.test import TestCase, override_settings
 from django.contrib.auth.models import User, Permission
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
-from processos.models import Processo, StatusChoicesProcesso, TiposDeDocumento, DocumentoProcesso, DocumentoFiscal
+from processos.models.segments.core import Processo
+from processos.models.segments.parametrizations import StatusChoicesProcesso, TiposDeDocumento
+from processos.models.segments.documents import DocumentoProcesso, DocumentoFiscal
 from processos.utils import processar_pdf_comprovantes
 from processos.validators import verificar_turnpike
 from processos.views import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
+
+# O schema de testes legado não possui todas as tabelas `historical*`.
+# Desativamos gravação de histórico na suíte agregada para focar nas regras de negócio.
+settings.SIMPLE_HISTORY_ENABLED = False
 
 
 class AuditoriaViewTest(TestCase):
@@ -265,13 +272,10 @@ from decimal import Decimal
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from processos.models import (
-    CodigosImposto,
-    Credor,
-    DadosContribuinte,
-    DocumentoFiscal,
-    Processo,
-)
+from processos.models.segments.parametrizations import CodigosImposto
+from processos.models.segments.cadastros import Credor, DadosContribuinte
+from processos.models.segments.documents import DocumentoFiscal
+from processos.models.segments.core import Processo
 from processos.reinf_services import (
     _build_r2010_xml,
     _build_r4020_xml,
@@ -313,7 +317,7 @@ class GerarLotesReinfHelpersTest(TestCase):
         )
 
     def _make_retencao(self, nota, codigo, valor='50.00', base='1000.00'):
-        from ..models import RetencaoImposto
+        from ..models.segments.auxiliary import RetencaoImposto
         ret = RetencaoImposto(
             nota_fiscal=nota,
             codigo=codigo,
@@ -421,6 +425,7 @@ class GerarLotesReinfHelpersTest(TestCase):
         self.assertEqual(xml_str.count('<detPag>'), 1)
 
 
+@override_settings(SIMPLE_HISTORY_ENABLED=False)
 class GerarLotesReinfIntegrationTest(TestCase):
     """Integration tests for gerar_lotes_reinf."""
 
@@ -559,6 +564,7 @@ class GerarLotesReinfIntegrationTest(TestCase):
                 self.assertIsNotNone(tree)
 
 
+@override_settings(SIMPLE_HISTORY_ENABLED=False)
 class GerarLoteReinfViewTest(TestCase):
     """Tests for the gerar_lote_reinf_view endpoint."""
 
@@ -642,6 +648,7 @@ class GerarLoteReinfViewTest(TestCase):
 #
 # Para desativar: comente ou remova a classe inteira abaixo.
 # ===========================================================================
+@override_settings(SIMPLE_HISTORY_ENABLED=False)
 class ComprovantesExtracaoDebugTest(TestCase):
     """
     ⚠  DEBUG / DESENVOLVIMENTO — REMOVER ANTES DE PRODUÇÃO.
@@ -678,7 +685,7 @@ class ComprovantesExtracaoDebugTest(TestCase):
         sendo extraídos corretamente.
         """
         import contextlib
-        from processos.models import Credor
+        from processos.models.segments.cadastros import Credor
         credor_cadastrado = Credor.objects.create(
             nome='Fornecedor Teste Ltda',
             cpf_cnpj='11.222.333/0001-44',
@@ -767,7 +774,7 @@ class ComprovantesExtracaoDebugTest(TestCase):
         bancárias.
         """
         import contextlib
-        from processos.models import Credor, ContasBancarias
+        from processos.models.segments.cadastros import Credor, ContasBancarias
 
         credor_por_conta = Credor.objects.create(
             nome='Prestador Via Conta Ltda',
@@ -858,14 +865,14 @@ class BasePDFDocumentTest(TestCase):
 
     def test_draw_content_not_implemented(self):
         """Instantiating BasePDFDocument and calling draw_content raises NotImplementedError."""
-        from processos.pdf_engine import BasePDFDocument
+        from processos.pdf_generators import BasePDFDocument
         doc = BasePDFDocument(obj=None)
         with self.assertRaises(NotImplementedError):
             doc.draw_content()
 
     def test_generate_returns_bytes(self):
         """generate() merges content with letterhead and returns bytes."""
-        from processos.pdf_engine import BasePDFDocument
+        from processos.pdf_generators import BasePDFDocument
         from pypdf import PdfReader
 
         letterhead_pdf = self._make_single_page_pdf()
@@ -874,12 +881,12 @@ class BasePDFDocumentTest(TestCase):
             def draw_content(self):
                 self.canvas.drawString(100, 600, "Hello PDF")
 
-        with patch('processos.pdf_engine.open', return_value=io.BytesIO(letterhead_pdf), create=True):
-            with patch('processos.pdf_engine.settings') as mock_settings:
+        with patch('processos.pdf_generators.open', return_value=io.BytesIO(letterhead_pdf), create=True):
+            with patch('processos.pdf_generators.settings') as mock_settings:
                 mock_settings.BASE_DIR = ''
                 mock_settings.CRECI_LETTERHEAD_PATH = 'dummy.pdf'
-                with patch('processos.pdf_engine.os.path.join', return_value='dummy.pdf'):
-                    with patch('processos.pdf_engine.PdfReader') as mock_reader_cls:
+                with patch('processos.pdf_generators.os.path.join', return_value='dummy.pdf'):
+                    with patch('processos.pdf_generators.PdfReader') as mock_reader_cls:
                         # First call → content PDF; second call → letterhead PDF
                         real_reader = PdfReader
                         call_count = {'n': 0}
@@ -899,15 +906,15 @@ class BasePDFDocumentTest(TestCase):
 
     def test_letterhead_path_defaults_to_settings(self):
         """letterhead_path falls back to settings.CRECI_LETTERHEAD_PATH when not provided."""
-        from processos.pdf_engine import BasePDFDocument
-        with patch('processos.pdf_engine.settings') as mock_settings:
+        from processos.pdf_generators import BasePDFDocument
+        with patch('processos.pdf_generators.settings') as mock_settings:
             mock_settings.CRECI_LETTERHEAD_PATH = '/path/to/letterhead.pdf'
             doc = BasePDFDocument(obj=None)
         self.assertEqual(doc.letterhead_path, '/path/to/letterhead.pdf')
 
     def test_explicit_letterhead_path_overrides_settings(self):
         """An explicit letterhead_path argument takes precedence over settings."""
-        from processos.pdf_engine import BasePDFDocument
+        from processos.pdf_generators import BasePDFDocument
         doc = BasePDFDocument(obj=None, letterhead_path='/custom/path.pdf')
         self.assertEqual(doc.letterhead_path, '/custom/path.pdf')
 
@@ -952,7 +959,7 @@ def _doc_url(tipo, pk):
     return reverse('download_arquivo_seguro', args=[tipo, pk])
 
 
-@override_settings(SECURE_SSL_REDIRECT=False)
+@override_settings(SECURE_SSL_REDIRECT=False, SIMPLE_HISTORY_ENABLED=False)
 class DownloadArquivoSeguroProcessoTest(TestCase):
     """tipo_documento='processo' — only CAP/backoffice allowed."""
 
@@ -987,7 +994,7 @@ class DownloadArquivoSeguroProcessoTest(TestCase):
         self.assertEqual(RegistroAcessoArquivo.objects.count(), count_before)
 
 
-@override_settings(SECURE_SSL_REDIRECT=False)
+@override_settings(SECURE_SSL_REDIRECT=False, SIMPLE_HISTORY_ENABLED=False)
 class DownloadArquivoSeguroFiscalTest(TestCase):
     """tipo_documento='fiscal' — CAP OR matching fiscal_contrato allowed."""
 
@@ -1034,7 +1041,7 @@ class DownloadArquivoSeguroFiscalTest(TestCase):
         self.assertEqual(RegistroAcessoArquivo.objects.count(), count_before)
 
 
-@override_settings(SECURE_SSL_REDIRECT=False)
+@override_settings(SECURE_SSL_REDIRECT=False, SIMPLE_HISTORY_ENABLED=False)
 class DownloadArquivoSeguroSuprimentoTest(TestCase):
     """tipo_documento='suprimento' — CAP, or SUPRIDOS+not_encerrado+email_match."""
 
@@ -1102,7 +1109,7 @@ class DownloadArquivoSeguroSuprimentoTest(TestCase):
         self.assertEqual(response.status_code, 403)
 
 
-@override_settings(SECURE_SSL_REDIRECT=False)
+@override_settings(SECURE_SSL_REDIRECT=False, SIMPLE_HISTORY_ENABLED=False)
 class DownloadArquivoSeguroImmutabilityTest(TestCase):
     """DocumentoProcesso.imutavel enforcement via signals."""
 
@@ -1130,5 +1137,5 @@ class DownloadArquivoSeguroImmutabilityTest(TestCase):
             processo=processo, tipo=tipo, arquivo='pagamentos/2026/proc_1/mutable.pdf', ordem=1,
             imutavel=False,
         )
-        with patch('processos.models.fluxo._delete_file'):
+        with patch('processos.models.segments._fluxo_models._delete_file'):
             doc.delete()

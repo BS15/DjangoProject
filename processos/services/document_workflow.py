@@ -2,6 +2,7 @@
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.base import ContentFile
+from django.db.models import Max
 from django.http import HttpResponse
 
 from processos.pdf_generators import gerar_documento_pdf
@@ -46,7 +47,7 @@ def gerar_e_anexar_documento_processo(processo, doc_type, obj, nome_arquivo, tip
 
 def criar_assinatura_rascunho(entidade, tipo_documento, criador, pdf_bytes, nome_arquivo):
     """Cria registro de assinatura Autentique em rascunho com PDF associado."""
-    from processos.models.fluxo import AssinaturaAutentique
+    from processos.models.segments.auxiliary import AssinaturaAutentique
 
     assinatura = AssinaturaAutentique(
         content_type=ContentType.objects.get_for_model(entidade),
@@ -107,7 +108,7 @@ def construir_signatarios_padrao(entidade, extra_emails=None):
 def enviar_para_assinatura(entidade, tipo_documento, nome_doc, signatarios, doc_type=None, pdf_bytes=None, **kwargs):
     """Gera (quando necessário) e envia um documento para assinatura no Autentique."""
     from processos.autentique_service import enviar_documento_para_assinatura
-    from processos.models.fluxo import AssinaturaAutentique
+    from processos.models.segments.auxiliary import AssinaturaAutentique
 
     ct = ContentType.objects.get_for_model(entidade)
     assinatura_existente = AssinaturaAutentique.objects.filter(
@@ -158,6 +159,24 @@ def disparar_assinatura_rascunho(assinatura, signatarios, nome_doc=None):
     return assinatura
 
 
+def disparar_assinatura_rascunho_com_signatarios(assinatura):
+    """Resolve signatários padrão e dispara um rascunho de assinatura.
+
+    Retorna None quando não há entidade relacionada ou quando não for
+    possível determinar signatários para o documento.
+    """
+    entidade = assinatura.entidade_relacionada
+    if entidade is None:
+        return None
+
+    signatarios = construir_signatarios_padrao(entidade)
+    if not signatarios:
+        return None
+
+    nome_doc = f"{assinatura.tipo_documento}_{assinatura.id}"
+    return disparar_assinatura_rascunho(assinatura, signatarios, nome_doc=nome_doc)
+
+
 def sincronizar_assinatura(assinatura):
     """Sincroniza assinatura no Autentique e atualiza arquivo assinado quando concluída.
 
@@ -177,3 +196,30 @@ def sincronizar_assinatura(assinatura):
     assinatura.status = "ASSINADO"
     assinatura.save()
     return "signed"
+
+
+def gerar_e_anexar_scd_diaria(diaria, criador):
+    """Gera SCD da diária, anexa DocumentoDiaria e cria rascunho de assinatura."""
+    from processos.models.segments.documents import DocumentoDiaria
+    from processos.models.segments.parametrizations import TiposDeDocumento
+
+    pdf_bytes = gerar_documento_bytes('scd', diaria)
+
+    tipo_scd, _ = TiposDeDocumento.objects.get_or_create(
+        tipo_de_documento__iexact='SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS (SCD)',
+        defaults={'tipo_de_documento': 'SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS (SCD)'},
+    )
+    proxima_ordem = (diaria.documentos.aggregate(max_ordem=Max('ordem'))['max_ordem'] or 0) + 1
+    DocumentoDiaria.objects.create(
+        diaria=diaria,
+        arquivo=ContentFile(pdf_bytes, name=f"SCD_{diaria.id}.pdf"),
+        tipo=tipo_scd,
+        ordem=proxima_ordem,
+    )
+    return criar_assinatura_rascunho(
+        entidade=diaria,
+        tipo_documento='SCD',
+        criador=criador,
+        pdf_bytes=pdf_bytes,
+        nome_arquivo=f"SCD_{diaria.id}.pdf",
+    )

@@ -96,10 +96,14 @@ def verificar_turnpike(processo, status_anterior, status_novo):
                 )
 
     if anterior.startswith('LANÇADO') and novo.startswith('PAGO'):
-        is_suprimento = (
-            processo.tipo_pagamento and
-            'SUPRIMENTO' in processo.tipo_pagamento.tipo_de_pagamento.upper()
-        )
+        tipo_pagamento_nome = ''
+        if getattr(processo, 'tipo_pagamento_id', None):
+            try:
+                tipo_pagamento_nome = (processo.tipo_pagamento.tipo_de_pagamento or '').upper()
+            except Exception:
+                tipo_pagamento_nome = ''
+
+        is_suprimento = 'SUPRIMENTO' in tipo_pagamento_nome
 
         tem_comprovante = processo.documentos.filter(
             tipo__tipo_de_documento__iexact='COMPROVANTE DE PAGAMENTO'

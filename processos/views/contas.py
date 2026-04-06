@@ -4,7 +4,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.urls import reverse
 
-from processos.models import FaturaMensal, Processo, ContaFixa
+from processos.models.segments.cadastros import FaturaMensal, ContaFixa
+from processos.models.segments.core import Processo
 from processos.forms import ContaFixaForm
 from processos.utils.utils_contas import gerar_faturas_do_mes
 

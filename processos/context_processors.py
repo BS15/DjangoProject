@@ -2,7 +2,7 @@
 
 import datetime
 
-from processos.models.cadastros import FaturaMensal
+from processos.models.segments.cadastros import FaturaMensal
 
 
 def alertas_contas_fixas(request):

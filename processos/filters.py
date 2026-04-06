@@ -1,5 +1,17 @@
 import django_filters
-from .models import Processo, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, RetencaoImposto, CodigosImposto, DocumentoFiscal, StatusChoicesRetencoes, StatusChoicesVerbasIndenizatorias, StatusChoicesPendencias, StatusChoicesProcesso, Pendencia, Contingencia, STATUS_CONTINGENCIA, Devolucao, TiposDePagamento
+from .models.segments.core import Processo, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao
+from .models.segments.cadastros import Credor
+from .models.segments.auxiliary import RetencaoImposto, Pendencia, Contingencia, Devolucao
+from .models.segments.documents import DocumentoFiscal
+from .models.segments.parametrizations import (
+    CodigosImposto,
+    StatusChoicesRetencoes,
+    StatusChoicesVerbasIndenizatorias,
+    StatusChoicesPendencias,
+    StatusChoicesProcesso,
+    STATUS_CONTINGENCIA,
+    TiposDePagamento,
+)
 
 
 class BaseStyledFilterSet(django_filters.FilterSet):

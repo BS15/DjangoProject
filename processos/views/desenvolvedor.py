@@ -11,7 +11,7 @@ from django.core.files.base import ContentFile
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from processos.utils.utils_import import importar_contas_fixas_csv, importar_credores_csv
+from processos.utils.cadastros_import import importar_contas_fixas_csv, importar_credores_csv
 from ..utils import format_brl_currency
 from ..models import (
     CargosFuncoes,

@@ -85,7 +85,11 @@ def _validar_regras_edicao_processo(request, processo, status_inicial):
         )
         return redirect("home_page"), False
 
-    if processo.tipo_pagamento and processo.tipo_pagamento.tipo_de_pagamento.upper() == "VERBAS INDENIZATÓRIAS":
+    if (
+        getattr(processo, "tipo_pagamento_id", None)
+        and processo.tipo_pagamento
+        and (processo.tipo_pagamento.tipo_de_pagamento or "").upper() == "VERBAS INDENIZATÓRIAS"
+    ):
         return redirect("editar_processo_verbas", pk=processo.id), False
 
     return None, status_inicial in STATUS_SOMENTE_DOCUMENTOS

@@ -1,21 +1,48 @@
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
-from .models import (
+from .models.segments.auxiliary import (
     AssinaturaAutentique,
-    CodigosImposto, StatusChoicesProcesso, TagChoices, FormasDePagamento,
-    ContaFixa,
-    TiposDePagamento, TiposDeDocumento, Processo, DocumentoProcesso,
-    DocumentoFiscal, RetencaoImposto, StatusChoicesVerbasIndenizatorias, Credor,
-    ContasBancarias, TiposDeVerbasIndenizatorias, FaturaMensal,
-    StatusChoicesPendencias, CargosFuncoes,
-    Tabela_Valores_Unitarios_Verbas_Indenizatorias,
-    StatusChoicesRetencoes, TiposDePendencias, Pendencia, ComprovanteDePagamento,
-    DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio,
-    DocumentoSuprimentoDeFundos, MeiosDeTransporte,
-    Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao,
-    SuprimentoDeFundos, DespesaSuprimento, DadosContribuinte, ReuniaoConselho,
-    Devolucao, RegistroAcessoArquivo,
+    RetencaoImposto,
+    Pendencia,
+    ReuniaoConselho,
+    Devolucao,
+    RegistroAcessoArquivo,
 )
+from .models.segments.parametrizations import (
+    CodigosImposto,
+    StatusChoicesProcesso,
+    TagChoices,
+    FormasDePagamento,
+    TiposDePagamento,
+    TiposDeDocumento,
+    StatusChoicesVerbasIndenizatorias,
+    TiposDeVerbasIndenizatorias,
+    StatusChoicesPendencias,
+    Tabela_Valores_Unitarios_Verbas_Indenizatorias,
+    StatusChoicesRetencoes,
+    TiposDePendencias,
+    MeiosDeTransporte,
+)
+from .models.segments.core import (
+    Processo,
+    Diaria,
+    ReembolsoCombustivel,
+    Jeton,
+    AuxilioRepresentacao,
+    SuprimentoDeFundos,
+)
+from .models.segments.documents import (
+    DocumentoProcesso,
+    DocumentoFiscal,
+    ComprovanteDePagamento,
+    DocumentoDiaria,
+    DocumentoReembolso,
+    DocumentoJeton,
+    DocumentoAuxilio,
+    DocumentoSuprimentoDeFundos,
+    DespesaSuprimento,
+)
+from .models.segments.cadastros import ContaFixa, Credor, ContasBancarias, FaturaMensal, CargosFuncoes, DadosContribuinte
 
 @admin.register(CodigosImposto)
 class CodigosImpostoAdmin(admin.ModelAdmin):

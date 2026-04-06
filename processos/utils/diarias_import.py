@@ -1,11 +1,17 @@
-"""Utilitários para parse e importação em lote de verbas indenizatórias via CSV."""
+"""Importação em lote de diárias via CSV."""
 
-import csv
-import io
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
 from django.db.models import Max
+
+from .csv_common import build_csv_dict_reader
+
+
+_COLUNAS_REQUERIDAS = {
+    'NOME_BENEFICIARIO', 'DATA_SAIDA', 'DATA_RETORNO',
+    'CIDADE_ORIGEM', 'CIDADE_DESTINO', 'OBJETIVO', 'QUANTIDADE_DIARIAS',
+}
 
 
 def _parse_diaria_row(row, line_num):
@@ -14,7 +20,7 @@ def _parse_diaria_row(row, line_num):
     Retorna ``(dict_valido, None)`` em caso de sucesso ou ``(None, erro)``
     quando a linha não atende às regras.
     """
-    from processos.models import Credor
+    from processos.models.segments.cadastros import Credor
 
     nome = row.get('NOME_BENEFICIARIO', '').strip()
     credor = (
@@ -56,54 +62,21 @@ def _parse_diaria_row(row, line_num):
     }, None
 
 
-_COLUNAS_REQUERIDAS = {
-    'NOME_BENEFICIARIO', 'DATA_SAIDA', 'DATA_RETORNO',
-    'CIDADE_ORIGEM', 'CIDADE_DESTINO', 'OBJETIVO', 'QUANTIDADE_DIARIAS',
-}
+def _open_diaria_csv(csv_file):
+    """Abre CSV de diárias em UTF-8 e valida o cabeçalho obrigatório."""
+    return build_csv_dict_reader(
+        csv_file,
+        encodings=('utf-8',),
+        encoding_error_message='Erro de codificação: verifique se o arquivo está salvo em UTF-8.',
+        required_columns=_COLUNAS_REQUERIDAS,
+        missing_columns_message_prefix='Cabeçalho inválido. Colunas ausentes:',
+    )
 
 
 def _gerar_anexar_scd_e_criar_assinatura(diaria, usuario_logado):
     """Gera SCD da diária, anexa o PDF e cria rascunho de assinatura digital."""
-    from processos.models import DocumentoDiaria, TiposDeDocumento
-    from processos.services import criar_assinatura_rascunho, gerar_documento_bytes
-    from django.core.files.base import ContentFile
-
-    pdf_bytes = gerar_documento_bytes('scd', diaria)
-
-    tipo_scd, _ = TiposDeDocumento.objects.get_or_create(
-        tipo_de_documento__iexact='SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS (SCD)',
-        defaults={'tipo_de_documento': 'SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS (SCD)'},
-    )
-    proxima_ordem = (diaria.documentos.aggregate(max_ordem=Max('ordem'))['max_ordem'] or 0) + 1
-    DocumentoDiaria.objects.create(
-        diaria=diaria,
-        arquivo=ContentFile(pdf_bytes, name=f"SCD_{diaria.id}.pdf"),
-        tipo=tipo_scd,
-        ordem=proxima_ordem,
-    )
-    criar_assinatura_rascunho(
-        entidade=diaria,
-        tipo_documento='SCD',
-        criador=usuario_logado,
-        pdf_bytes=pdf_bytes,
-        nome_arquivo=f"SCD_{diaria.id}.pdf",
-    )
-
-
-def _open_diaria_csv(csv_file):
-    """Abre CSV de diárias em UTF-8 e valida o cabeçalho obrigatório."""
-    try:
-        conteudo = io.StringIO(csv_file.read().decode('utf-8'))
-    except UnicodeDecodeError:
-        return None, "Erro de codificação: verifique se o arquivo está salvo em UTF-8."
-
-    reader = csv.DictReader(conteudo)
-
-    if reader.fieldnames is None or not _COLUNAS_REQUERIDAS.issubset(set(reader.fieldnames)):
-        faltando = _COLUNAS_REQUERIDAS - set(reader.fieldnames or [])
-        return None, f"Cabeçalho inválido. Colunas ausentes: {', '.join(sorted(faltando))}."
-
-    return reader, None
+    from processos.services import gerar_e_anexar_scd_diaria
+    gerar_e_anexar_scd_diaria(diaria, usuario_logado)
 
 
 def preview_diarias_lote(csv_file):
@@ -148,7 +121,7 @@ def importar_diarias_lote(csv_file, usuario_logado):
 
     Retorna um dict com 'sucessos' (int) e 'erros' (lista de str).
     """
-    from processos.models import Diaria
+    from processos.models.segments.core import Diaria
 
     resultados = {'sucessos': 0, 'erros': []}
 
@@ -192,7 +165,8 @@ def confirmar_diarias_lote(preview_items, usuario_logado):
     Cada dict em *preview_items* está no formato retornado por :func:`preview_diarias_lote`.
     Retorna um dict com 'sucessos' (int) e 'erros' (lista de str).
     """
-    from processos.models import Diaria, Credor
+    from processos.models.segments.core import Diaria
+    from processos.models.segments.cadastros import Credor
 
     resultados = {'sucessos': 0, 'erros': []}
 
@@ -227,4 +201,3 @@ def confirmar_diarias_lote(preview_items, usuario_logado):
         resultados['sucessos'] += 1
 
     return resultados
-

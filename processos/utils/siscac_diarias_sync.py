@@ -8,7 +8,9 @@ from decimal import Decimal, InvalidOperation
 
 def sync_diarias_siscac_csv(csv_file):
     """Importa/atualiza diárias a partir de CSV SISCAC padronizado por ponto e vírgula."""
-    from processos.models import Credor, Diaria, StatusChoicesVerbasIndenizatorias
+    from processos.models.segments.cadastros import Credor
+    from processos.models.segments.core import Diaria
+    from processos.models.segments.parametrizations import StatusChoicesVerbasIndenizatorias
 
     resultados = {'criadas': 0, 'atualizadas': 0, 'erros': []}
 

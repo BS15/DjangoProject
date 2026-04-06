@@ -43,14 +43,14 @@ from .pdf_extractors import (
 
 from .siscac_diarias_sync import sync_diarias_siscac_csv
 
-from .csv_imports import (
+from .diarias_import import (
     preview_diarias_lote,
     importar_diarias_lote,
     confirmar_diarias_lote,
 )
 
 from .utils_contas import gerar_faturas_do_mes
-from .utils_import import importar_credores_csv, importar_contas_fixas_csv
+from .cadastros_import import importar_credores_csv, importar_contas_fixas_csv
 from .utils_permissoes import user_in_group, group_required
 from .utils_relatorios import gerar_csv_relatorio
 

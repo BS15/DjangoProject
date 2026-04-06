@@ -5,12 +5,10 @@ from decimal import Decimal
 from django.core.management.base import BaseCommand
 from faker import Faker
 
-from processos.models import (
-    CargosFuncoes,
-    ContasBancarias,
-    Credor,
+from processos.models.segments.cadastros import CargosFuncoes, ContasBancarias, Credor
+from processos.models.segments.core import Processo
+from processos.models.segments.parametrizations import (
     FormasDePagamento,
-    Processo,
     StatusChoicesProcesso,
     TagChoices,
     TiposDePagamento,
