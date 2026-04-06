@@ -83,6 +83,50 @@ class DocumentWorkflowServiceTest(SimpleTestCase):
         self.assertEqual(assinatura.status, "PENDENTE")
         assinatura.save.assert_called_once()
 
+    @patch("processos.services.document_workflow.disparar_assinatura_rascunho")
+    @patch("processos.services.document_workflow.construir_signatarios_padrao")
+    def test_disparar_assinatura_rascunho_com_signatarios_resolve_e_dispara(
+        self,
+        construir_signatarios_mock,
+        disparar_mock,
+    ):
+        assinatura = SimpleNamespace(
+            id=17,
+            tipo_documento="PCD",
+            entidade_relacionada=SimpleNamespace(id=1),
+        )
+        signatarios = [{"email": "assinante@example.com", "action": "SIGN"}]
+        construir_signatarios_mock.return_value = signatarios
+
+        document_workflow.disparar_assinatura_rascunho_com_signatarios(assinatura)
+
+        construir_signatarios_mock.assert_called_once_with(assinatura.entidade_relacionada)
+        disparar_mock.assert_called_once_with(assinatura, signatarios, nome_doc="PCD_17")
+
+    def test_disparar_assinatura_rascunho_com_signatarios_sem_entidade_retorna_none(self):
+        assinatura = SimpleNamespace(
+            id=11,
+            tipo_documento="SCD",
+            entidade_relacionada=None,
+        )
+
+        resultado = document_workflow.disparar_assinatura_rascunho_com_signatarios(assinatura)
+        self.assertIsNone(resultado)
+
+    @patch("processos.services.document_workflow.construir_signatarios_padrao", return_value=[])
+    def test_disparar_assinatura_rascunho_com_signatarios_sem_signatarios_retorna_none(
+        self,
+        _construir_signatarios_mock,
+    ):
+        assinatura = SimpleNamespace(
+            id=12,
+            tipo_documento="SCD",
+            entidade_relacionada=SimpleNamespace(id=2),
+        )
+
+        resultado = document_workflow.disparar_assinatura_rascunho_com_signatarios(assinatura)
+        self.assertIsNone(resultado)
+
     @patch("processos.autentique_service.verificar_e_baixar_documento")
     def test_sincronizar_assinatura_quando_assinado_atualiza_arquivo(self, verificar_mock):
         verificar_mock.return_value = {"assinado": True, "pdf_bytes": b"%PDF-signed"}
@@ -121,7 +165,7 @@ class DocumentWorkflowServiceTest(SimpleTestCase):
         self.assertEqual(resultado, "pending")
         assinatura.save.assert_not_called()
 
-    @patch("processos.models.fluxo.AssinaturaAutentique")
+    @patch("processos.models.segments.auxiliary.AssinaturaAutentique")
     @patch("processos.services.document_workflow.ContentType")
     @patch("processos.autentique_service.enviar_documento_para_assinatura")
     @patch("processos.services.document_workflow.gerar_documento_bytes", return_value=b"%PDF-generated")

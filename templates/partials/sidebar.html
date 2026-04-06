@@ -47,10 +47,19 @@
         <hr class="my-4 text-muted">
 
         <h6 class="text-muted fw-bold mb-3 small text-uppercase">Ferramentas de Desenvolvimento</h6>
-        <a href="{% url 'gerar_dados_fake' %}" class="btn btn-warning w-100 fw-bold shadow-sm"><i class="bi bi-database-fill-gear"></i> Gerador de Dados de Teste</a>
-        <a href="{% url 'painel_teste_pdfs' %}" class="btn btn-warning w-100 fw-bold shadow-sm mt-2"><i class="bi bi-file-earmark-pdf"></i> Laboratório de PDFs</a>
+        {% url 'gerar_dados_fake' as gerar_dados_fake_url %}
+        {% if gerar_dados_fake_url %}
+        <a href="{{ gerar_dados_fake_url }}" class="btn btn-warning w-100 fw-bold shadow-sm"><i class="bi bi-database-fill-gear"></i> Gerador de Dados de Teste</a>
+        {% endif %}
+        {% url 'painel_teste_pdfs' as painel_teste_pdfs_url %}
+        {% if painel_teste_pdfs_url %}
+        <a href="{{ painel_teste_pdfs_url }}" class="btn btn-warning w-100 fw-bold shadow-sm mt-2"><i class="bi bi-file-earmark-pdf"></i> Laboratório de PDFs</a>
+        {% endif %}
         <a href="{% url 'painel_importacao' %}" class="btn btn-warning w-100 fw-bold shadow-sm mt-2"><i class="bi bi-cloud-upload"></i> Importar Dados SISCAC</a>
-        <a href="{% url 'chaos_testing' %}" class="btn btn-danger w-100 fw-bold shadow-sm mt-2"><i class="bi bi-bug-fill"></i> Chaos Testing (Gremlins)</a>
+        {% url 'chaos_testing' as chaos_testing_url %}
+        {% if chaos_testing_url %}
+        <a href="{{ chaos_testing_url }}" class="btn btn-danger w-100 fw-bold shadow-sm mt-2"><i class="bi bi-bug-fill"></i> Chaos Testing (Gremlins)</a>
+        {% endif %}
 
     </div>
 </div>

@@ -15,9 +15,10 @@ from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 from hypothesis.extra.django import TestCase as HypothesisTestCase
 
-from processos.models import DocumentoFiscal, Processo
-from processos.models.fiscal import CodigosImposto, RetencaoImposto
-from processos.models.fluxo import caminho_documento
+from processos.models.segments.documents import DocumentoFiscal, caminho_documento
+from processos.models.segments.core import Processo
+from processos.models.segments.parametrizations import CodigosImposto
+from processos.models.segments.auxiliary import RetencaoImposto
 from processos.validators import validar_arquivo_seguro
 
 

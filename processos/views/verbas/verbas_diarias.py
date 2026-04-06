@@ -19,16 +19,14 @@ from ...models import (
     Tabela_Valores_Unitarios_Verbas_Indenizatorias,
 )
 from ...services import (
-    criar_assinatura_rascunho,
     enviar_para_assinatura,
-    gerar_documento_bytes,
+    gerar_e_anexar_scd_diaria,
     gerar_resposta_pdf,
     sincronizar_assinatura,
 )
 from ...utils import confirmar_diarias_lote, preview_diarias_lote
 from .verbas_shared import (
     _anexar_documento,
-    _anexar_scd_na_diaria,
     _get_tipos_documento_ativos,
     _processar_upload_documento,
     _render_lista_verba,
@@ -101,15 +99,7 @@ def add_diaria_view(request):
             nova_diaria.avancar_status('SOLICITADA')
 
             try:
-                pdf_bytes = gerar_documento_bytes('scd', nova_diaria)
-                _anexar_scd_na_diaria(nova_diaria, pdf_bytes)
-                criar_assinatura_rascunho(
-                    entidade=nova_diaria,
-                    tipo_documento='SCD',
-                    criador=request.user,
-                    pdf_bytes=pdf_bytes,
-                    nome_arquivo=f"SCD_{nova_diaria.id}.pdf",
-                )
+                gerar_e_anexar_scd_diaria(nova_diaria, request.user)
                 messages.info(
                     request,
                     'PDF gerado! Acesse o Painel de Assinaturas para enviar ao Autentique.',

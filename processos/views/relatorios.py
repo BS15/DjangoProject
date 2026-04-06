@@ -1,7 +1,8 @@
 from django.contrib.auth.decorators import permission_required
 from django.http import JsonResponse
 from django.shortcuts import render
-from processos.models import Processo, Diaria, RetencaoImposto
+from processos.models.segments.core import Processo, Diaria
+from processos.models.segments.auxiliary import RetencaoImposto
 from processos.filters import ProcessoFilter, DiariaFilter, RetencaoIndividualFilter
 from processos.utils.utils_relatorios import gerar_csv_relatorio
 from .shared import apply_filterset

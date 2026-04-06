@@ -6,7 +6,8 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import RequestFactory, TestCase
 from django.urls import resolve, reverse
 
-from processos.models import Credor, Processo, ReembolsoCombustivel
+from processos.models.segments.cadastros import Credor
+from processos.models.segments.core import Processo, ReembolsoCombustivel
 from processos.views import (
     add_auxilio_view,
     add_diaria_view,

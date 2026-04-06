@@ -1,20 +1,22 @@
-"""Rotinas de importação em lote para credores e contas fixas."""
+"""Importação em lote de credores e contas fixas via CSV."""
 
-import csv
-import io
+from processos.models.segments.cadastros import CargosFuncoes, ContasBancarias, Credor, ContaFixa
 
-from processos.models import CargosFuncoes, ContasBancarias, Credor, ContaFixa
+from .csv_common import build_csv_dict_reader
 
 
 def importar_credores_csv(csv_file):
     """Importa credores de CSV, criando vínculos de conta e chave PIX quando disponíveis."""
     resultados = {'sucessos': 0, 'erros': []}
-    raw = csv_file.read()
-    try:
-        decoded = raw.decode('utf-8-sig')
-    except UnicodeDecodeError:
-        decoded = raw.decode('latin-1')
-    reader = csv.DictReader(io.StringIO(decoded))
+    reader, erro = build_csv_dict_reader(
+        csv_file,
+        encodings=('utf-8-sig', 'latin-1'),
+        encoding_error_message='Erro de codificação: não foi possível ler o CSV.',
+    )
+    if erro:
+        resultados['erros'].append(erro)
+        return resultados
+
     for row in reader:
         try:
             cpf_cnpj_limpo = (
@@ -73,12 +75,15 @@ def importar_credores_csv(csv_file):
 def importar_contas_fixas_csv(csv_file):
     """Importa contas fixas de CSV e as associa aos credores existentes."""
     resultados = {'sucessos': 0, 'erros': []}
-    raw = csv_file.read()
-    try:
-        decoded = raw.decode('utf-8-sig')
-    except UnicodeDecodeError:
-        decoded = raw.decode('latin-1')
-    reader = csv.DictReader(io.StringIO(decoded))
+    reader, erro = build_csv_dict_reader(
+        csv_file,
+        encodings=('utf-8-sig', 'latin-1'),
+        encoding_error_message='Erro de codificação: não foi possível ler o CSV.',
+    )
+    if erro:
+        resultados['erros'].append(erro)
+        return resultados
+
     for row in reader:
         try:
             nome_credor = row['NOME_CREDOR'].strip()
@@ -102,4 +107,3 @@ def importar_contas_fixas_csv(csv_file):
         except Exception as e:
             resultados['erros'].append(f"Linha {reader.line_num}: {e}")
     return resultados
-

@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from processos.models import TiposDePagamento, TiposDeDocumento, FormasDePagamento
+from processos.models.segments.parametrizations import TiposDePagamento, TiposDeDocumento, FormasDePagamento
 
 FORMAS_DE_PAGAMENTO = [
     'PIX',

@@ -220,7 +220,7 @@ def processar_pdf_boleto(pdf_file):
 
 def processar_pdf_comprovantes(pdf_file):
     """Fatia comprovantes em páginas e extrai credor, valor, data e autenticação por regex."""
-    from processos.models import Credor, ContasBancarias
+    from processos.models.segments.cadastros import Credor, ContasBancarias
 
     CNPJ_ORGAO = '82.894.098/0001-32'
     AGENCIA_ORGAO = '3582-3'

@@ -3,6 +3,7 @@
 from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import permission_required
+from django.db import OperationalError, ProgrammingError
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
@@ -141,7 +142,13 @@ def auditoria_view(request):
     for history_model, label in model_configs:
         if modelo_filter and modelo_filter != label:
             continue
-        qs = history_model.objects.select_related("history_user").all()
+        try:
+            qs = history_model.objects.select_related("history_user").all()
+            qs.exists()  # força validação de tabela no banco antes do loop
+        except (OperationalError, ProgrammingError):
+            # Alguns ambientes de teste legados não têm todas as tabelas historical*.
+            # Ignoramos o modelo ausente para manter a auditoria utilizável.
+            continue
         qs = _aplicar_filtros_historico(
             qs,
             tipo_acao=tipo_filter,

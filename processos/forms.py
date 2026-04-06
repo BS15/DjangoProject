@@ -4,7 +4,11 @@ from django import forms
 from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 from django.contrib.auth.models import User
-from .models import Processo, DocumentoProcesso, DocumentoFiscal, RetencaoImposto, Credor, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos, Pendencia, StatusChoicesPendencias, DadosContribuinte, ContasBancarias, Devolucao, ContaFixa, TiposDePagamento
+from .models.segments.core import Processo, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos
+from .models.segments.documents import DocumentoProcesso, DocumentoFiscal
+from .models.segments.auxiliary import RetencaoImposto, Pendencia, Devolucao
+from .models.segments.cadastros import Credor, DadosContribuinte, ContasBancarias, ContaFixa
+from .models.segments.parametrizations import StatusChoicesPendencias, TiposDePagamento
 from .validators import validar_regras_processo, validar_regras_suprimento, STATUS_BLOQUEADOS_FORM
 
 SUPRIMENTO_DE_FUNDOS = 'SUPRIMENTO DE FUNDOS'

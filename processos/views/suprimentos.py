@@ -14,8 +14,14 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
 from ..forms import SuprimentoForm
-from ..models import DespesaSuprimento, StatusChoicesProcesso, StatusChoicesSuprimentoDeFundos, SuprimentoDeFundos
-from ..models.fluxo import FormasDePagamento, Processo, TiposDePagamento
+from ..models.segments.documents import DespesaSuprimento
+from ..models.segments.parametrizations import (
+    StatusChoicesProcesso,
+    StatusChoicesSuprimentoDeFundos,
+    FormasDePagamento,
+    TiposDePagamento,
+)
+from ..models.segments.core import SuprimentoDeFundos, Processo
 from ..utils import parse_brl_decimal
 
 

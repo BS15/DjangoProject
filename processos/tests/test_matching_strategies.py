@@ -7,7 +7,10 @@ from unittest.mock import MagicMock, patch
 
 from django.test import TestCase
 
-from processos.models import ComprovanteDePagamento, ContasBancarias, Credor, Processo, StatusChoicesProcesso
+from processos.models.segments.documents import ComprovanteDePagamento
+from processos.models.segments.cadastros import ContasBancarias, Credor
+from processos.models.segments.core import Processo
+from processos.models.segments.parametrizations import StatusChoicesProcesso
 from processos.utils import processar_pdf_comprovantes
 from processos.views.fluxo.siscac_processo_sync import sync_siscac_payments
 

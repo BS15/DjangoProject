@@ -9,7 +9,8 @@ import xml.etree.ElementTree as ET
 from collections import defaultdict
 from datetime import date
 
-from .models import RetencaoImposto, DadosContribuinte
+from .models.segments.auxiliary import RetencaoImposto
+from .models.segments.cadastros import DadosContribuinte
 
 
 def _build_competencia_date(month: int, year: int) -> date:

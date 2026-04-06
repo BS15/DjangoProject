@@ -14,14 +14,13 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from processos.models import (
+from processos.models.segments.documents import (
     ComprovanteDePagamento,
     DocumentoProcesso,
-    Processo,
-    StatusChoicesProcesso,
-    TiposDeDocumento,
+    DocumentoFiscal,
 )
-from processos.models.fiscal import DocumentoFiscal
+from processos.models.segments.core import Processo
+from processos.models.segments.parametrizations import StatusChoicesProcesso, TiposDeDocumento
 
 
 # ---------------------------------------------------------------------------

@@ -1,8 +1,6 @@
 import os
 from django.shortcuts import render
 from django.contrib import messages
-from django.db.models import Max
-from django.core.files.base import ContentFile
 
 from ..shared import render_filtered_list
 from ...models import (
@@ -127,18 +125,3 @@ def _obter_credor_agrupamento(itens):
         defaults={'nome': _CREDOR_AGRUPAMENTO_MULTIPLO, 'tipo': 'PJ'},
     )
     return credor_banco
-
-
-def _anexar_scd_na_diaria(diaria, pdf_bytes):
-    """Anexa o PDF de SCD na diária com ordem sequencial de documentos."""
-    tipo_scd, _ = TiposDeDocumento.objects.get_or_create(
-        tipo_de_documento__iexact='SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS (SCD)',
-        defaults={'tipo_de_documento': 'SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS (SCD)'},
-    )
-    proxima_ordem = (diaria.documentos.aggregate(max_ordem=Max('ordem'))['max_ordem'] or 0) + 1
-    DocumentoDiaria.objects.create(
-        diaria=diaria,
-        arquivo=ContentFile(pdf_bytes, name=f"SCD_{diaria.id}.pdf"),
-        tipo=tipo_scd,
-        ordem=proxima_ordem,
-    )
