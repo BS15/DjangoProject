@@ -10,7 +10,7 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 
-from ...models import ComprovanteDePagamento, DocumentoProcesso, Processo, TiposDeDocumento
+from ...models import ComprovanteDePagamento, DocumentoDePagamento, Processo, TiposDeDocumento
 from ...utils import split_pdf_to_temp_pages, processar_pdf_comprovantes
 
 
@@ -128,7 +128,7 @@ def api_vincular_comprovantes(request):
 
                             nome_arquivo = f"Comprovante_Proc_{processo.id}_{idx + 1}.pdf"
 
-                            DocumentoProcesso.objects.create(
+                            DocumentoDePagamento.objects.create(
                                 processo=processo,
                                 arquivo=ContentFile(conteudo_arquivo, name=nome_arquivo),
                                 tipo=tipo_comprovante,

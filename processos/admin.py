@@ -25,6 +25,7 @@ from .models.segments.parametrizations import (
 )
 from .models.segments.core import (
     Processo,
+    DocumentoOrcamentario,
     Diaria,
     ReembolsoCombustivel,
     Jeton,
@@ -32,7 +33,7 @@ from .models.segments.core import (
     SuprimentoDeFundos,
 )
 from .models.segments.documents import (
-    DocumentoProcesso,
+    DocumentoDePagamento,
     DocumentoFiscal,
     ComprovanteDePagamento,
     DocumentoDiaria,
@@ -97,13 +98,14 @@ class MeiosDeTransporteAdmin(admin.ModelAdmin):
 class ProcessoAdmin(SimpleHistoryAdmin):
     """Admin principal do processo com trilha histórica."""
     list_display = ('id', 'n_nota_empenho', 'credor', 'data_empenho', 'status')
-    search_fields = ('n_nota_empenho', 'credor')
+    search_fields = ('documentos_orcamentarios__numero_nota_empenho', 'credor__nome')
     list_filter = ('status', 'tipo_pagamento', 'forma_pagamento')
 
 admin.site.register(ContasBancarias, SimpleHistoryAdmin)
 admin.site.register(DocumentoFiscal, SimpleHistoryAdmin)
 admin.site.register(RetencaoImposto, SimpleHistoryAdmin)
-admin.site.register(DocumentoProcesso, SimpleHistoryAdmin)
+admin.site.register(DocumentoDePagamento, SimpleHistoryAdmin)
+admin.site.register(DocumentoOrcamentario, SimpleHistoryAdmin)
 admin.site.register(DocumentoDiaria, SimpleHistoryAdmin)
 admin.site.register(DocumentoReembolso, SimpleHistoryAdmin)
 admin.site.register(DocumentoJeton, SimpleHistoryAdmin)
@@ -135,7 +137,7 @@ admin.site.register(Devolucao, SimpleHistoryAdmin)
 class ComprovanteDePagamentoAdmin(SimpleHistoryAdmin):
     """Admin de comprovantes de pagamento com campos de conferência."""
     list_display = ('id', 'processo', 'numero_comprovante', 'credor_nome', 'valor_pago', 'data_pagamento')
-    search_fields = ('processo__n_nota_empenho', 'credor_nome', 'numero_comprovante')
+    search_fields = ('processo__documentos_orcamentarios__numero_nota_empenho', 'credor_nome', 'numero_comprovante')
 
 
 @admin.register(DadosContribuinte)

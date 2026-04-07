@@ -94,8 +94,8 @@ class PermissionDeniedTest(TestCase):
         response = self.client.get('/processos/conselho/')
         self.assertEqual(response.status_code, 403)
 
-    def test_iniciar_conselho_403(self):
-        response = self.client.get('/processos/conselho/iniciar/')
+    def test_iniciar_conselho_reuniao_403(self):
+        response = self.client.get('/processos/conselho/reunioes/1/iniciar/')
         self.assertEqual(response.status_code, 403)
 
     def test_gerenciar_reunioes_403(self):

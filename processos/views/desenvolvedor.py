@@ -19,8 +19,8 @@ from ..models import (
     ContasBancarias,
     Credor,
     Diaria,
+    DocumentoDePagamento,
     DocumentoFiscal,
-    DocumentoProcesso,
     FormasDePagamento,
     MeiosDeTransporte,
     Processo,
@@ -409,7 +409,7 @@ def gerar_dummy_pdf_view(request, pk):
     filename = f'nota_fiscal_dummy_{timestamp}.pdf'
     ordem = processo.documentos.count() + 1
 
-    doc = DocumentoProcesso(processo=processo, tipo=tipo_nf, ordem=ordem)
+    doc = DocumentoDePagamento(processo=processo, tipo=tipo_nf, ordem=ordem)
     doc.arquivo.save(filename, ContentFile(buffer.getvalue()), save=True)
 
     messages.success(request, f'PDF de teste gerado e vinculado ao Processo #{processo.id}.')

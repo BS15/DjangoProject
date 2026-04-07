@@ -2,7 +2,7 @@
 
 Este módulo concentra endpoints para:
 1. Exibir e gerenciar documentos fiscais vinculados a um processo.
-2. Marcar/desmarcar um DocumentoProcesso como DocumentoFiscal.
+2. Marcar/desmarcar um DocumentoDePagamento como DocumentoFiscal.
 3. Persistir dados da nota fiscal e suas retenções, com atualização de
     pendência de ateste de liquidação.
 
@@ -26,7 +26,7 @@ from ...models import (
     CodigosImposto,
     Credor,
     DocumentoFiscal,
-    DocumentoProcesso,
+    DocumentoDePagamento,
     Pendencia,
     Processo,
     RetencaoImposto,
@@ -93,7 +93,7 @@ def api_toggle_documento_fiscal(request, processo_pk, documento_pk):
     Parâmetros:
         request: Requisição HTTP; aceita apenas POST.
         processo_pk: ID do Processo ao qual o documento pertence.
-        documento_pk: ID do DocumentoProcesso que será alternado.
+        documento_pk: ID do DocumentoDePagamento que será alternado.
 
     Retorna:
         JsonResponse:
@@ -108,7 +108,7 @@ def api_toggle_documento_fiscal(request, processo_pk, documento_pk):
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
     processo = get_object_or_404(Processo, id=processo_pk)
-    doc = get_object_or_404(DocumentoProcesso, id=documento_pk, processo=processo)
+    doc = get_object_or_404(DocumentoDePagamento, id=documento_pk, processo=processo)
 
     try:
         nota = doc.nota_referente

@@ -1,4 +1,5 @@
 import os
+from django.db import transaction
 from django.shortcuts import render
 from django.contrib import messages
 
@@ -80,25 +81,64 @@ def _anexar_documento(modelo_documento, fk_name, entidade, arquivo, tipo_id):
     return modelo_documento.objects.create(**kwargs)
 
 
-def _processar_upload_documento(request, entidade, modelo_documento, fk_name):
-    """Processa upload de documento, valida entrada e persiste o anexo."""
-    arquivo = request.FILES.get('arquivo')
-    tipo_id = request.POST.get('tipo')
+def _obter_dados_upload_documento(request, *, arquivo_field='arquivo', tipo_field='tipo'):
+    """Extrai arquivo e tipo documental do payload da requisição."""
+    return request.FILES.get(arquivo_field), request.POST.get(tipo_field)
+
+
+def _validar_upload_documento(arquivo, tipo_id, *, obrigatorio=True):
+    """Valida presença e extensão do upload documental."""
+    if not arquivo and not tipo_id and not obrigatorio:
+        return None
+
     if not arquivo or not tipo_id:
-        messages.error(request, 'Selecione um arquivo e um tipo de documento.')
-        return False
+        return 'Selecione um arquivo e um tipo de documento.'
 
     if not _extensao_documento_permitida(arquivo.name):
-        messages.error(request, 'Formato de arquivo não permitido. Use PDF, JPG ou PNG.')
-        return False
+        return 'Formato de arquivo não permitido. Use PDF, JPG ou PNG.'
+
+    return None
+
+
+def _salvar_documento_upload(
+    entidade,
+    *,
+    modelo_documento,
+    fk_name,
+    arquivo,
+    tipo_id,
+    obrigatorio=True,
+):
+    """Valida e persiste um documento de verba, retornando `(documento, erro)` ."""
+    erro = _validar_upload_documento(arquivo, tipo_id, obrigatorio=obrigatorio)
+    if erro:
+        return None, erro
+
+    if not arquivo:
+        return None, None
 
     try:
-        _anexar_documento(modelo_documento, fk_name, entidade, arquivo, tipo_id)
-        messages.success(request, 'Documento anexado com sucesso!')
-        return True
+        return _anexar_documento(modelo_documento, fk_name, entidade, arquivo, tipo_id), None
     except Exception:
-        messages.error(request, 'Erro ao salvar o documento. Tente novamente.')
+        return None, 'Erro ao salvar o documento. Tente novamente.'
+
+
+def _processar_upload_documento(request, entidade, modelo_documento, fk_name):
+    """Processa upload de documento, valida entrada e persiste o anexo."""
+    arquivo, tipo_id = _obter_dados_upload_documento(request)
+    _, erro = _salvar_documento_upload(
+        entidade,
+        modelo_documento=modelo_documento,
+        fk_name=fk_name,
+        arquivo=arquivo,
+        tipo_id=tipo_id,
+    )
+    if erro:
+        messages.error(request, erro)
         return False
+
+    messages.success(request, 'Documento anexado com sucesso!')
+    return True
 
 
 def _render_lista_verba(request, model, filter_class, template_name):
@@ -125,3 +165,67 @@ def _obter_credor_agrupamento(itens):
         defaults={'nome': _CREDOR_AGRUPAMENTO_MULTIPLO, 'tipo': 'PJ'},
     )
     return credor_banco
+
+
+def _salvar_verba_com_anexo_opcional(
+    request,
+    *,
+    form,
+    modelo_documento,
+    fk_name,
+    pre_save=None,
+    post_save=None,
+):
+    """Salva uma verba e anexa documento opcional em transação atômica."""
+    arquivo, tipo_id = _obter_dados_upload_documento(
+        request,
+        arquivo_field='documento_anexo',
+        tipo_field='tipo_documento_anexo',
+    )
+    erro = _validar_upload_documento(arquivo, tipo_id, obrigatorio=False)
+    if erro:
+        messages.error(request, erro)
+        return None
+
+    with transaction.atomic():
+        instancia = form.save(commit=False)
+        if pre_save:
+            pre_save(instancia)
+        instancia.save()
+
+        if hasattr(form, 'save_m2m'):
+            form.save_m2m()
+
+        if post_save:
+            post_save(instancia)
+
+        if arquivo:
+            _anexar_documento(modelo_documento, fk_name, instancia, arquivo, tipo_id)
+
+    return instancia
+
+
+def _processar_edicao_verba_com_upload(
+    request,
+    *,
+    instancia,
+    form_class,
+    modelo_documento,
+    fk_name,
+    success_message,
+):
+    """Processa fluxo padrao de edicao com upload avulso de documento."""
+    if request.method == 'POST' and request.POST.get('upload_doc'):
+        _processar_upload_documento(request, instancia, modelo_documento, fk_name)
+        return None, True
+
+    if request.method == 'POST':
+        form = form_class(request.POST, instance=instancia)
+        if form.is_valid():
+            form.save()
+            messages.success(request, success_message)
+            return None, True
+        messages.error(request, 'Erro ao salvar. Verifique os campos.')
+        return form, False
+
+    return form_class(instance=instancia), False

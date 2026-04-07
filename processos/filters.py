@@ -27,9 +27,10 @@ class BaseStyledFilterSet(django_filters.FilterSet):
 class ProcessoFilter(BaseStyledFilterSet):
     """Filtro completo para listagem de processos de pagamento."""
     credor_nome = django_filters.CharFilter(field_name='credor__nome', lookup_expr='icontains', label='Credor (Nome)')
-    n_nota_empenho = django_filters.CharFilter(lookup_expr='icontains', label='Nº Empenho')
+    n_nota_empenho = django_filters.CharFilter(method='filter_n_nota_empenho', label='Nº Empenho')
+    ano_exercicio = django_filters.NumberFilter(method='filter_ano_exercicio', label='Ano Exercício')
 
-    data_empenho = django_filters.DateFromToRangeFilter(label='Data Empenho (De - Até)', widget=django_filters.widgets.RangeWidget(attrs={'type': 'date'}))
+    data_empenho = django_filters.DateFromToRangeFilter(method='filter_data_empenho', label='Data Empenho (De - Até)', widget=django_filters.widgets.RangeWidget(attrs={'type': 'date'}))
     data_vencimento = django_filters.DateFromToRangeFilter(label='Data Vencimento (De - Até)', widget=django_filters.widgets.RangeWidget(attrs={'type': 'date'}))
     data_pagamento = django_filters.DateFromToRangeFilter(label='Data Pagamento (De - Até)', widget=django_filters.widgets.RangeWidget(attrs={'type': 'date'}))
 
@@ -40,9 +41,24 @@ class ProcessoFilter(BaseStyledFilterSet):
         model = Processo
         fields = [
             'n_nota_empenho', 'n_pagamento_siscac', 'observacao', 'detalhamento',
-            'extraorcamentario', 'ano_exercicio', 'forma_pagamento', 'tipo_pagamento', 'status', 'tag', 'conta',
+            'extraorcamentario', 'forma_pagamento', 'tipo_pagamento', 'status', 'tag', 'conta',
             'data_empenho', 'data_vencimento', 'data_pagamento', 'valor_bruto', 'valor_liquido'
         ]
+
+    def filter_n_nota_empenho(self, queryset, name, value):
+        return queryset.filter(documentos_orcamentarios__numero_nota_empenho__icontains=value).distinct()
+
+    def filter_ano_exercicio(self, queryset, name, value):
+        return queryset.filter(documentos_orcamentarios__ano_exercicio=value).distinct()
+
+    def filter_data_empenho(self, queryset, name, value):
+        if not value:
+            return queryset
+        if value.start:
+            queryset = queryset.filter(documentos_orcamentarios__data_empenho__gte=value.start)
+        if value.stop:
+            queryset = queryset.filter(documentos_orcamentarios__data_empenho__lte=value.stop)
+        return queryset.distinct()
 
 
 class CredorFilter(BaseStyledFilterSet):

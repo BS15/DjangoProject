@@ -103,7 +103,7 @@ class DocumentoFiscal(models.Model):
     cnpj_emitente = models.CharField(max_length=20, blank=False, validators=[validar_cpf_cnpj])
     numero_nota_fiscal = models.CharField(max_length=50)
     documento_vinculado = models.OneToOneField(
-        'DocumentoProcesso',
+        'DocumentoDePagamento',
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='nota_referente',

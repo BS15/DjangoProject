@@ -24,8 +24,8 @@ def sync_siscac_payments(extracted_payments):
 
         candidates = Processo.objects.filter(
             comprovantes_pagamento__numero_comprovante=payment["comprovante"],
-            n_nota_empenho=payment["nota_empenho"],
-        ).select_related("credor")
+            documentos_orcamentarios__numero_nota_empenho=payment["nota_empenho"],
+        ).select_related("credor").distinct()
 
         for processo in candidates:
             if processo.credor is None or not processo.credor.nome:
