@@ -13,7 +13,7 @@ from ...models import (
     DocumentoDiaria,
     DocumentoFiscal,
     DocumentoJeton,
-    DocumentoProcesso,
+    DocumentoDePagamento,
     DocumentoReembolso,
     RegistroAcessoArquivo,
 )
@@ -31,7 +31,7 @@ def _is_cap_backoffice(user):
 def _resolver_documento(tipo_documento, documento_id):
     """Resolve o documento alvo e retorna (objeto_doc, field_arquivo_name)."""
     resolvers = {
-        "processo": (DocumentoProcesso, "arquivo"),
+        "processo": (DocumentoDePagamento, "arquivo"),
         "fiscal": (DocumentoFiscal, "documento_vinculado"),
         "comprovante": (ComprovanteDePagamento, "arquivo"),
         "suprimento": (DespesaSuprimento, "arquivo"),

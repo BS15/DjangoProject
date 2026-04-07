@@ -21,8 +21,8 @@ from ...models import (
     ComprovanteDePagamento,
     Contingencia,
     Devolucao,
+    DocumentoDePagamento,
     DocumentoFiscal,
-    DocumentoProcesso,
     Pendencia,
     Processo,
     RetencaoImposto,
@@ -34,11 +34,8 @@ from ...utils import format_br_date, format_brl_currency, parse_brl_decimal
 
 
 _CAMPOS_PERMITIDOS_CONTINGENCIA = {
-    "n_nota_empenho",
-    "data_empenho",
     "valor_bruto",
     "valor_liquido",
-    "ano_exercicio",
     "n_pagamento_siscac",
     "data_vencimento",
     "data_pagamento",
@@ -135,7 +132,7 @@ def normalizar_dados_propostos_contingencia(dados_propostos):
 
     for campo_raw, valor_raw in dados_propostos.items():
         campo = aliases.get(campo_raw, campo_raw)
-        if campo not in _CAMPOS_PERMITIDOS_CONTINGENCIA:
+        if campo not in _CAMPOS_PERMITIDOS_CONTINGENCIA and campo not in {"n_nota_empenho", "data_empenho", "ano_exercicio"}:
             continue
 
         valor = valor_raw
@@ -492,7 +489,7 @@ def _get_unified_history(pk):
 
     for record in processo.history.all().select_related("history_user"):
         history_records.append(_build_history_record(record, "Processo"))
-    for record in DocumentoProcesso.history.filter(processo_id=pk).select_related("history_user"):
+    for record in DocumentoDePagamento.history.filter(processo_id=pk).select_related("history_user"):
         history_records.append(_build_history_record(record, "Documento"))
     for record in Pendencia.history.filter(processo_id=pk).select_related("history_user"):
         history_records.append(_build_history_record(record, "Pendência"))
@@ -531,13 +528,25 @@ def _iniciar_fila_sessao(request, queue_key, fallback_view, detail_view, extra_a
     return redirect(detail_view, pk=process_ids[0])
 
 
-def _handle_queue_navigation(request, pk, action, queue_key, fallback_view):
+def _handle_queue_navigation(
+    request,
+    pk,
+    action,
+    queue_key,
+    fallback_view,
+    *,
+    fallback_kwargs=None,
+    session_keys_to_clear=None,
+):
     """Processa a navegação entre itens de uma fila de revisão.
 
     Trata as ações de saída, avanço e retorno, devolvendo um redirecionamento
     imediato quando necessário ou os metadados da fila para a renderização da
     tela atual.
     """
+    fallback_kwargs = fallback_kwargs or {}
+    session_keys_to_clear = session_keys_to_clear or []
+
     queue = request.session.get(queue_key, [])
     current_index = queue.index(pk) if pk in queue else -1
     next_pk = queue[current_index + 1] if 0 <= current_index < len(queue) - 1 else None
@@ -545,16 +554,20 @@ def _handle_queue_navigation(request, pk, action, queue_key, fallback_view):
 
     if action == "sair":
         request.session.pop(queue_key, None)
+        for session_key in session_keys_to_clear:
+            request.session.pop(session_key, None)
         request.session.modified = True
-        return redirect(fallback_view)
+        return redirect(fallback_view, **fallback_kwargs)
 
     if action == "pular":
         if next_pk:
             return redirect(request.resolver_match.view_name, pk=next_pk)
         messages.info(request, "Não há mais processos na fila. Retornando ao painel.")
         request.session.pop(queue_key, None)
+        for session_key in session_keys_to_clear:
+            request.session.pop(session_key, None)
         request.session.modified = True
-        return redirect(fallback_view)
+        return redirect(fallback_view, **fallback_kwargs)
 
     if action == "voltar":
         if prev_pk:
@@ -620,6 +633,8 @@ def _processo_fila_detalhe_view(
     reject_message=None,
     editable=True,
     lock_documents=False,
+    fallback_kwargs=None,
+    session_keys_to_clear=None,
 ):
     """Renderiza e processa a tela detalhada de revisão em filas operacionais.
 
@@ -637,10 +652,21 @@ def _processo_fila_detalhe_view(
     doc_formset = None
     pendencia_formset = None
 
+    fallback_kwargs = fallback_kwargs or {}
+    session_keys_to_clear = session_keys_to_clear or []
+
     if request.method == "POST":
         action = request.POST.get("action", "")
 
-        nav_result = _handle_queue_navigation(request, pk, action, queue_key, fallback_view)
+        nav_result = _handle_queue_navigation(
+            request,
+            pk,
+            action,
+            queue_key,
+            fallback_view,
+            fallback_kwargs=fallback_kwargs,
+            session_keys_to_clear=session_keys_to_clear,
+        )
         if isinstance(nav_result, HttpResponse):
             return nav_result
 
@@ -664,8 +690,10 @@ def _processo_fila_detalhe_view(
                     if next_pk:
                         return redirect(current_view, pk=next_pk)
                     request.session.pop(queue_key, None)
+                    for session_key in session_keys_to_clear:
+                        request.session.pop(session_key, None)
                     request.session.modified = True
-                    return redirect(fallback_view)
+                    return redirect(fallback_view, **fallback_kwargs)
                 messages.warning(request, "Erro ao registrar recusa. Verifique os dados da pendência.")
                 return redirect(current_view, pk=pk)
 
@@ -695,8 +723,10 @@ def _processo_fila_detalhe_view(
                             if next_pk:
                                 return redirect(current_view, pk=next_pk)
                             request.session.pop(queue_key, None)
+                            for session_key in session_keys_to_clear:
+                                request.session.pop(session_key, None)
                             request.session.modified = True
-                            return redirect(fallback_view)
+                            return redirect(fallback_view, **fallback_kwargs)
 
                         messages.success(request, save_message.format(processo_id=processo.id))
                         return redirect(current_view, pk=pk)
@@ -708,11 +738,19 @@ def _processo_fila_detalhe_view(
                 if next_pk:
                     return redirect(current_view, pk=next_pk)
                 request.session.pop(queue_key, None)
+                for session_key in session_keys_to_clear:
+                    request.session.pop(session_key, None)
                 request.session.modified = True
-                return redirect(fallback_view)
+                return redirect(fallback_view, **fallback_kwargs)
     else:
         _, queue, current_index, next_pk, prev_pk = _handle_queue_navigation(
-            request, pk, "", queue_key, fallback_view
+            request,
+            pk,
+            "",
+            queue_key,
+            fallback_view,
+            fallback_kwargs=fallback_kwargs,
+            session_keys_to_clear=session_keys_to_clear,
         )
 
     if editable:
@@ -928,15 +966,28 @@ def aplicar_aprovacao_contingencia(contingencia):
 
     with transaction.atomic():
         campos_alterados = []
+        campos_orcamentarios = {}
         for campo, valor in contingencia.dados_propostos.items():
+            if campo in {"n_nota_empenho", "data_empenho", "ano_exercicio"}:
+                campos_orcamentarios[campo] = valor
+                continue
+
             if campo in _CAMPOS_PERMITIDOS_CONTINGENCIA and hasattr(processo, campo):
                 setattr(processo, campo, valor)
                 campos_alterados.append(campo)
 
-        if not campos_alterados:
+        if campos_orcamentarios:
+            processo.registrar_documento_orcamentario(
+                numero_nota_empenho=campos_orcamentarios.get("n_nota_empenho", processo.n_nota_empenho),
+                data_empenho=campos_orcamentarios.get("data_empenho", processo.data_empenho),
+                ano_exercicio=campos_orcamentarios.get("ano_exercicio", processo.ano_exercicio),
+            )
+
+        if not campos_alterados and not campos_orcamentarios:
             return False, "Nenhum campo válido foi informado para atualização no processo."
 
-        processo.save(update_fields=campos_alterados)
+        if campos_alterados:
+            processo.save(update_fields=campos_alterados)
 
         contingencia.status = "APROVADA"
         contingencia.save(update_fields=["status"])

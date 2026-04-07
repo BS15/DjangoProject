@@ -1,12 +1,65 @@
-from .cadastros import *
-from .fluxo import *
-from .verbas import *
-from .suprimentos import *
-from .fiscal import *
-from .contas import *
+"""Agregador de pacotes de views. Preferir imports específicos de submodulos.
+
+Exemplos de uso recomendado:
+  from processos.views import cadastros as cadastro_views
+  from processos.views import verbas as verbas_views
+  from processos.views.fluxo.payment import panels as payment_panels
+
+Evitar importações do agregador para melhor clareza de dependências.
+"""
+
+# Legacy reexports para compatibilidade transitória
+from . import assinaturas
+from . import cadastros
+from . import chaos
+from . import contas
+from . import desenvolvedor
+from . import fiscal
+from . import fluxo
+from . import relatorios
+from . import suprimentos
 from . import teste_pdf
-from .desenvolvedor import painel_importacao_view, download_template_csv_credores, download_template_csv_contas, gerar_dados_fake_view, gerar_dummy_pdf_view
-from .relatorios import painel_relatorios_view, relatorio_documentos_gerados_view
-from .chaos import chaos_testing_view
-from .assinaturas import painel_assinaturas_view, disparar_assinatura_view
+from . import verbas
+from .verbas import (
+  add_auxilio_view,
+  add_diaria_view,
+  add_jeton_view,
+  add_reembolso_view,
+  agrupar_verbas_view,
+  auxilios_list_view,
+  diarias_list_view,
+  edit_auxilio_view,
+  edit_jeton_view,
+  edit_reembolso_view,
+  jetons_list_view,
+  reembolsos_list_view,
+)
 from ..validators import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
+
+__all__ = [
+    'assinaturas',
+    'cadastros',
+    'chaos',
+    'contas',
+    'desenvolvedor',
+    'fiscal',
+    'fluxo',
+    'relatorios',
+    'suprimentos',
+    'teste_pdf',
+    'verbas',
+    'add_auxilio_view',
+    'add_diaria_view',
+    'add_jeton_view',
+    'add_reembolso_view',
+    'agrupar_verbas_view',
+    'auxilios_list_view',
+    'diarias_list_view',
+    'edit_auxilio_view',
+    'edit_jeton_view',
+    'edit_reembolso_view',
+    'jetons_list_view',
+    'reembolsos_list_view',
+    'STATUS_BLOQUEADOS_TOTAL',
+    'STATUS_SOMENTE_DOCUMENTOS',
+]

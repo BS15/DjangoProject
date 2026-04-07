@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import OuterRef, Subquery, Sum
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -16,7 +16,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from ...filters import ContingenciaFilter, DevolucaoFilter, PendenciaFilter, ProcessoFilter
 from ...forms import DevolucaoForm
-from ...models import Contingencia, Devolucao, Pendencia, Processo
+from ...models import Contingencia, Devolucao, DocumentoOrcamentario, Pendencia, Processo
 from ..shared import apply_filterset, render_filtered_list
 from .helpers import (
     _obter_campo_ordenacao,
@@ -60,14 +60,17 @@ def home_page(request: HttpRequest) -> HttpResponse:
         campos_permitidos={
             "id": "id",
             "credor": "credor__nome",
-            "data_empenho": "data_empenho",
+            "data_empenho": "data_empenho_ordem",
             "status": "status__status_choice",
             "tipo_pagamento": "tipo_pagamento__tipo_de_pagamento",
             "valor_liquido": "valor_liquido",
         },
     )
 
-    processos_base = Processo.objects.all().order_by(order_field)
+    subquery_empenho = DocumentoOrcamentario.objects.filter(processo_id=OuterRef("pk")).order_by("-data_empenho", "-id")
+    processos_base = Processo.objects.annotate(
+        data_empenho_ordem=Subquery(subquery_empenho.values("data_empenho")[:1])
+    ).all().order_by(order_field)
     meu_filtro = apply_filterset(request, ProcessoFilter, processos_base)
 
     context: dict[str, Any] = {

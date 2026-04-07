@@ -4,8 +4,8 @@ from django import forms
 from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 from django.contrib.auth.models import User
-from .models.segments.core import Processo, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos
-from .models.segments.documents import DocumentoProcesso, DocumentoFiscal
+from .models.segments.core import Processo, DocumentoOrcamentario, Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao, SuprimentoDeFundos
+from .models.segments.documents import DocumentoDePagamento, DocumentoFiscal
 from .models.segments.auxiliary import RetencaoImposto, Pendencia, Devolucao
 from .models.segments.cadastros import Credor, DadosContribuinte, ContasBancarias, ContaFixa
 from .models.segments.parametrizations import StatusChoicesPendencias, TiposDePagamento
@@ -16,15 +16,24 @@ SUPRIMENTO_DE_FUNDOS = 'SUPRIMENTO DE FUNDOS'
 class ProcessoForm(forms.ModelForm):
     """Formulário principal de Processo com bloqueios por estágio e filtros de domínio."""
 
+    n_nota_empenho = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    data_empenho = forms.DateField(
+        required=False,
+        input_formats=['%Y-%m-%d'],
+        widget=forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date', 'class': 'form-control'}),
+    )
+    ano_exercicio = forms.ChoiceField(
+        required=False,
+        choices=[('', '---------')] + [(y, y) for y in range(2020, 2035)],
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+
     class Meta:
         model = Processo
         exclude = ['status']
         widgets = {
             'extraorcamentario': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'n_nota_empenho': forms.TextInput(attrs={'class': 'form-control'}),
             'credor': forms.Select(attrs={'class': 'form-select'}),
-            'ano_exercicio': forms.Select(attrs={'class': 'form-select'}),
-            'data_empenho': forms.DateInput(format='%Y-%m-%d',attrs={'type': 'date', 'class': 'form-control'}),
             'conta': forms.Select(attrs={'class': 'form-select'}),
             'tipo_pagamento': forms.Select(attrs={'class': 'form-select'}),
             'forma_pagamento': forms.Select(attrs={'class': 'form-select'}),
@@ -54,6 +63,11 @@ class ProcessoForm(forms.ModelForm):
                 self.fields[field_name].required = False
 
         self.status_bloqueados = STATUS_BLOQUEADOS_FORM
+
+        if self.instance and self.instance.pk:
+            self.fields['n_nota_empenho'].initial = self.instance.n_nota_empenho
+            self.fields['data_empenho'].initial = self.instance.data_empenho
+            self.fields['ano_exercicio'].initial = self.instance.ano_exercicio
 
         if self.instance and self.instance.pk and self.instance.status:
             status_atual = self.instance.status.status_choice.upper()
@@ -122,6 +136,31 @@ class ProcessoForm(forms.ModelForm):
 
         return cleaned_data
 
+    def save(self, commit=True):
+        processo = super().save(commit=commit)
+
+        n_nota_empenho = self.cleaned_data.get('n_nota_empenho')
+        data_empenho = self.cleaned_data.get('data_empenho')
+        ano_exercicio = self.cleaned_data.get('ano_exercicio')
+        ano_exercicio = int(ano_exercicio) if ano_exercicio not in (None, '',) else None
+
+        if commit and any(v not in (None, '') for v in (n_nota_empenho, data_empenho, ano_exercicio)):
+            atual = processo.documento_orcamentario_principal
+            mudou = (
+                not atual
+                or atual.numero_nota_empenho != n_nota_empenho
+                or atual.data_empenho != data_empenho
+                or atual.ano_exercicio != ano_exercicio
+            )
+            if mudou:
+                processo.registrar_documento_orcamentario(
+                    numero_nota_empenho=n_nota_empenho,
+                    data_empenho=data_empenho,
+                    ano_exercicio=ano_exercicio,
+                )
+
+        return processo
+
 class DocumentoFiscalForm(forms.ModelForm):
     """Formulário de nota fiscal com campos mínimos para ateste e retenções."""
 
@@ -163,7 +202,7 @@ class DocumentoFiscalForm(forms.ModelForm):
 
 DocumentoFormSet = inlineformset_factory(
     Processo,
-    DocumentoProcesso,
+    DocumentoDePagamento,
     fields=['tipo', 'ordem', 'arquivo'],
     extra=1,
     can_delete=True,
@@ -180,6 +219,19 @@ DocumentoFiscalFormSet = inlineformset_factory(
     form=DocumentoFiscalForm,
     extra=0,
     can_delete=True
+)
+
+DocumentoOrcamentarioFormSet = inlineformset_factory(
+    Processo,
+    DocumentoOrcamentario,
+    fields=['numero_nota_empenho', 'data_empenho', 'ano_exercicio'],
+    extra=1,
+    can_delete=False,
+    widgets={
+        'numero_nota_empenho': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
+        'data_empenho': forms.DateInput(attrs={'class': 'form-control form-control-sm', 'type': 'date'}),
+        'ano_exercicio': forms.Select(attrs={'class': 'form-select form-select-sm'}),
+    },
 )
 
 RetencaoFormSet = inlineformset_factory(

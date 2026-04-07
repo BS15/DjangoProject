@@ -120,6 +120,10 @@
                         <label for="data_empenho" class="form-label fw-bold text-dark">Data do Empenho</label>
                         <input type="date" class="form-control border-primary" id="data_empenho" name="data_empenho" required>
                     </div>
+                    <div class="mb-3">
+                        <label for="ano_exercicio" class="form-label fw-bold text-dark">Ano do Exercício</label>
+                        <input type="number" class="form-control border-primary" id="ano_exercicio" name="ano_exercicio" min="2020" max="2035" placeholder="Ex: 2026">
+                    </div>
                 </div>
 
                 <div class="modal-footer bg-white">
@@ -174,6 +178,7 @@
                 // Limpa todos os campos ao abrir
                 document.getElementById('n_nota_empenho').value = '';
                 document.getElementById('data_empenho').value = '';
+                document.getElementById('ano_exercicio').value = '';
                 document.getElementById('siscac_file').value = '';
                 document.getElementById('siscac_extract_status').innerHTML = '';
             });
@@ -211,6 +216,12 @@
                             }
                             if (data.data_empenho) {
                                 document.getElementById('data_empenho').value = data.data_empenho;
+                                if (!data.ano_exercicio) {
+                                    document.getElementById('ano_exercicio').value = data.data_empenho.substring(0, 4);
+                                }
+                            }
+                            if (data.ano_exercicio) {
+                                document.getElementById('ano_exercicio').value = data.ano_exercicio;
                             }
                             statusEl.innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> Dados extraídos com sucesso. Confira os campos abaixo.</span>';
                         } else {

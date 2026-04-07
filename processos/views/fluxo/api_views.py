@@ -187,6 +187,7 @@ def api_extrair_dados_empenho(request):
 
     n_nota_empenho = data.get("n_nota_empenho") or ""
     data_empenho = data.get("data_empenho")
+    ano_exercicio = data.get("ano_exercicio")
     data_empenho_iso = data_empenho if data_empenho else ""
 
     if not n_nota_empenho and not data_empenho_iso:
@@ -203,6 +204,7 @@ def api_extrair_dados_empenho(request):
             "sucesso": True,
             "n_nota_empenho": n_nota_empenho,
             "data_empenho": data_empenho_iso,
+            "ano_exercicio": ano_exercicio,
         }
     )
 

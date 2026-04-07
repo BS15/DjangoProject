@@ -1,19 +1,15 @@
 """
 Agregador de compatibilidade para views fiscais.
 
-As views fiscais foram refatoradas para módulos temáticos mantendo a interface pública compatível:
-- fiscal_documentos.py: gerenciamento de documentos fiscais (Notas Fiscais)
-- fiscal_liquidacoes.py: painel de liquidações e ateste
-- fiscal_retencoes.py: painel de impostos e agrupamento
-- fiscal_reinf.py: painel EFD-Reinf
-- fiscal_comprovantes.py: painel de comprovantes pós-pagamento
+Os módulos fiscal_retencoes e fiscal_reinf permanecem neste pacote.
+Os demais foram movidos para os módulos de fluxo canônicos:
 
-Nota: Use imports diretos dos módulos temáticos para novo código.
+- fiscal_comprovantes → processos.views.fluxo.payment.comprovantes
+- fiscal_liquidacoes  → processos.views.fluxo.pre_payment.liquidacoes
+- fiscal_documentos   → processos.views.fluxo.pre_payment.cadastro.documentos
+
+Nota: Use imports diretos dos módulos canônicos para novo código.
 """
 
-# Compatibilidade para imports legados
-from .fiscal_comprovantes import *
-from .fiscal_documentos import *
-from .fiscal_liquidacoes import *
 from .fiscal_reinf import *
 from .fiscal_retencoes import *

@@ -13,6 +13,7 @@
 {% block form_fields %}
 <input type="hidden" name="next" value="{{ next_url }}">
 {{ documento_formset.management_form }}
+{{ documento_orcamentario_formset.management_form }}
 
 <div class="alert alert-light border small">
     Status atual: <strong>{{ status_inicial|default:"-" }}</strong>
@@ -41,6 +42,35 @@
                     {% endif %}
                 </td>
                 <td class="text-center">{{ doc_f.DELETE }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<hr class="my-4">
+
+<h6 class="fw-bold">Documentos Orçamentários (Empenho)</h6>
+<p class="text-muted small mb-2">
+    Registre múltiplas notas/data/ano de empenho para o mesmo processo. Novos registros podem ser adicionados em qualquer etapa.
+</p>
+
+<div class="table-responsive">
+    <table class="table table-sm align-middle">
+        <thead>
+            <tr>
+                <th style="width: 240px;">Número da NE</th>
+                <th style="width: 220px;">Data do Empenho</th>
+                <th style="width: 160px;">Ano do Exercício</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for doc_orc_f in documento_orcamentario_formset %}
+            <tr>
+                {% for hidden in doc_orc_f.hidden_fields %}{{ hidden }}{% endfor %}
+                <td>{{ doc_orc_f.numero_nota_empenho }}</td>
+                <td>{{ doc_orc_f.data_empenho }}</td>
+                <td>{{ doc_orc_f.ano_exercicio }}</td>
             </tr>
             {% endfor %}
         </tbody>

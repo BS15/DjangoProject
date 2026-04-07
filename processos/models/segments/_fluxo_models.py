@@ -13,7 +13,7 @@ from django.dispatch import receiver
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from simple_history.models import HistoricalRecords
-from datetime import date
+from datetime import date, datetime
 from processos.validators import validar_arquivo_seguro
 from processos.utils import mesclar_pdfs_em_memoria
 
@@ -185,6 +185,24 @@ class ReuniaoConselho(models.Model):
         return f"{self.numero}ª Reunião - {self.trimestre_referencia}"
 
 
+class ProcessoManager(models.Manager):
+    """Manager com compatibilidade para kwargs legados de empenho."""
+
+    def create(self, **kwargs):
+        numero_nota_empenho = kwargs.pop("n_nota_empenho", None)
+        data_empenho = kwargs.pop("data_empenho", None)
+        ano_exercicio = kwargs.pop("ano_exercicio", None)
+
+        processo = super().create(**kwargs)
+        if any(v not in (None, "") for v in (numero_nota_empenho, data_empenho, ano_exercicio)):
+            processo.registrar_documento_orcamentario(
+                numero_nota_empenho=numero_nota_empenho,
+                data_empenho=data_empenho,
+                ano_exercicio=ano_exercicio,
+            )
+        return processo
+
+
 class Processo(models.Model):
     """Entidade principal do ciclo orçamentário e financeiro do pagamento."""
 
@@ -193,12 +211,9 @@ class Processo(models.Model):
         default=False,
         help_text="Marque se este processo não utiliza dotação orçamentária (ex: cauções)."
     )
-    n_nota_empenho = models.CharField(max_length=50, blank=True, null=True)
     credor = models.ForeignKey('Credor', on_delete=models.PROTECT, blank=False, null=False)
-    data_empenho = models.DateField(default=timezone.now, blank=True, null=True)
     valor_bruto = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, validators=[MinValueValidator(0)])
     valor_liquido = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, validators=[MinValueValidator(0)])
-    ano_exercicio = models.IntegerField(choices=[(y, y) for y in range(2020, 2030)], default=2026, blank=True, null=True)
 
     n_pagamento_siscac = models.CharField(max_length=50, blank=True, null=True)
     data_vencimento = models.DateField(blank=True, null=True)
@@ -227,6 +242,7 @@ class Processo(models.Model):
         verbose_name="Reunião do Conselho",
     )
     history = HistoricalRecords()
+    objects = ProcessoManager()
 
     class Meta:
         permissions = [
@@ -253,6 +269,91 @@ class Processo(models.Model):
 
     def __str__(self):
         return f"Processo {self.n_nota_empenho or 'S/N'}"
+
+    def _set_pending_documento_orcamentario_field(self, field_name, value):
+        pending = getattr(self, "_pending_documento_orcamentario", {})
+        pending[field_name] = value
+        self._pending_documento_orcamentario = pending
+
+    def _persist_pending_documento_orcamentario(self):
+        pending = getattr(self, "_pending_documento_orcamentario", None)
+        if not pending or not self.pk:
+            return
+
+        atual = self.documentos_orcamentarios.order_by("-data_empenho", "-id").first()
+
+        numero_nota_empenho = pending.get(
+            "numero_nota_empenho",
+            atual.numero_nota_empenho if atual else None,
+        )
+        data_empenho = pending.get("data_empenho", atual.data_empenho if atual else None)
+        ano_exercicio = pending.get("ano_exercicio", atual.ano_exercicio if atual else None)
+
+        if data_empenho and not ano_exercicio:
+            ano_exercicio = data_empenho.year
+
+        if any(v not in (None, "") for v in (numero_nota_empenho, data_empenho, ano_exercicio)):
+            DocumentoOrcamentario.objects.create(
+                processo=self,
+                numero_nota_empenho=numero_nota_empenho,
+                data_empenho=data_empenho,
+                ano_exercicio=ano_exercicio,
+            )
+
+        self._pending_documento_orcamentario = {}
+
+    @property
+    def documento_orcamentario_principal(self):
+        return self.documentos_orcamentarios.order_by("-data_empenho", "-id").first()
+
+    @property
+    def n_nota_empenho(self):
+        doc = self.documento_orcamentario_principal
+        return doc.numero_nota_empenho if doc else None
+
+    @n_nota_empenho.setter
+    def n_nota_empenho(self, value):
+        self._set_pending_documento_orcamentario_field("numero_nota_empenho", value)
+
+    @property
+    def data_empenho(self):
+        doc = self.documento_orcamentario_principal
+        return doc.data_empenho if doc else None
+
+    @data_empenho.setter
+    def data_empenho(self, value):
+        self._set_pending_documento_orcamentario_field("data_empenho", value)
+
+    @property
+    def ano_exercicio(self):
+        doc = self.documento_orcamentario_principal
+        return doc.ano_exercicio if doc else None
+
+    @ano_exercicio.setter
+    def ano_exercicio(self, value):
+        self._set_pending_documento_orcamentario_field("ano_exercicio", value)
+
+    def registrar_documento_orcamentario(self, numero_nota_empenho=None, data_empenho=None, ano_exercicio=None):
+        """Registra um novo documento orçamentário mantendo histórico de versões."""
+        if isinstance(data_empenho, str):
+            data_empenho = datetime.strptime(data_empenho, "%Y-%m-%d").date()
+
+        if data_empenho and not ano_exercicio:
+            ano_exercicio = data_empenho.year
+
+        if not any(v not in (None, "") for v in (numero_nota_empenho, data_empenho, ano_exercicio)):
+            return None
+
+        return DocumentoOrcamentario.objects.create(
+            processo=self,
+            numero_nota_empenho=numero_nota_empenho,
+            data_empenho=data_empenho,
+            ano_exercicio=ano_exercicio,
+        )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self._persist_pending_documento_orcamentario()
 
     def clean(self):
         """Valida integridade dos dados do processo antes de salvar."""
@@ -350,7 +451,7 @@ class Processo(models.Model):
         )
 
     def _anexar_pdf_gerado(self, pdf_bytes, nome_arquivo, tipo_documento_nome):
-        """Anexa PDF gerado como DocumentoProcesso na próxima ordem disponível."""
+        """Anexa PDF gerado como DocumentoDePagamento na próxima ordem disponível."""
         from django.core.files.base import ContentFile
 
         if self.documentos.filter(arquivo__icontains=nome_arquivo).exists():
@@ -359,7 +460,7 @@ class Processo(models.Model):
         proxima_ordem = (self.documentos.aggregate(max_ordem=Max("ordem"))["max_ordem"] or 0) + 1
         tipo_documento = self._obter_tipo_documento_gerado(tipo_documento_nome)
 
-        DocumentoProcesso.objects.create(
+        DocumentoDePagamento.objects.create(
             processo=self,
             arquivo=ContentFile(pdf_bytes, name=nome_arquivo),
             tipo=tipo_documento,
@@ -507,7 +608,7 @@ class Processo(models.Model):
                 diaria.save(update_fields=['status'])
 
 
-class DocumentoProcesso(DocumentoBase):
+class DocumentoDePagamento(DocumentoBase):
     """Documento anexado ao processo com controle de imutabilidade."""
 
     processo = models.ForeignKey('Processo', on_delete=models.CASCADE, related_name='documentos')
@@ -518,6 +619,34 @@ class DocumentoProcesso(DocumentoBase):
         help_text="Documento bloqueado para exclusão. Definido automaticamente durante a etapa de Conferência."
     )
     history = HistoricalRecords()
+
+
+# Alias de compatibilidade transitória.
+DocumentoProcesso = DocumentoDePagamento
+
+
+class DocumentoOrcamentario(DocumentoBase):
+    """Documento orçamentário (nota/data/ano de empenho) vinculado ao processo."""
+
+    processo = models.ForeignKey("Processo", on_delete=models.CASCADE, related_name="documentos_orcamentarios")
+    arquivo = models.FileField(upload_to=caminho_documento, validators=[validar_arquivo_seguro], blank=True, null=True)
+    tipo = models.ForeignKey('TiposDeDocumento', on_delete=models.PROTECT, blank=True, null=True)
+    numero_nota_empenho = models.CharField(max_length=50, blank=True, null=True)
+    data_empenho = models.DateField(blank=True, null=True)
+    ano_exercicio = models.IntegerField(
+        choices=[(y, y) for y in range(2020, 2035)],
+        blank=True,
+        null=True,
+    )
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ["-data_empenho", "-id"]
+
+    def __str__(self):
+        numero = self.numero_nota_empenho or "S/N"
+        ano = self.ano_exercicio or "----"
+        return f"{numero} ({ano})"
 
 
 class Pendencia(models.Model):
@@ -706,13 +835,13 @@ def _delete_file(file_field):
             pass
 
 
-@receiver(post_delete, sender=DocumentoProcesso)
+@receiver(post_delete, sender=DocumentoDePagamento)
 def auto_delete_file_on_delete_documentoprocesso(sender, instance, **kwargs):
-    """Remove arquivo físico quando DocumentoProcesso é excluído."""
+    """Remove arquivo físico quando DocumentoDePagamento é excluído."""
     _delete_file(instance.arquivo)
 
 
-@receiver(pre_save, sender=DocumentoProcesso)
+@receiver(pre_save, sender=DocumentoDePagamento)
 def enforce_immutability_and_cleanup_on_save(sender, instance, **kwargs):
     """Bloqueia troca de arquivo em documento imutável e limpa versão anterior."""
     if not instance.pk:
@@ -730,7 +859,7 @@ def enforce_immutability_and_cleanup_on_save(sender, instance, **kwargs):
         _delete_file(old.arquivo)
 
 
-@receiver(pre_delete, sender=DocumentoProcesso)
+@receiver(pre_delete, sender=DocumentoDePagamento)
 def prevent_immutable_delete(sender, instance, **kwargs):
     """Impede exclusão de documentos marcados como imutáveis."""
     if instance.imutavel:
