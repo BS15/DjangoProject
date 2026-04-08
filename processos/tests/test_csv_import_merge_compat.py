@@ -5,7 +5,7 @@ from django.test import SimpleTestCase
 
 from processos.utils import confirmar_diarias_lote, importar_contas_fixas_csv, importar_credores_csv, preview_diarias_lote
 from processos.utils.csv_common import build_csv_dict_reader
-from processos.utils.diarias_import import _open_diaria_csv
+from processos.utils.verbas.diarias.importacao import _open_diaria_csv
 
 
 class CsvCommonHelperTest(SimpleTestCase):

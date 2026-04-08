@@ -12,8 +12,8 @@ Módulos voltados ao fechamento, auditoria e etapas posteriores ao pagamento.
 
 ## Assinaturas
 
-::: processos.views.assinaturas
+::: processos.views.sistemas_auxiliares.assinaturas
 
 ## Relatórios
 
-::: processos.views.relatorios
+::: processos.views.sistemas_auxiliares.relatorios

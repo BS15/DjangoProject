@@ -126,13 +126,10 @@ class ProcessoForm(forms.ModelForm):
         """Aplica validações de negócio do processo e agrega erros no formulário."""
         cleaned_data = super().clean()
 
-        try:
-            erros_processo = validar_regras_processo(cleaned_data)
-            if erros_processo:
-                for field, error in erros_processo.items():
-                    self.add_error(field, error)
-        except NameError:
-            pass
+        erros_processo = validar_regras_processo(cleaned_data)
+        if erros_processo:
+            for field, error in erros_processo.items():
+                self.add_error(field, error)
 
         return cleaned_data
 

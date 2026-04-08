@@ -4,11 +4,11 @@ Fluxo fiscal para saneamento documental, ateste, retenções e obrigações aces
 
 ## Documentos fiscais
 
-::: processos.views.fiscal.fiscal_documentos
+::: processos.views.fluxo.pre_payment.cadastro.documentos
 
 ## Liquidações e ateste
 
-::: processos.views.fiscal.fiscal_liquidacoes
+::: processos.views.fluxo.pre_payment.liquidacoes
 
 ## Retenções e impostos
 
@@ -16,7 +16,7 @@ Fluxo fiscal para saneamento documental, ateste, retenções e obrigações aces
 
 ## Comprovantes pós-pagamento
 
-::: processos.views.fiscal.fiscal_comprovantes
+::: processos.views.fluxo.payment.comprovantes
 
 ## REINF
 

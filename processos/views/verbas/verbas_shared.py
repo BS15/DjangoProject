@@ -1,5 +1,7 @@
 import os
+import logging
 from django.db import transaction
+from django.db import DatabaseError
 from django.shortcuts import render
 from django.contrib import messages
 
@@ -19,6 +21,8 @@ from ...models import (
 
 _EXTENSOES_DOCUMENTO_PERMITIDAS = {'.pdf', '.jpg', '.jpeg', '.png'}
 _CREDOR_AGRUPAMENTO_MULTIPLO = 'BANCO DO BRASIL S/A'
+
+logger = logging.getLogger(__name__)
 
 _VERBA_CONFIG = {
     'diaria': {
@@ -119,7 +123,12 @@ def _salvar_documento_upload(
 
     try:
         return _anexar_documento(modelo_documento, fk_name, entidade, arquivo, tipo_id), None
-    except Exception:
+    except (DatabaseError, OSError, TypeError, ValueError) as exc:
+        logger.exception(
+            "Erro ao salvar documento de verba para entidade %s: %s",
+            getattr(entidade, "id", None),
+            exc,
+        )
         return None, 'Erro ao salvar o documento. Tente novamente.'
 
 

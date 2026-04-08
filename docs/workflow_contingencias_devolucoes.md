@@ -4,7 +4,7 @@ Fluxo de correções excepcionais (contingência), pendências e devoluções fi
 
 ## Suporte transversal (pendências, contingências, devoluções)
 
-::: processos.views.fluxo.support_views
+::: processos.views.fluxo.support
 
 ## Pós-pagamento com operação de contingência
 

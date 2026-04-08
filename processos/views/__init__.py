@@ -8,15 +8,12 @@ Exemplos de uso recomendado:
 Evitar importações do agregador para melhor clareza de dependências.
 """
 
-# Legacy reexports para compatibilidade transitória
-from . import assinaturas
 from . import cadastros
 from . import chaos
-from . import contas
 from . import desenvolvedor
 from . import fiscal
 from . import fluxo
-from . import relatorios
+from . import sistemas_auxiliares
 from . import suprimentos
 from . import teste_pdf
 from . import verbas
@@ -37,14 +34,12 @@ from .verbas import (
 from ..validators import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
 
 __all__ = [
-    'assinaturas',
     'cadastros',
     'chaos',
-    'contas',
     'desenvolvedor',
     'fiscal',
     'fluxo',
-    'relatorios',
+    'sistemas_auxiliares',
     'suprimentos',
     'teste_pdf',
     'verbas',

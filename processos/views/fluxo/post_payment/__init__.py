@@ -1,9 +1,10 @@
 """Views do fluxo de pos-pagamento organizadas por responsabilidade."""
 
 from .arquivamento import *
-from .actions import *
-from .panels import *
-from .reviews import *
+from .conferencia import *
+from .conselho import *
+from .contabilizacao import *
+from .reunioes import *
 
 __all__ = [
     "painel_conferencia_view",

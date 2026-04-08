@@ -1,15 +1,20 @@
+import logging
+
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .....forms import DiariaForm
 from .....models import Diaria, DocumentoDiaria, ReembolsoCombustivel, StatusChoicesVerbasIndenizatorias
-from .....services import gerar_e_anexar_scd_diaria
+from .....services.verbas.diarias import gerar_e_anexar_scd_diaria
 from ...verbas_shared import (
     _get_tipos_documento_ativos,
     _processar_upload_documento,
     _salvar_verba_com_anexo_opcional,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 def _preparar_nova_diaria(diaria):
@@ -55,8 +60,12 @@ def _executar_rotinas_pos_cadastro_diaria(request, diaria):
     try:
         gerar_e_anexar_scd_diaria(diaria, request.user)
         messages.info(request, 'PDF gerado! Acesse o Painel de Assinaturas para enviar ao Autentique.')
-    except Exception as e:
-        messages.warning(request, f'Diaria cadastrada, mas falha ao gerar SCD: {str(e)}')
+    except (OSError, RuntimeError, TypeError, ValueError):
+        logger.exception("Falha ao gerar SCD para diária %s", diaria.id)
+        messages.warning(
+            request,
+            'Diária cadastrada, mas o SCD não foi gerado automaticamente. Use o Painel de Assinaturas.',
+        )
 
     _criar_reembolso_pendente_se_necessario(request, diaria)
 

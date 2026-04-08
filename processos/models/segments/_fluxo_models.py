@@ -418,6 +418,8 @@ class Processo(models.Model):
 
     def gerar_pdf_consolidado(self):
         """Mescla documentos do processo por ordem e retorna PDF em memória."""
+        from processos.utils.shared.pdf_tools import PdfMergeError
+
         lista_caminhos = []
         for doc in self.documentos.order_by('ordem'):
             if doc.arquivo and doc.arquivo.name:
@@ -426,7 +428,12 @@ class Processo(models.Model):
 
         if not lista_caminhos:
             return None
-        return mesclar_pdfs_em_memoria(lista_caminhos)
+
+        try:
+            return mesclar_pdfs_em_memoria(lista_caminhos)
+        except PdfMergeError as exc:
+            logger.exception("Falha ao gerar PDF consolidado do processo %s", self.id)
+            raise RuntimeError(f"Falha técnica ao consolidar PDFs do processo {self.id}.") from exc
 
     def _obter_tipo_documento_gerado(self, nome_tipo_documento):
         """Resolve (ou cria) o tipo de documento para anexos gerados automaticamente."""
@@ -455,7 +462,9 @@ class Processo(models.Model):
         from django.core.files.base import ContentFile
 
         if self.documentos.filter(arquivo__icontains=nome_arquivo).exists():
-            return False
+            raise ValidationError(
+                f"Documento automático já existe para o processo {self.id}: {nome_arquivo}"
+            )
 
         proxima_ordem = (self.documentos.aggregate(max_ordem=Max("ordem"))["max_ordem"] or 0) + 1
         tipo_documento = self._obter_tipo_documento_gerado(tipo_documento_nome)
@@ -470,16 +479,27 @@ class Processo(models.Model):
 
     def _gerar_anexo_por_tipo(self, doc_type, obj, nome_arquivo, tipo_documento_nome, **kwargs):
         """Gera PDF via engine e anexa ao processo sem duplicar arquivo."""
-        from processos.services import gerar_e_anexar_documento_processo
-
-        return gerar_e_anexar_documento_processo(
-            self,
-            doc_type,
-            obj,
-            nome_arquivo,
-            tipo_documento_nome,
-            **kwargs,
+        from processos.services.fluxo import (
+            DocumentoGeradoDuplicadoError,
+            gerar_e_anexar_documento_processo,
         )
+
+        try:
+            return gerar_e_anexar_documento_processo(
+                self,
+                doc_type,
+                obj,
+                nome_arquivo,
+                tipo_documento_nome,
+                **kwargs,
+            )
+        except DocumentoGeradoDuplicadoError:
+            logger.info(
+                "Documento automático duplicado ignorado no processo %s: %s",
+                self.id,
+                nome_arquivo,
+            )
+            return None
 
     def _gerar_documentos_automaticos(self, status_anterior, novo_status):
         """Gera e anexa documentos automáticos conforme transição de status."""
@@ -561,7 +581,7 @@ class Processo(models.Model):
                         f"Recibo_Suprimento_{suprimento.id}.pdf",
                         "RECIBO DE PAGAMENTO",
                     )
-        except Exception:
+        except (ValidationError, OSError, RuntimeError, TypeError, ValueError):
             logger.exception(
                 "Falha ao gerar anexos automáticos do processo %s na transição '%s' -> '%s'",
                 self.id,
@@ -831,8 +851,12 @@ def _delete_file(file_field):
     if file_field and file_field.name:
         try:
             file_field.storage.delete(file_field.name)
-        except Exception:
-            pass
+        except (FileNotFoundError, OSError) as exc:
+            logger.warning(
+                "Falha ao remover arquivo '%s' do storage: %s",
+                file_field.name,
+                exc,
+            )
 
 
 @receiver(post_delete, sender=DocumentoDePagamento)

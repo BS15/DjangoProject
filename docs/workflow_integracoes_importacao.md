@@ -4,20 +4,20 @@ Fluxo de sincronização e importação com sistemas externos (SISCAC, REINF e c
 
 ## Sincronização SISCAC do fluxo de processos
 
-::: processos.views.fluxo.siscac_processo_sync
+::: processos.views.sistemas_auxiliares.sync.pagamentos
 
 ## Sincronização/importação de diárias
 
-::: processos.views.verbas.siscac_diarias_sync
+::: processos.views.sistemas_auxiliares.sync.diarias
 
-::: processos.utils.siscac_diarias_sync
+::: processos.utils.verbas.diarias.siscac
 
 ## REINF
 
-::: processos.reinf_services
+::: processos.services.fiscal.reinf
 
 ## Importação CSV operacional
 
-::: processos.utils.diarias_import
+::: processos.utils.verbas.diarias.importacao
 
 ::: processos.utils.cadastros_import

@@ -146,14 +146,26 @@ def api_salvar_nota_fiscal(request, processo_pk, nota_pk):
         try:
             nota.data_emissao = datetime.strptime(str(data_str), "%Y-%m-%d").date()
         except (ValueError, TypeError):
-            pass
+            return JsonResponse(
+                {
+                    "status": "error",
+                    "error": "Data de emissão inválida. Use o formato AAAA-MM-DD.",
+                },
+                status=400,
+            )
 
     valor_bruto = body.get("valor_bruto", "")
     if valor_bruto:
         try:
             nota.valor_bruto = Decimal(str(valor_bruto).replace(",", "."))
         except (InvalidOperation, ValueError, TypeError):
-            pass
+            return JsonResponse(
+                {
+                    "status": "error",
+                    "error": "Valor bruto inválido. Informe um valor numérico válido.",
+                },
+                status=400,
+            )
 
     fiscal_id = body.get("fiscal_contrato")
     if fiscal_id:

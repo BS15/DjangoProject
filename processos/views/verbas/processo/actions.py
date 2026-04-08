@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.db import transaction
@@ -5,12 +7,15 @@ from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 
 from ....models import Diaria, Processo, StatusChoicesProcesso, TiposDePagamento
-from ....services import criar_assinatura_rascunho, gerar_documento_bytes
+from ....services.shared import criar_assinatura_rascunho, gerar_documento_bytes
 from ..verbas_shared import (
     _CREDOR_AGRUPAMENTO_MULTIPLO,
     _VERBA_CONFIG,
     _obter_credor_agrupamento,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 @require_POST
@@ -80,8 +85,12 @@ def agrupar_verbas_view(request, tipo_verba):
                         pdf_bytes=pdf_bytes,
                         nome_arquivo=f"PCD_{item.id}.pdf",
                     )
-                except Exception as e:
-                    messages.warning(request, f"PCD para diaria {item.numero_siscac} nao gerado: {str(e)}")
+                except (OSError, RuntimeError, TypeError, ValueError):
+                    logger.exception("Falha ao gerar PCD da diária %s", item.id)
+                    messages.warning(
+                        request,
+                        f"PCD para diária {item.numero_siscac or item.id} não pôde ser gerado automaticamente.",
+                    )
             item.save()
 
     messages.success(request, f"Processo #{novo_processo.id} gerado com sucesso!")

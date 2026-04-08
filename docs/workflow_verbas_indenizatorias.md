@@ -8,20 +8,20 @@ Fluxo de diárias, jetons, reembolsos e auxílios, incluindo agrupamento em proc
 
 ## Diárias
 
-::: processos.views.verbas.verbas_diarias
+::: processos.views.verbas.tipos.diarias
 
 ## Reembolsos
 
-::: processos.views.verbas.verbas_reembolso
+::: processos.views.verbas.tipos.reembolsos
 
 ## Jetons
 
-::: processos.views.verbas.verbas_jeton
+::: processos.views.verbas.tipos.jetons
 
 ## Auxílios
 
-::: processos.views.verbas.verbas_auxilio
+::: processos.views.verbas.tipos.auxilios
 
 ## Integração de diárias com SISCAC
 
-::: processos.views.verbas.siscac_diarias_sync
+::: processos.views.sistemas_auxiliares.sync.diarias

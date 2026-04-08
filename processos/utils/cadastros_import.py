@@ -1,5 +1,7 @@
 """Importação em lote de credores e contas fixas via CSV."""
 
+from django.db import DatabaseError
+
 from processos.models.segments.cadastros import CargosFuncoes, ContasBancarias, Credor, ContaFixa
 
 from .csv_common import build_csv_dict_reader
@@ -67,7 +69,7 @@ def importar_credores_csv(csv_file):
                 credor.save(update_fields=['chave_pix'])
 
             resultados['sucessos'] += 1
-        except Exception as e:
+        except (KeyError, AttributeError, ValueError, TypeError, DatabaseError) as e:
             resultados['erros'].append(f"Linha {reader.line_num}: {e}")
     return resultados
 
@@ -104,6 +106,6 @@ def importar_contas_fixas_csv(csv_file):
             resultados['sucessos'] += 1
         except ValueError as e:
             resultados['erros'].append(f"Linha {reader.line_num}: {e}")
-        except Exception as e:
+        except (KeyError, AttributeError, TypeError, DatabaseError) as e:
             resultados['erros'].append(f"Linha {reader.line_num}: {e}")
     return resultados

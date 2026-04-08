@@ -19,11 +19,36 @@ from ...models import (
 )
 
 
+# Mapeia tipos de documentos de verbas ao nome do FK da entidade proprietária
+_VERBA_DOC_FK: dict[str, str] = {
+    "verba_reembolso_doc": "reembolso",
+    "verba_jeton_doc": "jeton",
+    "verba_auxilio_doc": "auxilio",
+}
+
+
+def _can_access_verba_beneficiario(user, fk_name, doc):
+    """Verifica acesso por e-mail do beneficiário para documentos de verbas simples."""
+    entidade = getattr(doc, fk_name, None)
+    if not entidade:
+        return False
+    beneficiario = getattr(entidade, "beneficiario", None)
+    return bool(beneficiario and beneficiario.email and beneficiario.email == user.email)
+
+
 def _is_cap_backoffice(user):
-    """Retorna True para perfis de backoffice autorizados."""
+    """
+    Verifica se usuário tem permissão explícita de backoffice.
+    
+    Returns True if user is:
+    - Superuser (Django admin with full system access)
+    - Has explicit 'pode_operar_contas_pagar' permission (Contas a Pagar role)
+    
+    NOTE: is_staff flag is intentionally NOT checked here to enforce strict RBAC.
+    Staff users must have explicit permissions assigned. See: copilot-instructions.md
+    """
     return user.is_active and (
         user.is_superuser
-        or user.is_staff
         or user.has_perm("processos.pode_operar_contas_pagar")
     )
 
@@ -77,29 +102,8 @@ def _can_access_non_backoffice(user, tipo_documento, doc):
         proponente_match = diaria.proponente == user
         return email_match or proponente_match
 
-    if tipo_documento == "verba_reembolso_doc":
-        reembolso = doc.reembolso
-        return bool(
-            reembolso.beneficiario
-            and reembolso.beneficiario.email
-            and reembolso.beneficiario.email == user.email
-        )
-
-    if tipo_documento == "verba_jeton_doc":
-        jeton = doc.jeton
-        return bool(
-            jeton.beneficiario
-            and jeton.beneficiario.email
-            and jeton.beneficiario.email == user.email
-        )
-
-    if tipo_documento == "verba_auxilio_doc":
-        auxilio = doc.auxilio
-        return bool(
-            auxilio.beneficiario
-            and auxilio.beneficiario.email
-            and auxilio.beneficiario.email == user.email
-        )
+    if tipo_documento in _VERBA_DOC_FK:
+        return _can_access_verba_beneficiario(user, _VERBA_DOC_FK[tipo_documento], doc)
 
     return False
 

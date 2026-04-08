@@ -8,8 +8,9 @@ from django.conf import settings
 from pypdf import PdfReader
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
-from .utils.pdf_multipurpose_tools import merge_canvas_with_template
-from .utils.text_helpers import format_brl_currency as _formatar_moeda
+
+from .utils.shared.pdf_tools import merge_canvas_with_template
+from .utils.shared.text_tools import format_brl_currency as _formatar_moeda
 
 logger = logging.getLogger(__name__)
 _CHAR_WIDTH_RATIO = 0.55
@@ -57,8 +58,13 @@ def _contar_paginas_documentos(processo):
             with doc.arquivo.open('rb') as f:
                 reader = PdfReader(f)
                 total_pages += len(reader.pages)
-        except Exception:
-            pass
+        except (FileNotFoundError, OSError, ValueError) as exc:
+            logger.warning(
+                "Não foi possível contar páginas do documento %s do processo %s: %s",
+                getattr(doc, "id", None),
+                processo.id,
+                exc,
+            )
 
     return total_docs, total_pages
 
@@ -561,8 +567,12 @@ class ConselhoFiscalDocument(BasePDFDocument):
                     else:
                         status_str = str(record.status) if record.status else "Status atualizado"
                         log_lines.append(f"• {status_str} em {date_str} por {user_str}")
-                except Exception:
-                    pass
+                except AttributeError as exc:
+                    logger.warning(
+                        "Falha ao montar trilha de auditoria do processo %s: %s",
+                        processo.id,
+                        exc,
+                    )
 
         if log_lines:
             for line in log_lines[:_MAX_AUDIT_TRAIL_ENTRIES]:

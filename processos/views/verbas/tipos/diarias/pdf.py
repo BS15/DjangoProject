@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404
 
 from .....models import Diaria
-from .....services import gerar_resposta_pdf
+from .....services.shared import gerar_resposta_pdf
 
 
 @permission_required('processos.pode_gerenciar_diarias', raise_exception=True)

@@ -1,11 +1,12 @@
 from django.urls import path
 
 from processos.views import verbas as verbas_views
-from processos.views.verbas import siscac_diarias_sync as verbas_sync_views
-from processos.views.verbas import verbas_auxilio as verbas_auxilio_views
-from processos.views.verbas import verbas_diarias as verbas_diarias_views
-from processos.views.verbas import verbas_jeton as verbas_jeton_views
-from processos.views.verbas import verbas_reembolso as verbas_reembolso_views
+from processos.views.sistemas_auxiliares.imports import diarias as diarias_import_views
+from processos.views.sistemas_auxiliares.sync import diarias as diarias_sync_views
+from processos.views.verbas.tipos import auxilios as verbas_auxilio_views
+from processos.views.verbas.tipos import diarias as verbas_diarias_views
+from processos.views.verbas.tipos import jetons as verbas_jeton_views
+from processos.views.verbas.tipos import reembolsos as verbas_reembolso_views
 
 urlpatterns = [
     path('processo/<int:pk>/editar-verbas/', verbas_views.editar_processo_verbas, name='editar_processo_verbas'),
@@ -29,8 +30,8 @@ urlpatterns = [
     path('verbas/diarias/autorizacao/<int:pk>/alternar/', verbas_diarias_views.alternar_autorizacao_diaria, name='alternar_autorizacao_diaria'),
     path('verbas/diarias/<int:diaria_id>/aprovar/', verbas_diarias_views.aprovar_diaria_view, name='aprovar_diaria'),
     path('verbas/diarias/<int:pk>/pcd/', verbas_diarias_views.gerar_pcd_view, name='gerar_pcd'),
-    path('verbas/sincronizar-diarias/', verbas_sync_views.sincronizar_diarias, name='sincronizar_diarias'),
-    path('verbas/diarias/importar/', verbas_diarias_views.importar_diarias_view, name='importar_diarias'),
+    path('verbas/sincronizar-diarias/', diarias_sync_views.sincronizar_diarias, name='sincronizar_diarias'),
+    path('verbas/diarias/importar/', diarias_import_views.importar_diarias_view, name='importar_diarias'),
     path('verbas/diarias/template-csv/', verbas_diarias_views.download_template_diarias_csv, name='download_template_diarias_csv'),
     path('verbas/diarias/<int:assinatura_id>/sincronizar/', verbas_diarias_views.sincronizar_assinatura_view, name='sincronizar_assinatura'),
     path('verbas/diarias/<int:diaria_id>/reenviar-assinatura/', verbas_diarias_views.reenviar_assinatura_view, name='reenviar_assinatura'),

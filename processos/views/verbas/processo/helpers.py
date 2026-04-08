@@ -1,7 +1,8 @@
 import logging
 
 from django.contrib import messages
-from django.db import transaction
+from django.core.exceptions import ValidationError
+from django.db import DatabaseError, transaction
 
 from ....forms import PendenciaFormSet, ProcessoForm
 from ....models import AuxilioRepresentacao, Diaria, Jeton, ReembolsoCombustivel
@@ -34,7 +35,7 @@ def _salvar_formularios_processo_verbas(request, *, processo_form, pendencia_for
         with transaction.atomic():
             processo = processo_form.save()
             pendencia_formset.save()
-    except Exception as exc:
+    except (ValidationError, DatabaseError, TypeError, ValueError) as exc:
         logger.exception('Erro ao atualizar processo de verbas', exc_info=exc)
         messages.error(request, 'Erro interno ao salvar as alteracoes.')
         return None

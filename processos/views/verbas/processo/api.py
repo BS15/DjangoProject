@@ -1,6 +1,7 @@
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
+from django.urls import NoReverseMatch
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
@@ -45,5 +46,5 @@ def api_add_documento_verba(request, tipo_verba, pk):
     try:
         arquivo_url = reverse('download_arquivo_seguro', args=[tipo_doc_seguro, doc.id])
         return JsonResponse({'ok': True, 'doc_id': doc.id, 'arquivo_url': arquivo_url, 'tipo': str(doc.tipo)})
-    except Exception as e:
+    except NoReverseMatch as e:
         return JsonResponse({'ok': False, 'error': str(e)}, status=500)

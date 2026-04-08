@@ -1,5 +1,6 @@
 """Acoes POST de gerenciamento de reunioes do conselho."""
 
+import logging
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.db import IntegrityError
@@ -29,7 +30,12 @@ def gerenciar_reunioes_action(request):
         except ValueError:
             messages.error(request, "Número da reunião inválido.")
         except IntegrityError as exc:
-            messages.error(request, f"Erro de integridade ao criar reunião: {exc}")
+            logger.exception(
+                "IntegrityError ao criar reunião: numero=%s, trimestre=%s",
+                numero,
+                trimestre_referencia,
+            )
+            messages.error(request, "Erro ao criar reunião. Verifique os dados e tente novamente.")
     else:
         messages.warning(request, "Preencha o número e o trimestre de referência.")
 

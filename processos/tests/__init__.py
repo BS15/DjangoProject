@@ -276,7 +276,7 @@ from processos.models.segments.parametrizations import CodigosImposto
 from processos.models.segments.cadastros import Credor, DadosContribuinte
 from processos.models.segments.documents import DocumentoFiscal
 from processos.models.segments.core import Processo
-from processos.reinf_services import (
+from processos.services.fiscal.reinf import (
     _build_r2010_xml,
     _build_r4020_xml,
     gerar_lotes_reinf,

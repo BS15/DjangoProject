@@ -1,17 +1,17 @@
 """Pré-pagamento: criação, edição, empenho, liquidações e avanço de processos."""
 
 from .cadastro import *
-from .empenho import *
-from .liquidacoes import *
-from .forms import (
+from .cadastro.forms import (
     add_process_view,
     editar_processo,
     editar_processo_capa_view,
     editar_processo_documentos_view,
     editar_processo_pendencias_view,
 )
-from .panels import a_empenhar_view
-from .actions import registrar_empenho_action, avancar_para_pagamento_view
+from .empenho import *
+from .empenho.actions import avancar_para_pagamento_view, registrar_empenho_action
+from .empenho.panels import a_empenhar_view
+from .liquidacoes import *
 
 __all__ = [
     "add_process_view",

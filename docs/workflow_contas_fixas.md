@@ -4,8 +4,8 @@ Fluxo de contas recorrentes, geração de faturas mensais e vinculação com pro
 
 ## Operação de contas fixas
 
-::: processos.views.contas
+::: processos.views.sistemas_auxiliares.contas
 
 ## Utilitários de contas
 
-::: processos.utils.utils_contas
+::: processos.utils.fluxo.contas
