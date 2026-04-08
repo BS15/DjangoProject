@@ -12,7 +12,7 @@ from processos.models.segments.cadastros import ContasBancarias, Credor
 from processos.models.segments.core import Processo
 from processos.models.segments.parametrizations import StatusChoicesProcesso
 from processos.utils import processar_pdf_comprovantes
-from processos.views.fluxo.siscac_processo_sync import sync_siscac_payments
+from processos.views.sistemas_auxiliares.sync.pagamentos import sync_siscac_payments
 
 
 class SiscacSyncDecisionMatrixTest(TestCase):
@@ -80,9 +80,9 @@ class SiscacSyncDecisionMatrixTest(TestCase):
 class ComprovanteIdentityPrecedenceTest(TestCase):
     """Ensures comprovante identity prefers CPF/CNPJ over account fallback."""
 
-    @patch("processos.utils.pdfplumber.open")
-    @patch("processos.utils.default_storage.open")
-    @patch("processos.utils.split_pdf_to_temp_pages")
+    @patch("processos.utils.shared.pdf_tools.pdfplumber.open")
+    @patch("processos.utils.shared.pdf_tools.default_storage.open")
+    @patch("processos.utils.shared.pdf_tools.split_pdf_to_temp_pages")
     def test_doc_match_has_precedence_over_account_match(
         self,
         mock_split,

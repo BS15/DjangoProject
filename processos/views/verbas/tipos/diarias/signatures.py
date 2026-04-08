@@ -1,14 +1,20 @@
+import logging
+
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect
 
 from .....models import AssinaturaAutentique, Diaria
-from .....services import (
+from .....services.shared import (
+    AssinaturaSignatariosError,
     construir_signatarios_padrao,
     enviar_para_assinatura,
     sincronizar_assinatura,
 )
 from ....signature_access import user_is_entity_owner
+
+
+logger = logging.getLogger(__name__)
 
 
 def sincronizar_assinatura_view(request, assinatura_id):
@@ -30,8 +36,9 @@ def sincronizar_assinatura_view(request, assinatura_id):
             messages.success(request, 'Documento assinado e sincronizado com sucesso!')
         else:
             messages.info(request, 'O documento ainda esta pendente de assinatura no Autentique.')
-    except Exception as e:
-        messages.error(request, f'Erro ao verificar assinatura: {str(e)}')
+    except (AssinaturaSignatariosError, OSError, RuntimeError, TypeError, ValueError):
+        logger.exception("Erro ao sincronizar assinatura %s", assinatura_id)
+        messages.error(request, 'Erro ao verificar assinatura. Tente novamente.')
     return redirect(request.META.get('HTTP_REFERER', '/'))
 
 
@@ -57,7 +64,8 @@ def reenviar_assinatura_view(request, diaria_id):
             doc_type='scd',
         )
         messages.success(request, 'SCD reenviado para assinatura com sucesso!')
-    except Exception as e:
-        messages.error(request, f'Erro ao reenviar SCD para assinatura: {str(e)}')
+    except (AssinaturaSignatariosError, OSError, RuntimeError, TypeError, ValueError):
+        logger.exception("Erro ao reenviar SCD da diária %s para assinatura", diaria_id)
+        messages.error(request, 'Erro ao reenviar SCD para assinatura. Tente novamente.')
 
     return redirect('gerenciar_diaria', pk=diaria.id)

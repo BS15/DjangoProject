@@ -6,6 +6,6 @@ Fase de consolidação contábil e atendimento de obrigações acessórias.
 
 ::: processos.views.fiscal.fiscal_reinf
 
-::: processos.reinf_services
+::: processos.services.fiscal.reinf
 
-::: processos.views.relatorios
+::: processos.views.sistemas_auxiliares.relatorios

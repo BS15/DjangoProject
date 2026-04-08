@@ -1,7 +1,9 @@
 """Endpoints POST/API da etapa de comprovantes de pagamento."""
 
 import json
+import logging
 
+import PyPDF2
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
@@ -12,6 +14,9 @@ from django.shortcuts import get_object_or_404
 
 from .....models import ComprovanteDePagamento, DocumentoDePagamento, Processo, TiposDeDocumento
 from .....utils import split_pdf_to_temp_pages, processar_pdf_comprovantes
+
+
+logger = logging.getLogger(__name__)
 
 
 def serializar_comprovante(comp):
@@ -46,7 +51,8 @@ def api_fatiar_comprovantes(request):
 
             resultados_json = [serializar_comprovante(resultado) for resultado in resultados]
             return JsonResponse({"sucesso": True, "comprovantes": resultados_json, "modo": modo})
-        except Exception as exc:
+        except (PyPDF2.errors.PdfReadError, OSError, TypeError, ValueError) as exc:
+            logger.exception("Erro ao fatiar comprovantes (modo=%s)", modo)
             return JsonResponse({"sucesso": False, "erro": str(exc)})
     return JsonResponse({"sucesso": False, "erro": "Arquivo não enviado."})
 
@@ -54,6 +60,7 @@ def api_fatiar_comprovantes(request):
 @permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
 def api_vincular_comprovantes(request):
     if request.method == "POST":
+        processo_id = None
         try:
             dados = json.loads(request.body)
             processo_id = dados.get("processo_id")
@@ -137,8 +144,8 @@ def api_vincular_comprovantes(request):
             for temp_path in temp_paths_to_delete:
                 try:
                     default_storage.delete(temp_path)
-                except Exception:
-                    pass
+                except (FileNotFoundError, OSError) as exc:
+                    logger.warning("Falha ao remover arquivo temporário %s: %s", temp_path, exc)
 
             return JsonResponse(
                 {
@@ -146,7 +153,10 @@ def api_vincular_comprovantes(request):
                     "mensagem": f'Processo #{processo_id} baixado com sucesso! Status alterado para "PAGO - EM CONFERÊNCIA".',
                 }
             )
-        except Exception as exc:
+        except json.JSONDecodeError:
+            return JsonResponse({"sucesso": False, "erro": "JSON inválido no corpo da requisição."})
+        except (OSError, TypeError, ValueError) as exc:
+            logger.exception("Erro ao vincular comprovantes no processo %s", processo_id)
             return JsonResponse({"sucesso": False, "erro": str(exc)})
 
     return JsonResponse({"sucesso": False, "erro": "Método inválido."})

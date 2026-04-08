@@ -1,7 +1,10 @@
 """Views de formulario (GET+POST) da etapa de cadastro/edicao."""
 
+import logging
+
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
+from django.db import DatabaseError
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -15,6 +18,9 @@ from ..helpers import (
     _salvar_processo_completo,
     _validar_regras_edicao_processo,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 @permission_required("processos.acesso_backoffice", raise_exception=True)
@@ -52,8 +58,8 @@ def add_process_view(request):
                 if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
                     return redirect(next_url)
                 return redirect("editar_processo", pk=processo.id)
-            except Exception as e:
-                print(f"🛑 Erro CRÍTICO de Banco de Dados ao salvar: {e}", flush=True)
+            except (DatabaseError, TypeError, ValueError) as e:
+                logger.exception("Erro crítico ao salvar processo na criação")
                 messages.error(request, "Ocorreu um erro interno ao salvar no banco de dados.")
         else:
             messages.error(request, "Verifique os erros no formulário da capa do processo.")
@@ -146,8 +152,8 @@ def editar_processo_capa_view(request, pk):
                 )
                 messages.success(request, f"Capa do Processo #{processo_saved.id} atualizada com sucesso!")
                 return _redirect_seguro_ou_fallback(request, next_url, "editar_processo", processo_saved.id)
-            except Exception as e:
-                print(f"🛑 Erro ao atualizar capa: {e}")
+            except (DatabaseError, TypeError, ValueError) as e:
+                logger.exception("Erro ao atualizar capa do processo %s", pk)
                 messages.error(request, "Erro interno ao salvar a capa do processo.")
         else:
             messages.error(request, "Verifique os erros na capa do processo.")
@@ -187,8 +193,8 @@ def editar_processo_documentos_view(request, pk):
                     documento_orcamentario_formset.save()
                 messages.success(request, f"Documentos do Processo #{pk} atualizados com sucesso!")
                 return _redirect_seguro_ou_fallback(request, next_url, "editar_processo", pk)
-            except Exception as e:
-                print(f"🛑 Erro ao atualizar documentos: {e}")
+            except (DatabaseError, TypeError, ValueError, OSError) as e:
+                logger.exception("Erro ao atualizar documentos do processo %s", pk)
                 messages.error(request, "Erro interno ao salvar os documentos.")
         else:
             messages.error(request, "Verifique os erros nos documentos e dados orçamentários.")
@@ -233,8 +239,8 @@ def editar_processo_pendencias_view(request, pk):
                     pendencia_formset.save()
                 messages.success(request, f"Pendências do Processo #{pk} atualizadas com sucesso!")
                 return _redirect_seguro_ou_fallback(request, next_url, "editar_processo", pk)
-            except Exception as e:
-                print(f"🛑 Erro ao atualizar pendências: {e}")
+            except (DatabaseError, TypeError, ValueError) as e:
+                logger.exception("Erro ao atualizar pendências do processo %s", pk)
                 messages.error(request, "Erro interno ao salvar as pendências.")
         else:
             messages.error(request, "Verifique os erros nas pendências.")

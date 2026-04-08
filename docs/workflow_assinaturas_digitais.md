@@ -4,10 +4,10 @@ Fluxo de rascunho, disparo e acompanhamento de assinaturas com integração Aute
 
 ## Painel e disparo de assinaturas
 
-::: processos.views.assinaturas
+::: processos.views.sistemas_auxiliares.assinaturas
 
 ## Serviço de assinatura e orquestração
 
-::: processos.autentique_service
+::: processos.services.integracoes.autentique
 
-::: processos.services.document_workflow
+::: processos.services.shared.documentos

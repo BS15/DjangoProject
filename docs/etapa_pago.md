@@ -6,6 +6,6 @@ Fase em que a obrigação foi paga e o processo segue para integrações e fecha
 
 ::: processos.views.fluxo.payment
 
-::: processos.views.fluxo.siscac_processo_sync
+::: processos.views.sistemas_auxiliares.sync.pagamentos
 
-::: processos.views.verbas.siscac_diarias_sync
+::: processos.views.sistemas_auxiliares.sync.diarias

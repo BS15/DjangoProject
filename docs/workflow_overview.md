@@ -21,6 +21,6 @@ Este sistema segue uma máquina de estados rígida para execução orçamentári
 
 ::: processos.views.fluxo.helpers
 
-::: processos.services.document_workflow
+::: processos.services.shared.documentos
 
 ::: processos.views.fluxo.security

@@ -1,15 +1,23 @@
 """
-processos/utils — Modular utility package.
+processos/utils — Pacote modular de utilidades por domínio.
 
-This __init__.py re-exports the public API of all sub-modules so that
-existing callers (views, models, tests) that do
-    from processos.utils import <name>
-continue to work without any changes.
+Este __init__.py re-exporta a API pública de sub-módulos para que código legado
+fazendo `from processos.utils import <name>` continue funcionando.
+
+✨ Novo padrão: imports específicos de domínio delegam para subpacotes:
+
+  - shared/: utilidades cross-cutting (text formatting, PDF manipulation, reports)
+  - verbas/: operações de verbas indenizatórias (diárias, import/sync)
+  - fluxo/: operações do fluxo financeiro (fatura generation, etc)
+  - Imports de topo: permissões, importação de dados cadastrais
 """
 
 from django.core.files.storage import default_storage
 
-from .text_helpers import (
+# Re-exportar cada domínio de forma explícita para deixar claro sua origem
+
+# Shared/cross-cutting utilities
+from .shared import (
     normalize_document,
     normalize_account,
     normalize_text,
@@ -24,14 +32,8 @@ from .text_helpers import (
     safe_split,
     parse_br_date,
     extract_text_between,
-)
-
-from .pdf_multipurpose_tools import (
     mesclar_pdfs_em_memoria,
     merge_canvas_with_template,
-)
-
-from .pdf_extractors import (
     sort_pages,
     extract_siscac_data,
     interpretar_linha,
@@ -39,20 +41,25 @@ from .pdf_extractors import (
     split_pdf_to_temp_pages,
     processar_pdf_comprovantes,
     parse_siscac_report,
+    gerar_csv_relatorio,
 )
 
-from .siscac_diarias_sync import sync_diarias_siscac_csv
-
-from .diarias_import import (
+# Verbas domain
+from .verbas.diarias import (
     preview_diarias_lote,
     importar_diarias_lote,
     confirmar_diarias_lote,
+    sync_diarias_siscac_csv,
 )
 
-from .utils_contas import gerar_faturas_do_mes
+# Fluxo domain
+from .fluxo import gerar_faturas_do_mes
+
+# Top-level imports (cadastro)
 from .cadastros_import import importar_credores_csv, importar_contas_fixas_csv
-from .utils_permissoes import user_in_group, group_required
-from .utils_relatorios import gerar_csv_relatorio
+
+# Note: Permission utilities moved to @permission_required decorator pattern
+# See: .github/copilot-instructions.md#robust-security-rbac
 
 __all__ = [
     # compatibility exports
@@ -93,9 +100,6 @@ __all__ = [
     # utils_import
     "importar_credores_csv",
     "importar_contas_fixas_csv",
-    # utils_permissoes
-    "user_in_group",
-    "group_required",
     # utils_relatorios
     "gerar_csv_relatorio",
 ]

@@ -1,5 +1,6 @@
 """Modelos fiscais: notas, retenções e comprovantes de pagamento."""
 
+import logging
 import re
 from django.db import models
 from datetime import date
@@ -8,6 +9,9 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from simple_history.models import HistoricalRecords
 from processos.validators import validar_arquivo_seguro
+
+
+logger = logging.getLogger(__name__)
 
 
 def validar_cpf_cnpj(value):
@@ -38,8 +42,12 @@ def caminho_comprovante(instance, filename):
             ano = processo.data_empenho.year if processo.data_empenho else date.today().year
             mes = processo.data_empenho.month if processo.data_empenho else date.today().month
             return f'pagamentos/{ano}/{mes:02d}/proc_{processo.id}/comprovantes/{filename}'
-        except Exception:
-            pass
+        except AttributeError as exc:
+            logger.warning(
+                "Falha ao calcular caminho de comprovante para processo %s: %s",
+                getattr(instance, "processo_id", None),
+                exc,
+            )
     return f'comprovantes/{filename}'
 
 

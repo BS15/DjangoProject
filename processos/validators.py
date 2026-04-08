@@ -24,7 +24,7 @@ def validar_arquivo_seguro(file):
     try:
         mime_type = magic.from_buffer(file.read(2048), mime=True)
         file.seek(0)
-    except Exception:
+    except (magic.MagicException, OSError, TypeError, ValueError):
         raise ValidationError(
             "Não foi possível verificar o tipo do arquivo. "
             "Certifique-se de que o arquivo não está corrompido."
@@ -100,7 +100,7 @@ def verificar_turnpike(processo, status_anterior, status_novo):
         if getattr(processo, 'tipo_pagamento_id', None):
             try:
                 tipo_pagamento_nome = (processo.tipo_pagamento.tipo_de_pagamento or '').upper()
-            except Exception:
+            except AttributeError:
                 tipo_pagamento_nome = ''
 
         is_suprimento = 'SUPRIMENTO' in tipo_pagamento_nome
@@ -149,7 +149,13 @@ def verificar_turnpike_diaria(diaria, status_anterior, novo_status_str):
     if status_anterior:
         status_anterior_upper = status_anterior.upper()
         if status_anterior_upper in transicoes_validas and novo_status_upper not in transicoes_validas[status_anterior_upper]:
-            pass
+            permitidas = ', '.join(transicoes_validas.get(status_anterior_upper, [])) or 'nenhuma'
+            erros.append(
+                (
+                    f"Transição inválida de '{status_anterior_upper}' para '{novo_status_upper}'. "
+                    f"Transições permitidas: {permitidas}."
+                )
+            )
 
     return erros
 

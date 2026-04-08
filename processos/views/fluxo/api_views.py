@@ -14,14 +14,19 @@ respostas em `JsonResponse` para chamadas assíncronas.
 import json
 import logging
 
+import PyPDF2
 from django.contrib.auth.decorators import permission_required
+from django.db import DatabaseError
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from ...models import Processo, TiposDeDocumento
 from ...utils import extract_siscac_data, format_brl_amount, processar_pdf_boleto
-from ...services import gerar_resposta_pdf, montar_resposta_pdf
+from ...services.shared import gerar_resposta_pdf, montar_resposta_pdf
+
+
+logger = logging.getLogger(__name__)
 
 
 @permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
@@ -99,8 +104,8 @@ def api_extrair_codigos_barras_upload(request):
     if len(files) == 1:
         try:
             dados = processar_pdf_boleto(files[0]) or {}
-        except Exception as e:
-            logging.getLogger(__name__).exception(
+        except (PyPDF2.errors.PdfReadError, OSError, TypeError, ValueError):
+            logger.exception(
                 "Erro ao processar boleto no upload %s", getattr(files[0], "name", "")
             )
             return JsonResponse(
@@ -126,8 +131,8 @@ def api_extrair_codigos_barras_upload(request):
             else:
                 barcodes.append(None)
                 n_falhas += 1
-        except Exception as e:
-            logging.getLogger(__name__).exception(
+        except (PyPDF2.errors.PdfReadError, OSError, TypeError, ValueError):
+            logger.exception(
                 "Erro ao extrair código de barras de '%s'", getattr(pdf_file, "name", "arquivo")
             )
             barcodes.append(None)
@@ -173,8 +178,8 @@ def api_extrair_dados_empenho(request):
 
     try:
         data = extract_siscac_data(siscac_file)
-    except Exception:
-        logging.getLogger(__name__).exception(
+    except (PyPDF2.errors.PdfReadError, OSError, TypeError, ValueError):
+        logger.exception(
             "Erro ao extrair dados de empenho do arquivo %s", getattr(siscac_file, "name", "")
         )
         return JsonResponse(
@@ -238,7 +243,7 @@ def api_tipos_documento_por_pagamento(request):
 
         lista_docs = list(documentos_validos)
         return JsonResponse({"sucesso": True, "tipos": lista_docs})
-    except Exception as e:
+    except (DatabaseError, TypeError, ValueError) as e:
         return JsonResponse({"sucesso": False, "erro": str(e)})
 
 
@@ -294,10 +299,8 @@ def api_detalhes_pagamento(request):
                 )
 
             return JsonResponse({"sucesso": True, "dados": resultados})
-        except Exception as e:
-            import traceback
-
-            traceback.print_exc()
+        except (json.JSONDecodeError, TypeError, ValueError, KeyError) as e:
+            logger.exception("Erro ao montar detalhes de pagamento")
             return JsonResponse({"sucesso": False, "erro": str(e)})
 
     return JsonResponse({"sucesso": False, "erro": "Método inválido"})

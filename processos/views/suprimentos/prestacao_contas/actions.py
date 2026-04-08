@@ -28,7 +28,7 @@ def adicionar_despesa_action(request: HttpRequest, pk: int) -> HttpResponse:
         messages.success(request, "Despesa e documento anexados com sucesso!")
     except ValidationError as exc:
         messages.error(request, str(exc))
-    except Exception:
+    except (OSError, TypeError, ValueError):
         messages.error(request, "Erro ao processar a despesa. Verifique os valores.")
 
     return redirect("gerenciar_suprimento", pk=suprimento.id)

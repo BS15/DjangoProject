@@ -8,6 +8,6 @@ Fase de encerramento com preservação de histórico, auditoria e evidências do
 
 ::: processos.views.fluxo.auditing
 
-::: processos.views.assinaturas
+::: processos.views.sistemas_auxiliares.assinaturas
 
-::: processos.services.document_workflow
+::: processos.services.shared.documentos

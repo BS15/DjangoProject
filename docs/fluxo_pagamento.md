@@ -8,7 +8,7 @@ Módulos centrais da etapa de pagamento e integrações associadas.
 
 ## Integração SISCAC para Processo
 
-::: processos.views.fluxo.siscac_processo_sync
+::: processos.views.sistemas_auxiliares.sync.pagamentos
 
 ## Integração REINF
 
@@ -18,4 +18,4 @@ Módulos centrais da etapa de pagamento e integrações associadas.
 
 ::: processos.views.fiscal.fiscal_retencoes
 
-::: processos.views.fiscal.fiscal_liquidacoes
+::: processos.views.fluxo.pre_payment.liquidacoes

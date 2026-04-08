@@ -1,14 +1,19 @@
 """Acoes POST da etapa de empenho."""
 
+import logging
+
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import DatabaseError, transaction
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
 from .....models import Processo
 from ..helpers import _registrar_empenho_e_anexar_siscac
+
+
+logger = logging.getLogger(__name__)
 
 
 @permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
@@ -47,8 +52,9 @@ def registrar_empenho_action(request):
         )
     except Processo.DoesNotExist:
         messages.error(request, "Processo não encontrado.")
-    except Exception as e:
-        messages.error(request, f"Erro inesperado ao salvar empenho: {str(e)}")
+    except (DatabaseError, OSError, TypeError, ValueError):
+        logger.exception("Erro inesperado ao salvar empenho do processo %s", processo_id)
+        messages.error(request, "Erro interno ao salvar empenho. Tente novamente.")
 
     return redirect("a_empenhar")
 
@@ -76,8 +82,9 @@ def avancar_para_pagamento_view(request, pk):
     except ValidationError as ve:
         for erro in ve.messages:
             messages.error(request, erro)
-    except Exception as e:
-        messages.error(request, f"Erro ao avançar o processo: {str(e)}")
+    except (DatabaseError, TypeError, ValueError):
+        logger.exception("Erro ao avançar processo %s para pagamento", pk)
+        messages.error(request, "Erro interno ao avançar o processo. Tente novamente.")
 
     return redirect("editar_processo", pk=pk)
 

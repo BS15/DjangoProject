@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from .....models import Processo
-from .....services import gerar_resposta_pdf
+from .....services.shared import gerar_resposta_pdf
 from ...helpers import _processo_fila_detalhe_view
 
 

@@ -16,4 +16,4 @@ Módulos relacionados às etapas iniciais do processo.
 
 ## Views de Suporte
 
-::: processos.views.fluxo.support_views
+::: processos.views.fluxo.support

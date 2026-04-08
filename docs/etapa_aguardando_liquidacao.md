@@ -4,8 +4,8 @@ Fase de validação documental e liquidação fiscal antes da autorização de p
 
 ## Módulos associados
 
-::: processos.views.fiscal.fiscal_documentos
+::: processos.views.fluxo.pre_payment.cadastro.documentos
 
-::: processos.views.fiscal.fiscal_comprovantes
+::: processos.views.fluxo.payment.comprovantes
 
-::: processos.views.fiscal.fiscal_liquidacoes
+::: processos.views.fluxo.pre_payment.liquidacoes

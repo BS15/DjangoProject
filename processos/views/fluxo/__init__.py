@@ -9,13 +9,13 @@ Mesmo com a separacao por dominio em modulos dedicados.
 # Base comum e seguranca
 from .security import *
 from .helpers import *
-from .support_views import *
+from .support import *
+from ..sistemas_auxiliares.sync.pagamentos import *
 
 # Fluxo principal por etapa
 from .pre_payment import *
 from .payment import *
 from .post_payment import *
-from .siscac_processo_sync import *
 
 # Endpoints auxiliares transversais
 from .api_views import *

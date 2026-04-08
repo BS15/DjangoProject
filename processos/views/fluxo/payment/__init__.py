@@ -5,12 +5,10 @@ Este pacote preserva a interface publica historica de
 (painéis/listagens) dos endpoints de acao/mutacao.
 """
 
-from .actions import *
 from .autorizacao import *
 from .comprovantes import *
 from .contas_a_pagar import *
 from .lancamento import *
-from .panels import *
 
 __all__ = [
     "separar_para_lancamento_bancario",

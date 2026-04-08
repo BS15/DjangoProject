@@ -12,4 +12,4 @@ Fluxo de apreciação pelo conselho, aprovação final e arquivamento definitivo
 
 ## Relatórios e lacunas documentais
 
-::: processos.views.relatorios
+::: processos.views.sistemas_auxiliares.relatorios

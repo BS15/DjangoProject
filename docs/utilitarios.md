@@ -4,32 +4,32 @@ Referência de módulos utilitários e serviços de integração.
 
 ## Serviços
 
-::: processos.services.document_workflow
+::: processos.services.shared.documentos
 
-::: processos.autentique_service
+::: processos.services.integracoes.autentique
 
-::: processos.reinf_services
+::: processos.services.fiscal.reinf
 
 ## Geração e Extração de PDF
 
 ::: processos.pdf_generators
 
-::: processos.utils.pdf_extractors
+::: processos.utils.shared.pdf_tools
 
-::: processos.utils.pdf_multipurpose_tools
+::: processos.utils.shared.pdf_tools
 
 ## Importação e Helpers
 
-::: processos.utils.diarias_import
+::: processos.utils.verbas.diarias.importacao
 
 ::: processos.utils.cadastros_import
 
-::: processos.utils.text_helpers
+::: processos.utils.shared.text_tools
 
-::: processos.utils.utils_contas
+::: processos.utils.fluxo.contas
 
 ::: processos.utils.utils_permissoes
 
-::: processos.utils.utils_relatorios
+::: processos.utils.shared.relatorios
 
-::: processos.utils.siscac_diarias_sync
+::: processos.utils.verbas.diarias.siscac
