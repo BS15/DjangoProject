@@ -3,10 +3,8 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, redirect
-from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from .....models import Processo
-from .....services.shared import gerar_resposta_pdf
 from ...helpers import _processo_fila_detalhe_view
 
 
@@ -42,20 +40,4 @@ def conselho_processo_view(request, pk):
     )
 
 
-@permission_required("processos.pode_auditar_conselho", raise_exception=True)
-@xframe_options_sameorigin
-def gerar_parecer_conselho_view(request, pk):
-    """Gera e retorna o PDF de parecer do conselho para um processo."""
-    processo = get_object_or_404(Processo, pk=pk)
-    numero_reuniao = processo.reuniao_conselho.numero if processo.reuniao_conselho else None
-    nome_arquivo = f"Parecer_Conselho_Fiscal_Proc_{processo.id}.pdf"
-    return gerar_resposta_pdf(
-        "conselho_fiscal",
-        processo,
-        nome_arquivo,
-        inline=True,
-        numero_reuniao=numero_reuniao,
-    )
-
-
-__all__ = ["conselho_processo_view", "gerar_parecer_conselho_view"]
+__all__ = ["conselho_processo_view"]

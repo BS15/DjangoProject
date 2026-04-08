@@ -4,8 +4,7 @@ Este módulo concentra endpoints auxiliares usados pela interface do fluxo para:
 - extração de códigos de barras e metadados de boletos;
 - extração de dados de empenho a partir de PDF SISCAC;
 - carregamento dinâmico de tipos documentais por tipo de pagamento;
-- montagem de payload resumido para painéis de pagamento;
-- visualização/geração de PDFs operacionais.
+- montagem de payload resumido para painéis de pagamento.
 
 As regras de segurança seguem o padrão do projeto com `permission_required` e
 respostas em `JsonResponse` para chamadas assíncronas.
@@ -17,13 +16,11 @@ import logging
 import PyPDF2
 from django.contrib.auth.decorators import permission_required
 from django.db import DatabaseError
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from ...models import Processo, TiposDeDocumento
 from ...utils import extract_siscac_data, format_brl_amount, processar_pdf_boleto
-from ...services.shared import gerar_resposta_pdf, montar_resposta_pdf
 
 
 logger = logging.getLogger(__name__)
@@ -306,59 +303,10 @@ def api_detalhes_pagamento(request):
     return JsonResponse({"sucesso": False, "erro": "Método inválido"})
 
 
-@permission_required("processos.pode_operar_contas_pagar", raise_exception=True)
-@xframe_options_sameorigin
-def visualizar_pdf_processo(request, processo_id):
-    """Renderiza o PDF consolidado de documentos anexados ao processo.
-
-    Gera visualização inline no navegador usando o consolidado retornado por
-    `Processo.gerar_pdf_consolidado()`. Se o processo não tiver documentos PDF
-    compatíveis, responde com `404` e mensagem textual.
-
-    Parâmetros:
-        request: Requisição HTTP autenticada.
-        processo_id: ID do processo para geração do consolidado.
-
-    Retorna:
-        HttpResponse: Conteúdo `application/pdf` inline quando disponível.
-    """
-    processo = get_object_or_404(Processo, id=processo_id)
-
-    pdf_buffer = processo.gerar_pdf_consolidado()
-
-    if pdf_buffer is None:
-        return HttpResponse("Este processo ainda não possui documentos em PDF anexados.", status=404)
-
-    nome_arquivo = f"Processo_{processo.n_nota_empenho or processo.id}.pdf"
-    return montar_resposta_pdf(pdf_buffer, nome_arquivo, inline=True)
-
-
-@permission_required("processos.pode_autorizar_pagamento", raise_exception=True)
-@xframe_options_sameorigin
-def gerar_autorizacao_pagamento_view(request, pk):
-    """Gera e exibe o PDF de autorização de pagamento de um processo.
-
-    Utiliza o motor de documentos (`gerar_documento_pdf`) com template lógico
-    `autorizacao` e retorna o resultado para visualização inline.
-
-    Parâmetros:
-        request: Requisição HTTP autenticada com permissão de autorização.
-        pk: ID do processo para o qual a autorização será gerada.
-
-    Retorna:
-        HttpResponse: PDF inline com nome de arquivo padronizado.
-    """
-    processo = get_object_or_404(Processo, pk=pk)
-    nome_arquivo = f"Autorizacao_Pagamento_Proc_{processo.id}.pdf"
-    return gerar_resposta_pdf("autorizacao", processo, nome_arquivo, inline=True)
-
-
 __all__ = [
     "api_extrair_codigos_barras_processo",
     "api_extrair_codigos_barras_upload",
     "api_extrair_dados_empenho",
     "api_tipos_documento_por_pagamento",
     "api_detalhes_pagamento",
-    "visualizar_pdf_processo",
-    "gerar_autorizacao_pagamento_view",
 ]

@@ -3,6 +3,7 @@ from django.urls import path
 from processos.views.fluxo import api_views as fluxo_api_views
 from processos.views.fluxo import auditing as fluxo_auditing_views
 from processos.views.fluxo import security as fluxo_security_views
+from processos.views.fluxo import pdf as fluxo_pdf_views
 from processos.views.fluxo.support.core import home_page, process_detail_view
 from processos.views.fluxo.support.pendencia import painel_pendencias_view
 from processos.views.sistemas_auxiliares.sync import pagamentos as pagamentos_sync_views
@@ -32,6 +33,7 @@ from processos.views.fluxo.post_payment.conferencia import reviews as post_payme
 from processos.views.fluxo.post_payment.conselho import actions as post_payment_conselho_actions
 from processos.views.fluxo.post_payment.conselho import panels as post_payment_conselho_panels
 from processos.views.fluxo.post_payment.conselho import reviews as post_payment_conselho_reviews
+from processos.views.fluxo.post_payment.conselho import pdf as post_payment_conselho_pdf
 from processos.views.fluxo.post_payment.contabilizacao import actions as post_payment_contabilizacao_actions
 from processos.views.fluxo.post_payment.contabilizacao import panels as post_payment_contabilizacao_panels
 from processos.views.fluxo.post_payment.contabilizacao import reviews as post_payment_contabilizacao_reviews
@@ -48,7 +50,7 @@ urlpatterns = [
     path('processo/<int:pk>/editar/capa/', pre_payment_forms.editar_processo_capa_view, name='editar_processo_capa'),
     path('processo/<int:pk>/editar/documentos/', pre_payment_forms.editar_processo_documentos_view, name='editar_processo_documentos'),
     path('processo/<int:pk>/editar/pendencias/', pre_payment_forms.editar_processo_pendencias_view, name='editar_processo_pendencias'),
-    path('processo/<int:processo_id>/pdf/', fluxo_api_views.visualizar_pdf_processo, name='visualizar_pdf_processo'),
+    path('processo/<int:processo_id>/pdf/', fluxo_pdf_views.visualizar_pdf_processo, name='visualizar_pdf_processo'),
     path('contas-a-pagar/', payment_contas_panels.contas_a_pagar, name='contas_a_pagar'),
     path('api/processo/<int:pk>/extrair-codigos-barras/', fluxo_api_views.api_extrair_codigos_barras_processo, name='api_extrair_codigos_barras_processo'),
     path('api/extrair-codigos-barras-upload/', fluxo_api_views.api_extrair_codigos_barras_upload, name='api_extrair_codigos_barras_upload'),
@@ -96,8 +98,8 @@ urlpatterns = [
     path('contingencias/nova/enviar/', add_contingencia_action, name='add_contingencia_action'),
     path('contingencias/<int:pk>/analisar/', analisar_contingencia_view, name='analisar_contingencia'),
     path('api/processo_detalhes/', fluxo_auditing_views.api_processo_detalhes, name='api_processo_detalhes'),
-    path('processo/<int:pk>/autorizacao-pagamento/', fluxo_api_views.gerar_autorizacao_pagamento_view, name='gerar_autorizacao_pagamento'),
-    path('processo/<int:pk>/parecer-conselho/', post_payment_conselho_reviews.gerar_parecer_conselho_view, name='gerar_parecer_conselho'),
+    path('processo/<int:pk>/autorizacao-pagamento/', fluxo_pdf_views.gerar_autorizacao_pagamento_view, name='gerar_autorizacao_pagamento'),
+    path('processo/<int:pk>/parecer-conselho/', post_payment_conselho_pdf.gerar_parecer_conselho_view, name='gerar_parecer_conselho'),
     path('fluxo/sincronizar-siscac/', pagamentos_sync_views.sincronizar_siscac, name='sincronizar_siscac'),
     path('fluxo/sincronizar-siscac/manual/', pagamentos_sync_views.sincronizar_siscac_manual_action, name='sincronizar_siscac_manual_action'),
     path('fluxo/sincronizar-siscac/auto/', pagamentos_sync_views.sincronizar_siscac_auto_action, name='sincronizar_siscac_auto_action'),

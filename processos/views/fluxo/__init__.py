@@ -20,3 +20,4 @@ from .post_payment import *
 # Endpoints auxiliares transversais
 from .api_views import *
 from .auditing import *
+from .pdf import *

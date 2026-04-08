@@ -2,6 +2,7 @@
 
 from .actions import *
 from .panels import *
+from .pdf import *
 from .reviews import *
 
 __all__ = [
