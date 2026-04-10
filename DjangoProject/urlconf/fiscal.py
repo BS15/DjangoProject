@@ -1,12 +1,12 @@
 from django.urls import path
 
-from processos.views.fiscal import fiscal_reinf as fiscal_reinf_views
-from processos.views.fiscal import fiscal_retencoes as fiscal_retencoes_views
-from processos.views.fluxo.payment.comprovantes import panels as comprovantes_panels
-from processos.views.fluxo.payment.comprovantes import actions as comprovantes_actions
-from processos.views.fluxo.pre_payment.liquidacoes import panels as liquidacoes_panels
-from processos.views.fluxo.pre_payment.liquidacoes import actions as liquidacoes_actions
-from processos.views.fluxo.pre_payment.cadastro import documentos as documentos_fiscais_views
+from fiscal.views import fiscal_reinf as fiscal_reinf_views
+from fiscal.views import fiscal_retencoes as fiscal_retencoes_views
+from fluxo.views.payment.comprovantes import panels as comprovantes_panels
+from fluxo.views.payment.comprovantes import actions as comprovantes_actions
+from fluxo.views.pre_payment.liquidacoes import panels as liquidacoes_panels
+from fluxo.views.pre_payment.liquidacoes import actions as liquidacoes_actions
+from fluxo.views.pre_payment.cadastro import documentos as documentos_fiscais_views
 
 urlpatterns = [
     path('retencao-impostos/', fiscal_retencoes_views.painel_impostos, name='painel_impostos'),

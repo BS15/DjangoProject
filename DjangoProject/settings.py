@@ -63,7 +63,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'processos.apps.ProcessosConfig'
+    'credores.apps.CredoresConfig',
+    'fluxo.apps.FluxoConfig',
+    'suprimentos.apps.SuprimentosConfig',
+    'verbas_indenizatorias.apps.VerbasIndenizatoriasConfig',
+        'fiscal.apps.FiscalConfig',
 ]
 
 MIDDLEWARE = [
@@ -72,7 +76,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'processos.middleware.GlobalLoginRequiredMiddleware',
+    'fluxo.middleware.GlobalLoginRequiredMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
@@ -87,13 +91,13 @@ TEMPLATES = [
         ,
         'APP_DIRS': True,
         'OPTIONS': {
-            'builtins': ['processos.templatetags.formatting'],
+            'builtins': ['fluxo.templatetags.fmt_builtin'],
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.template.context_processors.static',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'processos.context_processors.alertas_contas_fixas',
+                'fluxo.context_processors.alertas_contas_fixas',
             ],
         },
     },

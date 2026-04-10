@@ -1,8 +1,8 @@
 from django.urls import path
 
-from processos.views import chaos as chaos_views
-from processos.views import desenvolvedor as dev_views
-from processos.views import teste_pdf
+from fluxo.views.debug import chaos as chaos_views
+from fluxo.views.debug import desenvolvedor as dev_views
+from fluxo.views.debug import teste_pdf
 
 urlpatterns = [
     path('processo/<int:pk>/gerar-dummy-pdf/', dev_views.gerar_dummy_pdf_view, name='gerar_dummy_pdf'),

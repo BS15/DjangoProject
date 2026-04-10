@@ -1,47 +1,47 @@
 from django.urls import path
 
-from processos.views.fluxo import api_views as fluxo_api_views
-from processos.views.fluxo import auditing as fluxo_auditing_views
-from processos.views.fluxo import security as fluxo_security_views
-from processos.views.fluxo import pdf as fluxo_pdf_views
-from processos.views.fluxo.support.core import home_page, process_detail_view
-from processos.views.fluxo.support.pendencia import painel_pendencias_view
-from processos.views.sistemas_auxiliares.sync import pagamentos as pagamentos_sync_views
-from processos.views.fluxo.support.contingencia import (
+from fluxo.views import api_views as fluxo_api_views
+from fluxo.views import auditing as fluxo_auditing_views
+from fluxo.views import pdf as fluxo_pdf_views
+from fluxo.views import security as fluxo_security_views
+from fluxo.views.support.core import home_page, process_detail_view
+from fluxo.views.support.sync import pagamentos as pagamentos_sync_views
+from fluxo.views.support.pendencia import painel_pendencias_view
+from fluxo.views.support.contingencia import (
     painel_contingencias_view,
     add_contingencia_view,
     add_contingencia_action,
     analisar_contingencia_view,
 )
-from processos.views.fluxo.support.devolucao import (
+from fluxo.views.support.devolucao import (
     painel_devolucoes_view,
     registrar_devolucao_view,
     registrar_devolucao_action,
 )
-from processos.views.fluxo.payment.autorizacao import actions as payment_autorizacao_actions
-from processos.views.fluxo.payment.autorizacao import panels as payment_autorizacao_panels
-from processos.views.fluxo.payment.contas_a_pagar import actions as payment_contas_actions
-from processos.views.fluxo.payment.contas_a_pagar import panels as payment_contas_panels
-from processos.views.fluxo.payment.lancamento import actions as payment_lancamento_actions
-from processos.views.fluxo.payment.lancamento import panels as payment_lancamento_panels
-from processos.views.fluxo.post_payment.arquivamento import actions as post_payment_arquivamento_actions
-from processos.views.fluxo.post_payment.arquivamento import panels as post_payment_arquivamento_panels
-from processos.views.fluxo.post_payment.arquivamento import reviews as post_payment_arquivamento_reviews
-from processos.views.fluxo.post_payment.conferencia import actions as post_payment_conferencia_actions
-from processos.views.fluxo.post_payment.conferencia import panels as post_payment_conferencia_panels
-from processos.views.fluxo.post_payment.conferencia import reviews as post_payment_conferencia_reviews
-from processos.views.fluxo.post_payment.conselho import actions as post_payment_conselho_actions
-from processos.views.fluxo.post_payment.conselho import panels as post_payment_conselho_panels
-from processos.views.fluxo.post_payment.conselho import reviews as post_payment_conselho_reviews
-from processos.views.fluxo.post_payment.conselho import pdf as post_payment_conselho_pdf
-from processos.views.fluxo.post_payment.contabilizacao import actions as post_payment_contabilizacao_actions
-from processos.views.fluxo.post_payment.contabilizacao import panels as post_payment_contabilizacao_panels
-from processos.views.fluxo.post_payment.contabilizacao import reviews as post_payment_contabilizacao_reviews
-from processos.views.fluxo.post_payment.reunioes import actions as post_payment_reunioes_actions
-from processos.views.fluxo.post_payment.reunioes import panels as post_payment_reunioes_panels
-from processos.views.fluxo.pre_payment.cadastro import forms as pre_payment_forms
-from processos.views.fluxo.pre_payment.empenho import actions as pre_payment_actions
-from processos.views.fluxo.pre_payment.empenho import panels as pre_payment_panels
+from fluxo.views.payment.autorizacao import actions as payment_autorizacao_actions
+from fluxo.views.payment.autorizacao import panels as payment_autorizacao_panels
+from fluxo.views.payment.contas_a_pagar import actions as payment_contas_actions
+from fluxo.views.payment.contas_a_pagar import panels as payment_contas_panels
+from fluxo.views.payment.lancamento import actions as payment_lancamento_actions
+from fluxo.views.payment.lancamento import panels as payment_lancamento_panels
+from fluxo.views.post_payment.arquivamento import actions as post_payment_arquivamento_actions
+from fluxo.views.post_payment.arquivamento import panels as post_payment_arquivamento_panels
+from fluxo.views.post_payment.arquivamento import reviews as post_payment_arquivamento_reviews
+from fluxo.views.post_payment.conferencia import actions as post_payment_conferencia_actions
+from fluxo.views.post_payment.conferencia import panels as post_payment_conferencia_panels
+from fluxo.views.post_payment.conferencia import reviews as post_payment_conferencia_reviews
+from fluxo.views.post_payment.conselho import actions as post_payment_conselho_actions
+from fluxo.views.post_payment.conselho import panels as post_payment_conselho_panels
+from fluxo.views.post_payment.conselho import pdf as post_payment_conselho_pdf
+from fluxo.views.post_payment.conselho import reviews as post_payment_conselho_reviews
+from fluxo.views.post_payment.contabilizacao import actions as post_payment_contabilizacao_actions
+from fluxo.views.post_payment.contabilizacao import panels as post_payment_contabilizacao_panels
+from fluxo.views.post_payment.contabilizacao import reviews as post_payment_contabilizacao_reviews
+from fluxo.views.post_payment.reunioes import actions as post_payment_reunioes_actions
+from fluxo.views.post_payment.reunioes import panels as post_payment_reunioes_panels
+from fluxo.views.pre_payment.cadastro import forms as pre_payment_forms
+from fluxo.views.pre_payment.empenho import actions as pre_payment_actions
+from fluxo.views.pre_payment.empenho import panels as pre_payment_panels
 
 urlpatterns = [
     path('', home_page, name='home_page'),
