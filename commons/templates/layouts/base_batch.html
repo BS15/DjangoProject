@@ -80,16 +80,19 @@
     };
 
     masterCb.addEventListener('change', function () {
-        getItems().forEach(function (cb) { cb.checked = masterCb.checked; });
+        var items = getItems();
+        items.forEach(function (item) {
+            item.checked = masterCb.checked;
+        });
     });
 
-    document.addEventListener('change', function (e) {
-        if (!e.target.classList.contains('batch-item-check')) return;
-        var items   = getItems();
-        var checked = items.filter(function (cb) { return cb.checked; }).length;
-        masterCb.indeterminate = checked > 0 && checked < items.length;
-        masterCb.checked       = checked === items.length;
+    var items = getItems();
+    items.forEach(function (item) {
+        item.addEventListener('change', function () {
+            var allChecked = items.every(function (i) { return i.checked; });
+            masterCb.checked = allChecked;
+        });
     });
-}());
+})();
 </script>
 {% endblock %}

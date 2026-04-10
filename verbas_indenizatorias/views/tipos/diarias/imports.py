@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import redirect, render
 
-from fluxo.utils import confirmar_diarias_lote, preview_diarias_lote
+from .import_services import confirmar_diarias_lote, preview_diarias_lote
 
 
 @permission_required("fluxo.pode_importar_diarias", raise_exception=True)

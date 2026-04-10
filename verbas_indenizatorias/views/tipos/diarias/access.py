@@ -1,8 +1,8 @@
-"""Helpers de acesso para fluxos de assinatura."""
+"""Regras de acesso específicas do fluxo de assinaturas de diárias."""
 
 
 def user_is_entity_owner(user, entidade):
-    """Retorna True quando o usuario e dono funcional da entidade."""
+    """Retorna True quando o usuário é o dono funcional da entidade."""
     if user is None or entidade is None:
         return False
 

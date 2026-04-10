@@ -1,19 +1,10 @@
-import io
 import logging
-import os
-import textwrap
 from datetime import date
 
-from django.conf import settings
-from pypdf import PdfReader
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-
-from fluxo.utils import format_brl_currency as _formatar_moeda
-from fluxo.utils import merge_canvas_with_template
+from commons.shared.pdf_tools import BasePDFDocument, _draw_wrapped_text, _contar_paginas_documentos
+from commons.shared.text_tools import format_brl_currency as _formatar_moeda
 
 logger = logging.getLogger(__name__)
-_CHAR_WIDTH_RATIO = 0.55
 _SIGNATURE_BLOCK_HEIGHT = 160
 _MAX_AUDIT_TRAIL_ENTRIES = 10
 _AUTH_SIG_Y = 120
@@ -21,91 +12,6 @@ _AUTH_SIG_HALF_WIDTH = 130
 _AUTH_SIG_DATE_OFFSET = 32
 _COUNCIL_SIG_Y = 110
 _COUNCIL_SIG_WIDTH = 145
-_PCD_SIG_Y = 120
-_PCD_SIG_HALF_WIDTH = 130
-_SCD_SIG_Y = 200
-_SCD_SIG_LABEL_Y = 186
-
-def _draw_wrapped_text(p, text, x, y, max_width, font_name="Helvetica", font_size=11, leading=16):
-    """
-    Desenha texto com quebra automática de linha no canvas ReportLab.
-    Retorna a posição Y após o último texto desenhado.
-    """
-    if not text:
-        return y
-    p.setFont(font_name, font_size)
-    chars_per_line = max(1, int(max_width / (font_size * _CHAR_WIDTH_RATIO)))
-    lines = textwrap.wrap(str(text), width=chars_per_line)
-    if not lines:
-        lines = [str(text)]
-    for line in lines:
-        p.drawString(x, y, line)
-        y -= leading
-    return y
-
-
-def _contar_paginas_documentos(processo):
-    """
-    Conta o número total de documentos e páginas nos DocumentoProcesso em PDF.
-    Retorna uma tupla (total_documentos, total_paginas).
-    """
-    total_docs = 0
-    total_pages = 0
-
-    for doc in processo.documentos.all():
-        total_docs += 1
-        try:
-            with doc.arquivo.open('rb') as f:
-                reader = PdfReader(f)
-                total_pages += len(reader.pages)
-        except (FileNotFoundError, OSError, ValueError) as exc:
-            logger.warning(
-                "Não foi possível contar páginas do documento %s do processo %s: %s",
-                getattr(doc, "id", None),
-                processo.id,
-                exc,
-            )
-
-    return total_docs, total_pages
-
-
-class BasePDFDocument:
-    """
-    Classe base para geração de documentos PDF no padrão Strategy.
-
-    Subclasses devem sobrescrever ``draw_content`` para desenhar o layout no
-    canvas e usar ``generate`` para obter o PDF final em bytes.
-    """
-
-    def __init__(self, obj, letterhead_path=None, **kwargs):
-        """Inicializa contexto de renderização para a entidade informada."""
-        self.obj = obj
-        self.packet = io.BytesIO()
-        self.canvas = canvas.Canvas(self.packet, pagesize=A4)
-        self.page_width, self.page_height = A4
-        self.letterhead_path = letterhead_path or getattr(settings, 'CRECI_LETTERHEAD_PATH', None)
-        self.kwargs = kwargs
-
-    def draw_content(self):
-        """Desenha o conteúdo específico do documento no canvas atual."""
-        raise NotImplementedError("Subclasses must implement draw_content()")
-
-    def generate(self):
-        """Renderiza o conteúdo e retorna o PDF final mesclado ao timbrado."""
-        self.draw_content()
-        self.canvas.save()
-        template_path = None
-        if self.letterhead_path:
-            template_path = os.path.join(settings.BASE_DIR, self.letterhead_path)
-            if not os.path.exists(template_path):
-                logger.warning(
-                    "Letterhead file not found at '%s'. Generating PDF without letterhead.",
-                    template_path,
-                )
-                template_path = None
-
-        merged_packet = merge_canvas_with_template(self.packet, template_path)
-        return merged_packet.getvalue()
 
 
 class TermoContabilizacaoDocument(BasePDFDocument):
@@ -193,11 +99,7 @@ class TermoAtesteDocument(BasePDFDocument):
             "de forma satisfatória e de acordo com as especificações contratuais exigidas."
         )
         c.setFont("Helvetica", 11)
-        wrapped_lines = textwrap.wrap(declaration, width=85)
-        y = 430
-        for line in wrapped_lines:
-            c.drawString(72, y, line)
-            y -= line_height
+        y = _draw_wrapped_text(declaration, 72, 430, 500, font_name="Helvetica", font_size=11, leading=20)
 
         sig_x = page_width / 2
         if documento_fiscal.fiscal_contrato:
@@ -305,193 +207,10 @@ class AutorizacaoDocument(BasePDFDocument):
         c.drawCentredString(sig_x, _AUTH_SIG_Y - 14, "Ordenador(a) de Despesa")
 
 
-class PCDDocument(BasePDFDocument):
-    """Gera o PDF da Proposta de Concessão de Diárias (PCD)."""
-
-    def draw_content(self):
-        """Desenha corpo da PCD no canvas."""
-        diaria = self.obj
-        c = self.canvas
-        width = self.page_width
-        height = self.page_height
-
-        margin_left = 70
-        margin_right = 70
-        text_width = width - margin_left - margin_right
-
-        y = height - 160
-
-        c.setFont("Helvetica-Bold", 13)
-        c.drawCentredString(width / 2.0, y, "PROPOSTA DE CONCESSÃO DE DIÁRIAS (PCD)")
-        y -= 18
-        c.setFont("Helvetica-Bold", 11)
-        c.drawCentredString(width / 2.0, y, f"Nº {diaria.numero_siscac}")
-        y -= 16
-        c.setFont("Helvetica", 10)
-        c.drawCentredString(width / 2.0, y, f"Tipo: {diaria.get_tipo_solicitacao_display()}")
-        y -= 28
-
-        c.setLineWidth(0.5)
-        c.line(margin_left, y, width - margin_right, y)
-        y -= 20
-
-        nome = str(diaria.beneficiario.nome) if diaria.beneficiario and diaria.beneficiario.nome else "Não informado"
-        cpf = str(diaria.beneficiario.cpf_cnpj) if diaria.beneficiario and diaria.beneficiario.cpf_cnpj else "Não informado"
-        cargo = str(diaria.beneficiario.cargo_funcao) if diaria.beneficiario and diaria.beneficiario.cargo_funcao else "Não informado"
-
-        c.setFont("Helvetica-Bold", 11)
-        c.drawString(margin_left, y, "DADOS DO BENEFICIÁRIO:")
-        y -= 16
-        c.setFont("Helvetica", 11)
-        c.drawString(margin_left, y, f"Nome:              {nome}")
-        y -= 16
-        c.drawString(margin_left, y, f"CPF:               {cpf}")
-        y -= 16
-        c.drawString(margin_left, y, f"Cargo / Função:    {cargo}")
-        y -= 24
-
-        if diaria.proponente:
-            c.setFont("Helvetica-Bold", 11)
-            c.drawString(margin_left, y, "PROPONENTE:")
-            y -= 16
-            c.setFont("Helvetica", 11)
-            nome_p = diaria.proponente.get_full_name() or diaria.proponente.username
-            email_p = diaria.proponente.email or "Não informado"
-            cargo_p = "Não informado"
-            c.drawString(margin_left, y, f"Nome:              {nome_p}")
-            y -= 16
-            c.drawString(margin_left, y, f"E-mail:            {email_p}")
-            y -= 16
-            c.drawString(margin_left, y, f"Cargo / Função:    {cargo_p}")
-            y -= 24
-
-        c.setFont("Helvetica-Bold", 11)
-        c.drawString(margin_left, y, "DADOS DA VIAGEM:")
-        y -= 16
-        c.setFont("Helvetica", 11)
-
-        data_saida = diaria.data_saida.strftime('%d/%m/%Y') if diaria.data_saida else "Não informado"
-        data_retorno = diaria.data_retorno.strftime('%d/%m/%Y') if diaria.data_retorno else "Não informado"
-
-        c.drawString(margin_left, y, f"Data de Saída:           {data_saida}")
-        y -= 16
-        c.drawString(margin_left, y, f"Data de Retorno:         {data_retorno}")
-        y -= 16
-        c.drawString(margin_left, y, f"Cidade de Origem:        {diaria.cidade_origem or 'Não informado'}")
-        y -= 16
-        c.drawString(margin_left, y, f"Cidade(s) de Destino:    {diaria.cidade_destino or 'Não informado'}")
-        y -= 16
-        if diaria.meio_de_transporte:
-            c.drawString(margin_left, y, f"Meio de Transporte:      {diaria.meio_de_transporte}")
-            y -= 16
-        y -= 8
-
-        c.setFont("Helvetica-Bold", 11)
-        c.drawString(margin_left, y, "OBJETIVO DA VIAGEM:")
-        y -= 16
-        y = _draw_wrapped_text(c, diaria.objetivo or "Não informado.", margin_left, y, text_width,
-                               font_name="Helvetica", font_size=11)
-        y -= 20
-
-        c.setFont("Helvetica-Bold", 11)
-        c.drawString(margin_left, y, "VALORES:")
-        y -= 16
-        c.setFont("Helvetica", 11)
-        c.drawString(margin_left, y, f"Quantidade de Diárias:   {diaria.quantidade_diarias}")
-        y -= 16
-        c.setFont("Helvetica-Bold", 11)
-        c.drawString(margin_left, y, f"Valor Total:             {_formatar_moeda(diaria.valor_total)}")
-        y -= 28
-
-        c.setLineWidth(0.5)
-        c.line(margin_left, y, width - margin_right, y)
-        y -= 14
-        boilerplate = (
-            "Proposta de concessão de diárias elaborada nos termos da legislação e regulamento interno vigentes, "
-            "para fins de autorização pelo Ordenador de Despesas."
-        )
-        _draw_wrapped_text(c, boilerplate, margin_left, y, text_width, font_name="Helvetica-Oblique", font_size=10)
-
-        sig_left_x = margin_left + _PCD_SIG_HALF_WIDTH
-        sig_right_x = width - margin_right - _PCD_SIG_HALF_WIDTH
-
-        c.setFont("Helvetica", 9)
-
-        c.drawCentredString(sig_left_x, _PCD_SIG_Y + 38, nome)
-        c.drawCentredString(sig_left_x, _PCD_SIG_Y + 26, f"CPF: {cpf}")
-        c.drawCentredString(sig_left_x, _PCD_SIG_Y + 14, cargo)
-        c.line(sig_left_x - _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y,
-               sig_left_x + _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y)
-        c.drawCentredString(sig_left_x, _PCD_SIG_Y - 12, "Assinatura do(a) Beneficiário(a)")
-
-        c.drawCentredString(sig_right_x, _PCD_SIG_Y + 14,
-                            "Local e Data: _____ / _____ / _________")
-        c.line(sig_right_x - _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y,
-               sig_right_x + _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y)
-        c.drawCentredString(sig_right_x, _PCD_SIG_Y - 12, "Ordenador(a) de Despesa")
 
 
-class SCDDocument(BasePDFDocument):
-    """Gera o PDF da Solicitação de Concessão de Diárias (SCD)."""
 
-    def draw_content(self):
-        """Desenha corpo da SCD no canvas."""
-        diaria = self.obj
-        c = self.canvas
-        width = self.page_width
 
-        margin_left = 70
-        margin_right = 70
-        text_width = width - margin_left - margin_right
-
-        c.setFont("Helvetica-Bold", 14)
-        c.drawCentredString(width / 2.0, 620, "SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS - SCD")
-
-        c.setFont("Helvetica", 11)
-        y = 550
-
-        siscac = diaria.numero_siscac or 'N/A'
-        nome_benef = diaria.beneficiario.nome if diaria.beneficiario else 'N/A'
-        cpf_benef = diaria.beneficiario.cpf_cnpj if diaria.beneficiario else 'N/A'
-        proponente = diaria.proponente.get_full_name() if diaria.proponente else 'N/A'
-        data_saida = diaria.data_saida.strftime('%d/%m/%Y') if diaria.data_saida else 'N/A'
-        data_retorno = diaria.data_retorno.strftime('%d/%m/%Y') if diaria.data_retorno else 'N/A'
-        transporte = diaria.meio_de_transporte.meio_de_transporte if diaria.meio_de_transporte else 'N/A'
-
-        fields = [
-            f"Nº SISCAC: {siscac}",
-            f"Beneficiário: {nome_benef} - CPF: {cpf_benef}",
-            f"Proponente: {proponente}",
-            f"Período: {data_saida} a {data_retorno}",
-            f"Trajeto: {diaria.cidade_origem} para {diaria.cidade_destino}",
-            f"Transporte: {transporte}",
-        ]
-        for field in fields:
-            c.drawString(margin_left, y, field)
-            y -= 20
-
-        c.setFont("Helvetica-Bold", 11)
-        c.drawString(margin_left, 430, "Objetivo:")
-        _draw_wrapped_text(c, diaria.objetivo or 'N/A', margin_left, 410, text_width,
-                           font_name="Helvetica", font_size=11)
-
-        c.setFont("Helvetica", 11)
-        c.drawString(
-            margin_left, 380,
-            f"Cálculo: {diaria.quantidade_diarias} diárias - Total Estimado: {_formatar_moeda(diaria.valor_total)}",
-        )
-
-        sig_left_x = margin_left + _PCD_SIG_HALF_WIDTH
-        sig_right_x = width - margin_right - _PCD_SIG_HALF_WIDTH
-
-        c.setFont("Helvetica", 10)
-        c.line(sig_left_x - _PCD_SIG_HALF_WIDTH, _SCD_SIG_Y,
-               sig_left_x + _PCD_SIG_HALF_WIDTH, _SCD_SIG_Y)
-        c.drawCentredString(sig_left_x, _SCD_SIG_LABEL_Y, "Assinatura do Beneficiário")
-
-        c.line(sig_right_x - _PCD_SIG_HALF_WIDTH, _SCD_SIG_Y,
-               sig_right_x + _PCD_SIG_HALF_WIDTH, _SCD_SIG_Y)
-        c.drawCentredString(sig_right_x, _SCD_SIG_LABEL_Y, "Assinatura do Proponente")
 
 
 class ConselhoFiscalDocument(BasePDFDocument):
@@ -731,117 +450,24 @@ class TermoAuditoriaDocument(BasePDFDocument):
         c.drawCentredString(sig_x, _AUTH_SIG_Y - 14, "Responsável pela Auditoria")
 
 
-class ReciboDocument(BasePDFDocument):
-    """Gera PDF de recibo para reembolso, auxílio, jeton e suprimento."""
-
-    def draw_content(self):
-        """Desenha corpo do recibo com dispatch por tipo de objeto."""
-        obj = self.obj
-        c = self.canvas
-        page_width = self.page_width
-
-        _RECIBO_DISPATCH = {
-            'ReembolsoCombustivel': (
-                "Reembolso de Combustível",
-                lambda o: o.beneficiario,
-                lambda o: o.valor_total,
-            ),
-            'AuxilioRepresentacao': (
-                "Auxílio Representação",
-                lambda o: o.beneficiario,
-                lambda o: o.valor_total,
-            ),
-            'Jeton': (
-                "Jeton",
-                lambda o: o.beneficiario,
-                lambda o: o.valor_total,
-            ),
-            'SuprimentoDeFundos': (
-                "Suprimento de Fundos",
-                lambda o: o.suprido,
-                lambda o: o.valor_liquido,
-            ),
-        }
-
-        class_name = obj.__class__.__name__
-        dispatch = _RECIBO_DISPATCH.get(class_name)
-        if dispatch is None:
-            raise ValueError(
-                f"ReciboDocument não suporta o tipo '{class_name}'. "
-                f"Tipos aceitos: {', '.join(_RECIBO_DISPATCH)}."
-            )
-        tipo_verba, get_beneficiario, get_valor = dispatch
-        beneficiario = get_beneficiario(obj)
-        valor = get_valor(obj)
-
-        valor_formatado = _formatar_moeda(valor)
-        beneficiario_nome = beneficiario.nome if beneficiario else "N/A"
-        beneficiario_cpf = beneficiario.cpf_cnpj if beneficiario else "N/A"
-
-        c.setFont("Helvetica-Bold", 14)
-        c.drawCentredString(page_width / 2, 620, "RECIBO DE PAGAMENTO")
-
-        c.setFont("Helvetica-Bold", 12)
-        c.drawCentredString(page_width / 2, 590, tipo_verba.upper())
-
-        declaration = (
-            f"Recebi do Conselho Regional de Corretores de Imóveis de Santa Catarina - "
-            f"11ª Região (CRECI-SC), a importância líquida de {valor_formatado}, "
-            f"referente ao pagamento de {tipo_verba}."
-        )
-        margin_left = 72
-        text_width = page_width - 2 * margin_left
-        _draw_wrapped_text(
-            c, declaration, margin_left, 540, text_width,
-            font_name="Helvetica", font_size=12,
-        )
-
-        c.setFont("Helvetica", 11)
-        c.drawString(margin_left, 450, f"Beneficiário / Recebedor: {beneficiario_nome}")
-        c.drawString(margin_left, 434, f"CPF / CNPJ: {beneficiario_cpf}")
-
-        sig_x = page_width / 2
-        c.line(sig_x - 130, 250, sig_x + 130, 250)
-        c.setFont("Helvetica", 11)
-        c.drawCentredString(sig_x, 265, beneficiario_nome)
-        c.drawCentredString(sig_x, 236, "Assinatura do Recebedor")
-        c.drawCentredString(sig_x, 220, "Local e Data: Florianópolis, _____ / _____ / _________")
 
 
-DOCUMENT_REGISTRY = {
-    'scd': SCDDocument,
+
+# Registry de documentos específicos de fluxo (pagamentos)
+FLUXO_DOCUMENT_REGISTRY = {
     'contabilizacao': TermoContabilizacaoDocument,
     'auditoria': TermoAuditoriaDocument,
     'ateste': TermoAtesteDocument,
     'autorizacao': AutorizacaoDocument,
-    'pcd': PCDDocument,
     'conselho_fiscal': ConselhoFiscalDocument,
-    'recibo_reembolso': ReciboDocument,
-    'recibo_auxilio': ReciboDocument,
-    'recibo_jeton': ReciboDocument,
-    'recibo_suprimento': ReciboDocument,
 }
 
 
-def gerar_documento_pdf(doc_type, obj, **kwargs):
-    """Instancia a classe de documento adequada e retorna o PDF em bytes."""
-    doc_class = DOCUMENT_REGISTRY.get(doc_type.lower())
-    if not doc_class:
-        raise ValueError(f"Tipo de documento '{doc_type}' não reconhecido.")
-    documento = doc_class(obj, **kwargs)
-    return documento.generate()
-
-
 __all__ = [
-    "BasePDFDocument",
     "TermoContabilizacaoDocument",
     "TermoAtesteDocument",
     "AutorizacaoDocument",
-    "PCDDocument",
-    "SCDDocument",
     "ConselhoFiscalDocument",
     "TermoAuditoriaDocument",
-    "ReciboDocument",
-    "DOCUMENT_REGISTRY",
-    "gerar_documento_pdf",
+    "FLUXO_DOCUMENT_REGISTRY",
 ]

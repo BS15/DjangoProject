@@ -1,7 +1,6 @@
 """Modelos centrais do fluxo financeiro, auditoria e gestão documental."""
 
 import logging
-import os
 from django.db import models
 from django.db.models import Max, Sum
 from django.utils import timezone
@@ -16,33 +15,9 @@ from simple_history.models import HistoricalRecords
 from datetime import date, datetime
 from fluxo.validators import validar_arquivo_seguro
 from fluxo.utils import mesclar_pdfs_em_memoria
-
+from commons.shared.storage_utils import caminho_documento, _delete_file
 
 logger = logging.getLogger(__name__)
-
-
-def caminho_documento(instance, filename):
-    """Resolve o diretório de upload conforme entidade de negócio vinculada."""
-    if hasattr(instance, 'processo') and instance.processo:
-        ano = instance.processo.data_empenho.year if instance.processo.data_empenho else (instance.processo.ano_exercicio or 9999)
-        return f'pagamentos/{ano}/proc_{instance.processo.id}/{filename}'
-
-    if hasattr(instance, 'diaria') and instance.diaria:
-        return f'verbasindenizatorias/diarias/diaria_{instance.diaria.id}/{filename}'
-    if hasattr(instance, 'reembolso') and instance.reembolso:
-        return f'verbasindenizatorias/reembolsos/reembolso_{instance.reembolso.id}/{filename}'
-    if hasattr(instance, 'jeton') and instance.jeton:
-        return f'verbasindenizatorias/jetons/jeton_{instance.jeton.id}/{filename}'
-    if hasattr(instance, 'auxilio') and instance.auxilio:
-        return f'verbasindenizatorias/auxilios/auxilio_{instance.auxilio.id}/{filename}'
-
-    if instance.__class__.__name__ == 'DespesaSuprimento':
-        return f'suprimentosdefundos/suprimento_{instance.suprimento.id}/despesas/{filename}'
-
-    if hasattr(instance, 'suprimento') and instance.suprimento:
-        return f'suprimentosdefundos/suprimento_{instance.suprimento.id}/{filename}'
-
-    return f'documentos_avulsos/{filename}'
 
 
 class StatusChoicesProcesso(models.Model):
@@ -844,19 +819,6 @@ class AssinaturaAutentique(models.Model):
 
     def __str__(self):
         return f"{self.tipo_documento} - {self.autentique_id} ({self.status})"
-
-
-def _delete_file(file_field):
-    """Remove arquivo do storage, ignorando erros quando inexistente."""
-    if file_field and file_field.name:
-        try:
-            file_field.storage.delete(file_field.name)
-        except (FileNotFoundError, OSError) as exc:
-            logger.warning(
-                "Falha ao remover arquivo '%s' do storage: %s",
-                file_field.name,
-                exc,
-            )
 
 
 @receiver(post_delete, sender=DocumentoDePagamento)

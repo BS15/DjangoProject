@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import render
 
-from fluxo.utils import sync_diarias_siscac_csv
+from .import_services import sync_diarias_siscac_csv
 
 logger = logging.getLogger(__name__)
 
