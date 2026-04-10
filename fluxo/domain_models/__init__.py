@@ -1,25 +1,23 @@
-"""Fachada pública dos modelos do domínio de fluxo financeiro."""
+"""Modelos do domínio de fluxo financeiro organizados por submódulos."""
 
-from fluxo.domain_models import (
-    AssinaturaAutentique,
-    Contingencia,
-    Devolucao,
-    DocumentoDePagamento,
-    DocumentoOrcamentario,
-    DocumentoProcesso,
+from .catalogos import (
     FormasDePagamento,
-    Pendencia,
-    Processo,
-    ProcessoManager,
-    RegistroAcessoArquivo,
-    ReuniaoConselho,
-    STATUS_CONTINGENCIA,
     StatusChoicesPendencias,
     StatusChoicesProcesso,
     TagChoices,
     TiposDeDocumento,
     TiposDePagamento,
     TiposDePendencias,
+)
+from .documentos import DocumentoDePagamento, DocumentoOrcamentario, DocumentoProcesso
+from .processos import Processo, ProcessoManager, ReuniaoConselho
+from .suporte import (
+    AssinaturaAutentique,
+    Contingencia,
+    Devolucao,
+    Pendencia,
+    RegistroAcessoArquivo,
+    STATUS_CONTINGENCIA,
 )
 
 

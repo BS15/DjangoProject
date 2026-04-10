@@ -10,7 +10,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 
 from suprimentos.forms import SuprimentoForm
-from ..helpers import _persistir_suprimento_com_processo
+from .actions import persistir_suprimento_com_processo
 
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ def add_suprimento_view(request: HttpRequest) -> HttpResponse:
 
     if request.method == "POST" and form.is_valid():
         try:
-            _persistir_suprimento_com_processo(form)
+            persistir_suprimento_com_processo(form)
             messages.success(request, "Suprimento de Fundos cadastrado com sucesso!")
             return redirect("painel_suprimentos")
         except (ValidationError, DatabaseError, TypeError, ValueError):

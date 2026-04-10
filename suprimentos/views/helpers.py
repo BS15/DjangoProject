@@ -1,65 +1,19 @@
 """Funções auxiliares privadas do fluxo de suprimentos."""
 
 from datetime import datetime
-from decimal import Decimal
 from typing import Any, Mapping
 
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
 
-from fluxo.models import FormasDePagamento, Processo, StatusChoicesProcesso, TiposDePagamento
+from fluxo.models import StatusChoicesProcesso
 from suprimentos.models import DespesaSuprimento, StatusChoicesSuprimentoDeFundos
-from suprimentos.forms import SuprimentoForm
 from fluxo.utils import parse_brl_decimal
 
 def _suprimento_encerrado(suprimento: Any) -> bool:
     """Indica se o suprimento está em status final de encerramento."""
     return bool(suprimento.status and suprimento.status.status_choice.upper() == "ENCERRADO")
-
-
-def _persistir_suprimento_com_processo(form_suprimento: SuprimentoForm) -> Any:
-    """Persiste suprimento e cria o processo financeiro vinculado em transação atômica."""
-    with transaction.atomic():
-        suprimento: Any = form_suprimento.save(commit=False)
-        status_aberto, _ = StatusChoicesSuprimentoDeFundos.objects.get_or_create(status_choice="ABERTO")
-        suprimento.status = status_aberto
-        suprimento.save()
-
-        nome_lotacao = suprimento.lotacao or "Unidade Não Especificada"
-        detalhamento = (
-            f"Referente a suprimento de fundos da {nome_lotacao} "
-            f"- mês {suprimento.data_saida.month}/{suprimento.data_saida.year}"
-        )
-
-        forma_pgto, _ = FormasDePagamento.objects.get_or_create(
-            forma_de_pagamento__iexact="CARTÃO PRÉ-PAGO",
-            defaults={"forma_de_pagamento": "CARTÃO PRÉ-PAGO"},
-        )
-        tipo_pgto, _ = TiposDePagamento.objects.get_or_create(
-            tipo_de_pagamento__iexact="SUPRIMENTO DE FUNDOS",
-            defaults={"tipo_de_pagamento": "SUPRIMENTO DE FUNDOS"},
-        )
-        status_inicial, _ = StatusChoicesProcesso.objects.get_or_create(
-            status_choice__iexact="A EMPENHAR",
-            defaults={"status_choice": "A EMPENHAR"},
-        )
-
-        taxa_saque = suprimento.taxa_saque or Decimal("0")
-        processo = Processo.objects.create(
-            credor=suprimento.suprido,
-            valor_bruto=suprimento.valor_liquido,
-            valor_liquido=(suprimento.valor_liquido or Decimal("0")) - taxa_saque,
-            forma_pagamento=forma_pgto,
-            tipo_pagamento=tipo_pgto,
-            status=status_inicial,
-            detalhamento=detalhamento,
-            extraorcamentario=False,
-        )
-
-        suprimento.processo = processo
-        suprimento.save(update_fields=["processo"])
-        return suprimento
 
 
 def _salvar_despesa_manual(

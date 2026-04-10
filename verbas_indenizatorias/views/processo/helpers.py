@@ -6,7 +6,7 @@ from django.db import DatabaseError, transaction
 
 from fluxo.forms import PendenciaFormSet, ProcessoForm
 from verbas_indenizatorias.models import AuxilioRepresentacao, Diaria, Jeton, ReembolsoCombustivel
-from ..verbas_shared import _get_tipos_documento_ativos
+from ..shared.registry import _get_tipos_documento_ativos
 
 logger = logging.getLogger(__name__)
 

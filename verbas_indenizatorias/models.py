@@ -9,7 +9,7 @@ from simple_history.models import HistoricalRecords
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError as DjangoValidationError
 
-from fluxo.models import DocumentoBase
+from commons.shared.models import DocumentoBase
 from commons.shared.storage_utils import caminho_documento, _delete_file
 
 

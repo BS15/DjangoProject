@@ -6,7 +6,7 @@ from django.shortcuts import render
 
 from verbas_indenizatorias.models import Diaria
 from verbas_indenizatorias.filters import DiariaFilter
-from ...verbas_shared import _render_lista_verba
+from ...shared.lists import _render_lista_verba
 
 
 @permission_required('fluxo.pode_visualizar_verbas', raise_exception=True)

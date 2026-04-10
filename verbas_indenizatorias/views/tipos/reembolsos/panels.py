@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import permission_required
 
 from verbas_indenizatorias.models import ReembolsoCombustivel
 from verbas_indenizatorias.filters import ReembolsoFilter
-from ...verbas_shared import _render_lista_verba
+from ...shared.lists import _render_lista_verba
 
 
 @permission_required("fluxo.pode_visualizar_verbas", raise_exception=True)
