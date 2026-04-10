@@ -1,22 +1,24 @@
 from django.urls import path
 
-from processos.views import cadastros as cadastro_views
-from processos.views import suprimentos as suprimento_views
-from processos.views.sistemas_auxiliares import assinaturas as assinatura_views
-from processos.views.sistemas_auxiliares import contas as conta_views
-from processos.views.sistemas_auxiliares import relatorios as relatorio_views
-from processos.views.sistemas_auxiliares.imports import credores as credores_import_views
+from credores import imports as credores_import_views
+from credores import views as credor_views
+from fluxo.views.sistemas_auxiliares import assinaturas as assinatura_views
+from fluxo.views.sistemas_auxiliares import contas as conta_views
+from fluxo.views.sistemas_auxiliares import relatorios as relatorio_views
+from suprimentos.views.cadastro import forms as suprimento_cadastro_forms
+from suprimentos.views.prestacao_contas import actions as suprimento_actions
+from suprimentos.views.prestacao_contas import panels as suprimento_panels
 
 urlpatterns = [
-    path('adicionar-credor/', cadastro_views.add_credor_view, name='add_credor'),
-    path('credores/', cadastro_views.credores_list_view, name='credores_list'),
-    path('credores/<int:pk>/editar/', cadastro_views.edit_credor_view, name='edit_credor'),
-    path('api/credor/<int:credor_id>/', cadastro_views.api_dados_credor, name='api_dados_credor'),
-    path('suprimentos/', suprimento_views.painel_suprimentos_view, name='painel_suprimentos'),
-    path('suprimentos/<int:pk>/gerenciar/', suprimento_views.gerenciar_suprimento_view, name='gerenciar_suprimento'),
-    path('suprimentos/<int:pk>/despesas/adicionar/', suprimento_views.adicionar_despesa_action, name='adicionar_despesa_action'),
-    path('suprimentos/<int:pk>/fechar/', suprimento_views.fechar_suprimento_action, name='fechar_suprimento_action'),
-    path('suprimentos/novo/', suprimento_views.add_suprimento_view, name='add_suprimento'),
+    path('adicionar-credor/', credor_views.add_credor_view, name='add_credor'),
+    path('credores/', credor_views.credores_list_view, name='credores_list'),
+    path('credores/<int:pk>/editar/', credor_views.edit_credor_view, name='edit_credor'),
+    path('api/credor/<int:credor_id>/', credor_views.api_dados_credor, name='api_dados_credor'),
+    path('suprimentos/', suprimento_panels.painel_suprimentos_view, name='painel_suprimentos'),
+    path('suprimentos/<int:pk>/gerenciar/', suprimento_panels.gerenciar_suprimento_view, name='gerenciar_suprimento'),
+    path('suprimentos/<int:pk>/despesas/adicionar/', suprimento_actions.adicionar_despesa_action, name='adicionar_despesa_action'),
+    path('suprimentos/<int:pk>/fechar/', suprimento_actions.fechar_suprimento_action, name='fechar_suprimento_action'),
+    path('suprimentos/novo/', suprimento_cadastro_forms.add_suprimento_view, name='add_suprimento'),
     path('importar-siscac/', credores_import_views.painel_importacao_view, name='painel_importacao'),
     path('importar-siscac/template-credores/', credores_import_views.download_template_csv_credores, name='template_csv_credores'),
     path('importar-siscac/template-contas/', credores_import_views.download_template_csv_contas, name='template_csv_contas'),
