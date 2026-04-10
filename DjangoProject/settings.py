@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'commons.apps.CommonsConfig',
     'credores.apps.CredoresConfig',
     'fluxo.apps.FluxoConfig',
     'suprimentos.apps.SuprimentosConfig',
@@ -87,7 +88,7 @@ ROOT_URLCONF = 'DjangoProject.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
+        'DIRS': [BASE_DIR / 'commons' / 'templates']
         ,
         'APP_DIRS': True,
         'OPTIONS': {

@@ -11,7 +11,7 @@ from fluxo.services.shared import (
     enviar_para_assinatura,
     sincronizar_assinatura,
 )
-from fluxo.views.signature_access import user_is_entity_owner
+from .access import user_is_entity_owner
 from verbas_indenizatorias.models import Diaria
 
 

@@ -4,15 +4,24 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.files.base import ContentFile
 from django.http import HttpResponse
 
-from fluxo.pdf_generators import gerar_documento_pdf
+from commons.shared.pdf_tools import gerar_documento_pdf
 
 
 class AssinaturaSignatariosError(Exception):
 	"""Erro de signatarios para envio/sincronizacao de assinatura."""
 
 
-def gerar_documento_bytes(doc_type, obj, **kwargs):
-	return gerar_documento_pdf(doc_type, obj, **kwargs)
+def gerar_documento_bytes(doc_type, obj, document_registry=None, **kwargs):
+	"""
+	Gera PDF de documento usando document_registry apropriado.
+	Se não fornecido, usa o document_registry do app do objeto.
+	"""
+	if document_registry is None:
+		# Importa registry apropriado baseado no tipo de objeto
+		from fluxo.pdf_generators import FLUXO_DOCUMENT_REGISTRY
+		document_registry = FLUXO_DOCUMENT_REGISTRY
+	
+	return gerar_documento_pdf(doc_type, obj, document_registry, **kwargs)
 
 
 def montar_resposta_pdf(pdf_bytes, nome_arquivo, inline=True):

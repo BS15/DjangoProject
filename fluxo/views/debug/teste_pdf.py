@@ -5,7 +5,9 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from faker import Faker
 
-from fluxo.pdf_generators import gerar_documento_pdf
+from commons.shared.pdf_tools import gerar_documento_pdf
+from fluxo.pdf_generators import FLUXO_DOCUMENT_REGISTRY
+from verbas_indenizatorias.pdf_generators import VERBAS_DOCUMENT_REGISTRY
 
 fake = Faker('pt_BR')
 
@@ -82,7 +84,14 @@ def gerar_pdf_fake_view(request, doc_type):
         return HttpResponse(f"Tipo de documento '{doc_type}' não reconhecido.", status=400)
 
     kwargs = {'numero_reuniao': fake.random_int(min=1, max=50)} if doc_type == 'conselho_fiscal' else {}
-    pdf_bytes = gerar_documento_pdf(doc_type, obj, **kwargs)
+    
+    # Determinar qual registry usar
+    if doc_type in ['scd', 'pcd', 'recibo_reembolso', 'recibo_auxilio', 'recibo_jeton', 'recibo_suprimento']:
+        registry = VERBAS_DOCUMENT_REGISTRY
+    else:
+        registry = FLUXO_DOCUMENT_REGISTRY
+    
+    pdf_bytes = gerar_documento_pdf(doc_type, obj, registry, **kwargs)
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="teste_{doc_type}.pdf"'
     return response
