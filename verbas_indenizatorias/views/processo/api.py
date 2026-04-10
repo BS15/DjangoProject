@@ -5,11 +5,13 @@ from django.urls import NoReverseMatch
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from ..verbas_shared import (
-    _VERBA_CONFIG,
-    _get_permissao_gestao_verba,
+from ..shared.documents import (
     _obter_dados_upload_documento,
     _salvar_documento_upload,
+)
+from ..shared.registry import (
+    _VERBA_CONFIG,
+    _get_permissao_gestao_verba,
 )
 
 

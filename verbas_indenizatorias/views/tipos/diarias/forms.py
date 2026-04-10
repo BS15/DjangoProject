@@ -7,10 +7,12 @@ from django.shortcuts import get_object_or_404, redirect, render
 from verbas_indenizatorias.forms import DiariaForm
 from verbas_indenizatorias.services import gerar_e_anexar_scd_diaria
 from verbas_indenizatorias.models import Diaria, DocumentoDiaria, ReembolsoCombustivel, StatusChoicesVerbasIndenizatorias
-from ...verbas_shared import (
-    _get_tipos_documento_ativos,
+from ...shared.documents import (
     _processar_upload_documento,
     _salvar_verba_com_anexo_opcional,
+)
+from ...shared.registry import (
+    _get_tipos_documento_ativos,
 )
 
 

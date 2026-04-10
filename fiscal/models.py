@@ -8,7 +8,8 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from simple_history.models import HistoricalRecords
-from fluxo.validators import validar_arquivo_seguro
+
+from commons.shared.file_validators import validar_arquivo_seguro
 
 
 logger = logging.getLogger(__name__)
