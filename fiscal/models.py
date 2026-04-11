@@ -1,3 +1,18 @@
+# --- MIGRADO DE credores.models ---
+class DadosContribuinte(models.Model):
+    """Identificação fiscal do órgão para filtros e integrações tributárias."""
+
+    cnpj = models.CharField(max_length=14, validators=[validar_cpf_cnpj])
+    razao_social = models.CharField(max_length=255)
+    tipo_inscricao = models.IntegerField(default=1)
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return f"{self.razao_social} ({self.cnpj})"
+
+    class Meta:
+        verbose_name = "Dados do Contribuinte"
+        verbose_name_plural = "Dados do Contribuinte"
 """Modelos fiscais: notas, retenções e comprovantes de pagamento."""
 
 import logging

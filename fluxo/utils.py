@@ -472,7 +472,7 @@ def gerar_csv_relatorio(queryset, tipo_relatorio):
 def gerar_faturas_do_mes(ano, mes):
 	import datetime
 	from django.db.models import Q
-	from credores.models import ContaFixa, FaturaMensal
+	from fluxo.support.conta_fixa_models import ContaFixa, FaturaMensal
 
 	data_ref = datetime.date(ano, mes, 1)
 	contas_ativas = ContaFixa.objects.filter(ativa=True).filter(

@@ -11,7 +11,8 @@ from fluxo.models import (
 	StatusChoicesPendencias,
 	TiposDePagamento,
 )
-from credores.models import DadosContribuinte, ContasBancarias
+from fiscal.models import DadosContribuinte
+from credores.models import ContasBancarias
 from fluxo.validators import validar_regras_processo, STATUS_BLOQUEADOS_FORM
 
 SUPRIMENTO_DE_FUNDOS = 'SUPRIMENTO DE FUNDOS'

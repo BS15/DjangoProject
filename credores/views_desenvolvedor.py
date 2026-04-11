@@ -157,83 +157,11 @@ def _create_fake_processos(n):
             ano_exercicio=ano,
             n_pagamento_siscac=n_siscac,
             data_vencimento=data_vencimento,
-            data_pagamento=data_pagamento,
-            forma_pagamento=random.choice(forma_list) if forma_list else None,
-            tipo_pagamento=random.choice(tipo_list) if tipo_list else None,
-            observacao=_fake_generator.sentence(nb_words=8)[:200],
-            conta=random.choice(contas),
-            status=random.choice(status_list),
-            detalhamento=_fake_generator.sentence(nb_words=10)[:200],
-            tag=random.choice(tag_list) if tag_list else None,
-        )
-        created += 1
-    return created
 
-def _create_fake_documentos_fiscais(n, processos):
-    """Cria ``n`` documentos fiscais fictícios vinculados aos processos informados."""
-    from django.contrib.auth.models import User
-    credores_pj = list(Credor.objects.filter(tipo='PJ'))
-    fiscais = list(User.objects.filter(groups__name='FISCAL DE CONTRATO'))
-    if not fiscais:
-        fiscais = list(User.objects.all())
-    if not credores_pj:
-        credores_pj = list(Credor.objects.all())
-
-    created = 0
-    for i in range(n):
-        processo = random.choice(processos)
-        emitente = random.choice(credores_pj) if credores_pj else None
-        fiscal = random.choice(fiscais) if fiscais else None
-        data_emissao = _fake_generator.date_between(start_date="-1y", end_date="today")
-        valor_bruto = Decimal(str(round(random.uniform(100.00, 50_000.00), 2)))
-        retencao_pct = Decimal(str(round(random.uniform(0, 0.15), 4)))
-        valor_liquido = (valor_bruto * (1 - retencao_pct)).quantize(Decimal("0.01"))
-        DocumentoFiscal.objects.create(
-            processo=processo,
-            nome_emitente=emitente,
-            numero_nota_fiscal=_fake_generator.numerify("NF-#####"),
-            serie_nota_fiscal=_fake_generator.numerify("###"),
-            data_emissao=data_emissao,
-            valor_bruto=valor_bruto,
-            valor_liquido=valor_liquido,
-            atestada=random.choice([True, False]),
-            fiscal_contrato=fiscal,
-        )
-        created += 1
-    return created
-
-def _create_fake_retencoes(n, notas):
-    """Cria ``n`` retenções fictícias vinculadas aos documentos fiscais informados."""
-    codigos = list(CodigosImposto.objects.all())
-    status_list = list(StatusChoicesRetencoes.objects.all())
-    credores = list(Credor.objects.all())
-
-    if not codigos:
-        return 0
-
-    created = 0
-    for _ in range(n):
-        nota = random.choice(notas)
-        beneficiario = nota.nome_emitente or (random.choice(credores) if credores else None)
-        rendimento = Decimal(str(round(random.uniform(500.00, 30_000.00), 2)))
-        codigo = random.choice(codigos)
-        aliquota = codigo.aliquota or Decimal("0.015")
-        valor = (rendimento * aliquota / 100).quantize(Decimal("0.01"))
-        data_pagamento = _fake_generator.date_between(start_date="-1y", end_date="today")
-        RetencaoImposto.objects.create(
-            nota_fiscal=nota,
-            beneficiario=beneficiario,
-            codigo=codigo,
-            valor=valor,
-            rendimento_tributavel=rendimento,
-            data_pagamento=data_pagamento,
-            status=random.choice(status_list) if status_list else None,
-        )
-        created += 1
-    return created
-
-def _create_fake_diarias(n, credores_pf, processos):
-    """Cria ``n`` diárias fictícias e vincula a processos existentes quando possível."""
+"""
+Arquivo movido para desenvolvedor/views_desenvolvedor.py
+Todos os recursos de desenvolvimento e testes especiais agora estão centralizados lá.
+"""
     status_list = list(StatusChoicesVerbasIndenizatorias.objects.all())
     transportes = list(MeiosDeTransporte.objects.all())
 
