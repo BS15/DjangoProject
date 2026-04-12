@@ -1,4 +1,7 @@
-"""Formulários de entrada para documentos fiscais e retenções."""
+"""Formulários de entrada para documentos fiscais e retenções.
+
+Este módulo define formulários para cadastro, edição e validação de notas fiscais e retenções de impostos.
+"""
 
 from django import forms
 from django.contrib.auth.models import User

@@ -1,3 +1,7 @@
+
+"""Geradores de PDF para documentos de verbas indenizatórias.
+
+Este módulo implementa classes para geração de PDFs de propostas, solicitações e recibos de diárias, reembolsos, jetons, auxílios e suprimentos.
 """
 Geradores de PDF específicos de Verbas Indenizatórias (Diárias, Reembolsos, Auxílios, Jetons, Suprimentos).
 """

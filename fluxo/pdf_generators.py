@@ -1,3 +1,8 @@
+"""Geradores de PDF para documentos do fluxo financeiro e documental.
+
+Este módulo implementa classes para geração de PDFs de termos, autorizações, conselhos e auditorias no contexto do fluxo financeiro.
+"""
+
 import logging
 from datetime import date
 

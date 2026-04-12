@@ -1,4 +1,7 @@
-"""CSV import utilities shared across apps."""
+"""Utilitários para importação de dados em CSV compartilhados entre domínios.
+
+Este módulo implementa funções para decodificação, leitura e validação de arquivos CSV para importação em massa.
+"""
 
 import csv
 import io

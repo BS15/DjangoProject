@@ -1,4 +1,7 @@
-"""Modelos de verbas indenizatórias e seus documentos comprobatórios."""
+"""Modelos de verbas indenizatórias e seus documentos comprobatórios.
+
+Este módulo define modelos para controle de diárias, reembolsos, jetons, auxílios e documentos comprobatórios de verbas indenizatórias.
+"""
 
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation

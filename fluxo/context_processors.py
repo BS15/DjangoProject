@@ -1,4 +1,7 @@
-"""Context processors globais do dominio de fluxo."""
+"""Context processors customizados para o domínio de fluxo financeiro e documental.
+
+Este módulo define funções para injetar variáveis globais em templates do fluxo financeiro.
+"""
 
 
 import datetime

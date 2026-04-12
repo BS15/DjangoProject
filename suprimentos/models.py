@@ -1,4 +1,7 @@
-"""Modelos de suprimento de fundos, despesas e documentos associados."""
+"""Modelos de suprimento de fundos, despesas e documentos associados.
+
+Este módulo define modelos para controle de suprimentos de fundos, despesas, documentos e ciclo de prestação de contas.
+"""
 
 from django.db import models
 from django.db.models.signals import post_delete, pre_save

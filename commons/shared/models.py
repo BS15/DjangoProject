@@ -1,4 +1,8 @@
-"""Modelos abstratos compartilhados entre múltiplos apps de domínio."""
+
+"""Modelos abstratos compartilhados entre múltiplos apps de domínio.
+
+Este módulo define modelos base reutilizáveis para documentos e entidades comuns a múltiplos domínios do sistema.
+"""
 
 from django.db import models
 

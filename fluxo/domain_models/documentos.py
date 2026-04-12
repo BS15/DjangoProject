@@ -1,5 +1,10 @@
 """Modelos documentais do processo e regras de ciclo de vida de arquivos."""
 
+"""Modelos de documentos vinculados a processos do fluxo financeiro.
+
+Este módulo define modelos para documentos orçamentários, de pagamento e de processo, com regras de ordenação e exibição.
+"""
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete, pre_save

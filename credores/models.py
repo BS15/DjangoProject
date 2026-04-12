@@ -1,4 +1,7 @@
-"""Modelos cadastrais: credores, contas bancárias e contas fixas mensais."""
+"""Modelos cadastrais: credores, contas bancárias e contas fixas mensais.
+
+Este módulo define modelos para cadastro de credores, contas bancárias vinculadas e configuração de contas fixas mensais.
+"""
 
 import datetime
 import re

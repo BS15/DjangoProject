@@ -1,4 +1,7 @@
-"""Formulários de entrada para verbas indenizatórias."""
+"""Formulários de entrada para verbas indenizatórias.
+
+Este módulo define formulários para cadastro, edição e validação de diárias, reembolsos, jetons e auxílios.
+"""
 
 from django import forms
 from verbas_indenizatorias.models import Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao

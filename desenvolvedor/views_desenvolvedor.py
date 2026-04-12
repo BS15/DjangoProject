@@ -12,10 +12,10 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from credores.imports import (
-    download_template_csv_contas,
     download_template_csv_credores,
     painel_importacao_view,
 )
+from fluxo.support.conta_fixa_imports import download_template_csv_contas
 from ..utils import format_brl_currency
 from ..models import (
     CargosFuncoes,

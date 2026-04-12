@@ -3,6 +3,12 @@
 Consolida normalizacao textual, parsing monetario e processamento de PDF.
 """
 
+
+"""Funções utilitárias para o domínio de fluxo financeiro e documental.
+
+Este módulo implementa normalizações, extrações, formatações e utilidades para processamento de documentos, valores e datas.
+"""
+
 import io
 import logging
 import re

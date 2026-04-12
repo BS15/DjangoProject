@@ -2,6 +2,11 @@
 Ferramentas genéricas para geração e manipulação de PDFs.
 Utilizadas por múltiplos apps (fluxo, verbas_indenizatorias, suprimentos, etc).
 """
+
+"""Ferramentas utilitárias para manipulação e geração de PDFs compartilhados.
+
+Este módulo implementa classes e funções base para geração de documentos PDF reutilizáveis em múltiplos domínios.
+"""
 import io
 import logging
 import os

@@ -1,4 +1,7 @@
-"""Formulários de entrada para cadastro e manutenção de credores."""
+"""Formulários de entrada para cadastro e manutenção de credores.
+
+Este módulo define formulários para entrada, edição e validação de dados de credores e contas bancárias.
+"""
 
 from django import forms
 from credores.models import Credor, ContaFixa
