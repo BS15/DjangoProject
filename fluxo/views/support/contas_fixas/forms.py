@@ -1,5 +1,6 @@
 from django import forms
-from fluxo.support.conta_fixa_models import ContaFixa
+from fluxo.views.support.contas_fixas.models import ContaFixa
+
 class ContaFixaForm(forms.ModelForm):
     """Formulário para manutenção de contas fixas com vencimento mensal."""
     class Meta:

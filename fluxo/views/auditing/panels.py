@@ -7,7 +7,7 @@ from django.db import OperationalError, ProgrammingError
 from django.shortcuts import render
 
 from credores.models import CargosFuncoes, ContasBancarias
-from fluxo.support.conta_fixa_models import ContaFixa, FaturaMensal
+from fluxo.views.support.contas_fixas.models import ContaFixa, FaturaMensal
 from fiscal.models import DadosContribuinte
 from fiscal.models import ComprovanteDePagamento, DocumentoFiscal, RetencaoImposto
 from fluxo.models import (

@@ -4,11 +4,11 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from verbas_indenizatorias.forms import AuxilioForm
 from verbas_indenizatorias.models import AuxilioRepresentacao, DocumentoAuxilio
-from ...shared.documents import (
+from ..shared.documents import (
     _processar_edicao_verba_com_upload,
     _salvar_verba_com_anexo_opcional,
 )
-from ...shared.registry import (
+from ..shared.registry import (
     _get_tipos_documento_ativos,
 )
 

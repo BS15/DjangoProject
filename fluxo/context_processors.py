@@ -1,8 +1,8 @@
 """Context processors globais do dominio de fluxo."""
 
-import datetime
 
-from credores.models import FaturaMensal
+import datetime
+from fluxo.views.support.contas_fixas.models import FaturaMensal
 
 
 def alertas_contas_fixas(request):

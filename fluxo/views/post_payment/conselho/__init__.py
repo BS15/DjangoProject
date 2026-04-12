@@ -10,5 +10,4 @@ __all__ = [
     "conselho_processo_view",
     "aprovar_conselho_view",
     "recusar_conselho_view",
-    "gerar_parecer_conselho_view",
 ]

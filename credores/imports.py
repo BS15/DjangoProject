@@ -1,5 +1,5 @@
-import csv
-import io
+
+from commons.shared.csv_import_utils import decode_csv_file, build_csv_dict_reader
 
 from django.contrib.auth.decorators import permission_required
 from django.db import DatabaseError
@@ -9,42 +9,6 @@ from django.shortcuts import render
 from credores.models import CargosFuncoes, ContaFixa, ContasBancarias, Credor
 
 
-def decode_csv_file(csv_file, encodings, error_message):
-    """Lê e decodifica CSV binário com fallback de encodings."""
-    raw = csv_file.read()
-    if isinstance(raw, str):
-        return raw, None
-    for encoding in encodings:
-        try:
-            return raw.decode(encoding), None
-        except UnicodeDecodeError:
-            continue
-    return None, error_message
-
-
-def build_csv_dict_reader(
-    csv_file,
-    *,
-    encodings,
-    encoding_error_message,
-    required_columns=None,
-    missing_columns_message_prefix="Cabeçalho inválido. Colunas ausentes:",
-):
-    """Retorna DictReader e mensagem de erro opcional para importação."""
-    decoded, error = decode_csv_file(csv_file, encodings, encoding_error_message)
-    if error:
-        return None, error
-
-    reader = csv.DictReader(io.StringIO(decoded))
-    if required_columns is None:
-        return reader, None
-
-    fieldnames = set(reader.fieldnames or [])
-    if not set(required_columns).issubset(fieldnames):
-        faltando = set(required_columns) - fieldnames
-        return None, f"{missing_columns_message_prefix} {', '.join(sorted(faltando))}."
-
-    return reader, None
 
 
 def importar_credores_csv(csv_file):

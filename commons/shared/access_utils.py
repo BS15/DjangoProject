@@ -1,5 +1,4 @@
-"""Regras de acesso específicas do fluxo de assinaturas de diárias."""
-
+"""Funções utilitárias de acesso e ownership compartilhadas entre apps."""
 
 def user_is_entity_owner(user, entidade):
     """Retorna True quando o usuário é o dono funcional da entidade."""

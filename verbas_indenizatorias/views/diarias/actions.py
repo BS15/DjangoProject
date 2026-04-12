@@ -38,6 +38,3 @@ def aprovar_diaria_view(request, diaria_id):
     diaria.avancar_status('APROVADA')
     diaria.autorizada = True
     diaria.save(update_fields=['autorizada'])
-
-    messages.success(request, 'Diaria aprovada com sucesso.')
-    return redirect('painel_autorizacao_diarias')

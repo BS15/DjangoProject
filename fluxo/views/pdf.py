@@ -56,7 +56,44 @@ def gerar_autorizacao_pagamento_view(request, pk):
     return gerar_resposta_pdf("autorizacao", processo, nome_arquivo, inline=True)
 
 
+@permission_required("fluxo.pode_auditar_conselho", raise_exception=True)
+@xframe_options_sameorigin
+def gerar_parecer_conselho_view(request, pk):
+    """Gera e retorna o PDF de parecer do conselho para um processo."""
+    processo = get_object_or_404(Processo, pk=pk)
+    numero_reuniao = processo.reuniao_conselho.numero if hasattr(processo, 'reuniao_conselho') and processo.reuniao_conselho else None
+    nome_arquivo = f"Parecer_Conselho_Fiscal_Proc_{processo.id}.pdf"
+    return gerar_resposta_pdf(
+        "conselho_fiscal",
+        processo,
+        nome_arquivo,
+        inline=True,
+        numero_reuniao=numero_reuniao,
+    )
+
+
+@permission_required("fluxo.pode_contabilizar", raise_exception=True)
+@xframe_options_sameorigin
+def gerar_termo_contabilizacao_view(request, pk):
+    """Gera e exibe o PDF do Termo de Contabilização de um processo."""
+    processo = get_object_or_404(Processo, pk=pk)
+    nome_arquivo = f"Termo_Contabilizacao_Proc_{processo.id}.pdf"
+    return gerar_resposta_pdf("contabilizacao", processo, nome_arquivo, inline=True)
+
+
+@permission_required("fluxo.pode_auditar_conselho", raise_exception=True)
+@xframe_options_sameorigin
+def gerar_termo_auditoria_view(request, pk):
+    """Gera e exibe o PDF do Termo de Auditoria de um processo."""
+    processo = get_object_or_404(Processo, pk=pk)
+    nome_arquivo = f"Termo_Auditoria_Proc_{processo.id}.pdf"
+    return gerar_resposta_pdf("auditoria", processo, nome_arquivo, inline=True)
+
+
 __all__ = [
     "visualizar_pdf_processo",
     "gerar_autorizacao_pagamento_view",
+    "gerar_parecer_conselho_view",
+    "gerar_termo_contabilizacao_view",
+    "gerar_termo_auditoria_view",
 ]
