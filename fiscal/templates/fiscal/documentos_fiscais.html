@@ -190,7 +190,7 @@
             {% endif %}
 
             {% for doc in documentos %}
-            {% with nota=doc.nota_referente %}
+            {% with nota=doc.nota_referente.first %}
             <div class="card shadow-sm mb-3 doc-card {% if nota %}is-fiscal{% endif %}" id="doc-card-{{ doc.id }}" data-doc-id="{{ doc.id }}">
                 <div class="card-header py-2 d-flex justify-content-between align-items-center
                     {% if nota %}bg-success bg-opacity-10 border-success{% else %}bg-white{% endif %}">

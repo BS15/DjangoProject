@@ -5,7 +5,7 @@ Este módulo define funções para injetar variáveis globais em templates do fl
 
 
 import datetime
-from fluxo.views.support.contas_fixas.models import FaturaMensal
+from credores.models import FaturaMensal
 
 
 def alertas_contas_fixas(request):

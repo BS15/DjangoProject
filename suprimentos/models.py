@@ -58,23 +58,19 @@ class SuprimentoDeFundos(models.Model):
     @property
     def valor_gasto(self):
         """Soma o valor das despesas vinculadas ao suprimento."""
-    class Meta:
-        permissions = [
-            ("acesso_backoffice", "Acesso ao backoffice de suprimentos"),
-        ]
-        # Soma todas as despesas atreladas a este suprimento
         total = sum(despesa.valor for despesa in self.despesas.all())
         return total
 
     @property
     def saldo_remanescente(self):
         """Calcula saldo remanescente entre valor liberado e gasto."""
-        # Calcula quanto sobrou do dinheiro liberado
         return self.valor_liquido - self.valor_gasto
 
     def __str__(self):
         return f"Suprimento: {self.suprido} - Valor: R$ {self.valor_liquido}"
+
     history = HistoricalRecords()
+
     def clean(self):
         """Valida que data_retorno é posterior ou igual a data_saida."""
         errors = {}
@@ -89,6 +85,11 @@ class SuprimentoDeFundos(models.Model):
         
         if errors:
             raise DjangoValidationError(errors)
+
+    class Meta:
+        permissions = [
+            ("acesso_backoffice", "Acesso ao backoffice de suprimentos"),
+        ]
 
 
 class DespesaSuprimento(models.Model):
