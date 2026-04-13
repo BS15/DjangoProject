@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import permission_required
 from django.db import DatabaseError
 from credores.models import Credor
 from commons.shared.csv_import_utils import build_csv_dict_reader
-from .models import ContaFixa
+from credores.models import ContaFixa
 
 
 @permission_required("fluxo.acesso_backoffice", raise_exception=True)

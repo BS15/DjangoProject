@@ -1,7 +1,7 @@
 """Utilitários compartilhados entre múltiplos apps."""
 
+from .access_utils import user_is_entity_owner
 from .text_tools import (
-    from .access_utils import user_is_entity_owner
     decimals_equal_money,
     format_br_date,
     format_brl_amount,
@@ -17,7 +17,7 @@ from .text_tools import (
 )
 
 __all__ = [
-        "user_is_entity_owner",
+    "user_is_entity_owner",
     "decimals_equal_money",
     "format_br_date",
     "format_brl_amount",

@@ -7,7 +7,6 @@ from django.contrib.auth.decorators import permission_required
 from django.db import DatabaseError
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils.http import url_has_allowed_host_and_scheme
 
 from fluxo.forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoForm
 from fluxo.domain_models import Processo
@@ -23,16 +22,78 @@ from ..helpers import (
 logger = logging.getLogger(__name__)
 
 
+def _get_request_payloads(request):
+    """Retorna POST/FILES apenas em submissões."""
+    if request.method != "POST":
+        return None, None
+    return request.POST, request.FILES
+
+
+def _get_next_url(request, *, allow_referer=False):
+    """Resolve a URL de retorno priorizando POST, depois GET e opcionalmente referer."""
+    next_url = request.POST.get("next") or request.GET.get("next") or ""
+    if not next_url and allow_referer:
+        next_url = request.META.get("HTTP_REFERER", "")
+    return next_url
+
+
+def _get_status_inicial(processo):
+    """Normaliza o status textual do processo para uso nas guards da UI."""
+    return processo.status.status_choice.upper() if processo.status else ""
+
+
+def _obter_contexto_edicao(request, pk):
+    """Carrega processo, status inicial e resultado das regras de guarda da edição."""
+    processo = get_object_or_404(Processo, id=pk)
+    status_inicial = _get_status_inicial(processo)
+    redirecionamento, somente_documentos = _validar_regras_edicao_processo(request, processo, status_inicial)
+    return processo, status_inicial, redirecionamento, somente_documentos
+
+
+def _redirecionar_post_hub(request, pk):
+    """Encaminha submissões legadas do hub para o spoke correspondente."""
+    if any(key.startswith("documento-") for key in request.POST.keys()) or request.FILES:
+        messages.info(request, "A edição foi modularizada. Você foi redirecionado para o spoke de documentos.")
+        return redirect("editar_processo_documentos", pk=pk)
+    if any(key.startswith("pendencia-") for key in request.POST.keys()):
+        messages.info(request, "A edição foi modularizada. Você foi redirecionado para o spoke de pendências.")
+        return redirect("editar_processo_pendencias", pk=pk)
+    if any(key.startswith("processo-") for key in request.POST.keys()):
+        messages.info(request, "A edição foi modularizada. Você foi redirecionado para o spoke da capa.")
+        return redirect("editar_processo_capa", pk=pk)
+    messages.info(request, "Use os módulos de edição disponíveis no hub do processo.")
+    return redirect("editar_processo", pk=pk)
+
+
+def _montar_contexto_hub(processo, status_inicial, somente_documentos):
+    """Monta os indicadores resumidos exibidos no hub de edição."""
+    return {
+        "processo": processo,
+        "status_inicial": status_inicial,
+        "somente_documentos": somente_documentos,
+        "aguardando_liquidacao": status_inicial.startswith("AGUARDANDO LIQUIDAÇÃO"),
+        "total_documentos": processo.documentos.count(),
+        "total_notas": processo.notas_fiscais.count(),
+        "notas_nao_atestadas": processo.notas_fiscais.filter(atestada=False).count(),
+        "total_pendencias": processo.pendencias.count(),
+        "pendencias_abertas": processo.pendencias.filter(status__status_choice__iexact="A RESOLVER").count(),
+    }
+
+
+def _salvar_formsets_em_transacao(*formsets):
+    """Persiste os formsets informados em uma única transação atômica."""
+    with transaction.atomic():
+        for formset in formsets:
+            formset.save()
+
+
 @permission_required("fluxo.acesso_backoffice", raise_exception=True)
 def add_process_view(request):
-    """Cria um novo processo de pagamento."""
-    post_data = request.POST if request.method == "POST" else None
-    files_data = request.FILES if request.method == "POST" else None
+    """Cria a capa inicial do processo e encaminha a complementação ao hub."""
+    post_data, _ = _get_request_payloads(request)
 
     processo_form = ProcessoForm(post_data, prefix="processo")
-    documento_formset = DocumentoFormSet(post_data, files_data, prefix="documento")
-    pendencia_formset = PendenciaFormSet(post_data, prefix="pendencia")
-    next_url = request.POST.get("next") or request.META.get("HTTP_REFERER", "")
+    next_url = _get_next_url(request, allow_referer=True)
 
     if request.method == "POST":
         trigger_a_empenhar = request.POST.get("trigger_a_empenhar") == "on"
@@ -53,11 +114,7 @@ def add_process_view(request):
                     request,
                     f"Processo #{processo.id} inserido com sucesso! Complete documentos, fiscais e pendências na etapa de edição.",
                 )
-                if request.POST.get("btn_goto_fiscais"):
-                    return redirect("documentos_fiscais", pk=processo.id)
-                if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
-                    return redirect(next_url)
-                return redirect("editar_processo", pk=processo.id)
+                return _redirect_seguro_ou_fallback(request, next_url, "editar_processo", processo.id)
             except (DatabaseError, TypeError, ValueError) as e:
                 logger.exception("Erro crítico ao salvar processo na criação")
                 messages.error(request, "Ocorreu um erro interno ao salvar no banco de dados.")
@@ -69,9 +126,8 @@ def add_process_view(request):
         "fluxo/add_process.html",
         {
             "processo_form": processo_form,
-            "documento_formset": documento_formset,
-            "pendencia_formset": pendencia_formset,
             "next_url": next_url,
+            "trigger_a_empenhar_checked": request.POST.get("trigger_a_empenhar") == "on",
         },
     )
 
@@ -79,42 +135,14 @@ def add_process_view(request):
 @permission_required("fluxo.acesso_backoffice", raise_exception=True)
 def editar_processo(request, pk):
     """Hub de edicao modular do processo."""
-    processo = get_object_or_404(Processo, id=pk)
-    status_inicial = processo.status.status_choice.upper() if processo.status else ""
-    redirecionamento, somente_documentos = _validar_regras_edicao_processo(request, processo, status_inicial)
+    processo, status_inicial, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
     if redirecionamento:
         return redirecionamento
 
     if request.method == "POST":
-        if any(key.startswith("documento-") for key in request.POST.keys()) or request.FILES:
-            messages.info(request, "A edição foi modularizada. Você foi redirecionado para o spoke de documentos.")
-            return redirect("editar_processo_documentos", pk=pk)
-        if any(key.startswith("pendencia-") for key in request.POST.keys()):
-            messages.info(request, "A edição foi modularizada. Você foi redirecionado para o spoke de pendências.")
-            return redirect("editar_processo_pendencias", pk=pk)
-        if any(key.startswith("processo-") for key in request.POST.keys()):
-            messages.info(request, "A edição foi modularizada. Você foi redirecionado para o spoke da capa.")
-            return redirect("editar_processo_capa", pk=pk)
-        messages.info(request, "Use os módulos de edição disponíveis no hub do processo.")
-        return redirect("editar_processo", pk=pk)
+        return _redirecionar_post_hub(request, pk)
 
-    total_documentos = processo.documentos.count()
-    total_notas = processo.notas_fiscais.count()
-    notas_nao_atestadas = processo.notas_fiscais.filter(atestada=False).count()
-    total_pendencias = processo.pendencias.count()
-    pendencias_abertas = processo.pendencias.filter(status__status_choice__iexact="A RESOLVER").count()
-
-    context = {
-        "processo": processo,
-        "status_inicial": status_inicial,
-        "somente_documentos": somente_documentos,
-        "aguardando_liquidacao": status_inicial.startswith("AGUARDANDO LIQUIDAÇÃO"),
-        "total_documentos": total_documentos,
-        "total_notas": total_notas,
-        "notas_nao_atestadas": notas_nao_atestadas,
-        "total_pendencias": total_pendencias,
-        "pendencias_abertas": pendencias_abertas,
-    }
+    context = _montar_contexto_hub(processo, status_inicial, somente_documentos)
 
     return render(request, "fluxo/editar_processo_hub.html", context)
 
@@ -122,9 +150,7 @@ def editar_processo(request, pk):
 @permission_required("fluxo.acesso_backoffice", raise_exception=True)
 def editar_processo_capa_view(request, pk):
     """Spoke de edicao da capa do processo."""
-    processo = get_object_or_404(Processo, id=pk)
-    status_inicial = processo.status.status_choice.upper() if processo.status else ""
-    redirecionamento, somente_documentos = _validar_regras_edicao_processo(request, processo, status_inicial)
+    processo, status_inicial, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
     if redirecionamento:
         return redirecionamento
 
@@ -135,8 +161,8 @@ def editar_processo_capa_view(request, pk):
         )
         return redirect("editar_processo_documentos", pk=pk)
 
-    post_data = request.POST if request.method == "POST" else None
-    next_url = request.POST.get("next") or request.GET.get("next") or ""
+    post_data, _ = _get_request_payloads(request)
+    next_url = _get_next_url(request)
     processo_form = ProcessoForm(post_data, instance=processo, prefix="processo")
 
     if request.method == "POST":
@@ -173,24 +199,19 @@ def editar_processo_capa_view(request, pk):
 @permission_required("fluxo.acesso_backoffice", raise_exception=True)
 def editar_processo_documentos_view(request, pk):
     """Spoke de edicao de anexos do processo."""
-    processo = get_object_or_404(Processo, id=pk)
-    status_inicial = processo.status.status_choice.upper() if processo.status else ""
-    redirecionamento, _ = _validar_regras_edicao_processo(request, processo, status_inicial)
+    processo, status_inicial, redirecionamento, _ = _obter_contexto_edicao(request, pk)
     if redirecionamento:
         return redirecionamento
 
-    post_data = request.POST if request.method == "POST" else None
-    files_data = request.FILES if request.method == "POST" else None
-    next_url = request.POST.get("next") or request.GET.get("next") or ""
+    post_data, files_data = _get_request_payloads(request)
+    next_url = _get_next_url(request)
     documento_formset = DocumentoFormSet(post_data, files_data, instance=processo, prefix="documento")
     documento_orcamentario_formset = DocumentoOrcamentarioFormSet(post_data, instance=processo, prefix="docorc")
 
     if request.method == "POST":
         if documento_formset.is_valid() and documento_orcamentario_formset.is_valid():
             try:
-                with transaction.atomic():
-                    documento_formset.save()
-                    documento_orcamentario_formset.save()
+                _salvar_formsets_em_transacao(documento_formset, documento_orcamentario_formset)
                 messages.success(request, f"Documentos do Processo #{pk} atualizados com sucesso!")
                 return _redirect_seguro_ou_fallback(request, next_url, "editar_processo", pk)
             except (DatabaseError, TypeError, ValueError, OSError) as e:
@@ -215,9 +236,7 @@ def editar_processo_documentos_view(request, pk):
 @permission_required("fluxo.acesso_backoffice", raise_exception=True)
 def editar_processo_pendencias_view(request, pk):
     """Spoke de edicao de pendencias do processo."""
-    processo = get_object_or_404(Processo, id=pk)
-    status_inicial = processo.status.status_choice.upper() if processo.status else ""
-    redirecionamento, somente_documentos = _validar_regras_edicao_processo(request, processo, status_inicial)
+    processo, status_inicial, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
     if redirecionamento:
         return redirecionamento
 
@@ -228,15 +247,14 @@ def editar_processo_pendencias_view(request, pk):
         )
         return redirect("editar_processo_documentos", pk=pk)
 
-    post_data = request.POST if request.method == "POST" else None
-    next_url = request.POST.get("next") or request.GET.get("next") or ""
+    post_data, _ = _get_request_payloads(request)
+    next_url = _get_next_url(request)
     pendencia_formset = PendenciaFormSet(post_data, instance=processo, prefix="pendencia")
 
     if request.method == "POST":
         if pendencia_formset.is_valid():
             try:
-                with transaction.atomic():
-                    pendencia_formset.save()
+                _salvar_formsets_em_transacao(pendencia_formset)
                 messages.success(request, f"Pendências do Processo #{pk} atualizadas com sucesso!")
                 return _redirect_seguro_ou_fallback(request, next_url, "editar_processo", pk)
             except (DatabaseError, TypeError, ValueError) as e:

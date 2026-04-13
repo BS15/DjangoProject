@@ -1,18 +1,3 @@
-# --- MIGRADO DE credores.models ---
-class DadosContribuinte(models.Model):
-    """Identificação fiscal do órgão para filtros e integrações tributárias."""
-
-    cnpj = models.CharField(max_length=14, validators=[validar_cpf_cnpj])
-    razao_social = models.CharField(max_length=255)
-    tipo_inscricao = models.IntegerField(default=1)
-    history = HistoricalRecords()
-
-    def __str__(self):
-        return f"{self.razao_social} ({self.cnpj})"
-
-    class Meta:
-        verbose_name = "Dados do Contribuinte"
-        verbose_name_plural = "Dados do Contribuinte"
 """Modelos fiscais: notas, retenções e comprovantes de pagamento."""
 
 import logging
@@ -20,6 +5,8 @@ import re
 from django.db import models
 from datetime import date
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from simple_history.models import HistoricalRecords
@@ -48,6 +35,23 @@ def validar_cpf_cnpj(value):
     elif len(clean) == 14:
         if clean == clean[0] * 14:
             raise ValidationError('CNPJ inválido (dígitos repetidos).', code='invalid_cnpj')
+
+
+# --- MIGRADO DE credores.models ---
+class DadosContribuinte(models.Model):
+    """Identificação fiscal do órgão para filtros e integrações tributárias."""
+
+    cnpj = models.CharField(max_length=14, validators=[validar_cpf_cnpj])
+    razao_social = models.CharField(max_length=255)
+    tipo_inscricao = models.IntegerField(default=1)
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return f"{self.razao_social} ({self.cnpj})"
+
+    class Meta:
+        verbose_name = "Dados do Contribuinte"
+        verbose_name_plural = "Dados do Contribuinte"
 
 
 class CodigosImposto(models.Model):
@@ -109,13 +113,15 @@ class DocumentoFiscal(models.Model):
     nome_emitente = models.ForeignKey('credores.Credor', on_delete=models.PROTECT, blank=True, null=True)
     cnpj_emitente = models.CharField(max_length=20, blank=False, validators=[validar_cpf_cnpj])
     numero_nota_fiscal = models.CharField(max_length=50)
-    documento_vinculado = models.OneToOneField(
-        'fluxo.Boleto_Bancario',
+    content_type = models.ForeignKey(
+        ContentType,
         on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name='nota_referente',
-        verbose_name="Documento PDF da Nota"
+        null=True,
+        blank=True,
+        verbose_name="Tipo do Documento Vinculado",
     )
+    object_id = models.PositiveIntegerField(null=True, blank=True, verbose_name="ID do Documento Vinculado")
+    documento_vinculado = GenericForeignKey("content_type", "object_id")
     data_emissao = models.DateField()
     valor_bruto = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0.01)])
     valor_liquido = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])

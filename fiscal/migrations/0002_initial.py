@@ -3,6 +3,7 @@
 import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
+import django.contrib.contenttypes.models
 
 
 class Migration(migrations.Migration):
@@ -10,6 +11,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
+        ("contenttypes", "__first__"),
         ("credores", "0002_initial"),
         ("fiscal", "0001_initial"),
         ("fluxo", "0001_initial"),
@@ -19,15 +21,27 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name="documentofiscal",
-            name="documento_vinculado",
-            field=models.OneToOneField(
+            name="content_type",
+            field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                related_name="nota_referente",
-                to="fluxo.boleto_bancario",
-                verbose_name="Documento PDF da Nota",
+                to="contenttypes.contenttype",
+                verbose_name="Tipo do Documento Vinculado",
             ),
+        ),
+        migrations.AddField(
+            model_name="documentofiscal",
+            name="object_id",
+            field=models.PositiveIntegerField(
+                blank=True,
+                null=True,
+                verbose_name="ID do Documento Vinculado",
+            ),
+        ),
+        migrations.AddIndex(
+            model_name="documentofiscal",
+            index=models.Index(fields=["content_type", "object_id"], name="fiscal_docfi_ct_obj_idx"),
         ),
         migrations.AddField(
             model_name="documentofiscal",
@@ -62,15 +76,24 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name="historicaldocumentofiscal",
-            name="documento_vinculado",
+            name="content_type",
             field=models.ForeignKey(
                 blank=True,
                 db_constraint=False,
                 null=True,
                 on_delete=django.db.models.deletion.DO_NOTHING,
                 related_name="+",
-                to="fluxo.boleto_bancario",
-                verbose_name="Documento PDF da Nota",
+                to="contenttypes.contenttype",
+                verbose_name="Tipo do Documento Vinculado",
+            ),
+        ),
+        migrations.AddField(
+            model_name="historicaldocumentofiscal",
+            name="object_id",
+            field=models.PositiveIntegerField(
+                blank=True,
+                null=True,
+                verbose_name="ID do Documento Vinculado",
             ),
         ),
         migrations.AddField(

@@ -94,7 +94,7 @@
                             </a>
                             
                             {% if nf.documento_vinculado and nf.documento_vinculado.arquivo %}
-                                <a href="{% url 'download_arquivo_seguro' 'processo' nf.documento_vinculado.id %}" target="_blank" class="btn btn-sm btn-outline-danger" title="Ver PDF da Nota">
+                                <a href="{% url 'download_arquivo_seguro' 'fiscal' nf.id %}" target="_blank" class="btn btn-sm btn-outline-danger" title="Ver PDF da Nota">
                                     <i class="bi bi-file-earmark-pdf"></i>
                                 </a>
                             {% endif %}

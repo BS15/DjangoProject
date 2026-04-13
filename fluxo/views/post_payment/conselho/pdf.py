@@ -1,11 +1,6 @@
 """PDF views da etapa de conselho fiscal."""
 
-from django.contrib.auth.decorators import permission_required
-from django.shortcuts import get_object_or_404
-from django.views.decorators.clickjacking import xframe_options_sameorigin
+# A implementação canônica vive em fluxo.views.pdf para evitar duplicação.
+from fluxo.views.pdf import gerar_parecer_conselho_view  # noqa: F401
 
-from fluxo.domain_models import Processo
-from fluxo.services.shared import gerar_resposta_pdf
-
-
-__all__ = []
+__all__ = ["gerar_parecer_conselho_view"]

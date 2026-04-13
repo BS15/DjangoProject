@@ -8,7 +8,8 @@ from fluxo.views.payment.comprovantes import panels as comprovantes_panels
 from fluxo.views.payment.comprovantes import actions as comprovantes_actions
 from fluxo.views.pre_payment.liquidacoes import panels as liquidacoes_panels
 from fluxo.views.pre_payment.liquidacoes import actions as liquidacoes_actions
-from fluxo.views.pre_payment.cadastro import documentos as documentos_fiscais_views
+from fluxo.views.pre_payment.cadastro import panels as documentos_fiscais_panels
+from fluxo.views.pre_payment.cadastro import actions as documentos_fiscais_actions
 
 urlpatterns = [
     path('retencao-impostos/', impostos_panels.painel_impostos, name='painel_impostos'),
@@ -18,9 +19,9 @@ urlpatterns = [
     path('api/comprovantes/vincular/', comprovantes_actions.api_vincular_comprovantes, name='api_vincular_comprovantes'),
     path('liquidacoes/', liquidacoes_panels.painel_liquidacoes_view, name='painel_liquidacoes'),
     path('liquidacoes/atestar/<int:pk>/', liquidacoes_actions.alternar_ateste_nota, name='alternar_ateste_nota'),
-    path('processo/<int:pk>/documentos-fiscais/', documentos_fiscais_views.documentos_fiscais_view, name='documentos_fiscais'),
-    path('api/processo/<int:processo_pk>/toggle-documento-fiscal/<int:documento_pk>/', documentos_fiscais_views.api_toggle_documento_fiscal, name='api_toggle_documento_fiscal'),
-    path('api/processo/<int:processo_pk>/salvar-nota-fiscal/<int:nota_pk>/', documentos_fiscais_views.api_salvar_nota_fiscal, name='api_salvar_nota_fiscal'),
+    path('processo/<int:pk>/documentos-fiscais/', documentos_fiscais_panels.documentos_fiscais_view, name='documentos_fiscais'),
+    path('api/processo/<int:processo_pk>/toggle-documento-fiscal/<int:documento_pk>/', documentos_fiscais_actions.api_toggle_documento_fiscal, name='api_toggle_documento_fiscal'),
+    path('api/processo/<int:processo_pk>/salvar-nota-fiscal/<int:nota_pk>/', documentos_fiscais_actions.api_salvar_nota_fiscal, name='api_salvar_nota_fiscal'),
     path('api/processar-retencoes/', impostos_actions.api_processar_retencoes, name='api_processar_retencoes'),
     path('reinf/painel/', reinf_panels.painel_reinf_view, name='painel_reinf'),
     path('reinf/gerar-lotes/', reinf_actions.gerar_lote_reinf_view, name='gerar_lote_reinf'),

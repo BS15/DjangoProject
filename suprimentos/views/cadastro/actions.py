@@ -8,7 +8,6 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 
 from suprimentos.forms import SuprimentoForm
-from .actions import persistir_suprimento_com_processo
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +28,6 @@ def add_suprimento_view(request: HttpRequest) -> HttpResponse:
         messages.error(request, "Verifique os erros no formulário.")
 
     return render(request, "suprimentos/add_suprimento.html", {"form": form})
-
-__all__ = ["add_suprimento_view"]
 
 # --- Business logic for suprimento creation below ---
 from typing import Any
@@ -57,5 +54,4 @@ def persistir_suprimento_com_processo(form_suprimento: SuprimentoForm) -> Any:
         criar_processo_para_suprimento(suprimento, detalhamento)
         return suprimento
 
-
-__all__ = ["persistir_suprimento_com_processo"]
+__all__ = ["add_suprimento_view", "persistir_suprimento_com_processo"]

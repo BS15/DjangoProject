@@ -10,6 +10,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete, pre_save
 from django.dispatch import receiver
+from django.contrib.contenttypes.fields import GenericRelation
 from simple_history.models import HistoricalRecords
 
 from commons.shared.file_validators import validar_arquivo_seguro
@@ -26,6 +27,11 @@ class Boleto_Bancario(DocumentoBase):
         "Imutável",
         default=False,
         help_text="Documento bloqueado para exclusão. Definido automaticamente durante a etapa de Conferência.",
+    )
+    nota_referente = GenericRelation(
+        "fiscal.DocumentoFiscal",
+        content_type_field="content_type",
+        object_id_field="object_id",
     )
     history = HistoricalRecords()
 
