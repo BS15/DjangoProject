@@ -4,33 +4,26 @@ from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.http import JsonResponse
 from django.shortcuts import redirect
+from django.views.decorators.http import require_POST
 
 from credores.models import Credor
 from fiscal.models import RetencaoImposto
 from fluxo.domain_models import Processo, StatusChoicesProcesso, TiposDePagamento
 
 
+@require_POST
 @permission_required("fiscal.acesso_backoffice", raise_exception=True)
-def agrupar_impostos_view(request):
-    """Group selected tax retentions into a new payment process."""
-    if request.method != "POST":
-        return redirect("painel_impostos")
-
-    selecionados = request.POST.getlist("itens_selecionados")
-    visao = request.POST.get("visao_atual")
+def agrupar_retencoes_action(request):
+    """Agrupa retenções selecionadas em um novo processo de recolhimento."""
+    selecionados = request.POST.getlist("retencao_ids") or request.POST.getlist("itens_selecionados")
 
     if not selecionados:
         messages.warning(request, "Nenhum item selecionado para agrupar.")
-        return redirect("painel_impostos")
+        return redirect("painel_impostos_view")
 
     total_impostos = 0
 
-    if visao == "processos":
-        retencoes = RetencaoImposto.objects.filter(nota_fiscal__processo__id__in=selecionados)
-    elif visao == "notas":
-        retencoes = RetencaoImposto.objects.filter(nota_fiscal__id__in=selecionados)
-    else:
-        retencoes = RetencaoImposto.objects.filter(id__in=selecionados)
+    retencoes = RetencaoImposto.objects.filter(id__in=selecionados)
 
     for retencao in retencoes:
         if retencao.valor:
@@ -38,7 +31,7 @@ def agrupar_impostos_view(request):
 
     if total_impostos <= 0:
         messages.warning(request, "Os itens selecionados não possuem valores válidos.")
-        return redirect("painel_impostos")
+        return redirect("painel_impostos_view")
 
     status_padrao, _ = StatusChoicesProcesso.objects.get_or_create(
         status_choice__iexact="A PAGAR - PENDENTE AUTORIZAÇÃO",
@@ -68,6 +61,14 @@ def agrupar_impostos_view(request):
 
     messages.success(request, f"Processo #{novo_processo.id} para recolhimento gerado com sucesso!")
     return redirect("editar_processo", pk=novo_processo.id)
+
+
+@permission_required("fiscal.acesso_backoffice", raise_exception=True)
+def agrupar_impostos_view(request):
+    """Alias legado do agrupamento de retenções."""
+    if request.method != "POST":
+        return redirect("painel_impostos_view")
+    return agrupar_retencoes_action(request)
 
 
 @permission_required("fiscal.acesso_backoffice", raise_exception=True)

@@ -7,16 +7,22 @@ from fluxo.views.support.contas_fixas import imports as conta_fixa_imports
 from fluxo.views.support.contas_fixas import actions as conta_actions
 from fluxo.views.support.contas_fixas import forms as conta_forms
 from fluxo.views.support.contas_fixas import panels as conta_panels
-from credores import views as credor_views
+from credores import actions as credor_actions
+from credores import panels as credor_panels
 from suprimentos.views.cadastro import actions as suprimento_cadastro_actions
 from suprimentos.views.prestacao_contas import actions as suprimento_actions
 from suprimentos.views.prestacao_contas import panels as suprimento_panels
 
 urlpatterns = [
-    path('adicionar-credor/', credor_views.add_credor_view, name='add_credor'),
-    path('credores/', credor_views.credores_list_view, name='credores_list'),
-    path('credores/<int:pk>/editar/', credor_views.edit_credor_view, name='edit_credor'),
-    path('api/credor/<int:credor_id>/', credor_views.api_dados_credor, name='api_dados_credor'),
+    path('adicionar-credor/', credor_panels.add_credor_view, name='add_credor_view'),
+    path('adicionar-credor/', credor_panels.add_credor_view, name='add_credor'),
+    path('adicionar-credor/action/', credor_actions.add_credor_action, name='add_credor_action'),
+    path('credores/', credor_panels.credores_list_view, name='credores_list'),
+    path('credores/<int:pk>/gerenciar/', credor_panels.gerenciar_credor_view, name='gerenciar_credor_view'),
+    path('credores/<int:pk>/editar/', credor_panels.gerenciar_credor_view, name='edit_credor'),
+    path('credores/<int:pk>/editar/action/', credor_actions.edit_credor_action, name='edit_credor_action'),
+    path('credores/<int:pk>/toggle-status/', credor_actions.toggle_status_credor_action, name='toggle_status_credor_action'),
+    path('api/credor/<int:credor_id>/', credor_panels.api_dados_credor, name='api_dados_credor'),
     path('suprimentos/', suprimento_panels.painel_suprimentos_view, name='suprimentos_list'),
     path('suprimentos/<int:pk>/gerenciar/', suprimento_panels.gerenciar_suprimento_view, name='gerenciar_suprimento_view'),
     path('suprimentos/<int:pk>/despesas/adicionar/', suprimento_actions.adicionar_despesa_action, name='registrar_despesa_action'),

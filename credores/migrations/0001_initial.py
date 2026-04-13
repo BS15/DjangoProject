@@ -286,6 +286,7 @@ class Migration(migrations.Migration):
                         verbose_name="Cód. Serviço Padrão INSS (Tabela 06)",
                     ),
                 ),
+                ("ativo", models.BooleanField(default=True, verbose_name="Credor Ativo")),
                 ("history_id", models.AutoField(primary_key=True, serialize=False)),
                 ("history_date", models.DateTimeField(db_index=True)),
                 ("history_change_reason", models.CharField(max_length=100, null=True)),
@@ -471,6 +472,7 @@ class Migration(migrations.Migration):
                         verbose_name="Cód. Serviço Padrão INSS (Tabela 06)",
                     ),
                 ),
+                ("ativo", models.BooleanField(default=True, verbose_name="Credor Ativo")),
                 (
                     "cargo_funcao",
                     models.ForeignKey(

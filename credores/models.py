@@ -88,6 +88,7 @@ class Credor(models.Model):
         verbose_name="Cód. Serviço Padrão INSS (Tabela 06)",
         help_text="Ex: 100000001 (Limpeza). Será herdado automaticamente pelas Notas Fiscais deste credor."
     )
+    ativo = models.BooleanField("Credor Ativo", default=True)
     history = HistoricalRecords()
 
     def __str__(self):

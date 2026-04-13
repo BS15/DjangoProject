@@ -1,206 +1,88 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Retenção de Impostos - System X</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
-</head>
-<body class="bg-light">
-{% include 'partials/sidebar.html' %}
+{% extends "layouts/base_list.html" %}
 
+{% block title %}Painel de Retenções de Impostos{% endblock %}
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow-sm">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="{% url 'home_page' %}">System X</a>
-    </div>
-</nav>
+{% block page_heading %}Gestão de Retenções Fiscais{% endblock %}
+{% block page_subtitle %}Visualização e agrupamento de retenções para geração de guias de recolhimento.{% endblock %}
 
-<div class="container mt-4 mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Retenção de Impostos</h2>
-        <div class="d-flex gap-2">
-            {% if status_agrupamento == 'pendentes' %}
-            <button type="submit" form="form-agrupar" class="btn btn-warning fw-bold shadow-sm" onclick="return confirm('Gerar um processo de recolhimento para os impostos selecionados?');">
-                <i class="bi bi-boxes"></i> Agrupar para Pagamento
-            </button>
-            {% endif %}
-            <a href="{% url 'painel_reinf' %}" class="btn btn-outline-primary fw-bold shadow-sm">
-                <i class="bi bi-file-earmark-text"></i> Painel EFD-Reinf
-            </a>
-            <a href="{% url 'home_page' %}" class="btn btn-outline-secondary">Voltar para Home</a>
-        </div>
-    </div>
+{% block page_actions %}
+<a href="{% url 'painel_reinf_view' %}" class="btn btn-outline-danger">
+    <i class="bi bi-filetype-xml"></i> Painel EFD-Reinf
+</a>
+{% endblock %}
 
-    <div class="card shadow-sm border-0 mb-4 bg-white">
-        <div class="card-body py-3">
-            <form method="get" class="row g-2 align-items-end">
-
-                <div class="col-md-2 mb-2">
-                    <label class="form-label text-muted small fw-bold mb-1">Visão</label>
-                    <select name="visao" class="form-select form-select-sm border-primary" onchange="this.form.submit()">
-                        <option value="processos" {% if visao == 'processos' %}selected{% endif %}>1. Por Processo</option>
-                        <option value="notas" {% if visao == 'notas' %}selected{% endif %}>2. Por Nota Fiscal</option>
-                        <option value="retencoes" {% if visao == 'retencoes' %}selected{% endif %}>3. Impostos Individuais</option>
-                    </select>
-                </div>
-
-                <div class="col-md-2 mb-2">
-                    <label class="form-label text-muted small fw-bold mb-1">Status</label>
-                    <select name="status_agrupamento" class="form-select form-select-sm border-secondary" onchange="this.form.submit()">
-                        <option value="pendentes" {% if status_agrupamento == 'pendentes' %}selected{% endif %}>Pendentes</option>
-                        <option value="agrupados" {% if status_agrupamento == 'agrupados' %}selected{% endif %}>Agrupados (Pagos)</option>
-                        <option value="todos" {% if status_agrupamento == 'todos' %}selected{% endif %}>Todos</option>
-                    </select>
-                </div>
-
-                {% for field in meu_filtro.form %}
-                <div class="col-md-2 mb-2">
-                    <label class="form-label text-muted small fw-bold mb-1">{{ field.label }}</label>
-                    {{ field }}
-                </div>
-                {% endfor %}
-
-                <div class="col-md-12 d-flex gap-2 mt-2">
-                    <button type="submit" class="btn btn-primary btn-sm fw-bold shadow-sm px-4">
-                        <i class="bi bi-search"></i> Filtrar Resultados
-                    </button>
-                    <a href="?visao={{ visao }}&status_agrupamento={{ status_agrupamento }}" class="btn btn-outline-secondary btn-sm shadow-sm">Limpar Filtros</a>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <form id="form-agrupar" method="POST" action="{% url 'agrupar_impostos' %}">
-        {% csrf_token %}
-        <input type="hidden" name="visao_atual" value="{{ visao }}">
-
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover table-striped mb-0 align-middle">
-
-                        {% if visao == 'processos' %}
-                        <thead class="table-light">
-                            <tr>
-                                <th class="text-center" style="width: 40px;"><input class="form-check-input" type="checkbox" id="checkAll"></th>
-                                <th># Processo Origem</th>
-                                <th>Empenho</th>
-                                <th>Credor</th>
-                                <th>Impostos Retidos (Etiquetas)</th>
-                                <th class="text-center">PDF</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for processo in itens %}
-                            <tr>
-                                <td class="text-center">
-                                    <input class="form-check-input check-item" type="checkbox" name="itens_selecionados" value="{{ processo.id }}">
-                                </td>
-                                <td class="fw-bold text-muted">#{{ processo.id }}</td>
-                                <td>{{ processo.n_nota_empenho|default:"-" }}</td>
-                                <td class="fw-medium">{{ processo.credor }}</td>
-                                <td>
-                                    {% for nf in processo.notas_fiscais.all %}
-                                        {% for retencao in nf.retencoes.all %}
-                                            <span class="badge bg-danger px-2 py-1 me-1">{{ retencao.codigo }}</span>
-                                        {% endfor %}
-                                    {% endfor %}
-                                </td>
-                                <td class="text-center">
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="6" class="text-center py-4 text-muted">Nenhum processo com retenção encontrado para os filtros informados.</td></tr>
-                            {% endfor %}
-                        </tbody>
-
-                        {% elif visao == 'notas' %}
-                        <thead class="table-light">
-                            <tr>
-                                <th class="text-center" style="width: 40px;"><input class="form-check-input" type="checkbox" id="checkAll"></th>
-                                <th>Nota Fiscal</th>
-                                <th>Data Emissão</th>
-                                <th>Emitente</th>
-                                <th>Processo Vinculado</th>
-                                <th>Impostos Retidos (Etiquetas)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for nf in itens %}
-                            <tr>
-                                <td class="text-center">
-                                    <input class="form-check-input check-item" type="checkbox" name="itens_selecionados" value="{{ nf.id }}">
-                                </td>
-                                <td class="fw-bold">NF {{ nf.numero_nota_fiscal }}</td>
-                                <td>{{ nf.data_emissao|date:"d/m/Y" }}</td>
-                                <td class="fw-medium">{{ nf.nome_emitente }}</td>
-                                <td class="text-muted">Proc. #{{ nf.processo.id }}</td>
-                                <td>
-                                    {% for retencao in nf.retencoes.all %}
-                                        <span class="badge bg-warning px-2 py-1 me-1">{{ retencao.codigo }}</span>
-                                    {% endfor %}
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="6" class="text-center py-4 text-muted">Nenhuma nota fiscal com retenção encontrada para os filtros informados.</td></tr>
-                            {% endfor %}
-                        </tbody>
-
-                        {% elif visao == 'retencoes' %}
-                        <thead class="table-light">
-                            <tr>
-                                <th class="text-center" style="width: 40px;"><input class="form-check-input" type="checkbox" id="checkAll"></th>
-                                <th>Imposto</th>
-                                <th>Valor</th>
-                                <th>Competência</th>
-                                <th>Status</th>
-                                <th>NF Origem</th>
-                                <th>Processo Origem</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for ret in itens %}
-                            <tr>
-                                <td class="text-center">
-                                    <input class="form-check-input check-item" type="checkbox" name="itens_selecionados" value="{{ ret.id }}">
-                                </td>
-                                <td><span class="badge bg-warning px-3 py-1">{{ ret.codigo.codigo }}</span></td>
-                                <td class="text-danger fw-bold">R$ {{ ret.valor }}</td>
-                                <td>{{ ret.competencia|date:"m/Y"|default:"-" }}</td>
-                                <td><span class="badge bg-secondary">{{ ret.status|default:"Pendente" }}</span></td>
-                                <td class="text-muted small">
-                                    NF {{ ret.nota_fiscal.numero_nota_fiscal }}<br>
-                                    ({{ ret.nota_fiscal.nome_emitente|truncatechars:20 }})
-                                </td>
-                                <td><a href="{% url 'editar_processo' pk=ret.nota_fiscal.processo.id %}" target="_blank" class="btn btn-sm btn-outline-info">#{{ ret.nota_fiscal.processo.id }}</a></td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="7" class="text-center py-4 text-muted">Nenhum imposto encontrado para os filtros informados.</td></tr>
-                            {% endfor %}
-                        </tbody>
-                        {% endif %}
-
-                    </table>
-                </div>
-            </div>
-        </div>
-    </form>
+{% block filter_form %}
+{% for field in filter.form %}
+<div class="col-md-3">
+    <label class="form-label text-muted small">{{ field.label }}</label>
+    {{ field }}
 </div>
+{% endfor %}
+{% endblock %}
 
+{% block batch_form_open %}
+<form method="post" action="{% url 'agrupar_retencoes_action' %}" id="formAgruparRetencoes">
+    {% csrf_token %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Lançamentos Individuais</h5>
+        <button type="submit" class="btn btn-danger" onclick="return confirm('Gerar processo de pagamento (Guia DARF) com as retenções selecionadas?');">
+            <i class="bi bi-collection"></i> Agrupar Selecionados para Guia
+        </button>
+    </div>
+{% endblock %}
+
+{% block table_headers %}
+<th style="width: 40px;"><input class="form-check-input" type="checkbox" id="selectAll"></th>
+<th>Competência</th>
+<th>Credor / Fonte Retentora</th>
+<th>Código Receita</th>
+<th>Base de Cálculo</th>
+<th>Valor Retido</th>
+<th>Status Reinf</th>
+{% endblock %}
+
+{% block table_rows %}
+{% for retencao in retencoes %}
+<tr>
+    <td>
+        {% if not retencao.processo_pagamento_id %}
+        <input class="form-check-input retencao-check" type="checkbox" name="retencao_ids" value="{{ retencao.id }}">
+        {% else %}
+        <i class="bi bi-lock-fill text-muted" title="Já agrupado ou pago"></i>
+        {% endif %}
+    </td>
+    <td>{{ retencao.competencia|date:"m/Y"|default:"-" }}</td>
+    <td>
+        <strong>{{ retencao.beneficiario.nome|default:retencao.nota_fiscal.nome_emitente.nome|upper }}</strong><br>
+        <small class="text-muted">NF: {{ retencao.nota_fiscal.numero_nota_fiscal }}</small>
+    </td>
+    <td><span class="badge bg-dark">{{ retencao.codigo.codigo }}</span></td>
+    <td>R$ {{ retencao.rendimento_tributavel|floatformat:2|default:"0,00" }}</td>
+    <td class="text-danger fw-bold">R$ {{ retencao.valor|floatformat:2 }}</td>
+    <td>
+        {% if retencao.processo_pagamento_id %}
+        <span class="badge bg-success"><i class="bi bi-check-all"></i> Agrupado</span>
+        {% else %}
+        <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Pendente</span>
+        {% endif %}
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="7" class="text-center text-muted py-4">Nenhuma retenção fiscal encontrada para os filtros aplicados.</td>
+</tr>
+{% endfor %}
+{% endblock %}
+
+{% block batch_form_close %}
+</form>
+{% endblock %}
+
+{% block extra_js %}
 <script>
-    const checkAll = document.getElementById('checkAll');
-    if (checkAll) {
-        checkAll.addEventListener('change', function() {
-            var checkboxes = document.querySelectorAll('.check-item');
-            for (var checkbox of checkboxes) {
-                checkbox.checked = this.checked;
-            }
-        });
-    }
+document.getElementById('selectAll').addEventListener('change', function(e) {
+    const checkboxes = document.querySelectorAll('.retencao-check');
+    checkboxes.forEach(cb => cb.checked = e.target.checked);
+});
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% endblock %}

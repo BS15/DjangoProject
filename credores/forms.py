@@ -26,5 +26,30 @@ class CredorForm(forms.ModelForm):
         }
 
 
+class CredorEditForm(forms.ModelForm):
+    """Formulário de manutenção sem permitir alteração de CPF/CNPJ."""
+
+    class Meta:
+        model = Credor
+        fields = [
+            'nome',
+            'telefone',
+            'email',
+            'conta',
+            'chave_pix',
+            'cargo_funcao',
+            'codigo_servico_padrao',
+        ]
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'telefone': forms.TextInput(attrs={'class': 'form-control mask-telefone', 'placeholder': '(00) 00000-0000'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'conta': forms.Select(attrs={'class': 'form-select'}),
+            'chave_pix': forms.TextInput(attrs={'class': 'form-control'}),
+            'cargo_funcao': forms.Select(attrs={'class': 'form-select'}),
+            'codigo_servico_padrao': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: 100000001'}),
+        }
+
+
 
 # Formulário ContaFixaForm migrado para fluxo.support.conta_fixa_forms
