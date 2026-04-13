@@ -6,7 +6,7 @@ from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
 from fiscal.models import RetencaoImposto
-from fluxo.models import Contingencia, Processo
+from fluxo.domain_models import Contingencia, Processo
 from fluxo.utils import normalize_choice
 from fluxo.views.helpers import _aplicar_filtro_por_opcao
 

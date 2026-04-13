@@ -165,10 +165,18 @@ class Processo(models.Model):
             ano_exercicio = data_empenho.year
 
         if any(value not in (None, "") for value in (numero_nota_empenho, data_empenho, ano_exercicio)):
-            from fluxo.models import DocumentoOrcamentario
+            if not atual or not getattr(atual, "arquivo", None) or not getattr(atual, "tipo", None):
+                raise ValidationError(
+                    "DocumentoOrcamentario exige arquivo e tipo obrigatórios. "
+                    "Cadastre o documento orçamentário completo antes de atualizar metadados de empenho."
+                )
+
+            from fluxo.domain_models.documentos import DocumentoOrcamentario
 
             DocumentoOrcamentario.objects.create(
                 processo=self,
+                arquivo=atual.arquivo,
+                tipo=atual.tipo,
                 numero_nota_empenho=numero_nota_empenho,
                 data_empenho=data_empenho,
                 ano_exercicio=ano_exercicio,
@@ -209,7 +217,7 @@ class Processo(models.Model):
 
     def registrar_documento_orcamentario(self, numero_nota_empenho=None, data_empenho=None, ano_exercicio=None):
         """Registra um novo documento orçamentário mantendo histórico de versões."""
-        from fluxo.models import DocumentoOrcamentario
+        from fluxo.domain_models.documentos import DocumentoOrcamentario
 
         if isinstance(data_empenho, str):
             data_empenho = datetime.strptime(data_empenho, "%Y-%m-%d").date()
@@ -220,8 +228,17 @@ class Processo(models.Model):
         if not any(value not in (None, "") for value in (numero_nota_empenho, data_empenho, ano_exercicio)):
             return None
 
+        atual = self.documento_orcamentario_principal
+        if not atual or not getattr(atual, "arquivo", None) or not getattr(atual, "tipo", None):
+            raise ValidationError(
+                "DocumentoOrcamentario exige arquivo e tipo obrigatórios. "
+                "Cadastre o documento orçamentário completo antes de registrar metadados de empenho."
+            )
+
         return DocumentoOrcamentario.objects.create(
             processo=self,
+            arquivo=atual.arquivo,
+            tipo=atual.tipo,
             numero_nota_empenho=numero_nota_empenho,
             data_empenho=data_empenho,
             ano_exercicio=ano_exercicio,
@@ -304,7 +321,7 @@ class Processo(models.Model):
 
     def avancar_status(self, novo_status_str, usuario=None):
         """Avança status validando turnpike e delega integrações aos serviços."""
-        from fluxo.models import StatusChoicesProcesso
+        from fluxo.domain_models.catalogos import StatusChoicesProcesso
         from fluxo.services.integracoes.processo_relacionados import sincronizar_relacoes_apos_transicao
         from fluxo.services.processo_documentos import gerar_documentos_automaticos_processo
         from fluxo.validators import verificar_turnpike

@@ -55,7 +55,7 @@ processos/models/
 |-------------|---------|----------------|
 | `Processo` | Main entity for budget execution & payment cycle | FK: Credor, links all domain entities |
 | `DocumentoOrcamentario` | Budget document (Empenho) tracking | FK: Processo |
-| `DocumentoDePagamento` | Payment document wrapper | FK: Processo |
+| `Boleto_Bancario` | Payment document wrapper | FK: Processo |
 | `DocumentoBase` | Abstract base for all document types | - |
 | `ReuniaoConselho` | Council meeting for batch process review | Timestamps & status tracking |
 | `Pendencia` | Blockers/issues per processo | FK: Processo, StatusChoicesPendencias |
@@ -79,7 +79,7 @@ processos/models/
 |-------------|---------|----------------|
 | `CodigosImposto` | Tax code registry with REINF metadata | regra_competencia, serie_reinf, aliquota |
 | `StatusChoicesRetencoes` | Tax retention status catalog | Choices for RetencaoImposto |
-| `DocumentoFiscal` | Invoice/fiscal document linked to processo | FK: Processo, Credor (emitente), User (fiscal), DocumentoDePagamento |
+| `DocumentoFiscal` | Invoice/fiscal document linked to processo | FK: Processo, Credor (emitente), User (fiscal), Boleto_Bancario |
 | `RetencaoImposto` | Individual tax withheld from payment | FK: DocumentoFiscal or Processo, CodigosImposto, Credor (beneficiary) |
 | `ComprovanteDePagamento` | Payment proof/receipt document | FK: Processo, file upload |
 
@@ -443,7 +443,7 @@ processos/views/
 |-----------|--------|---------|-----------|
 | `ProcessoForm` | Fluxo | Main processo creation/edit | n_nota_empenho, data_pagamento, valor_bruto, valor_liquido, etc. |
 | `DocumentoFiscalForm` | Fiscal | Invoice/nota fiscal entry | numero_nota_fiscal, serie_nota_fiscal, valor_bruto, atestada, etc. |
-| `DocumentoDePagamentoForm` | Fluxo | Payment document form | tipo, ordem, arquivo |
+| `Boleto_BancarioForm` | Fluxo | Payment document form | tipo, ordem, arquivo |
 | `RetencaoImpostoForm` | Fiscal | Tax withheld input | beneficiario, codigo, rendimento_tributavel, valor |
 | `CredorForm` | Cadastros | Creditor/supplier registry | cpf_cnpj, nome, telefone, email, chave_pix, etc. |
 | `DiariaForm` | Verbas | Travel allowance entry | numero_siscac, processo, (implicitly calculated valor_total) |
@@ -602,7 +602,7 @@ processos/views/
 - 0073_add_assinatura_autentique_and_remove_diaria_fields.py - Signature refinement
 - 0075_refactor_tipos_documento_unique_constraint.py - Document type constraints
 - 0080_contingencia_workflow_stages_and_contadora_review.py - **Contingency workflow**
-- 0082_rename_documentoprocesso_documentodepagamento.py - **Final naming**: DocumentoProcesso → DocumentoDePagamento
+- 0082_rename_boleto_bancario.py - **Final naming**: Boleto_Bancario
 
 #### Merge Conflicts Resolved
 - 0055_merge_20260318_0017.py
@@ -806,14 +806,14 @@ Advanced Features:
 ├─ 0068-0073: Autentique integration (signatures)
 ├─ 0072-0073: ReuniaoConselho & AssinaturaAutentique
 ├─ 0080: Contingencia workflow
-└─ 0082: DocumentoProcesso → DocumentoDePagamento rename
+└─ 0082: Boleto_Bancario → Boleto_Bancario rename
    └─ 0083: Final schema (criado_em removed from DocumentoOrcamentario)
 ```
 
 ### Breaking Changes in History
 
 1. **0046**: `NotaFiscal` → `DocumentoFiscal` (table renamed, FK integrity preserved)
-2. **0082**: `DocumentoProcesso` → `DocumentoDePagamento` (semantic rename)
+2. **0082**: `Boleto_Bancario` → `Boleto_Bancario` (semantic rename)
 3. **0041**: Major addition of `HistoricalRecords` on all document types
 4. **0053**: Permission system added (new Permission model)
 5. **0080**: Contingency workflow stages refined

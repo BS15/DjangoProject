@@ -18,16 +18,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name="comprovantedepagamento",
-            name="processo",
-            field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE,
-                related_name="comprovantes_pagamento",
-                to="fluxo.processo",
-                verbose_name="Processo",
-            ),
-        ),
-        migrations.AddField(
             model_name="documentofiscal",
             name="documento_vinculado",
             field=models.OneToOneField(
@@ -35,7 +25,7 @@ class Migration(migrations.Migration):
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
                 related_name="nota_referente",
-                to="fluxo.documentodepagamento",
+                to="fluxo.boleto_bancario",
                 verbose_name="Documento PDF da Nota",
             ),
         ),
@@ -71,29 +61,6 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AddField(
-            model_name="historicalcomprovantedepagamento",
-            name="history_user",
-            field=models.ForeignKey(
-                null=True,
-                on_delete=django.db.models.deletion.SET_NULL,
-                related_name="+",
-                to=settings.AUTH_USER_MODEL,
-            ),
-        ),
-        migrations.AddField(
-            model_name="historicalcomprovantedepagamento",
-            name="processo",
-            field=models.ForeignKey(
-                blank=True,
-                db_constraint=False,
-                null=True,
-                on_delete=django.db.models.deletion.DO_NOTHING,
-                related_name="+",
-                to="fluxo.processo",
-                verbose_name="Processo",
-            ),
-        ),
-        migrations.AddField(
             model_name="historicaldocumentofiscal",
             name="documento_vinculado",
             field=models.ForeignKey(
@@ -102,7 +69,7 @@ class Migration(migrations.Migration):
                 null=True,
                 on_delete=django.db.models.deletion.DO_NOTHING,
                 related_name="+",
-                to="fluxo.documentodepagamento",
+                to="fluxo.boleto_bancario",
                 verbose_name="Documento PDF da Nota",
             ),
         ),

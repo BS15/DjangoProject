@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 
 from fluxo.forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoForm
-from fluxo.models import Processo
+from fluxo.domain_models import Processo
 from ..helpers import (
     _aplicar_confirmacao_extra_orcamentario,
     _configurar_status_novo_processo,

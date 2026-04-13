@@ -13,14 +13,7 @@ class DadosContribuinte(models.Model):
     class Meta:
         verbose_name = "Dados do Contribuinte"
         verbose_name_plural = "Dados do Contribuinte"
-class Meta:
-    permissions = [
-        ("acesso_backoffice", "Acesso ao backoffice fiscal"),
-    ]
-"""Modelos fiscais: notas, retenções e integrações fiscais.
-
-Este módulo define modelos para controle de notas fiscais, retenções de impostos e integrações fiscais.
-"""
+"""Modelos fiscais: notas, retenções e comprovantes de pagamento."""
 
 import logging
 import re
@@ -55,10 +48,6 @@ def validar_cpf_cnpj(value):
     elif len(clean) == 14:
         if clean == clean[0] * 14:
             raise ValidationError('CNPJ inválido (dígitos repetidos).', code='invalid_cnpj')
-
-
-
-# ComprovanteDePagamento and caminho_comprovante moved to fluxo.domain_models.comprovantes
 
 
 class CodigosImposto(models.Model):
@@ -121,7 +110,7 @@ class DocumentoFiscal(models.Model):
     cnpj_emitente = models.CharField(max_length=20, blank=False, validators=[validar_cpf_cnpj])
     numero_nota_fiscal = models.CharField(max_length=50)
     documento_vinculado = models.OneToOneField(
-        'fluxo.DocumentoDePagamento',
+        'fluxo.Boleto_Bancario',
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='nota_referente',
@@ -229,6 +218,3 @@ class RetencaoImposto(models.Model):
 
     def __str__(self):
         return f"{self.codigo} - R$ {self.valor}"
-
-
-# ComprovanteDePagamento model moved to fluxo.domain_models.comprovantes

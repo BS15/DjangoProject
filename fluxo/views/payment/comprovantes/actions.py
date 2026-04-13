@@ -12,8 +12,8 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 
-from fluxo.domain_models.comprovantes import ComprovanteDePagamento
-from fluxo.models import DocumentoDePagamento, Processo, TiposDeDocumento
+from fluxo.domain_models.documentos import ComprovanteDePagamento
+from fluxo.domain_models import Boleto_Bancario, Processo, TiposDeDocumento
 from fluxo.utils import processar_pdf_comprovantes, split_pdf_to_temp_pages
 
 
@@ -24,9 +24,9 @@ def serializar_comprovante(comp):
     """Converte o resultado de um comprovante para estrutura serializável em JSON."""
     return {
         **comp,
-        "documentos_encontrados": [
-            {"doc": item["doc"], "credor": getattr(item["credor"], "nome", None)}
-            for item in comp.get("documentos_encontrados", [])
+        "cpf_cnpj_encontrados": [
+            {"cpf_cnpj": item["cpf_cnpj"], "credor": getattr(item["credor"], "nome", None)}
+            for item in comp.get("cpf_cnpj_encontrados", [])
         ],
         "contas_encontradas": [
             {
@@ -112,7 +112,7 @@ def api_vincular_comprovantes(request):
 
                             nome_arquivo = f"Comprovante_Proc_{processo.id}_{idx + 1}.pdf"
 
-                            DocumentoDePagamento.objects.create(
+                            Boleto_Bancario.objects.create(
                                 processo=processo,
                                 arquivo=ContentFile(conteudo_arquivo, name=nome_arquivo),
                                 tipo=tipo_comprovante,

@@ -1,5 +1,14 @@
+"""Importação e processamento de contas fixas via CSV."""
+
+import csv
 from django.http import HttpResponse
 from django.contrib.auth.decorators import permission_required
+from django.db import DatabaseError
+from credores.models import Credor
+from commons.shared.csv_import_utils import build_csv_dict_reader
+from .models import ContaFixa
+
+
 @permission_required("fluxo.acesso_backoffice", raise_exception=True)
 def download_template_csv_contas(request):
     """Disponibiliza template CSV para importação de contas fixas."""
@@ -8,10 +17,7 @@ def download_template_csv_contas(request):
     writer = csv.writer(response)
     writer.writerow(["NOME_CREDOR", "DIA_VENCIMENTO", "DETALHAMENTO"])
     return response
-import csv
-from django.db import DatabaseError
-from credores.models import Credor
-from .conta_fixa_models import ContaFixa
+
 
 def importar_contas_fixas_csv(csv_file):
     """Importa contas fixas via CSV."""

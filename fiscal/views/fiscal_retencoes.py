@@ -7,7 +7,7 @@ from django.shortcuts import redirect, render
 
 from credores.models import Credor
 from fiscal.models import DocumentoFiscal, RetencaoImposto
-from fluxo.models import Processo, StatusChoicesProcesso, TiposDePagamento
+from fluxo.domain_models import Processo, StatusChoicesProcesso, TiposDePagamento
 from fiscal.filters import RetencaoIndividualFilter, RetencaoNotaFilter, RetencaoProcessoFilter
 from fluxo.utils import normalize_choice
 from fluxo.views.helpers import _aplicar_filtro_por_opcao

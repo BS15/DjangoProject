@@ -1,6 +1,5 @@
-{% load static %}
-<!DOCTYPE html>
 {% extends "layouts/base_list.html" %}
+{% load static %}
 
 {% block page_heading %}
     <i class="bi bi-wallet2 text-primary"></i> Suprimentos de Fundos
@@ -44,7 +43,7 @@
             {{ suprimento.valor_gasto|floatformat:2 }}
         </td>
         <td class="text-center">
-            {{ suprimento.get_status_display }}
+            {{ suprimento.status }}
         </td>
         <td class="text-center">
             <a href="{% url 'gerenciar_suprimento' suprimento.id %}" class="btn btn-sm btn-outline-primary">
@@ -58,18 +57,3 @@
     </tr>
     {% endfor %}
 {% endblock %}
-                            <i class="bi bi-wallet fs-2 d-block mb-3 text-secondary"></i>
-                            Nenhum suprimento de fundos cadastrado.
-                            <br>
-                            <span class="small">Utilize o botão "Novo Suprimento" para adicionar o primeiro numerário do mês.</span>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-</body>
-</html>

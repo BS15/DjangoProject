@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
 from fluxo.filters import ProcessoFilter
-from fluxo.models import Processo
+from fluxo.domain_models import Processo
 from fluxo.views.shared import apply_filterset
 
 

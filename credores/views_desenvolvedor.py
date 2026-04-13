@@ -12,10 +12,10 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from credores.imports import (
+    download_template_csv_contas,
     download_template_csv_credores,
     painel_importacao_view,
 )
-from fluxo.support.conta_fixa_imports import download_template_csv_contas
 from ..utils import format_brl_currency
 from ..models import (
     CargosFuncoes,
@@ -23,7 +23,7 @@ from ..models import (
     ContasBancarias,
     Credor,
     Diaria,
-    DocumentoDePagamento,
+    Boleto_Bancario,
     DocumentoFiscal,
     FormasDePagamento,
     MeiosDeTransporte,
@@ -157,11 +157,26 @@ def _create_fake_processos(n):
             ano_exercicio=ano,
             n_pagamento_siscac=n_siscac,
             data_vencimento=data_vencimento,
+            data_pagamento=data_pagamento,
+            forma_pagamento=random.choice(forma_list) if forma_list else None,
+            tipo_pagamento=random.choice(tipo_list) if tipo_list else None,
+            observacao=_fake_generator.sentence(nb_words=8)[:200],
+            conta=random.choice(contas),
+            status=random.choice(status_list),
+            detalhamento=_fake_generator.sentence(nb_words=10)[:200],
+            tag=random.choice(tag_list) if tag_list else None,
+        )
+        created += 1
+        return 0
+    """
+    Arquivo movido para desenvolvedor/views_desenvolvedor.py
+    Todos os recursos de desenvolvimento e testes especiais agora estão centralizados lá.
+    """
+    created += 1
+    return created
 
-"""
-Arquivo movido para desenvolvedor/views_desenvolvedor.py
-Todos os recursos de desenvolvimento e testes especiais agora estão centralizados lá.
-"""
+def _create_fake_diarias(n, credores_pf, processos):
+    """Cria ``n`` diárias fictícias e vincula a processos existentes quando possível."""
     status_list = list(StatusChoicesVerbasIndenizatorias.objects.all())
     transportes = list(MeiosDeTransporte.objects.all())
 
@@ -299,7 +314,7 @@ def gerar_dummy_pdf_view(request, pk):
     filename = f'nota_fiscal_dummy_{timestamp}.pdf'
     ordem = processo.documentos.count() + 1
 
-    doc = DocumentoDePagamento(processo=processo, tipo=tipo_nf, ordem=ordem)
+    doc = Boleto_Bancario(processo=processo, tipo=tipo_nf, ordem=ordem)
     doc.arquivo.save(filename, ContentFile(buffer.getvalue()), save=True)
 
     messages.success(request, f'PDF de teste gerado e vinculado ao Processo #{processo.id}.')

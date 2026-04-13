@@ -39,7 +39,7 @@
           "parent_model": "Processo"
         },
         {
-          "name": "DocumentoDePagamento",
+          "name": "Boleto_Bancario",
           "purpose": "Payment document wrapper",
           "parent_model": "Processo"
         },
@@ -511,9 +511,9 @@
       "model": "DocumentoFiscal"
     },
     {
-      "name": "DocumentoDePagamentoForm",
+      "name": "Boleto_BancarioForm",
       "domain": "fluxo",
-      "model": "DocumentoDePagamento"
+      "model": "Boleto_Bancario"
     },
     {
       "name": "RetencaoImpostoForm",
@@ -668,8 +668,8 @@
       },
       {
         "migration": "0082",
-        "old_name": "DocumentoProcesso",
-        "new_name": "DocumentoDePagamento",
+        "old_name": "Boleto_Bancario",
+        "new_name": "Boleto_Bancario",
         "impact": "Semantic rename"
       }
     ],

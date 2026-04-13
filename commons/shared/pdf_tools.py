@@ -23,6 +23,23 @@ logger = logging.getLogger(__name__)
 _CHAR_WIDTH_RATIO = 0.55
 
 
+def extract_text_between(full_text, start_anchor, end_anchor):
+	"""Extrai texto entre âncoras, com fallback para fim de linha."""
+	if full_text is None:
+		return ""
+
+	start_idx = full_text.find(start_anchor)
+	if start_idx == -1:
+		return ""
+
+	start_idx += len(start_anchor)
+	end_idx = full_text.find(end_anchor, start_idx)
+	if end_idx == -1:
+		end_idx = full_text.find("\n", start_idx)
+
+	return full_text[start_idx:end_idx].replace("\n", "").strip()
+
+
 def _draw_wrapped_text(p, text, x, y, max_width, font_name="Helvetica", font_size=11, leading=16):
 	"""
 	Desenha texto com quebra automática de linha no canvas ReportLab.
@@ -43,7 +60,7 @@ def _draw_wrapped_text(p, text, x, y, max_width, font_name="Helvetica", font_siz
 
 def _contar_paginas_documentos(processo):
 	"""
-	Conta o número total de documentos e páginas nos DocumentoProcesso em PDF.
+	Conta o número total de documentos e páginas nos Boleto_Bancario em PDF.
 	Retorna uma tupla (total_documentos, total_paginas).
 	"""
 	total_docs = 0
@@ -157,6 +174,7 @@ def gerar_documento_pdf(doc_type, obj, document_registry, **kwargs):
 
 
 __all__ = [
+	"extract_text_between",
 	"_draw_wrapped_text",
 	"_contar_paginas_documentos",
 	"merge_canvas_with_template",

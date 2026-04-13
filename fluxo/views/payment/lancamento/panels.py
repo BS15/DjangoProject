@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET
 
-from fluxo.models import Processo, StatusChoicesProcesso
+from fluxo.domain_models import Processo, StatusChoicesProcesso
 from fluxo.views.helpers import _build_detalhes_pagamento, _consolidar_totais_pagamento
 
 

@@ -7,20 +7,11 @@ from django import forms
 from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 from fiscal.models import DocumentoFiscal, RetencaoImposto
-from fluxo.models import Processo
+from fluxo.domain_models import Processo
 
 
 class DocumentoFiscalForm(forms.ModelForm):
     """Formulário de nota fiscal com campos mínimos para ateste e retenções."""
-
-    arquivo_ia = forms.FileField(
-        required=False,
-        label="Extrair via IA",
-        widget=forms.ClearableFileInput(attrs={
-            'class': 'form-control form-control-sm extrair-ia-input',
-            'accept': 'application/pdf'
-        })
-    )
 
     def __init__(self, *args, **kwargs):
         """Define obrigatoriedade e restringe fiscal aos usuários do grupo apropriado."""

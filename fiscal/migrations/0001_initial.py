@@ -75,69 +75,6 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name="ComprovanteDePagamento",
-            fields=[
-                (
-                    "id",
-                    models.BigAutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                (
-                    "numero_comprovante",
-                    models.CharField(
-                        blank=True,
-                        max_length=100,
-                        null=True,
-                        verbose_name="Número do Comprovante",
-                    ),
-                ),
-                (
-                    "credor_nome",
-                    models.CharField(
-                        blank=True,
-                        max_length=200,
-                        null=True,
-                        verbose_name="Credor (Texto)",
-                    ),
-                ),
-                (
-                    "valor_pago",
-                    models.DecimalField(
-                        blank=True,
-                        decimal_places=2,
-                        max_digits=12,
-                        null=True,
-                        validators=[django.core.validators.MinValueValidator(0)],
-                        verbose_name="Valor Pago",
-                    ),
-                ),
-                (
-                    "data_pagamento",
-                    models.DateField(
-                        blank=True, null=True, verbose_name="Data de Pagamento"
-                    ),
-                ),
-                (
-                    "arquivo",
-                    models.FileField(
-                        blank=True,
-                        null=True,
-                        upload_to=fiscal.models.caminho_comprovante,
-                        validators=[fluxo.validators.validar_arquivo_seguro],
-                        verbose_name="Arquivo do Comprovante",
-                    ),
-                ),
-            ],
-            options={
-                "verbose_name": "Comprovante de Pagamento",
-                "verbose_name_plural": "Comprovantes de Pagamento",
-            },
-        ),
-        migrations.CreateModel(
             name="DocumentoFiscal",
             fields=[
                 (

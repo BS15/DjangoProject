@@ -5,7 +5,7 @@ from django.http import HttpRequest, HttpResponse
 from django.views.decorators.http import require_GET
 
 from fluxo.filters import ContingenciaFilter
-from fluxo.models import Contingencia
+from fluxo.domain_models import Contingencia
 from fluxo.views.shared import apply_filterset, render_filtered_list
 from .helpers import _usuario_pode_acessar_painel_contingencias
 

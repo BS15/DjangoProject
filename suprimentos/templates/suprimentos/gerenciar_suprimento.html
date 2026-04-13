@@ -1,13 +1,3 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Prestação de Contas - Suprimento #{{ suprimento.id }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
-</head>
 {% extends "layouts/base_detail.html" %}
 
 {% block detail_header %}
@@ -57,8 +47,6 @@
         </div>
     </div>
     {# Additional detail content (tables, etc.) can be added here as needed #}
-{% endblock %}
-
     <div class="row">
         <div class="col-md-4 mb-4">
             {% if pode_editar %}
@@ -170,7 +158,4 @@
             </div>
         </div>
     </div>
-</div>
-
-</body>
-</html>
+{% endblock %}

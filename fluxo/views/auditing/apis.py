@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_GET
 
-from fluxo.models import Processo
+from fluxo.domain_models import Processo
 from ..helpers import _build_payload_documentos_processo_auditoria, _build_payload_processo_detalhes
 
 

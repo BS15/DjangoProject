@@ -6,15 +6,14 @@ from django.contrib.auth.decorators import permission_required
 from django.db import OperationalError, ProgrammingError
 from django.shortcuts import render
 
-from credores.models import CargosFuncoes, ContasBancarias
-from fluxo.views.support.contas_fixas.models import ContaFixa, FaturaMensal
+from credores.models import CargosFuncoes, ContaFixa, ContasBancarias, FaturaMensal
 from fiscal.models import DadosContribuinte
-from fluxo.domain_models.comprovantes import ComprovanteDePagamento
 from fiscal.models import DocumentoFiscal, RetencaoImposto
-from fluxo.models import (
+from fluxo.domain_models import (
     AssinaturaAutentique,
+    ComprovanteDePagamento,
     Devolucao,
-    DocumentoDePagamento,
+    Boleto_Bancario,
     Processo,
     RegistroAcessoArquivo,
 )
@@ -36,7 +35,7 @@ def auditoria_view(request):
         (DadosContribuinte.history.model, "Dados do Contribuinte"),
         (ContaFixa.history.model, "Conta Fixa"),
         (FaturaMensal.history.model, "Fatura Mensal"),
-        (DocumentoDePagamento.history.model, "Documento de Pagamento"),
+        (Boleto_Bancario.history.model, "Documento de Pagamento"),
         (DocumentoFiscal.history.model, "Documento Fiscal"),
         (RetencaoImposto.history.model, "Retenção de Imposto"),
         (ComprovanteDePagamento.history.model, "Comprovante de Pagamento"),

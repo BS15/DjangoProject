@@ -5,7 +5,7 @@ from django.db import transaction
 from django.db.models import Count
 from django.shortcuts import redirect
 
-from fluxo.models import Processo
+from fluxo.domain_models import Processo
 
 
 def _obter_estatisticas_boletos(processo):
