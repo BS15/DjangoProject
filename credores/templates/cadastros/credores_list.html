@@ -1,72 +1,53 @@
 {% extends "layouts/base_list.html" %}
 
-{% block page_heading %}<i class="bi bi-people"></i> Gerenciar Credores{% endblock %}
+{% block title %}Diretorio de Credores{% endblock %}
+
+{% block page_heading %}<i class="bi bi-people-fill text-primary"></i> Entidades e Credores{% endblock %}
 {% block page_actions %}
-    <a href="{% url 'add_credor' %}" class="btn btn-success btn-sm fw-bold">
-        <i class="bi bi-person-plus"></i> Novo Credor
+    <a href="{% url 'add_credor_view' %}" class="btn btn-primary btn-sm fw-bold">
+        <i class="bi bi-plus-circle"></i> Novo Cadastro
     </a>
-    <a href="/" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
 {% endblock %}
 
 {% block filter_form %}
-    <form method="get" class="row g-2 align-items-end">
-        <div class="col-md-4">
-            <label class="small fw-bold text-secondary mb-1">Nome / Razão Social</label>
-            {{ filter.form.nome__icontains }}
-        </div>
-        <div class="col-md-3">
-            <label class="small fw-bold text-secondary mb-1">CPF / CNPJ</label>
-            {{ filter.form.cpf_cnpj__icontains }}
-        </div>
-        <div class="col-md-2">
-            <label class="small fw-bold text-secondary mb-1">Tipo</label>
-            {{ filter.form.tipo }}
-        </div>
-        <div class="col-md-3">
-            <label class="small fw-bold text-secondary mb-1">Cargo / Função</label>
-            {{ filter.form.cargo_funcao }}
-        </div>
-        <div class="col-md-3">
-            <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">
-                <i class="bi bi-search"></i> Pesquisar
-            </button>
-        </div>
-    </form>
+{% for field in filter.form %}
+<div class="col-md-3">
+    <label class="form-label text-muted small">{{ field.label }}</label>
+    {{ field }}
+</div>
+{% endfor %}
 {% endblock %}
 
 {% block table_headers %}
-    <tr>
-        <th>ID</th>
-        <th>Nome</th>
-        <th>CPF/CNPJ</th>
-        <th>Tipo</th>
-        <th>Cargo/Função</th>
-        <th>Telefone</th>
-        <th class="text-center">Ações</th>
-    </tr>
+<th>Nome / Razao Social</th>
+<th>CPF / CNPJ</th>
+<th>Tipo</th>
+<th>Status</th>
+<th>Acoes</th>
 {% endblock %}
 
 {% block table_rows %}
-    {% for credor in credores %}
-    <tr>
-        <td>#{{ credor.id }}</td>
-        <td class="fw-bold">{{ credor.nome|default:"---" }}</td>
-        <td>{{ credor.cpf_cnpj|default:"---" }}</td>
-        <td>{{ credor.get_tipo_display|default:"---" }}</td>
-        <td>{{ credor.cargo_funcao|default:"---" }}</td>
-        <td>{{ credor.telefone|default:"---" }}</td>
-        <td class="text-center">
-            <a href="{% url 'edit_credor' credor.pk %}" class="btn btn-sm btn-outline-primary" title="Editar">
-                <i class="bi bi-pencil"></i>
-            </a>
-        </td>
-    </tr>
-    {% empty %}
-    <tr>
-        <td colspan="7" class="text-center text-muted py-4">
-            <i class="bi bi-search fs-4 d-block mb-2"></i>
-            Nenhum credor encontrado com estes filtros.
-        </td>
-    </tr>
-    {% endfor %}
+{% for credor in credores %}
+<tr>
+    <td><strong>{{ credor.nome|upper }}</strong></td>
+    <td><span class="mask-cpf-cnpj">{{ credor.cpf_cnpj }}</span></td>
+    <td>{{ credor.get_tipo_display }}</td>
+    <td>
+        {% if credor.ativo %}
+        <span class="badge bg-success">Ativo</span>
+        {% else %}
+        <span class="badge bg-danger">Bloqueado</span>
+        {% endif %}
+    </td>
+    <td>
+        <a href="{% url 'gerenciar_credor_view' credor.id %}" class="btn btn-sm btn-outline-primary">
+            Acessar Hub
+        </a>
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="5" class="text-center text-muted py-4">Nenhum credor encontrado.</td>
+</tr>
+{% endfor %}
 {% endblock %}

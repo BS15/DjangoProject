@@ -1,199 +1,99 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Editar Reembolso #{{ reembolso.numero_sequencial }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
-</head>
-<body class="bg-light">
-{% include 'partials/sidebar.html' %}
+{% extends "layouts/base_detail.html" %}
 
+{% block title %}Gerenciar Reembolso #{{ reembolso.id }}{% endblock %}
 
-<div class="container mt-4 mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2><i class="bi bi-car-front text-success"></i> Editar Reembolso</h2>
-            <p class="text-muted mb-0">Nº Sequencial: <strong>{{ reembolso.numero_sequencial }}</strong>
-                {% if reembolso.status %}
-                    &nbsp;<span class="badge bg-secondary">{{ reembolso.status }}</span>
-                {% endif %}
-            </p>
+{% block detail_header %}
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        <h2><i class="bi bi-receipt text-info"></i> Reembolso #{{ reembolso.id }}</h2>
+        <p class="text-muted mb-0">Beneficiário: <strong>{{ reembolso.beneficiario.nome|upper }}</strong> | Status: <span class="badge bg-secondary">{{ reembolso.status|default:"RASCUNHO" }}</span></p>
+    </div>
+    <div>
+        <a href="{% url 'reembolsos_list' %}" class="btn btn-outline-secondary">Voltar</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block detail_body %}
+<div class="row mt-4">
+    <div class="col-md-5">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">Detalhes da Solicitação</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Descrição:</strong> {{ reembolso.objetivo|default:"Não informado" }}</p>
+                <p><strong>Período da Despesa:</strong> {{ reembolso.data_saida|date:"d/m/Y" }} a {{ reembolso.data_retorno|date:"d/m/Y" }}</p>
+                <hr>
+                <h4 class="text-info text-end">R$ {{ reembolso.valor_total|floatformat:2 }}</h4>
+            </div>
         </div>
-        <a href="{% url 'reembolsos_list' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Voltar
-        </a>
     </div>
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div class="col-md-7">
+        <div class="card shadow-sm border-info mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-paperclip"></i> Notas Fiscais e Recibos</h5>
             </div>
-        {% endfor %}
-    {% endif %}
-
-    <div class="row g-4">
-        <div class="col-md-8">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white fw-bold">
-                    <i class="bi bi-pencil-square"></i> Dados do Reembolso
-                </div>
-                <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data">
-                        {% csrf_token %}
-
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Nº Sequencial</label>
-                                {{ form.numero_sequencial }}
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Processo</label>
-                                {{ form.processo }}
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Status</label>
-                                {{ form.status }}
-                            </div>
+            <div class="card-body">
+                {% if not reembolso.status or reembolso.status.status_choice == 'RASCUNHO' %}
+                <form method="post" action="{% url 'registrar_comprovante_reembolso_action' reembolso.id %}" enctype="multipart/form-data" class="mb-4 bg-light p-3 rounded">
+                    {% csrf_token %}
+                    <div class="row align-items-end">
+                        <div class="col-md-7">
+                            <label class="form-label">Anexar Comprovante (PDF/Imagem)</label>
+                            <input type="file" name="arquivo" class="form-control" required>
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Beneficiário</label>
-                            {{ form.beneficiario }}
-                        </div>
-
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Data Saída</label>
-                                {{ form.data_saida }}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Data Retorno</label>
-                                {{ form.data_retorno }}
-                            </div>
-                        </div>
-
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Origem</label>
-                                {{ form.cidade_origem }}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Destino</label>
-                                {{ form.cidade_destino }}
-                            </div>
-                        </div>
-
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Distância (KM)</label>
-                                {{ form.distancia_km }}
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Preço Médio (R$)</label>
-                                {{ form.preco_combustivel }}
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold text-success">Valor Total (R$)</label>
-                                {{ form.valor_total }}
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Objetivo</label>
-                            {{ form.objetivo }}
-                        </div>
-
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-success btn-lg shadow-sm"><i class="bi bi-save"></i> Salvar Alterações</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 mb-3">
-                <div class="card-header bg-white fw-bold">
-                    <i class="bi bi-upload"></i> Anexar Documento
-                </div>
-                <div class="card-body bg-light">
-                    <form method="POST" enctype="multipart/form-data" action="{% url 'edit_reembolso' pk=reembolso.id %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="upload_doc" value="1">
-                        <div class="mb-3">
-                            <label class="small fw-bold text-muted">Tipo de Documento</label>
-                            <select name="tipo" class="form-select form-select-sm" required>
-                                <option value="">— Selecione —</option>
+                        <div class="col-md-5">
+                            <label class="form-label">Tipo de comprovante</label>
+                            <select name="tipo_comprovante" class="form-select" required>
+                                <option value="">Selecione...</option>
                                 {% for tipo in tipos_documento %}
-                                    <option value="{{ tipo.id }}">{{ tipo }}</option>
+                                <option value="{{ tipo.id }}">{{ tipo.tipo_de_documento }}</option>
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="mb-3">
-                            <label class="small fw-bold text-muted">Arquivo (PDF, JPG, PNG)</label>
-                            <input type="file" name="arquivo" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">
-                            <i class="bi bi-paperclip"></i> Salvar Documento
-                        </button>
-                    </form>
-                </div>
-            </div>
+                    </div>
+                    <div class="text-end mt-3">
+                        <button type="submit" class="btn btn-outline-info"><i class="bi bi-upload"></i> Enviar</button>
+                    </div>
+                </form>
+                {% endif %}
 
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white fw-bold">
-                    <i class="bi bi-files"></i> Documentos Anexados
-                    <span class="badge bg-secondary ms-1">{{ documentos|length }}</span>
-                </div>
-                <div class="card-body p-0">
-                    <table class="table table-hover table-striped align-middle mb-0 small">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Tipo</th>
-                                <th class="text-center">Arquivo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for doc in documentos %}
-                                <tr>
-                                    <td class="text-muted">{{ doc.id }}</td>
-                                    <td>{{ doc.tipo }}</td>
-                                    <td class="text-center">
-                                        <a href="{% url 'download_arquivo_seguro' 'verba_reembolso_doc' doc.id %}" target="_blank"
-                                           class="btn btn-sm btn-outline-primary py-0" title="Visualizar documento">
-                                            <i class="bi bi-file-earmark-arrow-down"></i> Abrir
-                                        </a>
-                                    </td>
-                                </tr>
-                            {% empty %}
-                                <tr>
-                                    <td colspan="3" class="text-center py-4 text-muted">
-                                        Nenhum documento anexado ainda.
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                <ul class="list-group list-group-flush">
+                    {% for doc in comprovantes %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <a href="{% url 'download_arquivo_seguro' 'verba_reembolso_doc' doc.id %}" target="_blank" class="text-decoration-none"><i class="bi bi-file-earmark text-danger"></i> {{ doc.arquivo.name }}</a>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-center text-muted">Nenhum comprovante anexado. A solicitação não poderá avançar.</li>
+                    {% endfor %}
+                </ul>
             </div>
         </div>
     </div>
-
-    {% if reembolso.processo %}
-        <div class="mt-4">
-            <span class="text-muted small"><i class="bi bi-link-45deg"></i> Vinculado ao Processo
-                <strong>#{{ reembolso.processo.id }}</strong>
-            </span>
-        </div>
-    {% endif %}
 </div>
+{% endblock %}
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% block detail_actions %}
+{% if not reembolso.status or reembolso.status.status_choice == 'RASCUNHO' %}
+<form method="post" action="{% url 'solicitar_autorizacao_reembolso_action' reembolso.id %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-info w-100 text-white"><i class="bi bi-send"></i> Solicitar Autorização</button>
+</form>
+{% endif %}
+
+{% if reembolso.status and reembolso.status.status_choice == 'SOLICITADA' and pode_autorizar %}
+<form method="post" action="{% url 'autorizar_reembolso_action' reembolso.id %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-circle"></i> Autorizar Pagamento</button>
+</form>
+{% endif %}
+
+{% if not reembolso.status or reembolso.status.status_choice != 'PAGA' and reembolso.status.status_choice != 'CANCELADO / ANULADO' %}
+<form method="post" action="{% url 'cancelar_reembolso_action' reembolso.id %}" onsubmit="return confirm('Deseja cancelar este reembolso?');">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline-danger w-100 btn-sm mt-2"><i class="bi bi-x-circle"></i> Cancelar</button>
+</form>
+{% endif %}
+{% endblock %}

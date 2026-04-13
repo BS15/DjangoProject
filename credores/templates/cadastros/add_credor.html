@@ -1,74 +1,23 @@
 {% extends "layouts/base_form.html" %}
 
-{% block page_title %}Adicionar Novo Credor{% endblock %}
+{% block title %}Novo Credor / Fornecedor{% endblock %}
 
-{% block page_heading %}<i class="bi bi-person-plus"></i> Novo Credor{% endblock %}
+{% block page_heading %}<i class="bi bi-building text-primary"></i> Cadastrar Entidade{% endblock %}
+{% block page_subtitle %}Registre um novo credor, fornecedor ou servidor. O CPF/CNPJ sera validado e nao podera ser alterado posteriormente.{% endblock %}
 
 {% block page_actions %}
-<a href="/" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+<a href="{% url 'credores_list' %}" class="btn btn-outline-secondary">Cancelar</a>
 {% endblock %}
 
+{% block form_action %}{% url 'add_credor_action' %}{% endblock %}
+
 {% block form_fields %}
-    <h6 class="text-secondary border-bottom pb-2 mb-3">Identificação</h6>
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <label class="form-label fw-bold">Tipo</label>
-            {{ form.tipo }}
-        </div>
-        <div class="col-md-3">
-            <label class="form-label fw-bold">CPF/CNPJ</label>
-            {{ form.cpf_cnpj }}
-            {{ form.cpf_cnpj.errors }}
-        </div>
-        <div class="col-md-6">
-            <label class="form-label fw-bold">Nome / Razão Social</label>
-            {{ form.nome }}
-            {{ form.nome.errors }}
-        </div>
-    </div>
-
-    <h6 class="text-secondary border-bottom pb-2 mb-3">Contato e Categoria</h6>
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <label class="form-label fw-bold">Telefone</label>
-            {{ form.telefone }}
-        </div>
-        <div class="col-md-4">
-            <label class="form-label fw-bold">E-mail</label>
-            {{ form.email }}
-        </div>
-        <div class="col-md-4">
-            <label class="form-label fw-bold">Cargo/Função</label>
-            {{ form.cargo_funcao }}
-        </div>
-    </div>
-
-    <h6 class="text-secondary border-bottom pb-2 mb-3">Dados Bancários Básicos</h6>
-    <div class="row g-3 mb-4">
-        <div class="col-md-6">
-            <label class="form-label fw-bold">Conta Bancária Principal</label>
-            {{ form.conta }}
-            <div class="form-text text-muted small">Selecione uma conta previamente cadastrada.</div>
-        </div>
-        <div class="col-md-6">
-            <label class="form-label fw-bold">Chave PIX</label>
-            {{ form.chave_pix }}
-        </div>
-    </div>
-
-    <h6 class="text-secondary border-bottom pb-2 mb-3">Dados Fiscais</h6>
-    <div class="row g-3 mb-4">
-        <div class="col-md-6">
-            <label class="form-label fw-bold">{{ form.codigo_servico_padrao.label }}</label>
-            {{ form.codigo_servico_padrao }}
-            <div class="form-text text-muted small">{{ form.codigo_servico_padrao.help_text }}</div>
-        </div>
-    </div>
+{{ form.as_p }}
 {% endblock %}
 
 {% block form_actions %}
-<a href="/" class="btn btn-secondary px-4">Cancelar</a>
-<button type="submit" class="btn btn-success px-4 fw-bold">
-    <i class="bi bi-check-lg"></i> Salvar Credor
+<a href="{% url 'credores_list' %}" class="btn btn-outline-secondary me-2">Cancelar</a>
+<button type="submit" class="btn btn-primary">
+    <i class="bi bi-save"></i> Salvar Cadastro
 </button>
 {% endblock %}

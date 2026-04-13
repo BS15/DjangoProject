@@ -12,8 +12,10 @@ from fluxo.views.pre_payment.cadastro import panels as documentos_fiscais_panels
 from fluxo.views.pre_payment.cadastro import actions as documentos_fiscais_actions
 
 urlpatterns = [
-    path('retencao-impostos/', impostos_panels.painel_impostos, name='painel_impostos'),
-    path('impostos/agrupar/', impostos_actions.agrupar_impostos_view, name='agrupar_impostos'),
+    path('retencao-impostos/', impostos_panels.painel_impostos_view, name='painel_impostos_view'),
+    path('retencao-impostos/legacy/', impostos_panels.painel_impostos, name='painel_impostos'),
+    path('impostos/agrupar/', impostos_actions.agrupar_retencoes_action, name='agrupar_retencoes_action'),
+    path('impostos/agrupar/legacy/', impostos_actions.agrupar_impostos_view, name='agrupar_impostos'),
     path('processos/comprovantes/', comprovantes_panels.painel_comprovantes_view, name='painel_comprovantes'),
     path('api/comprovantes/fatiar/', comprovantes_actions.api_fatiar_comprovantes, name='api_fatiar_comprovantes'),
     path('api/comprovantes/vincular/', comprovantes_actions.api_vincular_comprovantes, name='api_vincular_comprovantes'),
@@ -23,6 +25,9 @@ urlpatterns = [
     path('api/processo/<int:processo_pk>/toggle-documento-fiscal/<int:documento_pk>/', documentos_fiscais_actions.api_toggle_documento_fiscal, name='api_toggle_documento_fiscal'),
     path('api/processo/<int:processo_pk>/salvar-nota-fiscal/<int:nota_pk>/', documentos_fiscais_actions.api_salvar_nota_fiscal, name='api_salvar_nota_fiscal'),
     path('api/processar-retencoes/', impostos_actions.api_processar_retencoes, name='api_processar_retencoes'),
-    path('reinf/painel/', reinf_panels.painel_reinf_view, name='painel_reinf'),
-    path('reinf/gerar-lotes/', reinf_actions.gerar_lote_reinf_view, name='gerar_lote_reinf'),
+    path('reinf/painel/', reinf_panels.painel_reinf_view, name='painel_reinf_view'),
+    path('reinf/painel/legacy/', reinf_panels.painel_reinf_view, name='painel_reinf'),
+    path('reinf/gerar-lotes/', reinf_actions.gerar_lote_reinf_action, name='gerar_lote_reinf_action'),
+    path('reinf/transmitir-lotes/', reinf_actions.transmitir_lote_reinf_action, name='transmitir_lote_reinf_action'),
+    path('reinf/gerar-lotes/legacy/', reinf_actions.gerar_lote_reinf_view, name='gerar_lote_reinf'),
 ]
