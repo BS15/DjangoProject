@@ -16,6 +16,9 @@
         {% endfor %}
     {% endif %}
 
+    <!-- ============================================================
+         SEÇÃO 1 — Seleção do Processo
+    ============================================================ -->
     <div class="card shadow-sm section-card mb-4">
         <div class="card-header d-flex align-items-center gap-2 py-2">
             <i class="bi bi-search"></i>
@@ -26,15 +29,12 @@
             <div class="input-group">
                 <span class="input-group-text bg-white"><i class="bi bi-hash text-primary"></i></span>
                 <input type="number" id="input-processo-id" class="form-control" placeholder="Digite o ID numérico do Processo (ex: 42)" min="1" />
+                <button type="button" class="btn btn-primary" id="btn-buscar">
+                    <span id="spinner-busca" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display:none;"></span>
+                    <i id="icon-busca" class="bi bi-search"></i>
+                    Buscar
+                </button>
             </div>
-        </div>
-    </div>
-    ...existing code for the rest of the form...
-{% endblock %}
-
-{% block form_actions %}
-<button type="submit" class="btn btn-success fw-bold">Solicitar Contingência</button>
-{% endblock %}
             <div id="erro-busca" class="text-danger small mt-2" style="display:none;"></div>
             <p class="text-muted small mt-2 mb-0">
                 <i class="bi bi-info-circle"></i>
@@ -46,7 +46,7 @@
     <!-- ============================================================
          SEÇÃO 2 — Detalhes do Processo (exibido após busca)
     ============================================================ -->
-    <div class="card shadow-sm section-card mb-4" id="painel-processo">
+    <div class="card shadow-sm section-card mb-4" id="painel-processo" style="display:none;">
         <div class="card-header d-flex align-items-center justify-content-between py-2">
             <span class="fw-bold"><i class="bi bi-file-earmark-text me-2"></i>2. Detalhes do Processo</span>
             <span id="badge-processo-id" class="badge bg-light text-dark border badge-status"></span>
@@ -131,111 +131,113 @@
     <!-- ============================================================
          SEÇÃO 3 — Formulário da Contingência
     ============================================================ -->
-    <div class="card shadow-sm section-card mb-4" id="painel-form-contingencia">
+    <div class="card shadow-sm section-card mb-4" id="painel-form-contingencia" style="display:none;">
         <div class="card-header d-flex align-items-center gap-2 py-2">
             <i class="bi bi-pencil-square"></i>
             <span class="fw-bold">3. Dados da Contingência</span>
         </div>
         <div class="card-body">
-            <form method="post" action="{% url 'add_contingencia_action' %}" id="form-contingencia" novalidate>
-                {% csrf_token %}
-                <input type="hidden" name="processo_id" id="campo-processo-id">
-                <input type="hidden" name="dados_propostos" id="campo-dados-propostos">
+            <input type="hidden" name="processo_id" id="campo-processo-id">
+            <input type="hidden" name="dados_propostos" id="campo-dados-propostos">
 
-                <!-- Justificativa -->
-                <div class="mb-4">
-                    <label class="form-label fw-bold" for="campo-justificativa">
-                        <i class="bi bi-chat-left-text me-1 text-primary"></i>
-                        Justificativa <span class="text-danger">*</span>
-                    </label>
-                    <textarea
-                        id="campo-justificativa"
-                        name="justificativa"
-                        class="form-control"
-                        rows="4"
-                        maxlength="2000"
-                        placeholder="Descreva detalhadamente o motivo da solicitação de contingência (quebra de fluxo, erro de cadastro, retificação, etc.)..."
-                        required
-                    ></textarea>
-                    <div class="d-flex justify-content-between mt-1">
-                        <div class="invalid-feedback">A justificativa é obrigatória.</div>
-                        <small class="text-muted ms-auto" id="contador-justificativa">0 / 2000</small>
-                    </div>
+            <!-- Justificativa -->
+            <div class="mb-4">
+                <label class="form-label fw-bold" for="campo-justificativa">
+                    <i class="bi bi-chat-left-text me-1 text-primary"></i>
+                    Justificativa <span class="text-danger">*</span>
+                </label>
+                <textarea
+                    id="campo-justificativa"
+                    name="justificativa"
+                    class="form-control"
+                    rows="4"
+                    maxlength="2000"
+                    placeholder="Descreva detalhadamente o motivo da solicitação de contingência (quebra de fluxo, erro de cadastro, retificação, etc.)..."
+                    required
+                ></textarea>
+                <div class="d-flex justify-content-between mt-1">
+                    <div class="invalid-feedback">A justificativa é obrigatória.</div>
+                    <small class="text-muted ms-auto" id="contador-justificativa">0 / 2000</small>
                 </div>
+            </div>
 
-                <!-- Dados Propostos -->
-                <div class="mb-4">
-                    <label class="form-label fw-bold">
-                        <i class="bi bi-arrow-left-right me-1 text-warning"></i>
-                        Dados Propostos (alterações solicitadas)
-                    </label>
-                    <p class="text-muted small mb-3">
-                        Informe apenas os campos que precisam ser alterados. Deixe em branco os campos que devem
-                        permanecer como estão. Os campos são opcionais — a justificativa acima é suficiente para
-                        abertura da contingência.
-                    </p>
+            <!-- Dados Propostos -->
+            <div class="mb-4">
+                <label class="form-label fw-bold">
+                    <i class="bi bi-arrow-left-right me-1 text-warning"></i>
+                    Dados Propostos (alterações solicitadas)
+                </label>
+                <p class="text-muted small mb-3">
+                    Informe apenas os campos que precisam ser alterados. Deixe em branco os campos que devem
+                    permanecer como estão. Os campos são opcionais — a justificativa acima é suficiente para
+                    abertura da contingência.
+                </p>
 
-                    <div id="dados-propostos-list">
-                        <div class="row g-2 align-items-center campo-proposto-row p-2 rounded mb-2">
-                            <div class="col-md-5">
-                                <label class="form-label small mb-1 fw-semibold">Campo</label>
-                                <select class="form-select form-select-sm campo-select">
-                                    <option value="">— Selecionar campo —</option>
-                                    <option value="n_nota_empenho">Nota de Empenho</option>
-                                    <option value="credor_id">Credor (ID)</option>
-                                    <option value="data_empenho">Data de Empenho</option>
-                                    <option value="valor_bruto">Valor Bruto</option>
-                                    <option value="valor_liquido">Valor Líquido</option>
-                                    <option value="data_vencimento">Data de Vencimento</option>
-                                    <option value="data_pagamento">Data de Pagamento</option>
-                                    <option value="n_pagamento_siscac">Nº SISCAC</option>
-                                    <option value="observacao">Observação</option>
-                                    <option value="detalhamento">Detalhamento</option>
-                                    <option value="ano_exercicio">Ano do Exercício</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small mb-1 fw-semibold">Valor Proposto</label>
-                                <input type="text" class="form-control form-control-sm valor-proposto" placeholder="Novo valor para o campo selecionado">
-                            </div>
-                            <div class="col-md-1 d-flex align-items-end pb-1">
-                                <button type="button" class="btn btn-outline-danger btn-sm btn-remover-campo w-100" title="Remover linha">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
+                <div id="dados-propostos-list">
+                    <div class="row g-2 align-items-center campo-proposto-row p-2 rounded mb-2">
+                        <div class="col-md-5">
+                            <label class="form-label small mb-1 fw-semibold">Campo</label>
+                            <select class="form-select form-select-sm campo-select">
+                                <option value="">— Selecionar campo —</option>
+                                <option value="n_nota_empenho">Nota de Empenho</option>
+                                <option value="credor_id">Credor (ID)</option>
+                                <option value="data_empenho">Data de Empenho</option>
+                                <option value="valor_bruto">Valor Bruto</option>
+                                <option value="valor_liquido">Valor Líquido</option>
+                                <option value="data_vencimento">Data de Vencimento</option>
+                                <option value="data_pagamento">Data de Pagamento</option>
+                                <option value="n_pagamento_siscac">Nº SISCAC</option>
+                                <option value="observacao">Observação</option>
+                                <option value="detalhamento">Detalhamento</option>
+                                <option value="ano_exercicio">Ano do Exercício</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small mb-1 fw-semibold">Valor Proposto</label>
+                            <input type="text" class="form-control form-control-sm valor-proposto" placeholder="Novo valor para o campo selecionado">
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end pb-1">
+                            <button type="button" class="btn btn-outline-danger btn-sm btn-remover-campo w-100" title="Remover linha">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </div>
                     </div>
-
-                    <button type="button" class="btn btn-outline-secondary btn-sm mt-1 fw-semibold" id="btn-add-campo">
-                        <i class="bi bi-plus-circle me-1"></i> Adicionar Campo
-                    </button>
                 </div>
 
-                <!-- Resumo antes de enviar -->
-                <div id="resumo-contingencia" class="alert alert-info d-none mb-4" role="alert">
-                    <h6 class="fw-bold mb-2"><i class="bi bi-clipboard-data me-1"></i> Resumo da Solicitação</h6>
-                    <p class="mb-1 small"><strong>Processo:</strong> <span id="resumo-processo"></span></p>
-                    <p class="mb-1 small"><strong>Campos a alterar:</strong> <span id="resumo-campos"></span></p>
-                    <p class="mb-0 small text-muted">Após envio, o processo ficará bloqueado até cumprir a cadeia aplicável ao status atual. Em casos pós-autorização, a revisão da Contadora também é obrigatória antes da aplicação final.</p>
-                </div>
+                <button type="button" class="btn btn-outline-secondary btn-sm mt-1 fw-semibold" id="btn-add-campo">
+                    <i class="bi bi-plus-circle me-1"></i> Adicionar Campo
+                </button>
+            </div>
 
-                <div class="d-flex justify-content-between align-items-center border-top pt-3">
-                    <a href="{% url 'home_page' %}" class="btn btn-outline-secondary">
-                        <i class="bi bi-x-circle me-1"></i> Cancelar
-                    </a>
-                    <button type="submit" class="btn btn-danger fw-bold px-4" id="btn-enviar">
-                        <i class="bi bi-send-check me-2"></i> Enviar Solicitação de Contingência
-                    </button>
-                </div>
-            </form>
+            <!-- Resumo antes de enviar -->
+            <div id="resumo-contingencia" class="alert alert-info d-none mb-4" role="alert">
+                <h6 class="fw-bold mb-2"><i class="bi bi-clipboard-data me-1"></i> Resumo da Solicitação</h6>
+                <p class="mb-1 small"><strong>Processo:</strong> <span id="resumo-processo"></span></p>
+                <p class="mb-1 small"><strong>Campos a alterar:</strong> <span id="resumo-campos"></span></p>
+                <p class="mb-0 small text-muted">Após envio, o processo ficará bloqueado até cumprir a cadeia aplicável ao status atual. Em casos pós-autorização, a revisão da Contadora também é obrigatória antes da aplicação final.</p>
+            </div>
         </div>
     </div>
+{% endblock %}
 
-</div>
+{% block form_actions %}
+<a href="{% url 'home_page' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-x-circle me-1"></i> Cancelar
+</a>
+<button type="submit" class="btn btn-danger fw-bold px-4" id="btn-enviar">
+    <i class="bi bi-send-check me-2"></i> Enviar Solicitação de Contingência
+</button>
+{% endblock %}
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}
+{{ block.super }}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+
+    // Configure the outer mainForm to submit to the correct action endpoint
+    var mainForm = document.getElementById('mainForm');
+    mainForm.action = '{% url "add_contingencia_action" %}';
+    mainForm.noValidate = true;
 
     // ----------------------------------------------------------------
     // Helpers
@@ -433,7 +435,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ----------------------------------------------------------------
     // Contador de caracteres da Justificativa
     // ----------------------------------------------------------------
-    var campoJustificativa   = document.getElementById('campo-justificativa');
+    var campoJustificativa    = document.getElementById('campo-justificativa');
     var contadorJustificativa = document.getElementById('contador-justificativa');
     campoJustificativa.addEventListener('input', function () {
         contadorJustificativa.textContent = campoJustificativa.value.length + ' / 2000';
@@ -442,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ----------------------------------------------------------------
     // Submissão do formulário
     // ----------------------------------------------------------------
-    document.getElementById('form-contingencia').addEventListener('submit', function (e) {
+    mainForm.addEventListener('submit', function (e) {
         e.preventDefault();
 
         // Validação simples
@@ -468,8 +470,8 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('campo-dados-propostos').value = JSON.stringify(dadosPropostos);
 
         // Mostrar resumo e confirmar antes de enviar
-        var processoId    = document.getElementById('campo-processo-id').value;
-        var numCampos     = Object.keys(dadosPropostos).length;
+        var processoId = document.getElementById('campo-processo-id').value;
+        var numCampos  = Object.keys(dadosPropostos).length;
         document.getElementById('resumo-processo').textContent = '#' + processoId;
         document.getElementById('resumo-campos').textContent   =
             numCampos > 0
@@ -484,11 +486,10 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('btn-enviar').disabled = true;
             document.getElementById('btn-enviar').innerHTML =
                 '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Enviando...';
-            this.submit();
+            mainForm.submit();
         }
     });
 
 });
 </script>
-</body>
-</html>
+{% endblock %}

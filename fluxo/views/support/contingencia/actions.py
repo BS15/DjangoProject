@@ -1,10 +1,12 @@
 """Acoes de contingencia (POST views)."""
 
 import json
+import logging
 from decimal import Decimal
 from typing import cast
 
-import logging
+logger = logging.getLogger(__name__)
+
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -16,7 +18,6 @@ from django.views.decorators.http import require_POST
 
 from fluxo.domain_models import Contingencia, Processo
 from fluxo.views.helpers import (
-    _obter_campo_ordenacao,
     aplicar_aprovacao_contingencia,
     determinar_requisitos_contingencia,
     normalizar_dados_propostos_contingencia,
