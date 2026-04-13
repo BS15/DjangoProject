@@ -1,16 +1,18 @@
 {% extends "layouts/base_form.html" %}
 
 {% block page_heading %}
-    <i class="bi bi-wallet2 text-success"></i> Cadastrar Suprimento de Fundos
+    <i class="bi bi-cash-coin text-success"></i> Conceder Suprimento de Fundos
 {% endblock %}
 
 {% block page_subtitle %}
-    Abertura de numerário para prestação de contas (Petty Cash).
+    Preencha os dados abaixo para registrar uma nova concessão e gerar o processo de pagamento associado.
 {% endblock %}
 
 {% block page_actions %}
-    <a href="{% url 'painel_suprimentos' %}" class="btn btn-outline-secondary">Voltar para Lista</a>
+    <a href="{% url 'suprimentos_list' %}" class="btn btn-outline-secondary">Voltar para Lista</a>
 {% endblock %}
+
+{% block form_action %}{% url 'add_suprimento_action' %}{% endblock %}
 
 {% block form_fields %}
     <div class="row g-3">
@@ -38,17 +40,16 @@
             <label class="form-label small fw-bold text-muted">Data de Retorno (Fim)</label>
             {{ form.data_retorno }}
         </div>
+        <div class="col-md-4">
+            <label class="form-label small fw-bold text-muted">Data do Depósito em Conta</label>
+            {{ form.data_recibo }}
+        </div>
     </div>
 {% endblock %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-bold text-muted">Data do Depósito em Conta</label>
-                        {{ form.data_recibo }}
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <button type="submit" class="btn btn-success btn-lg w-100 fw-bold shadow-sm">
-            <i class="bi bi-check-circle"></i> Criar Suprimento de Fundos
-        </button>
+{% block form_actions %}
+    <a href="{% url 'suprimentos_list' %}" class="btn btn-outline-secondary px-4">Cancelar</a>
+    <button type="submit" class="btn btn-success px-4 fw-bold">
+        <i class="bi bi-save"></i> Conceder Suprimento
+    </button>
+{% endblock %}

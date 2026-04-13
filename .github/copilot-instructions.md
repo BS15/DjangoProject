@@ -1,62 +1,49 @@
-# Copilot Instructions — Financial & Administrative Backoffice System
+# System Architect Instructions — PaGé (Financial & Administrative ERP)
 
-You are an Expert Django Developer assisting in the development of a **Financial and Administrative Backoffice System** for a Brazilian Public Administration entity (Conselho).
+You are an Expert Enterprise Django Architect assisting in the development of "PaGé", a Financial and Administrative Backoffice System for a Brazilian Public Administration entity (Conselho).
 
----
-
-## 1. Domain Knowledge (Public Administration)
-
-The system strictly models Brazilian public budget execution and document management. You must understand these core concepts:
-
-- **Strict State Machine:** Processes move through rigid stages:
-  `A EMPENHAR` → `AGUARDANDO LIQUIDAÇÃO` → `A PAGAR` → `PAGO` → `CONTABILIZADO` → `ARQUIVADO`
-- **Immutability & Audit:** Public money requires strict auditing. Do not delete records or files once they are in advanced stages. Use `django-simple-history` for audit trails.
-- **Turnpike Pattern:** Transitions between states are guarded by strict validation rules (e.g., a process cannot move to `A PAGAR` without an attested *Nota Fiscal*).
-- **Key Workflows:**
-  - *Processos de Pagamento:* Standard invoice payments.
-  - *Verbas Indenizatórias:* Diárias (Per Diems), Jetons, Reembolsos, and Auxílios.
-  - *Suprimentos de Fundos:* Petty cash/advance funds, which require a strict "Prestação de Contas" (Accountability) closure phase before finalizing the process value.
-- **External Integrations:** SISCAC (banking/budget system) and Autentique (Digital Signatures).
+Your code MUST adhere to the strict architectural paradigms defined below. Failure to follow these rules will break the system.
 
 ---
 
-## 2. Tech Stack & Architecture
+## 1. Development State: FULL DEV MODE (Pre-V1)
+- **Canonical Changes Only:** We are currently in active, pre-production development. Do NOT write backward-compatible shims, deprecation wrappers, or legacy fallback logic. 
+- **No Migration Anxiety:** If a model's structure needs to change, change the canonical `models.py` directly. Do not worry about preserving existing database data or writing complex data migrations. We utilize a "Clean Slate Protocol" (nuking and recreating the DB) during this phase.
 
-- **Backend:** Django (Python)
-- **Database:** PostgreSQL (Cloud/Production) / SQLite (Local/Dev)
-- **Frontend:** Vanilla Bootstrap 5, standard Django Templates, minimal jQuery (mainly for input masking like CPF/CNPJ/Currency). No heavy JS frameworks (React/Vue/Angular).
-
-### Template Architecture (Strict 3-Tier Rule)
-
-| Tier | Role | Example |
-|------|------|---------|
-| **Tier 1 (Master)** | `base.html` — generic layout and sidebar | `templates/base.html` |
-| **Tier 2 (Archetypes)** | Reusable layout shells | `layouts/base_list.html`, `layouts/base_form.html`, `layouts/base_review.html`, `layouts/base_detail.html`, `layouts/base_batch.html` |
-| **Tier 3 (Leaves)** | Specific views (e.g., `diarias_list.html`) that **must** extend a Tier 2 archetype and only inject data into specific blocks (`{% block filter_form %}`, `{% block table_rows %}`) | `fluxo/diarias_list.html` |
-
-> **Rule:** Never write standalone boilerplate HTML in leaf templates. Always extend the appropriate Tier 2 archetype.
+## 2. Code Generation: PATTERN MATCHING FIRST
+- **Mimic Existing Structures:** Before writing any new feature from scratch, you MUST look for an analogous feature in the codebase and mirror its exact architecture, file naming convention, and import patterns.
+- **Example:** If asked to build an endpoint for "Reembolsos", you must look at how "Diárias" or "Jetons" are structured and copy that exact folder hierarchy and logic flow. 
 
 ---
 
-## 3. Development Philosophy & Baselines
+## 3. The Backend Architecture (Modular & Decoupled)
+The monolithic `processos` app has been shattered. The system is divided into isolated domains: `fluxo` (Core), `suprimentos`, `verbas_indenizatorias`, `fiscal`, `commons`, and `credores`.
+- **Strict One-Way Dependencies:** Satellite apps (`verbas`, `suprimentos`) can import from `commons` or `credores`, but avoid circular dependencies with `fluxo` wherever possible.
 
-- **Function Over Form:** Prioritize highly functional, fast, and simple code over aesthetic complexity. Use standard Bootstrap utility classes; avoid writing custom CSS unless absolutely necessary.
-- **Deterministic Over AI:** For tasks like data extraction (e.g., Febraban barcodes), rely strictly on deterministic algorithms, Regex, or specialized libraries — not LLM inference.
-- **Single Responsibility Principle:** Keep `views.py` clean:
-  - Move non-operational logic (e.g., fake data generators) to separate files (e.g., `desenvolvedor.py`).
-  - Move complex business rules to `utils.py` or model methods.
-- **Robust Security (RBAC):**
-  - All views are globally protected by a Login Middleware. **Do not** use `@login_required`.
-  - **Do not** use brittle `@group_required` decorators.
-  - Always secure views using Django's permission framework: `@permission_required('app_label.permission_name', raise_exception=True)`.
+### The "Manager-Worker" View Paradigm
+Do NOT use standard Django "Fat Views" (e.g., writing business logic inside a single `views.py` file). Views are strictly separated by HTTP method:
+- **Panels (`panels.py`):** Handle ONLY `GET` requests. They compile context dictionaries and render HTML templates. No database mutations occur here.
+- **Actions (`actions.py`):** Handle ONLY `POST` requests. They validate forms, call Services/Helpers to mutate the database, and return HTTP Redirects. They NEVER render templates.
+- **Services/Helpers (`services/`):** All database mutations, state transitions, and complex business logic MUST live here. Views merely route traffic to these workers.
 
 ---
 
-## 4. Implementation Rules
+## 4. The Frontend Architecture (Hub and Spoke)
+Do NOT build massive, multi-formset monolithic pages.
+- **The Hub:** Entity detail pages (e.g., `process_detail.html`) are read-only Command Centers.
+- **The Spokes:** Data mutation (adding an attachment, registering an invoice) happens on isolated, single-purpose endpoints that redirect back to the Hub upon success.
 
-When asked to create or refactor a feature:
+### Template Tiers (Strict Inheritance)
+Never write standalone boilerplate HTML. Always extend the appropriate Tier 2 archetype:
+- `layouts/base_list.html`
+- `layouts/base_form.html` (Automatically inherits jQuery masking for R$, CPF/CNPJ)
+- `layouts/base_review.html`
+- `layouts/base_detail.html`
 
-1. **Never write raw IDs:** When tracking foreign keys or history, always resolve IDs to their human-readable `__str__` representations.
-2. **Forms & Masks:** All Data Entry forms must extend `layouts/base_form.html` so they automatically inherit global jQuery masking for Brazilian currency (R$), CPFs, CNPJs, and Phone numbers.
-3. **Database Constraints:** Always respect database constraints (like required `status` foreign keys). Never leave an object in an invalid state before calling `.save()`.
-4. **DRY Filters:** Do not duplicate `FilterSet`s. Consolidate filters by model and utilize `RangeFilter` for all dates and monetary values.
+---
+
+## 5. Domain Knowledge (Public Administration Compliance)
+- **Strict State Machine:** Processes move through rigid stages (e.g., `A EMPENHAR` → `AGUARDANDO LIQUIDAÇÃO` → `PAGO`). 
+- **The Turnpike Pattern:** State transitions are guarded by strict validation rules (Turnpikes). A process cannot advance if it lacks mandatory attachments (like a *Nota Fiscal* or *Documento Orçamentário*).
+- **Immutability & Audit:** Public money requires strict auditing. Do not delete records. Rely on `django-simple-history` for audit trails and use `Contingência` or `Devolução` models for workflow exceptions.
+- **Security (RBAC):** All views are globally protected. NEVER use `@login_required` or `@group_required`. Use Django's native `@permission_required('app_label.permission_name', raise_exception=True)`. Operational users NEVER use the Django `/admin/` panel.

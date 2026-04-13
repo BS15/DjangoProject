@@ -20,7 +20,7 @@ def add_suprimento_view(request: HttpRequest) -> HttpResponse:
         try:
             persistir_suprimento_com_processo(form)
             messages.success(request, "Suprimento de Fundos cadastrado com sucesso!")
-            return redirect("painel_suprimentos")
+            return redirect("suprimentos_list")
         except (ValidationError, DatabaseError, TypeError, ValueError):
             logger.exception("Erro ao cadastrar suprimento de fundos")
             messages.error(request, "Erro interno ao salvar suprimento. Tente novamente.")

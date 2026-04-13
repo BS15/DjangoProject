@@ -1,161 +1,146 @@
 {% extends "layouts/base_detail.html" %}
 
 {% block detail_header %}
-    <h2><i class="bi bi-wallet2 text-success"></i> Gestão de Suprimento de Fundos</h2>
-    <p class="text-muted mb-0">Suprido(a): <strong>{{ suprimento.suprido.nome }}</strong> |
-        Período: {{ suprimento.data_saida|date:"d/m/Y" }} a {{ suprimento.data_retorno|date:"d/m/Y" }}</p>
-    {% if suprimento.processo %}
-        <span class="badge bg-secondary">Vinculado ao Processo #{{ suprimento.processo.id }}</span>
-    {% endif %}
-{% endblock %}
-
-{% block detail_actions %}
-    {% if suprimento.processo %}
-        <a href="{% url 'registrar_devolucao' suprimento.processo.id %}"
-           class="btn btn-success fw-bold shadow-sm">
-            <i class="bi bi-arrow-return-left"></i> Registrar Devolução de Saldo
-        </a>
-    {% endif %}
-    <a href="{% url 'painel_suprimentos' %}" class="btn btn-outline-secondary">Voltar</a>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="mb-1 fw-bold"><i class="bi bi-wallet2 text-success"></i> Gestão de Suprimento de Fundos</h4>
+            <p class="text-muted mb-0">
+                Suprido(a): <strong>{{ suprimento.suprido.nome }}</strong> |
+                Período: {{ suprimento.data_saida|date:"d/m/Y" }} a {{ suprimento.data_retorno|date:"d/m/Y" }} |
+                Status: <span class="badge bg-secondary">{{ suprimento.status }}</span>
+            </p>
+        </div>
+        <a href="{% url 'suprimentos_list' %}" class="btn btn-outline-secondary btn-sm">Voltar para Lista</a>
+    </div>
 {% endblock %}
 
 {% block detail_body %}
-    <div class="row mb-4">
-        <div class="{% if suprimento.processo %}col-md-3{% else %}col-md-4{% endif %}">
-            <div class="card shadow-sm border-0 border-start border-primary border-4">
-                <div class="card-body">
-                    <h6 class="text-muted mb-1">Numerário Liberado</h6>
-                    <h3 class="text-primary mb-0">R$ {{ suprimento.valor_liquido|floatformat:2 }}</h3>
-                </div>
-            </div>
+    {% if pode_editar %}
+    <div class="card shadow-sm mb-4 border-primary">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0"><i class="bi bi-receipt"></i> Registrar Nova Despesa</h5>
         </div>
-        <div class="{% if suprimento.processo %}col-md-3{% else %}col-md-4{% endif %}">
-            <div class="card shadow-sm border-0 border-start border-danger border-4">
-                <div class="card-body">
-                    <h6 class="text-muted mb-1">Total de Despesas Lançadas</h6>
-                    <h3 class="text-danger mb-0">R$ {{ suprimento.valor_gasto|floatformat:2 }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="{% if suprimento.processo %}col-md-3{% else %}col-md-4{% endif %}">
-            <div class="card shadow-sm border-0 border-start border-success border-4">
-                <div class="card-body">
-                    <h6 class="text-muted mb-1">Saldo Remanescente a Devolver</h6>
-                    <h3 class="text-success mb-0">R$ {{ suprimento.saldo_remanescente|floatformat:2 }}</h3>
-                </div>
-            </div>
-        </div>
-    </div>
-    {# Additional detail content (tables, etc.) can be added here as needed #}
-    <div class="row">
-        <div class="col-md-4 mb-4">
-            {% if pode_editar %}
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white fw-bold">
-                    <i class="bi bi-receipt"></i> Lançar Nova Despesa
-                </div>
-                <div class="card-body bg-light">
-                    <form method="POST" action="{% url 'adicionar_despesa_action' pk=suprimento.id %}" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <div class="mb-2">
-                            <label class="small fw-bold text-muted">Data da Compra</label>
-                            <input type="date" name="data" class="form-control form-control-sm" required>
-                        </div>
-                        <div class="mb-2">
-                            <label class="small fw-bold text-muted">Estabelecimento / Credor</label>
-                            <input type="text" name="estabelecimento" class="form-control form-control-sm" required>
-                        </div>
-                        <div class="mb-2">
-                            <label class="small fw-bold text-muted">Nº Nota Fiscal / Cupom</label>
-                            <input type="text" name="nota_fiscal" class="form-control form-control-sm" required>
-                        </div>
-                        <div class="mb-2">
-                            <label class="small fw-bold text-muted">Descrição do Item/Serviço</label>
-                            <textarea name="detalhamento" class="form-control form-control-sm" rows="2" required></textarea>
-                        </div>
-                        <div class="mb-2">
-                            <label class="small fw-bold text-muted">Valor (R$)</label>
-                            <input type="number" step="0.01" name="valor" class="form-control form-control-sm text-danger fw-bold" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="small fw-bold text-muted">Documento (Solicitação + NF)</label>
-                            <input type="file" name="arquivo" class="form-control form-control-sm" accept=".pdf" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">Registrar Despesa</button>
-                    </form>
-                </div>
-            </div>
-            {% else %}
-            <div class="card shadow-sm border-danger">
-                <div class="card-header bg-danger text-white fw-bold">
-                    <i class="bi bi-lock-fill"></i> Suprimento Encerrado
-                </div>
-                <div class="card-body text-center text-muted">
-                    <i class="bi bi-lock fs-1 text-danger d-block mb-2"></i>
-                    <p class="mb-0">Este suprimento foi encerrado e não aceita novas despesas.</p>
-                </div>
-            </div>
-            {% endif %}
-        </div>
-
-        <div class="col-md-8">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <span class="fw-bold"><i class="bi bi-list-columns"></i> Extrato de Compras</span>
-
-                    {% if pode_editar %}
-                      <form method="POST" action="{% url 'fechar_suprimento_action' pk=suprimento.id %}"
-                          onsubmit="return confirm('Deseja encerrar a prestação de contas? O processo será enviado para a Auditoria.');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-warning btn-sm fw-bold shadow-sm">
-                            <i class="bi bi-lock-fill"></i> Fechar Prestação de Contas
+        <div class="card-body">
+            <form method="post" action="{% url 'registrar_despesa_action' suprimento.id %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted">{{ form_despesa.data.label }}</label>
+                        {{ form_despesa.data }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-muted">{{ form_despesa.estabelecimento.label }}</label>
+                        {{ form_despesa.estabelecimento }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted">{{ form_despesa.cnpj_cpf.label }}</label>
+                        {{ form_despesa.cnpj_cpf }}
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold text-muted">{{ form_despesa.nota_fiscal.label }}</label>
+                        {{ form_despesa.nota_fiscal }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-muted">{{ form_despesa.detalhamento.label }}</label>
+                        {{ form_despesa.detalhamento }}
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold text-muted">{{ form_despesa.valor.label }}</label>
+                        {{ form_despesa.valor }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-muted">{{ form_despesa.arquivo.label }}</label>
+                        {{ form_despesa.arquivo }}
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">
+                            <i class="bi bi-plus-circle"></i> Adicionar
                         </button>
-                    </form>
-                    {% else %}
-                    <span class="badge bg-danger fs-6"><i class="bi bi-lock-fill"></i> Encerrado</span>
-                    {% endif %}
+                    </div>
                 </div>
-                <div class="card-body p-0">
-                    <table class="table table-hover table-striped mb-0 align-middle small">
-                        <thead class="table-light">
-                        <tr>
-                            <th>Data</th>
-                            <th>NF</th>
-                            <th>Estabelecimento</th>
-                            <th>Detalhe</th>
-                            <th class="text-end pe-3">Valor</th>
-                            <th class="text-center">Doc</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for despesa in despesas %}
-                            <tr>
-                                <td class="text-muted">{{ despesa.data|date:"d/m/Y" }}</td>
-                                <td class="fw-bold">{{ despesa.nota_fiscal }}</td>
-                                <td>{{ despesa.estabelecimento }}</td>
-                                <td>{{ despesa.detalhamento|truncatechars:40 }}</td>
-                                <td class="text-end pe-3 fw-bold text-danger">R$ {{ despesa.valor|floatformat:2 }}</td>
-                                <td class="text-center">
-                                    {% if despesa.arquivo %}
-                                        <a href="{% url 'download_arquivo_seguro' 'suprimento' despesa.id %}" target="_blank" class="btn btn-sm btn-danger py-0" title="Ver Solicitação + NF">
-                                            <i class="bi bi-file-pdf"></i>
-                                        </a>
-                                    {% else %}
-                                        <span class="text-muted">-</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="6" class="text-center py-5 text-muted">Nenhuma despesa lançada neste
-                                    suprimento ainda.
-                                </td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
+    {% endif %}
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <span class="fw-bold"><i class="bi bi-list-columns"></i> Extrato de Despesas</span>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover table-striped mb-0 align-middle small">
+                <thead class="table-light">
+                    <tr>
+                        <th>Data</th>
+                        <th>NF</th>
+                        <th>Estabelecimento</th>
+                        <th>Detalhe</th>
+                        <th class="text-end pe-3">Valor</th>
+                        <th class="text-center">Doc</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for despesa in despesas %}
+                    <tr>
+                        <td class="text-muted">{{ despesa.data|date:"d/m/Y" }}</td>
+                        <td class="fw-bold">{{ despesa.nota_fiscal }}</td>
+                        <td>{{ despesa.estabelecimento }}</td>
+                        <td>{{ despesa.detalhamento|truncatechars:40 }}</td>
+                        <td class="text-end pe-3 fw-bold text-danger">R$ {{ despesa.valor|floatformat:2 }}</td>
+                        <td class="text-center">
+                            {% if despesa.arquivo %}
+                                <a href="{% url 'download_arquivo_seguro' 'suprimento' despesa.id %}" target="_blank" class="btn btn-sm btn-danger py-0" title="Ver Comprovante">
+                                    <i class="bi bi-file-pdf"></i>
+                                </a>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">Nenhuma despesa lançada neste suprimento ainda.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block detail_actions %}
+    <div class="card shadow-sm border-0 border-start border-primary border-4 mb-3">
+        <div class="card-body">
+            <h6 class="text-muted mb-1">Numerário Liberado</h6>
+            <h4 class="text-primary mb-0">R$ {{ suprimento.valor_liquido|floatformat:2 }}</h4>
+        </div>
+    </div>
+    <div class="card shadow-sm border-0 border-start border-danger border-4 mb-3">
+        <div class="card-body">
+            <h6 class="text-muted mb-1">Total de Despesas</h6>
+            <h4 class="text-danger mb-0">R$ {{ suprimento.valor_gasto|floatformat:2 }}</h4>
+        </div>
+    </div>
+    <div class="card shadow-sm border-0 border-start border-success border-4 mb-3">
+        <div class="card-body">
+            <h6 class="text-muted mb-1">Saldo Remanescente</h6>
+            <h4 class="text-success mb-0">R$ {{ suprimento.saldo_remanescente|floatformat:2 }}</h4>
+        </div>
+    </div>
+    {% if suprimento.processo %}
+        <a href="{% url 'registrar_devolucao' suprimento.processo.id %}" class="btn btn-success fw-bold w-100 mb-2">
+            <i class="bi bi-arrow-return-left"></i> Registrar Devolução
+        </a>
+    {% endif %}
+    {% if pode_editar %}
+    <form method="post" action="{% url 'concluir_prestacao_action' suprimento.id %}"
+          onsubmit="return confirm('Confirma o encerramento da prestação de contas?');">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-warning fw-bold w-100">
+            <i class="bi bi-lock-fill"></i> Concluir Prestação
+        </button>
+    </form>
+    {% else %}
+    <span class="text-success d-block text-center"><i class="bi bi-lock-fill"></i> Prestação Encerrada</span>
+    {% endif %}
 {% endblock %}
