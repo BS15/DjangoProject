@@ -9,7 +9,8 @@ from django.shortcuts import render
 from credores.models import CargosFuncoes, ContasBancarias
 from fluxo.views.support.contas_fixas.models import ContaFixa, FaturaMensal
 from fiscal.models import DadosContribuinte
-from fiscal.models import ComprovanteDePagamento, DocumentoFiscal, RetencaoImposto
+from fluxo.domain_models.comprovantes import ComprovanteDePagamento
+from fiscal.models import DocumentoFiscal, RetencaoImposto
 from fluxo.models import (
     AssinaturaAutentique,
     Devolucao,

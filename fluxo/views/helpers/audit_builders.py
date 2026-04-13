@@ -5,7 +5,8 @@ import logging
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
-from fiscal.models import ComprovanteDePagamento, DocumentoFiscal, RetencaoImposto
+from fluxo.domain_models.comprovantes import ComprovanteDePagamento
+from fiscal.models import DocumentoFiscal, RetencaoImposto
 from fluxo.models import (
     Devolucao,
     DocumentoDePagamento,

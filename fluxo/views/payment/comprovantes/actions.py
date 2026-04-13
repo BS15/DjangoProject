@@ -12,7 +12,7 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 
-from fiscal.models import ComprovanteDePagamento
+from fluxo.domain_models.comprovantes import ComprovanteDePagamento
 from fluxo.models import DocumentoDePagamento, Processo, TiposDeDocumento
 from fluxo.utils import processar_pdf_comprovantes, split_pdf_to_temp_pages
 

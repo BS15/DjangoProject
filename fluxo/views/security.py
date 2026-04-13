@@ -5,7 +5,8 @@ from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 
-from fiscal.models import ComprovanteDePagamento, DocumentoFiscal
+from fluxo.domain_models.comprovantes import ComprovanteDePagamento
+from fiscal.models import DocumentoFiscal
 from fluxo.models import Devolucao, DocumentoDePagamento, RegistroAcessoArquivo
 from suprimentos.models import DespesaSuprimento
 from verbas_indenizatorias.models import (
