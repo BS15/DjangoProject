@@ -13,6 +13,10 @@ class DadosContribuinte(models.Model):
     class Meta:
         verbose_name = "Dados do Contribuinte"
         verbose_name_plural = "Dados do Contribuinte"
+class Meta:
+    permissions = [
+        ("acesso_backoffice", "Acesso ao backoffice fiscal"),
+    ]
 """Modelos fiscais: notas, retenções e comprovantes de pagamento.
 
 Este módulo define modelos para controle de notas fiscais, retenções de impostos, comprovantes de pagamento e integrações fiscais.

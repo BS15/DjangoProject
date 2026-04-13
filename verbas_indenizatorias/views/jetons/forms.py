@@ -13,7 +13,7 @@ from ..shared.registry import (
 )
 
 
-@permission_required("fluxo.pode_gerenciar_jetons", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_jetons", raise_exception=True)
 def add_jeton_view(request):
     if request.method == 'POST':
         form = JetonForm(request.POST)
@@ -36,7 +36,7 @@ def add_jeton_view(request):
     return render(request, 'verbas/add_jeton.html', {'form': form, 'tipos_documento': tipos_doc})
 
 
-@permission_required("fluxo.pode_gerenciar_jetons", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_jetons", raise_exception=True)
 def edit_jeton_view(request, pk):
     jeton = get_object_or_404(Jeton, id=pk)
     documentos = jeton.documentos.select_related('tipo').all()

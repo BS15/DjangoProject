@@ -47,6 +47,20 @@ class TiposDeVerbasIndenizatorias(models.Model):
     def __str__(self):
         return f"{self.tipo_de_verba_indenizatoria}"
 
+    class Meta:
+        permissions = [
+            ("pode_visualizar_verbas", "Pode visualizar verbas indenizatórias"),
+            ("pode_gerenciar_jetons", "Pode gerenciar jetons"),
+            ("pode_agrupar_verbas", "Pode agrupar verbas indenizatórias"),
+            ("pode_gerenciar_processos_verbas", "Pode gerenciar processos de verbas"),
+            ("pode_gerenciar_auxilios", "Pode gerenciar auxílios"),
+            ("pode_gerenciar_reembolsos", "Pode gerenciar reembolsos"),
+            ("pode_autorizar_diarias", "Pode autorizar diárias"),
+            ("pode_importar_diarias", "Pode importar diárias"),
+            ("pode_criar_diarias", "Pode criar diárias"),
+            ("pode_gerenciar_diarias", "Pode gerenciar diárias"),
+        ]
+
 
 class Tabela_Valores_Unitarios_Verbas_Indenizatorias(models.Model):
     """Tabela de valores unitários por tipo de verba e cargo/função."""
@@ -57,7 +71,6 @@ class Tabela_Valores_Unitarios_Verbas_Indenizatorias(models.Model):
 
     @classmethod
     def get_valor_para_cargo_diaria(cls, cargo_funcao):
-        """Obtém o valor unitário de diária para o cargo/função informado."""
         tabela = cls.objects.filter(
             cargo_funcao=cargo_funcao,
             tipo__tipo_de_verba_indenizatoria__icontains='diária'

@@ -1,56 +1,12 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nova Contingência - System X</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
-    <style>
-        .section-card { border-left: 4px solid var(--bs-primary); }
-        .section-card .card-header { background-color: var(--bs-primary); color: #fff; }
-        #painel-processo { display: none; }
-        #painel-form-contingencia { display: none; }
-        .campo-proposto-row { background-color: #f8f9fa; }
-        .campo-proposto-row:hover { background-color: #e9ecef; }
-        #btn-buscar { min-width: 140px; }
-        .badge-status { font-size: 0.8rem; }
-        #spinner-busca { display: none; }
-        .info-label { font-size: 0.78rem; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-        .info-value { font-size: 0.95rem; font-weight: 500; }
-        .alert-contingencia-ativa { border-left: 4px solid var(--bs-warning); }
-        #dados-propostos-list .row { margin-bottom: 0.5rem; }
-    </style>
-</head>
-<body class="bg-light">
-{% include 'partials/sidebar.html' %}
+{% extends "layouts/base_form.html" %}
 
+{% block page_heading %}<i class="bi bi-shield-exclamation me-2"></i> Solicitar Contingência{% endblock %}
+{% block page_subtitle %}Solicite uma correção excepcional em um Processo bloqueado.{% endblock %}
+{% block page_actions %}
+<a href="{% url 'home_page' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar para Home</a>
+{% endblock %}
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow-sm">
-    <div class="container-fluid">
-        <span class="navbar-brand fw-bold"><i class="bi bi-shield-exclamation me-2"></i>System X</span>
-        <div class="d-flex gap-2">
-            <a href="{% url 'home_page' %}" class="btn btn-outline-light btn-sm">
-                <i class="bi bi-arrow-left"></i> Voltar para Home
-            </a>
-        </div>
-    </div>
-</nav>
-
-<div class="container mt-2 mb-5" style="max-width: 860px;">
-
-    <div class="d-flex align-items-center mb-4">
-        <div class="p-2 rounded bg-primary text-white me-3">
-            <i class="bi bi-shield-exclamation fs-4"></i>
-        </div>
-        <div>
-            <h4 class="mb-0 fw-bold">Solicitar Contingência</h4>
-            <p class="text-muted mb-0 small">Solicite uma correção excepcional em um Processo bloqueado.</p>
-        </div>
-    </div>
-
+{% block form_fields %}
     {% if messages %}
         {% for message in messages %}
             <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
@@ -60,9 +16,6 @@
         {% endfor %}
     {% endif %}
 
-    <!-- ============================================================
-         SEÇÃO 1 — Seleção do Processo
-    ============================================================ -->
     <div class="card shadow-sm section-card mb-4">
         <div class="card-header d-flex align-items-center gap-2 py-2">
             <i class="bi bi-search"></i>
@@ -72,20 +25,16 @@
             <label class="form-label fw-bold" for="input-processo-id">ID do Processo</label>
             <div class="input-group">
                 <span class="input-group-text bg-white"><i class="bi bi-hash text-primary"></i></span>
-                <input
-                    type="number"
-                    id="input-processo-id"
-                    class="form-control"
-                    placeholder="Digite o ID numérico do Processo (ex: 42)"
-                    min="1"
-                    step="1"
-                    autocomplete="off"
-                >
-                <button class="btn btn-primary fw-bold" type="button" id="btn-buscar">
-                    <span id="spinner-busca" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                    <i class="bi bi-search me-1" id="icon-busca"></i> Buscar Processo
-                </button>
+                <input type="number" id="input-processo-id" class="form-control" placeholder="Digite o ID numérico do Processo (ex: 42)" min="1" />
             </div>
+        </div>
+    </div>
+    ...existing code for the rest of the form...
+{% endblock %}
+
+{% block form_actions %}
+<button type="submit" class="btn btn-success fw-bold">Solicitar Contingência</button>
+{% endblock %}
             <div id="erro-busca" class="text-danger small mt-2" style="display:none;"></div>
             <p class="text-muted small mt-2 mb-0">
                 <i class="bi bi-info-circle"></i>

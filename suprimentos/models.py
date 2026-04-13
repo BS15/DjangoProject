@@ -58,6 +58,10 @@ class SuprimentoDeFundos(models.Model):
     @property
     def valor_gasto(self):
         """Soma o valor das despesas vinculadas ao suprimento."""
+    class Meta:
+        permissions = [
+            ("acesso_backoffice", "Acesso ao backoffice de suprimentos"),
+        ]
         # Soma todas as despesas atreladas a este suprimento
         total = sum(despesa.valor for despesa in self.despesas.all())
         return total

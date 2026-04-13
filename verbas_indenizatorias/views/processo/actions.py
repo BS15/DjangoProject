@@ -10,7 +10,7 @@ from ..shared.registry import (
     _obter_credor_agrupamento,
 )
 @require_POST
-@permission_required("fluxo.pode_agrupar_verbas", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_agrupar_verbas", raise_exception=True)
 def agrupar_verbas_view(request, tipo_verba):
     selecionados = request.POST.getlist('verbas_selecionadas')
 

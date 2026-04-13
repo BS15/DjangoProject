@@ -1,63 +1,45 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Novo Suprimento de Fundos</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
-</head>
-<body class="bg-light">
-{% include 'partials/sidebar.html' %}
+{% extends "layouts/base_form.html" %}
 
+{% block page_heading %}
+    <i class="bi bi-wallet2 text-success"></i> Cadastrar Suprimento de Fundos
+{% endblock %}
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow-sm">
-    <div class="container-fluid px-4">
-        <a class="navbar-brand fw-bold" href="{% url 'home_page' %}">System X</a>
-    </div>
-</nav>
+{% block page_subtitle %}
+    Abertura de numerário para prestação de contas (Petty Cash).
+{% endblock %}
 
-<div class="container mt-4 mb-5" style="max-width: 800px;">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2><i class="bi bi-wallet2 text-success"></i> Cadastrar Suprimento de Fundos</h2>
-            <p class="text-muted small">Abertura de numerário para prestação de contas (Petty Cash).</p>
+{% block page_actions %}
+    <a href="{% url 'painel_suprimentos' %}" class="btn btn-outline-secondary">Voltar para Lista</a>
+{% endblock %}
+
+{% block form_fields %}
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label small fw-bold text-muted">Suprido (Responsável)</label>
+            {{ form.suprido }}
         </div>
-        <a href="{% url 'painel_suprimentos' %}" class="btn btn-outline-secondary">Voltar para Lista</a>
+        <div class="col-md-6">
+            <label class="form-label small fw-bold text-muted">Lotação / Setor</label>
+            {{ form.lotacao }}
+        </div>
+        <div class="col-md-6">
+            <label class="form-label small fw-bold text-muted">Valor Liberado (R$)</label>
+            {{ form.valor_liquido }}
+        </div>
+        <div class="col-md-6">
+            <label class="form-label small fw-bold text-muted">Taxa de Saque (R$)</label>
+            {{ form.taxa_saque }}
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small fw-bold text-muted">Data de Saída (Início)</label>
+            {{ form.data_saida }}
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small fw-bold text-muted">Data de Retorno (Fim)</label>
+            {{ form.data_retorno }}
+        </div>
     </div>
-
-    <form method="POST">
-        {% csrf_token %}
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white fw-bold"><i class="bi bi-info-circle"></i> Informações do Adiantamento</div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold text-muted">Suprido (Responsável)</label>
-                        {{ form.suprido }}
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold text-muted">Lotação / Setor</label>
-                        {{ form.lotacao }}
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold text-muted">Valor Liberado (R$)</label>
-                        {{ form.valor_liquido }}
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold text-muted">Taxa de Saque (R$)</label>
-                        {{ form.taxa_saque }}
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label small fw-bold text-muted">Data de Saída (Início)</label>
-                        {{ form.data_saida }}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-bold text-muted">Data de Retorno (Fim)</label>
-                        {{ form.data_retorno }}
+{% endblock %}
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small fw-bold text-muted">Data do Depósito em Conta</label>

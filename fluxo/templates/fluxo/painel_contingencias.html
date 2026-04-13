@@ -1,63 +1,37 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Contingências - System X</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
-</head>
-<body class="bg-light">
-{% include 'partials/sidebar.html' %}
+{% extends "layouts/base_list.html" %}
 
+{% block page_heading %}
+    <i class="bi bi-exclamation-triangle"></i> Painel de Contingências
+{% endblock %}
 
-<div class="container mt-4 mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4><i class="bi bi-exclamation-triangle"></i> Painel de Contingências</h4>
-        <div class="gap-2 d-flex">
-            <a href="{% url 'add_contingencia' %}" class="btn btn-success btn-sm fw-bold">
-                <i class="bi bi-plus-circle"></i> Adicionar Contingência
-            </a>
-            <a href="/" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
-        </div>
+{% block page_actions %}
+    <a href="{% url 'add_contingencia' %}" class="btn btn-success btn-sm fw-bold">
+        <i class="bi bi-plus-circle"></i> Adicionar Contingência
+    </a>
+    <a href="/" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+{% endblock %}
+
+{% block filter_form %}
+    <div class="col-md-3">
+        <label class="small fw-bold text-secondary mb-1">Nº do Processo</label>
+        {{ filter.form.processo__id }}
     </div>
-
-    <!-- Filter Card -->
-    <div class="card shadow-sm mb-4 border-0">
-        <div class="card-body bg-white pb-2 rounded">
-            <form method="get" class="row g-2 align-items-end">
-                <div class="col-md-3">
-                    <label class="small fw-bold text-secondary mb-1">Nº do Processo</label>
-                    {{ filter.form.processo__id }}
-                </div>
-                <div class="col-md-3">
-                    <label class="small fw-bold text-secondary mb-1">Solicitante</label>
-                    {{ filter.form.solicitante__username }}
-                </div>
-                <div class="col-md-3">
-                    <label class="small fw-bold text-secondary mb-1">Status</label>
-                    {{ filter.form.status }}
-                </div>
-                <div class="col-md-3">
-                    <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">
-                        <i class="bi bi-search"></i> Pesquisar
-                    </button>
-                </div>
-            </form>
-        </div>
+    <div class="col-md-3">
+        <label class="small fw-bold text-secondary mb-1">Solicitante</label>
+        {{ filter.form.solicitante__username }}
     </div>
+    <div class="col-md-3">
+        <label class="small fw-bold text-secondary mb-1">Status</label>
+        {{ filter.form.status }}
+    </div>
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">
+            <i class="bi bi-search"></i> Pesquisar
+        </button>
+    </div>
+{% endblock %}
 
-    <!-- Results Table -->
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-striped align-middle mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>#</th>
-                            <th>Processo</th>
+{# Add table_headers and table_rows blocks as needed for the list #}
                             <th>Solicitante</th>
                             <th>Data da Solicitação</th>
                             <th>Justificativa</th>

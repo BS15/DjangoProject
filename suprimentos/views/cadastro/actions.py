@@ -12,7 +12,7 @@ from .actions import persistir_suprimento_com_processo
 
 logger = logging.getLogger(__name__)
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
 def add_suprimento_view(request: HttpRequest) -> HttpResponse:
     """Cria um suprimento e o processo financeiro vinculado."""
     form = SuprimentoForm(request.POST or None)
