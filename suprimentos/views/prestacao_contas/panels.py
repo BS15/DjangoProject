@@ -9,6 +9,7 @@ from django.views.decorators.http import require_GET
 
 from suprimentos.models import SuprimentoDeFundos
 from ..helpers import _suprimento_encerrado
+from suprimentos.forms import DespesaSuprimentoForm
 
 
 @require_GET
@@ -30,6 +31,7 @@ def gerenciar_suprimento_view(request: HttpRequest, pk: int) -> HttpResponse:
         "suprimento": suprimento,
         "despesas": despesas,
         "pode_editar": not _suprimento_encerrado(suprimento),
+        "form_despesa": DespesaSuprimentoForm(),
     }
     return render(request, "suprimentos/gerenciar_suprimento.html", context)
 

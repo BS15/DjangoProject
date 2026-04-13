@@ -15,7 +15,7 @@
 
     <div class="card shadow-sm border-0">
         <div class="card-body p-4">
-            <form method="post" id="mainForm" enctype="{% block form_enctype %}application/x-www-form-urlencoded{% endblock %}">
+            <form method="post" id="mainForm" action="{% block form_action %}{% endblock %}" enctype="{% block form_enctype %}application/x-www-form-urlencoded{% endblock %}">
                 {% csrf_token %}
 
                 {% block form_fields %}{% endblock %}
