@@ -1,4 +1,7 @@
-"""Agregado principal do processo de pagamento e entidades correlatas imediatas."""
+"""Modelos de processos e reuniões do domínio de fluxo financeiro.
+
+Este módulo define modelos para processos, reuniões de conselho e gerenciadores relacionados ao ciclo de vida dos processos financeiros.
+"""
 
 from datetime import datetime
 

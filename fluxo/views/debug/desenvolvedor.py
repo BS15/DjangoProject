@@ -13,10 +13,10 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from credores.models import CargosFuncoes, ContasBancarias, Credor
 from credores.imports import (
-    download_template_csv_contas,
     download_template_csv_credores,
     painel_importacao_view,
 )
+from fluxo.support.conta_fixa_imports import download_template_csv_contas
 from fiscal.models import CodigosImposto, DocumentoFiscal, RetencaoImposto, StatusChoicesRetencoes
 from fluxo.models import (
     DocumentoDePagamento,

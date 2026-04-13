@@ -40,6 +40,20 @@
             </div>
         {% endfor %}
     {% endif %}
+{% extends "layouts/base_form.html" %}
+
+{% block page_heading %}<i class="bi bi-funnel-fill text-warning"></i> Fase 2: Triagem Fiscal e Retenções{% endblock %}
+{% block page_subtitle %}Processo Base: <strong>#{{ processo.id }}</strong> | Credor: {{ processo.credor.nome }}{% endblock %}
+
+{% block form_fields %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
 
     {% if nota_fiscal_formset.non_form_errors %}
         <div class="alert alert-danger shadow-sm">
@@ -47,79 +61,74 @@
         </div>
     {% endif %}
 
-    <form method="post" id="triagemForm" novalidate>
-        {% csrf_token %}
-        {{ nota_fiscal_formset.management_form }}
-        <input type="hidden" name="source" value="{{ source }}">
-        
-        <div class="row g-4">
-            <div class="col-lg-5">
-                <div class="sticky-viewer">
-                    <div class="card shadow-sm border-info h-100">
-                        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0 fw-bold"><i class="bi bi-file-earmark-pdf"></i> Documentos Identificados</h6>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-light text-info">{{ docs_nota|length }} PDF(s)</span>
-                                <a href="{% url 'gerar_dummy_pdf' processo.id %}" class="btn btn-xs btn-light btn-sm py-0 px-2 text-info fw-bold" title="Adicionar PDF de teste">
-                                    <i class="bi bi-plus-circle"></i> PDF Teste
-                                </a>
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="sticky-viewer">
+                <div class="card shadow-sm border-info h-100">
+                    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-file-earmark-pdf"></i> Documentos Identificados</h6>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-light text-info">{{ docs_nota|length }} PDF(s)</span>
+                            <a href="{% url 'gerar_dummy_pdf' processo.id %}" class="btn btn-xs btn-light btn-sm py-0 px-2 text-info fw-bold" title="Adicionar PDF de teste">
+                                <i class="bi bi-plus-circle"></i> PDF Teste
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body p-2 bg-light-blue">
+                        {% if docs_nota %}
+                            <ul class="nav nav-pills nav-fill mb-2 gap-1" id="pdf-tabs" role="tablist">
+                                {% for doc in docs_nota %}
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link border fw-bold pdf-tab-btn {% if forloop.first %}active{% endif %}" 
+                                                id="tab-doc-{{ forloop.counter0 }}" 
+                                                data-index="{{ forloop.counter0 }}"
+                                                data-url="{% if doc.arquivo %}{% url 'download_arquivo_seguro' 'processo' doc.id %}{% endif %}" 
+                                                onclick="changePdf(this)" 
+                                                type="button">
+                                            <i class="bi bi-file-text"></i> Nota {{ forloop.counter }}
+                                        </button>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            <div class="border rounded bg-white shadow-inner">
+                                <iframe id="pdf-viewer" src="{% if docs_nota.first and docs_nota.first.arquivo %}{% url 'download_arquivo_seguro' 'processo' docs_nota.first.id %}{% endif %}" width="100%" height="700px" style="border: none; border-radius: 6px;"></iframe>
                             </div>
-                        </div>
-                        <div class="card-body p-2 bg-light-blue">
-                            
-                            {% if docs_nota %}
-                                <ul class="nav nav-pills nav-fill mb-2 gap-1" id="pdf-tabs" role="tablist">
-                                    {% for doc in docs_nota %}
-                                        <li class="nav-item" role="presentation">
-                                            <button class="nav-link border fw-bold pdf-tab-btn {% if forloop.first %}active{% endif %}" 
-                                                    id="tab-doc-{{ forloop.counter0 }}" 
-                                                    data-index="{{ forloop.counter0 }}"
-                                                    data-url="{% if doc.arquivo %}{% url 'download_arquivo_seguro' 'processo' doc.id %}{% endif %}" 
-                                                    onclick="changePdf(this)" 
-                                                    type="button">
-                                                <i class="bi bi-file-text"></i> Nota {{ forloop.counter }}
-                                            </button>
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-                                <div class="border rounded bg-white shadow-inner">
-                                    <iframe id="pdf-viewer" src="{% if docs_nota.first and docs_nota.first.arquivo %}{% url 'download_arquivo_seguro' 'processo' docs_nota.first.id %}{% endif %}" width="100%" height="700px" style="border: none; border-radius: 6px;"></iframe>
+                        {% else %}
+                            <div class="alert alert-warning m-3 text-center">
+                                <i class="bi bi-exclamation-triangle fs-3 d-block mb-2"></i>
+                                Nenhum PDF do tipo "Nota Fiscal" foi anexado.
+                                <div class="mt-3">
+                                    <a href="{% url 'gerar_dummy_pdf' processo.id %}" class="btn btn-sm btn-outline-warning fw-bold">
+                                        <i class="bi bi-file-earmark-plus"></i> Gerar PDF de Teste
+                                    </a>
                                 </div>
-                            {% else %}
-                                <div class="alert alert-warning m-3 text-center">
-                                    <i class="bi bi-exclamation-triangle fs-3 d-block mb-2"></i>
-                                    Nenhum PDF do tipo "Nota Fiscal" foi anexado.
-                                    <div class="mt-3">
-                                        <a href="{% url 'gerar_dummy_pdf' processo.id %}" class="btn btn-sm btn-outline-warning fw-bold">
-                                            <i class="bi bi-file-earmark-plus"></i> Gerar PDF de Teste
-                                        </a>
-                                    </div>
-                                </div>
-                            {% endif %}
-                            
-                        </div>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="col-lg-7">
-                <div class="d-flex justify-content-between align-items-end mb-3 border-bottom pb-2">
-                    <div>
-                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-input-cursor-text"></i> Detalhamento da Nota</h5>
-                        <small class="text-muted">Preencha os dados vinculados ao PDF selecionado na aba ao lado.</small>
-                    </div>
+        <div class="col-lg-7">
+            <div class="d-flex justify-content-between align-items-end mb-3 border-bottom pb-2">
+                <div>
+                    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-input-cursor-text"></i> Detalhamento da Nota</h5>
+                    <small class="text-muted">Preencha os dados vinculados ao PDF selecionado na aba ao lado.</small>
                 </div>
+            </div>
 
-                <div id="nf-list">
+            <div id="nf-list">
+                <form method="post" id="triagemForm" novalidate>
+                    {% csrf_token %}
+                    {{ nota_fiscal_formset.management_form }}
+                    <input type="hidden" name="source" value="{{ source }}">
                     {% for nf_f in nota_fiscal_formset %}
                         <div class="card mb-4 shadow-sm border-secondary nf-card" data-nf-index="{{ forloop.counter0 }}">
                             <div class="card-header bg-secondary text-white py-2">
                                 <span class="fw-bold"><i class="bi bi-link-45deg"></i> Vinculado à Nota {{ forloop.counter }}</span>
                             </div>
-                            
                             <div class="card-body">
                                 {% for hidden in nf_f.hidden_fields %}{{ hidden }}{% endfor %}
-
                                 {% if nf_f.errors %}
                                     <div class="alert alert-danger small py-2 mb-3">
                                         <i class="bi bi-exclamation-octagon"></i> Verifique os erros abaixo:
@@ -133,7 +142,6 @@
                                         {% endfor %}
                                     </div>
                                 {% endif %}
-
                                 <div class="row g-3 mb-4">
                                     <div class="col-md-5">
                                         <label class="small fw-bold text-muted mb-1">Emitente</label>
@@ -160,60 +168,15 @@
                                         {{ nf_f.valor_liquido }}
                                     </div>
                                 </div>
-
-                                <div class="row g-3 mb-4 p-3 bg-light rounded border border-warning border-opacity-50">
-                                    <div class="col-md-8">
-                                        <label class="small fw-bold text-dark mb-1"><i class="bi bi-person-badge"></i> Fiscal do Contrato <span class="text-warning">(obrigatório se "Enviar para Liquidação")</span></label>
-                                        {{ nf_f.fiscal_contrato }}
-                                        <small class="text-muted" style="font-size: 0.70rem;">Obrigatório ao enviar para liquidação.</small>
-                                    </div>
-                                    <div class="col-md-4 d-flex align-items-center justify-content-end">
-                                        <div class="form-check form-switch mt-2">
-                                            {{ nf_f.atestada }}
-                                            <label class="form-check-label fw-bold text-success ms-1" for="id_nota_fiscal-{{ forloop.counter0 }}-atestada">
-                                                Enviar para Liquidação
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="form-check form-switch mb-2">
-                                    <input class="form-check-input tem-retencao-toggle" type="checkbox" id="tem-retencao-{{ forloop.counter0 }}" role="switch" {% if nf_f.instance.pk and nf_f.instance.retencoes.all %}checked{% endif %}>
-                                    <label class="form-check-label fw-bold text-danger" for="tem-retencao-{{ forloop.counter0 }}">
-                                        <i class="bi bi-percent"></i> Tem Retenção de Impostos
-                                    </label>
-                                </div>
-
-                                <div class="taxes-container">
-                                    <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
-                                        <h6 class="text-danger fw-bold mb-0"><i class="bi bi-calculator"></i> Retenções de Impostos</h6>
-                                        <button type="button" class="btn btn-xs btn-outline-danger add-tax-btn fw-bold shadow-sm">
-                                            <i class="bi bi-plus"></i> Adicionar Imposto
-                                        </button>
-                                    </div>
-                                    <table class="table table-sm table-borderless mb-0">
-                                        <thead class="text-muted small">
-                                            <tr>
-                                                <th style="width: 25%;">Beneficiário</th>
-                                                <th style="width: 25%;">Código Imposto</th>
-                                                <th style="width: 22%;">Rend. Tributável (R$)</th>
-                                                <th style="width: 23%;">Valor Retido (R$)</th>
-                                                <th style="width: 5%;"></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="tax-body">
-                                            {% if nf_f.instance.pk %}
-                                                {% for ret in nf_f.instance.retencoes.all %}
-                                                <tr class="border-bottom border-light">
-                                                    <td>
-                                                        <select name="imposto_{{ forloop.parentloop.counter0 }}_beneficiario" class="form-select form-select-sm border-danger border-opacity-25 tax-beneficiario-select">
-                                                            <option value="">---------</option>
-                                                            {% for credor in credores %}
-                                                            <option value="{{ credor.id }}" {% if ret.beneficiario_id == credor.id %}selected{% endif %}>{{ credor.nome }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                        <input type="text" class="form-control form-control-sm bg-light mt-1 tax-beneficiario-cnpj" value="{{ ret.beneficiario.cpf_cnpj|default:'' }}" readonly placeholder="CPF/CNPJ">
-                                                    </td>
+                                ...existing code for the rest of the form...
+                            </div>
+                        </div>
+                    {% endfor %}
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
                                                     <td>
                                                         <select name="imposto_{{ forloop.parentloop.counter0 }}_code" class="form-select form-select-sm border-danger border-opacity-25">
                                                             <option value="{{ ret.codigo.id }}" selected>{{ ret.codigo.codigo }}</option>

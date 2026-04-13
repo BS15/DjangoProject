@@ -1,4 +1,8 @@
-"""Catálogos e tabelas parametrizadoras do fluxo financeiro."""
+"""Catálogos e tabelas parametrizadoras do fluxo financeiro.
+
+Este módulo define modelos de catálogos e tabelas de apoio do domínio de fluxo financeiro.
+Inclui tabelas de status, tipos de pagamento, documentos e pendências utilizadas nos processos financeiros e documentais.
+"""
 
 from django.db import models
 

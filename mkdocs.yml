@@ -19,6 +19,12 @@ theme:
     - search.suggest
     - search.highlight
 
+nav:
+  - Início: index.md
+  - Visão Geral: overview.md
+  - Guia de Instalação: instalacao.md
+  - Referência de API: api.md
+
 plugins:
   - search
   - mkdocstrings:

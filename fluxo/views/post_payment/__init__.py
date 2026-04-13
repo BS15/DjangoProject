@@ -26,7 +26,6 @@ __all__ = [
     "montar_pauta_reuniao_action",
     "analise_reuniao_view",
     "iniciar_conselho_reuniao_view",
-    "gerar_parecer_conselho_view",
     "painel_arquivamento_view",
     "arquivar_processo_view",
     "arquivar_processo_action",

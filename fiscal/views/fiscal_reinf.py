@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("fiscal.acesso_backoffice", raise_exception=True)
 def painel_reinf_view(request):
     """
     Painel EFD-Reinf - exibe as retencoes separadas em:
@@ -52,7 +52,7 @@ def painel_reinf_view(request):
     return render(request, "fiscal/painel_reinf.html", context)
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("fiscal.acesso_backoffice", raise_exception=True)
 def gerar_lote_reinf_view(request):
     """
     Generate EFD-Reinf XML batch files (lotes) for R-2010 (INSS) and

@@ -1,5 +1,12 @@
 """Formulários de entrada e validação para o fluxo principal de processos."""
 
+"""Formulários de entrada e validação para o fluxo principal de processos."""
+
+"""Formulários de entrada para o domínio de fluxo financeiro e documental.
+
+Este módulo define formulários para cadastro, edição e validação de processos, documentos e pagamentos.
+"""
+
 from django import forms
 from django.forms import inlineformset_factory
 from fluxo.models import (
@@ -11,7 +18,8 @@ from fluxo.models import (
 	StatusChoicesPendencias,
 	TiposDePagamento,
 )
-from credores.models import DadosContribuinte, ContasBancarias
+from fiscal.models import DadosContribuinte
+from credores.models import ContasBancarias
 from fluxo.validators import validar_regras_processo, STATUS_BLOQUEADOS_FORM
 
 SUPRIMENTO_DE_FUNDOS = 'SUPRIMENTO DE FUNDOS'

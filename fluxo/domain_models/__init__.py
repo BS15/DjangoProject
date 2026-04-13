@@ -1,4 +1,7 @@
-"""Modelos do domínio de fluxo financeiro organizados por submódulos."""
+"""Inicialização do pacote de modelos de domínio do fluxo financeiro.
+
+Este módulo expõe os principais modelos de domínio relacionados a processos, documentos, status e catálogos do fluxo financeiro.
+"""
 
 from .catalogos import (
     FormasDePagamento,

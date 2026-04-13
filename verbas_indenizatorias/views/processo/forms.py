@@ -9,7 +9,7 @@ from .helpers import (
 )
 
 
-@permission_required("fluxo.pode_gerenciar_processos_verbas", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas(request, pk):
     processo = get_object_or_404(Processo, id=pk)
     processo_form, pendencia_formset = _instanciar_formularios_processo_verbas(request, processo)

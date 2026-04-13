@@ -14,7 +14,7 @@ from fluxo.views.helpers import _aplicar_filtro_por_opcao
 from fluxo.views.shared import apply_filterset
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("fiscal.acesso_backoffice", raise_exception=True)
 def painel_impostos(request):
     visao = request.GET.get("visao", "processos")
     status_agrupamento = normalize_choice(
@@ -69,7 +69,7 @@ def painel_impostos(request):
     return render(request, "fiscal/painel_impostos.html", context)
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("fiscal.acesso_backoffice", raise_exception=True)
 def agrupar_impostos_view(request):
     if request.method != "POST":
         return redirect("painel_impostos")
@@ -128,7 +128,7 @@ def agrupar_impostos_view(request):
     return redirect("editar_processo", pk=novo_processo.id)
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("fiscal.acesso_backoffice", raise_exception=True)
 def api_processar_retencoes(request):
     """
     Recebe um arquivo PDF de Nota Fiscal e aplica as regras de negócio de

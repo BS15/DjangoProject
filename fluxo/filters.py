@@ -1,4 +1,7 @@
-"""Filtros de listagem para o domínio de fluxo principal de processos."""
+"""Filtros de listagem para o domínio de fluxo financeiro e documental.
+
+Este módulo define filtros para pesquisa e listagem de processos, documentos e pagamentos no fluxo financeiro.
+"""
 
 import django_filters
 from fluxo.models import (

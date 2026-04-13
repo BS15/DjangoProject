@@ -1,6 +1,7 @@
 from django.urls import path
 
 from credores import imports as credores_import_views
+from fluxo.support import conta_fixa_imports
 from credores import views as credor_views
 from fluxo.views.sistemas_auxiliares import assinaturas as assinatura_views
 from fluxo.views.sistemas_auxiliares import contas as conta_views
@@ -21,7 +22,7 @@ urlpatterns = [
     path('suprimentos/novo/', suprimento_cadastro_forms.add_suprimento_view, name='add_suprimento'),
     path('importar-siscac/', credores_import_views.painel_importacao_view, name='painel_importacao'),
     path('importar-siscac/template-credores/', credores_import_views.download_template_csv_credores, name='template_csv_credores'),
-    path('importar-siscac/template-contas/', credores_import_views.download_template_csv_contas, name='template_csv_contas'),
+    path('importar-siscac/template-contas/', conta_fixa_imports.download_template_csv_contas, name='template_csv_contas'),
     path('contas-fixas/', conta_views.painel_contas_fixas_view, name='painel_contas_fixas'),
     path('contas-fixas/nova/', conta_views.add_conta_fixa_view, name='add_conta_fixa'),
     path('contas-fixas/<int:pk>/editar/', conta_views.edit_conta_fixa_view, name='edit_conta_fixa'),

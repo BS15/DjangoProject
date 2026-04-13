@@ -12,7 +12,7 @@ from ..helpers import _suprimento_encerrado
 
 
 @require_GET
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
 def painel_suprimentos_view(request: HttpRequest) -> HttpResponse:
     """Exibe painel resumido com os suprimentos cadastrados."""
     suprimentos = SuprimentoDeFundos.objects.all().order_by("-id")
@@ -20,7 +20,7 @@ def painel_suprimentos_view(request: HttpRequest) -> HttpResponse:
 
 
 @require_GET
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
 def gerenciar_suprimento_view(request: HttpRequest, pk: int) -> HttpResponse:
     """Exibe detalhes operacionais de um suprimento e suas despesas."""
     suprimento: Any = get_object_or_404(SuprimentoDeFundos, id=pk)

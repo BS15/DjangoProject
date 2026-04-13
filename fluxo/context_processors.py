@@ -1,8 +1,11 @@
-"""Context processors globais do dominio de fluxo."""
+"""Context processors customizados para o domínio de fluxo financeiro e documental.
+
+Este módulo define funções para injetar variáveis globais em templates do fluxo financeiro.
+"""
+
 
 import datetime
-
-from credores.models import FaturaMensal
+from fluxo.views.support.contas_fixas.models import FaturaMensal
 
 
 def alertas_contas_fixas(request):

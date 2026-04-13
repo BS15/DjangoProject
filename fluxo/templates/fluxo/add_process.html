@@ -56,355 +56,106 @@
 
     <form method="post" enctype="multipart/form-data" id="processForm">
         {% csrf_token %}
-        <input type="hidden" name="next" value="{{ next_url }}">
-        {{ documento_formset.management_form }}
-        {{ pendencia_formset.management_form }}
+        {% extends "layouts/base_form.html" %}
 
-        <div class="row g-4">
-            <div class="col-lg-5">
-                <div class="sticky-viewer">
-                    <div class="card shadow-sm border-primary h-100">
-                        <div class="card-header bg-primary text-white">
-                            <h6 class="mb-0 fw-bold"><i class="bi bi-file-earmark-pdf"></i> Visualizador de Documentos</h6>
-                        </div>
-                        <div class="card-body p-2 bg-light-blue d-flex flex-column align-items-center justify-content-center" id="pdf-viewer-container" style="min-height: 700px;">
-                            <div id="pdf-placeholder" class="text-center text-muted">
-                                <i class="bi bi-file-earmark-arrow-up fs-1 d-block mb-3"></i>
-                                <h5>Nenhum documento selecionado</h5>
-                                <p class="small">Faça o upload de um PDF à direita ou clique no ícone de olho para visualizar o arquivo aqui.</p>
+        {% block page_heading %}<i class="bi bi-plus-square"></i> Novo Processo de Pagamento{% endblock %}
+        {% block page_subtitle %}Cadastro de novo processo, anexação de documentos e registro de pendências iniciais.{% endblock %}
+        {% block page_actions %}
+        <a href="{% url 'home_page' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar para Home</a>
+        {% endblock %}
+
+        {% block form_fields %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if processo_form.errors or documento_formset.errors %}
+                <div class="alert alert-danger shadow-sm">
+                    <h6 class="fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Verifique os campos obrigatórios:</h6>
+                    <ul class="mb-0 small">
+                        {% for field, errors in processo_form.errors.items %}
+                            <li>Capa do Processo ({{ field }}): {{ errors|striptags }}</li>
+                        {% endfor %}
+                        {% for dict_err in documento_formset.errors %}
+                            {% for field, errors in dict_err.items %}
+                                <li>Documentos ({{ field }}): {{ errors|striptags }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <input type="hidden" name="next" value="{{ next_url }}">
+            {{ documento_formset.management_form }}
+            {{ pendencia_formset.management_form }}
+
+            <div class="row g-4">
+                <div class="col-lg-5">
+                    <div class="sticky-viewer">
+                        <div class="card shadow-sm border-primary h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0 fw-bold"><i class="bi bi-file-earmark-pdf"></i> Visualizador de Documentos</h6>
                             </div>
-                            <iframe id="pdf-viewer" src="" width="100%" height="700px" style="border: none; border-radius: 6px; display: none;"></iframe>
+                            <div class="card-body p-2 bg-light-blue d-flex flex-column align-items-center justify-content-center" id="pdf-viewer-container" style="min-height: 700px;">
+                                <div id="pdf-placeholder" class="text-center text-muted">
+                                    <i class="bi bi-file-earmark-arrow-up fs-1 d-block mb-3"></i>
+                                    <h5>Nenhum documento selecionado</h5>
+                                    <p class="small">Faça o upload de um PDF à direita ou clique no ícone de olho para visualizar o arquivo aqui.</p>
+                                </div>
+                                <iframe id="pdf-viewer" src="" width="100%" height="700px" style="border: none; border-radius: 6px; display: none;"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-4">
+                            ...existing code for form fields, document upload, pendências, etc...
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-7">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body p-4">
-
-                        <h5 class="text-secondary border-bottom pb-2 mb-3"><i class="bi bi-folder-fill"></i> 1. Documentos e Anexos</h5>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Selecione o Tipo de Pagamento primeiro:</label>
-                                {{ processo_form.tipo_pagamento }}
-                            </div>
-                        </div>
-
-                        <div id="avisoDocumentos" class="alert alert-warning small py-2 mb-3" style="display: block;">
-                            <i class="bi bi-lock"></i> Selecione o <b>Tipo de Pagamento</b> acima para liberar a anexação de documentos.
-                        </div>
-
-                        <div id="bloco-documentos" style="display: none;">
-                            <div id="dropzone-area" class="p-4 mb-3 text-center rounded bg-light border-primary" style="border: 2px dashed #0d6efd; cursor: pointer; transition: all 0.3s ease;">
-                                <i class="bi bi-cloud-arrow-up fs-1 text-primary dropzone-icon"></i>
-                                <h6 class="text-primary fw-bold mt-2 dropzone-text">Arraste arquivos aqui para visualizar</h6>
-                                <p class="text-muted small mb-0">ou clique para selecionar do computador</p>
-                                <input type="file" id="bulk-file-input" multiple accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
-                            </div>
-
-                            <div id="document-list" class="bg-white p-3 rounded border">
-                                {% for doc_f in documento_formset %}
-                                    <div class="row g-2 align-items-center mb-2 border-bottom pb-2 document-row bg-white">
-                                        <div class="col-md-1 text-center drag-handle" style="cursor: grab;"><i class="bi bi-grip-vertical fs-5 text-secondary"></i></div>
-                                        {% for hidden in doc_f.hidden_fields %}{{ hidden }}{% endfor %}
-                                        <div class="col-md-1"><label class="small text-muted fw-bold d-block mb-1">Ordem</label>{{ doc_f.ordem }}</div>
-                                        <div class="col-md-3"><label class="small text-muted fw-bold d-block mb-1">Tipo</label>{{ doc_f.tipo }}</div>
-                                        <div class="col-md-4">
-                                            <label class="small text-muted fw-bold d-block mb-1">Arquivo</label>
-                                            {{ doc_f.arquivo }}
-                                            <small class="text-primary fw-bold mt-1 d-block doc-filename-display" style="min-height: 18px;"></small>
-                                        </div>
-                                        <div class="col-md-3 text-end d-flex flex-column justify-content-end" style="height: 52px;">
-                                            <div class="d-flex justify-content-end gap-1">
-                                                <button type="button" class="btn btn-sm btn-outline-primary preview-doc-btn" title="Ver no painel esquerdo" style="display: none;"><i class="bi bi-eye"></i></button>
-                                                <button type="button" class="btn btn-sm btn-outline-danger remove-doc-btn" tabindex="-1" title="Remover Documento"><i class="bi bi-trash"></i></button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                            <button type="button" id="add-doc-btn" class="btn btn-outline-primary btn-sm mt-2">
-                                <i class="bi bi-plus-circle"></i> Adicionar Documento Manual
-                            </button>
-                            <button type="button" id="btn-batch-tipo" class="btn btn-outline-secondary btn-sm mt-2 ms-2" title="Definir o mesmo tipo de documento para todos os anexos de uma vez">
-                                <i class="bi bi-tag-fill"></i> Definir Tipo em Lote
-                            </button>
-                        </div>
-
-
-                        <div id="payment-info-block">
-                            <h5 class="text-secondary border-bottom pb-2 mb-3 mt-4"><i class="bi bi-card-heading"></i> 3. Informações do Processo</h5>
-
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-3 d-flex align-items-end">
-                                    <div class="form-check mb-2">
-                                        {{ processo_form.extraorcamentario }}
-                                        <label class="form-check-label fw-bold text-danger">
-                                            <i class="bi bi-exclamation-circle"></i> Extraorçamentária
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 d-flex align-items-end">
-                                    <div class="form-check mb-2">
-                                        <input type="checkbox" name="trigger_a_empenhar" id="id_trigger_a_empenhar" class="form-check-input">
-                                        <label class="form-check-label fw-bold text-primary" for="id_trigger_a_empenhar">
-                                            <i class="bi bi-hourglass-split"></i> A Empenhar
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-3"><label class="form-label">Nota de Empenho</label>{{ processo_form.n_nota_empenho }}</div>
-                                <div class="col-md-6"><label class="form-label">Credor</label>{{ processo_form.credor }}</div>
-                                <div class="col-md-3"><label class="form-label">Data Empenho</label>{{ processo_form.data_empenho }}</div>
-                                <div class="col-md-3"><label class="form-label">Ano do Exercício</label>{{ processo_form.ano_exercicio }}</div>
-                            </div>
-
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-4"><label class="form-label">Forma de Pagamento</label>{{ processo_form.forma_pagamento }}</div>
-                                <div class="col-md-2"><label class="form-label">Vencimento</label>{{ processo_form.data_vencimento }}</div>
-                                <div class="col-md-2"><label class="form-label">Data Pagamento</label>{{ processo_form.data_pagamento }}</div>
-                                <div class="col-md-2"><label class="form-label text-primary">Valor Bruto</label>{{ processo_form.valor_bruto }}</div>
-                                <div class="col-md-2"><label class="form-label text-success">Valor Líquido</label>{{ processo_form.valor_liquido }}</div>
-                            </div>
-
-                            <div id="bloco_boleto" class="row g-3 mb-3 bg-light p-3 border rounded mt-2" style="display: none;">
-                                <!-- INDICADORES DE BOLETOS (dinâmico via JS) -->
-                                <div class="col-md-12" id="bloco-indicadores-boleto">
-                                    <div class="d-flex gap-3 flex-wrap align-items-center mb-2">
-                                        <div class="d-flex align-items-center gap-2 px-3 py-2 bg-white rounded border shadow-sm">
-                                            <i class="bi bi-files text-primary fs-5"></i>
-                                            <div>
-                                                <div class="fw-bold fs-5 text-primary" id="contador-docs-boleto">0</div>
-                                                <div class="text-muted small">Doc(s) BOLETO BANCÁRIO</div>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex align-items-center gap-2 px-3 py-2 bg-white rounded border shadow-sm">
-                                            <i class="bi bi-upc-scan text-success fs-5"></i>
-                                            <div>
-                                                <div id="add_boleto_barcodes_count" class="fw-bold fs-5 text-success">0</div>
-                                                <div class="text-muted small">Linha(s) digitável(is) extraída(s)</div>
-                                            </div>
-                                        </div>
-                                        <button type="button" id="btn_extrair_codigos_barras_add"
-                                                class="btn btn-primary btn-sm fw-bold"
-                                                data-url="{% url 'api_extrair_codigos_barras_upload' %}"
-                                                disabled>
-                                            <i class="bi bi-upc-scan"></i> Extrair Linhas Digitáveis
-                                        </button>
-                                    </div>
-                                    <div id="add_boleto_barcodes_area"></div>
-                                    <div class="mt-3 pt-3 border-top">
-                                        <h6 class="fw-bold mb-2 small"><i class="bi bi-upc-scan"></i> Leitor Automático de Boleto</h6>
-                                        <div class="input-group input-group-sm mb-2">
-                                            <input type="file" id="add_boleto_upload" class="form-control" accept=".pdf">
-                                            <button type="button" class="btn btn-outline-primary fw-bold" id="btn_processar_boleto_add">
-                                                Processar PDF
-                                            </button>
-                                        </div>
-                                        <div id="add_boleto_status" class="small fw-bold"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="bloco_transferencia" class="row g-3 mb-3 bg-light p-3 border rounded mt-2" style="display: none;">
-                                <div class="col-md-12 mb-2">
-                                    <h6 class="fw-bold text-primary mb-0"><i class="bi bi-bank"></i> Dados de Transferência Bancária</h6>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold small">Banco</label>
-                                    <input type="text" name="manual_banco" class="form-control" placeholder="Ex: Banco do Brasil">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold small">Agência</label>
-                                    <input type="text" name="manual_agencia" class="form-control" placeholder="Ex: 1234-5">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold small">Conta Corrente</label>
-                                    <input type="text" name="manual_conta" class="form-control" placeholder="Ex: 123456-7">
-                                </div>
-                                <div class="col-md-12 mt-3 pt-2 border-top">
-                                    <label class="form-label fw-bold small text-muted">Vincular a uma Conta de Credor Existente (Opcional)</label>
-                                    {{ processo_form.conta }}
-                                </div>
-                            </div>
-
-                            <div id="bloco_pix" class="row g-3 mb-3 bg-light p-3 border rounded border-success border-opacity-50 mt-2" style="display: none;">
-                                <div class="col-md-12">
-                                    <label class="form-label fw-bold text-success"><i class="bi bi-qr-code"></i> Chave PIX</label>
-                                    <input type="text" name="manual_pix" class="form-control border-success" placeholder="Insira a Chave PIX do favorecido">
-                                </div>
-                            </div>
-                            <div class="row g-3 mb-3 mt-3">
-                                <div class="col-md-6"><label class="form-label">Detalhamento</label>{{ processo_form.detalhamento }}</div>
-                                <div class="col-md-6"><label class="form-label">Observações</label>{{ processo_form.observacao }}</div>
-                                <div class="col-md-6"><label class="form-label">Tags</label>{{ processo_form.tag }}</div>
-                            </div>
-
-                            <h5 class="text-danger border-bottom border-danger border-opacity-25 pb-2 mt-5 mb-3">
-                                <i class="bi bi-exclamation-triangle"></i> 4. Pendências Iniciais
-                            </h5>
-                            <div id="pendencia-list" class="bg-white p-3 rounded border border-danger border-opacity-25">
-                                {% for pen_f in pendencia_formset %}
-                                    <div class="row g-2 align-items-center mb-2 border-bottom pb-2 pendencia-row">
-                                        {% for hidden in pen_f.hidden_fields %}{{ hidden }}{% endfor %}
-                                        <div class="col-md-4">
-                                            <label class="small text-muted fw-bold d-block mb-1">Tipo de Pendência</label>
-                                            {{ pen_f.tipo }}
-                                        </div>
-                                        <div class="col-md-7">
-                                            <label class="small text-muted fw-bold d-block mb-1">
-                                                Descrição / Justificativa
-                                                <span class="badge bg-warning text-dark ms-2">Nova (A Resolver)</span>
-                                            </label>
-                                            {{ pen_f.descricao }}
-                                        </div>
-                                        <div class="col-md-1 text-center d-flex flex-column justify-content-end" style="height: 52px;">
-                                            <button type="button" class="btn btn-sm btn-outline-danger remove-pendencia-btn" tabindex="-1" title="Remover Pendência">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                            <button type="button" id="add-pendencia-btn" class="btn btn-outline-danger btn-sm mt-2 fw-bold">
-                                <i class="bi bi-plus-circle"></i> Adicionar Pendência
-                            </button>
-
-                        </div>
-
-                        <hr class="mt-5">
-                        <div class="bg-light p-3 border rounded">
-                            <div class="d-flex justify-content-between align-items-center gap-2">
-                                <button type="submit" name="btn_goto_fiscais" value="1" class="btn btn-info text-white fw-bold">
-                                    <i class="bi bi-receipt"></i> Gerenciar Documentos Fiscais
-                                </button>
-                                <div class="d-flex gap-2 ms-auto">
-                                    <a href="/" class="btn btn-secondary">Cancelar</a>
-                                    <button type="button" class="btn btn-success px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#previewModal" onclick="check_information_alert()">
-                                        Salvar e Continuar <i class="bi bi-arrow-right"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
+            <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog"><div class="modal-content">
+                    <div class="modal-header bg-success text-white"><h5 class="modal-title">Confirmação de Processo</h5></div>
+                    <div class="modal-body">
+                        <p><strong>Credor:</strong> <span id="prev_credor"></span></p>
+                        <p><strong>Valor Líquido:</strong> R$ <span id="prev_val"></span></p>
                     </div>
-                </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Editar</button>
+                        <button type="submit" class="btn btn-primary fw-bold">Prosseguir</button>
+                    </div>
+                </div></div>
             </div>
-        </div>
 
-        <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog"><div class="modal-content">
-                <div class="modal-header bg-success text-white"><h5 class="modal-title">Confirmação de Processo</h5></div>
-                <div class="modal-body">
-                    <p><strong>Credor:</strong> <span id="prev_credor"></span></p>
-                    <p><strong>Valor Líquido:</strong> R$ <span id="prev_val"></span></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Editar</button>
-                    <button type="submit" class="btn btn-primary fw-bold">Prosseguir</button>
-                </div>
-            </div></div>
-        </div>
-    </form>
-</div>
+            <div id="empty-doc-form">...existing code...</div>
+            <div id="empty-pendencia-form">...existing code...</div>
+        {% endblock %}
 
-<div id="empty-doc-form">
-    <div class="row g-2 align-items-start mb-2 border-bottom pb-2 document-row bg-white">
-        <div class="col-md-1 text-center drag-handle" style="cursor: grab;"><i class="bi bi-grip-vertical fs-5 text-secondary"></i></div>
-        <div class="col-md-1"><input type="number" name="documento-__prefix__-ordem" class="form-control form-control-sm text-center bg-light" value="1" readonly tabindex="-1"></div>
-        <div class="col-md-3">{{ documento_formset.empty_form.tipo }}</div>
-        <div class="col-md-4">
-            <input type="file" name="documento-__prefix__-arquivo" class="form-control form-control-sm doc-file-input">
-            <small class="text-primary fw-bold mt-1 d-block doc-filename-display" style="min-height: 18px;"></small>
-        </div>
-        <div class="col-md-3 text-end d-flex flex-column justify-content-end" style="height: 52px;">
-            <div class="d-flex justify-content-end gap-1">
-                <button type="button" class="btn btn-sm btn-outline-primary preview-doc-btn" title="Ver no painel esquerdo" style="display: none;"><i class="bi bi-eye"></i></button>
-                <button type="button" class="btn btn-sm btn-outline-danger remove-doc-btn" tabindex="-1" title="Remover Documento"><i class="bi bi-trash"></i></button>
-            </div>
-        </div>
-    </div>
-</div>
+        {% block form_actions %}
+        <button type="submit" name="btn_goto_fiscais" value="1" class="btn btn-info text-white fw-bold">
+            <i class="bi bi-receipt"></i> Gerenciar Documentos Fiscais
+        </button>
+        <a href="/" class="btn btn-secondary">Cancelar</a>
+        <button type="button" class="btn btn-success px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#previewModal" onclick="check_information_alert()">
+            Salvar e Continuar <i class="bi bi-arrow-right"></i>
+        </button>
+        {% endblock %}
 
-<div id="empty-pendencia-form">
-    <div class="row g-2 align-items-center mb-2 border-bottom pb-2 pendencia-row bg-white">
-        <div class="col-md-4">
-            <label class="small text-muted fw-bold d-block mb-1">Tipo de Pendência</label>
-            {{ pendencia_formset.empty_form.tipo }}
-        </div>
-        <div class="col-md-7">
-            <label class="small text-muted fw-bold d-block mb-1">Descrição</label>
-            {{ pendencia_formset.empty_form.descricao }}
-        </div>
-        <div class="col-md-1 text-center d-flex flex-column justify-content-end" style="height: 52px;">
-            <button type="button" class="btn btn-sm btn-outline-danger remove-pendencia-btn" tabindex="-1" title="Remover Pendência"><i class="bi bi-trash"></i></button>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-
-<!-- Modal: Definir Tipo de Documento em Lote -->
-<div class="modal fade" id="modal-batch-tipo" tabindex="-1" aria-labelledby="modalBatchTipoLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="modalBatchTipoLabel"><i class="bi bi-tag-fill me-2"></i>Definir Tipo de Documento em Lote</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
-            </div>
-            <div class="modal-body">
-                <p id="batch-tipo-msg" class="text-muted small mb-3"></p>
-                <label for="batch-tipo-select" class="form-label fw-bold">Tipo de Documento:</label>
-                <select id="batch-tipo-select" class="form-select">
-                    <option value="">-- Selecione o tipo --</option>
-                </select>
-                <div class="invalid-feedback">Por favor, selecione um tipo de documento.</div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i>Ignorar</button>
-                <button type="button" id="btn-confirmar-batch-tipo" class="btn btn-primary fw-bold"><i class="bi bi-check2-all me-1"></i>Aplicar a Todos</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-
-function loadPdfIntoViewer(file) {
-    const viewer = document.getElementById('pdf-viewer');
-    const placeholder = document.getElementById('pdf-placeholder');
-    if (file && file.type === "application/pdf") {
-        const fileURL = URL.createObjectURL(file);
-        viewer.src = fileURL;
-        viewer.style.display = 'block';
-        placeholder.style.display = 'none';
-    } else { alert("Apenas arquivos PDF podem ser visualizados no painel."); }
-}
-
-function formatarDataParaInput(dataStr) {
-    if (!dataStr) return '';
-    if (dataStr.includes('/')) { const p = dataStr.split('/'); if (p.length === 3) return `${p[2]}-${p[1]}-${p[0]}`; }
-    if (dataStr.includes('-')) { const p = dataStr.split('-'); if (p[0].length === 2) return `${p[2]}-${p[1]}-${p[0]}`; return dataStr; }
-    return dataStr;
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-
-    const docTotalInput = document.getElementById('id_documento-TOTAL_FORMS');
-    const containerDocumentos = document.getElementById('document-list');
-
-    // ==========================================
-    // CONTROLE ORÇAMENTÁRIO
-    // ==========================================
-    const chkExtra = document.getElementById('id_processo-extraorcamentario');
-    const chkEmpenhar = document.getElementById('id_trigger_a_empenhar');
-    const camposEmpenho = [
-        document.getElementById('id_processo-n_nota_empenho'),
+        {% block extra_js %}
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+        <script>
+        // ...existing JS logic for drag-and-drop, preview, barcode extraction, etc...
+        </script>
+        {% endblock %}
         document.getElementById('id_processo-data_empenho'),
         document.getElementById('id_processo-ano_exercicio'),
     ];

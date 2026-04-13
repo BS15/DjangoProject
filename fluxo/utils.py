@@ -3,6 +3,12 @@
 Consolida normalizacao textual, parsing monetario e processamento de PDF.
 """
 
+
+"""Funções utilitárias para o domínio de fluxo financeiro e documental.
+
+Este módulo implementa normalizações, extrações, formatações e utilidades para processamento de documentos, valores e datas.
+"""
+
 import io
 import logging
 import re
@@ -472,7 +478,7 @@ def gerar_csv_relatorio(queryset, tipo_relatorio):
 def gerar_faturas_do_mes(ano, mes):
 	import datetime
 	from django.db.models import Q
-	from credores.models import ContaFixa, FaturaMensal
+	from fluxo.views.support.contas_fixas.models import ContaFixa, FaturaMensal
 
 	data_ref = datetime.date(ano, mes, 1)
 	contas_ativas = ContaFixa.objects.filter(ativa=True).filter(

@@ -1,102 +1,72 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Credores - System X</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
-</head>
-<body class="bg-light">
-{% include 'partials/sidebar.html' %}
+{% extends "layouts/base_list.html" %}
 
+{% block page_heading %}<i class="bi bi-people"></i> Gerenciar Credores{% endblock %}
+{% block page_actions %}
+    <a href="{% url 'add_credor' %}" class="btn btn-success btn-sm fw-bold">
+        <i class="bi bi-person-plus"></i> Novo Credor
+    </a>
+    <a href="/" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+{% endblock %}
 
-<div class="container mt-4 mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4><i class="bi bi-people"></i> Gerenciar Credores</h4>
-        <div class="gap-2 d-flex">
-            <a href="{% url 'add_credor' %}" class="btn btn-success btn-sm fw-bold">
-                <i class="bi bi-person-plus"></i> Novo Credor
+{% block filter_form %}
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="small fw-bold text-secondary mb-1">Nome / Razão Social</label>
+            {{ filter.form.nome__icontains }}
+        </div>
+        <div class="col-md-3">
+            <label class="small fw-bold text-secondary mb-1">CPF / CNPJ</label>
+            {{ filter.form.cpf_cnpj__icontains }}
+        </div>
+        <div class="col-md-2">
+            <label class="small fw-bold text-secondary mb-1">Tipo</label>
+            {{ filter.form.tipo }}
+        </div>
+        <div class="col-md-3">
+            <label class="small fw-bold text-secondary mb-1">Cargo / Função</label>
+            {{ filter.form.cargo_funcao }}
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">
+                <i class="bi bi-search"></i> Pesquisar
+            </button>
+        </div>
+    </form>
+{% endblock %}
+
+{% block table_headers %}
+    <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>CPF/CNPJ</th>
+        <th>Tipo</th>
+        <th>Cargo/Função</th>
+        <th>Telefone</th>
+        <th class="text-center">Ações</th>
+    </tr>
+{% endblock %}
+
+{% block table_rows %}
+    {% for credor in credores %}
+    <tr>
+        <td>#{{ credor.id }}</td>
+        <td class="fw-bold">{{ credor.nome|default:"---" }}</td>
+        <td>{{ credor.cpf_cnpj|default:"---" }}</td>
+        <td>{{ credor.get_tipo_display|default:"---" }}</td>
+        <td>{{ credor.cargo_funcao|default:"---" }}</td>
+        <td>{{ credor.telefone|default:"---" }}</td>
+        <td class="text-center">
+            <a href="{% url 'edit_credor' credor.pk %}" class="btn btn-sm btn-outline-primary" title="Editar">
+                <i class="bi bi-pencil"></i>
             </a>
-            <a href="/" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
-        </div>
-    </div>
-
-    <div class="card shadow-sm mb-4 border-0">
-        <div class="card-body bg-white pb-2 rounded">
-            <form method="get" class="row g-2 align-items-end">
-                <div class="col-md-4">
-                    <label class="small fw-bold text-secondary mb-1">Nome / Razão Social</label>
-                    {{ filter.form.nome__icontains }}
-                </div>
-                <div class="col-md-3">
-                    <label class="small fw-bold text-secondary mb-1">CPF / CNPJ</label>
-                    {{ filter.form.cpf_cnpj__icontains }}
-                </div>
-                <div class="col-md-2">
-                    <label class="small fw-bold text-secondary mb-1">Tipo</label>
-                    {{ filter.form.tipo }}
-                </div>
-                <div class="col-md-3">
-                    <label class="small fw-bold text-secondary mb-1">Cargo / Função</label>
-                    {{ filter.form.cargo_funcao }}
-                </div>
-                <div class="col-md-3">
-                    <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">
-                        <i class="bi bi-search"></i> Pesquisar
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-striped align-middle mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>ID</th>
-                            <th>Nome</th>
-                            <th>CPF/CNPJ</th>
-                            <th>Tipo</th>
-                            <th>Cargo/Função</th>
-                            <th>Telefone</th>
-                            <th class="text-center">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for credor in credores %}
-                        <tr>
-                            <td>#{{ credor.id }}</td>
-                            <td class="fw-bold">{{ credor.nome|default:"---" }}</td>
-                            <td>{{ credor.cpf_cnpj|default:"---" }}</td>
-                            <td>{{ credor.get_tipo_display|default:"---" }}</td>
-                            <td>{{ credor.cargo_funcao|default:"---" }}</td>
-                            <td>{{ credor.telefone|default:"---" }}</td>
-                            <td class="text-center">
-                                <a href="{% url 'edit_credor' credor.pk %}" class="btn btn-sm btn-outline-primary" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
-                                <i class="bi bi-search fs-4 d-block mb-2"></i>
-                                Nenhum credor encontrado com estes filtros.
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+        </td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="7" class="text-center text-muted py-4">
+            <i class="bi bi-search fs-4 d-block mb-2"></i>
+            Nenhum credor encontrado com estes filtros.
+        </td>
+    </tr>
+    {% endfor %}
+{% endblock %}

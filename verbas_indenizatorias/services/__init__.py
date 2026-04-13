@@ -1,5 +1,7 @@
-"""Servicos do dominio de verbas indenizatorias."""
+"""Serviços do domínio de verbas indenizatórias.
 
-from .diarias import gerar_e_anexar_scd_diaria
+Este pacote agrupa serviços e utilitários para geração, anexação e manipulação de documentos e operações de verbas indenizatórias.
+"""
 
-__all__ = ["gerar_e_anexar_scd_diaria"]
+
+

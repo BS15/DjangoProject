@@ -1,4 +1,7 @@
-"""Formulários de entrada para suprimentos de fundos."""
+"""Formulários de entrada para suprimentos de fundos.
+
+Este módulo define formulários para cadastro, edição e validação de suprimentos de fundos e despesas relacionadas.
+"""
 
 from django import forms
 from suprimentos.models import SuprimentoDeFundos
