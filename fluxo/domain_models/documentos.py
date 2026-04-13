@@ -6,6 +6,7 @@ Este módulo define modelos para documentos orçamentários, de pagamento e de p
 """
 
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete, pre_save
 from django.dispatch import receiver
@@ -16,7 +17,7 @@ from commons.shared.models import DocumentoBase
 from commons.shared.storage_utils import _delete_file, caminho_documento
 
 
-class DocumentoDePagamento(DocumentoBase):
+class Boleto_Bancario(DocumentoBase):
     """Documento anexado ao processo com controle de imutabilidade."""
 
     processo = models.ForeignKey("fluxo.Processo", on_delete=models.CASCADE, related_name="documentos")
@@ -28,16 +29,15 @@ class DocumentoDePagamento(DocumentoBase):
     )
     history = HistoricalRecords()
 
-
-DocumentoProcesso = DocumentoDePagamento
+    class Meta:
+        verbose_name = "Boleto_Bancario"
+        verbose_name_plural = "Boleto_Bancario"
 
 
 class DocumentoOrcamentario(DocumentoBase):
     """Documento orçamentário vinculado ao processo."""
 
     processo = models.ForeignKey("fluxo.Processo", on_delete=models.CASCADE, related_name="documentos_orcamentarios")
-    arquivo = models.FileField(upload_to=caminho_documento, validators=[validar_arquivo_seguro], blank=True, null=True)
-    tipo = models.ForeignKey("fluxo.TiposDeDocumento", on_delete=models.PROTECT, blank=True, null=True)
     numero_nota_empenho = models.CharField(max_length=50, blank=True, null=True)
     data_empenho = models.DateField(blank=True, null=True)
     ano_exercicio = models.IntegerField(
@@ -56,13 +56,43 @@ class DocumentoOrcamentario(DocumentoBase):
         return f"{numero} ({ano})"
 
 
-@receiver(post_delete, sender=DocumentoDePagamento)
-def auto_delete_file_on_delete_documentoprocesso(sender, instance, **kwargs):
-    """Remove arquivo físico quando DocumentoDePagamento é excluído."""
+class ComprovanteDePagamento(DocumentoBase):
+    """Comprovante bancário anexado para lastrear pagamento do processo."""
+
+    processo = models.ForeignKey(
+        "fluxo.Processo",
+        on_delete=models.CASCADE,
+        related_name="comprovantes_pagamento",
+        verbose_name="Processo",
+    )
+    numero_comprovante = models.CharField("Número do Comprovante", max_length=100, null=True, blank=True)
+    credor_nome = models.CharField("Credor (Texto)", max_length=200, null=True, blank=True)
+    valor_pago = models.DecimalField(
+        "Valor Pago",
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0)],
+    )
+    data_pagamento = models.DateField("Data de Pagamento", null=True, blank=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = "Comprovante de Pagamento"
+        verbose_name_plural = "Comprovantes de Pagamento"
+
+    def __str__(self):
+        return f"Comprovante - {self.processo} - {self.credor_nome} - R$ {self.valor_pago}"
+
+
+@receiver(post_delete, sender=Boleto_Bancario)
+def auto_delete_file_on_delete_boleto_bancario(sender, instance, **kwargs):
+    """Remove arquivo físico quando Boleto_Bancario é excluído."""
     _delete_file(instance.arquivo)
 
 
-@receiver(pre_save, sender=DocumentoDePagamento)
+@receiver(pre_save, sender=Boleto_Bancario)
 def enforce_immutability_and_cleanup_on_save(sender, instance, **kwargs):
     """Bloqueia troca de arquivo em documento imutável e limpa versão anterior."""
     if not instance.pk:
@@ -80,7 +110,7 @@ def enforce_immutability_and_cleanup_on_save(sender, instance, **kwargs):
         _delete_file(old.arquivo)
 
 
-@receiver(pre_delete, sender=DocumentoDePagamento)
+@receiver(pre_delete, sender=Boleto_Bancario)
 def prevent_immutable_delete(sender, instance, **kwargs):
     """Impede exclusão de documentos marcados como imutáveis."""
     if instance.imutavel:

@@ -7,7 +7,7 @@ from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
-from fluxo.models import Processo, ReuniaoConselho
+from fluxo.domain_models import Processo, ReuniaoConselho
 REUNIAO_STATUS_ANALISE = {"AGENDADA", "EM_ANALISE"}
 
 

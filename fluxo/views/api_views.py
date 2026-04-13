@@ -19,7 +19,7 @@ from django.db import DatabaseError
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 
-from fluxo.models import Processo, TiposDeDocumento
+from fluxo.domain_models import Processo, TiposDeDocumento
 from fluxo.utils import extract_siscac_data, format_brl_amount, processar_pdf_boleto
 
 

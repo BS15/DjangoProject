@@ -13,14 +13,7 @@ class DadosContribuinte(models.Model):
     class Meta:
         verbose_name = "Dados do Contribuinte"
         verbose_name_plural = "Dados do Contribuinte"
-class Meta:
-    permissions = [
-        ("acesso_backoffice", "Acesso ao backoffice fiscal"),
-    ]
-"""Modelos fiscais: notas, retenções e comprovantes de pagamento.
-
-Este módulo define modelos para controle de notas fiscais, retenções de impostos, comprovantes de pagamento e integrações fiscais.
-"""
+"""Modelos fiscais: notas, retenções e comprovantes de pagamento."""
 
 import logging
 import re
@@ -55,23 +48,6 @@ def validar_cpf_cnpj(value):
     elif len(clean) == 14:
         if clean == clean[0] * 14:
             raise ValidationError('CNPJ inválido (dígitos repetidos).', code='invalid_cnpj')
-
-
-def caminho_comprovante(instance, filename):
-    """Monta caminho de upload para comprovantes com fallback seguro."""
-    if instance.processo_id:
-        try:
-            processo = instance.processo
-            ano = processo.data_empenho.year if processo.data_empenho else date.today().year
-            mes = processo.data_empenho.month if processo.data_empenho else date.today().month
-            return f'pagamentos/{ano}/{mes:02d}/proc_{processo.id}/comprovantes/{filename}'
-        except AttributeError as exc:
-            logger.warning(
-                "Falha ao calcular caminho de comprovante para processo %s: %s",
-                getattr(instance, "processo_id", None),
-                exc,
-            )
-    return f'comprovantes/{filename}'
 
 
 class CodigosImposto(models.Model):
@@ -134,7 +110,7 @@ class DocumentoFiscal(models.Model):
     cnpj_emitente = models.CharField(max_length=20, blank=False, validators=[validar_cpf_cnpj])
     numero_nota_fiscal = models.CharField(max_length=50)
     documento_vinculado = models.OneToOneField(
-        'fluxo.DocumentoDePagamento',
+        'fluxo.Boleto_Bancario',
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='nota_referente',
@@ -242,50 +218,3 @@ class RetencaoImposto(models.Model):
 
     def __str__(self):
         return f"{self.codigo} - R$ {self.valor}"
-
-
-class ComprovanteDePagamento(models.Model):
-    """Comprovante bancário anexado para lastrear pagamento do processo."""
-
-    processo = models.ForeignKey(
-        'fluxo.Processo',
-        on_delete=models.CASCADE,
-        related_name='comprovantes_pagamento',
-        verbose_name="Processo"
-    )
-    numero_comprovante = models.CharField(
-        "Número do Comprovante",
-        max_length=100,
-        null=True,
-        blank=True
-    )
-    credor_nome = models.CharField(
-        "Credor (Texto)",
-        max_length=200,
-        null=True,
-        blank=True
-    )
-    valor_pago = models.DecimalField(
-        "Valor Pago",
-        max_digits=12,
-        decimal_places=2,
-        null=True,
-        blank=True,
-        validators=[MinValueValidator(0)]
-    )
-    data_pagamento = models.DateField("Data de Pagamento", null=True, blank=True)
-    arquivo = models.FileField(
-        "Arquivo do Comprovante",
-        upload_to=caminho_comprovante,
-        null=True,
-        blank=True,
-        validators=[validar_arquivo_seguro]
-    )
-    history = HistoricalRecords()
-
-    class Meta:
-        verbose_name = "Comprovante de Pagamento"
-        verbose_name_plural = "Comprovantes de Pagamento"
-
-    def __str__(self):
-        return f"Comprovante - {self.processo} - {self.credor_nome} - R$ {self.valor_pago}"

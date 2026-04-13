@@ -2,11 +2,11 @@
 
 from fluxo.domain_models import (
     AssinaturaAutentique,
+    ComprovanteDePagamento,
     Contingencia,
     Devolucao,
-    DocumentoDePagamento,
+    Boleto_Bancario,
     DocumentoOrcamentario,
-    DocumentoProcesso,
     FormasDePagamento,
     Pendencia,
     Processo,
@@ -25,11 +25,11 @@ from fluxo.domain_models import (
 
 __all__ = [
     "AssinaturaAutentique",
+    "ComprovanteDePagamento",
     "Contingencia",
     "Devolucao",
-    "DocumentoDePagamento",
+    "Boleto_Bancario",
     "DocumentoOrcamentario",
-    "DocumentoProcesso",
     "FormasDePagamento",
     "Pendencia",
     "Processo",

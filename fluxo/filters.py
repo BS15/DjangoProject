@@ -4,7 +4,7 @@ Este módulo define filtros para pesquisa e listagem de processos, documentos e 
 """
 
 import django_filters
-from fluxo.models import (
+from fluxo.domain_models import (
 	Processo,
 	Pendencia,
 	Contingencia,

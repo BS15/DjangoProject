@@ -1,6 +1,7 @@
 import datetime
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models import Q
 from simple_history.models import HistoricalRecords
 
 from credores.models import Credor
@@ -57,3 +58,13 @@ class FaturaMensal(models.Model):
         verbose_name = "Fatura Mensal"
         verbose_name_plural = "Faturas Mensais"
         unique_together = ('conta_fixa', 'mes_referencia')
+
+
+def gerar_faturas_do_mes(ano, mes):
+    """Gera faturas mensais para contas ativas na competência informada."""
+    data_ref = datetime.date(ano, mes, 1)
+    contas_ativas = ContaFixa.objects.filter(ativa=True).filter(
+        Q(data_inicio__year__lt=ano) | Q(data_inicio__year=ano, data_inicio__month__lte=mes)
+    )
+    for conta in contas_ativas:
+        FaturaMensal.objects.get_or_create(conta_fixa=conta, mes_referencia=data_ref)

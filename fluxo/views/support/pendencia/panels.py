@@ -5,7 +5,7 @@ from django.http import HttpRequest, HttpResponse
 from django.views.decorators.http import require_GET
 
 from fluxo.filters import PendenciaFilter
-from fluxo.models import Pendencia
+from fluxo.domain_models import Pendencia
 from fluxo.views.shared import render_filtered_list
 
 

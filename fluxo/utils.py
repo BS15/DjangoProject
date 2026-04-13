@@ -12,13 +12,27 @@ Este módulo implementa normalizações, extrações, formatações e utilidades
 import io
 import logging
 import re
-import unicodedata
 import uuid
-from datetime import datetime, timedelta
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
 import pdfplumber
 import PyPDF2
+from commons.shared.pdf_tools import extract_text_between
+from commons.shared.text_tools import (
+	_digits_only,
+	decimals_equal_money,
+	format_br_date,
+	format_brl_amount,
+	format_brl_currency,
+	names_bidirectional_match,
+	normalize_account,
+	normalize_choice,
+	normalize_document,
+	normalize_name_for_match,
+	normalize_text,
+	parse_br_date,
+	parse_brl_decimal,
+)
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from pypdf import PdfReader, PdfWriter
@@ -31,128 +45,16 @@ class PdfMergeError(Exception):
 	"""Erro ao mesclar arquivos PDF em memoria."""
 
 
-def _digits_only(value):
-	return re.sub(r"\D", "", value or "")
-
-
-def normalize_text(value, *, collapse_spaces=True):
-	if not value:
-		return ""
-
-	normalized = unicodedata.normalize("NFD", value.upper())
-	no_accents = "".join(ch for ch in normalized if unicodedata.category(ch) != "Mn")
-	if not collapse_spaces:
-		return no_accents.strip()
-	return re.sub(r"\s+", " ", no_accents).strip()
-
-
-def normalize_document(value):
-	return _digits_only(value)
-
-
-def normalize_account(agencia, conta):
-	agencia_norm = (agencia or "").strip().replace(" ", "")
-	conta_norm = (conta or "").strip().replace(" ", "").replace(".", "")
-	return agencia_norm.upper(), conta_norm.upper()
-
-
-def normalize_name_for_match(value):
-	return normalize_text(value)
-
-
-def names_bidirectional_match(left, right):
-	left_norm = normalize_name_for_match(left)
-	right_norm = normalize_name_for_match(right)
-	if not left_norm or not right_norm:
-		return False
-	return left_norm in right_norm or right_norm in left_norm
-
-
-def decimals_equal_money(left, right):
-	if left is None or right is None:
-		return False
-	return Decimal(left).quantize(Decimal("0.01")) == Decimal(right).quantize(Decimal("0.01"))
-
-
-def normalize_choice(value, valid_choices, default=""):
-	return value if value in valid_choices else default
-
-
-def format_br_date(value, empty_value="-"):
-	return value.strftime("%d/%m/%Y") if value else empty_value
-
-
-def format_brl_currency(value, empty_value="-"):
-	if value is None:
-		return empty_value
-
-	int_part, dec_part = f"{abs(value):.2f}".split(".")
-	int_formatted = "{:,}".format(int(int_part)).replace(",", ".")
-	signal = "-" if value < 0 else ""
-	return f"R$ {signal}{int_formatted},{dec_part}"
-
-
-def format_brl_amount(value, empty_value="-", include_symbol=False):
-	formatted = format_brl_currency(value, empty_value=empty_value)
-	if formatted == empty_value or include_symbol:
-		return formatted
-	return formatted.removeprefix("R$ ")
-
-
-def parse_brl_decimal(value, default=None):
-	if value is None:
-		return default
-
-	if isinstance(value, Decimal):
-		return value
-
-	normalized = str(value).strip()
-	if not normalized:
-		return default
-
-	normalized = normalized.replace("R$", "").replace(" ", "")
-	if "," in normalized:
-		normalized = normalized.replace(".", "").replace(",", ".")
-
-	try:
-		return Decimal(normalized)
-	except (InvalidOperation, ValueError):
-		return default
-
-
 def safe_split(line, keyword, index=1):
+	"""Retorna o trecho após a palavra-chave em posição segura."""
 	parts = line.split(keyword)
 	if len(parts) > index:
 		return parts[index].strip()
 	return ""
 
 
-def parse_br_date(date_str):
-	try:
-		if not date_str:
-			return None
-		return datetime.strptime(date_str.strip(), "%d/%m/%Y").strftime("%Y-%m-%d")
-	except ValueError:
-		return None
-
-
-def extract_text_between(full_text, start_anchor, end_anchor):
-	if full_text is None:
-		return ""
-
-	start_idx = full_text.find(start_anchor)
-	if start_idx == -1:
-		return ""
-
-	start_idx += len(start_anchor)
-	end_idx = full_text.find(end_anchor, start_idx)
-	if end_idx == -1:
-		end_idx = full_text.find("\n", start_idx)
-
-	return full_text[start_idx:end_idx].replace("\n", "").strip()
-
-
 def split_pdf_to_temp_pages(arquivo_pdf):
+	"""Divide um PDF em páginas e salva cada página em arquivo temporário."""
 	pdf = PdfReader(arquivo_pdf)
 	paginas = []
 
@@ -177,6 +79,7 @@ def split_pdf_to_temp_pages(arquivo_pdf):
 
 
 def sort_pages(pdf_file):
+	"""Classifica páginas SISCAC por tipo de conteúdo encontrado no texto."""
 	pages_dict = {"empenho": [], "liquidacao": [], "pagamento": []}
 
 	with pdfplumber.open(pdf_file) as pdf:
@@ -192,6 +95,7 @@ def sort_pages(pdf_file):
 
 
 def extract_siscac_data(pdf_file):
+	"""Extrai dados essenciais de empenho, liquidação e pagamento do SISCAC."""
 	pages_dict = sort_pages(pdf_file)
 	data = {}
 
@@ -239,6 +143,7 @@ def extract_siscac_data(pdf_file):
 
 
 def processar_pdf_boleto(pdf_file):
+	"""Localiza linha digitável válida em PDF de boleto/arrecadação."""
 	leitor = PyPDF2.PdfReader(pdf_file)
 	texto = " ".join([pagina.extract_text() for pagina in leitor.pages if pagina.extract_text()])
 	texto = re.sub(r"\s+", " ", texto)
@@ -267,7 +172,89 @@ def processar_pdf_boleto(pdf_file):
 	raise ValueError("Linha digitavel valida nao encontrada no PDF.")
 
 
+def _extract_comprovante_fields(texto_flat):
+	"""Extrai campos estruturados de um texto de comprovante bancário."""
+	padrao_valor = re.compile(
+		r"(?:VALOR TOTAL|VALOR DO DOCUMENTO|VALOR COBRADO|VALOR EM DINHEIRO|VALOR)\s*:?\s*(?:R\$\s*)?([\d.,]+)",
+		re.IGNORECASE,
+	)
+
+	valor_float = 0.00
+	for match_valor in padrao_valor.finditer(texto_flat):
+		valor_str = match_valor.group(1).replace(".", "").replace(",", ".")
+		try:
+			valor_float = float(valor_str)
+			break
+		except ValueError:
+			pass
+
+	cpf_cnpj = re.findall(r"\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}|\d{3}\.\d{3}\.\d{3}-\d{2}", texto_flat)
+	contas = re.findall(r"AGENCIA:\s*([\d-]+)\s*CONTA:\s*([\d.-]+[Xx]?)", texto_flat)
+
+	data_pagamento = ""
+	match_data = re.search(
+		r"(?:DATA(?:\s*DO PAGAMENTO|\s*DA TRANSFERENCIA)?|DEBITO EM)\s*:?\s*(\d{2}/\d{2}/\d{4})",
+		texto_flat,
+		re.IGNORECASE,
+	)
+	if match_data:
+		partes = match_data.group(1).split("/")
+		if len(partes) == 3:
+			data_pagamento = f"{partes[2]}-{partes[1]}-{partes[0]}"
+
+	numero_comprovante = ""
+	autenticacao_match = re.search(
+		r"NR\.AUTENTICACAO\s*([A-Z0-9]\.[A-Z0-9]{3}\.[A-Z0-9]{3}\.[A-Z0-9]{3}\.[A-Z0-9]{3}\.[A-Z0-9]{3})",
+		texto_flat,
+		re.IGNORECASE,
+	)
+	if autenticacao_match:
+		numero_comprovante = autenticacao_match.group(1)
+
+	return {
+		"valor_extraido": valor_float,
+		"cpf_cnpj": cpf_cnpj,
+		"contas": contas,
+		"data_pagamento": data_pagamento,
+		"numero_comprovante": numero_comprovante,
+	}
+
+
+def match_credor_por_cpf_cnpj(cpf_cnpj_list, cnpj_orgao_norm, Credor):
+	"""Relaciona CPF/CNPJ extraído ao credor cadastrado, ignorando o órgão."""
+	credor_encontrado = None
+	cpf_cnpj_encontrados = []
+
+	for cpf_cnpj in cpf_cnpj_list:
+		cpf_cnpj_norm = normalize_document(cpf_cnpj)
+		if cpf_cnpj_norm and cpf_cnpj_norm != cnpj_orgao_norm:
+			credor = Credor.objects.filter(cpf_cnpj=cpf_cnpj).first()
+			cpf_cnpj_encontrados.append({"cpf_cnpj": cpf_cnpj, "credor": credor})
+			if credor and not credor_encontrado:
+				credor_encontrado = credor
+
+	return credor_encontrado, cpf_cnpj_encontrados
+
+
+def _match_credor_por_contas(contas, agencia_orgao_norm, conta_orgao_norm, ContasBancarias):
+	"""Relaciona agência/conta extraídas ao titular cadastrado, excluindo conta do órgão."""
+	credor_encontrado = None
+	contas_encontradas = []
+
+	for agencia, conta in contas:
+		agencia_norm, conta_norm = normalize_account(agencia, conta)
+		if agencia_norm != agencia_orgao_norm or conta_norm != conta_orgao_norm:
+			conta_db = ContasBancarias.objects.filter(agencia=agencia, conta=conta_norm).first()
+			titular = conta_db.titular if conta_db else None
+			contas_encontradas.append({"agencia": agencia, "conta": conta_norm, "credor": titular})
+			if titular and not credor_encontrado:
+				credor_encontrado = titular
+
+	return credor_encontrado, contas_encontradas
+
+
 def processar_pdf_comprovantes(pdf_file):
+	"""Processa comprovantes em PDF e retorna dados extraídos por página."""
 	from credores.models import Credor, ContasBancarias
 
 	CNPJ_ORGAO = "82.894.098/0001-32"
@@ -286,79 +273,35 @@ def processar_pdf_comprovantes(pdf_file):
 				texto = pdf_leitor.pages[0].extract_text() or ""
 
 		texto_flat = re.sub(r"\s+", " ", texto)
+		campos_extraidos = _extract_comprovante_fields(texto_flat)
 
-		padrao_valor = re.compile(
-			r"(?:VALOR TOTAL|VALOR DO DOCUMENTO|VALOR COBRADO|VALOR EM DINHEIRO|VALOR)\s*:?\s*(?:R\$\s*)?([\d.,]+)",
-			re.IGNORECASE,
+		credor_por_cpf_cnpj, cpf_cnpj_encontrados = match_credor_por_cpf_cnpj(
+			campos_extraidos["cpf_cnpj"],
+			cnpj_orgao_norm,
+			Credor,
 		)
-
-		valor_float = 0.00
-		for match_valor in padrao_valor.finditer(texto_flat):
-			valor_str = match_valor.group(1).replace(".", "").replace(",", ".")
-			try:
-				valor_float = float(valor_str)
-				break
-			except ValueError:
-				pass
-
-		credor_encontrado = None
-
-		padrao_doc = re.compile(r"\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}|\d{3}\.\d{3}\.\d{3}-\d{2}")
-		documentos = padrao_doc.findall(texto_flat)
-		documentos_encontrados = []
-		for doc in documentos:
-			doc_norm = normalize_document(doc)
-			if doc_norm and doc_norm != cnpj_orgao_norm:
-				credor = Credor.objects.filter(cpf_cnpj=doc).first()
-				documentos_encontrados.append({"doc": doc, "credor": credor})
-				if credor and not credor_encontrado:
-					credor_encontrado = credor
-
-		contas_encontradas = []
-		padrao_conta = re.compile(r"AGENCIA:\s*([\d-]+)\s*CONTA:\s*([\d.-]+[Xx]?)")
-		contas = padrao_conta.findall(texto_flat)
-		for agencia, conta in contas:
-			agencia_norm, conta_norm = normalize_account(agencia, conta)
-			if agencia_norm != agencia_orgao_norm or conta_norm != conta_orgao_norm:
-				conta_db = ContasBancarias.objects.filter(agencia=agencia, conta=conta_norm).first()
-				titular = conta_db.titular if conta_db else None
-				contas_encontradas.append({"agencia": agencia, "conta": conta_norm, "credor": titular})
-				if titular and not credor_encontrado:
-					credor_encontrado = titular
-
-		data_pagamento = ""
-		padrao_data = re.compile(
-			r"(?:DATA(?:\s*DO PAGAMENTO|\s*DA TRANSFERENCIA)?|DEBITO EM)\s*:?\s*(\d{2}/\d{2}/\d{4})",
-			re.IGNORECASE,
+		credor_por_conta, contas_encontradas = _match_credor_por_contas(
+			campos_extraidos["contas"],
+			agencia_orgao_norm,
+			conta_orgao_norm,
+			ContasBancarias,
 		)
-		match_data = padrao_data.search(texto_flat)
-		if match_data:
-			partes = match_data.group(1).split("/")
-			if len(partes) == 3:
-				data_pagamento = f"{partes[2]}-{partes[1]}-{partes[0]}"
-
-		numero_comprovante = ""
-		padrao_autenticacao = re.compile(
-			r"NR\.AUTENTICACAO\s*([A-Z0-9]\.[A-Z0-9]{3}\.[A-Z0-9]{3}\.[A-Z0-9]{3}\.[A-Z0-9]{3}\.[A-Z0-9]{3})",
-			re.IGNORECASE,
-		)
-		autenticacao_match = padrao_autenticacao.search(texto_flat)
-		if autenticacao_match:
-			numero_comprovante = autenticacao_match.group(1)
+		credor_encontrado = credor_por_cpf_cnpj or credor_por_conta
 
 		resultados.append({
 			**pagina_info,
 			"credor_extraido": credor_encontrado.nome if credor_encontrado else None,
-			"valor_extraido": valor_float,
-			"data_pagamento": data_pagamento,
-			"numero_comprovante": numero_comprovante,
-			"documentos_encontrados": documentos_encontrados,
+			"valor_extraido": campos_extraidos["valor_extraido"],
+			"data_pagamento": campos_extraidos["data_pagamento"],
+			"numero_comprovante": campos_extraidos["numero_comprovante"],
+			"cpf_cnpj_encontrados": cpf_cnpj_encontrados,
 			"contas_encontradas": contas_encontradas,
 		})
 	return resultados
 
 
 def mesclar_pdfs_em_memoria(lista_arquivos):
+	"""Mescla PDFs em memória e retorna buffer posicionado no início."""
 	merger = PdfWriter()
 
 	try:
@@ -374,9 +317,6 @@ def mesclar_pdfs_em_memoria(lista_arquivos):
 	except (PyPDF2.errors.PdfReadError, OSError, TypeError, ValueError) as exc:
 		logger.exception("Erro na mesclagem de PDFs em memoria: %s", exc)
 		raise PdfMergeError("Falha tecnica ao mesclar PDFs em memoria.") from exc
-
-
-
 
 
 def parse_siscac_report(pdf_file):
@@ -417,77 +357,6 @@ def parse_siscac_report(pdf_file):
 	return list(payments.values())
 
 
-def gerar_csv_relatorio(queryset, tipo_relatorio):
-	"""Gera resposta CSV para o tipo de relatório solicitado."""
-	import csv
-	from django.http import HttpResponse
-
-	response = HttpResponse(content_type='text/csv')
-	response['Content-Disposition'] = f'attachment; filename="relatorio_{tipo_relatorio}.csv"'
-	response.write('\ufeff'.encode('utf8'))
-	writer = csv.writer(response, delimiter=';')
-
-	mapa_relatorios = {
-		'processos': (
-			['ID', 'Empenho', 'Credor', 'Valor Bruto', 'Valor Líquido', 'Status', 'Data Pagamento'],
-			lambda p: [
-				p.id,
-				p.n_nota_empenho,
-				p.credor.nome if p.credor else '',
-				p.valor_bruto,
-				p.valor_liquido,
-				p.status.status_choice if p.status else '',
-				p.data_pagamento,
-			],
-		),
-		'diarias': (
-			['ID', 'Beneficiário', 'Proponente', 'Período', 'Destino', 'Valor', 'Status'],
-			lambda d: [
-				d.id,
-				d.beneficiario.nome if d.beneficiario else '',
-				d.proponente.get_full_name() if d.proponente else '',
-				f'{d.data_saida} a {d.data_retorno}',
-				d.cidade_destino,
-				d.valor_total,
-				d.status.status_choice if d.status else '',
-			],
-		),
-		'impostos': (
-			['ID', 'NF', 'Processo Pai', 'Código', 'Valor Retido', 'Competência', 'Processo Pagamento'],
-			lambda i: [
-				i.id,
-				i.nota_fiscal.numero_nota_fiscal,
-				i.nota_fiscal.processo.id,
-				i.codigo.codigo if i.codigo else '',
-				i.valor,
-				i.competencia,
-				i.processo_pagamento.id if i.processo_pagamento else 'Pendente',
-			],
-		),
-	}
-
-	cabecalhos, extrator = mapa_relatorios.get(tipo_relatorio, (['Erro'], lambda x: ['Tipo não configurado']))
-	writer.writerow(cabecalhos)
-	for obj in queryset:
-		writer.writerow(extrator(obj))
-	return response
-
-
-
-
-def gerar_faturas_do_mes(ano, mes):
-	import datetime
-	from django.db.models import Q
-	from fluxo.views.support.contas_fixas.models import ContaFixa, FaturaMensal
-
-	data_ref = datetime.date(ano, mes, 1)
-	contas_ativas = ContaFixa.objects.filter(ativa=True).filter(
-		Q(data_inicio__year__lt=ano) | Q(data_inicio__year=ano, data_inicio__month__lte=mes)
-	)
-	for conta in contas_ativas:
-		FaturaMensal.objects.get_or_create(conta_fixa=conta, mes_referencia=data_ref)
-
-
 
 
 __all__ = [
@@ -512,7 +381,5 @@ __all__ = [
 	"processar_pdf_boleto",
 	"processar_pdf_comprovantes",
 	"mesclar_pdfs_em_memoria",
-	"gerar_csv_relatorio",
-	"gerar_faturas_do_mes",
 	"PdfMergeError",
 ]

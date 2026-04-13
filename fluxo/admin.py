@@ -7,7 +7,7 @@ from .models import (
     AssinaturaAutentique,
     Contingencia,
     Devolucao,
-    DocumentoDePagamento,
+    Boleto_Bancario,
     DocumentoOrcamentario,
     FormasDePagamento,
     Pendencia,
@@ -79,7 +79,7 @@ class ReuniaoConselhoAdmin(admin.ModelAdmin):
     ordering = ('-numero',)
 
 
-admin.site.register(DocumentoDePagamento, SimpleHistoryAdmin)
+admin.site.register(Boleto_Bancario, SimpleHistoryAdmin)
 admin.site.register(DocumentoOrcamentario, SimpleHistoryAdmin)
 admin.site.register(Pendencia, SimpleHistoryAdmin)
 admin.site.register(StatusChoicesPendencias)

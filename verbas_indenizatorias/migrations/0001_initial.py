@@ -2,7 +2,7 @@
 
 import django.core.validators
 import django.db.models.deletion
-import fluxo.models
+from commons.shared.storage_utils import caminho_documento
 import fluxo.validators
 import simple_history.models
 from django.conf import settings
@@ -276,7 +276,7 @@ class Migration(migrations.Migration):
                 (
                     "arquivo",
                     models.FileField(
-                        upload_to=fluxo.models.caminho_documento,
+                        upload_to=caminho_documento,
                         validators=[fluxo.validators.validar_arquivo_seguro],
                     ),
                 ),
@@ -322,7 +322,7 @@ class Migration(migrations.Migration):
                 (
                     "arquivo",
                     models.FileField(
-                        upload_to=fluxo.models.caminho_documento,
+                        upload_to=caminho_documento,
                         validators=[fluxo.validators.validar_arquivo_seguro],
                     ),
                 ),
@@ -645,7 +645,7 @@ class Migration(migrations.Migration):
                 (
                     "arquivo",
                     models.FileField(
-                        upload_to=fluxo.models.caminho_documento,
+                        upload_to=caminho_documento,
                         validators=[fluxo.validators.validar_arquivo_seguro],
                     ),
                 ),
@@ -865,7 +865,7 @@ class Migration(migrations.Migration):
                 (
                     "arquivo",
                     models.FileField(
-                        upload_to=fluxo.models.caminho_documento,
+                        upload_to=caminho_documento,
                         validators=[fluxo.validators.validar_arquivo_seguro],
                     ),
                 ),

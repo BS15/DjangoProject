@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from fluxo.forms import DocumentoFormSet, PendenciaForm, PendenciaFormSet
-from fluxo.models import (
+from fluxo.domain_models import (
     Contingencia,
     Processo,
     StatusChoicesPendencias,

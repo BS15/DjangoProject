@@ -4,7 +4,7 @@ import django_filters
 from fluxo.filters import BaseStyledFilterSet
 from credores.models import Credor
 from fiscal.models import DocumentoFiscal, RetencaoImposto, CodigosImposto, StatusChoicesRetencoes
-from fluxo.models import Processo
+from fluxo.domain_models import Processo
 
 
 class RetencaoNotaFilter(BaseStyledFilterSet):

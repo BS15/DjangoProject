@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, redirect, render
 
-from fluxo.models import Processo
+from fluxo.domain_models import Processo
 from .helpers import (
     _instanciar_formularios_processo_verbas,
     _montar_contexto_processo_verbas,

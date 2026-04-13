@@ -1,7 +1,7 @@
 from django.urls import path
 
 from credores import imports as credores_import_views
-from fluxo.support import conta_fixa_imports
+from fluxo.views.support.contas_fixas import imports as conta_fixa_imports
 from credores import views as credor_views
 from fluxo.views.sistemas_auxiliares import assinaturas as assinatura_views
 from fluxo.views.sistemas_auxiliares import contas as conta_views

@@ -6,7 +6,7 @@ from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
 from fiscal.models import RetencaoImposto
-from fluxo.models import Pendencia, Processo
+from fluxo.domain_models import Pendencia, Processo
 from fluxo.views.helpers import (
     _aplicar_filtros_contas_a_pagar,
     _gerar_agrupamentos_contas_a_pagar,

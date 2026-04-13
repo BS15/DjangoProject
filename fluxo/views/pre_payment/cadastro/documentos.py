@@ -2,7 +2,7 @@
 
 Este módulo concentra endpoints para:
 1. Exibir e gerenciar documentos fiscais vinculados a um processo.
-2. Marcar/desmarcar um DocumentoDePagamento como DocumentoFiscal.
+2. Marcar/desmarcar um Boleto_Bancario como DocumentoFiscal.
 3. Persistir dados da nota fiscal e suas retenções, com atualização de
     pendência de ateste de liquidação.
 
@@ -24,8 +24,8 @@ from django.shortcuts import get_object_or_404, render
 
 from credores.models import Credor
 from fiscal.models import CodigosImposto, DocumentoFiscal, RetencaoImposto
-from fluxo.models import (
-    DocumentoDePagamento,
+from fluxo.domain_models import (
+    Boleto_Bancario,
     Pendencia,
     Processo,
     StatusChoicesPendencias,
@@ -73,7 +73,7 @@ def api_toggle_documento_fiscal(request, processo_pk, documento_pk):
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
     processo = get_object_or_404(Processo, id=processo_pk)
-    doc = get_object_or_404(DocumentoDePagamento, id=documento_pk, processo=processo)
+    doc = get_object_or_404(Boleto_Bancario, id=documento_pk, processo=processo)
 
     try:
         nota = doc.nota_referente

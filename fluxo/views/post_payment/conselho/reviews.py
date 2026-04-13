@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, redirect
 
-from fluxo.models import Processo
+from fluxo.domain_models import Processo
 from fluxo.views.helpers import _processo_fila_detalhe_view
 
 

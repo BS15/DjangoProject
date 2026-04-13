@@ -2,7 +2,7 @@
 
 import django.core.validators
 import django.db.models.deletion
-import fluxo.models
+from commons.shared.storage_utils import caminho_documento
 import fluxo.validators
 import simple_history.models
 from django.conf import settings
@@ -1179,7 +1179,7 @@ class Migration(migrations.Migration):
             bases=(simple_history.models.HistoricalChanges, models.Model),
         ),
         migrations.CreateModel(
-            name="HistoricalDocumentoDePagamento",
+            name="HistoricalBoleto_Bancario",
             fields=[
                 (
                     "id",
@@ -1268,6 +1268,113 @@ class Migration(migrations.Migration):
             bases=(simple_history.models.HistoricalChanges, models.Model),
         ),
         migrations.CreateModel(
+            name="HistoricalComprovanteDePagamento",
+            fields=[
+                (
+                    "id",
+                    models.BigIntegerField(
+                        auto_created=True, blank=True, db_index=True, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "arquivo",
+                    models.TextField(
+                        max_length=100,
+                        validators=[fluxo.validators.validar_arquivo_seguro],
+                    ),
+                ),
+                (
+                    "ordem",
+                    models.PositiveIntegerField(
+                        default=1, help_text="Ordem do arquivo"
+                    ),
+                ),
+                (
+                    "numero_comprovante",
+                    models.CharField(
+                        blank=True,
+                        max_length=100,
+                        null=True,
+                        verbose_name="Número do Comprovante",
+                    ),
+                ),
+                (
+                    "credor_nome",
+                    models.CharField(
+                        blank=True,
+                        max_length=200,
+                        null=True,
+                        verbose_name="Credor (Texto)",
+                    ),
+                ),
+                (
+                    "valor_pago",
+                    models.DecimalField(
+                        blank=True,
+                        decimal_places=2,
+                        max_digits=12,
+                        null=True,
+                        validators=[django.core.validators.MinValueValidator(0)],
+                        verbose_name="Valor Pago",
+                    ),
+                ),
+                (
+                    "data_pagamento",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Data de Pagamento"
+                    ),
+                ),
+                ("history_id", models.AutoField(primary_key=True, serialize=False)),
+                ("history_date", models.DateTimeField(db_index=True)),
+                ("history_change_reason", models.CharField(max_length=100, null=True)),
+                (
+                    "history_type",
+                    models.CharField(
+                        choices=[("+", "Created"), ("~", "Changed"), ("-", "Deleted")],
+                        max_length=1,
+                    ),
+                ),
+                (
+                    "history_user",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "processo",
+                    models.ForeignKey(
+                        blank=True,
+                        db_constraint=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        related_name="+",
+                        to="fluxo.processo",
+                    ),
+                ),
+                (
+                    "tipo",
+                    models.ForeignKey(
+                        blank=True,
+                        db_constraint=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        related_name="+",
+                        to="fluxo.tiposdedocumento",
+                    ),
+                ),
+            ],
+            options={
+                "verbose_name": "historical comprovante de pagamento",
+                "verbose_name_plural": "historical comprovante de pagamentos",
+                "ordering": ("-history_date", "-history_id"),
+                "get_latest_by": ("history_date", "history_id"),
+            },
+            bases=(simple_history.models.HistoricalChanges, models.Model),
+        ),
+        migrations.CreateModel(
             name="DocumentoOrcamentario",
             fields=[
                 (
@@ -1288,9 +1395,7 @@ class Migration(migrations.Migration):
                 (
                     "arquivo",
                     models.FileField(
-                        blank=True,
-                        null=True,
-                        upload_to=fluxo.models.caminho_documento,
+                        upload_to=caminho_documento,
                         validators=[fluxo.validators.validar_arquivo_seguro],
                     ),
                 ),
@@ -1334,8 +1439,6 @@ class Migration(migrations.Migration):
                 (
                     "tipo",
                     models.ForeignKey(
-                        blank=True,
-                        null=True,
                         on_delete=django.db.models.deletion.PROTECT,
                         to="fluxo.tiposdedocumento",
                     ),
@@ -1346,7 +1449,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name="DocumentoDePagamento",
+            name="ComprovanteDePagamento",
             fields=[
                 (
                     "id",
@@ -1360,7 +1463,90 @@ class Migration(migrations.Migration):
                 (
                     "arquivo",
                     models.FileField(
-                        upload_to=fluxo.models.caminho_documento,
+                        upload_to=caminho_documento,
+                        validators=[fluxo.validators.validar_arquivo_seguro],
+                    ),
+                ),
+                (
+                    "ordem",
+                    models.PositiveIntegerField(
+                        default=1, help_text="Ordem do arquivo"
+                    ),
+                ),
+                (
+                    "tipo",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="fluxo.tiposdedocumento",
+                    ),
+                ),
+                (
+                    "numero_comprovante",
+                    models.CharField(
+                        blank=True,
+                        max_length=100,
+                        null=True,
+                        verbose_name="Número do Comprovante",
+                    ),
+                ),
+                (
+                    "credor_nome",
+                    models.CharField(
+                        blank=True,
+                        max_length=200,
+                        null=True,
+                        verbose_name="Credor (Texto)",
+                    ),
+                ),
+                (
+                    "valor_pago",
+                    models.DecimalField(
+                        blank=True,
+                        decimal_places=2,
+                        max_digits=12,
+                        null=True,
+                        validators=[django.core.validators.MinValueValidator(0)],
+                        verbose_name="Valor Pago",
+                    ),
+                ),
+                (
+                    "data_pagamento",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Data de Pagamento"
+                    ),
+                ),
+                (
+                    "processo",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="comprovantes_pagamento",
+                        to="fluxo.processo",
+                        verbose_name="Processo",
+                    ),
+                ),
+            ],
+            options={
+                "verbose_name": "Comprovante de Pagamento",
+                "verbose_name_plural": "Comprovantes de Pagamento",
+                "ordering": ["ordem"],
+            },
+        ),
+        migrations.CreateModel(
+            name="Boleto_Bancario",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "arquivo",
+                    models.FileField(
+                        upload_to=caminho_documento,
                         validators=[fluxo.validators.validar_arquivo_seguro],
                     ),
                 ),

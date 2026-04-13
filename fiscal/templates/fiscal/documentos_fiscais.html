@@ -208,17 +208,18 @@
                                 <i class="bi bi-eye"></i>
                             </button>
                         {% endif %}
+                        {% if pode_remover_nota_fiscal or not nota %}
                         <button type="button"
                                 class="btn btn-sm fw-bold toggle-fiscal-btn {% if nota %}btn-outline-danger{% else %}btn-outline-success{% endif %}"
                                 data-doc-id="{{ doc.id }}"
-                                data-toggle-url="{% url 'api_toggle_documento_fiscal' processo_pk=processo.id documento_pk=doc.id %}"
-                                {% if nota and not pode_remover_nota_fiscal %}disabled title="Remoção bloqueada após pagamento"{% endif %}>
+                                data-toggle-url="{% url 'api_toggle_documento_fiscal' processo_pk=processo.id documento_pk=doc.id %}">
                             {% if nota %}
                                 <i class="bi bi-x-circle"></i> Remover Documento Fiscal
                             {% else %}
                                 <i class="bi bi-plus-circle"></i> Marcar como Documento Fiscal
                             {% endif %}
                         </button>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -638,36 +639,46 @@ function saveNotaFiscal(panel) {
     if (!notaId || !url) return Promise.resolve(null);
 
     // Gather NF field values
-    const payload = {};
+    const payload = {
+        nome_emitente: null,
+        numero_nota_fiscal: null,
+        data_emissao: null,
+        valor_bruto: null,
+        fiscal_contrato: null,
+        imposto_codes: [],
+        imposto_values: [],
+        imposto_rendimentos: [],
+        imposto_beneficiarios: [],
+        atestada: null
+    };
     panel.querySelectorAll('.nf-field').forEach(function(field) {
         const fieldName = field.dataset.field;
         if (!fieldName) return;
         if (field.type === 'checkbox') {
-            payload[fieldName] = fieldName === 'atestada' ? !field.checked : field.checked;
+            if (fieldName === 'atestada') {
+                payload.atestada = !field.checked;
+            }
         } else {
-            payload[fieldName] = field.value || null;
+            if (fieldName in payload) {
+                payload[fieldName] = field.value || null;
+            }
         }
     });
 
     // Gather retencoes rows
     const taxBody = panel.querySelector('.tax-body');
-    const codes = [], rendimentos = [], values = [], beneficiarios = [];
     if (taxBody) {
         taxBody.querySelectorAll('tr').forEach(function(row) {
             const codeSelect = row.querySelector('.tax-code-select');
             const rendInput = row.querySelector('.tax-rend-input');
             const valInput = row.querySelector('.tax-val-input');
             const benef = row.querySelector('.tax-beneficiario-select');
-            codes.push(codeSelect ? codeSelect.value : '');
-            rendimentos.push(rendInput ? rendInput.value : '');
-            values.push(valInput ? valInput.value : '');
-            beneficiarios.push(benef ? benef.value : '');
+            payload.imposto_codes.push(codeSelect ? codeSelect.value : '');
+            payload.imposto_rendimentos.push(rendInput ? rendInput.value : '');
+            payload.imposto_values.push(valInput ? valInput.value : '');
+            payload.imposto_beneficiarios.push(benef ? benef.value : '');
         });
     }
-    payload.imposto_codes = codes;
-    payload.imposto_rendimentos = rendimentos;
-    payload.imposto_values = values;
-    payload.imposto_beneficiarios = beneficiarios;
 
     if (statusEl) { statusEl.textContent = 'Salvando…'; statusEl.classList.remove('text-success', 'text-danger'); }
 

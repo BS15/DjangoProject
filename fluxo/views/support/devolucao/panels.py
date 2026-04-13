@@ -10,7 +10,7 @@ from django.views.decorators.http import require_GET
 
 from fluxo.filters import DevolucaoFilter
 from fluxo.forms import DevolucaoForm
-from fluxo.models import Devolucao, Processo
+from fluxo.domain_models import Devolucao, Processo
 from fluxo.views.shared import apply_filterset
 
 

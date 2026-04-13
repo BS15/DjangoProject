@@ -5,10 +5,11 @@ import logging
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
-from fiscal.models import ComprovanteDePagamento, DocumentoFiscal, RetencaoImposto
-from fluxo.models import (
+from fluxo.domain_models.documentos import ComprovanteDePagamento
+from fiscal.models import DocumentoFiscal, RetencaoImposto
+from fluxo.domain_models import (
     Devolucao,
-    DocumentoDePagamento,
+    Boleto_Bancario,
     Pendencia,
     Processo,
 )
@@ -211,7 +212,7 @@ def _get_unified_history(pk):
 
     for record in processo.history.all().select_related("history_user"):
         history_records.append(_build_history_record(record, "Processo"))
-    for record in DocumentoDePagamento.history.filter(processo_id=pk).select_related("history_user"):
+    for record in Boleto_Bancario.history.filter(processo_id=pk).select_related("history_user"):
         history_records.append(_build_history_record(record, "Documento"))
     for record in Pendencia.history.filter(processo_id=pk).select_related("history_user"):
         history_records.append(_build_history_record(record, "Pendência"))

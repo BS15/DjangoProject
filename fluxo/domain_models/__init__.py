@@ -12,7 +12,7 @@ from .catalogos import (
     TiposDePagamento,
     TiposDePendencias,
 )
-from .documentos import DocumentoDePagamento, DocumentoOrcamentario, DocumentoProcesso
+from .documentos import ComprovanteDePagamento, Boleto_Bancario, DocumentoOrcamentario
 from .processos import Processo, ProcessoManager, ReuniaoConselho
 from .suporte import (
     AssinaturaAutentique,
@@ -26,11 +26,11 @@ from .suporte import (
 
 __all__ = [
     "AssinaturaAutentique",
+    "ComprovanteDePagamento",
     "Contingencia",
     "Devolucao",
-    "DocumentoDePagamento",
+    "Boleto_Bancario",
     "DocumentoOrcamentario",
-    "DocumentoProcesso",
     "FormasDePagamento",
     "Pendencia",
     "Processo",

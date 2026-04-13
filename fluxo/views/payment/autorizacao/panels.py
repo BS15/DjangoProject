@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
 from fluxo.forms import PendenciaForm
-from fluxo.models import Processo
+from fluxo.domain_models import Processo
 
 
 @require_GET

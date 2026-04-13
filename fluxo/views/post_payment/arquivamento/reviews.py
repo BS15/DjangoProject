@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
-from fluxo.models import Processo
+from fluxo.domain_models import Processo
 
 
 @require_GET

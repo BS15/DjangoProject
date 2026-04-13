@@ -5,8 +5,9 @@ from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 
-from fiscal.models import ComprovanteDePagamento, DocumentoFiscal
-from fluxo.models import Devolucao, DocumentoDePagamento, RegistroAcessoArquivo
+from fluxo.domain_models.documentos import ComprovanteDePagamento
+from fiscal.models import DocumentoFiscal
+from fluxo.domain_models import Devolucao, Boleto_Bancario, RegistroAcessoArquivo
 from suprimentos.models import DespesaSuprimento
 from verbas_indenizatorias.models import (
     DocumentoAuxilio,
@@ -53,7 +54,7 @@ def _is_cap_backoffice(user):
 def _resolver_documento(tipo_documento, documento_id):
     """Resolve o documento alvo e retorna (objeto_doc, field_arquivo_name)."""
     resolvers = {
-        "processo": (DocumentoDePagamento, "arquivo"),
+        "processo": (Boleto_Bancario, "arquivo"),
         "fiscal": (DocumentoFiscal, "documento_vinculado"),
         "comprovante": (ComprovanteDePagamento, "arquivo"),
         "suprimento": (DespesaSuprimento, "arquivo"),

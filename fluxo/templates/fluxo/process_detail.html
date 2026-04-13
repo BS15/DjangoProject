@@ -111,31 +111,91 @@
 </div>
 {% endif %}
 
-{% if pode_registrar_devolucao %}
-<div class="mt-3">
-    <a href="{% url 'registrar_devolucao' processo.id %}" class="btn btn-warning">
-        <i class="bi bi-arrow-return-left"></i> Registrar Devolução
-    </a>
-</div>
-{% endif %}
+{% extends "layouts/base_detail.html" %}
 
+{% block detail_header %}
+    <h2><i class="bi bi-diagram-3 text-primary"></i> Detalhes do Processo</h2>
+    <p class="text-muted mb-0">Processo #{{ processo.id }} — {{ processo }}</p>
+    <a href="{% url 'editar_processo_capa' processo.id %}" class="btn btn-outline-secondary">
+        <i class="bi bi-pencil"></i> Editar Capa
+    </a>
 {% endblock %}
 
-{# ═══ ACTIONS: view PDF, edit, back ══════════════════════════════════════ #}
-{% block detail_actions %}
-<a href="{% url 'merged_pdf' processo.id %}" target="_blank" class="btn btn-primary btn-lg">
-    <i class="bi bi-file-earmark-pdf-fill"></i> Visualizar Processo Completo
-</a>
-<div class="form-text text-center mb-2">
-    Gera um PDF único apenas para visualização. Não altera os arquivos originais.
-</div>
+{% block detail_body %}
+    <div class="row mb-4">
+        <!-- Documentos Anexados Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <span class="fw-bold"><i class="bi bi-paperclip"></i> Documentos Anexados</span>
+                    <a href="{% url 'editar_processo_documentos' processo.id %}" class="btn btn-sm btn-primary">
+                        + Gerenciar Documentos
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if documentos %}
+                        <ul class="list-group list-group-flush">
+                            {% for doc in documentos %}
+                                <li class="list-group-item">{{ doc }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <span class="text-muted">Nenhum documento anexado.</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 
-<hr>
+    <!-- Notas Fiscais & Retenções Card -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <span class="fw-bold"><i class="bi bi-receipt"></i> Notas Fiscais & Retenções</span>
+                    <a href="{% url 'registrar_nota_fiscal' processo.id %}" class="btn btn-sm btn-primary">
+                        + Registrar Nota Fiscal
+                    </a>
+                </div>
+                <div class="card-body">
+                    {# Placeholder for notas_fiscais context variable #}
+                    {% if notas_fiscais %}
+                        <ul class="list-group list-group-flush">
+                            {% for nota in notas_fiscais %}
+                                <li class="list-group-item">{{ nota }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <span class="text-muted">Nenhuma nota fiscal registrada.</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 
-<a href="/admin/processos/processo/{{ processo.id }}/change/" class="btn btn-outline-secondary">
-    <i class="bi bi-pencil"></i> Editar Dados (Admin)
-</a>
-<a href="{% url 'home_page' %}" class="btn btn-outline-dark">
-    <i class="bi bi-arrow-left"></i> Voltar
-</a>
+    <!-- Pendências Card -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <span class="fw-bold"><i class="bi bi-exclamation-triangle"></i> Pendências</span>
+                    <a href="{% url 'editar_processo_pendencias' processo.id %}" class="btn btn-sm btn-primary">
+                        + Adicionar Pendência
+                    </a>
+                </div>
+                <div class="card-body">
+                    {# Placeholder for pendencias context variable #}
+                    {% if pendencias %}
+                        <ul class="list-group list-group-flush">
+                            {% for pendencia in pendencias %}
+                                <li class="list-group-item">{{ pendencia }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <span class="text-muted">Nenhuma pendência registrada.</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

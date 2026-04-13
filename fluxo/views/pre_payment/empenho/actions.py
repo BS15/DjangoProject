@@ -9,7 +9,7 @@ from django.db import DatabaseError, transaction
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
-from fluxo.models import Processo
+from fluxo.domain_models import Processo
 from ..helpers import _registrar_empenho_e_anexar_siscac
 
 

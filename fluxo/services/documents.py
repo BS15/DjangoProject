@@ -30,8 +30,8 @@ def gerar_pdf_consolidado_processo(processo):
         raise RuntimeError(f"Falha técnica ao consolidar PDFs do processo {processo.id}.") from exc
 
 def anexar_pdf_gerado_ao_processo(processo, pdf_bytes, nome_arquivo, tipo_documento_nome):
-    """Anexa PDF gerado como DocumentoDePagamento na próxima ordem disponível."""
-    from fluxo.models import DocumentoDePagamento
+    """Anexa PDF gerado como Boleto_Bancario na próxima ordem disponível."""
+    from fluxo.domain_models import Boleto_Bancario
     if processo.documentos.filter(arquivo__icontains=nome_arquivo).exists():
         raise ValidationError(f"Documento automático já existe para o processo {processo.id}: {nome_arquivo}")
     proxima_ordem = obter_proxima_ordem_documento(processo.documentos)
@@ -39,7 +39,7 @@ def anexar_pdf_gerado_ao_processo(processo, pdf_bytes, nome_arquivo, tipo_docume
         tipo_documento_nome,
         tipo_pagamento=processo.tipo_pagamento if processo.tipo_pagamento_id else None,
     )
-    DocumentoDePagamento.objects.create(
+    Boleto_Bancario.objects.create(
         processo=processo,
         arquivo=ContentFile(pdf_bytes, name=nome_arquivo),
         tipo=tipo_documento,

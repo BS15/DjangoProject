@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 
-from fluxo.models import Processo
+from fluxo.domain_models import Processo
 from fluxo.services.shared import gerar_resposta_pdf, montar_resposta_pdf
 
 

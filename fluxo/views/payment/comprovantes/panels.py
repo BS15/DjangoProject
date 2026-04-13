@@ -5,7 +5,7 @@ import json
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import render
 
-from fluxo.models import Processo
+from fluxo.domain_models import Processo
 
 
 @permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)

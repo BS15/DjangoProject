@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
 
-from fluxo.models import StatusChoicesProcesso
+from fluxo.domain_models import StatusChoicesProcesso
 from suprimentos.models import DespesaSuprimento, StatusChoicesSuprimentoDeFundos
 from fluxo.utils import parse_brl_decimal
 

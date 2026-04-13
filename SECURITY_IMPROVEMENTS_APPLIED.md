@@ -187,7 +187,7 @@ All security improvements from the security review have been successfully implem
 ### ✅ Medium Priority Issues Resolved (8/8)
 1. ✅ **Required Field Design** - Made credor, status, forma_pagamento, tipo_pagamento required
 2. ✅ **Date Range Validation** - Added `clean()` methods to 4 models with date validation
-3. ✅ **Immutability Enforcement** - Pre-save signals protect DocumentoProcesso
+3. ✅ **Immutability Enforcement** - Pre-save signals protect Boleto_Bancario
 4. ✅ **Generic FK Protection** - AssinaturaAutentique criador now PROTECT
 5. ✅ **Audit Access Logs** - RegistroAcessoArquivo with PROTECT on usuario FK
 6. ✅ **Devolucao Validation** - Cannot exceed process total
