@@ -5,6 +5,7 @@ import logging
 from django.core.files.base import ContentFile
 from django.db import transaction
 
+from fluxo.services.processo_documentos import gerar_pdf_consolidado_processo
 from .errors import ArquivamentoDefinitivoError, ArquivamentoSemDocumentosError
 
 
@@ -17,7 +18,7 @@ def _executar_arquivamento_definitivo(processo, usuario):
     O arquivo é salvo no próprio processo e a mudança para o status
     ``ARQUIVADO`` só ocorre se toda a operação for concluída com sucesso.
     """
-    pdf_buffer = processo.gerar_pdf_consolidado()
+    pdf_buffer = gerar_pdf_consolidado_processo(processo)
     if pdf_buffer is None:
         raise ArquivamentoSemDocumentosError(
             f"Processo #{processo.id} sem documentos válidos para consolidar."

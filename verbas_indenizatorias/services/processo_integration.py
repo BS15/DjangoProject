@@ -10,9 +10,12 @@ def criar_processo_e_vincular_verbas(itens, tipo_verba, credor_obj, usuario=None
     """Cria processo de agrupamento e vincula lote de verbas em transação atômica."""
     from django.db import transaction
 
+    from commons.shared.signature_services import criar_assinatura_rascunho
     from fluxo.models import Processo, StatusChoicesProcesso, TiposDePagamento
-    from fluxo.services.shared import criar_assinatura_rascunho, gerar_documento_bytes
+    from fluxo.models import AssinaturaAutentique
+    from commons.shared.pdf_response import gerar_documento_bytes
     from verbas_indenizatorias.models import Diaria
+    from verbas_indenizatorias.pdf_generators import VERBAS_DOCUMENT_REGISTRY
 
     total = sum(item.valor_total for item in itens if item.valor_total)
     status_padrao, _ = StatusChoicesProcesso.objects.get_or_create(
@@ -40,13 +43,14 @@ def criar_processo_e_vincular_verbas(itens, tipo_verba, credor_obj, usuario=None
             if isinstance(item, Diaria):
                 item.avancar_status("ENVIADA PARA PAGAMENTO")
                 try:
-                    pdf_bytes = gerar_documento_bytes("pcd", item)
+                    pdf_bytes = gerar_documento_bytes("pcd", item, VERBAS_DOCUMENT_REGISTRY)
                     criar_assinatura_rascunho(
                         entidade=item,
                         tipo_documento="PCD",
                         criador=usuario,
                         pdf_bytes=pdf_bytes,
                         nome_arquivo=f"PCD_{item.id}.pdf",
+                        assinatura_model=AssinaturaAutentique,
                     )
                 except (OSError, RuntimeError, TypeError, ValueError):
                     logger.exception("Falha ao gerar PCD da diária %s", item.id)

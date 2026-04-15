@@ -1,30 +1,26 @@
 from django.urls import path
 
 from verbas_indenizatorias.views.processo import actions as verbas_actions
-from verbas_indenizatorias.views.processo import api as verbas_api
-from verbas_indenizatorias.views.processo import forms as verbas_forms
+from verbas_indenizatorias.views.processo import apis as verbas_apis
 from verbas_indenizatorias.views.processo import panels as verbas_panels
 from verbas_indenizatorias.views.auxilios import actions as verbas_auxilio_actions
-from verbas_indenizatorias.views.auxilios import forms as verbas_auxilio_forms
 from verbas_indenizatorias.views.auxilios import panels as verbas_auxilio_panels
 from verbas_indenizatorias.views.diarias import actions as verbas_diarias_actions
-from verbas_indenizatorias.views.diarias import api as verbas_diarias_api
-from verbas_indenizatorias.views.diarias import forms as verbas_diarias_forms
+from verbas_indenizatorias.views.diarias import apis as verbas_diarias_apis
 from verbas_indenizatorias.views.diarias import imports as verbas_diarias_imports
 from verbas_indenizatorias.views.diarias import panels as verbas_diarias_panels
 from verbas_indenizatorias.views.diarias import pdf as verbas_diarias_pdf
 from verbas_indenizatorias.views.diarias import signatures as verbas_diarias_signatures
 from verbas_indenizatorias.views.diarias import sync as verbas_diarias_sync
 from verbas_indenizatorias.views.jetons import actions as verbas_jeton_actions
-from verbas_indenizatorias.views.jetons import forms as verbas_jeton_forms
 from verbas_indenizatorias.views.jetons import panels as verbas_jeton_panels
 from verbas_indenizatorias.views.reembolsos import actions as verbas_reembolso_actions
-from verbas_indenizatorias.views.reembolsos import forms as verbas_reembolso_forms
 from verbas_indenizatorias.views.reembolsos import panels as verbas_reembolso_panels
 
 urlpatterns = [
-    path('processo/<int:pk>/editar-verbas/', verbas_forms.editar_processo_verbas, name='editar_processo_verbas'),
-    path('api/verba/<str:tipo_verba>/<int:pk>/add-documento/', verbas_api.api_add_documento_verba, name='api_add_documento_verba'),
+    path('processo/<int:pk>/editar-verbas/', verbas_panels.editar_processo_verbas_view, name='editar_processo_verbas'),
+    path('processo/<int:pk>/editar-verbas/action/', verbas_actions.editar_processo_verbas_action, name='editar_processo_verbas_action'),
+    path('api/verba/<str:tipo_verba>/<int:pk>/add-documento/', verbas_apis.api_add_documento_verba, name='api_add_documento_verba'),
     path('verbas/', verbas_panels.verbas_panel_view, name='verbas_panel'),
     path('verbas/diarias/', verbas_diarias_panels.diarias_list_view, name='diarias_list'),
     path('verbas/reembolsos/', verbas_reembolso_panels.reembolsos_list_view, name='reembolsos_list'),
@@ -60,8 +56,8 @@ urlpatterns = [
     path('verbas/auxilios/<int:pk>/autorizar/', verbas_auxilio_actions.autorizar_auxilio_action, name='autorizar_auxilio_action'),
     path('verbas/auxilios/<int:pk>/cancelar/', verbas_auxilio_actions.cancelar_auxilio_action, name='cancelar_auxilio_action'),
     path('verbas/agrupar/<str:tipo_verba>/', verbas_actions.agrupar_verbas_view, name='agrupar_verbas'),
-    path('api/valor-unitario-diaria/<int:beneficiario_id>/', verbas_diarias_api.api_valor_unitario_diaria, name='api_valor_unitario_diaria'),
-    path('verbas/diarias/autorizacao/', verbas_diarias_actions.painel_autorizacao_diarias_view, name='painel_autorizacao_diarias'),
+    path('api/valor-unitario-diaria/<int:beneficiario_id>/', verbas_diarias_apis.api_valor_unitario_diaria, name='api_valor_unitario_diaria'),
+    path('verbas/diarias/autorizacao/', verbas_diarias_panels.painel_autorizacao_diarias_view, name='painel_autorizacao_diarias'),
     path('verbas/diarias/autorizacao/<int:pk>/alternar/', verbas_diarias_actions.alternar_autorizacao_diaria, name='alternar_autorizacao_diaria'),
     path('verbas/diarias/<int:diaria_id>/aprovar/', verbas_diarias_actions.aprovar_diaria_view, name='aprovar_diaria'),
     path('verbas/diarias/<int:pk>/pcd/', verbas_diarias_pdf.gerar_pcd_view, name='gerar_pcd'),

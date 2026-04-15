@@ -14,6 +14,8 @@ Cadastre a capa inicial. Documentos, fiscais e pendências serão informados nas
 </a>
 {% endblock %}
 
+{% block form_action %}{% url 'add_process_action' %}{% endblock %}
+
 {% block form_fields %}
 <input type="hidden" name="next" value="{{ next_url }}">
 

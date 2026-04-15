@@ -7,9 +7,10 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
 
+from commons.shared.text_tools import parse_brl_decimal
 from fluxo.domain_models import StatusChoicesProcesso
+from fluxo.services.processo_documentos import gerar_documentos_automaticos_processo
 from suprimentos.models import DespesaSuprimento, StatusChoicesSuprimentoDeFundos
-from fluxo.utils import parse_brl_decimal
 
 def _suprimento_encerrado(suprimento: Any) -> bool:
     """Indica se o suprimento está em status final de encerramento."""
@@ -61,7 +62,8 @@ def _atualizar_status_apos_fechamento(suprimento: Any) -> None:
             )
             processo.status = status_conferencia
             processo.save(update_fields=["status"])
-            processo.disparar_documentos_automaticos_por_status(
+            gerar_documentos_automaticos_processo(
+                processo,
                 status_anterior,
                 "PAGO - EM CONFERÊNCIA",
             )

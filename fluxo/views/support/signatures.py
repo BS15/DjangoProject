@@ -5,8 +5,8 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from commons.shared.signature_services import AssinaturaSignatariosError, disparar_assinatura_rascunho_com_signatarios
 from fluxo.models import AssinaturaAutentique
-from fluxo.services.shared import AssinaturaSignatariosError, disparar_assinatura_rascunho_com_signatarios
 
 logger = logging.getLogger(__name__)
 

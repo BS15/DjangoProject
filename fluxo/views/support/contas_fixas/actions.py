@@ -4,27 +4,57 @@ from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.views.decorators.http import require_POST
 
 from credores.models import ContaFixa, FaturaMensal
 from fluxo.models import Processo
 
+from .forms import ContaFixaForm
+
 
 @permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@require_POST
+def add_conta_fixa_action(request):
+    """Persiste nova conta fixa."""
+    form = ContaFixaForm(request.POST)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Conta fixa cadastrada com sucesso!")
+    else:
+        messages.error(request, "Erro ao cadastrar. Verifique os campos.")
+    return redirect("painel_contas_fixas")
+
+
+@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@require_POST
+def edit_conta_fixa_action(request, pk):
+    """Atualiza dados cadastrais de uma conta fixa existente."""
+    conta = get_object_or_404(ContaFixa, pk=pk)
+    form = ContaFixaForm(request.POST, instance=conta)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Conta fixa atualizada com sucesso!")
+    else:
+        messages.error(request, "Erro ao atualizar. Verifique os campos.")
+    return redirect("painel_contas_fixas")
+
+
+@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@require_POST
 def vincular_processo_fatura_view(request, fatura_id):
     """Vincula manualmente uma fatura mensal a um processo existente."""
     fatura = get_object_or_404(FaturaMensal, id=fatura_id)
     mes = request.POST.get("mes", "")
     ano = request.POST.get("ano", "")
 
-    if request.method == "POST":
-        processo_id = request.POST.get("processo_id")
-        if processo_id:
-            try:
-                processo = get_object_or_404(Processo, id=int(processo_id))
-                fatura.processo_vinculado = processo
-                fatura.save()
-            except (ValueError, TypeError):
-                messages.error(request, "ID de processo inválido para vinculação da fatura.")
+    processo_id = request.POST.get("processo_id")
+    if processo_id:
+        try:
+            processo = get_object_or_404(Processo, id=int(processo_id))
+            fatura.processo_vinculado = processo
+            fatura.save()
+        except (ValueError, TypeError):
+            messages.error(request, "ID de processo inválido para vinculação da fatura.")
 
     redirect_url = reverse("painel_contas_fixas")
     if mes and ano:
@@ -33,10 +63,18 @@ def vincular_processo_fatura_view(request, fatura_id):
 
 
 @permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@require_POST
 def excluir_conta_fixa_view(request, pk):
     """Exclui conta fixa mediante confirmação por requisição POST."""
     conta = get_object_or_404(ContaFixa, pk=pk)
-    if request.method == "POST":
-        conta.delete()
-        messages.success(request, "Conta fixa excluída com sucesso!")
+    conta.delete()
+    messages.success(request, "Conta fixa excluída com sucesso!")
     return redirect("painel_contas_fixas")
+
+
+__all__ = [
+    "add_conta_fixa_action",
+    "edit_conta_fixa_action",
+    "vincular_processo_fatura_view",
+    "excluir_conta_fixa_view",
+]

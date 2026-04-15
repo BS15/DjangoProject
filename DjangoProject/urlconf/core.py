@@ -21,6 +21,7 @@ from fluxo.views.support.devolucao import (
 from fluxo.views.payment.autorizacao import actions as payment_autorizacao_actions
 from fluxo.views.payment.autorizacao import panels as payment_autorizacao_panels
 from fluxo.views.payment.contas_a_pagar import actions as payment_contas_actions
+from fluxo.views.payment.contas_a_pagar import apis as payment_contas_apis
 from fluxo.views.payment.contas_a_pagar import panels as payment_contas_panels
 from fluxo.views.payment.lancamento import actions as payment_lancamento_actions
 from fluxo.views.payment.lancamento import panels as payment_lancamento_panels
@@ -39,25 +40,37 @@ from fluxo.views.post_payment.contabilizacao import panels as post_payment_conta
 from fluxo.views.post_payment.contabilizacao import reviews as post_payment_contabilizacao_reviews
 from fluxo.views.post_payment.reunioes import actions as post_payment_reunioes_actions
 from fluxo.views.post_payment.reunioes import panels as post_payment_reunioes_panels
-from fluxo.views.pre_payment.cadastro import forms as pre_payment_forms
+from fluxo.views.pre_payment.cadastro import actions as pre_payment_cadastro_actions
+from fluxo.views.pre_payment.cadastro import apis as pre_payment_cadastro_apis
+from fluxo.views.pre_payment.cadastro import panels as pre_payment_cadastro_panels
 from fluxo.views.pre_payment.empenho import actions as pre_payment_actions
+from fluxo.views.pre_payment.empenho import apis as pre_payment_empenho_apis
 from fluxo.views.pre_payment.empenho import panels as pre_payment_panels
+from fluxo.views.pre_payment.liquidacoes import actions as pre_payment_liquidacoes_actions
 
 urlpatterns = [
     path('', home_page, name='home_page'),
-    path('adicionar/', pre_payment_forms.add_process_view, name='add_process'),
-    path('processo/<int:pk>/editar/', pre_payment_forms.editar_processo, name='editar_processo'),
-    path('processo/<int:pk>/editar/capa/', pre_payment_forms.editar_processo_capa_view, name='editar_processo_capa'),
-    path('processo/<int:pk>/editar/documentos/', pre_payment_forms.editar_processo_documentos_view, name='editar_processo_documentos'),
-    path('processo/<int:pk>/editar/pendencias/', pre_payment_forms.editar_processo_pendencias_view, name='editar_processo_pendencias'),
+    path('adicionar/', pre_payment_cadastro_panels.add_process_view, name='add_process'),
+    path('adicionar/action/', pre_payment_cadastro_actions.add_process_action, name='add_process_action'),
+    path('processo/<int:pk>/editar/', pre_payment_cadastro_panels.editar_processo, name='editar_processo'),
+    path('processo/<int:pk>/editar/capa/', pre_payment_cadastro_panels.editar_processo_capa_view, name='editar_processo_capa'),
+    path('processo/<int:pk>/editar/capa/action/', pre_payment_cadastro_actions.editar_processo_capa_action, name='editar_processo_capa_action'),
+    path('processo/<int:pk>/editar/documentos/', pre_payment_cadastro_panels.editar_processo_documentos_view, name='editar_processo_documentos'),
+    path('processo/<int:pk>/editar/documentos/action/', pre_payment_cadastro_actions.editar_processo_documentos_action, name='editar_processo_documentos_action'),
+    path('processo/<int:pk>/editar/pendencias/', pre_payment_cadastro_panels.editar_processo_pendencias_view, name='editar_processo_pendencias'),
+    path('processo/<int:pk>/editar/pendencias/action/', pre_payment_cadastro_actions.editar_processo_pendencias_action, name='editar_processo_pendencias_action'),
     path('processo/<int:processo_id>/pdf/', fluxo_pdf_views.visualizar_pdf_processo, name='visualizar_pdf_processo'),
     path('contas-a-pagar/', payment_contas_panels.contas_a_pagar, name='contas_a_pagar'),
-    path('api/processo/<int:pk>/extrair-codigos-barras/', fluxo_api_views.api_extrair_codigos_barras_processo, name='api_extrair_codigos_barras_processo'),
-    path('api/extrair-codigos-barras-upload/', fluxo_api_views.api_extrair_codigos_barras_upload, name='api_extrair_codigos_barras_upload'),
+    path('api/processo/<int:pk>/extrair-codigos-barras/', payment_contas_apis.api_extrair_codigos_barras_processo, name='api_extrair_codigos_barras_processo'),
+    path('api/extrair-codigos-barras-upload/', pre_payment_cadastro_apis.api_extrair_codigos_barras_upload, name='api_extrair_codigos_barras_upload'),
     path('a-empenhar/', pre_payment_panels.a_empenhar_view, name='a_empenhar'),
     path('a-empenhar/registrar-empenho/', pre_payment_actions.registrar_empenho_action, name='registrar_empenho_action'),
-    path('api/extrair-dados-empenho/', fluxo_api_views.api_extrair_dados_empenho, name='api_extrair_dados_empenho'),
-    path('processo/<int:pk>/avancar-para-pagamento/', pre_payment_actions.avancar_para_pagamento_view, name='avancar_para_pagamento'),
+    path('api/extrair-dados-empenho/', pre_payment_empenho_apis.api_extrair_dados_empenho, name='api_extrair_dados_empenho'),
+    path(
+        'processo/<int:pk>/avancar-para-pagamento/',
+        pre_payment_liquidacoes_actions.avancar_para_pagamento_view,
+        name='avancar_para_pagamento',
+    ),
     path('processos/conferencia/', post_payment_conferencia_panels.painel_conferencia_view, name='painel_conferencia'),
     path('processos/conferencia/iniciar/', post_payment_conferencia_actions.iniciar_conferencia_view, name='iniciar_conferencia'),
     path('processos/conferencia/<int:pk>/revisar/', post_payment_conferencia_reviews.conferencia_processo_view, name='conferencia_processo'),
@@ -85,7 +98,7 @@ urlpatterns = [
     path('processos/arquivamento/<int:pk>/aprovar/', post_payment_arquivamento_reviews.arquivar_processo_view, name='arquivar_processo'),
     path('processos/arquivamento/<int:pk>/executar/', post_payment_arquivamento_actions.arquivar_processo_action, name='arquivar_processo_action'),
     path('pendencias/', painel_pendencias_view, name='painel_pendencias'),
-    path('api/documentos-por-pagamento/', fluxo_api_views.api_tipos_documento_por_pagamento, name='api_documentos_pagamento'),
+    path('api/documentos-por-pagamento/', pre_payment_cadastro_apis.api_tipos_documento_por_pagamento, name='api_documentos_pagamento'),
     path('api/detalhes-pagamento/', fluxo_api_views.api_detalhes_pagamento, name='api_detalhes_pagamento'),
     path('processos/separar-lancamento/', payment_lancamento_actions.separar_para_lancamento_bancario, name='separar_para_lancamento_bancario'),
     path('processos/lancamento-bancario/', payment_lancamento_panels.lancamento_bancario, name='lancamento_bancario'),

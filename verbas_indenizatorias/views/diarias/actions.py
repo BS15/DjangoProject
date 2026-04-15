@@ -2,7 +2,7 @@ import logging
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from django.core.exceptions import ValidationError
 
@@ -124,15 +124,6 @@ def cancelar_diaria_action(request, pk):
     diaria.save(update_fields=['autorizada'])
     messages.warning(request, f'Diária #{diaria.numero_siscac} cancelada.')
     return redirect('gerenciar_diaria', pk=diaria.id)
-
-
-@permission_required('fluxo.pode_autorizar_diarias', raise_exception=True)
-def painel_autorizacao_diarias_view(request):
-    diarias_pendentes = Diaria.objects.select_related(
-        'beneficiario', 'proponente', 'status', 'processo'
-    ).filter(status__status_choice='SOLICITADA').order_by('-id')
-
-    return render(request, 'verbas/painel_autorizacao_diarias.html', {'diarias_pendentes': diarias_pendentes})
 
 
 @require_POST

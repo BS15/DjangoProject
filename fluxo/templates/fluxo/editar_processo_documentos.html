@@ -10,6 +10,8 @@
 </a>
 {% endblock %}
 
+{% block form_action %}{% url 'editar_processo_documentos_action' pk=processo.id %}{% endblock %}
+
 {% block form_fields %}
 <input type="hidden" name="next" value="{{ next_url }}">
 {{ documento_formset.management_form }}

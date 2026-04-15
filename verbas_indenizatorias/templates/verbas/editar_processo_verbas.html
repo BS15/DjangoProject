@@ -274,7 +274,7 @@
              COLUNA DIREITA: CAPA DO PROCESSO + PENDÊNCIAS
              ===================================================== -->
         <div class="col-lg-7">
-            <form method="post" enctype="multipart/form-data" id="processForm">
+            <form method="post" action="{% url 'editar_processo_verbas_action' pk=processo.id %}" enctype="multipart/form-data" id="processForm">
                 {% csrf_token %}
                 {{ pendencia_formset.management_form }}
 

@@ -4,10 +4,11 @@ import logging
 import os
 
 from commons.shared.document_services import obter_ou_criar_tipo_documento, obter_proxima_ordem_documento
+from commons.shared.pdf_tools import PdfMergeError, mesclar_pdfs_em_memoria
+from commons.shared.pdf_response import gerar_documento_bytes
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
-from fluxo.services.shared import gerar_documento_bytes
-from fluxo.utils import PdfMergeError, mesclar_pdfs_em_memoria
+from fluxo.pdf_generators import FLUXO_DOCUMENT_REGISTRY
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ def gerar_e_anexar_documento_processo(processo, doc_type, obj, nome_arquivo, tip
         raise DocumentoGeradoDuplicadoError(
             f"Documento automático já existe no processo #{processo.id}: {nome_arquivo}"
         )
-    pdf_bytes = gerar_documento_bytes(doc_type, obj, **kwargs)
+    pdf_bytes = gerar_documento_bytes(doc_type, obj, FLUXO_DOCUMENT_REGISTRY, **kwargs)
     return anexar_pdf_gerado_ao_processo(processo, pdf_bytes, nome_arquivo, tipo_documento_nome)
 
 def gerar_anexo_por_tipo(processo, doc_type, obj, nome_arquivo, tipo_documento_nome, **kwargs):

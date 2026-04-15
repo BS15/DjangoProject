@@ -5,6 +5,7 @@ import logging
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
+from commons.shared.text_tools import format_br_date, format_brl_currency
 from fluxo.domain_models.documentos import ComprovanteDePagamento
 from fiscal.models import DocumentoFiscal, RetencaoImposto
 from fluxo.domain_models import (
@@ -13,10 +14,50 @@ from fluxo.domain_models import (
     Pendencia,
     Processo,
 )
-from fluxo.utils import format_br_date, format_brl_currency
 
 
 logger = logging.getLogger(__name__)
+
+
+def get_detalhes_pagamento(processo):
+    """Produz resumo do meio de pagamento para exibição em interface.
+
+    Recebe uma instância de Processo já com select_related em
+    forma_pagamento, conta e credor e devolve um dicionário pronto
+    para serialização em JSON.
+    """
+    forma = processo.forma_pagamento.forma_de_pagamento.lower() if processo.forma_pagamento else ""
+    detalhe_tipo = "Não Especificado"
+    detalhe_valor = "Verifique o processo"
+    codigos_barras = None
+
+    if "boleto" in forma or "gerenciador" in forma:
+        detalhe_tipo = "Código de Barras"
+        codigos_barras = [doc.codigo_barras for doc in processo.documentos.all() if doc.codigo_barras]
+        detalhe_valor = codigos_barras[0] if codigos_barras else "Não preenchido"
+    elif "pix" in forma:
+        detalhe_tipo = "Chave PIX"
+        detalhe_valor = (
+            processo.credor.chave_pix
+            if (processo.credor and processo.credor.chave_pix)
+            else "Credor sem PIX cadastrado"
+        )
+    elif "transfer" in forma or "ted" in forma:
+        detalhe_tipo = "Conta Bancária"
+        if processo.conta:
+            detalhe_valor = (
+                f"Banco: {processo.conta.banco} | "
+                f"Ag: {processo.conta.agencia} | "
+                f"CC: {processo.conta.conta}"
+            )
+        else:
+            detalhe_valor = "Nenhuma conta vinculada"
+
+    return {
+        "tipo_formatado": detalhe_tipo,
+        "valor_formatado": detalhe_valor,
+        "codigos_barras": codigos_barras,
+    }
 
 
 def _aplicar_filtros_historico(qs, *, tipo_acao="", data_inicio="", data_fim="", usuario=""):

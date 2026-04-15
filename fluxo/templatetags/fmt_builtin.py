@@ -2,7 +2,7 @@
 
 from django import template
 
-from fluxo.utils import format_br_date, format_brl_amount, format_brl_currency
+from commons.shared.text_tools import format_br_date, format_brl_amount, format_brl_currency
 
 register = template.Library()
 

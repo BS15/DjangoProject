@@ -4,15 +4,18 @@ Este módulo implementa funções para geração e anexação de documentos PDF 
 """
 
 from commons.shared.document_services import obter_ou_criar_tipo_documento, obter_proxima_ordem_documento
+from commons.shared.pdf_response import gerar_documento_bytes
+from commons.shared.signature_services import criar_assinatura_rascunho
 from django.core.files.base import ContentFile
-from fluxo.services.shared import criar_assinatura_rascunho, gerar_documento_bytes
+from fluxo.models import AssinaturaAutentique
+from verbas_indenizatorias.pdf_generators import VERBAS_DOCUMENT_REGISTRY
 from verbas_indenizatorias.models import (
     DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio,
 )
 
 def gerar_e_anexar_scd_diaria(diaria, criador):
     """Gera SCD da diária, anexa DocumentoDiaria e cria rascunho de assinatura."""
-    pdf_bytes = gerar_documento_bytes("scd", diaria)
+    pdf_bytes = gerar_documento_bytes("scd", diaria, VERBAS_DOCUMENT_REGISTRY)
     tipo_scd = obter_ou_criar_tipo_documento(
         "SOLICITACAO DE CONCESSAO DE DIARIAS (SCD)",
     )
@@ -29,11 +32,12 @@ def gerar_e_anexar_scd_diaria(diaria, criador):
         criador=criador,
         pdf_bytes=pdf_bytes,
         nome_arquivo=f"SCD_{diaria.id}.pdf",
+        assinatura_model=AssinaturaAutentique,
     )
 
 def gerar_e_anexar_pcd_diaria(diaria, criador):
     """Gera PCD da diária, anexa DocumentoDiaria e cria rascunho de assinatura."""
-    pdf_bytes = gerar_documento_bytes("pcd", diaria)
+    pdf_bytes = gerar_documento_bytes("pcd", diaria, VERBAS_DOCUMENT_REGISTRY)
     tipo_pcd = obter_ou_criar_tipo_documento(
         "PROPOSTA DE CONCESSÃO DE DIÁRIAS (PCD)",
     )
@@ -50,11 +54,12 @@ def gerar_e_anexar_pcd_diaria(diaria, criador):
         criador=criador,
         pdf_bytes=pdf_bytes,
         nome_arquivo=f"PCD_{diaria.id}.pdf",
+        assinatura_model=AssinaturaAutentique,
     )
 
 def gerar_e_anexar_recibo_reembolso(reembolso, criador):
     """Gera recibo de reembolso, anexa DocumentoReembolso e cria rascunho de assinatura."""
-    pdf_bytes = gerar_documento_bytes("recibo_reembolso", reembolso)
+    pdf_bytes = gerar_documento_bytes("recibo_reembolso", reembolso, VERBAS_DOCUMENT_REGISTRY)
     tipo_recibo = obter_ou_criar_tipo_documento(
         "RECIBO DE PAGAMENTO",
     )
@@ -71,11 +76,12 @@ def gerar_e_anexar_recibo_reembolso(reembolso, criador):
         criador=criador,
         pdf_bytes=pdf_bytes,
         nome_arquivo=f"Recibo_Reembolso_{reembolso.id}.pdf",
+        assinatura_model=AssinaturaAutentique,
     )
 
 def gerar_e_anexar_recibo_jeton(jeton, criador):
     """Gera recibo de jeton, anexa DocumentoJeton e cria rascunho de assinatura."""
-    pdf_bytes = gerar_documento_bytes("recibo_jeton", jeton)
+    pdf_bytes = gerar_documento_bytes("recibo_jeton", jeton, VERBAS_DOCUMENT_REGISTRY)
     tipo_recibo = obter_ou_criar_tipo_documento(
         "RECIBO DE PAGAMENTO",
     )
@@ -92,11 +98,12 @@ def gerar_e_anexar_recibo_jeton(jeton, criador):
         criador=criador,
         pdf_bytes=pdf_bytes,
         nome_arquivo=f"Recibo_Jeton_{jeton.id}.pdf",
+        assinatura_model=AssinaturaAutentique,
     )
 
 def gerar_e_anexar_recibo_auxilio(auxilio, criador):
     """Gera recibo de auxílio, anexa DocumentoAuxilio e cria rascunho de assinatura."""
-    pdf_bytes = gerar_documento_bytes("recibo_auxilio", auxilio)
+    pdf_bytes = gerar_documento_bytes("recibo_auxilio", auxilio, VERBAS_DOCUMENT_REGISTRY)
     tipo_recibo = obter_ou_criar_tipo_documento(
         "RECIBO DE PAGAMENTO",
     )
@@ -113,4 +120,5 @@ def gerar_e_anexar_recibo_auxilio(auxilio, criador):
         criador=criador,
         pdf_bytes=pdf_bytes,
         nome_arquivo=f"Recibo_Auxilio_{auxilio.id}.pdf",
+        assinatura_model=AssinaturaAutentique,
     )

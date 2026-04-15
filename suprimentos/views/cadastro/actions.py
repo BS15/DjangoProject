@@ -1,43 +1,22 @@
 import logging
+from typing import Any
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
-from django.db import DatabaseError
+from django.db import DatabaseError, transaction
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect
+from django.views.decorators.http import require_POST
 
 from suprimentos.forms import SuprimentoForm
+from suprimentos.models import StatusChoicesSuprimentoDeFundos
+from suprimentos.services.processo_integration import criar_processo_para_suprimento
 
 logger = logging.getLogger(__name__)
 
-@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
-def add_suprimento_view(request: HttpRequest) -> HttpResponse:
-    """Cria um suprimento e o processo financeiro vinculado."""
-    form = SuprimentoForm(request.POST or None)
 
-    if request.method == "POST" and form.is_valid():
-        try:
-            persistir_suprimento_com_processo(form)
-            messages.success(request, "Suprimento de Fundos cadastrado com sucesso!")
-            return redirect("suprimentos_list")
-        except (ValidationError, DatabaseError, TypeError, ValueError):
-            logger.exception("Erro ao cadastrar suprimento de fundos")
-            messages.error(request, "Erro interno ao salvar suprimento. Tente novamente.")
-    elif request.method == "POST":
-        messages.error(request, "Verifique os erros no formulário.")
-
-    return render(request, "suprimentos/add_suprimento.html", {"form": form})
-
-# --- Business logic for suprimento creation below ---
-from typing import Any
-from django.db import transaction
-from suprimentos.services.processo_integration import criar_processo_para_suprimento
-from suprimentos.forms import SuprimentoForm
-from suprimentos.models import StatusChoicesSuprimentoDeFundos
-
-
-def persistir_suprimento_com_processo(form_suprimento: SuprimentoForm) -> Any:
+def _persistir_suprimento_com_processo(form_suprimento: SuprimentoForm) -> Any:
     """Persiste suprimento e cria o processo financeiro vinculado em transação atômica."""
     with transaction.atomic():
         suprimento: Any = form_suprimento.save(commit=False)
@@ -54,4 +33,25 @@ def persistir_suprimento_com_processo(form_suprimento: SuprimentoForm) -> Any:
         criar_processo_para_suprimento(suprimento, detalhamento)
         return suprimento
 
-__all__ = ["add_suprimento_view", "persistir_suprimento_com_processo"]
+
+@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
+@require_POST
+def add_suprimento_action(request: HttpRequest) -> HttpResponse:
+    """Cria um suprimento e o processo financeiro vinculado."""
+    form = SuprimentoForm(request.POST)
+
+    if not form.is_valid():
+        messages.error(request, "Verifique os erros no formulário.")
+        return redirect("add_suprimento_view")
+
+    try:
+        _persistir_suprimento_com_processo(form)
+        messages.success(request, "Suprimento de Fundos cadastrado com sucesso!")
+    except (ValidationError, DatabaseError, TypeError, ValueError):
+        logger.exception("Erro ao cadastrar suprimento de fundos")
+        messages.error(request, "Erro interno ao salvar suprimento. Tente novamente.")
+
+    return redirect("suprimentos_list")
+
+
+__all__ = ["add_suprimento_action"]
