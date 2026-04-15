@@ -9,7 +9,7 @@ from django.db.models import F
 from django.shortcuts import redirect
 from django.utils.http import url_has_allowed_host_and_scheme
 
-from fluxo.domain_models import Processo, StatusChoicesProcesso, TiposDeDocumento, Boleto_Bancario
+from fluxo.domain_models import Processo, TiposDeDocumento, Boleto_Bancario
 from fluxo.validators import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
 
 
@@ -91,41 +91,8 @@ def _validar_regras_edicao_processo(request, processo, status_inicial):
         return redirect("editar_processo_verbas", pk=processo.id), False
 
     return None, status_inicial in STATUS_SOMENTE_DOCUMENTOS
-
-
-def _aplicar_confirmacao_extra_orcamentario(processo, confirmar_extra, status_inicial):
-    """Converte um processo em extraorçamentário quando o usuário confirma em `A EMPENHAR`.
-
-    Muda o status para `A PAGAR - PENDENTE AUTORIZAÇÃO`, seta `extraorcamentario=True`
-    e limpa os campos de empenho. Sem efeito para qualquer outro status.
-    """
-    if confirmar_extra and status_inicial == "A EMPENHAR":
-        status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
-            status_choice__iexact="A PAGAR - PENDENTE AUTORIZAÇÃO",
-            defaults={"status_choice": "A PAGAR - PENDENTE AUTORIZAÇÃO"},
-        )
-        processo.status = status_obj
-        processo.extraorcamentario = True
-
-
 def _redirect_seguro_ou_fallback(request, next_url, fallback_name, pk):
     """Redireciona para `next` quando seguro; caso contrário usa rota fallback."""
     if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
         return redirect(next_url)
     return redirect(fallback_name, pk=pk)
-
-
-def _configurar_status_novo_processo(processo, trigger_a_empenhar, is_extra):
-    """Define o status inicial do processo na criação.
-
-    Define `A EMPENHAR` ou `A PAGAR - PENDENTE AUTORIZAÇÃO` conforme a flag
-    `trigger_a_empenhar`. Limpa nota/data de empenho e ano de exercício quando
-    o processo ainda não passou pela fase de empenho.
-    """
-    nome_status = "A EMPENHAR" if trigger_a_empenhar else "A PAGAR - PENDENTE AUTORIZAÇÃO"
-    status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
-        status_choice__iexact=nome_status, defaults={"status_choice": nome_status}
-    )
-    processo.status = status_obj
-
-    # Dados de empenho agora são armazenados em DocumentoOrcamentario.

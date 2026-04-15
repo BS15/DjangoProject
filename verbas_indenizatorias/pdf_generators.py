@@ -2,9 +2,10 @@
 
 Este módulo implementa classes para geração de PDFs de propostas,
 solicitações e recibos de diárias, reembolsos, jetons, auxílios e
-suprimentos.
+documentos correlatos.
 """
 from commons.shared.pdf_tools import BasePDFDocument, _draw_wrapped_text
+from commons.shared.text_tools import format_brl_currency
 
 
 _PCD_SIG_Y = 120
@@ -108,7 +109,7 @@ class PCDDocument(BasePDFDocument):
 		c.drawString(margin_left, y, f"Quantidade de Diárias:   {diaria.quantidade_diarias}")
 		y -= 16
 		c.setFont("Helvetica-Bold", 11)
-		c.drawString(margin_left, y, f"Valor Total:             {self._formatar_moeda(diaria.valor_total)}")
+		c.drawString(margin_left, y, f"Valor Total:             {format_brl_currency(diaria.valor_total)}")
 		y -= 28
 
 		c.setLineWidth(0.5)
@@ -137,11 +138,6 @@ class PCDDocument(BasePDFDocument):
 		c.line(sig_right_x - _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y,
 			   sig_right_x + _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y)
 		c.drawCentredString(sig_right_x, _PCD_SIG_Y - 12, "Ordenador(a) de Despesa")
-
-	def _formatar_moeda(self, valor):
-		"""Formata valor em moeda brasileira (R$)."""
-		from commons.shared.text_tools import format_brl_currency
-		return format_brl_currency(valor)
 
 
 class SCDDocument(BasePDFDocument):
@@ -191,7 +187,7 @@ class SCDDocument(BasePDFDocument):
 		c.setFont("Helvetica", 11)
 		c.drawString(
 			margin_left, 380,
-			f"Cálculo: {diaria.quantidade_diarias} diárias - Total Estimado: {self._formatar_moeda(diaria.valor_total)}",
+			f"Cálculo: {diaria.quantidade_diarias} diárias - Total Estimado: {format_brl_currency(diaria.valor_total)}",
 		)
 
 		sig_left_x = margin_left + _PCD_SIG_HALF_WIDTH
@@ -206,14 +202,9 @@ class SCDDocument(BasePDFDocument):
 			   sig_right_x + _PCD_SIG_HALF_WIDTH, _SCD_SIG_Y)
 		c.drawCentredString(sig_right_x, _SCD_SIG_LABEL_Y, "Assinatura do Proponente")
 
-	def _formatar_moeda(self, valor):
-		"""Formata valor em moeda brasileira (R$)."""
-		from commons.shared.text_tools import format_brl_currency
-		return format_brl_currency(valor)
-
 
 class ReciboDocument(BasePDFDocument):
-	"""Gera PDF de recibo para reembolso, auxílio, jeton e suprimento."""
+	"""Gera PDF de recibo para reembolso, auxílio e jeton."""
 
 	def draw_content(self):
 		"""Desenha corpo do recibo com dispatch por tipo de objeto."""
@@ -237,11 +228,6 @@ class ReciboDocument(BasePDFDocument):
 				lambda o: o.beneficiario,
 				lambda o: o.valor_total,
 			),
-			'SuprimentoDeFundos': (
-				"Suprimento de Fundos",
-				lambda o: o.suprido,
-				lambda o: o.valor_liquido,
-			),
 		}
 
 		class_name = obj.__class__.__name__
@@ -255,7 +241,7 @@ class ReciboDocument(BasePDFDocument):
 		beneficiario = get_beneficiario(obj)
 		valor = get_valor(obj)
 
-		valor_formatado = self._formatar_moeda(valor)
+		valor_formatado = format_brl_currency(valor)
 		beneficiario_nome = beneficiario.nome if beneficiario else "N/A"
 		beneficiario_cpf = beneficiario.cpf_cnpj if beneficiario else "N/A"
 
@@ -288,11 +274,6 @@ class ReciboDocument(BasePDFDocument):
 		c.drawCentredString(sig_x, 236, "Assinatura do Recebedor")
 		c.drawCentredString(sig_x, 220, "Local e Data: Florianópolis, _____ / _____ / _________")
 
-	def _formatar_moeda(self, valor):
-		"""Formata valor em moeda brasileira (R$)."""
-		from commons.shared.text_tools import format_brl_currency
-		return format_brl_currency(valor)
-
 
 # Registry de documentos específicos de Verbas Indenizatórias
 VERBAS_DOCUMENT_REGISTRY = {
@@ -301,7 +282,6 @@ VERBAS_DOCUMENT_REGISTRY = {
 	'recibo_reembolso': ReciboDocument,
 	'recibo_auxilio': ReciboDocument,
 	'recibo_jeton': ReciboDocument,
-	'recibo_suprimento': ReciboDocument,
 }
 
 

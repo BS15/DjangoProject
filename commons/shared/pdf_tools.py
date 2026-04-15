@@ -11,9 +11,13 @@ import io
 import logging
 import os
 import textwrap
+import uuid
 from datetime import date
 
+import PyPDF2
 from django.conf import settings
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from pypdf import PdfReader, PdfWriter
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
@@ -21,6 +25,10 @@ from reportlab.pdfgen import canvas
 
 logger = logging.getLogger(__name__)
 _CHAR_WIDTH_RATIO = 0.55
+
+
+class PdfMergeError(Exception):
+	"""Erro ao mesclar arquivos PDF em memória."""
 
 
 def extract_text_between(full_text, start_anchor, end_anchor):
@@ -111,6 +119,50 @@ def merge_canvas_with_template(canvas_io, template_path):
 	return output
 
 
+def split_pdf_to_temp_pages(arquivo_pdf):
+	"""Divide um PDF em páginas e salva cada página em arquivo temporário."""
+	pdf = PdfReader(arquivo_pdf)
+	paginas = []
+
+	for numero_pagina in range(len(pdf.pages)):
+		writer = PdfWriter()
+		writer.add_page(pdf.pages[numero_pagina])
+
+		buffer = io.BytesIO()
+		writer.write(buffer)
+		buffer.seek(0)
+
+		nome_temp = f"temp_comprovante_{uuid.uuid4().hex[:8]}_pag{numero_pagina + 1}.pdf"
+		caminho_salvo = default_storage.save(f"temp/{nome_temp}", ContentFile(buffer.read()))
+
+		paginas.append({
+			"temp_path": caminho_salvo,
+			"url": default_storage.url(caminho_salvo),
+			"pagina": numero_pagina + 1,
+		})
+
+	return paginas
+
+
+def mesclar_pdfs_em_memoria(lista_arquivos):
+	"""Mescla PDFs em memória e retorna buffer posicionado no início."""
+	merger = PdfWriter()
+
+	try:
+		for arquivo in lista_arquivos:
+			if arquivo:
+				merger.append(arquivo)
+
+		output_pdf = io.BytesIO()
+		merger.write(output_pdf)
+		merger.close()
+		output_pdf.seek(0)
+		return output_pdf
+	except (PyPDF2.errors.PdfReadError, OSError, TypeError, ValueError) as exc:
+		logger.exception("Erro na mesclagem de PDFs em memória: %s", exc)
+		raise PdfMergeError("Falha técnica ao mesclar PDFs em memória.") from exc
+
+
 class BasePDFDocument:
 	"""
 	Classe base para geração de documentos PDF no padrão Strategy.
@@ -178,6 +230,9 @@ __all__ = [
 	"_draw_wrapped_text",
 	"_contar_paginas_documentos",
 	"merge_canvas_with_template",
+	"split_pdf_to_temp_pages",
+	"mesclar_pdfs_em_memoria",
+	"PdfMergeError",
 	"BasePDFDocument",
 	"gerar_documento_pdf",
 ]

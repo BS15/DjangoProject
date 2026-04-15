@@ -63,3 +63,22 @@ def minhas_solicitacoes_view(request):
         items_key='registros',
         filter_key='filter',
     )
+
+
+@permission_required('fluxo.pode_autorizar_diarias', raise_exception=True)
+def painel_autorizacao_diarias_view(request):
+    diarias_pendentes = Diaria.objects.select_related(
+        'beneficiario', 'proponente', 'status', 'processo'
+    ).filter(status__status_choice='SOLICITADA').order_by('-id')
+
+    return render(request, 'verbas/painel_autorizacao_diarias.html', {'diarias_pendentes': diarias_pendentes})
+
+
+__all__ = [
+    'diarias_list_view',
+    'add_diaria_view',
+    'gerenciar_diaria_view',
+    'download_template_diarias_csv',
+    'minhas_solicitacoes_view',
+    'painel_autorizacao_diarias_view',
+]

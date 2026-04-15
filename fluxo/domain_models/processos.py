@@ -279,45 +279,27 @@ class Processo(models.Model):
         total_devolvido = self.devolucoes.aggregate(total=Sum("valor_devolvido"))["total"] or 0
         return self.valor_liquido - total_devolvido
 
-    @property
-    def detalhes_pagamento(self):
-        """Produz resumo do meio de pagamento para exibição em interface."""
-        forma = self.forma_pagamento.forma_de_pagamento.lower() if self.forma_pagamento else ""
-        detalhe_tipo = "Não Especificado"
-        detalhe_valor = "Verifique o processo"
-        codigos_barras = None
+    def _atribuir_status_manual(self, nome_status):
+        """Atribui um status diretamente ao processo sem executar turnpike."""
+        from fluxo.domain_models.catalogos import StatusChoicesProcesso
 
-        if "boleto" in forma or "gerenciador" in forma:
-            detalhe_tipo = "Código de Barras"
-            codigos_barras = [doc.codigo_barras for doc in self.documentos.all() if doc.codigo_barras]
-            detalhe_valor = codigos_barras[0] if codigos_barras else "Não preenchido"
-        elif "pix" in forma:
-            detalhe_tipo = "Chave PIX"
-            detalhe_valor = self.credor.chave_pix if (self.credor and self.credor.chave_pix) else "Credor sem PIX cadastrado"
-        elif "transfer" in forma or "ted" in forma:
-            detalhe_tipo = "Conta Bancária"
-            if self.conta:
-                detalhe_valor = f"Banco: {self.conta.banco} | Ag: {self.conta.agencia} | CC: {self.conta.conta}"
-            else:
-                detalhe_valor = "Nenhuma conta vinculada"
+        status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
+            status_choice__iexact=nome_status,
+            defaults={"status_choice": nome_status},
+        )
+        self.status = status_obj
 
-        return {
-            "tipo_formatado": detalhe_tipo,
-            "valor_formatado": detalhe_valor,
-            "codigos_barras": codigos_barras,
-        }
+    def definir_status_inicial(self, trigger_a_empenhar):
+        """Configura o status inicial do processo durante o cadastro."""
+        nome_status = "A EMPENHAR" if trigger_a_empenhar else "A PAGAR - PENDENTE AUTORIZAÇÃO"
+        self._atribuir_status_manual(nome_status)
 
-    def gerar_pdf_consolidado(self):
-        """Mescla documentos do processo por ordem e retorna PDF em memória."""
-        from fluxo.services.processo_documentos import gerar_pdf_consolidado_processo
-
-        return gerar_pdf_consolidado_processo(self)
-
-    def disparar_documentos_automaticos_por_status(self, status_anterior, novo_status):
-        """Dispara geração automática de documentos para transições feitas fora de avancar_status."""
-        from fluxo.services.processo_documentos import gerar_documentos_automaticos_processo
-
-        gerar_documentos_automaticos_processo(self, (status_anterior or "").upper(), (novo_status or "").upper())
+    def converter_para_extraorcamentario(self, confirmar=False):
+        """Reclassifica o processo para extraorçamentário quando cabível."""
+        status_atual = (self.status.status_choice or "").upper() if self.status else ""
+        if confirmar and status_atual == "A EMPENHAR":
+            self._atribuir_status_manual("A PAGAR - PENDENTE AUTORIZAÇÃO")
+            self.extraorcamentario = True
 
     def avancar_status(self, novo_status_str, usuario=None):
         """Avança status validando turnpike e delega integrações aos serviços."""

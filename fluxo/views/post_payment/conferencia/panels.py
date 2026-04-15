@@ -5,9 +5,9 @@ from django.db.models import Exists, OuterRef
 from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
+from commons.shared.text_tools import normalize_choice
 from fiscal.models import RetencaoImposto
 from fluxo.domain_models import Contingencia, Processo
-from fluxo.utils import normalize_choice
 from fluxo.views.helpers import _aplicar_filtro_por_opcao
 
 

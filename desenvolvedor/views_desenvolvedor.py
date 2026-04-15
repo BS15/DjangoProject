@@ -28,9 +28,10 @@ from fluxo.domain_models import (
     TiposDePagamento,
 )
 from fluxo.views.support.contas_fixas.imports import download_template_csv_contas
-from fluxo.utils import format_brl_currency
+from commons.shared.text_tools import format_brl_currency
 from commons.shared.pdf_tools import gerar_documento_pdf
 from fluxo.pdf_generators import FLUXO_DOCUMENT_REGISTRY
+from suprimentos.pdf_generators import SUPRIMENTOS_DOCUMENT_REGISTRY
 from verbas_indenizatorias.models import Diaria, MeiosDeTransporte, StatusChoicesVerbasIndenizatorias
 from verbas_indenizatorias.pdf_generators import VERBAS_DOCUMENT_REGISTRY
 
@@ -454,14 +455,17 @@ def gerar_pdf_fake_view(request, doc_type):
         obj.beneficiario = mock_credor()
         obj.suprido = obj.beneficiario
         obj.valor_total = Decimal(_fake_generator.numerify(text="####.##"))
+        obj.valor_liquido = obj.valor_total
         obj.valor_aprovado = obj.valor_total
     else:
         return HttpResponse(f"Tipo de documento '{doc_type}' não reconhecido.", status=400)
 
     kwargs = {"numero_reuniao": _fake_generator.random_int(min=1, max=50)} if doc_type == "conselho_fiscal" else {}
 
-    if doc_type in ["scd", "pcd", "recibo_reembolso", "recibo_auxilio", "recibo_jeton", "recibo_suprimento"]:
+    if doc_type in ["scd", "pcd", "recibo_reembolso", "recibo_auxilio", "recibo_jeton"]:
         registry = VERBAS_DOCUMENT_REGISTRY
+    elif doc_type == "recibo_suprimento":
+        registry = SUPRIMENTOS_DOCUMENT_REGISTRY
     else:
         registry = FLUXO_DOCUMENT_REGISTRY
 

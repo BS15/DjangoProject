@@ -9,8 +9,9 @@ from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
+from commons.shared.text_tools import decimals_equal_money, names_bidirectional_match
 from fluxo.domain_models import Processo
-from fluxo.utils import decimals_equal_money, names_bidirectional_match, parse_siscac_report
+from fluxo.utils import parse_siscac_report
 
 logger = logging.getLogger(__name__)
 

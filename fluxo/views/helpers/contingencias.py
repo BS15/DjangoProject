@@ -6,7 +6,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-from fluxo.utils import parse_brl_decimal
+from commons.shared.text_tools import parse_brl_decimal
 
 
 _CAMPOS_PERMITIDOS_CONTINGENCIA = {

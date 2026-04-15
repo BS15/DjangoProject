@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 
 from commons.shared.file_validators import validar_arquivo_seguro
-from .utils import format_brl_currency
+from commons.shared.text_tools import format_brl_currency
 
 
 STATUS_BLOQUEADOS_TOTAL = {

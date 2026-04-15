@@ -3,7 +3,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
 from fluxo.forms import DevolucaoForm
@@ -24,7 +24,8 @@ def registrar_devolucao_action(request: HttpRequest, processo_id: int) -> HttpRe
         messages.success(request, "Devolução registrada com sucesso.")
         return redirect("process_detail", processo.id)
 
-    return render(request, "fluxo/add_devolucao.html", {"form": form, "processo": processo})
+    messages.error(request, "Não foi possível registrar a devolução. Verifique os dados informados.")
+    return redirect("registrar_devolucao", processo_id=processo.id)
 
 
 __all__ = [

@@ -9,6 +9,7 @@ from django.shortcuts import render
 from credores.models import CargosFuncoes, ContaFixa, ContasBancarias, FaturaMensal
 from fiscal.models import DadosContribuinte
 from fiscal.models import DocumentoFiscal, RetencaoImposto
+from commons.shared.text_tools import normalize_choice
 from fluxo.domain_models import (
     AssinaturaAutentique,
     ComprovanteDePagamento,
@@ -19,7 +20,6 @@ from fluxo.domain_models import (
 )
 from verbas_indenizatorias.models import DocumentoAuxilio, DocumentoDiaria, DocumentoJeton, DocumentoReembolso
 from suprimentos.models import DocumentoSuprimentoDeFundos, SuprimentoDeFundos
-from fluxo.utils import normalize_choice
 from ..helpers import _aplicar_filtros_historico
 
 

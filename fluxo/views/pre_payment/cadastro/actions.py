@@ -1,26 +1,40 @@
 """Acoes POST da etapa de documentos fiscais do cadastro."""
 
-import json
-from datetime import date, datetime
-from decimal import Decimal, InvalidOperation
+import logging
 
+from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
-from django.contrib.auth.models import User
-from django.contrib.contenttypes.models import ContentType
-from django.db import transaction
-from django.db.models import Sum
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
+from django.db import DatabaseError, transaction
+from django.shortcuts import get_object_or_404, redirect
+from django.views.decorators.http import require_POST
 
-from credores.models import Credor
-from fiscal.models import DocumentoFiscal, RetencaoImposto
-from fluxo.domain_models import (
-    Boleto_Bancario,
-    Pendencia,
-    Processo,
-    StatusChoicesPendencias,
-    TiposDePendencias,
+from fluxo.domain_models import Processo
+from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoForm
+from ..helpers import (
+    _redirect_seguro_ou_fallback,
+    _salvar_processo_completo,
+    _validar_regras_edicao_processo,
 )
+
+
+logger = logging.getLogger(__name__)
+
+
+def _get_status_inicial(processo):
+    return processo.status.status_choice.upper() if processo.status else ""
+
+
+def _obter_contexto_edicao(request, pk):
+    processo = get_object_or_404(Processo, id=pk)
+    status_inicial = _get_status_inicial(processo)
+    redirecionamento, somente_documentos = _validar_regras_edicao_processo(request, processo, status_inicial)
+    return processo, status_inicial, redirecionamento, somente_documentos
+
+
+def _salvar_formsets_em_transacao(*formsets):
+    with transaction.atomic():
+        for formset in formsets:
+            formset.save()
 
 
 def _status_bloqueia_exclusao_nota_fiscal(processo):
@@ -33,220 +47,125 @@ def _status_bloqueia_exclusao_nota_fiscal(processo):
     return any(status_atual.startswith(prefixo) for prefixo in prefixos_bloqueados)
 
 
-def _atualizar_campos_nota(nota, body):
-    """Hidrata os campos escalares da nota a partir do body parsed.
+@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@require_POST
+def add_process_action(request):
+    """Persiste a capa inicial do processo."""
+    processo_form = ProcessoForm(request.POST, prefix="processo")
+    next_url = request.POST.get("next") or request.META.get("HTTP_REFERER", "")
+    trigger_a_empenhar = request.POST.get("trigger_a_empenhar") == "on"
 
-    Retorna um ``JsonResponse`` de erro (400) se algum campo for inválido,
-    ou ``None`` quando tudo for aplicado com sucesso.
-    """
-    emitente_id = body.get("nome_emitente")
-    if emitente_id:
-        try:
-            nota.nome_emitente = Credor.objects.get(id=int(emitente_id))
-        except (Credor.DoesNotExist, ValueError, TypeError):
-            nota.nome_emitente = None
-    else:
-        nota.nome_emitente = None
+    if not processo_form.is_valid():
+        messages.error(request, "Verifique os erros no formulário da capa do processo.")
+        return redirect("add_process")
 
-    numero = body.get("numero_nota_fiscal")
-    if numero:
-        nota.numero_nota_fiscal = numero
+    is_extra = processo_form.cleaned_data.get("extraorcamentario")
+    try:
+        def mutator(processo_instancia):
+            processo_instancia.definir_status_inicial(trigger_a_empenhar)
 
-    data_str = body.get("data_emissao", "")
-    if data_str:
-        try:
-            nota.data_emissao = datetime.strptime(str(data_str), "%Y-%m-%d").date()
-        except (ValueError, TypeError):
-            return JsonResponse(
-                {"status": "error", "error": "Data de emissão inválida. Use o formato AAAA-MM-DD."},
-                status=400,
-            )
-
-    valor_bruto = body.get("valor_bruto", "")
-    if valor_bruto:
-        try:
-            nota.valor_bruto = Decimal(str(valor_bruto).replace(",", "."))
-        except (InvalidOperation, ValueError, TypeError):
-            return JsonResponse(
-                {"status": "error", "error": "Valor bruto inválido. Informe um valor numérico válido."},
-                status=400,
-            )
-
-    fiscal_id = body.get("fiscal_contrato")
-    if fiscal_id:
-        try:
-            nota.fiscal_contrato = User.objects.get(id=int(fiscal_id))
-        except (User.DoesNotExist, ValueError, TypeError):
-            nota.fiscal_contrato = None
-    else:
-        nota.fiscal_contrato = None
-
-    atestada = body.get("atestada")
-    nota.atestada = bool(atestada) if isinstance(atestada, bool) else str(atestada).lower() in ("true", "1", "on")
-
-    serie = body.get("serie_nota_fiscal", "")
-    nota.serie_nota_fiscal = serie.strip() if serie else None
-
-    codigo_servico = body.get("codigo_servico_inss", "")
-    nota.codigo_servico_inss = codigo_servico.strip() if codigo_servico else None
-
-    return None
-
-
-def _salvar_retencoes(nota, body):
-    """Recria as retenções de impostos da nota e recalcula o valor líquido.
-
-    Apaga todas as retenções existentes, recria a partir do ``body`` e
-    persiste o ``valor_liquido`` calculado.  Retorna um ``JsonResponse`` de
-    erro (400) em caso de dados inválidos, ou ``None`` em caso de sucesso.
-    """
-    nota.retencoes.all().delete()
-    codigos = body.get("imposto_codes", [])
-    valores = body.get("imposto_values", [])
-    rendimentos = body.get("imposto_rendimentos", [])
-    beneficiarios = body.get("imposto_beneficiarios", [])
-
-    for codigo_id, rendimento, valor, beneficiario in zip(codigos, rendimentos, valores, beneficiarios):
-        if not (codigo_id and valor):
-            continue
-        try:
-            beneficiario_id = int(beneficiario) if beneficiario and str(beneficiario).strip() else None
-        except (ValueError, TypeError):
-            beneficiario_id = None
-        try:
-            rendimento_valor = (
-                float(str(rendimento).replace(",", ".")) if rendimento and str(rendimento).strip() else None
-            )
-            imposto_valor = float(str(valor).replace(",", "."))
-            RetencaoImposto.objects.create(
-                nota_fiscal=nota,
-                codigo_id=codigo_id,
-                rendimento_tributavel=rendimento_valor,
-                valor=imposto_valor,
-                beneficiario_id=beneficiario_id,
-            )
-        except (ValueError, TypeError, InvalidOperation):
-            return JsonResponse(
-                {
-                    "status": "error",
-                    "error": f"Erro ao processar o imposto {codigo_id}: Verifique se os valores numéricos são válidos.",
-                },
-                status=400,
-            )
-
-    total_retencoes = nota.retencoes.aggregate(total=Sum("valor"))["total"] or 0
-    nota.valor_liquido = (nota.valor_bruto or 0) - total_retencoes
-    nota.save(update_fields=["valor_liquido"])
-
-    return None
-
-
-def _atualizar_pendencia_ateste(processo, nota):
-    """Cria ou remove a pendência de ateste de liquidação conforme o estado da nota.
-
-    - Nota **não atestada**: garante que a pendência "ATESTE DE LIQUIDAÇÃO"
-      exista no processo.
-    - Nota **atestada**: remove a pendência apenas quando não houver outras
-      notas não atestadas no processo.
-    """
-    tipo_pendencia, _ = TiposDePendencias.objects.get_or_create(
-        tipo_de_pendencia__iexact="ATESTE DE LIQUIDAÇÃO",
-        defaults={"tipo_de_pendencia": "ATESTE DE LIQUIDAÇÃO"},
-    )
-
-    if not nota.atestada:
-        status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
-            status_choice__iexact="A RESOLVER",
-            defaults={"status_choice": "A RESOLVER"},
+        processo = _salvar_processo_completo(processo_form, mutator_func=mutator)
+        messages.success(
+            request,
+            f"Processo #{processo.id} inserido com sucesso! Complete documentos, fiscais e pendências na etapa de edição.",
         )
-        if not processo.pendencias.filter(tipo=tipo_pendencia).exists():
-            Pendencia.objects.create(
-                processo=processo,
-                tipo=tipo_pendencia,
-                descricao="DOCUMENTO PENDENTE DE ATESTE DE FISCAL DE CONTRATO",
-                status=status_pendencia,
-            )
-    else:
-        outras_nao_atestadas = processo.notas_fiscais.filter(atestada=False).exclude(id=nota.id).exists()
-        if not outras_nao_atestadas:
-            processo.pendencias.filter(tipo=tipo_pendencia).delete()
+        return _redirect_seguro_ou_fallback(request, next_url, "editar_processo", processo.id)
+    except (DatabaseError, TypeError, ValueError):
+        logger.exception("Erro crítico ao salvar processo na criação")
+        messages.error(request, "Ocorreu um erro interno ao salvar no banco de dados.")
+        return redirect("add_process")
 
 
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
-def api_toggle_documento_fiscal(request, processo_pk, documento_pk):
-    """Alterna o vínculo fiscal de um documento do processo."""
-    if request.method != "POST":
-        return JsonResponse({"error": "Method not allowed"}, status=405)
+@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@require_POST
+def editar_processo_capa_action(request, pk):
+    """Persiste alterações da capa do processo."""
+    processo, status_inicial, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
+    if redirecionamento:
+        return redirecionamento
+    if somente_documentos:
+        messages.error(request, "Neste status, apenas documentos podem ser alterados. Use a tela específica de documentos.")
+        return redirect("editar_processo_documentos", pk=pk)
 
-    processo = get_object_or_404(Processo, id=processo_pk)
-    doc = get_object_or_404(Boleto_Bancario, id=documento_pk, processo=processo)
+    processo_form = ProcessoForm(request.POST, instance=processo, prefix="processo")
+    next_url = request.POST.get("next") or ""
 
-    ct = ContentType.objects.get_for_model(doc)
-    nota = DocumentoFiscal.objects.filter(content_type=ct, object_id=doc.id).first()
+    if not processo_form.is_valid():
+        messages.error(request, "Verifique os erros na capa do processo.")
+        return redirect("editar_processo_capa", pk=pk)
 
-    if nota is not None:
-        if _status_bloqueia_exclusao_nota_fiscal(processo):
-            return JsonResponse(
-                {
-                    "status": "blocked",
-                    "message": (
-                        "Não é permitido remover documento fiscal após a etapa de pagamento. "
-                        "Use a interface de contingência para ajustes auditáveis."
-                    ),
-                },
-                status=409,
-            )
+    confirmar_extra = request.POST.get("confirmar_extra_orcamentario") == "on"
+    try:
+        def _mutator(proc):
+            proc.converter_para_extraorcamentario(confirmar_extra)
 
-        nota.retencoes.all().delete()
-        nota.delete()
-        return JsonResponse({"status": "removed", "message": "Documento fiscal removido."})
-    else:
-        nota = DocumentoFiscal.objects.create(
-            processo=processo,
-            content_type=ct,
-            object_id=doc.id,
-            numero_nota_fiscal=f"DOC-{doc.ordem}",
-            data_emissao=date.today(),
-            valor_bruto=0,
-            valor_liquido=0,
-        )
-        return JsonResponse(
-            {
-                "status": "created",
-                "nota_id": nota.id,
-                "message": "Documento marcado como fiscal.",
-            }
-        )
+        processo_saved = _salvar_processo_completo(processo_form, mutator_func=_mutator)
+        messages.success(request, f"Capa do Processo #{processo_saved.id} atualizada com sucesso!")
+        return _redirect_seguro_ou_fallback(request, next_url, "editar_processo", processo_saved.id)
+    except (DatabaseError, TypeError, ValueError):
+        logger.exception("Erro ao atualizar capa do processo %s", pk)
+        messages.error(request, "Erro interno ao salvar a capa do processo.")
+        return redirect("editar_processo_capa", pk=pk)
 
 
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
-@transaction.atomic
-def api_salvar_nota_fiscal(request, processo_pk, nota_pk):
-    """Salva os dados da nota fiscal, retenções e pendência de ateste."""
-    if request.method != "POST":
-        return JsonResponse({"error": "Method not allowed"}, status=405)
+@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@require_POST
+def editar_processo_documentos_action(request, pk):
+    """Persiste anexos e documentos orçamentários do processo."""
+    processo, _, redirecionamento, _ = _obter_contexto_edicao(request, pk)
+    if redirecionamento:
+        return redirecionamento
 
-    processo = get_object_or_404(Processo, id=processo_pk)
-    nota = get_object_or_404(DocumentoFiscal, id=nota_pk, processo=processo)
+    documento_formset = DocumentoFormSet(request.POST, request.FILES, instance=processo, prefix="documento")
+    documento_orcamentario_formset = DocumentoOrcamentarioFormSet(request.POST, instance=processo, prefix="docorc")
+    next_url = request.POST.get("next") or ""
+
+    if not (documento_formset.is_valid() and documento_orcamentario_formset.is_valid()):
+        messages.error(request, "Verifique os erros nos documentos e dados orçamentários.")
+        return redirect("editar_processo_documentos", pk=pk)
 
     try:
-        body = json.loads(request.body)
-    except (ValueError, AttributeError):
-        body = request.POST
-
-    erro = _atualizar_campos_nota(nota, body)
-    if erro:
-        return erro
-
-    nota.save()
-
-    erro = _salvar_retencoes(nota, body)
-    if erro:
-        return erro
-
-    _atualizar_pendencia_ateste(processo, nota)
-
-    return JsonResponse({"status": "ok", "message": "Nota fiscal salva com sucesso."})
+        _salvar_formsets_em_transacao(documento_formset, documento_orcamentario_formset)
+        messages.success(request, f"Documentos do Processo #{pk} atualizados com sucesso!")
+        return _redirect_seguro_ou_fallback(request, next_url, "editar_processo", pk)
+    except (DatabaseError, TypeError, ValueError, OSError):
+        logger.exception("Erro ao atualizar documentos do processo %s", pk)
+        messages.error(request, "Erro interno ao salvar os documentos.")
+        return redirect("editar_processo_documentos", pk=pk)
 
 
-__all__ = ["api_toggle_documento_fiscal", "api_salvar_nota_fiscal"]
+@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@require_POST
+def editar_processo_pendencias_action(request, pk):
+    """Persiste pendências administrativas do processo."""
+    processo, _, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
+    if redirecionamento:
+        return redirecionamento
+    if somente_documentos:
+        messages.error(request, "Neste status, apenas documentos podem ser alterados.")
+        return redirect("editar_processo_documentos", pk=pk)
+
+    pendencia_formset = PendenciaFormSet(request.POST, instance=processo, prefix="pendencia")
+    next_url = request.POST.get("next") or ""
+
+    if not pendencia_formset.is_valid():
+        messages.error(request, "Verifique os erros nas pendências.")
+        return redirect("editar_processo_pendencias", pk=pk)
+
+    try:
+        _salvar_formsets_em_transacao(pendencia_formset)
+        messages.success(request, f"Pendências do Processo #{pk} atualizadas com sucesso!")
+        return _redirect_seguro_ou_fallback(request, next_url, "editar_processo", pk)
+    except (DatabaseError, TypeError, ValueError):
+        logger.exception("Erro ao atualizar pendências do processo %s", pk)
+        messages.error(request, "Erro interno ao salvar as pendências.")
+        return redirect("editar_processo_pendencias", pk=pk)
+
+
+__all__ = [
+    "add_process_action",
+    "editar_processo_capa_action",
+    "editar_processo_documentos_action",
+    "editar_processo_pendencias_action",
+    "_status_bloqueia_exclusao_nota_fiscal",
+]

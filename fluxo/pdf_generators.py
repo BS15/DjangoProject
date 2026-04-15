@@ -212,12 +212,6 @@ class AutorizacaoDocument(BasePDFDocument):
         c.drawCentredString(sig_x, _AUTH_SIG_Y - 14, "Ordenador(a) de Despesa")
 
 
-
-
-
-
-
-
 class ConselhoFiscalDocument(BasePDFDocument):
     """Gera o PDF do parecer do Conselho Fiscal para um processo.
 

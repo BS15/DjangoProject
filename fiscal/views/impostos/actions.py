@@ -2,7 +2,6 @@
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
-from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 
@@ -71,19 +70,3 @@ def agrupar_impostos_view(request):
     return agrupar_retencoes_action(request)
 
 
-@permission_required("fiscal.acesso_backoffice", raise_exception=True)
-def api_processar_retencoes(request):
-    """
-    Process a PDF invoice file and apply tax retention business rules,
-    returning standardized JSON.
-    """
-    if request.method != "POST" or not request.FILES.get("arquivo"):
-        return JsonResponse(
-            {"status": "error", "message": "Requisição inválida ou arquivo ausente"},
-            status=400,
-        )
-
-    return JsonResponse(
-        {"status": "error", "message": "Extração por IA não disponível."},
-        status=400,
-    )

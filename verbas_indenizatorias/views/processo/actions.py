@@ -1,9 +1,12 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
+from fluxo.domain_models import Processo
+from fluxo.forms import PendenciaFormSet, ProcessoForm
 from verbas_indenizatorias.services.processo_integration import criar_processo_e_vincular_verbas
+from .helpers import _salvar_formularios_processo_verbas
 from ..shared.registry import (
     _CREDOR_AGRUPAMENTO_MULTIPLO,
     _VERBA_CONFIG,
@@ -59,3 +62,19 @@ def agrupar_verbas_view(request, tipo_verba):
     if not falhas_pcd:
         messages.info(request, 'PCDs gerados! Acesse o Painel de Assinaturas para enviar ao Autentique.')
     return redirect('editar_processo_verbas', pk=novo_processo.id)
+
+
+@require_POST
+@permission_required("verbas_indenizatorias.pode_gerenciar_processos_verbas", raise_exception=True)
+def editar_processo_verbas_action(request, pk):
+    processo = get_object_or_404(Processo, id=pk)
+    processo_form = ProcessoForm(request.POST, instance=processo, prefix='processo')
+    pendencia_formset = PendenciaFormSet(request.POST, instance=processo, prefix='pendencia')
+    processo_atualizado = _salvar_formularios_processo_verbas(
+        request,
+        processo_form=processo_form,
+        pendencia_formset=pendencia_formset,
+    )
+    if processo_atualizado:
+        return redirect('editar_processo_verbas', pk=processo_atualizado.id)
+    return redirect('editar_processo_verbas', pk=pk)

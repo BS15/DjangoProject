@@ -5,9 +5,9 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from commons.shared.pdf_tools import gerar_documento_pdf
+from commons.shared.pdf_response import montar_resposta_pdf
 from verbas_indenizatorias.models import Diaria
 from verbas_indenizatorias.pdf_generators import VERBAS_DOCUMENT_REGISTRY
-from fluxo.services.shared import montar_resposta_pdf
 
 
 @permission_required("fluxo.acesso_backoffice", raise_exception=True)

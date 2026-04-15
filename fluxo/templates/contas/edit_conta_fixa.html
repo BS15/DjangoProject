@@ -31,7 +31,7 @@
 
     <div class="card shadow-sm border-0">
         <div class="card-body p-4">
-            <form method="post">
+            <form method="post" action="{% url 'edit_conta_fixa_action' conta.pk %}">
                 {% csrf_token %}
 
                 <h6 class="text-secondary border-bottom pb-2 mb-3">Dados da Conta Fixa</h6>

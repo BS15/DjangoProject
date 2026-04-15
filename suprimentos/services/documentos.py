@@ -4,13 +4,16 @@ Este módulo implementa funções para geração e anexação de recibos e docum
 """
 
 from commons.shared.document_services import obter_ou_criar_tipo_documento, obter_proxima_ordem_documento
+from commons.shared.pdf_response import gerar_documento_bytes
+from commons.shared.signature_services import criar_assinatura_rascunho
 from django.core.files.base import ContentFile
-from fluxo.services.shared import criar_assinatura_rascunho, gerar_documento_bytes
+from fluxo.models import AssinaturaAutentique
+from suprimentos.pdf_generators import SUPRIMENTOS_DOCUMENT_REGISTRY
 from suprimentos.models import DocumentoSuprimentoDeFundos
 
 def gerar_e_anexar_recibo_suprimento(suprimento, criador):
     """Gera recibo de suprimento, anexa DocumentoSuprimentoDeFundos e cria rascunho de assinatura."""
-    pdf_bytes = gerar_documento_bytes("recibo_suprimento", suprimento)
+    pdf_bytes = gerar_documento_bytes("recibo_suprimento", suprimento, SUPRIMENTOS_DOCUMENT_REGISTRY)
     tipo_recibo = obter_ou_criar_tipo_documento(
         "RECIBO DE PAGAMENTO",
     )
@@ -27,4 +30,5 @@ def gerar_e_anexar_recibo_suprimento(suprimento, criador):
         criador=criador,
         pdf_bytes=pdf_bytes,
         nome_arquivo=f"Recibo_Suprimento_{suprimento.id}.pdf",
+        assinatura_model=AssinaturaAutentique,
     )
