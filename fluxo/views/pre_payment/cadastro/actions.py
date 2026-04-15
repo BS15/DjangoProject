@@ -5,7 +5,7 @@ import logging
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.db import DatabaseError, transaction
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from fluxo.domain_models import Processo
@@ -57,9 +57,17 @@ def add_process_action(request):
 
     if not processo_form.is_valid():
         messages.error(request, "Verifique os erros no formulário da capa do processo.")
-        return redirect("add_process")
+        return render(
+            request,
+            "fluxo/add_process.html",
+            {
+                "processo_form": processo_form,
+                "next_url": next_url,
+                "trigger_a_empenhar_checked": trigger_a_empenhar,
+            },
+            status=400,
+        )
 
-    is_extra = processo_form.cleaned_data.get("extraorcamentario")
     try:
         def mutator(processo_instancia):
             processo_instancia.definir_status_inicial(trigger_a_empenhar)

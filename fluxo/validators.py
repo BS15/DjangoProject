@@ -141,9 +141,9 @@ def validar_regras_processo(cleaned_data):
     valor_bruto = cleaned_data.get('valor_bruto')
     valor_liquido = cleaned_data.get('valor_liquido')
 
-    if data_pagamento and data_vencimento and data_pagamento > data_vencimento:
-        errors['data_pagamento'] = ValidationError(
-            "A data de pagamento não pode ser posterior à data de vencimento."
+    if data_pagamento and data_vencimento and data_vencimento < data_pagamento:
+        errors['data_vencimento'] = ValidationError(
+            "A data de vencimento não pode ser anterior à data de pagamento."
         )
 
     if valor_bruto is not None and valor_liquido is not None and valor_bruto < valor_liquido:

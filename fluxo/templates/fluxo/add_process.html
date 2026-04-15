@@ -25,6 +25,22 @@ Cadastre a capa inicial. Documentos, fiscais e pendências serão informados nas
 </div>
 {% endif %}
 
+{% if processo_form.errors %}
+<div class="alert alert-danger shadow-sm">
+    <strong>Não foi possível salvar a capa.</strong>
+    <ul class="mb-0 mt-2">
+        {% for field in processo_form.visible_fields %}
+            {% for error in field.errors %}
+            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+        {% for error in processo_form.non_field_errors %}
+        <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
 <div class="alert alert-info shadow-sm">
     <strong>Fluxo atual:</strong> esta etapa registra apenas a capa do processo. Ao salvar, o hub de edição libera os módulos de documentos, documentos fiscais e pendências.
 </div>

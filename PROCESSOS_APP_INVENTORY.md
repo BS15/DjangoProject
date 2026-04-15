@@ -705,7 +705,7 @@ processos/management/commands/
 ├── __init__.py
 ├── create_sample_data.py        [Fake data generator for testing]
 ├── setup_baselines.py           [Initialize base data (status catalogs, etc.)]
-└── setup_grupos.py              [Cargo/grupo initialization]
+└── setup_headstart.py           [Headstart catalogos + grupos/permissoes]
 ```
 
 **Commands Count:** 3 active commands

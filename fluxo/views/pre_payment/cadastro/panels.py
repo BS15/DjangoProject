@@ -117,6 +117,12 @@ def editar_processo_documentos_view(request, pk):
     if redirecionamento:
         return redirecionamento
 
+    precisa_documento_orcamentario = (
+        not processo.extraorcamentario
+        and not status_inicial.startswith("A EMPENHAR")
+        and not processo.documentos.filter(tipo__tipo_de_documento__iexact="DOCUMENTOS ORÇAMENTÁRIOS").exists()
+    )
+
     return render(
         request,
         "fluxo/editar_processo_documentos.html",
@@ -126,6 +132,7 @@ def editar_processo_documentos_view(request, pk):
             "documento_orcamentario_formset": DocumentoOrcamentarioFormSet(instance=processo, prefix="docorc"),
             "status_inicial": status_inicial,
             "next_url": _get_next_url(request),
+            "precisa_documento_orcamentario": precisa_documento_orcamentario,
         },
     )
 

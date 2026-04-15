@@ -21,6 +21,13 @@
     Status atual: <strong>{{ status_inicial|default:"-" }}</strong>
 </div>
 
+{% if precisa_documento_orcamentario %}
+<div class="alert alert-warning">
+    <strong>Atenção:</strong> este processo não é extraorçamentário e não está em <strong>A EMPENHAR</strong>.
+    Inclua ao menos um documento do tipo <strong>DOCUMENTOS ORÇAMENTÁRIOS</strong> para evitar bloqueios nas próximas etapas do fluxo.
+</div>
+{% endif %}
+
 <div class="table-responsive">
     <table class="table table-sm align-middle">
         <thead>

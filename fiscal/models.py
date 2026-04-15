@@ -44,7 +44,7 @@ class DadosContribuinte(models.Model):
     cnpj = models.CharField(max_length=14, validators=[validar_cpf_cnpj])
     razao_social = models.CharField(max_length=255)
     tipo_inscricao = models.IntegerField(default=1)
-    history = HistoricalRecords()
+    history = HistoricalRecords(table_name='credores_historicaldadoscontribuinte')
 
     def __str__(self):
         return f"{self.razao_social} ({self.cnpj})"
@@ -52,6 +52,7 @@ class DadosContribuinte(models.Model):
     class Meta:
         verbose_name = "Dados do Contribuinte"
         verbose_name_plural = "Dados do Contribuinte"
+        db_table = 'credores_dadoscontribuinte'
 
 
 class CodigosImposto(models.Model):
