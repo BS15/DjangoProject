@@ -27,7 +27,7 @@
 {% endblock %}
 
 {% block table_headers %}
-    <th>ID</th>
+    <th>#</th>
     <th>Processo</th>
     <th>Solicitante</th>
     <th>Data da Solicitação</th>
@@ -59,11 +59,10 @@
                 <span class="badge bg-warning text-dark">{{ contingencia.get_status_display }}</span>
             {% endif %}
             <div class="small text-muted mt-1">
-                Fluxo:
-                Supervisor
-                {% if contingencia.exige_aprovacao_ordenador %} -> Ordenador{% endif %}
-                {% if contingencia.exige_aprovacao_conselho %} -> Conselho{% endif %}
-                {% if contingencia.exige_revisao_contadora %} -> Contadora{% endif %}
+                Fluxo: Supervisor
+                {% if contingencia.exige_aprovacao_ordenador %} → Ordenador{% endif %}
+                {% if contingencia.exige_aprovacao_conselho %} → Conselho{% endif %}
+                {% if contingencia.exige_revisao_contadora %} → Contadora{% endif %}
             </div>
         </td>
         <td style="min-width: 280px;">
