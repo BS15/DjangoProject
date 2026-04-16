@@ -15,6 +15,12 @@
     {# Optional breadcrumb navigation #}
     {% block detail_breadcrumb %}{% endblock %}
 
+    <div class="mb-3">
+        <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="btn btn-link p-0 text-decoration-none" aria-label="Voltar" title="Voltar">
+            <i class="bi bi-arrow-left fs-4"></i>
+        </a>
+    </div>
+
     {# Hero / header card: title, status badges, key metadata #}
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body py-3 px-4">
@@ -22,25 +28,12 @@
         </div>
     </div>
 
-    <div class="row g-4">
+    {# Main body: related tables (documents, pendencies, devolutions, etc.) #}
+    {% block detail_body %}{% endblock %}
 
-        {# Main body: related tables (documents, pendencies, devolutions, etc.) #}
-        <div class="col-lg-8">
-            {% block detail_body %}{% endblock %}
-        </div>
-
-        {# Right sidebar: isolated action buttons #}
-        <div class="col-lg-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-body d-grid gap-2">
-                    <h5 class="card-title text-muted mb-2">
-                        <i class="bi bi-lightning-charge me-1"></i> Ações
-                    </h5>
-                    {% block detail_actions %}{% endblock %}
-                </div>
-            </div>
-        </div>
-
+    {# Optional action buttons at the bottom of the page #}
+    <div class="d-flex gap-2 mt-4">
+        {% block detail_actions %}{% endblock %}
     </div>
 </div>
 {% endblock content %}

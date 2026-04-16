@@ -39,10 +39,6 @@ class Migration(migrations.Migration):
                 verbose_name="ID do Documento Vinculado",
             ),
         ),
-        migrations.AddIndex(
-            model_name="documentofiscal",
-            index=models.Index(fields=["content_type", "object_id"], name="fiscal_docfi_ct_obj_idx"),
-        ),
         migrations.AddField(
             model_name="documentofiscal",
             name="fiscal_contrato",
@@ -111,6 +107,16 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name="historicaldocumentofiscal",
+            name="history_user",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="+",
+                to=settings.AUTH_USER_MODEL,
+            ),
+        ),
+        migrations.AddField(
+            model_name="historicaldadoscontribuinte",
             name="history_user",
             field=models.ForeignKey(
                 null=True,

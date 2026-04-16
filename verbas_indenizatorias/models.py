@@ -8,9 +8,11 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 from simple_history.models import HistoricalRecords
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError as DjangoValidationError
+from decimal import Decimal
 
 from commons.shared.models import DocumentoBase
 from commons.shared.storage_utils import caminho_documento, _delete_file
@@ -87,7 +89,6 @@ class Diaria(models.Model):
 
     TIPO_SOLICITACAO = [
         ('INICIAL', 'Concessão Inicial'),
-        ('PRORROGACAO', 'Prorrogação'),
         ('COMPLEMENTACAO', 'Complementação')
     ]
 
@@ -98,13 +99,22 @@ class Diaria(models.Model):
                                    related_name='diarias_propostas', verbose_name="Proponente")
 
     tipo_solicitacao = models.CharField(max_length=20, choices=TIPO_SOLICITACAO, default='INICIAL')
+    diaria_inicial = models.ForeignKey(
+        'self',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='complementacoes',
+        verbose_name='Diária Inicial Relacionada',
+    )
+    data_solicitacao = models.DateField("Data da Solicitação", default=timezone.now)
     data_saida = models.DateField("Data de Saída")
     data_retorno = models.DateField("Data de Retorno")
     cidade_origem = models.CharField("Cidade de Origem", max_length=50)
     cidade_destino = models.CharField("Cidade(s) de Destino", max_length=100)
-    objetivo = models.CharField("Objetivo da Viagem", max_length=200)
+    objetivo = models.TextField("Objetivo da Viagem")
 
-    quantidade_diarias = models.DecimalField("Quantidade de Diárias", max_digits=4, decimal_places=1, validators=[MinValueValidator(0.1)])
+    quantidade_diarias = models.DecimalField("Quantidade de Diárias", max_digits=4, decimal_places=1, validators=[MinValueValidator(0)])
     valor_total = models.DecimalField("Valor Total (R$)", max_digits=12, decimal_places=2, blank=True, null=True)
     meio_de_transporte = models.ForeignKey('MeiosDeTransporte', on_delete=models.PROTECT, blank=True, null=True,
                                            verbose_name="Meio de Transporte")
@@ -123,6 +133,35 @@ class Diaria(models.Model):
         if self.data_retorno and self.data_saida:
             if self.data_retorno < self.data_saida:
                 errors['data_retorno'] = 'Data de retorno não pode ser anterior à data de saída.'
+            elif self.beneficiario_id:
+                qs = Diaria.objects.filter(
+                    beneficiario_id=self.beneficiario_id,
+                    data_saida__lte=self.data_retorno,
+                    data_retorno__gte=self.data_saida,
+                )
+                if self.pk:
+                    qs = qs.exclude(pk=self.pk)
+                if qs.exists():
+                    conflito = qs.first()
+                    errors['data_saida'] = (
+                        f'Conflito de datas: o beneficiário já possui a diária #{conflito.pk} '
+                        f'no período {conflito.data_saida.strftime("%d/%m/%Y")} – '
+                        f'{conflito.data_retorno.strftime("%d/%m/%Y")}.'
+                    )
+
+        if self.tipo_solicitacao == 'COMPLEMENTACAO':
+            if not self.diaria_inicial_id:
+                errors['diaria_inicial'] = 'Selecione a diária inicial para complementação.'
+            else:
+                if self.diaria_inicial.tipo_solicitacao != 'INICIAL':
+                    errors['diaria_inicial'] = 'A diária relacionada deve ser do tipo inicial.'
+                if self.beneficiario_id and self.diaria_inicial.beneficiario_id != self.beneficiario_id:
+                    errors['diaria_inicial'] = 'A diária inicial deve pertencer ao mesmo beneficiário.'
+                if self.pk and self.diaria_inicial_id == self.pk:
+                    errors['diaria_inicial'] = 'A diária inicial não pode ser a própria diária de complementação.'
+
+        if self.tipo_solicitacao == 'INICIAL' and self.diaria_inicial_id and self.pk and self.diaria_inicial_id != self.pk:
+            errors['diaria_inicial'] = 'Diárias iniciais não podem apontar para outra diária.'
 
         if errors:
             raise DjangoValidationError(errors)
@@ -139,12 +178,34 @@ class Diaria(models.Model):
             return valor_unitario * self.quantidade_diarias
         return None
 
+    def calcular_quantidade_diarias(self):
+        """Calcula quantidade de diárias conforme tipo e intervalo de datas."""
+        if not self.data_saida or not self.data_retorno:
+            return self.quantidade_diarias
+
+        diferenca_dias = (self.data_retorno - self.data_saida).days
+        if diferenca_dias < 0:
+            return self.quantidade_diarias
+
+        if self.tipo_solicitacao == 'INICIAL':
+            return Decimal(diferenca_dias) + Decimal('0.5')
+        return Decimal(diferenca_dias)
+
     def save(self, *args, **kwargs):
         """Atualiza valor total calculado antes da persistência."""
+        calculada = self.calcular_quantidade_diarias()
+        if calculada is not None:
+            self.quantidade_diarias = calculada
+
         calculado = self.calcular_valor_total()
         if calculado is not None:
             self.valor_total = calculado
         super().save(*args, **kwargs)
+
+        # Modo canônico: diária inicial referencia a si mesma para rastreabilidade de cadeia.
+        if self.tipo_solicitacao == 'INICIAL' and self.diaria_inicial_id != self.pk:
+            self.diaria_inicial = self
+            super().save(update_fields=['diaria_inicial'])
 
     def avancar_status(self, novo_status_str):
         """Avança status da diária com validação de turnpike específico."""

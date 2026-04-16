@@ -27,7 +27,7 @@ def _persistir_suprimento_com_processo(form_suprimento: SuprimentoForm) -> Any:
         nome_lotacao = suprimento.lotacao or "Unidade Não Especificada"
         detalhamento = (
             f"Referente a suprimento de fundos da {nome_lotacao} "
-            f"- mês {suprimento.data_saida.month}/{suprimento.data_saida.year}"
+            f"- mês {suprimento.inicio_periodo.month}/{suprimento.inicio_periodo.year}"
         )
 
         criar_processo_para_suprimento(suprimento, detalhamento)

@@ -25,6 +25,7 @@ urlpatterns = [
     path('api/credor/<int:credor_id>/', credor_panels.api_dados_credor, name='api_dados_credor'),
     path('suprimentos/', suprimento_panels.painel_suprimentos_view, name='suprimentos_list'),
     path('suprimentos/<int:pk>/gerenciar/', suprimento_panels.gerenciar_suprimento_view, name='gerenciar_suprimento_view'),
+    path('suprimentos/<int:pk>/despesas/nova/', suprimento_panels.adicionar_despesa_view, name='adicionar_despesa_view'),
     path('suprimentos/<int:pk>/despesas/adicionar/', suprimento_actions.adicionar_despesa_action, name='registrar_despesa_action'),
     path('suprimentos/<int:pk>/fechar/', suprimento_actions.fechar_suprimento_action, name='concluir_prestacao_action'),
     path('suprimentos/novo/', suprimento_cadastro_panels.add_suprimento_view, name='add_suprimento_view'),

@@ -68,8 +68,10 @@
                             {% for reg in auxilios %}
                             <tr>
                                 <td class="text-center">
-                                    {% if not reg.processo %}
+                                    {% if not reg.processo and reg.status and reg.status.status_choice|upper == 'APROVADA' %}
                                         <input class="form-check-input check-item" type="checkbox" name="verbas_selecionadas" value="{{ reg.id }}">
+                                    {% elif not reg.processo %}
+                                        <i class="bi bi-hourglass-split text-muted small" title="Aguardando aprovação"></i>
                                     {% else %}
                                         <i class="bi bi-lock text-muted small" title="Já agrupado"></i>
                                     {% endif %}
@@ -81,7 +83,7 @@
                                 <td class="text-success fw-bold">R$ {{ reg.valor_total }}</td>
                                 <td class="text-center">
                                     {% if reg.processo %}
-                                        <a href="#" class="btn btn-sm btn-outline-info"><i class="bi bi-folder2-open"></i> #{{ reg.processo.id }}</a>
+                                        <a href="{% url 'editar_processo_verbas' pk=reg.processo.id %}" class="btn btn-sm btn-outline-info"><i class="bi bi-folder2-open"></i> #{{ reg.processo.id }}</a>
                                     {% else %}
                                         <span class="text-warning small"><i class="bi bi-exclamation-triangle"></i> S/ Proc.</span>
                                     {% endif %}

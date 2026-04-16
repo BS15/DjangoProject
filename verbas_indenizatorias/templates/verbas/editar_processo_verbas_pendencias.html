@@ -1,0 +1,79 @@
+{% extends "layouts/base_form.html" %}
+
+{% block page_heading %}Pendências do Processo de Verbas #{{ processo.id }}{% endblock %}
+{% block page_subtitle %}Gestão de pendências administrativas do processo.{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'editar_processo_verbas' pk=processo.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
+{% endblock %}
+
+{% block form_action %}{% url 'editar_processo_verbas_pendencias_action' pk=processo.id %}{% endblock %}
+
+{% block form_fields %}
+{{ pendencia_formset.management_form }}
+
+<div class="table-responsive">
+    <table class="table table-sm align-middle">
+        <thead>
+            <tr>
+                <th style="width: 260px;">Tipo</th>
+                <th>Descrição</th>
+                <th style="width: 120px;">Excluir</th>
+            </tr>
+        </thead>
+        <tbody id="pendencias-rows">
+            {% for pen_f in pendencia_formset %}
+            <tr>
+                {% for hidden in pen_f.hidden_fields %}{{ hidden }}{% endfor %}
+                <td>{{ pen_f.tipo }}</td>
+                <td>{{ pen_f.descricao }}</td>
+                <td class="text-center">{{ pen_f.DELETE }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<button type="button" id="add-pendencia-btn" class="btn btn-outline-danger btn-sm">
+    <i class="bi bi-plus-circle"></i> Adicionar Pendência
+</button>
+
+<template id="pendencia-empty-row-template">
+    <tr>
+        {% with empty_form=pendencia_formset.empty_form %}
+            {% for hidden in empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+            <td>{{ empty_form.tipo }}</td>
+            <td>{{ empty_form.descricao }}</td>
+            <td class="text-center">{{ empty_form.DELETE }}</td>
+        {% endwith %}
+    </tr>
+</template>
+{% endblock %}
+
+{% block form_actions %}
+<a href="{% url 'editar_processo_verbas' pk=processo.id %}" class="btn btn-secondary px-4">Cancelar</a>
+<button type="submit" class="btn btn-success px-4 fw-bold"><i class="bi bi-check-lg"></i> Salvar Pendências</button>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+(function () {
+    var addBtn = document.getElementById('add-pendencia-btn');
+    var tbody = document.getElementById('pendencias-rows');
+    var template = document.getElementById('pendencia-empty-row-template');
+    var totalFormsInput = document.getElementById('id_pendencia-TOTAL_FORMS');
+
+    if (!addBtn || !tbody || !template || !totalFormsInput) {
+        return;
+    }
+
+    addBtn.addEventListener('click', function () {
+        var formIndex = parseInt(totalFormsInput.value, 10);
+        var html = template.innerHTML.replace(/__prefix__/g, String(formIndex));
+        tbody.insertAdjacentHTML('beforeend', html);
+        totalFormsInput.value = String(formIndex + 1);
+    });
+})();
+</script>
+{% endblock %}

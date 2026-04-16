@@ -1,0 +1,141 @@
+{% comment %}
+  _documento_formset_generic.html — Reusable document formset widget (canon)
+  
+  Standardized, reusable document formset for any entity across the system.
+  Supports add/remove/reorder with consistent UI/UX.
+  
+  Parameters (via {% with %}):
+    formset              : The formset object (e.g., doc_formset)
+    form_prefix          : Formset prefix (e.g., "documentos", "docorc")
+    tipos_documento      : Available document types (TiposDeDocumento queryset)
+    add_btn_class        : Bootstrap button variant (btn-outline-primary, btn-outline-success)
+    entity_label         : Label for the entity (e.g., "Processo", "Suprimento", "Diária")
+    pode_interagir       : Boolean - can user add/remove documents?
+    show_order_field     : Boolean - show order input? (default True)
+    show_immutable_badge : Boolean - show immutable badge? (default True)
+    download_tipo_documento : String route key for secure download endpoint
+                              (default: "processo")
+  
+  Context required:
+    - formset.management_form
+    - Iteration over formset with instance and hidden fields
+{% endcomment %}
+
+<!-- ┌ DOCUMENTO FORMSET (GENERIC CANON) ───────────────────────────────────────────┐ -->
+<div class="card shadow-sm border-0 mb-3">
+    <div class="card-header bg-light fw-bold text-secondary py-2 d-flex justify-content-between align-items-center">
+        <span>
+            <i class="bi bi-paperclip me-1"></i> 
+            Documentos{% if entity_label %} do {{ entity_label }}{% endif %}
+        </span>
+        <span class="badge bg-secondary" id="doc-count-badge">{{ formset|length }} doc(s)</span>
+    </div>
+    <div class="card-body py-2 px-2">
+        <div id="document-list-{{ form_prefix }}">
+            {% for doc_f in formset %}
+                {% with is_existing=doc_f.instance.pk is_imutavel=doc_f.instance.imutavel %}
+                <div class="row g-1 align-items-center mb-2 border-bottom pb-2 document-row" data-doc-id="{{ doc_f.instance.pk }}">
+                    {% for hidden in doc_f.hidden_fields %}{{ hidden }}{% endfor %}
+
+                    {% if show_order_field %}
+                    <div class="col-auto drag-handle ps-1" title="Arrastar para reordenar">
+                        <i class="bi bi-grip-vertical text-secondary"></i>
+                    </div>
+
+                    <div class="col-1">
+                        <label class="small text-muted d-block">Ord.</label>
+                        {{ doc_f.ordem }}
+                    </div>
+                    {% endif %}
+
+                    <div class="col-4">
+                        <label class="small text-muted d-block">Tipo</label>
+                        {{ doc_f.tipo }}
+                    </div>
+
+                    <div class="col">
+                        <label class="small text-muted d-block">Arquivo</label>
+                        {% if is_existing %}
+                            <span class="small text-success d-block text-truncate"
+                                  style="max-width:160px;"
+                                  title="{{ doc_f.instance.arquivo.name }}">
+                                <i class="bi bi-cloud-check"></i>
+                                {{ doc_f.instance.arquivo.name|cut:"documentos/"|cut:"verbasindenizatorias/"|cut:"suprimentosdefundos/" }}
+                            </span>
+                            {% if show_immutable_badge and is_imutavel %}
+                                <span class="badge bg-secondary doc-imutavel-badge">
+                                    <i class="bi bi-lock-fill"></i> imutável
+                                </span>
+                            {% endif %}
+                        {% else %}
+                            {{ doc_f.arquivo }}
+                        {% endif %}
+                    </div>
+
+                    <div class="col-auto">
+                        {% if doc_f.instance.arquivo %}
+                        <a href="{% url 'download_arquivo_seguro' download_tipo_documento|default:'processo' doc_f.instance.id %}"
+                           target="_blank"
+                           class="btn btn-sm btn-outline-secondary"
+                           title="Ver arquivo">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% endif %}
+                        {% if not is_existing and pode_interagir %}
+                        <button type="button"
+                                class="btn btn-sm btn-outline-danger remove-doc-btn"
+                                title="Remover">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <div class="django-delete-checkbox d-none">{{ doc_f.DELETE }}</div>
+                </div>
+                {% endwith %}
+            {% endfor %}
+        </div><!-- #document-list-{{ form_prefix }} -->
+
+        <!-- Hidden empty form template for new docs -->
+        {% if pode_interagir %}
+           <div id="empty-doc-form-{{ form_prefix }}" class="row g-1 align-items-center mb-2 border-bottom pb-2 document-row"
+               style="display:none;" data-form-prefix="{{ form_prefix }}">
+            {% if show_order_field %}
+            <div class="col-auto drag-handle ps-1">
+                <i class="bi bi-grip-vertical text-secondary"></i>
+            </div>
+            <div class="col-1">
+                <label class="small text-muted d-block">Ord.</label>
+                <input type="number" name="{{ form_prefix }}-__prefix__-ordem" value="1"
+                       class="form-control form-control-sm" style="width:55px;">
+            </div>
+            {% endif %}
+            <div class="col-4">
+                <label class="small text-muted d-block">Tipo</label>
+                <select name="{{ form_prefix }}-__prefix__-tipo" class="form-select form-select-sm">
+                    <option value="">---------</option>
+                    {% for td in tipos_documento %}
+                    <option value="{{ td.pk }}">{{ td }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col">
+                <label class="small text-muted d-block">Arquivo</label>
+                <input type="file" name="{{ form_prefix }}-__prefix__-arquivo"
+                       class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+            <div class="col-auto">
+                <button type="button" class="btn btn-sm btn-outline-danger remove-doc-btn" title="Remover">
+                    <i class="bi bi-trash"></i>
+                </button>
+                <input type="hidden" name="{{ form_prefix }}-__prefix__-id" value="">
+            </div>
+        </div>
+
+        <button type="button" id="add-doc-btn-{{ form_prefix }}" class="btn {{ add_btn_class }} btn-sm mt-2">
+            <i class="bi bi-plus-circle me-1"></i>Adicionar Documento
+        </button>
+        {% endif %}
+    </div>
+</div>
+<!-- └────────────────────────────────────────────────────────────────────────────────┘ -->

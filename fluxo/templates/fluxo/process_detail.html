@@ -11,66 +11,261 @@
 </nav>
 {% endblock %}
 
-{# ═══ HERO HEADER: title + status badge + key metadata ═══════════════════ #}
 {% block detail_header %}
 <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-    <h4 class="mb-0 text-primary">
-        <i class="bi bi-folder2-open me-2"></i>{{ processo.n_nota_empenho|default:"Sem NE" }}
-    </h4>
-    <span class="badge bg-secondary fs-6">{{ processo.get_status_display }}</span>
+    <div>
+        <h4 class="mb-1 text-primary">
+            <i class="bi bi-folder2-open me-2"></i>Processo #{{ processo.id }}
+        </h4>
+        <div class="text-muted small">
+            {{ processo.n_nota_empenho|default:"Sem NE" }}
+        </div>
+    </div>
+    <span class="badge bg-secondary fs-6">{{ processo.status|default:"Sem status" }}</span>
 </div>
 <hr class="my-3">
 <div class="row g-3">
     <div class="col-md-6">
         <div class="text-muted small">Credor</div>
-        <div class="fw-bold">{{ processo.credor }}</div>
+        <div class="fw-bold">{{ processo.credor|default:"-" }}</div>
     </div>
     <div class="col-md-3">
         <div class="text-muted small">Valor Líquido</div>
-        <div class="fw-bold text-success">R$ {{ processo.valor_liquido }}</div>
+        <div class="fw-bold text-success">R$ {{ processo.valor_liquido|default:"-" }}</div>
     </div>
     <div class="col-md-3">
-        <div class="text-muted small">Valor Efetivo (Gasto Real)</div>
-        <div class="fw-bold text-primary">R$ {{ processo.valor_efetivo }}</div>
+        <div class="text-muted small">Valor Efetivo</div>
+        <div class="fw-bold text-primary">R$ {{ processo.valor_efetivo|default:"-" }}</div>
     </div>
     <div class="col-md-3">
         <div class="text-muted small">Data Empenho</div>
-        <div>{{ processo.data_empenho|date:"d/m/Y" }}</div>
+        <div>{{ processo.data_empenho|date:"d/m/Y"|default:"-" }}</div>
+    </div>
+    <div class="col-md-3">
+        <div class="text-muted small">Vencimento</div>
+        <div>{{ processo.data_vencimento|date:"d/m/Y"|default:"-" }}</div>
+    </div>
+    <div class="col-md-3">
+        <div class="text-muted small">Pagamento</div>
+        <div>{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</div>
+    </div>
+    <div class="col-md-3">
+        <div class="text-muted small">Tipo de Pagamento</div>
+        <div>{{ processo.tipo_pagamento|default:"-" }}</div>
     </div>
     <div class="col-md-6">
         <div class="text-muted small">Nº Pagamento (SISCAC)</div>
         <div>{{ processo.numero_pagamento|default:"-" }}</div>
     </div>
-    <div class="col-md-6">
-        <div class="text-muted small">Tipo de Pagamento</div>
-        <div>{{ processo.get_tipo_pagamento_display }}</div>
-    </div>
 </div>
 {% endblock %}
 
-{# ═══ BODY: documents table + devolution history ═════════════════════════ #}
 {% block detail_body %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-paperclip me-2"></i>Documentos Anexados</h5>
+        <a href="{% url 'editar_processo_documentos' pk=processo.id %}" class="btn btn-sm btn-primary">
+            Gerenciar Documentos
+        </a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Ord.</th>
+                    <th>Tipo</th>
+                    <th>Arquivo</th>
+                    <th class="text-center">Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in documentos_page %}
+                <tr>
+                    <td class="fw-bold">{{ doc.ordem }}</td>
+                    <td>{{ doc.tipo.tipo_de_documento|default:"Sem tipo" }}</td>
+                    <td class="small text-muted">{{ doc.arquivo.name|slice:"16:" }}</td>
+                    <td class="text-center">
+                        <a href="{% url 'download_arquivo_seguro' 'processo' doc.id %}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-eye"></i> Ver
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-3">Nenhum documento anexado.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if documentos_page.has_other_pages %}
+    <div class="card-footer bg-white">
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {% if documentos_page.has_previous %}
+                <li class="page-item"><a class="page-link" href="?docs_page={{ documentos_page.previous_page_number }}&pend_page={{ pendencias_page.number }}&liq_page={{ liquidacoes_page.number }}&ret_page={{ retencoes_page.number }}">Anterior</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ documentos_page.number }}</span></li>
+                {% if documentos_page.has_next %}
+                <li class="page-item"><a class="page-link" href="?docs_page={{ documentos_page.next_page_number }}&pend_page={{ pendencias_page.number }}&liq_page={{ liquidacoes_page.number }}&ret_page={{ retencoes_page.number }}">Próxima</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-receipt me-2"></i>Liquidações (Atestes de NF)</h5>
+        <a href="{% url 'documentos_fiscais' pk=processo.id %}" class="btn btn-sm btn-info text-white">
+            Gerenciar Documentos Fiscais
+        </a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>NF</th>
+                    <th>Emitente</th>
+                    <th>Emissão</th>
+                    <th>Valor Bruto</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for nota in liquidacoes_page %}
+                <tr>
+                    <td class="fw-bold">{{ nota.numero_nota_fiscal }}</td>
+                    <td>{{ nota.nome_emitente|default:"-" }}</td>
+                    <td>{{ nota.data_emissao|date:"d/m/Y"|default:"-" }}</td>
+                    <td>R$ {{ nota.valor_bruto|floatformat:2 }}</td>
+                    <td>
+                        <span class="badge {% if nota.atestada %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                            {% if nota.atestada %}Atestada{% else %}Pendente{% endif %}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-3">Nenhuma liquidação registrada.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if liquidacoes_page.has_other_pages %}
+    <div class="card-footer bg-white">
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {% if liquidacoes_page.has_previous %}
+                <li class="page-item"><a class="page-link" href="?docs_page={{ documentos_page.number }}&pend_page={{ pendencias_page.number }}&liq_page={{ liquidacoes_page.previous_page_number }}&ret_page={{ retencoes_page.number }}">Anterior</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ liquidacoes_page.number }}</span></li>
+                {% if liquidacoes_page.has_next %}
+                <li class="page-item"><a class="page-link" href="?docs_page={{ documentos_page.number }}&pend_page={{ pendencias_page.number }}&liq_page={{ liquidacoes_page.next_page_number }}&ret_page={{ retencoes_page.number }}">Próxima</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Pendências</h5>
+        <a href="{% url 'editar_processo_pendencias' pk=processo.id %}" class="btn btn-sm btn-primary">
+            Gerenciar Pendências
+        </a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Tipo</th>
+                    <th>Descrição</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pendencia in pendencias_page %}
+                <tr>
+                    <td class="fw-bold">{{ pendencia.tipo|default:"Sem tipo" }}</td>
+                    <td>{{ pendencia.descricao|default:"" }}</td>
+                    <td><span class="badge bg-secondary">{{ pendencia.status|default:"Sem status" }}</span></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center text-muted py-3">Nenhuma pendência registrada.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if pendencias_page.has_other_pages %}
+    <div class="card-footer bg-white">
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {% if pendencias_page.has_previous %}
+                <li class="page-item"><a class="page-link" href="?docs_page={{ documentos_page.number }}&pend_page={{ pendencias_page.previous_page_number }}&liq_page={{ liquidacoes_page.number }}&ret_page={{ retencoes_page.number }}">Anterior</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ pendencias_page.number }}</span></li>
+                {% if pendencias_page.has_next %}
+                <li class="page-item"><a class="page-link" href="?docs_page={{ documentos_page.number }}&pend_page={{ pendencias_page.next_page_number }}&liq_page={{ liquidacoes_page.number }}&ret_page={{ retencoes_page.number }}">Próxima</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
 
 <div class="card shadow-sm mb-4">
     <div class="card-header bg-light">
-        <h5 class="mb-0"><i class="bi bi-paperclip me-2"></i>Documentos Anexados</h5>
+        <h5 class="mb-0"><i class="bi bi-percent me-2"></i>Retenções</h5>
     </div>
-    <ul class="list-group list-group-flush">
-        {% for doc in documentos %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-                <span class="badge bg-primary rounded-pill me-2">{{ doc.ordem }}</span>
-                <strong>{{ doc.get_tipo_display }}</strong>
-                <span class="text-muted small ms-2">({{ doc.arquivo.name|slice:"16:" }})</span>
-            </div>
-            <a href="{% url 'download_arquivo_seguro' 'processo' doc.id %}" target="_blank" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-eye"></i> Ver
-            </a>
-        </li>
-        {% empty %}
-        <li class="list-group-item text-center text-muted py-3">Nenhum documento anexado.</li>
-        {% endfor %}
-    </ul>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>NF</th>
+                    <th>Código</th>
+                    <th>Valor</th>
+                    <th>Data Pagamento</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for retencao in retencoes_page %}
+                <tr>
+                    <td>{{ retencao.nota_fiscal.numero_nota_fiscal|default:"-" }}</td>
+                    <td>{{ retencao.codigo|default:"-" }}</td>
+                    <td class="fw-bold">R$ {{ retencao.valor|floatformat:2 }}</td>
+                    <td>{{ retencao.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
+                    <td>{{ retencao.status|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-3">Nenhuma retenção registrada.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if retencoes_page.has_other_pages %}
+    <div class="card-footer bg-white">
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {% if retencoes_page.has_previous %}
+                <li class="page-item"><a class="page-link" href="?docs_page={{ documentos_page.number }}&pend_page={{ pendencias_page.number }}&liq_page={{ liquidacoes_page.number }}&ret_page={{ retencoes_page.previous_page_number }}">Anterior</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ retencoes_page.number }}</span></li>
+                {% if retencoes_page.has_next %}
+                <li class="page-item"><a class="page-link" href="?docs_page={{ documentos_page.number }}&pend_page={{ pendencias_page.number }}&liq_page={{ liquidacoes_page.number }}&ret_page={{ retencoes_page.next_page_number }}">Próxima</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
 </div>
 
 {% if processo.devolucoes.all %}
@@ -100,7 +295,7 @@
                             <i class="bi bi-file-earmark-arrow-down"></i> Baixar
                         </a>
                         {% else %}
-                        <span class="text-muted">—</span>
+                        <span class="text-muted">-</span>
                         {% endif %}
                     </td>
                 </tr>
@@ -110,92 +305,16 @@
     </div>
 </div>
 {% endif %}
-
-{% extends "layouts/base_detail.html" %}
-
-{% block detail_header %}
-    <h2><i class="bi bi-diagram-3 text-primary"></i> Detalhes do Processo</h2>
-    <p class="text-muted mb-0">Processo #{{ processo.id }} — {{ processo }}</p>
-    <a href="{% url 'editar_processo_capa' processo.id %}" class="btn btn-outline-secondary">
-        <i class="bi bi-pencil"></i> Editar Capa
-    </a>
 {% endblock %}
 
-{% block detail_body %}
-    <div class="row mb-4">
-        <!-- Documentos Anexados Card -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <span class="fw-bold"><i class="bi bi-paperclip"></i> Documentos Anexados</span>
-                    <a href="{% url 'editar_processo_documentos' processo.id %}" class="btn btn-sm btn-primary">
-                        + Gerenciar Documentos
-                    </a>
-                </div>
-                <div class="card-body">
-                    {% if documentos %}
-                        <ul class="list-group list-group-flush">
-                            {% for doc in documentos %}
-                                <li class="list-group-item">{{ doc }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <span class="text-muted">Nenhum documento anexado.</span>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Notas Fiscais & Retenções Card -->
-    <div class="row mb-4">
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <span class="fw-bold"><i class="bi bi-receipt"></i> Notas Fiscais & Retenções</span>
-                    <a href="{% url 'registrar_nota_fiscal' processo.id %}" class="btn btn-sm btn-primary">
-                        + Registrar Nota Fiscal
-                    </a>
-                </div>
-                <div class="card-body">
-                    {# Placeholder for notas_fiscais context variable #}
-                    {% if notas_fiscais %}
-                        <ul class="list-group list-group-flush">
-                            {% for nota in notas_fiscais %}
-                                <li class="list-group-item">{{ nota }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <span class="text-muted">Nenhuma nota fiscal registrada.</span>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Pendências Card -->
-    <div class="row mb-4">
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <span class="fw-bold"><i class="bi bi-exclamation-triangle"></i> Pendências</span>
-                    <a href="{% url 'editar_processo_pendencias' processo.id %}" class="btn btn-sm btn-primary">
-                        + Adicionar Pendência
-                    </a>
-                </div>
-                <div class="card-body">
-                    {# Placeholder for pendencias context variable #}
-                    {% if pendencias %}
-                        <ul class="list-group list-group-flush">
-                            {% for pendencia in pendencias %}
-                                <li class="list-group-item">{{ pendencia }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <span class="text-muted">Nenhuma pendência registrada.</span>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
+{% block detail_actions %}
+<a href="{% url 'editar_processo' pk=processo.id %}" class="btn btn-outline-primary">
+    <i class="bi bi-diagram-3"></i> Abrir Hub de Edição
+</a>
+<a href="{% url 'editar_processo_capa' pk=processo.id %}" class="btn btn-outline-secondary">
+    <i class="bi bi-pencil"></i> Editar Capa
+</a>
+<a href="{% url 'home_page' %}" class="btn btn-outline-dark">
+    <i class="bi bi-arrow-left"></i> Voltar para Home
+</a>
 {% endblock %}

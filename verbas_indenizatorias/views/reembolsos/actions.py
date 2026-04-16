@@ -9,7 +9,7 @@ from verbas_indenizatorias.models import (
     StatusChoicesVerbasIndenizatorias,
 )
 from ..shared.documents import _salvar_documento_upload
-from ..shared.registry import _get_tipos_documento_ativos
+from ..shared.registry import _get_tipos_documento_verbas
 
 
 def _set_status_case_insensitive(reembolso, status_str):
@@ -69,7 +69,7 @@ def registrar_comprovante_reembolso_action(request, pk):
     tipo_id = request.POST.get("tipo_comprovante")
 
     if not tipo_id:
-        tipo = _get_tipos_documento_ativos().first()
+        tipo = _get_tipos_documento_verbas().first()
         tipo_id = str(tipo.id) if tipo else None
 
     _, erro = _salvar_documento_upload(

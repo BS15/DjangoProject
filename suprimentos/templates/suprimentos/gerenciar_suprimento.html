@@ -6,7 +6,7 @@
             <h4 class="mb-1 fw-bold"><i class="bi bi-wallet2 text-success"></i> Gestão de Suprimento de Fundos</h4>
             <p class="text-muted mb-0">
                 Suprido(a): <strong>{{ suprimento.suprido.nome }}</strong> |
-                Período: {{ suprimento.data_saida|date:"d/m/Y" }} a {{ suprimento.data_retorno|date:"d/m/Y" }} |
+                Período: {{ suprimento.inicio_periodo|date:"d/m/Y" }} a {{ suprimento.fim_periodo|date:"d/m/Y" }} |
                 Status: <span class="badge bg-secondary">{{ suprimento.status }}</span>
             </p>
         </div>
@@ -18,47 +18,15 @@
     {% if pode_editar %}
     <div class="card shadow-sm mb-4 border-primary">
         <div class="card-header bg-primary text-white">
-            <h5 class="card-title mb-0"><i class="bi bi-receipt"></i> Registrar Nova Despesa</h5>
+            <h5 class="card-title mb-0"><i class="bi bi-receipt"></i> Registro de Despesas</h5>
         </div>
         <div class="card-body">
-            <form method="post" action="{% url 'registrar_despesa_action' suprimento.id %}" enctype="multipart/form-data">
-                {% csrf_token %}
-                <div class="row g-2">
-                    <div class="col-md-3">
-                        <label class="form-label small fw-bold text-muted">{{ form_despesa.data.label }}</label>
-                        {{ form_despesa.data }}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-bold text-muted">{{ form_despesa.estabelecimento.label }}</label>
-                        {{ form_despesa.estabelecimento }}
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label small fw-bold text-muted">{{ form_despesa.cnpj_cpf.label }}</label>
-                        {{ form_despesa.cnpj_cpf }}
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label small fw-bold text-muted">{{ form_despesa.nota_fiscal.label }}</label>
-                        {{ form_despesa.nota_fiscal }}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-bold text-muted">{{ form_despesa.detalhamento.label }}</label>
-                        {{ form_despesa.detalhamento }}
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label small fw-bold text-muted">{{ form_despesa.valor.label }}</label>
-                        {{ form_despesa.valor }}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-bold text-muted">{{ form_despesa.arquivo.label }}</label>
-                        {{ form_despesa.arquivo }}
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">
-                            <i class="bi bi-plus-circle"></i> Adicionar
-                        </button>
-                    </div>
-                </div>
-            </form>
+            <p class="text-muted mb-3">
+                Este hub é somente leitura para acompanhamento. O lançamento de despesas ocorre em uma tela dedicada.
+            </p>
+            <a href="{% url 'adicionar_despesa_view' suprimento.id %}" class="btn btn-primary btn-sm fw-bold">
+                <i class="bi bi-plus-circle"></i> Registrar Nova Despesa
+            </a>
         </div>
     </div>
     {% endif %}

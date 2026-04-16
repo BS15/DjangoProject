@@ -1,4 +1,4 @@
-{% extends "layouts/base_list.html" %}
+{% extends "layouts/base_batch.html" %}
 
 {% block page_title %}Painel de Pendências{% endblock %}
 
@@ -7,8 +7,9 @@
 {% block page_subtitle %}Acompanhamento e triagem de recusas em processos{% endblock %}
 
 {% block page_actions %}
-    <a href="{% url 'home_page' %}" class="btn btn-outline-secondary"><i class="bi bi-house"></i> Voltar à Home</a>
+<a href="{% url 'home_page' %}" class="btn btn-outline-secondary"><i class="bi bi-house"></i> Voltar à Home</a>
 {% endblock %}
+
 
 {% block extra_css %}
 <style>
@@ -17,79 +18,153 @@
 </style>
 {% endblock %}
 
-{% block filter_title %}Filtrar Pendências{% endblock %}
-
 {% block filter_form %}
-    {% for field in meu_filtro.form %}
-    <div class="col-md-3">
-        <label class="form-label small fw-bold text-muted mb-1">{{ field.label }}</label>
-        {{ field }}
+<div class="p-3 border-bottom bg-light">
+    <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-funnel"></i> Filtrar Pendências</h6>
+</div>
+<form method="get" class="p-3">
+    <div class="row g-2">
+        {% for field in meu_filtro.form %}
+        <div class="col-12">
+            <label class="form-label small fw-bold text-muted mb-1">{{ field.label }}</label>
+            {{ field }}
+        </div>
+        {% endfor %}
+        <div class="col-12 mt-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm fw-bold">
+                <i class="bi bi-search"></i> Filtrar
+            </button>
+            <a href="{% url 'painel_pendencias' %}" class="btn btn-outline-secondary btn-sm">Limpar</a>
+        </div>
     </div>
-    {% endfor %}
+</form>
 {% endblock %}
 
 {% block table_headers %}
-    <th class="ps-4">ID Processo</th>
-    <th>Credor</th>
-    <th>Status do Processo</th>
-    <th>Tipo de Pendência</th>
-    <th style="width: 30%;">Justificativa / Descrição</th>
-    <th class="text-center">Status</th>
-    <th class="text-center pe-4">Ação</th>
+{% if pode_interagir %}
+<th class="text-center" style="width: 50px;">Sel.</th>
+{% endif %}
+<th class="ps-2">ID Processo</th>
+<th>Credor</th>
+<th>Status do Processo</th>
+<th>Tipo de Pendência</th>
+<th style="width: 30%;">Justificativa / Descrição</th>
+<th class="text-center">Status</th>
+<th class="text-center pe-2">Ações</th>
 {% endblock %}
 
 {% block table_rows %}
-    {% for p in pendencias %}
-    <tr>
-        <td class="ps-4 fw-bold">
-            <a href="{% url 'editar_processo' p.processo.id %}" class="text-decoration-none">
-                #{{ p.processo.id }}
-            </a>
-        </td>
-        <td class="fw-medium text-secondary">
-            {{ p.processo.credor.nome|default:"Não informado"|truncatechars:35 }}
-        </td>
-        <td>
-            <span class="badge bg-secondary bg-opacity-75 px-2 py-1">{{ p.processo.status|default:"—" }}</span>
-        </td>
-        <td>
-            <span class="badge bg-secondary">{{ p.tipo|default:"Geral" }}</span>
-        </td>
-        <td>
-            <div class="small text-wrap" style="max-height: 60px; overflow-y: auto;">
-                {{ p.descricao|default:"Sem descrição informada." }}
-            </div>
-        </td>
-        <td class="text-center">
-            {% if p.status.status_choice == 'A RESOLVER' or not p.status %}
-                <span class="badge status-nao-resolvido px-3 py-2 rounded-pill">
-                    <i class="bi bi-x-circle"></i> Pendente
-                </span>
-            {% else %}
-                <span class="badge status-resolvido px-3 py-2 rounded-pill">
-                    <i class="bi bi-check-circle"></i> Resolvido
-                </span>
-            {% endif %}
-        </td>
-        <td class="text-center pe-4">
-            <a href="{% url 'editar_processo' p.processo.id %}" class="btn btn-sm btn-outline-primary" title="Abrir Processo">
-                <i class="bi bi-folder2-open"></i> Acessar
-            </a>
-        </td>
-    </tr>
-    {% empty %}
-    <tr>
-        {# Update colspan to match the number of columns defined in table_headers #}
-        <td colspan="7" class="text-center py-5 text-muted">
-            <i class="bi bi-shield-check fs-1 d-block mb-3 text-success"></i>
-            Nenhuma pendência encontrada com os filtros atuais.<br>Tudo em ordem por aqui!
-        </td>
-    </tr>
-    {% endfor %}
+{% for p in pendencias %}
+<tr>
+    {% if pode_interagir %}
+    <td class="text-center">
+        <input type="checkbox" name="pendencias_selecionadas" value="{{ p.id }}" class="form-check-input batch-item-check">
+    </td>
+    {% endif %}
+    <td class="ps-2 fw-bold">
+        <a href="{% url 'editar_processo' p.processo.id %}" class="text-decoration-none">#{{ p.processo.id }}</a>
+    </td>
+    <td class="fw-medium text-secondary">{{ p.processo.credor.nome|default:"Não informado"|truncatechars:35 }}</td>
+    <td><span class="badge bg-secondary bg-opacity-75 px-2 py-1">{{ p.processo.status|default:"—" }}</span></td>
+    <td><span class="badge bg-secondary">{{ p.tipo|default:"Geral" }}</span></td>
+    <td>
+        <div class="small text-wrap" style="max-height: 60px; overflow-y: auto;">{{ p.descricao|default:"Sem descrição informada." }}</div>
+    </td>
+    <td class="text-center">
+        {% if p.status.status_choice == 'A RESOLVER' or not p.status %}
+        <span class="badge status-nao-resolvido px-3 py-2 rounded-pill"><i class="bi bi-x-circle"></i> Pendente</span>
+        {% elif p.status.status_choice|upper == 'EXCLUÍDO' %}
+        <span class="badge bg-secondary px-3 py-2 rounded-pill"><i class="bi bi-slash-circle"></i> Excluído</span>
+        {% else %}
+        <span class="badge status-resolvido px-3 py-2 rounded-pill"><i class="bi bi-check-circle"></i> Resolvido</span>
+        {% endif %}
+    </td>
+    <td class="text-center pe-2">
+        <button
+            type="submit"
+            formaction="{% url 'painel_pendencias_action' %}"
+            class="btn btn-sm btn-outline-success"
+            name="acao_lote"
+            value="resolver"
+            title="Resolver esta pendência"
+            onclick="document.getElementById('id_pendencia_id').value='{{ p.id }}'; return confirm('Marcar esta pendência como RESOLVIDO?');"
+        >
+            <i class="bi bi-check2-circle"></i>
+        </button>
+        <button
+            type="submit"
+            formaction="{% url 'painel_pendencias_action' %}"
+            class="btn btn-sm btn-outline-danger"
+            name="acao_lote"
+            value="excluir"
+            title="Excluir esta pendência (status)"
+            onclick="document.getElementById('id_pendencia_id').value='{{ p.id }}'; return confirm('Marcar esta pendência como EXCLUÍDO?');"
+        >
+            <i class="bi bi-x-circle"></i>
+        </button>
+        <a href="{% url 'editar_processo' p.processo.id %}" class="btn btn-sm btn-outline-primary" title="Abrir Processo">
+            <i class="bi bi-folder2-open"></i> Acessar
+        </a>
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="8" class="text-center py-5 text-muted">
+        <i class="bi bi-shield-check fs-1 d-block mb-3 text-success"></i>
+        Nenhuma pendência encontrada com os filtros atuais.<br>Tudo em ordem por aqui!
+    </td>
+</tr>
+{% endfor %}
+{% endblock %}
+
+{% block batch_actions %}
+{% if pode_interagir %}
+<input type="hidden" id="id_pendencia_id" name="pendencia_id" value="">
+<button
+    type="submit"
+    formaction="{% url 'painel_pendencias_action' %}"
+    class="btn btn-success fw-bold shadow-sm"
+    name="acao_lote"
+    value="resolver"
+    onclick="document.getElementById('id_pendencia_id').value=''; return confirm('Marcar pendências selecionadas como RESOLVIDO?');"
+>
+    <i class="bi bi-check2-circle"></i> Resolver Selecionadas
+</button>
+<button
+    type="submit"
+    formaction="{% url 'painel_pendencias_action' %}"
+    class="btn btn-outline-danger fw-bold"
+    name="acao_lote"
+    value="excluir"
+    onclick="document.getElementById('id_pendencia_id').value=''; return confirm('Marcar pendências selecionadas como EXCLUÍDO?');"
+>
+    <i class="bi bi-x-circle"></i> Excluir Selecionadas
+</button>
+{% endif %}
 {% endblock %}
 
 {% block list_footer %}
-<div class="mt-3 text-end text-muted small">
-    Total de registros encontrados: <strong>{{ pendencias|length }}</strong>
-</div>
+<div class="mt-3 text-end text-muted small">Total de registros encontrados: <strong>{{ pendencias|length }}</strong></div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    (function () {
+        var batchForm = document.getElementById('batchForm');
+        if (!batchForm) {
+            return;
+        }
+
+        batchForm.addEventListener('submit', function (event) {
+            var pendenciaIdInput = document.getElementById('id_pendencia_id');
+            var checked = document.querySelectorAll('input[name="pendencias_selecionadas"]:checked');
+            var acaoIndividual = pendenciaIdInput && pendenciaIdInput.value;
+            if (checked.length === 0 && !acaoIndividual) {
+                event.preventDefault();
+                alert('Selecione ao menos uma pendência antes de executar a ação em lote.');
+            }
+        });
+    })();
+</script>
 {% endblock %}

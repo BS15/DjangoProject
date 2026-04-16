@@ -2,6 +2,7 @@
 
 import django.core.validators
 import django.db.models.deletion
+import commons.shared.file_validators
 from commons.shared.storage_utils import caminho_documento
 import fluxo.validators
 import simple_history.models
@@ -1093,10 +1094,8 @@ class Migration(migrations.Migration):
                 (
                     "arquivo",
                     models.TextField(
-                        blank=True,
                         max_length=100,
-                        null=True,
-                        validators=[fluxo.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -1260,8 +1259,8 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "verbose_name": "historical documento de pagamento",
-                "verbose_name_plural": "historical documento de pagamentos",
+                "verbose_name": "historical Boleto_Bancario",
+                "verbose_name_plural": "historical Boleto_Bancario",
                 "ordering": ("-history_date", "-history_id"),
                 "get_latest_by": ("history_date", "history_id"),
             },
@@ -1352,6 +1351,7 @@ class Migration(migrations.Migration):
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
                         to="fluxo.processo",
+                        verbose_name="Processo",
                     ),
                 ),
                 (
@@ -1367,8 +1367,8 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "verbose_name": "historical comprovante de pagamento",
-                "verbose_name_plural": "historical comprovante de pagamentos",
+                "verbose_name": "historical Comprovante de Pagamento",
+                "verbose_name_plural": "historical Comprovantes de Pagamento",
                 "ordering": ("-history_date", "-history_id"),
                 "get_latest_by": ("history_date", "history_id"),
             },
@@ -1528,7 +1528,6 @@ class Migration(migrations.Migration):
             options={
                 "verbose_name": "Comprovante de Pagamento",
                 "verbose_name_plural": "Comprovantes de Pagamento",
-                "ordering": ["ordem"],
             },
         ),
         migrations.CreateModel(
@@ -1590,8 +1589,8 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "ordering": ["ordem"],
-                "abstract": False,
+                "verbose_name": "Boleto_Bancario",
+                "verbose_name_plural": "Boleto_Bancario",
             },
         ),
         migrations.AddField(

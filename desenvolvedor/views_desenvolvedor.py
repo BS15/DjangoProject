@@ -422,7 +422,7 @@ def gerar_pdf_fake_view(request, doc_type):
         obj.quantidade_diarias = Decimal("2.5")
         obj.valor_total = Decimal(_fake_generator.numerify(text="####.##"))
         obj.meio_de_transporte.nome = "Aéreo"
-    elif doc_type in ["autorizacao", "conselho_fiscal", "contabilizacao"]:
+    elif doc_type in ["autorizacao", "conselho_fiscal", "contabilizacao", "auditoria"]:
         obj = MagicMock()
         obj.id = _fake_generator.random_int(min=1000, max=9999)
         obj.n_nota_empenho = _fake_generator.numerify(text="2026NE####")

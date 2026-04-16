@@ -41,6 +41,7 @@ def _is_cap_backoffice(user):
     Returns True if user is:
     - Superuser (Django admin with full system access)
     - Has explicit 'pode_operar_contas_pagar' permission (Contas a Pagar role)
+    - Has explicit 'acesso_backoffice' permission (cadastro/backoffice role)
     
     NOTE: is_staff flag is intentionally NOT checked here to enforce strict RBAC.
     Staff users must have explicit permissions assigned. See: copilot-instructions.md
@@ -48,6 +49,7 @@ def _is_cap_backoffice(user):
     return user.is_active and (
         user.is_superuser
         or user.has_perm("fluxo.pode_operar_contas_pagar")
+        or user.has_perm("fluxo.acesso_backoffice")
     )
 
 

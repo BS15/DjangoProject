@@ -182,10 +182,11 @@
                 </div>
             {% endif %}
 
-            {% if not pode_remover_nota_fiscal %}
+            {% if not pode_gerenciar_fiscal %}
                 <div class="alert alert-info border-info small">
                     <i class="bi bi-shield-lock"></i>
-                    Este processo já está em etapa pós-pagamento. A exclusão de Documento Fiscal está bloqueada para preservar a trilha de auditoria.
+                    Este processo está em etapa pós-pagamento. A gestão fiscal está totalmente bloqueada para preservar a trilha de auditoria.
+                    Somente ajustes via contingência devem ser realizados.
                 </div>
             {% endif %}
 
@@ -208,7 +209,7 @@
                                 <i class="bi bi-eye"></i>
                             </button>
                         {% endif %}
-                        {% if pode_remover_nota_fiscal or not nota %}
+                        {% if pode_gerenciar_fiscal %}
                         <button type="button"
                                 class="btn btn-sm fw-bold toggle-fiscal-btn {% if nota %}btn-outline-danger{% else %}btn-outline-success{% endif %}"
                                 data-doc-id="{{ doc.id }}"
@@ -229,6 +230,7 @@
                      data-save-url="{% if nota %}{% url 'api_salvar_nota_fiscal' processo_pk=processo.id nota_pk=nota.id %}{% endif %}">
 
                     {% if nota %}
+                    {% if not pode_gerenciar_fiscal %}<fieldset disabled>{% endif %}
                     <div class="row g-3 mb-3">
                         <div class="col-md-5">
                             <label class="small fw-bold text-muted mb-1">Emitente</label>
@@ -380,6 +382,7 @@
                             <i class="bi bi-floppy2"></i> Salvar Nota Fiscal
                         </button>
                     </div>
+                    {% if not pode_gerenciar_fiscal %}</fieldset>{% endif %}
                     {% endif %}
                 </div>
             </div>
@@ -427,6 +430,7 @@
 <script>
 const CSRF_TOKEN = '{{ csrf_token }}';
 const PROCESSO_URL = "{% url 'editar_processo' pk=processo.id %}";
+const FISCAL_LOCKED = {% if pode_gerenciar_fiscal %}false{% else %}true{% endif %};
 
 /* ── Unsaved changes tracking ── */
 let hasChanges = false;
@@ -468,6 +472,7 @@ document.addEventListener('change', function(e) {
 /* ── Add imposto row ── */
 document.addEventListener('click', function(e) {
     if (e.target.closest('.add-tax-btn')) {
+        if (FISCAL_LOCKED) return;
         const btn = e.target.closest('.add-tax-btn');
         const container = btn.closest('.taxes-container');
         const tbody = container.querySelector('.tax-body');
@@ -480,6 +485,7 @@ document.addEventListener('click', function(e) {
         hasChanges = true;
     }
     if (e.target.closest('.remove-tax-btn')) {
+        if (FISCAL_LOCKED) return;
         const panel = e.target.closest('.nf-form-panel');
         e.target.closest('tr').remove();
         updateCodigoServicoInss(panel);
@@ -601,6 +607,10 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('click', function(e) {
     const btn = e.target.closest('.toggle-fiscal-btn');
     if (!btn) return;
+    if (FISCAL_LOCKED) {
+        alert('Gestão fiscal bloqueada no pós-pagamento. Utilize contingência para ajustes auditáveis.');
+        return;
+    }
     const docId = btn.dataset.docId;
     const url = btn.dataset.toggleUrl;
     btn.disabled = true;
@@ -709,6 +719,7 @@ function saveNotaFiscal(panel) {
 document.addEventListener('click', function(e) {
     const btn = e.target.closest('.save-nf-btn');
     if (!btn) return;
+    if (FISCAL_LOCKED) return;
 
     const panel = btn.closest('.nf-form-panel');
     btn.disabled = true;
@@ -719,6 +730,10 @@ document.addEventListener('click', function(e) {
 
 /* ── Salvar Todos e Sair ── */
 document.getElementById('btn-salvar-todos-sair').addEventListener('click', function() {
+    if (FISCAL_LOCKED) {
+        window.location.href = PROCESSO_URL;
+        return;
+    }
     const btn = this;
     const statusEl = document.getElementById('save-all-status');
     const fiscalPanels = Array.from(document.querySelectorAll('.nf-form-panel.visible'))

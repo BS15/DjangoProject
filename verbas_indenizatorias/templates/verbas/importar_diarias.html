@@ -75,6 +75,7 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Beneficiário</th>
+                                    <th>Data Solicitação</th>
                                     <th>Data Saída</th>
                                     <th>Data Retorno</th>
                                     <th>Origem</th>
@@ -88,6 +89,7 @@
                                     <tr>
                                         <td class="text-muted small">{{ forloop.counter }}</td>
                                         <td>{{ item.beneficiario_nome }}</td>
+                                        <td>{{ item.data_solicitacao }}</td>
                                         <td>{{ item.data_saida_display }}</td>
                                         <td>{{ item.data_retorno_display }}</td>
                                         <td>{{ item.cidade_origem }}</td>

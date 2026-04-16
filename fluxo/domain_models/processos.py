@@ -255,8 +255,8 @@ class Processo(models.Model):
         if self.valor_liquido and self.valor_bruto and self.valor_liquido > self.valor_bruto:
             errors["valor_liquido"] = "Valor líquido não pode ser maior que o valor bruto."
 
-        if self.data_pagamento and self.data_vencimento and self.data_pagamento < self.data_vencimento:
-            errors["data_pagamento"] = "Data de pagamento não pode ser anterior à data de vencimento."
+        if self.data_pagamento and self.data_vencimento and self.data_vencimento < self.data_pagamento:
+            errors["data_vencimento"] = "Data de vencimento não pode ser anterior à data de pagamento."
 
         if not self.credor_id:
             errors["credor"] = "Credor é obrigatório."
@@ -267,7 +267,10 @@ class Processo(models.Model):
         if not self.tipo_pagamento_id:
             errors["tipo_pagamento"] = "Tipo de pagamento é obrigatório."
 
-        if not self.status_id:
+        # No fluxo de criação, o status inicial é definido na camada de ação
+        # logo após a validação do formulário (mutator em add_process_action).
+        # Para instâncias já persistidas, o status continua obrigatório.
+        if self.pk and not self.status_id:
             errors["status"] = "Status é obrigatório."
 
         if errors:

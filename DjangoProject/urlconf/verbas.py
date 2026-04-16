@@ -10,7 +10,7 @@ from verbas_indenizatorias.views.diarias import apis as verbas_diarias_apis
 from verbas_indenizatorias.views.diarias import imports as verbas_diarias_imports
 from verbas_indenizatorias.views.diarias import panels as verbas_diarias_panels
 from verbas_indenizatorias.views.diarias import pdf as verbas_diarias_pdf
-from verbas_indenizatorias.views.diarias import signatures as verbas_diarias_signatures
+
 from verbas_indenizatorias.views.diarias import sync as verbas_diarias_sync
 from verbas_indenizatorias.views.jetons import actions as verbas_jeton_actions
 from verbas_indenizatorias.views.jetons import panels as verbas_jeton_panels
@@ -19,6 +19,13 @@ from verbas_indenizatorias.views.reembolsos import panels as verbas_reembolso_pa
 
 urlpatterns = [
     path('processo/<int:pk>/editar-verbas/', verbas_panels.editar_processo_verbas_view, name='editar_processo_verbas'),
+    path('processo/<int:pk>/editar-verbas/capa/', verbas_panels.editar_processo_verbas_capa_view, name='editar_processo_verbas_capa'),
+    path('processo/<int:pk>/editar-verbas/capa/action/', verbas_actions.editar_processo_verbas_capa_action, name='editar_processo_verbas_capa_action'),
+    path('processo/<int:pk>/editar-verbas/pendencias/', verbas_panels.editar_processo_verbas_pendencias_view, name='editar_processo_verbas_pendencias'),
+    path('processo/<int:pk>/editar-verbas/pendencias/action/', verbas_actions.editar_processo_verbas_pendencias_action, name='editar_processo_verbas_pendencias_action'),
+    path('processo/<int:pk>/editar-verbas/itens/', verbas_panels.editar_processo_verbas_itens_view, name='editar_processo_verbas_itens'),
+    path('processo/<int:pk>/editar-verbas/documentos/', verbas_panels.editar_processo_verbas_documentos_view, name='editar_processo_verbas_documentos'),
+    path('processo/<int:pk>/editar-verbas/documentos/action/', verbas_actions.editar_processo_verbas_documentos_action, name='editar_processo_verbas_documentos_action'),
     path('processo/<int:pk>/editar-verbas/action/', verbas_actions.editar_processo_verbas_action, name='editar_processo_verbas_action'),
     path('api/verba/<str:tipo_verba>/<int:pk>/add-documento/', verbas_apis.api_add_documento_verba, name='api_add_documento_verba'),
     path('verbas/', verbas_panels.verbas_panel_view, name='verbas_panel'),
@@ -29,8 +36,7 @@ urlpatterns = [
     path('verbas/diarias/nova/', verbas_diarias_panels.add_diaria_view, name='add_diaria'),
     path('verbas/diarias/nova/action/', verbas_diarias_actions.add_diaria_action, name='add_diaria_action'),
     path('verbas/diarias/<int:pk>/gerenciar/', verbas_diarias_panels.gerenciar_diaria_view, name='gerenciar_diaria'),
-    path('verbas/diarias/<int:pk>/solicitar-autorizacao/', verbas_diarias_actions.solicitar_autorizacao_action, name='solicitar_autorizacao_action'),
-    path('verbas/diarias/<int:pk>/autorizar/', verbas_diarias_actions.autorizar_diaria_action, name='autorizar_diaria_action'),
+
     path('verbas/diarias/<int:pk>/comprovantes/registrar/', verbas_diarias_actions.registrar_comprovante_action, name='registrar_comprovante_action'),
     path('verbas/diarias/<int:pk>/cancelar/', verbas_diarias_actions.cancelar_diaria_action, name='cancelar_diaria_action'),
     path('verbas/reembolsos/novo/', verbas_reembolso_panels.add_reembolso_view, name='add_reembolso'),
@@ -57,14 +63,11 @@ urlpatterns = [
     path('verbas/auxilios/<int:pk>/cancelar/', verbas_auxilio_actions.cancelar_auxilio_action, name='cancelar_auxilio_action'),
     path('verbas/agrupar/<str:tipo_verba>/', verbas_actions.agrupar_verbas_view, name='agrupar_verbas'),
     path('api/valor-unitario-diaria/<int:beneficiario_id>/', verbas_diarias_apis.api_valor_unitario_diaria, name='api_valor_unitario_diaria'),
-    path('verbas/diarias/autorizacao/', verbas_diarias_panels.painel_autorizacao_diarias_view, name='painel_autorizacao_diarias'),
-    path('verbas/diarias/autorizacao/<int:pk>/alternar/', verbas_diarias_actions.alternar_autorizacao_diaria, name='alternar_autorizacao_diaria'),
-    path('verbas/diarias/<int:diaria_id>/aprovar/', verbas_diarias_actions.aprovar_diaria_view, name='aprovar_diaria'),
+    path('api/diarias-iniciais/<int:beneficiario_id>/', verbas_diarias_apis.api_diarias_iniciais_por_beneficiario, name='api_diarias_iniciais_por_beneficiario'),
+
     path('verbas/diarias/<int:pk>/pcd/', verbas_diarias_pdf.gerar_pcd_view, name='gerar_pcd'),
     path('verbas/sincronizar-diarias/', verbas_diarias_sync.sincronizar_diarias, name='sincronizar_diarias'),
     path('verbas/diarias/importar/', verbas_diarias_imports.importar_diarias_view, name='importar_diarias'),
     path('verbas/diarias/template-csv/', verbas_diarias_panels.download_template_diarias_csv, name='download_template_diarias_csv'),
-    path('verbas/diarias/<int:assinatura_id>/sincronizar/', verbas_diarias_signatures.sincronizar_assinatura_view, name='sincronizar_assinatura'),
-    path('verbas/diarias/<int:diaria_id>/reenviar-assinatura/', verbas_diarias_signatures.reenviar_assinatura_view, name='reenviar_assinatura'),
-    path('verbas/minhas-solicitacoes/', verbas_diarias_panels.minhas_solicitacoes_view, name='minhas_solicitacoes'),
+
 ]

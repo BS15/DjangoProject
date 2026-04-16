@@ -29,10 +29,10 @@ def adicionar_despesa_action(request: HttpRequest, pk: int) -> HttpResponse:
         despesa.suprimento = suprimento
         despesa.save()
         messages.success(request, "Despesa e documento anexados com sucesso!")
+        return redirect("gerenciar_suprimento_view", pk=suprimento.id)
     else:
         messages.error(request, "Verifique os campos da despesa e tente novamente.")
-
-    return redirect("gerenciar_suprimento_view", pk=suprimento.id)
+        return redirect("adicionar_despesa_view", pk=suprimento.id)
 
 
 @permission_required("suprimentos.acesso_backoffice", raise_exception=True)

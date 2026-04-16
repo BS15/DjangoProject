@@ -70,8 +70,8 @@ class Migration(migrations.Migration):
                         blank=True, max_length=200, null=True, verbose_name="Lotação"
                     ),
                 ),
-                ("data_saida", models.DateField(verbose_name="Período Inicial (De)")),
-                ("data_retorno", models.DateField(verbose_name="Período Final (Ate)")),
+                ("inicio_periodo", models.DateField(verbose_name="Período Inicial (De)")),
+                ("fim_periodo", models.DateField(verbose_name="Período Final (Até)")),
                 (
                     "data_recibo",
                     models.DateField(
@@ -197,8 +197,8 @@ class Migration(migrations.Migration):
                         blank=True, max_length=200, null=True, verbose_name="Lotação"
                     ),
                 ),
-                ("data_saida", models.DateField(verbose_name="Período Inicial (De)")),
-                ("data_retorno", models.DateField(verbose_name="Período Final (Ate)")),
+                ("inicio_periodo", models.DateField(verbose_name="Período Inicial (De)")),
+                ("fim_periodo", models.DateField(verbose_name="Período Final (Até)")),
                 (
                     "data_recibo",
                     models.DateField(
@@ -253,6 +253,11 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
+            options={
+                "permissions": [
+                    ("acesso_backoffice", "Acesso ao backoffice de suprimentos"),
+                ],
+            },
         ),
         migrations.CreateModel(
             name="HistoricalDocumentoSuprimentoDeFundos",

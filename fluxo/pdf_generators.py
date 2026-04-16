@@ -4,6 +4,7 @@ Este módulo implementa classes para geração de PDFs de termos, autorizações
 """
 
 import logging
+import textwrap
 from datetime import date
 
 from commons.shared.pdf_tools import BasePDFDocument, _draw_wrapped_text, _contar_paginas_documentos
@@ -104,7 +105,7 @@ class TermoAtesteDocument(BasePDFDocument):
             "de forma satisfatória e de acordo com as especificações contratuais exigidas."
         )
         c.setFont("Helvetica", 11)
-        y = _draw_wrapped_text(declaration, 72, 430, 500, font_name="Helvetica", font_size=11, leading=20)
+        y = _draw_wrapped_text(c, declaration, 72, 430, 500, font_name="Helvetica", font_size=11, leading=20)
 
         sig_x = page_width / 2
         if documento_fiscal.fiscal_contrato:
@@ -396,7 +397,14 @@ class ConselhoFiscalDocument(BasePDFDocument):
 
 
 class TermoAuditoriaDocument(BasePDFDocument):
-    """Gera o PDF do Termo de Auditoria para um processo."""
+    """Gera o PDF do Termo de Auditoria para um processo.
+    
+    Inclui:
+    - Certificação formal de auditoria
+    - Declaração de contingências ativas
+    - Registro de devoluções realizadas
+    - Trilha de auditoria (histórico de transições)
+    """
 
     def draw_content(self):
         """Desenha corpo do Termo de Auditoria no canvas."""
@@ -408,6 +416,7 @@ class TermoAuditoriaDocument(BasePDFDocument):
         margin_left = 70
         margin_right = 70
         text_width = width - margin_left - margin_right
+        y_min = _SIGNATURE_BLOCK_HEIGHT
 
         y = height - 160
 
@@ -440,13 +449,104 @@ class TermoAuditoriaDocument(BasePDFDocument):
             "para continuidade do fluxo institucional."
         )
         y = _draw_wrapped_text(c, texto, margin_left, y, text_width, font_name="Helvetica", font_size=11)
-        y -= 30
+        y -= 20
 
-        sig_x = width / 2.0
-        c.setFont("Helvetica", 10)
-        c.drawCentredString(sig_x, _AUTH_SIG_Y + _AUTH_SIG_DATE_OFFSET, "Local e Data: _____________________________, _____ / _____ / _________")
-        c.line(sig_x - _AUTH_SIG_HALF_WIDTH, _AUTH_SIG_Y, sig_x + _AUTH_SIG_HALF_WIDTH, _AUTH_SIG_Y)
-        c.drawCentredString(sig_x, _AUTH_SIG_Y - 14, "Responsável pela Auditoria")
+        # ═════════════════════════════════════════════════════════════════════
+        # CONTINGÊNCIAS E DEVOLUÇÕES
+        # ═════════════════════════════════════════════════════════════════════
+        
+        contingencias = processo.contingencias.all()
+        devolucoes = processo.devolucoes.all()
+        
+        if contingencias or devolucoes:
+            c.setLineWidth(0.5)
+            c.line(margin_left, y, width - margin_right, y)
+            y -= 14
+            
+            c.setFont("Helvetica-Bold", 10)
+            c.drawString(margin_left, y, "SITUAÇÕES REGISTRADAS:")
+            y -= 14
+            
+            # Contingências
+            if contingencias:
+                c.setFont("Helvetica-Bold", 9)
+                c.drawString(margin_left, y, "Contingências Ativas:")
+                y -= 12
+                c.setFont("Helvetica", 9)
+                for cont in contingencias:
+                    status_display = cont.get_status_display() if hasattr(cont, 'get_status_display') else cont.status
+                    cont_text = f"• #{cont.pk}: {status_display} - {cont.justificativa[:60]}"
+                    y = _draw_wrapped_text(
+                        c, cont_text, margin_left + 10, y, text_width - 10,
+                        font_name="Helvetica", font_size=9
+                    )
+                    if y < y_min + 80:
+                        break
+                y -= 8
+            
+            # Devoluções
+            if devolucoes:
+                c.setFont("Helvetica-Bold", 9)
+                c.drawString(margin_left, y, "Devoluções Registradas:")
+                y -= 12
+                c.setFont("Helvetica", 9)
+                for dev in devolucoes:
+                    dev_text = f"• {dev.data_devolucao.strftime('%d/%m/%Y')}: R$ {_formatar_moeda(dev.valor_devolvido)} - {dev.motivo[:50]}"
+                    y = _draw_wrapped_text(
+                        c, dev_text, margin_left + 10, y, text_width - 10,
+                        font_name="Helvetica", font_size=9
+                    )
+                    if y < y_min + 80:
+                        break
+                y -= 12
+        
+        # ═════════════════════════════════════════════════════════════════════
+        # TRILHA DE AUDITORIA
+        # ═════════════════════════════════════════════════════════════════════
+        
+        if y > y_min + 80:
+            c.setLineWidth(0.5)
+            c.line(margin_left, y, width - margin_right, y)
+            y -= 14
+            
+            c.setFont("Helvetica-Bold", 10)
+            c.drawString(margin_left, y, "TRILHA DE AUDITORIA (TRANSIÇÕES DE STATUS):")
+            y -= 12
+            
+            history_records = list(processo.history.all().order_by('history_date'))
+            log_lines = []
+            for i, record in enumerate(history_records):
+                prev_status_id = history_records[i - 1].status_id if i > 0 else None
+                if record.history_type == '+' or (record.history_type == '~' and record.status_id != prev_status_id):
+                    try:
+                        if record.history_user:
+                            user_str = record.history_user.get_full_name() or record.history_user.username
+                        else:
+                            user_str = "Sistema"
+                        date_str = record.history_date.strftime('%d/%m/%Y às %H:%M')
+                        if record.history_type == '+':
+                            log_lines.append(f"• Processo criado em {date_str} por {user_str}")
+                        else:
+                            status_str = str(record.status) if record.status else "Status atualizado"
+                            log_lines.append(f"• {status_str} em {date_str} por {user_str}")
+                    except AttributeError as exc:
+                        logger.warning(
+                            "Falha ao montar trilha de auditoria do processo %s: %s",
+                            processo.id,
+                            exc,
+                        )
+            
+            c.setFont("Helvetica", 9)
+            if log_lines:
+                for line in log_lines[:_MAX_AUDIT_TRAIL_ENTRIES]:
+                    if y > y_min + 20:
+                        y = _draw_wrapped_text(
+                            c, line, margin_left + 10, y, text_width - 10,
+                            font_name="Helvetica", font_size=9, leading=12
+                        )
+            else:
+                c.drawString(margin_left, y, "Nenhum registro de alteração de status.")
+                y -= 12
 
 
 

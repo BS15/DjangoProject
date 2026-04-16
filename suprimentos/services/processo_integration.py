@@ -36,3 +36,23 @@ def criar_processo_para_suprimento(suprimento, detalhamento):
         suprimento.save(update_fields=["processo"])
 
     return novo_processo
+
+
+def gerar_documentos_relacionados_por_transicao(processo, status_anterior, novo_status):
+    """Hook de integração para documentos automáticos de suprimento.
+
+    Mantido para compatibilidade com o orquestrador canônico do fluxo.
+    No estado atual do domínio, suprimentos não geram anexos adicionais a partir
+    dessas transições genéricas do Processo.
+    """
+    return None
+
+
+def sincronizar_relacoes_apos_transicao(processo, status_anterior, novo_status, usuario=None):
+    """Hook de sincronização pós-transição para suprimentos vinculados.
+
+    Mantido para compatibilidade com o orquestrador canônico do fluxo.
+    As mudanças de estado específicas de suprimento são tratadas no próprio
+    domínio de suprimentos; portanto, esta integração é atualmente neutra.
+    """
+    return None

@@ -43,8 +43,8 @@ class SuprimentoDeFundos(models.Model):
 
     # Período
     lotacao = models.CharField("Lotação", max_length=200, blank=True, null=True)
-    data_saida = models.DateField("Período Inicial (De)")
-    data_retorno = models.DateField("Período Final (Ate)")
+    inicio_periodo = models.DateField("Período Inicial (De)")
+    fim_periodo = models.DateField("Período Final (Até)")
     data_recibo = models.DateField("Data de Carga na Conta", blank=True, null=True)
 
     # Fechamento (Preenchido ao encerrar o mês)
@@ -72,12 +72,12 @@ class SuprimentoDeFundos(models.Model):
     history = HistoricalRecords()
 
     def clean(self):
-        """Valida que data_retorno é posterior ou igual a data_saida."""
+        """Valida que fim_periodo é posterior ou igual a inicio_periodo."""
         errors = {}
         
-        if self.data_retorno and self.data_saida:
-            if self.data_retorno < self.data_saida:
-                errors['data_retorno'] = 'Data de retorno não pode ser anterior à data de saída.'
+        if self.fim_periodo and self.inicio_periodo:
+            if self.fim_periodo < self.inicio_periodo:
+                errors['fim_periodo'] = 'Data final do período não pode ser anterior ao início.'
         
         if self.data_devolucao_saldo and self.data_recibo:
             if self.data_devolucao_saldo < self.data_recibo:

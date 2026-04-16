@@ -1,6 +1,7 @@
 """Geradores de PDF para documentos de suprimentos de fundos."""
 
 from commons.shared.pdf_tools import BasePDFDocument, _draw_wrapped_text
+from commons.shared.text_tools import format_brl_currency
 
 
 class ReciboSuprimentoDocument(BasePDFDocument):
@@ -12,7 +13,7 @@ class ReciboSuprimentoDocument(BasePDFDocument):
         c = self.canvas
         page_width = self.page_width
 
-        valor_formatado = self._formatar_moeda(suprimento.valor_liquido)
+        valor_formatado = format_brl_currency(suprimento.valor_liquido)
         beneficiario = suprimento.suprido
         beneficiario_nome = beneficiario.nome if beneficiario else "N/A"
         beneficiario_cpf = beneficiario.cpf_cnpj if beneficiario else "N/A"
@@ -45,12 +46,6 @@ class ReciboSuprimentoDocument(BasePDFDocument):
         c.drawCentredString(sig_x, 265, beneficiario_nome)
         c.drawCentredString(sig_x, 236, "Assinatura do Recebedor")
         c.drawCentredString(sig_x, 220, "Local e Data: Florianópolis, _____ / _____ / _________")
-
-    def _formatar_moeda(self, valor):
-        """Formata valor em moeda brasileira (R$)."""
-        from commons.shared.text_tools import format_brl_currency
-        return format_brl_currency(valor)
-
 
 SUPRIMENTOS_DOCUMENT_REGISTRY = {
     "recibo_suprimento": ReciboSuprimentoDocument,

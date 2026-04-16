@@ -3,17 +3,18 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import User
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET
 
 from credores.models import Credor
-from fiscal.models import CodigosImposto
+from fiscal.models import CodigosImposto, DocumentoFiscal, RetencaoImposto
 from fluxo.domain_models import Processo
 
 from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoForm
 from ..helpers import _validar_regras_edicao_processo
 
-from .actions import _status_bloqueia_exclusao_nota_fiscal
+from .actions import _status_bloqueia_gestao_fiscal
 
 
 def _get_next_url(request, *, allow_referer=False):
@@ -52,6 +53,28 @@ def _montar_contexto_hub(processo, status_inicial, somente_documentos):
     }
 
 
+def _montar_peek_tables_hub(request, processo):
+    """Monta tabelas paginadas de apoio do hub (somente leitura)."""
+    documentos_qs = processo.documentos.select_related("tipo").all().order_by("ordem", "id")
+    pendencias_qs = processo.pendencias.select_related("tipo", "status").all().order_by("id")
+    liquidacoes_qs = DocumentoFiscal.objects.select_related("nome_emitente", "fiscal_contrato").filter(
+        processo=processo
+    ).order_by("-data_emissao", "-id")
+    retencoes_qs = RetencaoImposto.objects.select_related(
+        "nota_fiscal",
+        "codigo",
+        "status",
+        "beneficiario",
+    ).filter(nota_fiscal__processo=processo).order_by("-data_pagamento", "-id")
+
+    return {
+        "documentos_page": Paginator(documentos_qs, 6).get_page(request.GET.get("docs_page")),
+        "pendencias_page": Paginator(pendencias_qs, 6).get_page(request.GET.get("pend_page")),
+        "liquidacoes_page": Paginator(liquidacoes_qs, 6).get_page(request.GET.get("liq_page")),
+        "retencoes_page": Paginator(retencoes_qs, 6).get_page(request.GET.get("ret_page")),
+    }
+
+
 @require_GET
 @permission_required("fluxo.acesso_backoffice", raise_exception=True)
 def add_process_view(request):
@@ -79,6 +102,7 @@ def editar_processo(request, pk):
         return redirecionamento
 
     context = _montar_contexto_hub(processo, status_inicial, somente_documentos)
+    context.update(_montar_peek_tables_hub(request, processo))
     return render(request, "fluxo/editar_processo_hub.html", context)
 
 
@@ -113,9 +137,17 @@ def editar_processo_capa_view(request, pk):
 @permission_required("fluxo.acesso_backoffice", raise_exception=True)
 def editar_processo_documentos_view(request, pk):
     """Spoke GET de edição de anexos do processo."""
+    from fluxo.domain_models import TiposDeDocumento
+    
     processo, status_inicial, redirecionamento, _ = _obter_contexto_edicao(request, pk)
     if redirecionamento:
         return redirecionamento
+
+    precisa_documento_orcamentario = (
+        not processo.extraorcamentario
+        and not status_inicial.startswith("A EMPENHAR")
+        and not processo.documentos.filter(tipo__tipo_de_documento__iexact="DOCUMENTOS ORÇAMENTÁRIOS").exists()
+    )
 
     return render(
         request,
@@ -123,9 +155,12 @@ def editar_processo_documentos_view(request, pk):
         {
             "processo": processo,
             "documento_formset": DocumentoFormSet(instance=processo, prefix="documento"),
-            "documento_orcamentario_formset": DocumentoOrcamentarioFormSet(instance=processo, prefix="docorc"),
+            "tipos_documento": TiposDeDocumento.objects.filter(is_active=True),
+            "entity_label": f"Processo {processo.id}",
+            "pode_interagir": True,  # Users can always interact with docs; guards live at action level
             "status_inicial": status_inicial,
             "next_url": _get_next_url(request),
+            "precisa_documento_orcamentario": precisa_documento_orcamentario,
         },
     )
 
@@ -163,7 +198,7 @@ def documentos_fiscais_view(request, pk):
     credores = Credor.objects.all().order_by("nome")
     codigos_imposto = CodigosImposto.objects.all().order_by("codigo")
     source = request.GET.get("source", "")
-    pode_remover_nota_fiscal = not _status_bloqueia_exclusao_nota_fiscal(processo)
+    pode_gerenciar_fiscal = not _status_bloqueia_gestao_fiscal(processo)
 
     context = {
         "processo": processo,
@@ -172,7 +207,7 @@ def documentos_fiscais_view(request, pk):
         "credores": credores,
         "codigos_imposto": codigos_imposto,
         "source": source,
-        "pode_remover_nota_fiscal": pode_remover_nota_fiscal,
+        "pode_gerenciar_fiscal": pode_gerenciar_fiscal,
     }
     return render(request, "fiscal/documentos_fiscais.html", context)
 

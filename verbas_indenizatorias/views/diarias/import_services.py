@@ -7,7 +7,6 @@ from decimal import Decimal, InvalidOperation
 
 from credores.models import Credor
 from verbas_indenizatorias.models import Diaria, StatusChoicesVerbasIndenizatorias
-from verbas_indenizatorias.services.documentos import gerar_e_anexar_scd_diaria
 
 
 class DiariaCsvValidationError(Exception):
@@ -28,6 +27,15 @@ def _parse_diaria_row(row, line_num):
     except ValueError:
         raise DiariaCsvValidationError(f"Linha {line_num}: Data inválida. Use o formato DD/MM/AAAA.")
 
+    raw_solicitacao = row.get("DATA_SOLICITACAO", "").strip()
+    if raw_solicitacao:
+        try:
+            data_solicitacao = datetime.strptime(raw_solicitacao, "%d/%m/%Y").date()
+        except ValueError:
+            raise DiariaCsvValidationError(f"Linha {line_num}: DATA_SOLICITACAO inválida. Use o formato DD/MM/AAAA.")
+    else:
+        data_solicitacao = datetime.today().date()
+
     if data_retorno < data_saida:
         raise DiariaCsvValidationError(
             f"Linha {line_num}: Data de retorno ({row['DATA_RETORNO'].strip()}) não pode ser anterior à data de saída ({row['DATA_SAIDA'].strip()})."
@@ -43,6 +51,7 @@ def _parse_diaria_row(row, line_num):
     return {
         "beneficiario_id": credor.id,
         "beneficiario_nome": credor.nome,
+        "data_solicitacao": data_solicitacao.isoformat(),
         "data_saida": data_saida.isoformat(),
         "data_retorno": data_retorno.isoformat(),
         "quantidade_diarias": str(qtd),
@@ -76,14 +85,15 @@ def confirmar_diarias_lote(preview_items, usuario):
 
     resultados = []
     status_obj, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-        status_choice__iexact="AGUARDANDO AUTORIZAÇÃO",
-        defaults={"status_choice": "AGUARDANDO AUTORIZAÇÃO"},
+        status_choice__iexact="APROVADA",
+        defaults={"status_choice": "APROVADA"},
     )
     for item in preview_items:
         try:
             diaria = Diaria.objects.create(
                 beneficiario_id=item["beneficiario_id"],
                 proponente=usuario,
+                data_solicitacao=date.fromisoformat(item["data_solicitacao"]),
                 data_saida=date.fromisoformat(item["data_saida"]),
                 data_retorno=date.fromisoformat(item["data_retorno"]),
                 quantidade_diarias=Decimal(item["quantidade_diarias"]),
@@ -92,8 +102,8 @@ def confirmar_diarias_lote(preview_items, usuario):
                 objetivo=item.get("objetivo", ""),
                 tipo_solicitacao=item.get("tipo_solicitacao", "INICIAL"),
                 status=status_obj,
+                autorizada=True,
             )
-            gerar_e_anexar_scd_diaria(diaria, usuario)
             resultados.append({"ok": True, "diaria_id": diaria.id, "nome": item["beneficiario_nome"]})
         except Exception as exc:
             resultados.append({"ok": False, "nome": item.get("beneficiario_nome", "?"), "erro": str(exc)})

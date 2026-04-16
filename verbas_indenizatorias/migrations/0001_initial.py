@@ -2,6 +2,7 @@
 
 import django.core.validators
 import django.db.models.deletion
+import django.utils.timezone
 from commons.shared.storage_utils import caminho_documento
 import fluxo.validators
 import simple_history.models
@@ -70,6 +71,20 @@ class Migration(migrations.Migration):
                 ),
                 ("is_active", models.BooleanField(default=True)),
             ],
+            options={
+                "permissions": [
+                    ("pode_visualizar_verbas", "Pode visualizar verbas indenizatórias"),
+                    ("pode_gerenciar_jetons", "Pode gerenciar jetons"),
+                    ("pode_agrupar_verbas", "Pode agrupar verbas indenizatórias"),
+                    ("pode_gerenciar_processos_verbas", "Pode gerenciar processos de verbas"),
+                    ("pode_gerenciar_auxilios", "Pode gerenciar auxílios"),
+                    ("pode_gerenciar_reembolsos", "Pode gerenciar reembolsos"),
+                    ("pode_autorizar_diarias", "Pode autorizar diárias"),
+                    ("pode_importar_diarias", "Pode importar diárias"),
+                    ("pode_criar_diarias", "Pode criar diárias"),
+                    ("pode_gerenciar_diarias", "Pode gerenciar diárias"),
+                ],
+            },
         ),
         migrations.CreateModel(
             name="AuxilioRepresentacao",
@@ -153,12 +168,26 @@ class Migration(migrations.Migration):
                     models.CharField(
                         choices=[
                             ("INICIAL", "Concessão Inicial"),
-                            ("PRORROGACAO", "Prorrogação"),
                             ("COMPLEMENTACAO", "Complementação"),
                         ],
                         default="INICIAL",
                         max_length=20,
                     ),
+                ),
+                (
+                    "diaria_inicial",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="complementacoes",
+                        to="verbas_indenizatorias.diaria",
+                        verbose_name="Diária Inicial Relacionada",
+                    ),
+                ),
+                (
+                    "data_solicitacao",
+                    models.DateField(default=django.utils.timezone.now, verbose_name="Data da Solicitação"),
                 ),
                 ("data_saida", models.DateField(verbose_name="Data de Saída")),
                 ("data_retorno", models.DateField(verbose_name="Data de Retorno")),
@@ -181,7 +210,7 @@ class Migration(migrations.Migration):
                     models.DecimalField(
                         decimal_places=1,
                         max_digits=4,
-                        validators=[django.core.validators.MinValueValidator(0.1)],
+                        validators=[django.core.validators.MinValueValidator(0)],
                         verbose_name="Quantidade de Diárias",
                     ),
                 ),
@@ -1134,12 +1163,15 @@ class Migration(migrations.Migration):
                     models.CharField(
                         choices=[
                             ("INICIAL", "Concessão Inicial"),
-                            ("PRORROGACAO", "Prorrogação"),
                             ("COMPLEMENTACAO", "Complementação"),
                         ],
                         default="INICIAL",
                         max_length=20,
                     ),
+                ),
+                (
+                    "data_solicitacao",
+                    models.DateField(default=django.utils.timezone.now, verbose_name="Data da Solicitação"),
                 ),
                 ("data_saida", models.DateField(verbose_name="Data de Saída")),
                 ("data_retorno", models.DateField(verbose_name="Data de Retorno")),
@@ -1162,7 +1194,7 @@ class Migration(migrations.Migration):
                     models.DecimalField(
                         decimal_places=1,
                         max_digits=4,
-                        validators=[django.core.validators.MinValueValidator(0.1)],
+                        validators=[django.core.validators.MinValueValidator(0)],
                         verbose_name="Quantidade de Diárias",
                     ),
                 ),
@@ -1211,6 +1243,18 @@ class Migration(migrations.Migration):
                         related_name="+",
                         to="credores.credor",
                         verbose_name="Beneficiário",
+                    ),
+                ),
+                (
+                    "diaria_inicial",
+                    models.ForeignKey(
+                        blank=True,
+                        db_constraint=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        related_name="+",
+                        to="verbas_indenizatorias.diaria",
+                        verbose_name="Diária Inicial Relacionada",
                     ),
                 ),
                 (

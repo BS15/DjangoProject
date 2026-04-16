@@ -59,6 +59,14 @@ def _get_tipos_documento_ativos():
     return TiposDeDocumento.objects.filter(is_active=True)
 
 
+def _get_tipos_documento_verbas():
+    """Retorna apenas os tipos de documento ativos vinculados a VERBAS INDENIZATÓRIAS."""
+    return TiposDeDocumento.objects.filter(
+        is_active=True,
+        tipo_de_pagamento__tipo_de_pagamento__iexact="VERBAS INDENIZATÓRIAS",
+    )
+
+
 def _get_permissao_gestao_verba(tipo_verba):
     """Resolve a permissão Django necessária para gerenciar o tipo de verba."""
     return _VERBA_PERMISSION_MAP.get(tipo_verba)
