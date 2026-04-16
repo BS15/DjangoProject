@@ -43,7 +43,7 @@ def gerenciar_diaria_view(request, pk):
 def download_template_diarias_csv(request):
     """Baixa um CSV-modelo para importação de diárias."""
     conteudo = (
-        "NOME_BENEFICIARIO,DATA_SAIDA,DATA_RETORNO,QUANTIDADE_DIARIAS,CIDADE_ORIGEM,CIDADE_DESTINO,OBJETIVO,TIPO_SOLICITACAO\n"
+        "NOME_BENEFICIARIO,DATA_SOLICITACAO,DATA_SAIDA,DATA_RETORNO,QUANTIDADE_DIARIAS,CIDADE_ORIGEM,CIDADE_DESTINO,OBJETIVO,TIPO_SOLICITACAO\n"
     )
     response = HttpResponse(conteudo, content_type="text/csv; charset=utf-8")
     response["Content-Disposition"] = 'attachment; filename="template_diarias.csv"'

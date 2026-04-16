@@ -27,6 +27,15 @@ def _parse_diaria_row(row, line_num):
     except ValueError:
         raise DiariaCsvValidationError(f"Linha {line_num}: Data inválida. Use o formato DD/MM/AAAA.")
 
+    raw_solicitacao = row.get("DATA_SOLICITACAO", "").strip()
+    if raw_solicitacao:
+        try:
+            data_solicitacao = datetime.strptime(raw_solicitacao, "%d/%m/%Y").date()
+        except ValueError:
+            raise DiariaCsvValidationError(f"Linha {line_num}: DATA_SOLICITACAO inválida. Use o formato DD/MM/AAAA.")
+    else:
+        data_solicitacao = datetime.today().date()
+
     if data_retorno < data_saida:
         raise DiariaCsvValidationError(
             f"Linha {line_num}: Data de retorno ({row['DATA_RETORNO'].strip()}) não pode ser anterior à data de saída ({row['DATA_SAIDA'].strip()})."
@@ -42,6 +51,7 @@ def _parse_diaria_row(row, line_num):
     return {
         "beneficiario_id": credor.id,
         "beneficiario_nome": credor.nome,
+        "data_solicitacao": data_solicitacao.isoformat(),
         "data_saida": data_saida.isoformat(),
         "data_retorno": data_retorno.isoformat(),
         "quantidade_diarias": str(qtd),
@@ -83,6 +93,7 @@ def confirmar_diarias_lote(preview_items, usuario):
             diaria = Diaria.objects.create(
                 beneficiario_id=item["beneficiario_id"],
                 proponente=usuario,
+                data_solicitacao=date.fromisoformat(item["data_solicitacao"]),
                 data_saida=date.fromisoformat(item["data_saida"]),
                 data_retorno=date.fromisoformat(item["data_retorno"]),
                 quantidade_diarias=Decimal(item["quantidade_diarias"]),
