@@ -3,6 +3,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.db import DatabaseError, transaction
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 
@@ -17,7 +18,7 @@ PENDENCIA_ACAO_STATUS = {
 
 @require_POST
 @permission_required("fluxo.acesso_backoffice", raise_exception=True)
-def atualizar_pendencias_lote_action(request):
+def atualizar_pendencias_lote_action(request: HttpRequest) -> HttpResponse:
     """Atualiza status de pendências selecionadas em lote sem exclusão física."""
     acao_lote = (request.POST.get("acao_lote") or "").strip().lower()
     ids_selecionados = [pid for pid in request.POST.getlist("pendencias_selecionadas") if pid]

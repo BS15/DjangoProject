@@ -6,5 +6,5 @@ from .panels import *
 __all__ = [
     "painel_autorizacao_view",
     "autorizar_pagamento",
-    "recusar_autorizacao_view",
+    "recusar_autorizacao_action",
 ]

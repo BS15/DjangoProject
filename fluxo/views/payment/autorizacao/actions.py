@@ -1,6 +1,7 @@
 """Acoes POST da etapa de autorizacao."""
 
 from django.contrib.auth.decorators import permission_required
+from django.http import HttpRequest, HttpResponse
 from django.views.decorators.http import require_POST
 
 from fluxo.views.helpers import _processar_acao_lote, _recusar_processo_view
@@ -8,7 +9,7 @@ from fluxo.views.helpers import _processar_acao_lote, _recusar_processo_view
 
 @require_POST
 @permission_required("fluxo.pode_autorizar_pagamento", raise_exception=True)
-def autorizar_pagamento(request):
+def autorizar_pagamento(request: HttpRequest) -> HttpResponse:
     """Autoriza em lote processos selecionados para A PAGAR - AUTORIZADO."""
     return _processar_acao_lote(
         request,
@@ -25,7 +26,7 @@ def autorizar_pagamento(request):
 
 @require_POST
 @permission_required("fluxo.pode_autorizar_pagamento", raise_exception=True)
-def recusar_autorizacao_view(request, pk):
+def recusar_autorizacao_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Recusa autorizacao de um processo e devolve ao fluxo de correcao."""
     return _recusar_processo_view(
         request,
@@ -37,4 +38,4 @@ def recusar_autorizacao_view(request, pk):
     )
 
 
-__all__ = ["autorizar_pagamento", "recusar_autorizacao_view"]
+__all__ = ["autorizar_pagamento", "recusar_autorizacao_action"]

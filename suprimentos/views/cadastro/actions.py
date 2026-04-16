@@ -34,8 +34,8 @@ def _persistir_suprimento_com_processo(form_suprimento: SuprimentoForm) -> Any:
         return suprimento
 
 
-@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
 @require_POST
+@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
 def add_suprimento_action(request: HttpRequest) -> HttpResponse:
     """Cria um suprimento e o processo financeiro vinculado."""
     form = SuprimentoForm(request.POST)

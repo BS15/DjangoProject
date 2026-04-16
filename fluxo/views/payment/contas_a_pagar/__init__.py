@@ -8,5 +8,5 @@ __all__ = [
     "STATUSES_CONTAS_A_PAGAR",
     "api_extrair_codigos_barras_processo",
     "contas_a_pagar",
-    "enviar_para_autorizacao",
+    "enviar_para_autorizacao_action",
 ]

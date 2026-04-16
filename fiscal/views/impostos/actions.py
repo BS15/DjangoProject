@@ -2,6 +2,7 @@
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 
@@ -12,7 +13,7 @@ from fluxo.domain_models import Processo, StatusChoicesProcesso, TiposDePagament
 
 @require_POST
 @permission_required("fiscal.acesso_backoffice", raise_exception=True)
-def agrupar_retencoes_action(request):
+def agrupar_retencoes_action(request: HttpRequest) -> HttpResponse:
     """Agrupa retenções selecionadas em um novo processo de recolhimento."""
     selecionados = request.POST.getlist("retencao_ids") or request.POST.getlist("itens_selecionados")
 
@@ -62,11 +63,13 @@ def agrupar_retencoes_action(request):
     return redirect("editar_processo", pk=novo_processo.id)
 
 
+@require_POST
 @permission_required("fiscal.acesso_backoffice", raise_exception=True)
-def agrupar_impostos_view(request):
+def agrupar_impostos_action(request: HttpRequest) -> HttpResponse:
     """Alias legado do agrupamento de retenções."""
-    if request.method != "POST":
-        return redirect("painel_impostos_view")
     return agrupar_retencoes_action(request)
+
+
+__all__ = ["agrupar_retencoes_action", "agrupar_impostos_action"]
 
 

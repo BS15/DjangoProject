@@ -7,5 +7,5 @@ __all__ = [
     "painel_contingencias_view",
     "add_contingencia_view",
     "add_contingencia_action",
-    "analisar_contingencia_view",
+    "analisar_contingencia_action",
 ]

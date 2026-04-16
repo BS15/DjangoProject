@@ -2,6 +2,7 @@
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 
@@ -10,7 +11,7 @@ from fluxo.views.helpers import _processar_acao_lote
 
 @require_POST
 @permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
-def separar_para_lancamento_bancario(request):
+def separar_para_lancamento_bancario_action(request: HttpRequest) -> HttpResponse:
     """Armazena em sessao os processos selecionados para lancamento."""
     selecionados = request.POST.getlist("processos_selecionados")
 
@@ -24,7 +25,7 @@ def separar_para_lancamento_bancario(request):
 
 @require_POST
 @permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
-def marcar_como_lancado(request):
+def marcar_como_lancado_action(request: HttpRequest) -> HttpResponse:
     """Move processo para LANCADO - AGUARDANDO COMPROVANTE."""
     return _processar_acao_lote(
         request,
@@ -43,7 +44,7 @@ def marcar_como_lancado(request):
 
 @require_POST
 @permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
-def desmarcar_lancamento(request):
+def desmarcar_lancamento_action(request: HttpRequest) -> HttpResponse:
     """Reverte lancamento bancario para A PAGAR - AUTORIZADO."""
     return _processar_acao_lote(
         request,
@@ -61,7 +62,7 @@ def desmarcar_lancamento(request):
 
 
 __all__ = [
-    "separar_para_lancamento_bancario",
-    "marcar_como_lancado",
-    "desmarcar_lancamento",
+    "separar_para_lancamento_bancario_action",
+    "marcar_como_lancado_action",
+    "desmarcar_lancamento_action",
 ]

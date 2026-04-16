@@ -94,7 +94,8 @@ def add_contingencia_action(request: HttpRequest) -> HttpResponse:
 
 
 @require_POST
-def analisar_contingencia_view(request: HttpRequest, pk: int) -> HttpResponse:
+@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+def analisar_contingencia_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Aprova ou rejeita uma contingencia pendente."""
     contingencia = get_object_or_404(Contingencia, pk=pk)
     action = cast(str, request.POST.get("action", "")).strip()
@@ -267,5 +268,5 @@ def analisar_contingencia_view(request: HttpRequest, pk: int) -> HttpResponse:
 
 __all__ = [
     "add_contingencia_action",
-    "analisar_contingencia_view",
+    "analisar_contingencia_action",
 ]

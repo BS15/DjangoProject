@@ -8,6 +8,6 @@ from .reviews import *
 __all__ = [
     "painel_conselho_view",
     "conselho_processo_view",
-    "aprovar_conselho_view",
-    "recusar_conselho_view",
+    "aprovar_conselho_action",
+    "recusar_conselho_action",
 ]

@@ -2,6 +2,7 @@
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST
@@ -12,9 +13,9 @@ from fluxo.models import Processo
 from .forms import ContaFixaForm
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
 @require_POST
-def add_conta_fixa_action(request):
+@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+def add_conta_fixa_action(request: HttpRequest) -> HttpResponse:
     """Persiste nova conta fixa."""
     form = ContaFixaForm(request.POST)
     if form.is_valid():
@@ -25,9 +26,9 @@ def add_conta_fixa_action(request):
     return redirect("painel_contas_fixas")
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
 @require_POST
-def edit_conta_fixa_action(request, pk):
+@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+def edit_conta_fixa_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Atualiza dados cadastrais de uma conta fixa existente."""
     conta = get_object_or_404(ContaFixa, pk=pk)
     form = ContaFixaForm(request.POST, instance=conta)
@@ -39,9 +40,9 @@ def edit_conta_fixa_action(request, pk):
     return redirect("painel_contas_fixas")
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
 @require_POST
-def vincular_processo_fatura_view(request, fatura_id):
+@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+def vincular_processo_fatura_action(request: HttpRequest, fatura_id: int) -> HttpResponse:
     """Vincula manualmente uma fatura mensal a um processo existente."""
     fatura = get_object_or_404(FaturaMensal, id=fatura_id)
     mes = request.POST.get("mes", "")
@@ -62,9 +63,9 @@ def vincular_processo_fatura_view(request, fatura_id):
     return redirect(redirect_url)
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
 @require_POST
-def excluir_conta_fixa_view(request, pk):
+@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+def excluir_conta_fixa_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Exclui conta fixa mediante confirmação por requisição POST."""
     conta = get_object_or_404(ContaFixa, pk=pk)
     conta.delete()
@@ -75,6 +76,6 @@ def excluir_conta_fixa_view(request, pk):
 __all__ = [
     "add_conta_fixa_action",
     "edit_conta_fixa_action",
-    "vincular_processo_fatura_view",
-    "excluir_conta_fixa_view",
+    "vincular_processo_fatura_action",
+    "excluir_conta_fixa_action",
 ]

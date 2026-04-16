@@ -13,7 +13,6 @@ __all__ = [
     "editar_processo_verbas_pendencias_view",
     "editar_processo_verbas_itens_view",
     "editar_processo_verbas_documentos_view",
-    "editar_processo_verbas_action",
     "editar_processo_verbas_capa_action",
     "editar_processo_verbas_pendencias_action",
     "editar_processo_verbas_documentos_action",

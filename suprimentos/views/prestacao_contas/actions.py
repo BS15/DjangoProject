@@ -13,8 +13,8 @@ from ..helpers import _atualizar_status_apos_fechamento, _suprimento_encerrado
 from suprimentos.forms import DespesaSuprimentoForm
 
 
-@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
 @require_POST
+@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
 def adicionar_despesa_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Registra manualmente uma despesa de suprimento a partir de dados do POST."""
     suprimento: Any = get_object_or_404(SuprimentoDeFundos, id=pk)
@@ -35,8 +35,8 @@ def adicionar_despesa_action(request: HttpRequest, pk: int) -> HttpResponse:
         return redirect("adicionar_despesa_view", pk=suprimento.id)
 
 
-@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
 @require_POST
+@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
 def fechar_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Encerra a prestacao de contas e avanca o processo vinculado para conferencia."""
     suprimento: Any = get_object_or_404(SuprimentoDeFundos, id=pk)

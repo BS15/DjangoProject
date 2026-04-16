@@ -4,6 +4,7 @@ import logging
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
@@ -18,9 +19,9 @@ from fluxo.views.helpers import (
 logger = logging.getLogger(__name__)
 
 
-@permission_required("fluxo.pode_arquivar", raise_exception=True)
 @require_POST
-def arquivar_processo_action(request, pk):
+@permission_required("fluxo.pode_arquivar", raise_exception=True)
+def arquivar_processo_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Executa o arquivamento definitivo de um processo elegivel."""
     processo = get_object_or_404(Processo, id=pk)
 

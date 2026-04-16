@@ -1,10 +1,12 @@
 """Acoes POST da etapa de documentos fiscais do cadastro."""
 
 import logging
+from typing import Optional
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.db import DatabaseError, transaction
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
@@ -29,7 +31,7 @@ def _get_status_inicial(processo):
     return processo.status.status_choice.upper() if processo.status else ""
 
 
-def _obter_contexto_edicao(request, pk):
+def _obter_contexto_edicao(request: HttpRequest, pk: int) -> tuple[Processo, str, Optional[HttpResponse], bool]:
     processo = get_object_or_404(Processo, id=pk)
     status_inicial = _get_status_inicial(processo)
     redirecionamento, somente_documentos = _validar_regras_edicao_processo(request, processo, status_inicial)
@@ -70,9 +72,9 @@ def _atualizar_status_pendencia(pendencia: Pendencia, status_destino: str) -> No
     pendencia.save(update_fields=["status"])
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
 @require_POST
-def add_process_action(request):
+@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+def add_process_action(request: HttpRequest) -> HttpResponse:
     """Persiste a capa inicial do processo."""
     processo_form = ProcessoForm(request.POST, prefix="processo")
     next_url = request.POST.get("next") or request.META.get("HTTP_REFERER", "")
@@ -107,9 +109,9 @@ def add_process_action(request):
         return redirect("add_process")
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
 @require_POST
-def editar_processo_capa_action(request, pk):
+@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+def editar_processo_capa_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Persiste alterações da capa do processo."""
     processo, status_inicial, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
     if redirecionamento:
@@ -139,9 +141,9 @@ def editar_processo_capa_action(request, pk):
         return redirect("editar_processo_capa", pk=pk)
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
 @require_POST
-def editar_processo_documentos_action(request, pk):
+@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+def editar_processo_documentos_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Persiste anexos e documentos orçamentários do processo."""
     processo, _, redirecionamento, _ = _obter_contexto_edicao(request, pk)
     if redirecionamento:
@@ -164,9 +166,9 @@ def editar_processo_documentos_action(request, pk):
         return redirect("editar_processo_documentos", pk=pk)
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
 @require_POST
-def editar_processo_pendencias_action(request, pk):
+@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+def editar_processo_pendencias_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Persiste pendências administrativas do processo."""
     processo, _, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
     if redirecionamento:

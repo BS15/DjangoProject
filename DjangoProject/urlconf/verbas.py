@@ -26,7 +26,6 @@ urlpatterns = [
     path('processo/<int:pk>/editar-verbas/itens/', verbas_panels.editar_processo_verbas_itens_view, name='editar_processo_verbas_itens'),
     path('processo/<int:pk>/editar-verbas/documentos/', verbas_panels.editar_processo_verbas_documentos_view, name='editar_processo_verbas_documentos'),
     path('processo/<int:pk>/editar-verbas/documentos/action/', verbas_actions.editar_processo_verbas_documentos_action, name='editar_processo_verbas_documentos_action'),
-    path('processo/<int:pk>/editar-verbas/action/', verbas_actions.editar_processo_verbas_action, name='editar_processo_verbas_action'),
     path('api/verba/<str:tipo_verba>/<int:pk>/add-documento/', verbas_apis.api_add_documento_verba, name='api_add_documento_verba'),
     path('verbas/', verbas_panels.verbas_panel_view, name='verbas_panel'),
     path('verbas/diarias/', verbas_diarias_panels.diarias_list_view, name='diarias_list'),

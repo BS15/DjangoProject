@@ -1,20 +1,27 @@
 # Guia de Instalação
 
-1. Instale as dependências:
+## Opção recomendada (Docker)
+1. Configure o arquivo `.env` com as variáveis necessárias.
+2. Suba os serviços:
+   ```bash
+   docker compose up --build
+   ```
+
+## Opção local (sem Docker)
+1. Instale dependências:
    ```bash
    pip install -r requirements.txt
    ```
-2. Configure o banco de dados e variáveis de ambiente.
-3. Execute as migrações:
+2. Prepare o banco:
    ```bash
    python manage.py migrate
    ```
-4. Inicie o servidor:
+3. Inicie o servidor:
    ```bash
    python manage.py runserver
    ```
 
-Para documentação local:
+## Documentação local
 ```bash
 mkdocs serve
 ```

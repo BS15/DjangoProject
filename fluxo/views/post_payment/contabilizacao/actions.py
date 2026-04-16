@@ -1,14 +1,15 @@
 """Acoes POST da etapa de contabilizacao."""
 
 from django.contrib.auth.decorators import permission_required
+from django.http import HttpRequest, HttpResponse
 from django.views.decorators.http import require_POST
 
 from fluxo.views.helpers import _aprovar_processo_view, _iniciar_fila_sessao, _recusar_processo_view
 
 
-@permission_required("fluxo.pode_contabilizar", raise_exception=True)
 @require_POST
-def iniciar_contabilizacao_view(request):
+@permission_required("fluxo.pode_contabilizar", raise_exception=True)
+def iniciar_contabilizacao_action(request: HttpRequest) -> HttpResponse:
     """Inicializa a fila de trabalho da contabilizacao na sessao."""
     return _iniciar_fila_sessao(
         request,
@@ -18,9 +19,9 @@ def iniciar_contabilizacao_view(request):
     )
 
 
-@permission_required("fluxo.pode_contabilizar", raise_exception=True)
 @require_POST
-def aprovar_contabilizacao_view(request, pk):
+@permission_required("fluxo.pode_contabilizar", raise_exception=True)
+def aprovar_contabilizacao_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Aprova contabilizacao por rota direta e avanca status do processo."""
     return _aprovar_processo_view(
         request,
@@ -32,9 +33,9 @@ def aprovar_contabilizacao_view(request, pk):
     )
 
 
-@permission_required("fluxo.pode_contabilizar", raise_exception=True)
 @require_POST
-def recusar_contabilizacao_view(request, pk):
+@permission_required("fluxo.pode_contabilizar", raise_exception=True)
+def recusar_contabilizacao_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Recusa contabilizacao e devolve o processo para conferencia."""
     return _recusar_processo_view(
         request,
@@ -47,7 +48,7 @@ def recusar_contabilizacao_view(request, pk):
 
 
 __all__ = [
-    "iniciar_contabilizacao_view",
-    "aprovar_contabilizacao_view",
-    "recusar_contabilizacao_view",
+    "iniciar_contabilizacao_action",
+    "aprovar_contabilizacao_action",
+    "recusar_contabilizacao_action",
 ]

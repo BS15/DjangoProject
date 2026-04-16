@@ -1,5 +1,5 @@
-site_name: Wiki Técnica - Backoffice Financeiro
-site_description: Documentação de código e arquitetura do sistema Django
+site_name: Wiki PaGé
+site_description: Documentação de negócio, arquitetura e operação do PaGé
 site_url: ""
 repo_name: DjangoProject
 edit_uri: ""
@@ -18,12 +18,6 @@ theme:
     - toc.follow
     - search.suggest
     - search.highlight
-
-nav:
-  - Início: index.md
-  - Visão Geral: overview.md
-  - Guia de Instalação: instalacao.md
-  - Referência de API: api.md
 
 plugins:
   - search
@@ -59,29 +53,23 @@ markdown_extensions:
 
 nav:
   - Início: index.md
-  - Como Gerar a Wiki: como_gerar.md
-  - Workflows Operacionais:
-      - Catálogo de Workflows: workflows.md
-      - Pagamentos End-to-End: workflow_pagamentos_end_to_end.md
-      - Fiscal (Liquidação e Retenções): workflow_fiscal_liquidacao.md
-      - Verbas Indenizatórias: workflow_verbas_indenizatorias.md
-      - Suprimentos de Fundos: workflow_suprimentos_fundos.md
-      - Contingências e Devoluções: workflow_contingencias_devolucoes.md
-      - Conselho e Arquivamento: workflow_conselho_arquivamento.md
-      - Assinaturas Digitais: workflow_assinaturas_digitais.md
-      - Contas Fixas: workflow_contas_fixas.md
-      - Integrações e Importações: workflow_integracoes_importacao.md
-  - Fluxo Orçamentário (Turnpike):
-      - Visão Geral do Fluxo: workflow_overview.md
-      - Etapa A EMPENHAR: etapa_a_empenhar.md
-      - Etapa AGUARDANDO LIQUIDAÇÃO: etapa_aguardando_liquidacao.md
-      - Etapa A PAGAR: etapa_a_pagar.md
-      - Etapa PAGO: etapa_pago.md
-      - Etapa CONTABILIZADO: etapa_contabilizado.md
-      - Etapa ARQUIVADO: etapa_arquivado.md
-  - Referência de Código:
-      - Banco de Dados (Models): models.md
-      - Fluxo de Pré-Pagamento: fluxo_pre.md
-      - Fluxo de Pagamento: fluxo_pagamento.md
-      - Fluxo de Pós-Pagamento: fluxo_pos.md
-      - Utilitários e Serviços: utilitarios.md
+  - Visão Geral e Negócio:
+    - Missão do Sistema: negocio/missao_sistema.md
+    - Glossário do Conselho: negocio/glossario_conselho.md
+  - Arquitetura de Software:
+    - Padrão Manager-Worker: arquitetura/manager_worker.md
+    - Interface Hub-and-Spoke: arquitetura/hub_spoke.md
+    - Camada de Services: arquitetura/camada_services.md
+  - Manual de Módulos (Funcional):
+    - Fluxo Core: modulos/fluxo_core.md
+    - Verbas Indenizatórias: modulos/verbas_indenizatorias.md
+    - Suprimento de Fundos: modulos/suprimento_fundos.md
+    - Módulo Fiscal: modulos/modulo_fiscal.md
+  - Segurança e Governança:
+    - Matriz de Permissões (RBAC): governanca/matriz_permissoes.md
+    - Trilha de Auditoria: governanca/trilha_auditoria.md
+  - Guia do Desenvolvedor:
+    - Setup do Ambiente: desenvolvedor/setup_ambiente.md
+    - Padrões de Código: desenvolvedor/padroes_codigo.md
+    - Guia de Instalação: instalacao.md
+    - Referência de API: api.md

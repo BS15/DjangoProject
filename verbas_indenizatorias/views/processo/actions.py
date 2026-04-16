@@ -144,10 +144,3 @@ def editar_processo_verbas_documentos_action(request, pk):
     documento_formset.save()
     messages.success(request, f"Documentos do Processo #{processo.id} atualizados com sucesso!")
     return redirect("editar_processo_verbas", pk=processo.id)
-
-
-@require_POST
-@permission_required("verbas_indenizatorias.pode_gerenciar_processos_verbas", raise_exception=True)
-def editar_processo_verbas_action(request, pk):
-    """Compat: delega para spoke de capa no novo modelo hub-and-spoke."""
-    return editar_processo_verbas_capa_action(request, pk)

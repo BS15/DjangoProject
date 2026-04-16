@@ -4,8 +4,9 @@ import logging
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ValidationError
 from django.db import DatabaseError, transaction
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
@@ -16,12 +17,10 @@ from fluxo.domain_models import Processo
 logger = logging.getLogger(__name__)
 
 
-@permission_required("fluxo.pode_atestar_liquidacao", raise_exception=True)
 @require_POST
-def alternar_ateste_nota(request, pk):
+@permission_required("fluxo.pode_atestar_liquidacao", raise_exception=True)
+def alternar_ateste_nota_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Permite atestar ou remover o ateste de uma nota diretamente pelo painel."""
-    if not request.user.has_perm("fluxo.pode_atestar_liquidacao"):
-        raise PermissionDenied
     nota = get_object_or_404(DocumentoFiscal, id=pk)
 
     nota.atestada = not nota.atestada
@@ -35,9 +34,9 @@ def alternar_ateste_nota(request, pk):
     return redirect("painel_liquidacoes")
 
 
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
 @require_POST
-def avancar_para_pagamento_view(request, pk):
+@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+def avancar_para_pagamento_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Avanca processo de AGUARDANDO LIQUIDACAO para A PAGAR - PENDENTE AUTORIZACAO."""
     processo = get_object_or_404(Processo, id=pk)
     status_atual = processo.status.status_choice.upper() if processo.status else ""
@@ -65,4 +64,4 @@ def avancar_para_pagamento_view(request, pk):
     return redirect("editar_processo", pk=pk)
 
 
-__all__ = ["alternar_ateste_nota", "avancar_para_pagamento_view"]
+__all__ = ["alternar_ateste_nota_action", "avancar_para_pagamento_action"]

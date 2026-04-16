@@ -6,8 +6,8 @@ from .reviews import *
 
 __all__ = [
     "painel_contabilizacao_view",
-    "iniciar_contabilizacao_view",
+    "iniciar_contabilizacao_action",
     "contabilizacao_processo_view",
-    "aprovar_contabilizacao_view",
-    "recusar_contabilizacao_view",
+    "aprovar_contabilizacao_action",
+    "recusar_contabilizacao_action",
 ]
