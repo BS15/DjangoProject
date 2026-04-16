@@ -2,7 +2,6 @@
 
 import django.core.validators
 import fiscal.models
-import fluxo.validators
 import simple_history.models
 from django.db import migrations, models
 
@@ -75,6 +74,33 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name="DadosContribuinte",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "cnpj",
+                    models.CharField(
+                        max_length=14, validators=[fiscal.models.validar_cpf_cnpj]
+                    ),
+                ),
+                ("razao_social", models.CharField(max_length=255)),
+                ("tipo_inscricao", models.IntegerField(default=1)),
+            ],
+            options={
+                "verbose_name": "Dados do Contribuinte",
+                "verbose_name_plural": "Dados do Contribuinte",
+                "db_table": "credores_dadoscontribuinte",
+            },
+        ),
+        migrations.CreateModel(
             name="DocumentoFiscal",
             fields=[
                 (
@@ -129,7 +155,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name="HistoricalComprovanteDePagamento",
+            name="HistoricalDadosContribuinte",
             fields=[
                 (
                     "id",
@@ -138,50 +164,13 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "numero_comprovante",
+                    "cnpj",
                     models.CharField(
-                        blank=True,
-                        max_length=100,
-                        null=True,
-                        verbose_name="Número do Comprovante",
+                        max_length=14, validators=[fiscal.models.validar_cpf_cnpj]
                     ),
                 ),
-                (
-                    "credor_nome",
-                    models.CharField(
-                        blank=True,
-                        max_length=200,
-                        null=True,
-                        verbose_name="Credor (Texto)",
-                    ),
-                ),
-                (
-                    "valor_pago",
-                    models.DecimalField(
-                        blank=True,
-                        decimal_places=2,
-                        max_digits=12,
-                        null=True,
-                        validators=[django.core.validators.MinValueValidator(0)],
-                        verbose_name="Valor Pago",
-                    ),
-                ),
-                (
-                    "data_pagamento",
-                    models.DateField(
-                        blank=True, null=True, verbose_name="Data de Pagamento"
-                    ),
-                ),
-                (
-                    "arquivo",
-                    models.TextField(
-                        blank=True,
-                        max_length=100,
-                        null=True,
-                        validators=[fluxo.validators.validar_arquivo_seguro],
-                        verbose_name="Arquivo do Comprovante",
-                    ),
-                ),
+                ("razao_social", models.CharField(max_length=255)),
+                ("tipo_inscricao", models.IntegerField(default=1)),
                 ("history_id", models.AutoField(primary_key=True, serialize=False)),
                 ("history_date", models.DateTimeField(db_index=True)),
                 ("history_change_reason", models.CharField(max_length=100, null=True)),
@@ -194,8 +183,9 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "verbose_name": "historical Comprovante de Pagamento",
-                "verbose_name_plural": "historical Comprovantes de Pagamento",
+                "verbose_name": "historical Dados do Contribuinte",
+                "verbose_name_plural": "historical Dados do Contribuinte",
+                "db_table": "credores_historicaldadoscontribuinte",
                 "ordering": ("-history_date", "-history_id"),
                 "get_latest_by": ("history_date", "history_id"),
             },

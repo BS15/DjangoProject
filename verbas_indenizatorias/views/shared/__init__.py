@@ -13,6 +13,7 @@ from .registry import (
     _VERBA_CONFIG,
     _get_permissao_gestao_verba,
     _get_tipos_documento_ativos,
+    _get_tipos_documento_verbas,
     _obter_credor_agrupamento,
 )
 
@@ -21,6 +22,7 @@ __all__ = [
     "_VERBA_CONFIG",
     "_get_permissao_gestao_verba",
     "_get_tipos_documento_ativos",
+    "_get_tipos_documento_verbas",
     "_obter_credor_agrupamento",
     "_obter_dados_upload_documento",
     "_processar_edicao_verba_com_upload",

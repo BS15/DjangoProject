@@ -22,6 +22,9 @@ def painel_pendencias_view(request: HttpRequest) -> HttpResponse:
         filter_class=PendenciaFilter,
         template_name="fluxo/painel_pendencias.html",
         items_key="pendencias",
+        extra_context={
+            "pode_interagir": request.user.has_perm("fluxo.acesso_backoffice"),
+        },
     )
 
 

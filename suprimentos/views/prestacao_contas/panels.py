@@ -23,7 +23,7 @@ def painel_suprimentos_view(request: HttpRequest) -> HttpResponse:
 @require_GET
 @permission_required("suprimentos.acesso_backoffice", raise_exception=True)
 def gerenciar_suprimento_view(request: HttpRequest, pk: int) -> HttpResponse:
-    """Exibe detalhes operacionais de um suprimento e suas despesas."""
+    """Exibe detalhes operacionais read-only de um suprimento e suas despesas."""
     suprimento: Any = get_object_or_404(SuprimentoDeFundos, id=pk)
     despesas = suprimento.despesas.all().order_by("data", "id")
 
@@ -31,9 +31,35 @@ def gerenciar_suprimento_view(request: HttpRequest, pk: int) -> HttpResponse:
         "suprimento": suprimento,
         "despesas": despesas,
         "pode_editar": not _suprimento_encerrado(suprimento),
-        "form_despesa": DespesaSuprimentoForm(),
     }
     return render(request, "suprimentos/gerenciar_suprimento.html", context)
 
 
-__all__ = ["painel_suprimentos_view", "gerenciar_suprimento_view"]
+@require_GET
+@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
+def adicionar_despesa_view(request: HttpRequest, pk: int) -> HttpResponse:
+    """Exibe spoke dedicada para registro de nova despesa de suprimento."""
+    suprimento: Any = get_object_or_404(SuprimentoDeFundos, id=pk)
+    if _suprimento_encerrado(suprimento):
+        return render(
+            request,
+            "suprimentos/add_despesa_suprimento.html",
+            {
+                "suprimento": suprimento,
+                "pode_editar": False,
+                "form": DespesaSuprimentoForm(),
+            },
+        )
+
+    return render(
+        request,
+        "suprimentos/add_despesa_suprimento.html",
+        {
+            "suprimento": suprimento,
+            "pode_editar": True,
+            "form": DespesaSuprimentoForm(),
+        },
+    )
+
+
+__all__ = ["painel_suprimentos_view", "gerenciar_suprimento_view", "adicionar_despesa_view"]

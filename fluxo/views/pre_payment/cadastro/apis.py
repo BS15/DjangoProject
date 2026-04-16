@@ -24,7 +24,7 @@ from fluxo.domain_models import Boleto_Bancario, Pendencia, Processo, StatusChoi
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 
-from .actions import _status_bloqueia_exclusao_nota_fiscal
+from .actions import _status_bloqueia_gestao_fiscal
 
 
 @permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
@@ -147,6 +147,15 @@ def _salvar_retencoes(nota, body):
     return None
 
 
+def _sincronizar_totais_processo_fiscal(processo):
+    """Sincroniza valores do processo com base nas notas fiscais e retenções associadas."""
+    total_bruto = processo.notas_fiscais.aggregate(total=Sum("valor_bruto"))["total"] or Decimal("0")
+    total_retencoes = RetencaoImposto.objects.filter(nota_fiscal__processo=processo).aggregate(total=Sum("valor"))["total"] or Decimal("0")
+    processo.valor_bruto = total_bruto
+    processo.valor_liquido = total_bruto - total_retencoes
+    processo.save(update_fields=["valor_bruto", "valor_liquido"])
+
+
 def _atualizar_pendencia_ateste(processo, nota):
     """Cria ou remove a pendência de ateste de liquidação conforme o estado da nota."""
     tipo_pendencia, _ = TiposDePendencias.objects.get_or_create(
@@ -177,26 +186,28 @@ def _atualizar_pendencia_ateste(processo, nota):
 def api_toggle_documento_fiscal(request, processo_pk, documento_pk):
     """Alterna o vínculo fiscal de um documento do processo."""
     processo = get_object_or_404(Processo, id=processo_pk)
+
+    if _status_bloqueia_gestao_fiscal(processo):
+        return JsonResponse(
+            {
+                "status": "blocked",
+                "message": (
+                    "Gestão fiscal bloqueada no pós-pagamento. "
+                    "Use contingência para ajustes auditáveis."
+                ),
+            },
+            status=409,
+        )
+
     doc = get_object_or_404(Boleto_Bancario, id=documento_pk, processo=processo)
 
     ct = ContentType.objects.get_for_model(doc)
     nota = DocumentoFiscal.objects.filter(content_type=ct, object_id=doc.id).first()
 
     if nota is not None:
-        if _status_bloqueia_exclusao_nota_fiscal(processo):
-            return JsonResponse(
-                {
-                    "status": "blocked",
-                    "message": (
-                        "Não é permitido remover documento fiscal após a etapa de pagamento. "
-                        "Use a interface de contingência para ajustes auditáveis."
-                    ),
-                },
-                status=409,
-            )
-
         nota.retencoes.all().delete()
         nota.delete()
+        _sincronizar_totais_processo_fiscal(processo)
         return JsonResponse({"status": "removed", "message": "Documento fiscal removido."})
 
     nota = DocumentoFiscal.objects.create(
@@ -208,6 +219,7 @@ def api_toggle_documento_fiscal(request, processo_pk, documento_pk):
         valor_bruto=0,
         valor_liquido=0,
     )
+    _sincronizar_totais_processo_fiscal(processo)
     return JsonResponse(
         {
             "status": "created",
@@ -223,6 +235,16 @@ def api_toggle_documento_fiscal(request, processo_pk, documento_pk):
 def api_salvar_nota_fiscal(request, processo_pk, nota_pk):
     """Salva os dados da nota fiscal, retenções e pendência de ateste."""
     processo = get_object_or_404(Processo, id=processo_pk)
+
+    if _status_bloqueia_gestao_fiscal(processo):
+        return JsonResponse(
+            {
+                "status": "blocked",
+                "message": "Gestão fiscal bloqueada no pós-pagamento. Use contingência para ajustes auditáveis.",
+            },
+            status=409,
+        )
+
     nota = get_object_or_404(DocumentoFiscal, id=nota_pk, processo=processo)
 
     try:
@@ -240,6 +262,7 @@ def api_salvar_nota_fiscal(request, processo_pk, nota_pk):
     if erro:
         return erro
 
+    _sincronizar_totais_processo_fiscal(processo)
     _atualizar_pendencia_ateste(processo, nota)
 
     return JsonResponse({"status": "ok", "message": "Nota fiscal salva com sucesso."})

@@ -81,24 +81,10 @@
 {% endblock %}
 
 {% block detail_actions %}
-{% if not diaria.status or diaria.status.status_choice == 'RASCUNHO' %}
-<form method="post" action="{% url 'solicitar_autorizacao_action' diaria.id %}">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-send"></i> Solicitar Autorização</button>
-</form>
-{% endif %}
-
-{% if diaria.status and diaria.status.status_choice == 'SOLICITADA' and pode_autorizar %}
-<form method="post" action="{% url 'autorizar_diaria_action' diaria.id %}">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-circle"></i> Autorizar Diária</button>
-</form>
-{% endif %}
-
 {% if diaria.status.status_choice != 'PAGA' and diaria.status.status_choice != 'REJEITADA' and diaria.status.status_choice != 'CANCELADO / ANULADO' %}
 <form method="post" action="{% url 'cancelar_diaria_action' diaria.id %}" onsubmit="return confirm('Deseja realmente cancelar esta diária?');">
     {% csrf_token %}
-    <button type="submit" class="btn btn-outline-danger w-100 btn-sm mt-2"><i class="bi bi-x-circle"></i> Cancelar Solicitação</button>
+    <button type="submit" class="btn btn-outline-danger w-100 btn-sm mt-2"><i class="bi bi-x-circle"></i> Cancelar Diária</button>
 </form>
 {% endif %}
 

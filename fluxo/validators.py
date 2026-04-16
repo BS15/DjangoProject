@@ -162,12 +162,12 @@ def validar_regras_suprimento(cleaned_data):
     """
     errors = {}
 
-    data_saida = cleaned_data.get('data_saida')
-    data_retorno = cleaned_data.get('data_retorno')
+    inicio_periodo = cleaned_data.get('inicio_periodo')
+    fim_periodo = cleaned_data.get('fim_periodo')
 
-    if data_saida and data_retorno and data_retorno < data_saida:
-        errors['data_retorno'] = ValidationError(
-            "O período final (data de retorno) não pode ser anterior ao inicial (data de saída)."
+    if inicio_periodo and fim_periodo and fim_periodo < inicio_periodo:
+        errors['fim_periodo'] = ValidationError(
+            "O período final não pode ser anterior ao período inicial."
         )
 
     return errors

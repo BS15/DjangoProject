@@ -14,10 +14,10 @@ class SuprimentoForm(forms.ModelForm):
 
     class Meta:
         model = SuprimentoDeFundos
-        fields = ['suprido', 'lotacao', 'valor_liquido', 'taxa_saque', 'data_saida', 'data_retorno', 'data_recibo']
+        fields = ['suprido', 'lotacao', 'valor_liquido', 'taxa_saque', 'inicio_periodo', 'fim_periodo', 'data_recibo']
         widgets = {
-            'data_saida': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'data_retorno': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'inicio_periodo': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'fim_periodo': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'data_recibo': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'valor_liquido': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control'}),
             'taxa_saque': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control'}),

@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block page_subtitle %}
-    Gerenciamento de adiantamentos e prestação de contas (Petty Cash).
+    Gerenciamento de adiantamentos e prestação de contas
 {% endblock %}
 
 {% block page_actions %}
@@ -34,7 +34,7 @@
         <td class="fw-medium">{{ suprimento.suprido.nome|truncatechars:30 }}</td>
         <td>{{ suprimento.lotacao|default:"-"|truncatechars:20 }}</td>
         <td class="small text-muted fw-medium">
-            {{ suprimento.data_saida|date:"d/m/Y" }} a {{ suprimento.data_retorno|date:"d/m/Y" }}
+            {{ suprimento.inicio_periodo|date:"d/m/Y" }} a {{ suprimento.fim_periodo|date:"d/m/Y" }}
         </td>
         <td class="text-end pe-3 fw-bold text-primary">
             {{ suprimento.valor_liquido|floatformat:2 }}

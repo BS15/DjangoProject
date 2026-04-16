@@ -17,7 +17,84 @@ Preencha os dados da viagem. A solicitação será encaminhada para autorizaçã
 {% block form_action %}{% url 'add_diaria_action' %}{% endblock %}
 
 {% block form_fields %}
-{{ form.as_p }}
+{% if form.non_field_errors %}
+<div class="alert alert-danger">{{ form.non_field_errors }}</div>
+{% endif %}
+
+<div class="row g-3">
+    <div class="col-md-3">
+        <label class="form-label">{{ form.data_solicitacao.label }}</label>
+        {{ form.data_solicitacao }}
+        <div class="text-danger small">{{ form.data_solicitacao.errors }}</div>
+    </div>
+    <div class="col-md-5">
+        <label class="form-label">{{ form.beneficiario.label }}</label>
+        {{ form.beneficiario }}
+        <div class="text-danger small">{{ form.beneficiario.errors }}</div>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">{{ form.proponente.label }}</label>
+        {{ form.proponente }}
+        <div class="text-danger small">{{ form.proponente.errors }}</div>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">{{ form.tipo_solicitacao.label }}</label>
+        {{ form.tipo_solicitacao }}
+        <div class="text-danger small">{{ form.tipo_solicitacao.errors }}</div>
+    </div>
+    <div class="col-md-9" id="diaria-inicial-wrapper" style="display:none;">
+        <label class="form-label">{{ form.diaria_inicial.label }}</label>
+        {{ form.diaria_inicial }}
+        <div class="form-text">Selecione a diária inicial do mesmo beneficiário.</div>
+        <div class="text-danger small">{{ form.diaria_inicial.errors }}</div>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">{{ form.data_saida.label }}</label>
+        {{ form.data_saida }}
+        <div class="text-danger small">{{ form.data_saida.errors }}</div>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">{{ form.data_retorno.label }}</label>
+        {{ form.data_retorno }}
+        <div class="text-danger small">{{ form.data_retorno.errors }}</div>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">{{ form.quantidade_diarias.label }}</label>
+        {{ form.quantidade_diarias }}
+        <div class="form-text" id="hint-quantidade">Calculado automaticamente pelas datas.</div>
+        <div class="text-danger small">{{ form.quantidade_diarias.errors }}</div>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">{{ form.valor_total.label }}</label>
+        {{ form.valor_total }}
+        <div class="form-text">Calculado automaticamente pelo valor unitário do beneficiário.</div>
+        <div class="text-danger small">{{ form.valor_total.errors }}</div>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">{{ form.cidade_origem.label }}</label>
+        {{ form.cidade_origem }}
+        <div class="text-danger small">{{ form.cidade_origem.errors }}</div>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">{{ form.cidade_destino.label }}</label>
+        {{ form.cidade_destino }}
+        <div class="text-danger small">{{ form.cidade_destino.errors }}</div>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">{{ form.meio_de_transporte.label }}</label>
+        {{ form.meio_de_transporte }}
+        <div class="text-danger small">{{ form.meio_de_transporte.errors }}</div>
+    </div>
+
+    <div class="col-12">
+        <label class="form-label">{{ form.objetivo.label }}</label>
+        {{ form.objetivo }}
+        <div class="text-danger small">{{ form.objetivo.errors }}</div>
+    </div>
+</div>
 {% endblock %}
 
 {% block form_actions %}
@@ -25,4 +102,139 @@ Preencha os dados da viagem. A solicitação será encaminhada para autorizaçã
 <button type="submit" class="btn btn-primary">
     <i class="bi bi-save"></i> Salvar e Continuar
 </button>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tipoEl = document.getElementById('id_tipo_solicitacao');
+    const beneficiarioEl = document.getElementById('id_beneficiario');
+    const diariaInicialWrapper = document.getElementById('diaria-inicial-wrapper');
+    const diariaInicialEl = document.getElementById('id_diaria_inicial');
+    const saidaEl = document.getElementById('id_data_saida');
+    const retornoEl = document.getElementById('id_data_retorno');
+    const qtdEl = document.getElementById('id_quantidade_diarias');
+    const valorTotalEl = document.getElementById('id_valor_total');
+    let valorUnitarioAtual = null;
+
+    function isComplementacao() {
+        return (tipoEl && tipoEl.value === 'COMPLEMENTACAO');
+    }
+
+    function updateTipoUI() {
+        if (!diariaInicialWrapper || !diariaInicialEl) return;
+        const complementar = isComplementacao();
+        diariaInicialWrapper.style.display = complementar ? '' : 'none';
+        diariaInicialEl.required = complementar;
+        if (!complementar) {
+            diariaInicialEl.value = '';
+        }
+    }
+
+    function calcularQuantidade() {
+        if (!saidaEl || !retornoEl || !qtdEl) return;
+        if (!saidaEl.value || !retornoEl.value) {
+            qtdEl.value = '';
+            return;
+        }
+
+        const saida = new Date(saidaEl.value + 'T00:00:00');
+        const retorno = new Date(retornoEl.value + 'T00:00:00');
+        const diffDias = Math.floor((retorno - saida) / (1000 * 60 * 60 * 24));
+
+        if (Number.isNaN(diffDias) || diffDias < 0) {
+            qtdEl.value = '';
+            return;
+        }
+
+        const quantidade = isComplementacao() ? diffDias : (diffDias + 0.5);
+        qtdEl.value = Number(quantidade).toFixed(1);
+    }
+
+    function calcularValorTotal() {
+        if (!valorTotalEl || !qtdEl || valorUnitarioAtual === null || qtdEl.value === '') {
+            if (valorTotalEl) valorTotalEl.value = '';
+            return;
+        }
+        const qtd = parseFloat(qtdEl.value);
+        if (Number.isNaN(qtd)) {
+            valorTotalEl.value = '';
+            return;
+        }
+        valorTotalEl.value = (qtd * valorUnitarioAtual).toFixed(2);
+    }
+
+    function carregarValorUnitario() {
+        if (!beneficiarioEl || !beneficiarioEl.value) {
+            valorUnitarioAtual = null;
+            calcularValorTotal();
+            return;
+        }
+        fetch(`/api/valor-unitario-diaria/${beneficiarioEl.value}/`)
+            .then(r => r.json())
+            .then(data => {
+                valorUnitarioAtual = data && data.sucesso && data.valor_unitario ? parseFloat(data.valor_unitario) : null;
+                calcularValorTotal();
+            })
+            .catch(() => {
+                valorUnitarioAtual = null;
+                calcularValorTotal();
+            });
+    }
+
+    function carregarDiariasIniciais() {
+        if (!diariaInicialEl) return;
+        if (!isComplementacao() || !beneficiarioEl || !beneficiarioEl.value) {
+            diariaInicialEl.innerHTML = '<option value="">---------</option>';
+            return;
+        }
+
+        fetch(`/api/diarias-iniciais/${beneficiarioEl.value}/`)
+            .then(r => r.json())
+            .then(data => {
+                diariaInicialEl.innerHTML = '<option value="">---------</option>';
+                if (!data || !data.sucesso || !Array.isArray(data.diarias)) return;
+                data.diarias.forEach(diaria => {
+                    const opt = document.createElement('option');
+                    opt.value = diaria.id;
+                    opt.textContent = diaria.label;
+                    diariaInicialEl.appendChild(opt);
+                });
+            })
+            .catch(() => {
+                diariaInicialEl.innerHTML = '<option value="">---------</option>';
+            });
+    }
+
+    if (tipoEl) {
+        tipoEl.addEventListener('change', function () {
+            updateTipoUI();
+            calcularQuantidade();
+            calcularValorTotal();
+            carregarDiariasIniciais();
+        });
+    }
+
+    if (beneficiarioEl) {
+        beneficiarioEl.addEventListener('change', function () {
+            carregarValorUnitario();
+            carregarDiariasIniciais();
+        });
+    }
+
+    [saidaEl, retornoEl].forEach(function (el) {
+        if (!el) return;
+        el.addEventListener('change', function () {
+            calcularQuantidade();
+            calcularValorTotal();
+        });
+    });
+
+    updateTipoUI();
+    calcularQuantidade();
+    carregarValorUnitario();
+    carregarDiariasIniciais();
+});
+</script>
 {% endblock %}

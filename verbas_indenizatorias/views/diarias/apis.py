@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import permission_required
 from django.http import JsonResponse
 
 from credores.models import Credor
-from verbas_indenizatorias.models import Tabela_Valores_Unitarios_Verbas_Indenizatorias
+from verbas_indenizatorias.models import Diaria, Tabela_Valores_Unitarios_Verbas_Indenizatorias
 
 
 @permission_required('fluxo.pode_criar_diarias', raise_exception=True)
@@ -32,3 +32,25 @@ def api_valor_unitario_diaria(request, beneficiario_id):
         )
     except Credor.DoesNotExist:
         return JsonResponse({'sucesso': False, 'erro': 'Beneficiario nao encontrado', 'valor_unitario': None})
+
+
+@permission_required('fluxo.pode_criar_diarias', raise_exception=True)
+def api_diarias_iniciais_por_beneficiario(request, beneficiario_id):
+    """Retorna diárias iniciais de um beneficiário para uso em complementações."""
+    diarias = Diaria.objects.filter(
+        beneficiario_id=beneficiario_id,
+        tipo_solicitacao='INICIAL',
+    ).order_by('-data_solicitacao', '-id')
+
+    return JsonResponse(
+        {
+            'sucesso': True,
+            'diarias': [
+                {
+                    'id': d.id,
+                    'label': f"Diária #{d.id} - {d.data_saida:%d/%m/%Y} a {d.data_retorno:%d/%m/%Y}",
+                }
+                for d in diarias
+            ],
+        }
+    )

@@ -6,7 +6,7 @@ from fluxo.views import pdf as fluxo_pdf_views
 from fluxo.views import security as fluxo_security_views
 from fluxo.views.support.core import home_page, process_detail_view
 from fluxo.views.support.sync import pagamentos as pagamentos_sync_views
-from fluxo.views.support.pendencia import painel_pendencias_view
+from fluxo.views.support.pendencia import painel_pendencias_view, atualizar_pendencias_lote_action
 from fluxo.views.support.contingencia import (
     painel_contingencias_view,
     add_contingencia_view,
@@ -98,6 +98,7 @@ urlpatterns = [
     path('processos/arquivamento/<int:pk>/aprovar/', post_payment_arquivamento_reviews.arquivar_processo_view, name='arquivar_processo'),
     path('processos/arquivamento/<int:pk>/executar/', post_payment_arquivamento_actions.arquivar_processo_action, name='arquivar_processo_action'),
     path('pendencias/', painel_pendencias_view, name='painel_pendencias'),
+    path('pendencias/action/', atualizar_pendencias_lote_action, name='painel_pendencias_action'),
     path('api/documentos-por-pagamento/', pre_payment_cadastro_apis.api_tipos_documento_por_pagamento, name='api_documentos_pagamento'),
     path('api/detalhes-pagamento/', fluxo_api_views.api_detalhes_pagamento, name='api_detalhes_pagamento'),
     path('processos/separar-lancamento/', payment_lancamento_actions.separar_para_lancamento_bancario, name='separar_para_lancamento_bancario'),

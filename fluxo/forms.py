@@ -5,6 +5,7 @@ from django.forms import inlineformset_factory
 from fluxo.domain_models import (
 	Processo,
 	Boleto_Bancario,
+	ComprovanteDePagamento,
 	DocumentoOrcamentario,
 	Pendencia,
 	Devolucao,
@@ -185,6 +186,21 @@ DocumentoOrcamentarioFormSet = inlineformset_factory(
 		'numero_nota_empenho': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
 		'data_empenho': forms.DateInput(attrs={'class': 'form-control form-control-sm', 'type': 'date'}),
 		'ano_exercicio': forms.Select(attrs={'class': 'form-select form-select-sm'}),
+	},
+)
+
+ComprovanteDePagamentoFormSet = inlineformset_factory(
+	Processo,
+	ComprovanteDePagamento,
+	fields=['numero_comprovante', 'credor_nome', 'valor_pago', 'data_pagamento', 'arquivo'],
+	extra=1,
+	can_delete=True,
+	widgets={
+		'numero_comprovante': forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Nº do comprovante'}),
+		'credor_nome': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
+		'valor_pago': forms.NumberInput(attrs={'class': 'form-control form-control-sm dinheiro'}),
+		'data_pagamento': forms.DateInput(attrs={'class': 'form-control form-control-sm', 'type': 'date'}),
+		'arquivo': forms.ClearableFileInput(attrs={'class': 'form-control form-control-sm'}),
 	},
 )
 

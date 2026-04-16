@@ -1,0 +1,110 @@
+{% extends "layouts/base_detail.html" %}
+
+{% block detail_breadcrumb %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home_page' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'verbas_panel' %}">Verbas</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'editar_processo_verbas' pk=processo.id %}">Hub Processo #{{ processo.id }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Itens Vinculados</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block detail_header %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+    <div>
+        <h4 class="mb-1 text-info fw-bold"><i class="bi bi-list-ul"></i> Itens de Verba do Processo #{{ processo.id }}</h4>
+        <div class="text-muted small">Módulo spoke para gestão individual de itens vinculados.</div>
+    </div>
+    <a href="{% url 'editar_processo_verbas' pk=processo.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
+</div>
+{% endblock %}
+
+{% block detail_body %}
+<div class="row g-4">
+    {% if tipo_verba_ativo == "diarias" %}
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white fw-bold">Diárias</div>
+            <div class="card-body small">
+                <ul class="list-group list-group-flush">
+                    {% for item in diarias %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>#{{ item.id }} - {{ item.beneficiario.nome|default:"-" }}</span>
+                        <a href="{% url 'gerenciar_diaria' pk=item.id %}" class="btn btn-sm btn-outline-primary">Gerenciar</a>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-muted">Nenhuma diária vinculada.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {% elif tipo_verba_ativo == "reembolsos" %}
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white fw-bold">Reembolsos</div>
+            <div class="card-body small">
+                <ul class="list-group list-group-flush">
+                    {% for item in reembolsos %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>#{{ item.id }} - {{ item.beneficiario.nome|default:"-" }}</span>
+                        <a href="{% url 'gerenciar_reembolso' pk=item.id %}" class="btn btn-sm btn-outline-success">Gerenciar</a>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-muted">Nenhum reembolso vinculado.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {% elif tipo_verba_ativo == "jetons" %}
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning fw-bold">Jetons</div>
+            <div class="card-body small">
+                <ul class="list-group list-group-flush">
+                    {% for item in jetons %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>#{{ item.id }} - {{ item.beneficiario.nome|default:"-" }}</span>
+                        <a href="{% url 'gerenciar_jeton' item.id %}" class="btn btn-sm btn-outline-warning">Gerenciar</a>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-muted">Nenhum jeton vinculado.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {% elif tipo_verba_ativo == "auxilios" %}
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white fw-bold">Auxílios</div>
+            <div class="card-body small">
+                <ul class="list-group list-group-flush">
+                    {% for item in auxilios %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>#{{ item.id }} - {{ item.beneficiario.nome|default:"-" }}</span>
+                        <a href="{% url 'gerenciar_auxilio' pk=item.id %}" class="btn btn-sm btn-outline-info">Gerenciar</a>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-muted">Nenhum auxílio vinculado.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-light border mb-0">
+            Nenhum item de verba vinculado a este processo.
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

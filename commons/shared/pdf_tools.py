@@ -20,6 +20,7 @@ from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from pypdf import PdfReader, PdfWriter
 from reportlab.lib.pagesizes import A4
+from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.pdfgen import canvas
 
 
@@ -48,7 +49,17 @@ def extract_text_between(full_text, start_anchor, end_anchor):
 	return full_text[start_idx:end_idx].replace("\n", "").strip()
 
 
-def _draw_wrapped_text(p, text, x, y, max_width, font_name="Helvetica", font_size=11, leading=16):
+def _draw_wrapped_text(
+	p,
+	text,
+	x,
+	y,
+	max_width,
+	font_name="Helvetica",
+	font_size=11,
+	leading=16,
+	justify=False,
+):
 	"""
 	Desenha texto com quebra automática de linha no canvas ReportLab.
 	Retorna a posição Y após o último texto desenhado.
@@ -60,8 +71,24 @@ def _draw_wrapped_text(p, text, x, y, max_width, font_name="Helvetica", font_siz
 	lines = textwrap.wrap(str(text), width=chars_per_line)
 	if not lines:
 		lines = [str(text)]
-	for line in lines:
-		p.drawString(x, y, line)
+	for index, line in enumerate(lines):
+		should_justify = justify and index < len(lines) - 1 and " " in line
+		if should_justify:
+			words = line.split()
+			if len(words) > 1:
+				text_width = sum(stringWidth(word, font_name, font_size) for word in words)
+				extra_space = max_width - text_width
+				space_slots = len(words) - 1
+				space_width = max(0, extra_space / space_slots)
+				cursor_x = x
+				for word in words[:-1]:
+					p.drawString(cursor_x, y, word)
+					cursor_x += stringWidth(word, font_name, font_size) + space_width
+				p.drawString(cursor_x, y, words[-1])
+			else:
+				p.drawString(x, y, line)
+		else:
+			p.drawString(x, y, line)
 		y -= leading
 	return y
 

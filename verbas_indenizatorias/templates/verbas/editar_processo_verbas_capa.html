@@ -1,0 +1,84 @@
+{% extends "layouts/base_form.html" %}
+
+{% block page_heading %}Capa do Processo de Verbas #{{ processo.id }}{% endblock %}
+{% block page_subtitle %}Edição da capa sem campos fiscais/ateste. Campos canônicos são aplicados automaticamente.{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'editar_processo_verbas' pk=processo.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
+{% endblock %}
+
+{% block form_action %}{% url 'editar_processo_verbas_capa_action' pk=processo.id %}{% endblock %}
+
+{% block form_fields %}
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <label class="form-label">Extraorçamentário</label>
+        <input type="text" class="form-control" value="Não" readonly>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Tipo de Pagamento</label>
+        <input type="text" class="form-control" value="VERBAS INDENIZATÓRIAS" readonly>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Ano do Exercício</label>
+        {{ processo_form.ano_exercicio }}
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <label class="form-label">Valor Bruto (automático)</label>
+        <input type="text" class="form-control" value="R$ {{ totais.total_geral|floatformat:2 }}" readonly>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Valor Líquido (automático)</label>
+        <input type="text" class="form-control" value="R$ {{ totais.total_geral|floatformat:2 }}" readonly>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Credor</label>
+        {{ processo_form.credor }}
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <label class="form-label">Forma de Pagamento</label>
+        {{ processo_form.forma_pagamento }}
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Conta Sacada</label>
+        {{ processo_form.conta }}
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Data de Vencimento</label>
+        {{ processo_form.data_vencimento }}
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <label class="form-label">Data de Pagamento</label>
+        {{ processo_form.data_pagamento }}
+    </div>
+    <div class="col-md-8">
+        <label class="form-label">Detalhamento</label>
+        {{ processo_form.detalhamento }}
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <label class="form-label">Observação</label>
+        {{ processo_form.observacao }}
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Tag</label>
+        {{ processo_form.tag }}
+    </div>
+</div>
+{% endblock %}
+
+{% block form_actions %}
+<a href="{% url 'editar_processo_verbas' pk=processo.id %}" class="btn btn-secondary px-4">Cancelar</a>
+<button type="submit" class="btn btn-success px-4 fw-bold"><i class="bi bi-check-lg"></i> Salvar Capa</button>
+{% endblock %}

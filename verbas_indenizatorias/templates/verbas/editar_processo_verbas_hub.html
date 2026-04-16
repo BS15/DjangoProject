@@ -1,0 +1,98 @@
+{% extends "layouts/base_detail.html" %}
+
+{% block detail_breadcrumb %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home_page' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'verbas_panel' %}">Verbas</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Hub Processo #{{ processo.id }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block detail_header %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+    <div>
+        <h4 class="mb-1 text-primary fw-bold"><i class="bi bi-diagram-3"></i> Hub de Edição - Processo de Verbas #{{ processo.id }}</h4>
+        <div class="text-muted small">Credor: {{ processo.credor|default:"-" }} | Status: {{ processo.status|default:"-" }}</div>
+    </div>
+    <a href="{% url 'verbas_panel' %}" class="btn btn-outline-secondary btn-sm">Voltar ao Painel</a>
+</div>
+<hr class="my-3">
+<div class="row g-3 small">
+    <div class="col-md-3"><strong>Total de Itens:</strong> {{ total_itens }}</div>
+    {% if tipo_verba_ativo == "diarias" %}
+    <div class="col-md-6"><strong>Total Diárias:</strong> R$ {{ totais.total_diarias|floatformat:2 }}</div>
+    {% elif tipo_verba_ativo == "reembolsos" %}
+    <div class="col-md-6"><strong>Total Reembolsos:</strong> R$ {{ totais.total_reembolsos|floatformat:2 }}</div>
+    {% elif tipo_verba_ativo == "jetons" %}
+    <div class="col-md-6"><strong>Total Jetons:</strong> R$ {{ totais.total_jetons|floatformat:2 }}</div>
+    {% elif tipo_verba_ativo == "auxilios" %}
+    <div class="col-md-6"><strong>Total Auxílios:</strong> R$ {{ totais.total_auxilios|floatformat:2 }}</div>
+    {% endif %}
+    <div class="col-md-3"><strong>Valor Líquido:</strong> R$ {{ processo.valor_liquido|floatformat:2 }}</div>
+</div>
+<div class="mt-2 small text-muted">
+    Regras canônicas aplicadas automaticamente: Extraorçamentário = Não, Tipo de Pagamento = VERBAS INDENIZATÓRIAS, Valor Bruto = Valor Líquido = soma das verbas.
+</div>
+{% endblock %}
+
+{% block detail_body %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-light fw-bold"><i class="bi bi-grid"></i> Módulos</div>
+    <div class="card-body d-flex flex-wrap gap-2">
+        <a href="{% url 'editar_processo_verbas_capa' pk=processo.id %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-card-heading"></i> Capa do Processo</a>
+        <a href="{% url 'editar_processo_verbas_documentos' pk=processo.id %}" class="btn btn-outline-dark btn-sm position-relative">
+            <i class="bi bi-paperclip"></i> Documentos
+            {% if total_docs_processo > 0 %}<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-secondary">{{ total_docs_processo }}</span>{% endif %}
+        </a>
+        <a href="{% url 'editar_processo_verbas_pendencias' pk=processo.id %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-exclamation-triangle"></i> Pendências</a>
+        <a href="{% url 'editar_processo_verbas_itens' pk=processo.id %}" class="btn btn-outline-info btn-sm"><i class="bi bi-list-ul"></i> Itens de Verba</a>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-collection"></i> Itens Vinculados</span>
+        <span class="badge bg-secondary">{{ total_itens }}</span>
+    </div>
+    <div class="card-body">
+        {% if tipo_verba_ativo == "diarias" %}
+        <h6 class="text-primary">Diárias</h6>
+        <ul class="small mb-0">
+            {% for diaria in diarias|slice:":5" %}
+            <li>#{{ diaria.id }} - {{ diaria.beneficiario.nome|default:"-" }} (R$ {{ diaria.valor_total|floatformat:2 }})</li>
+            {% endfor %}
+        </ul>
+        {% elif tipo_verba_ativo == "reembolsos" %}
+        <h6 class="text-success">Reembolsos de Combustível</h6>
+        <ul class="small mb-0">
+            {% for reembolso in reembolsos|slice:":5" %}
+            <li>#{{ reembolso.id }} - {{ reembolso.beneficiario.nome|default:"-" }} (R$ {{ reembolso.valor_total|floatformat:2 }})</li>
+            {% endfor %}
+        </ul>
+        {% elif tipo_verba_ativo == "jetons" %}
+        <h6 class="text-warning">Jetons</h6>
+        <ul class="small mb-0">
+            {% for jeton in jetons|slice:":5" %}
+            <li>#{{ jeton.id }} - {{ jeton.beneficiario.nome|default:"-" }} (R$ {{ jeton.valor_total|floatformat:2 }})</li>
+            {% endfor %}
+        </ul>
+        {% elif tipo_verba_ativo == "auxilios" %}
+        <h6 class="text-info">Auxílios de Representação</h6>
+        <ul class="small mb-0">
+            {% for auxilio in auxilios|slice:":5" %}
+            <li>#{{ auxilio.id }} - {{ auxilio.beneficiario.nome|default:"-" }} (R$ {{ auxilio.valor_total|floatformat:2 }})</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted small">Nenhum item vinculado a este processo.</p>
+        {% endif %}
+        {% if total_itens > 5 %}
+        <div class="mt-2">
+            <a href="{% url 'editar_processo_verbas_itens' pk=processo.id %}" class="btn btn-sm btn-outline-secondary">Ver todos ({{ total_itens }})</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -52,6 +52,50 @@
             docList.appendChild(newRow);
             mgmtTotal.value = totalForms + 1;
             attachRemoveDocBtn(newRow);
+            refreshDocumentOrder();
+            attachDocumentRowDnD(newRow);
+        });
+    }
+
+    function refreshDocumentOrder() {
+        if (!docList) return;
+        var visibleRows = Array.prototype.filter.call(docList.querySelectorAll('.document-row'), function (row) {
+            return row.style.display !== 'none';
+        });
+
+        visibleRows.forEach(function (row, index) {
+            var ordemField = row.querySelector('input[name$="-ordem"]');
+            if (ordemField) {
+                ordemField.value = String(index + 1);
+            }
+        });
+    }
+
+    function attachDocumentRowDnD(row) {
+        if (!row || !docList) return;
+        row.setAttribute('draggable', 'true');
+
+        row.addEventListener('dragstart', function () {
+            row.classList.add('opacity-50');
+        });
+
+        row.addEventListener('dragend', function () {
+            row.classList.remove('opacity-50');
+            refreshDocumentOrder();
+        });
+
+        row.addEventListener('dragover', function (event) {
+            event.preventDefault();
+            var dragging = docList.querySelector('.document-row.opacity-50');
+            if (!dragging || dragging === row) return;
+
+            var rowRect = row.getBoundingClientRect();
+            var shouldInsertBefore = event.clientY < (rowRect.top + rowRect.height / 2);
+            if (shouldInsertBefore) {
+                docList.insertBefore(dragging, row);
+            } else {
+                docList.insertBefore(dragging, row.nextSibling);
+            }
         });
     }
 
@@ -66,12 +110,19 @@
             } else {
                 row.remove();
             }
+            refreshDocumentOrder();
         });
     }
 
     docList && docList.querySelectorAll('.remove-doc-btn').forEach(function (btn) {
         attachRemoveDocBtn(btn.closest('.document-row'));
     });
+
+    docList && docList.querySelectorAll('.document-row').forEach(function (row) {
+        attachDocumentRowDnD(row);
+    });
+
+    refreshDocumentOrder();
 
     // ── Pendência formset: dynamic add ───────────────────────────────────
     var pendList      = document.getElementById('pendencia-list');

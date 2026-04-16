@@ -9,6 +9,13 @@ __all__ = [
     "verbas_panel_view",
     "agrupar_verbas_view",
     "editar_processo_verbas_view",
+    "editar_processo_verbas_capa_view",
+    "editar_processo_verbas_pendencias_view",
+    "editar_processo_verbas_itens_view",
+    "editar_processo_verbas_documentos_view",
     "editar_processo_verbas_action",
+    "editar_processo_verbas_capa_action",
+    "editar_processo_verbas_pendencias_action",
+    "editar_processo_verbas_documentos_action",
     "api_add_documento_verba",
 ]

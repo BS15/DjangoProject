@@ -61,9 +61,13 @@ def format_brl_currency(value, empty_value="-"):
     if value is None:
         return empty_value
 
-    int_part, dec_part = f"{abs(value):.2f}".split(".")
+    parsed_value = parse_brl_decimal(value, default=None)
+    if parsed_value is None:
+        return empty_value
+
+    int_part, dec_part = f"{abs(parsed_value):.2f}".split(".")
     int_formatted = "{:,}".format(int(int_part)).replace(",", ".")
-    signal = "-" if value < 0 else ""
+    signal = "-" if parsed_value < 0 else ""
     return f"R$ {signal}{int_formatted},{dec_part}"
 
 

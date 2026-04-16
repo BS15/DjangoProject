@@ -68,50 +68,107 @@
             Gerenciar Documentos
         </a>
     </div>
-    <ul class="list-group list-group-flush">
-        {% for doc in documentos %}
-        <li class="list-group-item d-flex justify-content-between align-items-center gap-3">
-            <div>
-                <span class="badge bg-primary rounded-pill me-2">{{ doc.ordem }}</span>
-                <strong>{{ doc.tipo.tipo_de_documento|default:"Sem tipo" }}</strong>
-                <span class="text-muted small ms-2">({{ doc.arquivo.name|slice:"16:" }})</span>
-            </div>
-            <a href="{% url 'download_arquivo_seguro' 'processo' doc.id %}" target="_blank" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-eye"></i> Ver
-            </a>
-        </li>
-        {% empty %}
-        <li class="list-group-item text-center text-muted py-3">Nenhum documento anexado.</li>
-        {% endfor %}
-    </ul>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Ord.</th>
+                    <th>Tipo</th>
+                    <th>Arquivo</th>
+                    <th class="text-center">Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in documentos_page %}
+                <tr>
+                    <td class="fw-bold">{{ doc.ordem }}</td>
+                    <td>{{ doc.tipo.tipo_de_documento|default:"Sem tipo" }}</td>
+                    <td class="small text-muted">{{ doc.arquivo.name|slice:"16:" }}</td>
+                    <td class="text-center">
+                        <a href="{% url 'download_arquivo_seguro' 'processo' doc.id %}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-eye"></i> Ver
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-3">Nenhum documento anexado.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if documentos_page.has_other_pages %}
+    <div class="card-footer bg-white">
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {% if documentos_page.has_previous %}
+                <li class="page-item"><a class="page-link" href="?docs_page={{ documentos_page.previous_page_number }}&pend_page={{ pendencias_page.number }}&liq_page={{ liquidacoes_page.number }}&ret_page={{ retencoes_page.number }}">Anterior</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ documentos_page.number }}</span></li>
+                {% if documentos_page.has_next %}
+                <li class="page-item"><a class="page-link" href="?docs_page={{ documentos_page.next_page_number }}&pend_page={{ pendencias_page.number }}&liq_page={{ liquidacoes_page.number }}&ret_page={{ retencoes_page.number }}">Próxima</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
 </div>
 
 <div class="card shadow-sm mb-4">
     <div class="card-header bg-light d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="bi bi-receipt me-2"></i>Notas Fiscais e Retenções</h5>
+        <h5 class="mb-0"><i class="bi bi-receipt me-2"></i>Liquidações (Atestes de NF)</h5>
         <a href="{% url 'documentos_fiscais' pk=processo.id %}" class="btn btn-sm btn-info text-white">
             Gerenciar Documentos Fiscais
         </a>
     </div>
-    <div class="card-body">
-        {% if notas_fiscais %}
-        <ul class="list-group list-group-flush">
-            {% for nota in notas_fiscais %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                    <strong>NF {{ nota.numero_nota_fiscal }}</strong>
-                    <span class="text-muted ms-2">{{ nota.nome_emitente|default:"-" }}</span>
-                </div>
-                <span class="badge {% if nota.atestada %}bg-success{% else %}bg-warning text-dark{% endif %}">
-                    {% if nota.atestada %}Atestada{% else %}Pendente de ateste{% endif %}
-                </span>
-            </li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        <span class="text-muted">Nenhuma nota fiscal registrada.</span>
-        {% endif %}
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>NF</th>
+                    <th>Emitente</th>
+                    <th>Emissão</th>
+                    <th>Valor Bruto</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for nota in liquidacoes_page %}
+                <tr>
+                    <td class="fw-bold">{{ nota.numero_nota_fiscal }}</td>
+                    <td>{{ nota.nome_emitente|default:"-" }}</td>
+                    <td>{{ nota.data_emissao|date:"d/m/Y"|default:"-" }}</td>
+                    <td>R$ {{ nota.valor_bruto|floatformat:2 }}</td>
+                    <td>
+                        <span class="badge {% if nota.atestada %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                            {% if nota.atestada %}Atestada{% else %}Pendente{% endif %}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-3">Nenhuma liquidação registrada.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+    {% if liquidacoes_page.has_other_pages %}
+    <div class="card-footer bg-white">
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {% if liquidacoes_page.has_previous %}
+                <li class="page-item"><a class="page-link" href="?docs_page={{ documentos_page.number }}&pend_page={{ pendencias_page.number }}&liq_page={{ liquidacoes_page.previous_page_number }}&ret_page={{ retencoes_page.number }}">Anterior</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ liquidacoes_page.number }}</span></li>
+                {% if liquidacoes_page.has_next %}
+                <li class="page-item"><a class="page-link" href="?docs_page={{ documentos_page.number }}&pend_page={{ pendencias_page.number }}&liq_page={{ liquidacoes_page.next_page_number }}&ret_page={{ retencoes_page.number }}">Próxima</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
 </div>
 
 <div class="card shadow-sm mb-4">
@@ -121,23 +178,94 @@
             Gerenciar Pendências
         </a>
     </div>
-    <div class="card-body">
-        {% if pendencias %}
-        <ul class="list-group list-group-flush">
-            {% for pendencia in pendencias %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                    <strong>{{ pendencia.tipo|default:"Sem tipo" }}</strong>
-                    <span class="text-muted ms-2">{{ pendencia.descricao|default:"" }}</span>
-                </div>
-                <span class="badge bg-secondary">{{ pendencia.status|default:"Sem status" }}</span>
-            </li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        <span class="text-muted">Nenhuma pendência registrada.</span>
-        {% endif %}
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Tipo</th>
+                    <th>Descrição</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pendencia in pendencias_page %}
+                <tr>
+                    <td class="fw-bold">{{ pendencia.tipo|default:"Sem tipo" }}</td>
+                    <td>{{ pendencia.descricao|default:"" }}</td>
+                    <td><span class="badge bg-secondary">{{ pendencia.status|default:"Sem status" }}</span></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center text-muted py-3">Nenhuma pendência registrada.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+    {% if pendencias_page.has_other_pages %}
+    <div class="card-footer bg-white">
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {% if pendencias_page.has_previous %}
+                <li class="page-item"><a class="page-link" href="?docs_page={{ documentos_page.number }}&pend_page={{ pendencias_page.previous_page_number }}&liq_page={{ liquidacoes_page.number }}&ret_page={{ retencoes_page.number }}">Anterior</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ pendencias_page.number }}</span></li>
+                {% if pendencias_page.has_next %}
+                <li class="page-item"><a class="page-link" href="?docs_page={{ documentos_page.number }}&pend_page={{ pendencias_page.next_page_number }}&liq_page={{ liquidacoes_page.number }}&ret_page={{ retencoes_page.number }}">Próxima</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0"><i class="bi bi-percent me-2"></i>Retenções</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>NF</th>
+                    <th>Código</th>
+                    <th>Valor</th>
+                    <th>Data Pagamento</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for retencao in retencoes_page %}
+                <tr>
+                    <td>{{ retencao.nota_fiscal.numero_nota_fiscal|default:"-" }}</td>
+                    <td>{{ retencao.codigo|default:"-" }}</td>
+                    <td class="fw-bold">R$ {{ retencao.valor|floatformat:2 }}</td>
+                    <td>{{ retencao.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
+                    <td>{{ retencao.status|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-3">Nenhuma retenção registrada.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if retencoes_page.has_other_pages %}
+    <div class="card-footer bg-white">
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {% if retencoes_page.has_previous %}
+                <li class="page-item"><a class="page-link" href="?docs_page={{ documentos_page.number }}&pend_page={{ pendencias_page.number }}&liq_page={{ liquidacoes_page.number }}&ret_page={{ retencoes_page.previous_page_number }}">Anterior</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ retencoes_page.number }}</span></li>
+                {% if retencoes_page.has_next %}
+                <li class="page-item"><a class="page-link" href="?docs_page={{ documentos_page.number }}&pend_page={{ pendencias_page.number }}&liq_page={{ liquidacoes_page.number }}&ret_page={{ retencoes_page.next_page_number }}">Próxima</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
 </div>
 
 {% if processo.devolucoes.all %}

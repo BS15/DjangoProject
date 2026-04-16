@@ -4,7 +4,6 @@ Este pacote agrupa serviços e utilitários para geração, anexação e manipul
 """
 
 from .documentos import (  # noqa: F401
-	gerar_e_anexar_scd_diaria,
 	gerar_e_anexar_pcd_diaria,
 	gerar_e_anexar_recibo_reembolso,
 	gerar_e_anexar_recibo_jeton,

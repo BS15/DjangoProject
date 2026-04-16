@@ -5,7 +5,7 @@ from fluxo.views.shared import render_filtered_list
 from verbas_indenizatorias.forms import ReembolsoForm
 from verbas_indenizatorias.models import ReembolsoCombustivel
 from verbas_indenizatorias.filters import ReembolsoFilter
-from ..shared.registry import _get_tipos_documento_ativos
+from ..shared.registry import _get_tipos_documento_verbas
 
 
 @permission_required("fluxo.pode_visualizar_verbas", raise_exception=True)
@@ -33,7 +33,7 @@ def gerenciar_reembolso_view(request, pk):
     context = {
         "reembolso": reembolso,
         "comprovantes": comprovantes,
-        "tipos_documento": _get_tipos_documento_ativos(),
+        "tipos_documento": _get_tipos_documento_verbas(),
         "pode_autorizar": request.user.has_perm("fluxo.pode_gerenciar_reembolsos"),
     }
     return render(request, "verbas/edit_reembolso.html", context)

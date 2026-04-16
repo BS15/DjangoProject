@@ -6,7 +6,7 @@ from fluxo.views.shared import render_filtered_list
 from verbas_indenizatorias.forms import DiariaForm
 from verbas_indenizatorias.models import Diaria
 from verbas_indenizatorias.filters import DiariaFilter
-from ..shared.registry import _get_tipos_documento_ativos
+from ..shared.registry import _get_tipos_documento_verbas
 
 @permission_required("fluxo.pode_visualizar_verbas", raise_exception=True)
 def diarias_list_view(request):
@@ -34,8 +34,7 @@ def gerenciar_diaria_view(request, pk):
     context = {
         'diaria': diaria,
         'comprovantes': comprovantes,
-        'tipos_documento': _get_tipos_documento_ativos(),
-        'pode_autorizar': request.user.has_perm('fluxo.pode_autorizar_diarias'),
+        'tipos_documento': _get_tipos_documento_verbas(),
     }
     return render(request, 'verbas/gerenciar_diaria.html', context)
 
@@ -51,34 +50,9 @@ def download_template_diarias_csv(request):
     return response
 
 
-@permission_required("fluxo.pode_visualizar_verbas", raise_exception=True)
-def minhas_solicitacoes_view(request):
-    """Lista diárias propostas pelo usuário logado."""
-    queryset = Diaria.objects.filter(proponente=request.user).select_related("beneficiario", "status").order_by("-id")
-    return render_filtered_list(
-        request,
-        queryset=queryset,
-        filter_class=DiariaFilter,
-        template_name='verbas/diarias_list.html',
-        items_key='registros',
-        filter_key='filter',
-    )
-
-
-@permission_required('fluxo.pode_autorizar_diarias', raise_exception=True)
-def painel_autorizacao_diarias_view(request):
-    diarias_pendentes = Diaria.objects.select_related(
-        'beneficiario', 'proponente', 'status', 'processo'
-    ).filter(status__status_choice='SOLICITADA').order_by('-id')
-
-    return render(request, 'verbas/painel_autorizacao_diarias.html', {'diarias_pendentes': diarias_pendentes})
-
-
 __all__ = [
     'diarias_list_view',
     'add_diaria_view',
     'gerenciar_diaria_view',
     'download_template_diarias_csv',
-    'minhas_solicitacoes_view',
-    'painel_autorizacao_diarias_view',
 ]
