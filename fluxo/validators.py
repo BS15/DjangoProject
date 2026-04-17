@@ -1,4 +1,8 @@
+import io
+from decimal import Decimal
+
 from django.core.exceptions import ValidationError
+from pypdf import PdfReader
 
 from commons.shared.file_validators import validar_arquivo_seguro
 from commons.shared.text_tools import format_brl_currency
@@ -29,14 +33,47 @@ def verificar_turnpike(processo, status_anterior, status_novo):
     novo = status_novo.upper().strip()
 
     if anterior == ProcessoStatus.A_EMPENHAR and novo == ProcessoStatus.AGUARDANDO_LIQUIDACAO:
-        tem_doc_orcamentario = processo.documentos.filter(
+        docs_orcamentarios = processo.documentos.filter(
             tipo__tipo_de_documento__iexact='DOCUMENTOS ORÇAMENTÁRIOS'
-        ).exists()
-        if not tem_doc_orcamentario:
+        )
+        if not docs_orcamentarios.exists():
             erros.append(
                 'Para avançar para "Aguardando Liquidação" é necessário anexar ao menos '
                 'um documento do tipo "DOCUMENTOS ORÇAMENTÁRIOS".'
             )
+        else:
+            tem_lastro_material_valido = False
+            for doc in docs_orcamentarios:
+                try:
+                    if not doc.arquivo or not doc.arquivo.name:
+                        continue
+                    if not doc.arquivo.storage.exists(doc.arquivo.name):
+                        continue
+
+                    with doc.arquivo.open("rb") as arquivo:
+                        conteudo = arquivo.read()
+
+                    if not conteudo:
+                        continue
+
+                    if doc.arquivo.name.lower().endswith(".pdf"):
+                        try:
+                            reader = PdfReader(io.BytesIO(conteudo))
+                            if len(reader.pages) == 0:
+                                continue
+                        except Exception:
+                            continue
+
+                    tem_lastro_material_valido = True
+                    break
+                except (OSError, TypeError, ValueError):
+                    continue
+
+            if not tem_lastro_material_valido:
+                erros.append(
+                    'Para avançar para "Aguardando Liquidação" é necessário documento orçamentário '
+                    'materialmente válido (arquivo existente, legível e não vazio).'
+                )
 
     if anterior == ProcessoStatus.AGUARDANDO_LIQUIDACAO and novo == ProcessoStatus.A_PAGAR_PENDENTE_AUTORIZACAO:
         notas = processo.notas_fiscais.all()
@@ -54,6 +91,21 @@ def verificar_turnpike(processo, status_anterior, status_novo):
                 erros.append(
                     f'Todos os documentos fiscais devem estar atestados antes de avançar para '
                     f'"A Pagar - Pendente Autorização". Documento(s) pendente(s): {nomes}.'
+                )
+
+            notas_com_valor_invalido = [
+                nf for nf in notas
+                if nf.valor_bruto is None
+                or nf.valor_liquido is None
+                or nf.valor_bruto <= 0
+                or nf.valor_liquido <= 0
+            ]
+            if notas_com_valor_invalido:
+                nomes_invalidos = ', '.join(
+                    nf.numero_nota_fiscal or f'(id {nf.pk})' for nf in notas_com_valor_invalido[:5]
+                )
+                erros.append(
+                    f'Documento(s) fiscal(is) com valor inválido (<= 0) impedem o avanço: {nomes_invalidos}.'
                 )
 
     if anterior == ProcessoStatus.LANCADO_AGUARDANDO_COMPROVANTE and novo == ProcessoStatus.PAGO_EM_CONFERENCIA:
@@ -77,15 +129,19 @@ def verificar_turnpike(processo, status_anterior, status_novo):
 
         if not is_suprimento:
             soma_comprovantes = sum(
-                comp.valor_pago for comp in processo.comprovantes_pagamento.all()
-                if comp.valor_pago is not None
+                (
+                    comp.valor_pago for comp in processo.comprovantes_pagamento.all()
+                    if comp.valor_pago is not None
+                ),
+                Decimal("0"),
             )
-            valor_liquido = processo.valor_liquido or 0
-            if abs(float(soma_comprovantes) - float(valor_liquido)) > 0.01:
+            valor_liquido = processo.valor_liquido or Decimal("0")
+            diferenca = abs(soma_comprovantes - valor_liquido)
+            if diferenca > Decimal("0.01"):
                 erros.append(
                     f'Soma dos comprovantes de pagamento ({format_brl_currency(soma_comprovantes)}) é diferente do '
                     f'valor líquido do processo ({format_brl_currency(valor_liquido)}). '
-                    f'Diferença: {format_brl_currency(abs(float(soma_comprovantes) - float(valor_liquido)))}.'
+                    f'Diferença: {format_brl_currency(diferenca)}.'
                 )
 
     return erros

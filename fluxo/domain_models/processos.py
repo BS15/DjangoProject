@@ -189,6 +189,20 @@ class Processo(models.Model):
     )
     history = HistoricalRecords()
     objects = ProcessoManager()
+    _CAMPOS_SENSIVEIS_POS_PAGAMENTO = {
+        "credor_id",
+        "valor_bruto",
+        "valor_liquido",
+        "data_vencimento",
+        "data_pagamento",
+        "forma_pagamento_id",
+        "tipo_pagamento_id",
+        "observacao",
+        "detalhamento",
+        "conta_id",
+        "tag_id",
+        "n_pagamento_siscac",
+    }
 
     class Meta:
         permissions = [
@@ -319,8 +333,51 @@ class Processo(models.Model):
         )
 
     def save(self, *args, **kwargs):
+        self._enforce_domain_seal(update_fields=kwargs.get("update_fields"))
         super().save(*args, **kwargs)
         self._persist_pending_documento_orcamentario()
+
+    def _enforce_domain_seal(self, update_fields=None):
+        """Bloqueia mutação direta de campos sensíveis após pagamento.
+
+        A regra impede bypass por payload direto em scripts/API quando o processo
+        já está em estágios pós-pagamento, exceto em fluxos autorizados
+        (contingência explícita via `_bypass_domain_seal` ou processo em contingência).
+        """
+        if not self.pk:
+            return
+
+        if getattr(self, "_bypass_domain_seal", False):
+            return
+
+        if self.em_contingencia:
+            return
+
+        status_atual = (self.status.status_choice or "").upper() if self.status else ""
+        if status_atual not in PROCESSO_STATUS_PAGOS_E_POSTERIORES:
+            return
+
+        original = type(self).objects.get(pk=self.pk)
+        campos_sensiveis = self._CAMPOS_SENSIVEIS_POS_PAGAMENTO
+
+        if update_fields is not None:
+            campos_avaliados = set(update_fields) & campos_sensiveis
+        else:
+            campos_avaliados = campos_sensiveis
+
+        alterados = [
+            campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)
+        ]
+
+        if alterados:
+            raise ValidationError(
+                {
+                    "status": (
+                        "Mutação direta bloqueada: alterações de dados financeiros/cadastrais "
+                        "em estágios pós-pagamento devem ocorrer via contingência aprovada."
+                    )
+                }
+            )
 
     def clean(self):
         """Valida integridade dos dados do processo antes de salvar."""

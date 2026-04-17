@@ -19,6 +19,8 @@ from fluxo.validators import verificar_turnpike
 def test_baixa_bancaria_tolerancia_decimal(
     processo_factory,
     add_comprovante,
+    add_documento_processo,
+    monkeypatch,
     valor_liquido,
     soma_comprovantes,
     espera_bloqueio,
@@ -27,8 +29,27 @@ def test_baixa_bancaria_tolerancia_decimal(
     processo.valor_liquido = valor_liquido
     processo.save(update_fields=["valor_liquido"])
 
-    for valor in soma_comprovantes:
-        add_comprovante(processo, valor_pago=valor)
+    # Garante somente o lastro documental exigido pelo turnpike (sem influenciar a soma).
+    add_documento_processo(
+        processo,
+        tipo_nome="COMPROVANTE DE PAGAMENTO",
+        nome_arquivo="comprovante_lastro.pdf",
+    )
+
+    usa_quarta_casa = any(valor.as_tuple().exponent < -2 for valor in soma_comprovantes)
+    if usa_quarta_casa:
+        class _Comp:
+            def __init__(self, valor_pago):
+                self.valor_pago = valor_pago
+
+        monkeypatch.setattr(
+            type(processo.comprovantes_pagamento),
+            "all",
+            lambda self: [_Comp(valor) for valor in soma_comprovantes],
+        )
+    else:
+        for valor in soma_comprovantes:
+            add_comprovante(processo, valor_pago=valor)
 
     erros = verificar_turnpike(
         processo,

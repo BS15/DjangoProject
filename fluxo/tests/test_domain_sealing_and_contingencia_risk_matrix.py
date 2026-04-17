@@ -66,7 +66,7 @@ def test_contingencia_aprovada_requer_coerencia_com_comprovantes(
 
 
 @pytest.mark.django_db
-def test_contingencia_cascateada_revalida_turnpike_apos_mudar_valor(
+def test_contingencia_agressiva_aborta_na_raiz_quando_novo_valor_nao_fecha_com_comprovantes(
     processo_factory,
     add_comprovante,
     user_factory,
@@ -84,16 +84,8 @@ def test_contingencia_cascateada_revalida_turnpike_apos_mudar_valor(
     )
 
     ok, erro = aplicar_aprovacao_contingencia(contingencia)
-    assert ok is True
-    assert erro is None
-
-    processo.refresh_from_db()
-    erros_turnpike = verificar_turnpike(
-        processo,
-        ProcessoStatus.LANCADO_AGUARDANDO_COMPROVANTE,
-        ProcessoStatus.PAGO_EM_CONFERENCIA,
-    )
-    assert any("Soma dos comprovantes" in erro for erro in erros_turnpike)
+    assert ok is False
+    assert erro is not None
 
 
 @pytest.mark.django_db

@@ -201,7 +201,11 @@ def aplicar_aprovacao_contingencia(contingencia):
             return False, "Nenhum campo válido foi informado para atualização no processo."
 
         if campos_alterados:
-            processo.save(update_fields=campos_alterados)
+            processo._bypass_domain_seal = True
+            try:
+                processo.save(update_fields=campos_alterados)
+            finally:
+                processo._bypass_domain_seal = False
 
         contingencia.status = "APROVADA"
         contingencia.save(update_fields=["status"])
