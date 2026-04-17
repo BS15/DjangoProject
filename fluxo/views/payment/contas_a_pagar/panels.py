@@ -6,7 +6,7 @@ from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
 from fiscal.models import RetencaoImposto
-from fluxo.domain_models import Pendencia, Processo
+from fluxo.domain_models import PROCESSO_STATUS_CONTAS_A_PAGAR, Pendencia, Processo
 from fluxo.views.helpers import (
     _aplicar_filtros_contas_a_pagar,
     _gerar_agrupamentos_contas_a_pagar,
@@ -14,12 +14,7 @@ from fluxo.views.helpers import (
 )
 
 
-STATUSES_CONTAS_A_PAGAR = [
-    "A PAGAR - PENDENTE AUTORIZAÇÃO",
-    "A PAGAR - ENVIADO PARA AUTORIZAÇÃO",
-    "A PAGAR - AUTORIZADO",
-    "LANÇADO - AGUARDANDO COMPROVANTE",
-]
+STATUSES_CONTAS_A_PAGAR = list(PROCESSO_STATUS_CONTAS_A_PAGAR)
 
 
 @require_GET

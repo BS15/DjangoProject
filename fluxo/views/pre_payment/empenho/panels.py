@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
 from fluxo.filters import AEmpenharFilter
-from fluxo.domain_models import Processo
+from fluxo.domain_models import Processo, ProcessoStatus
 from fluxo.views.shared import apply_filterset
 from fluxo.views.helpers import _obter_campo_ordenacao
 
@@ -27,7 +27,7 @@ def a_empenhar_view(request):
         default_direcao="asc",
     )
 
-    processos_base = Processo.objects.filter(status__status_choice__iexact="A EMPENHAR").select_related(
+    processos_base = Processo.objects.filter(status__status_choice__iexact=ProcessoStatus.A_EMPENHAR).select_related(
         "credor", "status", "tipo_pagamento"
     )
     meu_filtro = apply_filterset(request, AEmpenharFilter, processos_base)

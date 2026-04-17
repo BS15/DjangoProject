@@ -7,7 +7,7 @@ from django.views.decorators.http import require_GET
 
 from commons.shared.text_tools import normalize_choice
 from fiscal.models import RetencaoImposto
-from fluxo.domain_models import Contingencia, Processo
+from fluxo.domain_models import Contingencia, Processo, ProcessoStatus
 from fluxo.views.helpers import _aplicar_filtro_por_opcao
 
 
@@ -16,7 +16,7 @@ from fluxo.views.helpers import _aplicar_filtro_por_opcao
 def painel_conferencia_view(request):
     """Exibe o painel de conferencia de processos pagos."""
     processos_pagos = (
-        Processo.objects.filter(status__status_choice__iexact="PAGO - EM CONFERÊNCIA")
+        Processo.objects.filter(status__status_choice__iexact=ProcessoStatus.PAGO_EM_CONFERENCIA)
         .annotate(
             tem_pendencia=Exists(Contingencia.objects.filter(processo=OuterRef("pk"))),
             tem_retencao=Exists(

@@ -9,7 +9,7 @@ from django.views.decorators.http import require_GET
 
 from credores.models import Credor
 from fiscal.models import CodigosImposto, DocumentoFiscal, RetencaoImposto
-from fluxo.domain_models import Processo
+from fluxo.domain_models import Processo, ProcessoStatus
 
 from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoForm
 from ..helpers import _validar_regras_edicao_processo
@@ -44,7 +44,7 @@ def _montar_contexto_hub(processo, status_inicial, somente_documentos):
         "processo": processo,
         "status_inicial": status_inicial,
         "somente_documentos": somente_documentos,
-        "aguardando_liquidacao": status_inicial.startswith("AGUARDANDO LIQUIDAÇÃO"),
+        "aguardando_liquidacao": status_inicial == ProcessoStatus.AGUARDANDO_LIQUIDACAO,
         "total_documentos": processo.documentos.count(),
         "total_notas": processo.notas_fiscais.count(),
         "notas_nao_atestadas": processo.notas_fiscais.filter(atestada=False).count(),
@@ -138,14 +138,16 @@ def editar_processo_capa_view(request, pk):
 def editar_processo_documentos_view(request, pk):
     """Spoke GET de edição de anexos do processo."""
     from fluxo.domain_models import TiposDeDocumento
-    
+
     processo, status_inicial, redirecionamento, _ = _obter_contexto_edicao(request, pk)
     if redirecionamento:
         return redirecionamento
 
+    from fluxo.domain_models import ProcessoStatus
+
     precisa_documento_orcamentario = (
         not processo.extraorcamentario
-        and not status_inicial.startswith("A EMPENHAR")
+        and status_inicial != ProcessoStatus.A_EMPENHAR
         and not processo.documentos.filter(tipo__tipo_de_documento__iexact="DOCUMENTOS ORÇAMENTÁRIOS").exists()
     )
 

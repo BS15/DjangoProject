@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import permission_required
 from django.http import HttpRequest, HttpResponse
 from django.views.decorators.http import require_POST
 
+from fluxo.domain_models import ProcessoStatus
 from fluxo.views.helpers import _aprovar_processo_view, _iniciar_fila_sessao, _recusar_processo_view
 
 
@@ -27,7 +28,7 @@ def aprovar_contabilizacao_action(request: HttpRequest, pk: int) -> HttpResponse
         request,
         pk,
         permission="fluxo.pode_contabilizar",
-        new_status="CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL",
+        new_status=ProcessoStatus.CONTABILIZADO_CONSELHO,
         success_message="Processo #{processo_id} contabilizado e enviado ao Conselho Fiscal!",
         redirect_to="painel_contabilizacao",
     )
@@ -41,7 +42,7 @@ def recusar_contabilizacao_action(request: HttpRequest, pk: int) -> HttpResponse
         request,
         pk,
         permission="fluxo.pode_contabilizar",
-        status_devolucao="PAGO - EM CONFERÊNCIA",
+        status_devolucao=ProcessoStatus.PAGO_EM_CONFERENCIA,
         error_message="Processo #{processo_id} recusado pela Contabilidade e devolvido para a Conferência!",
         redirect_to="painel_contabilizacao",
     )

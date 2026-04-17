@@ -9,6 +9,7 @@ from .models import (
     Devolucao,
     Boleto_Bancario,
     DocumentoOrcamentario,
+    DocumentoProcesso,
     FormasDePagamento,
     Pendencia,
     Processo,
@@ -80,6 +81,7 @@ class ReuniaoConselhoAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Boleto_Bancario, SimpleHistoryAdmin)
+admin.site.register(DocumentoProcesso, SimpleHistoryAdmin)
 admin.site.register(DocumentoOrcamentario, SimpleHistoryAdmin)
 admin.site.register(Pendencia, SimpleHistoryAdmin)
 admin.site.register(StatusChoicesPendencias)

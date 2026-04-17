@@ -14,6 +14,84 @@ from simple_history.models import HistoricalRecords
 from commons.shared.file_validators import validar_arquivo_seguro
 
 
+class ProcessoStatus(models.TextChoices):
+    """Estados canônicos do fluxo de pagamento usados nas regras de domínio."""
+
+    CANCELADO_ANULADO = "CANCELADO / ANULADO", "Cancelado / Anulado"
+    A_EMPENHAR = "A EMPENHAR", "A Empenhar"
+    AGUARDANDO_LIQUIDACAO = "AGUARDANDO LIQUIDAÇÃO", "Aguardando Liquidação"
+    A_PAGAR_PENDENTE_AUTORIZACAO = "A PAGAR - PENDENTE AUTORIZAÇÃO", "A Pagar - Pendente Autorização"
+    A_PAGAR_ENVIADO_PARA_AUTORIZACAO = "A PAGAR - ENVIADO PARA AUTORIZAÇÃO", "A Pagar - Enviado para Autorização"
+    A_PAGAR_AUTORIZADO = "A PAGAR - AUTORIZADO", "A Pagar - Autorizado"
+    LANCADO_AGUARDANDO_COMPROVANTE = "LANÇADO - AGUARDANDO COMPROVANTE", "Lançado - Aguardando Comprovante"
+    PAGO_EM_CONFERENCIA = "PAGO - EM CONFERÊNCIA", "Pago - Em Conferência"
+    PAGO_A_CONTABILIZAR = "PAGO - A CONTABILIZAR", "Pago - A Contabilizar"
+    PAGO_EM_CONTABILIZACAO = "PAGO - EM CONTABILIZAÇÃO", "Pago - Em Contabilização"
+    CONTABILIZADO_CONSELHO = (
+        "CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL",
+        "Contabilizado - Conselho Fiscal",
+    )
+    APROVADO_PENDENTE_ARQUIVAMENTO = "APROVADO - PENDENTE ARQUIVAMENTO", "Aprovado - Pendente Arquivamento"
+    ARQUIVADO = "ARQUIVADO", "Arquivado"
+
+
+PROCESSO_STATUS_BLOQUEADOS_TOTAL = (
+    ProcessoStatus.CANCELADO_ANULADO,
+    ProcessoStatus.ARQUIVADO,
+    ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO,
+    ProcessoStatus.CONTABILIZADO_CONSELHO,
+)
+
+PROCESSO_STATUS_SOMENTE_DOCUMENTOS = (
+    ProcessoStatus.LANCADO_AGUARDANDO_COMPROVANTE,
+    ProcessoStatus.PAGO_EM_CONFERENCIA,
+    ProcessoStatus.A_PAGAR_AUTORIZADO,
+    ProcessoStatus.A_PAGAR_ENVIADO_PARA_AUTORIZACAO,
+)
+
+PROCESSO_STATUS_BLOQUEADOS_FORM = (
+    *PROCESSO_STATUS_BLOQUEADOS_TOTAL,
+    *PROCESSO_STATUS_SOMENTE_DOCUMENTOS,
+    ProcessoStatus.PAGO_A_CONTABILIZAR,
+    ProcessoStatus.PAGO_EM_CONTABILIZACAO,
+)
+
+PROCESSO_STATUS_CONTAS_A_PAGAR = (
+    ProcessoStatus.A_PAGAR_PENDENTE_AUTORIZACAO,
+    ProcessoStatus.A_PAGAR_ENVIADO_PARA_AUTORIZACAO,
+    ProcessoStatus.A_PAGAR_AUTORIZADO,
+    ProcessoStatus.LANCADO_AGUARDANDO_COMPROVANTE,
+)
+
+PROCESSO_STATUS_PAGOS = (
+    ProcessoStatus.PAGO_EM_CONFERENCIA,
+    ProcessoStatus.PAGO_A_CONTABILIZAR,
+    ProcessoStatus.PAGO_EM_CONTABILIZACAO,
+)
+
+PROCESSO_STATUS_PAGOS_E_POSTERIORES = (
+    *PROCESSO_STATUS_PAGOS,
+    ProcessoStatus.CONTABILIZADO_CONSELHO,
+    ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO,
+    ProcessoStatus.ARQUIVADO,
+)
+
+PROCESSO_STATUS_PRE_AUTORIZACAO = (
+    ProcessoStatus.A_EMPENHAR,
+    ProcessoStatus.AGUARDANDO_LIQUIDACAO,
+    ProcessoStatus.A_PAGAR_PENDENTE_AUTORIZACAO,
+    ProcessoStatus.A_PAGAR_ENVIADO_PARA_AUTORIZACAO,
+)
+
+
+class ReuniaoConselhoStatus(models.TextChoices):
+    """Estados da reunião de conselho fiscal."""
+
+    AGENDADA = "AGENDADA", "Agendada/Em Montagem"
+    EM_ANALISE = "EM_ANALISE", "Em Análise pelo Conselho"
+    CONCLUIDA = "CONCLUIDA", "Concluída"
+
+
 class ReuniaoConselho(models.Model):
     """Reunião do conselho fiscal usada para análise em lote de processos."""
 
@@ -27,12 +105,8 @@ class ReuniaoConselho(models.Model):
     status = models.CharField(
         "Status",
         max_length=20,
-        choices=[
-            ("AGENDADA", "Agendada/Em Montagem"),
-            ("EM_ANALISE", "Em Análise pelo Conselho"),
-            ("CONCLUIDA", "Concluída"),
-        ],
-        default="AGENDADA",
+        choices=ReuniaoConselhoStatus.choices,
+        default=ReuniaoConselhoStatus.AGENDADA,
     )
 
     class Meta:
@@ -294,14 +368,16 @@ class Processo(models.Model):
 
     def definir_status_inicial(self, trigger_a_empenhar):
         """Configura o status inicial do processo durante o cadastro."""
-        nome_status = "A EMPENHAR" if trigger_a_empenhar else "A PAGAR - PENDENTE AUTORIZAÇÃO"
+        nome_status = (
+            ProcessoStatus.A_EMPENHAR if trigger_a_empenhar else ProcessoStatus.A_PAGAR_PENDENTE_AUTORIZACAO
+        )
         self._atribuir_status_manual(nome_status)
 
     def converter_para_extraorcamentario(self, confirmar=False):
         """Reclassifica o processo para extraorçamentário quando cabível."""
         status_atual = (self.status.status_choice or "").upper() if self.status else ""
-        if confirmar and status_atual == "A EMPENHAR":
-            self._atribuir_status_manual("A PAGAR - PENDENTE AUTORIZAÇÃO")
+        if confirmar and status_atual == ProcessoStatus.A_EMPENHAR:
+            self._atribuir_status_manual(ProcessoStatus.A_PAGAR_PENDENTE_AUTORIZACAO)
             self.extraorcamentario = True
 
     def avancar_status(self, novo_status_str, usuario=None):

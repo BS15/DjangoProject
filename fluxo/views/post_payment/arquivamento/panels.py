@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
 from fluxo.filters import ProcessoFilter
-from fluxo.domain_models import Processo
+from fluxo.domain_models import Processo, ProcessoStatus
 from fluxo.views.shared import apply_filterset
 
 
@@ -13,11 +13,13 @@ from fluxo.views.shared import apply_filterset
 @permission_required("fluxo.pode_arquivar", raise_exception=True)
 def painel_arquivamento_view(request):
     """Exibe painel de arquivamento com pendentes e historico arquivado."""
-    processos_pendentes = Processo.objects.filter(status__status_choice__iexact="APROVADO - PENDENTE ARQUIVAMENTO").order_by(
+    processos_pendentes = Processo.objects.filter(
+        status__status_choice__iexact=ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO
+    ).order_by(
         "data_pagamento"
     )
 
-    arquivados_qs = Processo.objects.filter(status__status_choice__iexact="ARQUIVADO").order_by("-id")
+    arquivados_qs = Processo.objects.filter(status__status_choice__iexact=ProcessoStatus.ARQUIVADO).order_by("-id")
 
     arquivamento_filtro = apply_filterset(request, ProcessoFilter, arquivados_qs)
     processos_arquivados = arquivamento_filtro.qs

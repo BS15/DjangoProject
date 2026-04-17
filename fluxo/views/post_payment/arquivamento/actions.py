@@ -8,7 +8,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
-from fluxo.domain_models import Processo
+from fluxo.domain_models import Processo, ProcessoStatus
 from fluxo.views.helpers import (
     ArquivamentoDefinitivoError,
     ArquivamentoSemDocumentosError,
@@ -26,7 +26,7 @@ def arquivar_processo_action(request: HttpRequest, pk: int) -> HttpResponse:
     processo = get_object_or_404(Processo, id=pk)
 
     status_atual = processo.status.status_choice if processo.status else ""
-    if status_atual.upper() != "APROVADO - PENDENTE ARQUIVAMENTO":
+    if status_atual.upper() != ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO:
         messages.error(request, f"Processo #{processo.id} não está no status correto para arquivamento.")
         return redirect("painel_arquivamento")
 

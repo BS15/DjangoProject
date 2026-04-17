@@ -5,7 +5,7 @@ from django.shortcuts import render
 from fiscal.filters import RetencaoIndividualFilter
 from fiscal.models import RetencaoImposto
 from fluxo.filters import ProcessoFilter
-from fluxo.models import Processo
+from fluxo.models import PROCESSO_STATUS_PAGOS_E_POSTERIORES, Processo, ProcessoStatus
 from fluxo.views.helpers.reports import gerar_csv_relatorio
 from fluxo.views.shared import apply_filterset
 from verbas_indenizatorias.filters import DiariaFilter
@@ -89,21 +89,21 @@ def relatorio_documentos_gerados_view(request):
         processo_pendencias = []
 
         if status in {
-            "A PAGAR - AUTORIZADO",
-            "LANÇADO - AGUARDANDO COMPROVANTE",
-            "PAGO - EM CONFERÊNCIA",
-            "PAGO - A CONTABILIZAR",
-            "CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL",
-            "APROVADO - PENDENTE ARQUIVAMENTO",
-            "ARQUIVADO",
+            ProcessoStatus.A_PAGAR_AUTORIZADO,
+            ProcessoStatus.LANCADO_AGUARDANDO_COMPROVANTE,
+            ProcessoStatus.PAGO_EM_CONFERENCIA,
+            ProcessoStatus.PAGO_A_CONTABILIZAR,
+            ProcessoStatus.CONTABILIZADO_CONSELHO,
+            ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO,
+            ProcessoStatus.ARQUIVADO,
         } and "TERMO DE AUTORIZAÇÃO DE PAGAMENTO" not in tipos_documentos:
             processo_pendencias.append("TERMO DE AUTORIZAÇÃO")
             totais["faltando_termo_autorizacao"] += 1
 
         if status in {
-            "CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL",
-            "APROVADO - PENDENTE ARQUIVAMENTO",
-            "ARQUIVADO",
+            ProcessoStatus.CONTABILIZADO_CONSELHO,
+            ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO,
+            ProcessoStatus.ARQUIVADO,
         }:
             if "TERMO DE CONTABILIZAÇÃO" not in tipos_documentos:
                 processo_pendencias.append("TERMO DE CONTABILIZAÇÃO")
@@ -112,15 +112,11 @@ def relatorio_documentos_gerados_view(request):
                 processo_pendencias.append("TERMO DE AUDITORIA")
                 totais["faltando_termo_auditoria"] += 1
 
-        if status in {"APROVADO - PENDENTE ARQUIVAMENTO", "ARQUIVADO"} and "PARECER DO CONSELHO FISCAL" not in tipos_documentos:
+        if status in {ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO, ProcessoStatus.ARQUIVADO} and "PARECER DO CONSELHO FISCAL" not in tipos_documentos:
             processo_pendencias.append("PARECER DO CONSELHO FISCAL")
             totais["faltando_parecer_conselho"] += 1
 
-        if status.startswith("PAGO") or status in {
-            "CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL",
-            "APROVADO - PENDENTE ARQUIVAMENTO",
-            "ARQUIVADO",
-        }:
+        if status in PROCESSO_STATUS_PAGOS_E_POSTERIORES:
             pcd_gerado = sum(
                 1
                 for doc in processo.documentos.all()

@@ -10,7 +10,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from fluxo.domain_models import Pendencia, Processo, StatusChoicesPendencias
+from fluxo.domain_models import Pendencia, Processo, ProcessoStatus, StatusChoicesPendencias
 from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoForm
 from ..helpers import (
     _redirect_seguro_ou_fallback,
@@ -58,8 +58,14 @@ def _status_bloqueia_gestao_fiscal(processo):
         return False
 
     status_atual = (processo.status.status_choice or "").upper()
-    prefixos_bloqueados = ("PAGO", "CONTABILIZADO", "APROVADO", "ARQUIVADO")
-    return any(status_atual.startswith(prefixo) for prefixo in prefixos_bloqueados)
+    return status_atual in {
+        ProcessoStatus.PAGO_EM_CONFERENCIA,
+        ProcessoStatus.PAGO_A_CONTABILIZAR,
+        ProcessoStatus.PAGO_EM_CONTABILIZACAO,
+        ProcessoStatus.CONTABILIZADO_CONSELHO,
+        ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO,
+        ProcessoStatus.ARQUIVADO,
+    }
 
 
 def _atualizar_status_pendencia(pendencia: Pendencia, status_destino: str) -> None:

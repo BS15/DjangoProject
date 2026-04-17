@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
 from fiscal.models import DocumentoFiscal
-from fluxo.domain_models import Processo
+from fluxo.domain_models import Processo, ProcessoStatus
 
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ def avancar_para_pagamento_action(request: HttpRequest, pk: int) -> HttpResponse
     processo = get_object_or_404(Processo, id=pk)
     status_atual = processo.status.status_choice.upper() if processo.status else ""
 
-    if not status_atual.startswith("AGUARDANDO LIQUIDAÇÃO"):
+    if status_atual != ProcessoStatus.AGUARDANDO_LIQUIDACAO:
         messages.error(
             request,
             f'O processo #{pk} não está em status "Aguardando Liquidação" '
@@ -51,7 +51,7 @@ def avancar_para_pagamento_action(request: HttpRequest, pk: int) -> HttpResponse
 
     try:
         with transaction.atomic():
-            processo.avancar_status("A PAGAR - PENDENTE AUTORIZAÇÃO", usuario=request.user)
+            processo.avancar_status(ProcessoStatus.A_PAGAR_PENDENTE_AUTORIZACAO, usuario=request.user)
 
         messages.success(request, f'Processo #{pk} avançado com sucesso para "A Pagar - Pendente Autorização".')
     except ValidationError as ve:

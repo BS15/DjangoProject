@@ -2,6 +2,7 @@
 
 from django.contrib.auth.decorators import permission_required
 
+from fluxo.domain_models import ProcessoStatus
 from fluxo.views.helpers import _processo_fila_detalhe_view
 
 
@@ -17,7 +18,7 @@ def conferencia_processo_view(request, pk):
         current_view="conferencia_processo",
         template_name="fluxo/conferencia_processo.html",
         approve_action="confirmar",
-        approve_status="PAGO - A CONTABILIZAR",
+        approve_status=ProcessoStatus.PAGO_A_CONTABILIZAR,
         approve_message="Processo #{processo_id} confirmado na conferência e enviado para Contabilização!",
         save_action="salvar",
         save_message="Alterações do Processo #{processo_id} salvas.",

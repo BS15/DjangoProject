@@ -1178,7 +1178,7 @@ class Migration(migrations.Migration):
             bases=(simple_history.models.HistoricalChanges, models.Model),
         ),
         migrations.CreateModel(
-            name="HistoricalBoleto_Bancario",
+            name="HistoricalDocumentoProcesso",
             fields=[
                 (
                     "id",
@@ -1197,15 +1197,6 @@ class Migration(migrations.Migration):
                     "ordem",
                     models.PositiveIntegerField(
                         default=1, help_text="Ordem do arquivo"
-                    ),
-                ),
-                (
-                    "codigo_barras",
-                    models.CharField(
-                        blank=True,
-                        max_length=60,
-                        null=True,
-                        verbose_name="Código de Barras",
                     ),
                 ),
                 (
@@ -1259,8 +1250,8 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "verbose_name": "historical Boleto_Bancario",
-                "verbose_name_plural": "historical Boleto_Bancario",
+                "verbose_name": "historical Documento do Processo",
+                "verbose_name_plural": "historical Documentos do Processo",
                 "ordering": ("-history_date", "-history_id"),
                 "get_latest_by": ("history_date", "history_id"),
             },
@@ -1531,7 +1522,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name="Boleto_Bancario",
+            name="DocumentoProcesso",
             fields=[
                 (
                     "id",
@@ -1553,15 +1544,6 @@ class Migration(migrations.Migration):
                     "ordem",
                     models.PositiveIntegerField(
                         default=1, help_text="Ordem do arquivo"
-                    ),
-                ),
-                (
-                    "codigo_barras",
-                    models.CharField(
-                        blank=True,
-                        max_length=60,
-                        null=True,
-                        verbose_name="Código de Barras",
                     ),
                 ),
                 (
@@ -1589,9 +1571,39 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
+                "verbose_name": "Documento do Processo",
+                "verbose_name_plural": "Documentos do Processo",
+            },
+        ),
+        migrations.CreateModel(
+            name="Boleto_Bancario",
+            fields=[
+                (
+                    "documentoprocesso_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="fluxo.documentoprocesso",
+                    ),
+                ),
+                (
+                    "codigo_barras",
+                    models.CharField(
+                        blank=True,
+                        max_length=60,
+                        null=True,
+                        verbose_name="Código de Barras",
+                    ),
+                ),
+            ],
+            options={
                 "verbose_name": "Boleto_Bancario",
                 "verbose_name_plural": "Boleto_Bancario",
             },
+            bases=("fluxo.documentoprocesso",),
         ),
         migrations.AddField(
             model_name="tiposdedocumento",

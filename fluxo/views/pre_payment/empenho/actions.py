@@ -10,7 +10,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 
-from fluxo.domain_models import Processo
+from fluxo.domain_models import Processo, ProcessoStatus
 from ..helpers import _registrar_empenho_e_anexar_siscac
 
 
@@ -43,7 +43,7 @@ def registrar_empenho_action(request: HttpRequest) -> HttpResponse:
                 ano_exercicio=ano_exercicio_int,
             )
             try:
-                processo.avancar_status("AGUARDANDO LIQUIDAÇÃO", usuario=request.user)
+                processo.avancar_status(ProcessoStatus.AGUARDANDO_LIQUIDACAO, usuario=request.user)
             except ValidationError as ve:
                 raise ValueError(str(ve))
 

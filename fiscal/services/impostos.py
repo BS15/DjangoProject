@@ -5,10 +5,11 @@ import io
 from collections import defaultdict
 from decimal import Decimal
 
+from django.apps import apps
 from django.core.files.base import ContentFile
 from django.db import transaction
 
-from fluxo.domain_models import Boleto_Bancario, TiposDeDocumento, TiposDePagamento
+from fluxo.domain_models import TiposDeDocumento, TiposDePagamento
 
 DOC_GUIA = "GUIA DE RECOLHIMENTO DE IMPOSTOS"
 DOC_COMPROVANTE = "COMPROVANTE DE RECOLHIMENTO DE IMPOSTOS"
@@ -96,6 +97,7 @@ def anexar_guia_comprovante_relatorio_em_processos(
     ano: int,
 ) -> int:
     """Anexa guia, comprovante e relatório mensal em cada processo de recolhimento envolvido."""
+    DocumentoProcesso = apps.get_model("fluxo", "DocumentoProcesso")
     processo_ids = sorted({retencao.processo_pagamento_id for retencao in retencoes if retencao.processo_pagamento_id})
     if not processo_ids:
         return 0
@@ -116,19 +118,19 @@ def anexar_guia_comprovante_relatorio_em_processos(
             if processo_referencia is None:
                 continue
 
-            Boleto_Bancario.objects.create(
+            DocumentoProcesso.objects.create(
                 processo=processo_referencia,
                 arquivo=ContentFile(guia_bytes, name=f"guia_proc_{processo_id}_{guia_nome}"),
                 tipo=tipo_guia,
                 ordem=97,
             )
-            Boleto_Bancario.objects.create(
+            DocumentoProcesso.objects.create(
                 processo=processo_referencia,
                 arquivo=ContentFile(comprovante_bytes, name=f"comprovante_proc_{processo_id}_{comprovante_nome}"),
                 tipo=tipo_comprovante,
                 ordem=98,
             )
-            Boleto_Bancario.objects.create(
+            DocumentoProcesso.objects.create(
                 processo=processo_referencia,
                 arquivo=ContentFile(relatorio_bytes, name=f"relatorio_retencoes_{mes:02d}_{ano}_proc_{processo_id}.csv"),
                 tipo=tipo_relatorio,

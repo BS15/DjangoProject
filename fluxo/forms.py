@@ -4,7 +4,7 @@ from django import forms
 from django.forms import inlineformset_factory
 from fluxo.domain_models import (
 	Processo,
-	Boleto_Bancario,
+	DocumentoProcesso,
 	ComprovanteDePagamento,
 	DocumentoOrcamentario,
 	Pendencia,
@@ -165,7 +165,7 @@ class ProcessoForm(forms.ModelForm):
 
 DocumentoFormSet = inlineformset_factory(
 	Processo,
-	Boleto_Bancario,
+	DocumentoProcesso,
 	fields=['tipo', 'ordem', 'arquivo'],
 	extra=1,
 	can_delete=True,

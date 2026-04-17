@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import permission_required
 from django.http import HttpRequest, HttpResponse
 from django.views.decorators.http import require_POST
 
+from fluxo.domain_models import ProcessoStatus
 from fluxo.views.helpers import _processar_acao_lote, _recusar_processo_view
 
 
@@ -14,8 +15,8 @@ def autorizar_pagamento(request: HttpRequest) -> HttpResponse:
     return _processar_acao_lote(
         request,
         param_name="processos_selecionados",
-        status_origem_esperado="A PAGAR - ENVIADO PARA AUTORIZAÇÃO",
-        status_destino="A PAGAR - AUTORIZADO",
+        status_origem_esperado=ProcessoStatus.A_PAGAR_ENVIADO_PARA_AUTORIZACAO,
+        status_destino=ProcessoStatus.A_PAGAR_AUTORIZADO,
         msg_sucesso="{count} pagamento(s) autorizado(s) com sucesso!",
         msg_vazio="Nenhum processo foi selecionado para autorização.",
         msg_sem_elegiveis='Ação negada: nenhum processo selecionado estava no status "{status_origem_esperado}".',
@@ -32,7 +33,7 @@ def recusar_autorizacao_action(request: HttpRequest, pk: int) -> HttpResponse:
         request,
         pk,
         permission="fluxo.pode_autorizar_pagamento",
-        status_devolucao="AGUARDANDO LIQUIDAÇÃO / ATESTE",
+        status_devolucao=ProcessoStatus.AGUARDANDO_LIQUIDACAO,
         error_message="Processo #{processo_id} não autorizado e devolvido com pendência!",
         redirect_to="painel_autorizacao",
     )

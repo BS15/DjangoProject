@@ -14,7 +14,7 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 
 from fluxo.domain_models.documentos import ComprovanteDePagamento
-from fluxo.domain_models import Boleto_Bancario, Processo, TiposDeDocumento
+from fluxo.domain_models import DocumentoProcesso, Processo, ProcessoStatus, TiposDeDocumento
 from commons.shared.pdf_tools import split_pdf_to_temp_pages
 from .helpers import processar_pdf_comprovantes
 
@@ -78,7 +78,7 @@ def api_vincular_comprovantes(request):
 
         processo = get_object_or_404(Processo, id=processo_id)
 
-        if not processo.status or processo.status.status_choice.upper() != "LANÇADO - AGUARDANDO COMPROVANTE":
+        if not processo.status or processo.status.status_choice.upper() != ProcessoStatus.LANCADO_AGUARDANDO_COMPROVANTE:
             return JsonResponse(
                 {
                     "sucesso": False,
@@ -115,7 +115,7 @@ def api_vincular_comprovantes(request):
 
                         nome_arquivo = f"Comprovante_Proc_{processo.id}_{idx + 1}.pdf"
 
-                        Boleto_Bancario.objects.create(
+                        DocumentoProcesso.objects.create(
                             processo=processo,
                             arquivo=ContentFile(conteudo_arquivo, name=nome_arquivo),
                             tipo=tipo_comprovante,
@@ -133,7 +133,7 @@ def api_vincular_comprovantes(request):
 
                         temp_paths_to_delete.append(temp_path)
 
-                processo.avancar_status("PAGO - EM CONFERÊNCIA", usuario=request.user)
+                processo.avancar_status(ProcessoStatus.PAGO_EM_CONFERENCIA, usuario=request.user)
 
                 if data_pagamento_processo:
                     processo.data_pagamento = data_pagamento_processo

@@ -8,12 +8,12 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
-from fluxo.domain_models import Processo, ReuniaoConselho
+from fluxo.domain_models import Processo, ProcessoStatus, ReuniaoConselho, ReuniaoConselhoStatus
 
 
 logger = logging.getLogger(__name__)
 
-REUNIAO_STATUS_ANALISE = {"AGENDADA", "EM_ANALISE"}
+REUNIAO_STATUS_ANALISE = {ReuniaoConselhoStatus.AGENDADA, ReuniaoConselhoStatus.EM_ANALISE}
 
 
 @require_POST
@@ -80,7 +80,7 @@ def iniciar_conselho_reuniao_action(request: HttpRequest, reuniao_id: int) -> Ht
         Processo.objects.filter(
             id__in=process_ids,
             reuniao_conselho_id=reuniao_id,
-            status__status_choice__iexact="CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL",
+            status__status_choice__iexact=ProcessoStatus.CONTABILIZADO_CONSELHO,
         ).values_list("id", flat=True)
     )
     fila = [pid for pid in process_ids if pid in processos_validos]
@@ -90,8 +90,8 @@ def iniciar_conselho_reuniao_action(request: HttpRequest, reuniao_id: int) -> Ht
     if len(fila) < len(process_ids):
         messages.warning(request, "Alguns processos foram ignorados por não pertencerem à reunião ou estágio esperado.")
 
-    if reuniao.status == "AGENDADA":
-        reuniao.status = "EM_ANALISE"
+    if reuniao.status == ReuniaoConselhoStatus.AGENDADA:
+        reuniao.status = ReuniaoConselhoStatus.EM_ANALISE
         reuniao.save(update_fields=["status"])
 
     request.session["conselho_queue"] = fila

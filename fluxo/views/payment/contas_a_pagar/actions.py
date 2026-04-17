@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import permission_required
 from django.http import HttpRequest, HttpResponse
 from django.views.decorators.http import require_POST
 
+from fluxo.domain_models import ProcessoStatus
 from fluxo.views.helpers import _processar_acao_lote
 
 
@@ -14,8 +15,8 @@ def enviar_para_autorizacao_action(request: HttpRequest) -> HttpResponse:
     return _processar_acao_lote(
         request,
         param_name="processos_selecionados",
-        status_origem_esperado="A PAGAR - PENDENTE AUTORIZAÇÃO",
-        status_destino="A PAGAR - ENVIADO PARA AUTORIZAÇÃO",
+        status_origem_esperado=ProcessoStatus.A_PAGAR_PENDENTE_AUTORIZACAO,
+        status_destino=ProcessoStatus.A_PAGAR_ENVIADO_PARA_AUTORIZACAO,
         msg_sucesso="{count} processo(s) enviado(s) para autorização com sucesso.",
         msg_vazio="Nenhum processo foi selecionado.",
         msg_sem_elegiveis='Nenhum dos processos selecionados está com status "{status_origem_esperado}".',

@@ -2,26 +2,19 @@ from django.core.exceptions import ValidationError
 
 from commons.shared.file_validators import validar_arquivo_seguro
 from commons.shared.text_tools import format_brl_currency
+from fluxo.domain_models.processos import (
+    PROCESSO_STATUS_BLOQUEADOS_FORM,
+    PROCESSO_STATUS_BLOQUEADOS_TOTAL,
+    PROCESSO_STATUS_SOMENTE_DOCUMENTOS,
+    ProcessoStatus,
+)
 
 
-STATUS_BLOQUEADOS_TOTAL = {
-    'CANCELADO / ANULADO',
-    'ARQUIVADO',
-    'APROVADO - PENDENTE ARQUIVAMENTO',
-    'CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL',
-}
+STATUS_BLOQUEADOS_TOTAL = set(PROCESSO_STATUS_BLOQUEADOS_TOTAL)
 
-STATUS_SOMENTE_DOCUMENTOS = {
-    'LANÇADO - AGUARDANDO COMPROVANTE',
-    'PAGO - EM CONFERÊNCIA',
-    'A PAGAR - AUTORIZADO',
-    'A PAGAR - ENVIADO PARA AUTORIZAÇÃO',
-}
+STATUS_SOMENTE_DOCUMENTOS = set(PROCESSO_STATUS_SOMENTE_DOCUMENTOS)
 
-STATUS_BLOQUEADOS_FORM = list(STATUS_BLOQUEADOS_TOTAL | STATUS_SOMENTE_DOCUMENTOS | {
-    'PAGO - A CONTABILIZAR',
-    'PAGO - EM CONTABILIZAÇÃO',
-})
+STATUS_BLOQUEADOS_FORM = list(PROCESSO_STATUS_BLOQUEADOS_FORM)
 
 
 def verificar_turnpike(processo, status_anterior, status_novo):
@@ -35,7 +28,7 @@ def verificar_turnpike(processo, status_anterior, status_novo):
     anterior = status_anterior.upper().strip()
     novo = status_novo.upper().strip()
 
-    if anterior.startswith('A EMPENHAR') and novo.startswith('AGUARDANDO LIQUIDAÇÃO'):
+    if anterior == ProcessoStatus.A_EMPENHAR and novo == ProcessoStatus.AGUARDANDO_LIQUIDACAO:
         tem_doc_orcamentario = processo.documentos.filter(
             tipo__tipo_de_documento__iexact='DOCUMENTOS ORÇAMENTÁRIOS'
         ).exists()
@@ -45,7 +38,7 @@ def verificar_turnpike(processo, status_anterior, status_novo):
                 'um documento do tipo "DOCUMENTOS ORÇAMENTÁRIOS".'
             )
 
-    if anterior.startswith('AGUARDANDO LIQUIDAÇÃO') and novo.startswith('A PAGAR - PENDENTE AUTORIZAÇÃO'):
+    if anterior == ProcessoStatus.AGUARDANDO_LIQUIDACAO and novo == ProcessoStatus.A_PAGAR_PENDENTE_AUTORIZACAO:
         notas = processo.notas_fiscais.all()
         if not notas.exists():
             erros.append(
@@ -63,7 +56,7 @@ def verificar_turnpike(processo, status_anterior, status_novo):
                     f'"A Pagar - Pendente Autorização". Documento(s) pendente(s): {nomes}.'
                 )
 
-    if anterior.startswith('LANÇADO') and novo.startswith('PAGO'):
+    if anterior == ProcessoStatus.LANCADO_AGUARDANDO_COMPROVANTE and novo == ProcessoStatus.PAGO_EM_CONFERENCIA:
         tipo_pagamento_nome = ''
         if getattr(processo, 'tipo_pagamento_id', None):
             try:

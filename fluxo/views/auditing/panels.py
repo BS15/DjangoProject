@@ -14,7 +14,7 @@ from fluxo.domain_models import (
     AssinaturaAutentique,
     ComprovanteDePagamento,
     Devolucao,
-    Boleto_Bancario,
+    DocumentoProcesso,
     Processo,
     RegistroAcessoArquivo,
 )
@@ -35,7 +35,7 @@ def auditoria_view(request):
         (DadosContribuinte.history.model, "Dados do Contribuinte"),
         (ContaFixa.history.model, "Conta Fixa"),
         (FaturaMensal.history.model, "Fatura Mensal"),
-        (Boleto_Bancario.history.model, "Documento de Pagamento"),
+        (DocumentoProcesso.history.model, "Documento de Pagamento"),
         (DocumentoFiscal.history.model, "Documento Fiscal"),
         (RetencaoImposto.history.model, "Retenção de Imposto"),
         (ComprovanteDePagamento.history.model, "Comprovante de Pagamento"),

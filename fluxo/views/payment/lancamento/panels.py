@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET
 
-from fluxo.domain_models import Processo, StatusChoicesProcesso
+from fluxo.domain_models import Processo, ProcessoStatus, StatusChoicesProcesso
 from fluxo.views.helpers import _build_detalhes_pagamento, _consolidar_totais_pagamento
 
 
@@ -19,8 +19,12 @@ def lancamento_bancario(request):
         messages.warning(request, "Nenhum processo foi selecionado.")
         return redirect("contas_a_pagar")
 
-    status_autorizado = StatusChoicesProcesso.objects.filter(status_choice__iexact="A PAGAR - AUTORIZADO").first()
-    status_lancado = StatusChoicesProcesso.objects.filter(status_choice__iexact="LANÇADO - AGUARDANDO COMPROVANTE").first()
+    status_autorizado = StatusChoicesProcesso.objects.filter(
+        status_choice__iexact=ProcessoStatus.A_PAGAR_AUTORIZADO
+    ).first()
+    status_lancado = StatusChoicesProcesso.objects.filter(
+        status_choice__iexact=ProcessoStatus.LANCADO_AGUARDANDO_COMPROVANTE
+    ).first()
 
     processos_qs = (
         Processo.objects.filter(id__in=ids)

@@ -9,7 +9,7 @@ from django.db.models import F
 from django.shortcuts import redirect
 from django.utils.http import url_has_allowed_host_and_scheme
 
-from fluxo.domain_models import Processo, TiposDeDocumento, Boleto_Bancario
+from fluxo.domain_models import DocumentoProcesso, Processo, TiposDeDocumento
 from fluxo.validators import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
 
 
@@ -59,7 +59,7 @@ def _registrar_empenho_e_anexar_siscac(processo, n_empenho, data_empenho_str, si
             defaults={"tipo_de_documento": "DOCUMENTOS ORÇAMENTÁRIOS"},
         )
         processo.documentos.all().update(ordem=F("ordem") + 1)
-        Boleto_Bancario.objects.create(
+        DocumentoProcesso.objects.create(
             processo=processo, arquivo=siscac_file, tipo=tipo_doc, ordem=1
         )
 

@@ -18,22 +18,31 @@ from commons.shared.models import DocumentoBase
 from commons.shared.storage_utils import _delete_file, caminho_documento
 
 
-class Boleto_Bancario(DocumentoBase):
-    """Documento anexado ao processo com controle de imutabilidade."""
+class DocumentoProcesso(DocumentoBase):
+    """Documento genérico anexado ao processo com controle de imutabilidade."""
 
     processo = models.ForeignKey("fluxo.Processo", on_delete=models.CASCADE, related_name="documentos")
-    codigo_barras = models.CharField("Código de Barras", max_length=60, null=True, blank=True)
     imutavel = models.BooleanField(
         "Imutável",
         default=False,
         help_text="Documento bloqueado para exclusão. Definido automaticamente durante a etapa de Conferência.",
     )
+    history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = "Documento do Processo"
+        verbose_name_plural = "Documentos do Processo"
+
+
+class Boleto_Bancario(DocumentoProcesso):
+    """Especialização documental para anexos com metadados bancários."""
+
+    codigo_barras = models.CharField("Código de Barras", max_length=60, null=True, blank=True)
     nota_referente = GenericRelation(
         "fiscal.DocumentoFiscal",
         content_type_field="content_type",
         object_id_field="object_id",
     )
-    history = HistoricalRecords()
 
     class Meta:
         verbose_name = "Boleto_Bancario"
@@ -92,13 +101,13 @@ class ComprovanteDePagamento(DocumentoBase):
         return f"Comprovante - {self.processo} - {self.credor_nome} - R$ {self.valor_pago}"
 
 
-@receiver(post_delete, sender=Boleto_Bancario)
-def auto_delete_file_on_delete_boleto_bancario(sender, instance, **kwargs):
-    """Remove arquivo físico quando Boleto_Bancario é excluído."""
+@receiver(post_delete, sender=DocumentoProcesso)
+def auto_delete_file_on_delete_documento_processo(sender, instance, **kwargs):
+    """Remove arquivo físico quando DocumentoProcesso é excluído."""
     _delete_file(instance.arquivo)
 
 
-@receiver(pre_save, sender=Boleto_Bancario)
+@receiver(pre_save, sender=DocumentoProcesso)
 def enforce_immutability_and_cleanup_on_save(sender, instance, **kwargs):
     """Bloqueia troca de arquivo em documento imutável e limpa versão anterior."""
     if not instance.pk:
@@ -116,7 +125,7 @@ def enforce_immutability_and_cleanup_on_save(sender, instance, **kwargs):
         _delete_file(old.arquivo)
 
 
-@receiver(pre_delete, sender=Boleto_Bancario)
+@receiver(pre_delete, sender=DocumentoProcesso)
 def prevent_immutable_delete(sender, instance, **kwargs):
     """Impede exclusão de documentos marcados como imutáveis."""
     if instance.imutavel:

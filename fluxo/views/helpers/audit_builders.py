@@ -11,6 +11,7 @@ from fiscal.models import DocumentoFiscal, RetencaoImposto
 from fluxo.domain_models import (
     Devolucao,
     Boleto_Bancario,
+    DocumentoProcesso,
     Pendencia,
     Processo,
 )
@@ -33,7 +34,11 @@ def get_detalhes_pagamento(processo):
 
     if "boleto" in forma or "gerenciador" in forma:
         detalhe_tipo = "Código de Barras"
-        codigos_barras = [doc.codigo_barras for doc in processo.documentos.all() if doc.codigo_barras]
+        codigos_barras = list(
+            Boleto_Bancario.objects.filter(processo=processo, codigo_barras__isnull=False)
+            .exclude(codigo_barras="")
+            .values_list("codigo_barras", flat=True)
+        )
         detalhe_valor = codigos_barras[0] if codigos_barras else "Não preenchido"
     elif "pix" in forma:
         detalhe_tipo = "Chave PIX"
@@ -253,7 +258,7 @@ def _get_unified_history(pk):
 
     for record in processo.history.all().select_related("history_user"):
         history_records.append(_build_history_record(record, "Processo"))
-    for record in Boleto_Bancario.history.filter(processo_id=pk).select_related("history_user"):
+    for record in DocumentoProcesso.history.filter(processo_id=pk).select_related("history_user"):
         history_records.append(_build_history_record(record, "Documento"))
     for record in Pendencia.history.filter(processo_id=pk).select_related("history_user"):
         history_records.append(_build_history_record(record, "Pendência"))

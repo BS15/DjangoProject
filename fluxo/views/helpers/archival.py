@@ -5,6 +5,7 @@ import logging
 from django.core.files.base import ContentFile
 from django.db import transaction
 
+from fluxo.domain_models import ProcessoStatus
 from fluxo.services.processo_documentos import gerar_pdf_consolidado_processo
 from .errors import ArquivamentoDefinitivoError, ArquivamentoSemDocumentosError
 
@@ -40,7 +41,7 @@ def _executar_arquivamento_definitivo(processo, usuario):
     with transaction.atomic():
         processo.arquivo_final.save(nome_arquivo, ContentFile(pdf_bytes), save=False)
         processo.save(update_fields=["arquivo_final"])
-        processo.avancar_status("ARQUIVADO", usuario=usuario)
+        processo.avancar_status(ProcessoStatus.ARQUIVADO, usuario=usuario)
 
     return True
 

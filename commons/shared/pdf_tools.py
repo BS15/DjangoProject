@@ -172,12 +172,16 @@ def split_pdf_to_temp_pages(arquivo_pdf):
 
 
 def mesclar_pdfs_em_memoria(lista_arquivos):
-	"""Mescla PDFs em memória e retorna buffer posicionado no início."""
+	"""Mescla PDFs em memória a partir de bytes, streams ou arquivos e retorna buffer no início."""
 	merger = PdfWriter()
+	streams_temporarios = []
 
 	try:
 		for arquivo in lista_arquivos:
 			if arquivo:
+				if isinstance(arquivo, (bytes, bytearray)):
+					arquivo = io.BytesIO(arquivo)
+					streams_temporarios.append(arquivo)
 				merger.append(arquivo)
 
 		output_pdf = io.BytesIO()
@@ -188,6 +192,9 @@ def mesclar_pdfs_em_memoria(lista_arquivos):
 	except (PyPDF2.errors.PdfReadError, OSError, TypeError, ValueError) as exc:
 		logger.exception("Erro na mesclagem de PDFs em memória: %s", exc)
 		raise PdfMergeError("Falha técnica ao mesclar PDFs em memória.") from exc
+	finally:
+		for stream in streams_temporarios:
+			stream.close()
 
 
 class BasePDFDocument:
