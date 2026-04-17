@@ -35,22 +35,6 @@ Campos usados em cada entrada:
 | Redirect | sucesso: `editar_processo(pk)`; erro: `painel_impostos_view` |
 | Feedback | mensagens de warning/success via `messages` |
 
-### agrupar_impostos_action (legado)
-
-| Campo | Valor |
-|---|---|
-| Action | `agrupar_impostos_action` |
-| Arquivo | `fiscal/views/impostos/actions.py` |
-| Rota | `agrupar_impostos` (`/impostos/agrupar/legacy/`) |
-| Permissão | `fiscal.acesso_backoffice` |
-| Método | `POST` |
-| Entrada | idêntica à `agrupar_retencoes_action` |
-| Validações | delegadas para `agrupar_retencoes_action` |
-| Worker | delega para `agrupar_retencoes_action` |
-| Efeitos | iguais ao endpoint principal |
-| Redirect | igual ao endpoint principal |
-| Feedback | igual ao endpoint principal |
-
 ### anexar_documentos_retencoes_action
 
 | Campo | Valor |
@@ -98,22 +82,6 @@ Campos usados em cada entrada:
 | Efeitos | sem mutação de dados |
 | Redirect | `painel_reinf_view` |
 | Feedback | warning de funcionalidade indisponível |
-
-### gerar_lote_reinf_legacy_action (legado)
-
-| Campo | Valor |
-|---|---|
-| Action | `gerar_lote_reinf_legacy_action` |
-| Arquivo | `fiscal/views/reinf/actions.py` |
-| Rota | `gerar_lote_reinf` (`/reinf/gerar-lotes/legacy/`) |
-| Permissão | `fiscal.acesso_backoffice` |
-| Método | `POST` |
-| Entrada | competência via parser legado |
-| Validações | delegadas para `parse_competencia` |
-| Worker | `fiscal.services.gerar_lotes_reinf` |
-| Efeitos | gera XMLs e devolve zip |
-| Redirect | não aplica (retorna arquivo) |
-| Feedback | erro funcional via `HttpResponse` 404 quando não há lotes |
 
 ## Catálogo de Actions do Fluxo
 

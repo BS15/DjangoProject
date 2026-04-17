@@ -66,13 +66,6 @@ def agrupar_retencoes_action(request: HttpRequest) -> HttpResponse:
 
 @require_POST
 @permission_required("fiscal.acesso_backoffice", raise_exception=True)
-def agrupar_impostos_action(request: HttpRequest) -> HttpResponse:
-    """Alias legado do agrupamento de retenções."""
-    return agrupar_retencoes_action(request)
-
-
-@require_POST
-@permission_required("fiscal.acesso_backoffice", raise_exception=True)
 def anexar_documentos_retencoes_action(request: HttpRequest) -> HttpResponse:
     """Anexa guia, comprovante e relatório mensal aos processos de recolhimento das retenções selecionadas."""
     selecionados = request.POST.getlist("retencao_ids")
@@ -133,6 +126,6 @@ def anexar_documentos_retencoes_action(request: HttpRequest) -> HttpResponse:
     return redirect("painel_impostos_view")
 
 
-__all__ = ["agrupar_retencoes_action", "agrupar_impostos_action", "anexar_documentos_retencoes_action"]
+__all__ = ["agrupar_retencoes_action", "anexar_documentos_retencoes_action"]
 
 

@@ -74,8 +74,8 @@
     </td>
     <td>{{ retencao.competencia|date:"m/Y"|default:"-" }}</td>
     <td>
-        <strong>{{ retencao.beneficiario.nome|default:retencao.nota_fiscal.nome_emitente.nome|upper }}</strong><br>
-        <small class="text-muted">NF: {{ retencao.nota_fiscal.numero_nota_fiscal }}</small>
+        <strong>{{ retencao.fonte_retentora_nome|upper }}</strong><br>
+        <small class="text-muted">NF: {{ retencao.nota_fiscal.numero_nota_fiscal|default:"-" }}</small>
     </td>
     <td><span class="badge bg-dark">{{ retencao.codigo.codigo }}</span></td>
     <td>R$ {{ retencao.rendimento_tributavel|floatformat:2|default:"0,00" }}</td>

@@ -12,6 +12,12 @@ from verbas_indenizatorias.filters import DiariaFilter
 from verbas_indenizatorias.models import Diaria
 
 
+TIPOS_DOC_QUITACAO_VERBAS = {
+    "RECIBO DE PAGAMENTO",
+    "REQUERIMENTO DE REEMBOLSO DE COMBUSTÍVEL",
+}
+
+
 @permission_required("fluxo.acesso_backoffice", raise_exception=True)
 def painel_relatorios_view(request):
     tipo = request.GET.get("tipo", "processos")
@@ -83,7 +89,7 @@ def relatorio_documentos_gerados_view(request):
         recibos_gerados = sum(
             1
             for doc in processo.documentos.all()
-            if doc.tipo and (doc.tipo.tipo_de_documento or "").upper() == "RECIBO DE PAGAMENTO"
+            if doc.tipo and (doc.tipo.tipo_de_documento or "").upper() in TIPOS_DOC_QUITACAO_VERBAS
         )
 
         processo_pendencias = []
@@ -127,7 +133,7 @@ def relatorio_documentos_gerados_view(request):
                 totais["faltando_pcd"] += 1
 
             if recibos_esperados and recibos_gerados < recibos_esperados:
-                processo_pendencias.append("RECIBOS")
+                processo_pendencias.append("RECIBOS / REQUERIMENTOS")
                 totais["faltando_recibos"] += 1
 
         if processo_pendencias:

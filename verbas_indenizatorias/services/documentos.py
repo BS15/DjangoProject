@@ -58,24 +58,24 @@ def gerar_e_anexar_pcd_diaria(diaria, criador):
     )
 
 def gerar_e_anexar_recibo_reembolso(reembolso, criador):
-    """Gera recibo de reembolso, anexa DocumentoReembolso e cria rascunho de assinatura."""
+    """Gera requerimento de reembolso, anexa DocumentoReembolso e cria rascunho de assinatura."""
     pdf_bytes = gerar_documento_bytes("recibo_reembolso", reembolso, VERBAS_DOCUMENT_REGISTRY)
     tipo_recibo = obter_ou_criar_tipo_documento(
-        "RECIBO DE PAGAMENTO",
+        "REQUERIMENTO DE REEMBOLSO DE COMBUSTÍVEL",
     )
     proxima_ordem = obter_proxima_ordem_documento(reembolso.documentos)
     DocumentoReembolso.objects.create(
         reembolso=reembolso,
-        arquivo=ContentFile(pdf_bytes, name=f"Recibo_Reembolso_{reembolso.id}.pdf"),
+        arquivo=ContentFile(pdf_bytes, name=f"Requerimento_Reembolso_{reembolso.id}.pdf"),
         tipo=tipo_recibo,
         ordem=proxima_ordem,
     )
     return criar_assinatura_rascunho(
         entidade=reembolso,
-        tipo_documento="RECIBO DE PAGAMENTO",
+        tipo_documento="REQUERIMENTO DE REEMBOLSO DE COMBUSTÍVEL",
         criador=criador,
         pdf_bytes=pdf_bytes,
-        nome_arquivo=f"Recibo_Reembolso_{reembolso.id}.pdf",
+        nome_arquivo=f"Requerimento_Reembolso_{reembolso.id}.pdf",
         assinatura_model=AssinaturaAutentique,
     )
 

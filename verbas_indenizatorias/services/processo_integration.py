@@ -84,8 +84,8 @@ def gerar_documentos_relacionados_por_transicao(processo, status_anterior, novo_
             processo,
             "recibo_reembolso",
             reembolso,
-            f"Recibo_Reembolso_{identificador}.pdf",
-            "RECIBO DE PAGAMENTO",
+            f"Requerimento_Reembolso_{identificador}.pdf",
+            "REQUERIMENTO DE REEMBOLSO DE COMBUSTÍVEL",
         )
 
     for jeton in processo.jetons.all():

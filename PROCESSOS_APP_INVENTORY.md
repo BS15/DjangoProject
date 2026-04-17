@@ -211,7 +211,6 @@ processos/views/
 ├── desenvolvedor.py              [Fake data generators]
 ├── fiscal/
 │   ├── __init__.py
-│   ├── fiscal_reinf.py          [REINF XML generation & export]
 │   └── fiscal_retencoes.py      [Tax retention management]
 ├── fluxo/                         [MAIN WORKFLOW - 82 files]
 │   ├── __init__.py

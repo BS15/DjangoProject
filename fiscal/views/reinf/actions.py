@@ -10,7 +10,7 @@ from django.views.decorators.http import require_POST
 
 from fiscal.services import gerar_lotes_reinf
 
-from .shared import build_zip_response, parse_competencia
+from .shared import build_zip_response
 
 
 def _parse_competencia_post(request: HttpRequest) -> tuple[int, int]:
@@ -58,20 +58,4 @@ def transmitir_lote_reinf_action(request: HttpRequest) -> HttpResponse:
     return redirect("painel_reinf_view")
 
 
-@require_POST
-@permission_required("fiscal.acesso_backoffice", raise_exception=True)
-def gerar_lote_reinf_legacy_action(request: HttpRequest) -> HttpResponse:
-    """Alias legado para geração de lote por GET."""
-    mes, ano, _ = parse_competencia(request)
-    try:
-        xmls = gerar_lotes_reinf(mes, ano)
-    except ValueError as exc:
-        return HttpResponse(str(exc), status=404)
-    return build_zip_response(xmls, mes, ano)
-
-
-__all__ = [
-    "gerar_lote_reinf_action",
-    "transmitir_lote_reinf_action",
-    "gerar_lote_reinf_legacy_action",
-]
+__all__ = ["gerar_lote_reinf_action", "transmitir_lote_reinf_action"]

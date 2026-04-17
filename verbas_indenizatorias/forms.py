@@ -89,12 +89,14 @@ class JetonForm(forms.ModelForm):
 
     class Meta:
         model = Jeton
-        fields = ['numero_sequencial', 'processo', 'beneficiario', 'reuniao', 'valor_total']
+        fields = ['numero_sequencial', 'processo', 'beneficiario', 'reuniao', 'data_evento', 'local_evento', 'valor_total']
         widgets = {
             'numero_sequencial': forms.TextInput(attrs={'class': 'form-control'}),
             'processo': forms.Select(attrs={'class': 'form-select'}),
             'beneficiario': forms.Select(attrs={'class': 'form-select'}),
             'reuniao': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Março/2026 ou 15ª Sessão'}),
+            'data_evento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'local_evento': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Local de realização da reunião/sessão'}),
             'valor_total': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
 
@@ -104,11 +106,13 @@ class AuxilioForm(forms.ModelForm):
 
     class Meta:
         model = AuxilioRepresentacao
-        fields = ['numero_sequencial', 'processo', 'beneficiario', 'objetivo', 'valor_total']
+        fields = ['numero_sequencial', 'processo', 'beneficiario', 'objetivo', 'data_evento', 'local_evento', 'valor_total']
         widgets = {
             'numero_sequencial': forms.TextInput(attrs={'class': 'form-control'}),
             'processo': forms.Select(attrs={'class': 'form-select'}),
             'beneficiario': forms.Select(attrs={'class': 'form-select'}),
             'objetivo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Motivo ou evento da representação'}),
+            'data_evento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'local_evento': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Local do evento ou ato de representação'}),
             'valor_total': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }

@@ -402,11 +402,13 @@ def gerar_pdf_fake_view(request, doc_type):
         c.nome = _fake_generator.name()
         c.cpf_cnpj = _fake_generator.cpf()
         c.email = _fake_generator.email()
+        c.cargo_funcao = "Analista Administrativo"
         return c
 
     def mock_user():
         u = MagicMock()
         u.get_full_name.return_value = _fake_generator.name()
+        u.username = _fake_generator.user_name()
         return u
 
     if doc_type in ["scd", "pcd"]:
@@ -445,12 +447,27 @@ def gerar_pdf_fake_view(request, doc_type):
         obj = MagicMock()
         if doc_type == "recibo_reembolso":
             obj.__class__.__name__ = "ReembolsoCombustivel"
+            obj.data_saida = _fake_generator.date_between(start_date="-5d", end_date="today")
+            obj.data_retorno = _fake_generator.date_between(start_date="today", end_date="+5d")
+            obj.cidade_origem = _fake_generator.city()
+            obj.cidade_destino = _fake_generator.city()
+            obj.objetivo = "participação em reunião administrativa"
         elif doc_type == "recibo_auxilio":
             obj.__class__.__name__ = "AuxilioRepresentacao"
+            obj.objetivo = "representação institucional em evento setorial"
+            obj.data_evento = _fake_generator.date_between(start_date="today", end_date="+15d")
+            obj.local_evento = _fake_generator.city()
         elif doc_type == "recibo_jeton":
             obj.__class__.__name__ = "Jeton"
+            obj.reuniao = "15ª Sessão"
+            obj.data_evento = _fake_generator.date_between(start_date="today", end_date="+15d")
+            obj.local_evento = _fake_generator.city()
         elif doc_type == "recibo_suprimento":
             obj.__class__.__name__ = "SuprimentoDeFundos"
+            obj.lotacao = "Delegacia Regional de Florianópolis"
+            obj.inicio_periodo = _fake_generator.date_between(start_date="today", end_date="+2d")
+            obj.fim_periodo = _fake_generator.date_between(start_date="+3d", end_date="+30d")
+            obj.data_devolucao_saldo = obj.fim_periodo
 
         obj.beneficiario = mock_credor()
         obj.suprido = obj.beneficiario

@@ -280,6 +280,8 @@ class Jeton(models.Model):
                                      verbose_name="Conselheiro(a)")
 
     reuniao = models.CharField("Reunião/Sessão de Referência", max_length=7)
+    data_evento = models.DateField("Data do Evento", blank=True, null=True)
+    local_evento = models.CharField("Local do Evento", max_length=150, blank=True, null=True)
 
     valor_total = models.DecimalField("Valor Total (R$)", max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
     status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
@@ -307,6 +309,8 @@ class AuxilioRepresentacao(models.Model):
 
     objetivo = models.CharField("Evento/Motivo da Representação", max_length=200, blank=True, null=True,
                                             help_text="Preencha se for representação em evento específico")
+    data_evento = models.DateField("Data do Evento", blank=True, null=True)
+    local_evento = models.CharField("Local do Evento", max_length=150, blank=True, null=True)
 
     valor_total = models.DecimalField("Valor Total (R$)", max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
     status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)

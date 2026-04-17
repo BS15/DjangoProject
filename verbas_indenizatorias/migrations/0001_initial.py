@@ -113,6 +113,19 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
+                    "data_evento",
+                    models.DateField(blank=True, null=True, verbose_name="Data do Evento"),
+                ),
+                (
+                    "local_evento",
+                    models.CharField(
+                        blank=True,
+                        max_length=150,
+                        null=True,
+                        verbose_name="Local do Evento",
+                    ),
+                ),
+                (
                     "valor_total",
                     models.DecimalField(
                         decimal_places=2,
@@ -546,6 +559,19 @@ class Migration(migrations.Migration):
                     "reuniao",
                     models.CharField(
                         max_length=7, verbose_name="Reunião/Sessão de Referência"
+                    ),
+                ),
+                (
+                    "data_evento",
+                    models.DateField(blank=True, null=True, verbose_name="Data do Evento"),
+                ),
+                (
+                    "local_evento",
+                    models.CharField(
+                        blank=True,
+                        max_length=150,
+                        null=True,
+                        verbose_name="Local do Evento",
                     ),
                 ),
                 (
@@ -1078,6 +1104,19 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
+                    "data_evento",
+                    models.DateField(blank=True, null=True, verbose_name="Data do Evento"),
+                ),
+                (
+                    "local_evento",
+                    models.CharField(
+                        blank=True,
+                        max_length=150,
+                        null=True,
+                        verbose_name="Local do Evento",
+                    ),
+                ),
+                (
                     "valor_total",
                     models.DecimalField(
                         decimal_places=2,
@@ -1342,6 +1381,19 @@ class Migration(migrations.Migration):
                         max_length=200,
                         null=True,
                         verbose_name="Evento/Motivo da Representação",
+                    ),
+                ),
+                (
+                    "data_evento",
+                    models.DateField(blank=True, null=True, verbose_name="Data do Evento"),
+                ),
+                (
+                    "local_evento",
+                    models.CharField(
+                        blank=True,
+                        max_length=150,
+                        null=True,
+                        verbose_name="Local do Evento",
                     ),
                 ),
                 (
