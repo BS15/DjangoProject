@@ -21,13 +21,34 @@
 {% endblock %}
 
 {% block batch_form_open %}
-<form method="post" action="{% url 'agrupar_retencoes_action' %}" id="formAgruparRetencoes">
+<form method="post" action="{% url 'agrupar_retencoes_action' %}" id="formAgruparRetencoes" enctype="multipart/form-data">
     {% csrf_token %}
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-end mb-3 flex-wrap gap-2">
         <h5 class="mb-0">Lançamentos Individuais</h5>
-        <button type="submit" class="btn btn-danger" onclick="return confirm('Gerar processo de pagamento (Guia DARF) com as retenções selecionadas?');">
-            <i class="bi bi-collection"></i> Agrupar Selecionados para Guia
-        </button>
+        <div class="d-flex align-items-end gap-2 flex-wrap">
+            <div>
+                <label class="form-label small text-muted mb-1">Mês</label>
+                <input type="number" min="1" max="12" class="form-control form-control-sm" name="mes_referencia" value="{{ request.GET.mes|default:'' }}">
+            </div>
+            <div>
+                <label class="form-label small text-muted mb-1">Ano</label>
+                <input type="number" min="2000" max="2100" class="form-control form-control-sm" name="ano_referencia" value="{{ request.GET.ano|default:'' }}">
+            </div>
+            <div>
+                <label class="form-label small text-muted mb-1">Guia (PDF)</label>
+                <input type="file" class="form-control form-control-sm" name="guia_arquivo" accept=".pdf">
+            </div>
+            <div>
+                <label class="form-label small text-muted mb-1">Comprovante (PDF)</label>
+                <input type="file" class="form-control form-control-sm" name="comprovante_arquivo" accept=".pdf">
+            </div>
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Gerar processo de pagamento (Guia DARF) com as retenções selecionadas?');">
+                <i class="bi bi-collection"></i> Agrupar Selecionados para Guia
+            </button>
+            <button type="submit" class="btn btn-outline-primary" formaction="{% url 'anexar_documentos_retencoes_action' %}" onclick="return confirm('Anexar guia/comprovante e gerar relatório mensal por código de imposto para os processos envolvidos?');">
+                <i class="bi bi-paperclip"></i> Anexar Guia + Comprovante + Relatório
+            </button>
+        </div>
     </div>
 {% endblock %}
 

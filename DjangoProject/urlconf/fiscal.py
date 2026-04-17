@@ -17,6 +17,7 @@ urlpatterns = [
     path('retencao-impostos/legacy/', impostos_panels.painel_impostos, name='painel_impostos'),
     path('impostos/agrupar/', impostos_actions.agrupar_retencoes_action, name='agrupar_retencoes_action'),
     path('impostos/agrupar/legacy/', impostos_actions.agrupar_impostos_action, name='agrupar_impostos'),
+    path('impostos/anexar-documentos/', impostos_actions.anexar_documentos_retencoes_action, name='anexar_documentos_retencoes_action'),
     path('processos/comprovantes/', comprovantes_panels.painel_comprovantes_view, name='painel_comprovantes'),
     path('api/comprovantes/fatiar/', comprovantes_apis.api_fatiar_comprovantes, name='api_fatiar_comprovantes'),
     path('api/comprovantes/vincular/', comprovantes_apis.api_vincular_comprovantes, name='api_vincular_comprovantes'),

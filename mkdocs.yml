@@ -71,5 +71,6 @@ nav:
   - Guia do Desenvolvedor:
     - Setup do Ambiente: desenvolvedor/setup_ambiente.md
     - Padrões de Código: desenvolvedor/padroes_codigo.md
+    - Dicionários Operacionais: desenvolvedor/dicionarios_operacionais.md
     - Guia de Instalação: instalacao.md
     - Referência de API: api.md

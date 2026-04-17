@@ -17,6 +17,13 @@ Sempre estender os layouts base:
 - Evitar duplicação de validações entre módulos.
 - Replicar padrões existentes de módulos análogos antes de criar abordagens novas.
 
+## Documentação operacional de Actions
+A especificação operacional (catálogo por action, uma entrada por endpoint) fica centralizada em [Dicionários Operacionais](dicionarios_operacionais.md).
+
+Regra de separação entre os guias:
+- esta página define princípios arquiteturais e padrões transversais.
+- a página de dicionários lista contratos concretos de cada action e worker.
+
 ## Estado e compliance
 - Tratar progressão de etapas como máquina de estados.
 - Aplicar turnpikes antes de qualquer avanço de fase.
