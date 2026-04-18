@@ -7,7 +7,7 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from fluxo.domain_models.documentos import ComprovanteDePagamento
 from fiscal.models import DocumentoFiscal
-from fluxo.domain_models import Devolucao, DocumentoProcesso, RegistroAcessoArquivo
+from fluxo.domain_models import Devolucao, Boleto_Bancario, RegistroAcessoArquivo
 from suprimentos.models import DespesaSuprimento
 from verbas_indenizatorias.models import (
     DocumentoAuxilio,
@@ -56,7 +56,7 @@ def _is_cap_backoffice(user):
 def _resolver_documento(tipo_documento, documento_id):
     """Resolve o documento alvo e retorna (objeto_doc, field_arquivo_name)."""
     resolvers = {
-        "processo": (DocumentoProcesso, "arquivo"),
+        "processo": (Boleto_Bancario, "arquivo"),
         "fiscal": (DocumentoFiscal, "documento_vinculado"),
         "comprovante": (ComprovanteDePagamento, "arquivo"),
         "suprimento": (DespesaSuprimento, "arquivo"),
@@ -120,9 +120,10 @@ def download_arquivo_seguro(request, tipo_documento, documento_id):
     else:
         arquivo = getattr(doc, file_attr, None)
 
-    if not _is_cap_backoffice(request.user) and not _can_access_non_backoffice(
-        request.user, tipo_documento, doc
-    ):
+
+    # Per-object access control
+    from commons.shared.access_utils import user_can_access_document
+    if not user_can_access_document(request.user, doc):
         raise PermissionDenied
 
     if not arquivo or not arquivo.name:

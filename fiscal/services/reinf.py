@@ -4,6 +4,8 @@ import xml.dom.minidom
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from datetime import date
+from decimal import Decimal, ROUND_HALF_UP
+import re
 
 from fiscal.models import RetencaoImposto
 from fiscal.models import DadosContribuinte
@@ -11,6 +13,19 @@ from fiscal.models import DadosContribuinte
 
 def _build_competencia_date(month: int, year: int) -> date:
     return date(year, month, 1)
+
+
+def _fmt_dec(value) -> str:
+    """Formata valores decimais no padrão XML fiscal com 2 casas."""
+    return f"{Decimal(value or 0).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP):.2f}"
+
+
+def _digits_only(value: str | None) -> str:
+    return "".join(ch for ch in str(value or "") if ch.isdigit())
+
+
+def _natureza_rendimento_valida(natureza: str | None) -> bool:
+    return bool(re.fullmatch(r"\d{5}", str(natureza or "")))
 
 
 def get_serie_2000_data(month: int | None, year: int | None) -> list:
@@ -125,11 +140,11 @@ def _build_r2010_xml(cnpj: str, retencoes: list, month: int, year: int) -> str:
         nf_seq = ET.SubElement(det_evt, 'nfSeq')
         ET.SubElement(nf_seq, 'nrNF').text = str(nota_fiscal.numero_nota_fiscal or '')
         ET.SubElement(nf_seq, 'dtEmiNF').text = str(nota_fiscal.data_emissao)
-        ET.SubElement(nf_seq, 'vrBruto').text = str(nota_fiscal.valor_bruto or 0)
+        ET.SubElement(nf_seq, 'vrBruto').text = _fmt_dec(nota_fiscal.valor_bruto)
 
         det_ret = ET.SubElement(nf_seq, 'detRet')
-        ET.SubElement(det_ret, 'vrBaseRet').text = str(retencao.rendimento_tributavel or 0)
-        ET.SubElement(det_ret, 'vrRet').text = str(retencao.valor or 0)
+        ET.SubElement(det_ret, 'vrBaseRet').text = _fmt_dec(retencao.rendimento_tributavel)
+        ET.SubElement(det_ret, 'vrRet').text = _fmt_dec(retencao.valor)
 
     raw = ET.tostring(root, encoding='unicode')
     return xml.dom.minidom.parseString(raw).toprettyxml(indent='  ')
@@ -160,8 +175,8 @@ def _build_r4020_xml(cnpj: str, retencoes: list, month: int, year: int) -> str:
     for natureza, rets in natureza_map.items():
         det_pag = ET.SubElement(ide_pj, 'detPag')
         ET.SubElement(det_pag, 'natRend').text = str(natureza)
-        ET.SubElement(det_pag, 'vrBaseRet').text = str(sum((ret.rendimento_tributavel or 0) for ret in rets))
-        ET.SubElement(det_pag, 'vrRet').text = str(sum((ret.valor or 0) for ret in rets))
+        ET.SubElement(det_pag, 'vrBaseRet').text = _fmt_dec(sum((ret.rendimento_tributavel or 0) for ret in rets))
+        ET.SubElement(det_pag, 'vrRet').text = _fmt_dec(sum((ret.valor or 0) for ret in rets))
 
     raw = ET.tostring(root, encoding='unicode')
     return xml.dom.minidom.parseString(raw).toprettyxml(indent='  ')
@@ -172,7 +187,7 @@ def _build_r1000_xml(contribuinte) -> str:
     evt = ET.SubElement(root, 'evtInfoContri')
     ide_contrib = ET.SubElement(evt, 'ideContri')
     ET.SubElement(ide_contrib, 'tpInsc').text = str(contribuinte.tipo_inscricao or 1)
-    ET.SubElement(ide_contrib, 'nrInsc').text = str(contribuinte.cnpj)
+    ET.SubElement(ide_contrib, 'nrInsc').text = _digits_only(contribuinte.cnpj)
     ET.SubElement(ide_contrib, 'nmRazao').text = str(contribuinte.razao_social or '')
     raw = ET.tostring(root, encoding='unicode')
     return xml.dom.minidom.parseString(raw).toprettyxml(indent='  ')
@@ -197,16 +212,34 @@ def gerar_lotes_reinf(month: int, year: int) -> dict:
         nota_fiscal__atestada=True,
     ).select_related('nota_fiscal', 'nota_fiscal__nome_emitente', 'codigo')
 
+    inconsistencias = []
+    for retencao in retencoes:
+        emitente = retencao.nota_fiscal.nome_emitente if retencao.nota_fiscal else None
+        cnpj_emitente = _digits_only(getattr(emitente, 'cpf_cnpj', None))
+        if not emitente or not cnpj_emitente:
+            inconsistencias.append(
+                f"Retencao #{retencao.id} sem emitente válido para EFD-Reinf."
+            )
+
+        if retencao.codigo.serie_reinf == 'S4000':
+            natureza = retencao.codigo.natureza_rendimento
+            if not _natureza_rendimento_valida(natureza):
+                inconsistencias.append(
+                    f"Retencao #{retencao.id} com natureza_rendimento inválida ({natureza!r}) para série S4000."
+                )
+
+    if inconsistencias:
+        raise ValueError("Inconsistências fiscais impedem geração Reinf: " + " | ".join(inconsistencias))
+
     inss_por_cnpj: dict = defaultdict(list)
     federal_por_cnpj: dict = defaultdict(list)
     for retencao in retencoes:
         emitente = retencao.nota_fiscal.nome_emitente
-        if not emitente or not emitente.cpf_cnpj:
-            continue
+        provider_cnpj = _digits_only(emitente.cpf_cnpj)
         if retencao.codigo.serie_reinf == 'S2000':
-            inss_por_cnpj[emitente.cpf_cnpj].append(retencao)
+            inss_por_cnpj[provider_cnpj].append(retencao)
         elif retencao.codigo.serie_reinf == 'S4000':
-            federal_por_cnpj[emitente.cpf_cnpj].append(retencao)
+            federal_por_cnpj[provider_cnpj].append(retencao)
 
     per_apur = f'{year}-{month:02d}'
     xmls = {
@@ -214,7 +247,7 @@ def gerar_lotes_reinf(month: int, year: int) -> dict:
         'INSS_R2010/R2099_Fechamento.xml': _build_fechamento_xml('evtFechaEvPer', per_apur),
         'Federais_R4020/R4099_Fechamento.xml': _build_fechamento_xml('evtFechaEvPer', per_apur),
     }
-    cnpj_contribuinte = contribuinte.cnpj
+    cnpj_contribuinte = _digits_only(contribuinte.cnpj)
     for provider_cnpj, rets in inss_por_cnpj.items():
         xmls[f'INSS_R2010/R2010_CNPJ_{provider_cnpj}_{year}{month:02d}.xml'] = _build_r2010_xml(
             cnpj_contribuinte,

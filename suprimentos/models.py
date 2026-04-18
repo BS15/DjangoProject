@@ -15,6 +15,39 @@ from commons.shared.models import DocumentoBase
 from commons.shared.storage_utils import caminho_documento, _delete_file
 
 
+def _is_processo_selado(processo):
+    """Retorna True quando o processo vinculado está em estágio pós-pagamento selado."""
+    if not processo or processo.em_contingencia or not processo.status:
+        return False
+
+    from fluxo.domain_models.processos import PROCESSO_STATUS_PAGOS_E_POSTERIORES
+
+    status_atual = (processo.status.status_choice or "").upper()
+    return status_atual in PROCESSO_STATUS_PAGOS_E_POSTERIORES
+
+
+class SealedMutationQuerySet(models.QuerySet):
+    """Bloqueia mutações em massa que contornam save/clean do domínio."""
+
+    def update(self, **kwargs):
+        raise DjangoValidationError(
+            "Mutações em massa via update() são proibidas neste domínio. "
+            "Use métodos de entidade/serviço com validações de negócio."
+        )
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        raise DjangoValidationError(
+            "Mutações em massa via bulk_update() são proibidas neste domínio. "
+            "Use métodos de entidade/serviço com validações de negócio."
+        )
+
+    def bulk_create(self, objs, batch_size=None, ignore_conflicts=False, update_conflicts=False, update_fields=None, unique_fields=None):
+        raise DjangoValidationError(
+            "Inserções em massa via bulk_create() são proibidas neste domínio. "
+            "Use criação canônica por entidade para garantir invariantes."
+        )
+
+
 class StatusChoicesSuprimentoDeFundos(models.Model):
     """Catálogo de status para o ciclo de suprimento de fundos."""
 
@@ -53,6 +86,19 @@ class SuprimentoDeFundos(models.Model):
                                           null=True, validators=[MinValueValidator(0)])
 
     status = models.ForeignKey('StatusChoicesSuprimentoDeFundos', on_delete=models.PROTECT, blank=True, null=True)
+    _CAMPOS_SENSIVEIS_POS_PAGAMENTO = {
+        "suprido_id",
+        "valor_liquido",
+        "taxa_saque",
+        "lotacao",
+        "inicio_periodo",
+        "fim_periodo",
+        "data_recibo",
+        "data_devolucao_saldo",
+        "valor_devolvido",
+        "processo_id",
+    }
+    objects = SealedMutationQuerySet.as_manager()
 
     # --- MÁGICA: Propriedades Calculadas Dinamicamente ---
     @property
@@ -86,9 +132,63 @@ class SuprimentoDeFundos(models.Model):
         if errors:
             raise DjangoValidationError(errors)
 
+    def _enforce_domain_seal(self, update_fields=None):
+        if not self.pk or not _is_processo_selado(self.processo):
+            return
+
+        original = type(self).objects.get(pk=self.pk)
+        campos_sensiveis = self._CAMPOS_SENSIVEIS_POS_PAGAMENTO
+        campos_avaliados = set(update_fields) & campos_sensiveis if update_fields is not None else campos_sensiveis
+        alterados = [campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)]
+
+        if alterados:
+            raise DjangoValidationError(
+                {
+                    "status": (
+                        "Mutação direta bloqueada: suprimento vinculado a processo em estágio pós-pagamento. "
+                        "Use fluxo de contingência aprovado para ajustes."
+                    )
+                }
+            )
+
+    def save(self, *args, **kwargs):
+        self._enforce_domain_seal(update_fields=kwargs.get("update_fields"))
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        self._enforce_domain_seal()
+        return super().delete(*args, **kwargs)
+
     class Meta:
         permissions = [
             ("acesso_backoffice", "Acesso ao backoffice de suprimentos"),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(fim_periodo__gte=models.F("inicio_periodo")),
+                name="suprimento_periodo_valido_chk",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(data_devolucao_saldo__isnull=True)
+                    | models.Q(data_recibo__isnull=True)
+                    | models.Q(data_devolucao_saldo__gte=models.F("data_recibo"))
+                ),
+                name="suprimento_devolucao_gte_recibo_chk",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(valor_liquido__gte=0),
+                name="suprimento_valor_liquido_nao_negativo_chk",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(taxa_saque__gte=0),
+                name="suprimento_taxa_saque_nao_negativa_chk",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(valor_devolvido__isnull=True) | models.Q(valor_devolvido__gte=0),
+                name="suprimento_valor_devolvido_nao_negativo_chk",
+            ),
         ]
 
 
@@ -109,6 +209,56 @@ class DespesaSuprimento(models.Model):
     def __str__(self):
         return f"{self.data} - {self.estabelecimento} - R$ {self.valor}"
     history = HistoricalRecords()
+    objects = SealedMutationQuerySet.as_manager()
+
+    def _enforce_domain_seal(self, update_fields=None):
+        if not self.pk:
+            return
+
+        processo = self.suprimento.processo if self.suprimento_id else None
+        if not _is_processo_selado(processo):
+            return
+
+        original = type(self).objects.get(pk=self.pk)
+        campos_sensiveis = {
+            "suprimento_id",
+            "data",
+            "estabelecimento",
+            "cnpj_cpf",
+            "detalhamento",
+            "nota_fiscal",
+            "valor",
+            "arquivo",
+        }
+        campos_avaliados = set(update_fields) & campos_sensiveis if update_fields is not None else campos_sensiveis
+        alterados = [campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)]
+
+        if alterados:
+            raise DjangoValidationError(
+                {
+                    "status": (
+                        "Mutação direta bloqueada: despesa vinculada a processo em estágio pós-pagamento. "
+                        "Use fluxo de contingência aprovado para ajustes."
+                    )
+                }
+            )
+
+    def save(self, *args, **kwargs):
+        self._enforce_domain_seal(update_fields=kwargs.get("update_fields"))
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        self._enforce_domain_seal()
+        return super().delete(*args, **kwargs)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(valor__gte=0),
+                name="despesa_valor_nao_negativo_chk",
+            ),
+        ]
 
 
 class DocumentoSuprimentoDeFundos(DocumentoBase):

@@ -27,7 +27,10 @@ def visualizar_pdf_processo(request, processo_id):
     Retorna:
         HttpResponse: Conteúdo `application/pdf` inline quando disponível.
     """
+    from commons.shared.access_utils import user_is_entity_owner
     processo = get_object_or_404(Processo, id=processo_id)
+    if not user_is_entity_owner(request.user, processo):
+        return HttpResponse("Acesso negado: você não é o responsável por este processo.", status=403)
 
     pdf_buffer = gerar_pdf_consolidado_processo(processo)
 
@@ -53,7 +56,10 @@ def gerar_autorizacao_pagamento_view(request, pk):
     Retorna:
         HttpResponse: PDF inline com nome de arquivo padronizado.
     """
+    from commons.shared.access_utils import user_is_entity_owner
     processo = get_object_or_404(Processo, pk=pk)
+    if not user_is_entity_owner(request.user, processo):
+        return HttpResponse("Acesso negado: você não é o responsável por este processo.", status=403)
     nome_arquivo = f"Autorizacao_Pagamento_Proc_{processo.id}.pdf"
     return gerar_resposta_pdf(
         "autorizacao",
@@ -68,7 +74,10 @@ def gerar_autorizacao_pagamento_view(request, pk):
 @xframe_options_sameorigin
 def gerar_parecer_conselho_view(request, pk):
     """Gera e retorna o PDF de parecer do conselho para um processo."""
+    from commons.shared.access_utils import user_is_entity_owner
     processo = get_object_or_404(Processo, pk=pk)
+    if not user_is_entity_owner(request.user, processo):
+        return HttpResponse("Acesso negado: você não é o responsável por este processo.", status=403)
     numero_reuniao = processo.reuniao_conselho.numero if hasattr(processo, 'reuniao_conselho') and processo.reuniao_conselho else None
     nome_arquivo = f"Parecer_Conselho_Fiscal_Proc_{processo.id}.pdf"
     return gerar_resposta_pdf(
@@ -85,7 +94,10 @@ def gerar_parecer_conselho_view(request, pk):
 @xframe_options_sameorigin
 def gerar_termo_contabilizacao_view(request, pk):
     """Gera e exibe o PDF do Termo de Contabilização de um processo."""
+    from commons.shared.access_utils import user_is_entity_owner
     processo = get_object_or_404(Processo, pk=pk)
+    if not user_is_entity_owner(request.user, processo):
+        return HttpResponse("Acesso negado: você não é o responsável por este processo.", status=403)
     nome_arquivo = f"Termo_Contabilizacao_Proc_{processo.id}.pdf"
     return gerar_resposta_pdf(
         "contabilizacao",
@@ -100,7 +112,10 @@ def gerar_termo_contabilizacao_view(request, pk):
 @xframe_options_sameorigin
 def gerar_termo_auditoria_view(request, pk):
     """Gera e exibe o PDF do Termo de Auditoria de um processo."""
+    from commons.shared.access_utils import user_is_entity_owner
     processo = get_object_or_404(Processo, pk=pk)
+    if not user_is_entity_owner(request.user, processo):
+        return HttpResponse("Acesso negado: você não é o responsável por este processo.", status=403)
     nome_arquivo = f"Termo_Auditoria_Proc_{processo.id}.pdf"
     return gerar_resposta_pdf(
         "auditoria",

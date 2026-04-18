@@ -99,7 +99,11 @@ def _montar_post_capa_com_campos_canonicos(request, processo):
 @permission_required("verbas_indenizatorias.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas_capa_action(request, pk):
     """Spoke POST da capa de processos de verbas."""
+    from commons.shared.access_utils import user_is_entity_owner
     processo = get_object_or_404(Processo, id=pk)
+    if not user_is_entity_owner(request.user, processo):
+        from django.http import HttpResponse
+        return HttpResponse("Acesso negado: você não é o responsável por este processo.", status=403)
     data = _montar_post_capa_com_campos_canonicos(request, processo)
     processo_form = ProcessoForm(data, instance=processo, prefix="processo")
 
@@ -117,7 +121,11 @@ def editar_processo_verbas_capa_action(request, pk):
 @permission_required("verbas_indenizatorias.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas_pendencias_action(request, pk):
     """Spoke POST de pendências para processos de verbas."""
+    from commons.shared.access_utils import user_is_entity_owner
     processo = get_object_or_404(Processo, id=pk)
+    if not user_is_entity_owner(request.user, processo):
+        from django.http import HttpResponse
+        return HttpResponse("Acesso negado: você não é o responsável por este processo.", status=403)
     pendencia_formset = PendenciaFormSet(request.POST, instance=processo, prefix="pendencia")
 
     if not pendencia_formset.is_valid():

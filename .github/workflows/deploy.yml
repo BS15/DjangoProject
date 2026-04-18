@@ -1,38 +1,58 @@
-name: Deploy to PythonAnywhere
+name: CI/CD Pipeline (Audit & Deploy)
 
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  verify:
+  audit_and_test:
+    name: Codebase Consistency & Security Check
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: 'pip'
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install flake8 pytest pytest-django
+          pip install ruff coverage pytest-django
 
-      - name: Run linter
-        run: flake8 .
+      - name: 1. Static Analysis (Ruff)
+        run: ruff check .
 
-      - name: Run tests
+      - name: 2. Migration Drift Check
         env:
           DJANGO_SETTINGS_MODULE: DjangoProject.settings
-        run: pytest
+        run: python manage.py makemigrations --check --dry-run
 
+      - name: 3. Production Security Check
+        env:
+          DJANGO_SETTINGS_MODULE: DjangoProject.settings
+        run: python manage.py check --deploy
+
+      - name: 4. Business Logic & Action Tests (with Coverage)
+        env:
+          DJANGO_SETTINGS_MODULE: DjangoProject.settings
+        run: |
+          coverage run -m pytest
+          coverage report -m
+          
   deploy:
-    needs: verify
+    name: Deploy to Production
+    needs: audit_and_test # <--- CRITICAL: This forces deployment to wait for tests!
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' # Only deploy on main branch
+    
     steps:
       - name: Deploy via PythonAnywhere API
         uses: umuttopalak/pythonanywhere-deploy-action@v1.1.0

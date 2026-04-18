@@ -4,6 +4,7 @@ import logging
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
+from django.db import transaction
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
@@ -23,15 +24,19 @@ logger = logging.getLogger(__name__)
 @permission_required("fluxo.pode_arquivar", raise_exception=True)
 def arquivar_processo_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Executa o arquivamento definitivo de um processo elegivel."""
-    processo = get_object_or_404(Processo, id=pk)
-
-    status_atual = processo.status.status_choice if processo.status else ""
-    if status_atual.upper() != ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO:
-        messages.error(request, f"Processo #{processo.id} não está no status correto para arquivamento.")
-        return redirect("painel_arquivamento")
-
     try:
-        _executar_arquivamento_definitivo(processo, request.user)
+        with transaction.atomic():
+            processo = get_object_or_404(
+                Processo.objects.select_for_update().select_related("status"),
+                id=pk,
+            )
+
+            status_atual = processo.status.status_choice if processo.status else ""
+            if status_atual.upper() != ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO:
+                messages.error(request, f"Processo #{processo.id} não está no status correto para arquivamento.")
+                return redirect("painel_arquivamento")
+
+            _executar_arquivamento_definitivo(processo, request.user)
     except ArquivamentoSemDocumentosError:
         messages.error(request, f"Processo #{processo.id} não possui documentos para arquivar.")
         return redirect("painel_arquivamento")

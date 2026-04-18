@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 from faker import Faker
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.base import ContentFile
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -21,6 +22,7 @@ from credores.models import CargosFuncoes, ContasBancarias, Credor
 from fiscal.models import CodigosImposto, DocumentoFiscal, RetencaoImposto, StatusChoicesRetencoes
 from fluxo.domain_models import (
     Boleto_Bancario,
+    DocumentoOrcamentario,
     FormasDePagamento,
     Processo,
     StatusChoicesProcesso,
@@ -38,6 +40,24 @@ from verbas_indenizatorias.pdf_generators import VERBAS_DOCUMENT_REGISTRY
 
 _fake_generator = Faker("pt_BR")
 _MIN_FAKE_ANO_EXERCICIO = 2020
+_FAKE_PDF_BYTES = b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 144] >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n"
+
+
+def _create_fake_documento_orcamentario(processo, numero_nota_empenho, data_empenho, ano_exercicio):
+    """Cria documento orçamentário canônico com arquivo e tipo obrigatórios."""
+    tipo_doc, _ = TiposDeDocumento.objects.get_or_create(
+        tipo_de_documento__iexact="DOCUMENTOS ORÇAMENTÁRIOS",
+        defaults={"tipo_de_documento": "DOCUMENTOS ORÇAMENTÁRIOS"},
+    )
+    nome_arquivo = f"doc_orcamentario_fake_{processo.id}_{ano_exercicio}.pdf"
+    return DocumentoOrcamentario.objects.create(
+        processo=processo,
+        arquivo=ContentFile(_FAKE_PDF_BYTES, name=nome_arquivo),
+        tipo=tipo_doc,
+        numero_nota_empenho=numero_nota_empenho,
+        data_empenho=data_empenho,
+        ano_exercicio=ano_exercicio,
+    )
 
 
 def _ensure_fake_lookup_tables():
@@ -148,14 +168,11 @@ def _create_fake_processos(n):
         existing_count = Processo.objects.count()
         n_empenho = f"{ano}NE{str(existing_count + i + 1).zfill(5)}"
         n_siscac = f"PAG{str(existing_count + i + 1).zfill(6)}"
-        Processo.objects.create(
+        processo = Processo.objects.create(
             extraorcamentario=random.choice([False, False, False, True]),
-            n_nota_empenho=n_empenho,
             credor=random.choice(credores),
-            data_empenho=data_empenho,
             valor_bruto=valor_bruto,
             valor_liquido=valor_liquido,
-            ano_exercicio=ano,
             n_pagamento_siscac=n_siscac,
             data_vencimento=data_vencimento,
             data_pagamento=data_pagamento,
@@ -166,6 +183,12 @@ def _create_fake_processos(n):
             status=random.choice(status_list),
             detalhamento=_fake_generator.sentence(nb_words=10)[:200],
             tag=random.choice(tag_list) if tag_list else None,
+        )
+        _create_fake_documento_orcamentario(
+            processo=processo,
+            numero_nota_empenho=n_empenho,
+            data_empenho=data_empenho,
+            ano_exercicio=ano,
         )
         created += 1
     return created
@@ -248,29 +271,51 @@ def _create_fake_diarias(n, credores_pf, processos):
     created = 0
     for i in range(n):
         beneficiario = random.choice(credores_pf)
-        data_saida = _fake_generator.date_between(start_date="-6m", end_date="today")
+        ultima_diaria = (
+            Diaria.objects.filter(beneficiario=beneficiario)
+            .exclude(data_retorno__isnull=True)
+            .order_by("-data_retorno")
+            .first()
+        )
+
+        if ultima_diaria and ultima_diaria.data_retorno:
+            data_saida = ultima_diaria.data_retorno + timedelta(days=random.randint(1, 5))
+        else:
+            data_saida = _fake_generator.date_between(start_date="-6m", end_date="today")
+
         dias = random.randint(1, 10)
         data_retorno = data_saida + timedelta(days=dias)
         quantidade = Decimal(str(round(random.uniform(0.5, float(dias)), 1)))
-        existing_count = Diaria.objects.count()
-        numero_seq = f"DIA{date.today().year}{str(existing_count + i + 1).zfill(5)}"
+
+        ano_ref = date.today().year
+        prefixo = f"DIA{ano_ref}"
+        sequencial = Diaria.objects.filter(numero_siscac__startswith=prefixo).count() + 1
+        numero_seq = f"{prefixo}{str(sequencial).zfill(5)}"
+        while Diaria.objects.filter(numero_siscac=numero_seq).exists():
+            sequencial += 1
+            numero_seq = f"{prefixo}{str(sequencial).zfill(5)}"
+
         processo = random.choice(processos) if processos else None
-        Diaria.objects.create(
-            processo=processo,
-            numero_siscac=numero_seq,
-            beneficiario=beneficiario,
-            tipo_solicitacao=random.choice(["INICIAL", "PRORROGACAO", "COMPLEMENTACAO"]),
-            data_saida=data_saida,
-            data_retorno=data_retorno,
-            cidade_origem=random.choice(cidades_origem),
-            cidade_destino=random.choice(cidades_destino),
-            objetivo=_fake_generator.sentence(nb_words=8)[:200],
-            quantidade_diarias=quantidade,
-            meio_de_transporte=random.choice(transportes) if transportes else None,
-            status=random.choice(status_list) if status_list else None,
-            autorizada=random.choice([True, False]),
-        )
-        created += 1
+
+        try:
+            Diaria.objects.create(
+                processo=processo,
+                numero_siscac=numero_seq,
+                beneficiario=beneficiario,
+                tipo_solicitacao="INICIAL",
+                data_saida=data_saida,
+                data_retorno=data_retorno,
+                cidade_origem=random.choice(cidades_origem),
+                cidade_destino=random.choice(cidades_destino),
+                objetivo=_fake_generator.sentence(nb_words=8)[:200],
+                quantidade_diarias=quantidade,
+                meio_de_transporte=random.choice(transportes) if transportes else None,
+                status=random.choice(status_list) if status_list else None,
+                autorizada=random.choice([True, False]),
+            )
+            created += 1
+        except DjangoValidationError:
+            continue
     return created
 
 

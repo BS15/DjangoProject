@@ -18,6 +18,39 @@ from commons.shared.models import DocumentoBase
 from commons.shared.storage_utils import caminho_documento, _delete_file
 
 
+def _is_processo_selado(processo):
+    """Retorna True quando o processo vinculado está em estágio pós-pagamento selado."""
+    if not processo or processo.em_contingencia or not processo.status:
+        return False
+
+    from fluxo.domain_models.processos import PROCESSO_STATUS_PAGOS_E_POSTERIORES
+
+    status_atual = (processo.status.status_choice or "").upper()
+    return status_atual in PROCESSO_STATUS_PAGOS_E_POSTERIORES
+
+
+class SealedMutationQuerySet(models.QuerySet):
+    """Bloqueia mutações em massa que contornam save/clean do domínio."""
+
+    def update(self, **kwargs):
+        raise DjangoValidationError(
+            "Mutações em massa via update() são proibidas neste domínio. "
+            "Use métodos de entidade/serviço com validações de negócio."
+        )
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        raise DjangoValidationError(
+            "Mutações em massa via bulk_update() são proibidas neste domínio. "
+            "Use métodos de entidade/serviço com validações de negócio."
+        )
+
+    def bulk_create(self, objs, batch_size=None, ignore_conflicts=False, update_conflicts=False, update_fields=None, unique_fields=None):
+        raise DjangoValidationError(
+            "Inserções em massa via bulk_create() são proibidas neste domínio. "
+            "Use criação canônica por entidade para garantir invariantes."
+        )
+
+
 class StatusChoicesVerbasIndenizatorias(models.Model):
     """Catálogo de estados de verbas indenizatórias."""
 
@@ -125,6 +158,24 @@ class Diaria(models.Model):
     assinaturas_autentique = GenericRelation('fluxo.AssinaturaAutentique')
 
     history = HistoricalRecords()
+    _CAMPOS_SENSIVEIS_POS_PAGAMENTO = {
+        "beneficiario_id",
+        "proponente_id",
+        "tipo_solicitacao",
+        "diaria_inicial_id",
+        "data_saida",
+        "data_retorno",
+        "cidade_origem",
+        "cidade_destino",
+        "objetivo",
+        "quantidade_diarias",
+        "valor_total",
+        "meio_de_transporte_id",
+        "autorizada",
+        "numero_siscac",
+        "processo_id",
+    }
+    objects = SealedMutationQuerySet.as_manager()
 
     def clean(self):
         """Valida que data_retorno é posterior ou igual a data_saida."""
@@ -193,6 +244,8 @@ class Diaria(models.Model):
 
     def save(self, *args, **kwargs):
         """Atualiza valor total calculado antes da persistência."""
+        self._enforce_domain_seal(update_fields=kwargs.get("update_fields"))
+
         calculada = self.calcular_quantidade_diarias()
         if calculada is not None:
             self.quantidade_diarias = calculada
@@ -200,12 +253,37 @@ class Diaria(models.Model):
         calculado = self.calcular_valor_total()
         if calculado is not None:
             self.valor_total = calculado
+
+        self.full_clean()
         super().save(*args, **kwargs)
 
         # Modo canônico: diária inicial referencia a si mesma para rastreabilidade de cadeia.
         if self.tipo_solicitacao == 'INICIAL' and self.diaria_inicial_id != self.pk:
             self.diaria_inicial = self
             super().save(update_fields=['diaria_inicial'])
+
+    def _enforce_domain_seal(self, update_fields=None):
+        if not self.pk or not _is_processo_selado(self.processo):
+            return
+
+        original = type(self).objects.get(pk=self.pk)
+        campos_sensiveis = self._CAMPOS_SENSIVEIS_POS_PAGAMENTO
+        campos_avaliados = set(update_fields) & campos_sensiveis if update_fields is not None else campos_sensiveis
+        alterados = [campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)]
+
+        if alterados:
+            raise DjangoValidationError(
+                {
+                    "status": (
+                        "Mutação direta bloqueada: diária vinculada a processo em estágio pós-pagamento. "
+                        "Use fluxo de contingência aprovado para ajustes."
+                    )
+                }
+            )
+
+    def delete(self, *args, **kwargs):
+        self._enforce_domain_seal()
+        return super().delete(*args, **kwargs)
 
     def avancar_status(self, novo_status_str):
         """Avança status da diária com validação de turnpike específico."""
@@ -227,6 +305,22 @@ class Diaria(models.Model):
 
     def __str__(self):
         return f"Diária {self.numero_siscac} - {self.beneficiario}"
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(data_retorno__gte=models.F("data_saida")),
+                name="diaria_data_retorno_gte_saida_chk",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(quantidade_diarias__gte=0),
+                name="diaria_qtd_nao_negativa_chk",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(valor_total__isnull=True) | models.Q(valor_total__gte=0),
+                name="diaria_valor_total_nao_negativo_chk",
+            ),
+        ]
 
 
 class DocumentoDiaria(DocumentoBase):
@@ -259,9 +353,81 @@ class ReembolsoCombustivel(models.Model):
     objetivo = models.CharField("Objetivo", max_length=200, blank=True, null=True)
     status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
     history = HistoricalRecords()
+    _CAMPOS_SENSIVEIS_POS_PAGAMENTO = {
+        "processo_id",
+        "diaria_id",
+        "beneficiario_id",
+        "data_saida",
+        "data_retorno",
+        "cidade_origem",
+        "cidade_destino",
+        "distancia_km",
+        "preco_combustivel",
+        "valor_total",
+        "objetivo",
+    }
+    objects = SealedMutationQuerySet.as_manager()
+
+    def _processo_referencia(self):
+        if self.processo_id:
+            return self.processo
+        if self.diaria_id:
+            return self.diaria.processo
+        return None
+
+    def clean(self):
+        errors = {}
+        if self.data_saida and self.data_retorno and self.data_retorno < self.data_saida:
+            errors["data_retorno"] = "Data de retorno não pode ser anterior à data de saída."
+        if errors:
+            raise DjangoValidationError(errors)
+
+    def _enforce_domain_seal(self, update_fields=None):
+        if not self.pk:
+            return
+
+        processo = self._processo_referencia()
+        if not _is_processo_selado(processo):
+            return
+
+        original = type(self).objects.get(pk=self.pk)
+        campos_sensiveis = self._CAMPOS_SENSIVEIS_POS_PAGAMENTO
+        campos_avaliados = set(update_fields) & campos_sensiveis if update_fields is not None else campos_sensiveis
+        alterados = [campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)]
+
+        if alterados:
+            raise DjangoValidationError(
+                {
+                    "status": (
+                        "Mutação direta bloqueada: reembolso vinculado a processo em estágio pós-pagamento. "
+                        "Use fluxo de contingência aprovado para ajustes."
+                    )
+                }
+            )
+
+    def save(self, *args, **kwargs):
+        self._enforce_domain_seal(update_fields=kwargs.get("update_fields"))
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        self._enforce_domain_seal()
+        return super().delete(*args, **kwargs)
 
     def __str__(self):
         return f"Reembolso de Combustível: {self.numero_sequencial} - {self.beneficiario}"
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(data_retorno__gte=models.F("data_saida")),
+                name="reembolso_data_retorno_gte_saida_chk",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(valor_total__gte=0),
+                name="reembolso_valor_total_nao_negativo_chk",
+            ),
+        ]
 
 
 class DocumentoReembolso(DocumentoBase):
@@ -286,9 +452,55 @@ class Jeton(models.Model):
     valor_total = models.DecimalField("Valor Total (R$)", max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
     status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
     history = HistoricalRecords()
+    _CAMPOS_SENSIVEIS_POS_PAGAMENTO = {
+        "processo_id",
+        "numero_sequencial",
+        "beneficiario_id",
+        "reuniao",
+        "data_evento",
+        "local_evento",
+        "valor_total",
+    }
+    objects = SealedMutationQuerySet.as_manager()
+
+    def _enforce_domain_seal(self, update_fields=None):
+        if not self.pk or not _is_processo_selado(self.processo):
+            return
+
+        original = type(self).objects.get(pk=self.pk)
+        campos_sensiveis = self._CAMPOS_SENSIVEIS_POS_PAGAMENTO
+        campos_avaliados = set(update_fields) & campos_sensiveis if update_fields is not None else campos_sensiveis
+        alterados = [campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)]
+
+        if alterados:
+            raise DjangoValidationError(
+                {
+                    "status": (
+                        "Mutação direta bloqueada: jeton vinculado a processo em estágio pós-pagamento. "
+                        "Use fluxo de contingência aprovado para ajustes."
+                    )
+                }
+            )
+
+    def save(self, *args, **kwargs):
+        self._enforce_domain_seal(update_fields=kwargs.get("update_fields"))
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        self._enforce_domain_seal()
+        return super().delete(*args, **kwargs)
 
     def __str__(self):
         return f"Jeton {self.reuniao} - {self.beneficiario}"
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(valor_total__gte=0),
+                name="jeton_valor_total_nao_negativo_chk",
+            ),
+        ]
 
 
 class DocumentoJeton(DocumentoBase):
@@ -315,9 +527,55 @@ class AuxilioRepresentacao(models.Model):
     valor_total = models.DecimalField("Valor Total (R$)", max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
     status = models.ForeignKey('StatusChoicesVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
     history = HistoricalRecords()
+    _CAMPOS_SENSIVEIS_POS_PAGAMENTO = {
+        "processo_id",
+        "numero_sequencial",
+        "beneficiario_id",
+        "objetivo",
+        "data_evento",
+        "local_evento",
+        "valor_total",
+    }
+    objects = SealedMutationQuerySet.as_manager()
+
+    def _enforce_domain_seal(self, update_fields=None):
+        if not self.pk or not _is_processo_selado(self.processo):
+            return
+
+        original = type(self).objects.get(pk=self.pk)
+        campos_sensiveis = self._CAMPOS_SENSIVEIS_POS_PAGAMENTO
+        campos_avaliados = set(update_fields) & campos_sensiveis if update_fields is not None else campos_sensiveis
+        alterados = [campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)]
+
+        if alterados:
+            raise DjangoValidationError(
+                {
+                    "status": (
+                        "Mutação direta bloqueada: auxílio vinculado a processo em estágio pós-pagamento. "
+                        "Use fluxo de contingência aprovado para ajustes."
+                    )
+                }
+            )
+
+    def save(self, *args, **kwargs):
+        self._enforce_domain_seal(update_fields=kwargs.get("update_fields"))
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        self._enforce_domain_seal()
+        return super().delete(*args, **kwargs)
 
     def __str__(self):
         return f"Aux. Representação {self.numero_sequencial} - {self.beneficiario}"
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(valor_total__gte=0),
+                name="auxilio_valor_total_nao_negativo_chk",
+            ),
+        ]
 
 
 class DocumentoAuxilio(DocumentoBase):

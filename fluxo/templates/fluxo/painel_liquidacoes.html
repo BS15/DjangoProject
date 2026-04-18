@@ -103,10 +103,12 @@
                             <form method="POST" action="{% url 'alternar_ateste_nota' pk=nf.id %}" class="m-0">
                                 {% csrf_token %}
                                 {% if nf.atestada %}
+                                    <input type="hidden" name="estado_alvo" value="false">
                                     <button type="submit" class="btn btn-sm btn-danger shadow-sm" onclick="return confirm('Deseja REVOGAR o ateste desta Nota Fiscal?');" title="Desfazer Ateste">
                                         <i class="bi bi-x-circle"></i> Revogar
                                     </button>
                                 {% else %}
+                                    <input type="hidden" name="estado_alvo" value="true">
                                     <button type="submit" class="btn btn-sm btn-success fw-bold shadow-sm" onclick="return confirm('Declaro para os devidos fins que os serviços/materiais desta nota foram recebidos e conferidos. Deseja confirmar o ateste?');" title="Atestar Nota Fiscal">
                                         <i class="bi bi-check-lg"></i> Atestar
                                     </button>

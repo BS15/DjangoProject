@@ -257,6 +257,33 @@ class Migration(migrations.Migration):
                 "permissions": [
                     ("acesso_backoffice", "Acesso ao backoffice de suprimentos"),
                 ],
+                "constraints": [
+                    models.CheckConstraint(
+                        condition=models.Q(fim_periodo__gte=models.F("inicio_periodo")),
+                        name="suprimento_periodo_valido_chk",
+                    ),
+                    models.CheckConstraint(
+                        condition=(
+                            models.Q(data_devolucao_saldo__isnull=True)
+                            | models.Q(data_recibo__isnull=True)
+                            | models.Q(data_devolucao_saldo__gte=models.F("data_recibo"))
+                        ),
+                        name="suprimento_devolucao_gte_recibo_chk",
+                    ),
+                    models.CheckConstraint(
+                        condition=models.Q(valor_liquido__gte=0),
+                        name="suprimento_valor_liquido_nao_negativo_chk",
+                    ),
+                    models.CheckConstraint(
+                        condition=models.Q(taxa_saque__gte=0),
+                        name="suprimento_taxa_saque_nao_negativa_chk",
+                    ),
+                    models.CheckConstraint(
+                        condition=models.Q(valor_devolvido__isnull=True)
+                        | models.Q(valor_devolvido__gte=0),
+                        name="suprimento_valor_devolvido_nao_negativo_chk",
+                    ),
+                ],
             },
         ),
         migrations.CreateModel(
@@ -534,5 +561,13 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
+            options={
+                "constraints": [
+                    models.CheckConstraint(
+                        condition=models.Q(valor__gte=0),
+                        name="despesa_valor_nao_negativo_chk",
+                    ),
+                ],
+            },
         ),
     ]

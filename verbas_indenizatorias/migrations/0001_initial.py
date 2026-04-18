@@ -163,6 +163,14 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
+            options={
+                "constraints": [
+                    models.CheckConstraint(
+                        condition=models.Q(valor_total__gte=0),
+                        name="auxilio_valor_total_nao_negativo_chk",
+                    ),
+                ],
+            },
         ),
         migrations.CreateModel(
             name="Diaria",
@@ -302,6 +310,23 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
+            options={
+                "constraints": [
+                    models.CheckConstraint(
+                        condition=models.Q(data_retorno__gte=models.F("data_saida")),
+                        name="diaria_data_retorno_gte_saida_chk",
+                    ),
+                    models.CheckConstraint(
+                        condition=models.Q(quantidade_diarias__gte=0),
+                        name="diaria_qtd_nao_negativa_chk",
+                    ),
+                    models.CheckConstraint(
+                        condition=models.Q(valor_total__isnull=True)
+                        | models.Q(valor_total__gte=0),
+                        name="diaria_valor_total_nao_negativo_chk",
+                    ),
+                ],
+            },
         ),
         migrations.CreateModel(
             name="DocumentoAuxilio",
@@ -612,6 +637,14 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
+            options={
+                "constraints": [
+                    models.CheckConstraint(
+                        condition=models.Q(valor_total__gte=0),
+                        name="jeton_valor_total_nao_negativo_chk",
+                    ),
+                ],
+            },
         ),
         migrations.CreateModel(
             name="HistoricalDocumentoJeton",
@@ -832,6 +865,18 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
+            options={
+                "constraints": [
+                    models.CheckConstraint(
+                        condition=models.Q(data_retorno__gte=models.F("data_saida")),
+                        name="reembolso_data_retorno_gte_saida_chk",
+                    ),
+                    models.CheckConstraint(
+                        condition=models.Q(valor_total__gte=0),
+                        name="reembolso_valor_total_nao_negativo_chk",
+                    ),
+                ],
+            },
         ),
         migrations.CreateModel(
             name="HistoricalDocumentoReembolso",

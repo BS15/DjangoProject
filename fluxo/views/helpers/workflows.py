@@ -23,14 +23,15 @@ def _registrar_recusa(request, processo, form, status_devolucao):
     transação para preservar consistência no fluxo administrativo.
     """
     with transaction.atomic():
+        processo_lock = Processo.objects.select_for_update().get(pk=processo.pk)
         pendencia = form.save(commit=False)
-        pendencia.processo = processo
+        pendencia.processo = processo_lock
         status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
             status_choice__iexact="A RESOLVER", defaults={"status_choice": "A RESOLVER"}
         )
         pendencia.status = status_pendencia
         pendencia.save()
-        processo.avancar_status(status_devolucao, usuario=request.user)
+        processo_lock.avancar_status(status_devolucao, usuario=request.user)
 
 
 def _salvar_documentos_sem_exclusao(doc_formset, processo):
@@ -222,14 +223,16 @@ def _processo_fila_detalhe_view(
 
                 if doc_formset.is_valid() and pendencia_formset.is_valid():
                     with transaction.atomic():
-                        _salvar_documentos_sem_exclusao(doc_formset, processo)
+                        processo_lock = Processo.objects.select_for_update().get(pk=processo.pk)
+                        _salvar_documentos_sem_exclusao(doc_formset, processo_lock)
                         if lock_documents:
-                            processo.documentos.all().update(imutavel=True)
+                            processo_lock.documentos.all().update(imutavel=True)
+                        pendencia_formset.instance = processo_lock
                         pendencia_formset.save()
 
                         if action == approve_action:
-                            processo.avancar_status(approve_status, usuario=request.user)
-                            messages.success(request, approve_message.format(processo_id=processo.id))
+                            processo_lock.avancar_status(approve_status, usuario=request.user)
+                            messages.success(request, approve_message.format(processo_id=processo_lock.id))
                             if next_pk:
                                 return redirect(current_view, pk=next_pk)
                             request.session.pop(queue_key, None)
@@ -238,13 +241,15 @@ def _processo_fila_detalhe_view(
                             request.session.modified = True
                             return redirect(fallback_view, **fallback_kwargs)
 
-                        messages.success(request, save_message.format(processo_id=processo.id))
+                        messages.success(request, save_message.format(processo_id=processo_lock.id))
                         return redirect(current_view, pk=pk)
 
                 messages.error(request, "Verifique os erros no formulário abaixo.")
             else:
-                processo.avancar_status(approve_status, usuario=request.user)
-                messages.success(request, approve_message.format(processo_id=processo.id))
+                with transaction.atomic():
+                    processo_lock = Processo.objects.select_for_update().get(pk=processo.pk)
+                    processo_lock.avancar_status(approve_status, usuario=request.user)
+                messages.success(request, approve_message.format(processo_id=processo_lock.id))
                 if next_pk:
                     return redirect(current_view, pk=next_pk)
                 request.session.pop(queue_key, None)
@@ -311,9 +316,9 @@ def _aprovar_processo_view(request, pk, *, permission, new_status, success_messa
         if not request.user.has_perm(permission):
             raise PermissionDenied
 
-        processo = get_object_or_404(Processo, id=pk)
-
-        processo.avancar_status(new_status, usuario=request.user)
+        with transaction.atomic():
+            processo = get_object_or_404(Processo.objects.select_for_update(), id=pk)
+            processo.avancar_status(new_status, usuario=request.user)
 
         messages.success(request, success_message.format(processo_id=processo.id))
 
