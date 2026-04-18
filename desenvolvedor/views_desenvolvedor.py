@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import permission_required
 from django.core.files.base import ContentFile
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.csrf import csrf_exempt
 
 from credores.imports import (
     download_template_csv_credores,
@@ -273,6 +274,7 @@ def _create_fake_diarias(n, credores_pf, processos):
     return created
 
 
+@csrf_exempt
 @permission_required("fluxo.acesso_backoffice", raise_exception=True)
 def gerar_dados_fake_view(request):
     """Gera dados fictícios de processos, fiscais, retenções e diárias via formulário."""
