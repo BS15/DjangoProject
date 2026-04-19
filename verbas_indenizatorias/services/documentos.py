@@ -11,33 +11,22 @@ from django.core.exceptions import ValidationError
 from pagamentos.models import AssinaturaAutentique
 from verbas_indenizatorias.pdf_generators import VERBAS_DOCUMENT_REGISTRY
 from verbas_indenizatorias.models import (
-    DocumentoComprovacao, DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio,
-    PrestacaoContasDiaria,
+    DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio,
+)
+from verbas_indenizatorias.services.prestacao import (
+    obter_ou_criar_prestacao as _obter_ou_criar_prestacao,
+    registrar_comprovante as _registrar_comprovante,
 )
 
 
 def obter_ou_criar_prestacao(diaria):
     """Obtém prestação de contas da diária, criando em estado aberto quando ausente."""
-    prestacao, _ = PrestacaoContasDiaria.objects.get_or_create(
-        diaria=diaria,
-        defaults={"status": PrestacaoContasDiaria.STATUS_ABERTA},
-    )
-    return prestacao
+    return _obter_ou_criar_prestacao(diaria)
 
 
 def registrar_comprovante_prestacao(diaria, arquivo, tipo_id):
     """Registra comprovante na prestação de contas da diária, bloqueando prestação encerrada."""
-    prestacao = obter_ou_criar_prestacao(diaria)
-    if prestacao.status == PrestacaoContasDiaria.STATUS_ENCERRADA:
-        raise ValidationError("A prestação de contas desta diária já foi encerrada.")
-
-    proxima_ordem = obter_proxima_ordem_documento(prestacao.documentos)
-    return DocumentoComprovacao.objects.create(
-        prestacao=prestacao,
-        arquivo=arquivo,
-        tipo_id=tipo_id,
-        ordem=proxima_ordem,
-    )
+    return _registrar_comprovante(diaria, arquivo, tipo_id)
 
 def gerar_e_anexar_scd_diaria(diaria, criador):
     """Gera SCD da diária, anexa DocumentoDiaria e cria rascunho de assinatura."""

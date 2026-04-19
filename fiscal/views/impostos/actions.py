@@ -9,7 +9,10 @@ from django.views.decorators.http import require_POST
 
 from credores.models import Credor
 from fiscal.models import RetencaoImposto
-from fiscal.services.impostos import anexar_guia_comprovante_relatorio_em_processos
+from fiscal.services.impostos import (
+    anexar_guia_comprovante_relatorio_em_processos,
+    criar_documentos_pagamento_impostos,
+)
 from pagamentos.domain_models import Processo, StatusChoicesProcesso, TiposDePagamento
 import logging
 
@@ -138,6 +141,66 @@ def anexar_documentos_retencoes_action(request: HttpRequest) -> HttpResponse:
     return redirect("painel_impostos_view")
 
 
-__all__ = ["agrupar_retencoes_action", "anexar_documentos_retencoes_action"]
+
+
+@require_POST
+@permission_required("fiscal.acesso_backoffice", raise_exception=True)
+def registrar_documentos_pagamento_action(request: HttpRequest) -> HttpResponse:
+    """Cria DocumentoPagamentoImposto para cada retenção selecionada (spoke de documentação)."""
+    selecionados = request.POST.getlist("retencao_ids")
+    relatorio_arquivo = request.FILES.get("relatorio_retencoes")
+    guia_arquivo = request.FILES.get("guia_recolhimento")
+    comprovante_arquivo = request.FILES.get("comprovante_pagamento")
+    competencia_raw = (request.POST.get("competencia") or "").strip()
+
+    if not selecionados:
+        messages.warning(request, "Selecione ao menos uma retenção para registrar a documentação.")
+        return redirect("painel_impostos_view")
+
+    if not relatorio_arquivo or not guia_arquivo or not comprovante_arquivo:
+        messages.error(request, "É obrigatório anexar os três documentos: relatório, guia e comprovante.")
+        return redirect("painel_impostos_view")
+
+    try:
+        from datetime import date
+        parts = competencia_raw.split("-")
+        if len(parts) != 2:
+            raise ValueError("formato inválido")
+        competencia = date(int(parts[0]), int(parts[1]), 1)
+    except (ValueError, IndexError):
+        messages.error(request, "Informe a competência no formato YYYY-MM.")
+        return redirect("painel_impostos_view")
+
+    retencoes = list(
+        RetencaoImposto.objects.select_related("codigo")
+        .filter(id__in=selecionados)
+    )
+    if not retencoes:
+        messages.warning(request, "Nenhuma retenção encontrada para os IDs informados.")
+        return redirect("painel_impostos_view")
+
+    criados = criar_documentos_pagamento_impostos(
+        retencoes=retencoes,
+        relatorio_bytes=relatorio_arquivo.read(),
+        relatorio_nome=relatorio_arquivo.name,
+        guia_bytes=guia_arquivo.read(),
+        guia_nome=guia_arquivo.name,
+        comprovante_bytes=comprovante_arquivo.read(),
+        comprovante_nome=comprovante_arquivo.name,
+        competencia=competencia,
+    )
+    logger.info(
+        "mutation=registrar_documentos_pagamento criados=%s user_id=%s",
+        len(criados), request.user.pk,
+    )
+    messages.success(
+        request,
+        f"Documentação registrada para {len(criados)} retenção(ões). "
+        f"{len(retencoes) - len(criados)} já possuíam documentação e foram ignoradas.",
+    )
+    return redirect("painel_impostos_view")
+
+
+__all__ = ["agrupar_retencoes_action", "anexar_documentos_retencoes_action", "registrar_documentos_pagamento_action"]
 
 

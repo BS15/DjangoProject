@@ -14,6 +14,9 @@
     </div>
     <div>
         <a href="{% url 'diarias_list' %}" class="btn btn-outline-secondary">Voltar</a>
+        {% if prestacao %}
+        <a href="{% url 'revisar_prestacao' prestacao.id %}" class="btn btn-outline-primary">Revisar Prestação</a>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
@@ -43,29 +46,9 @@
         </span>
     </div>
     <div class="card-body">
-        {% if not prestacao or prestacao.status != 'ENCERRADA' %}
-        <form method="post" action="{% url 'registrar_comprovante_action' diaria.id %}" enctype="multipart/form-data" class="mb-4 bg-light p-3 rounded">
-            {% csrf_token %}
-            <div class="row align-items-end">
-                <div class="col-md-8">
-                    <label class="form-label">Anexar comprovante</label>
-                    <input type="file" name="arquivo" class="form-control" required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Tipo de comprovante</label>
-                    <select name="tipo_comprovante" class="form-select" required>
-                        <option value="">Selecione...</option>
-                        {% for tipo in tipos_documento %}
-                        <option value="{{ tipo.id }}">{{ tipo.tipo_de_documento }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-            <div class="mt-3 text-end">
-                <button type="submit" class="btn btn-info text-white"><i class="bi bi-upload"></i> Enviar</button>
-            </div>
-        </form>
-        {% endif %}
+        <p class="text-muted">
+            Upload e encerramento são feitos no painel do beneficiário. Este painel exibe os comprovantes para auditoria operacional.
+        </p>
 
         <ul class="list-group list-group-flush">
             {% for doc in comprovantes %}
@@ -82,16 +65,6 @@
             <li class="list-group-item text-center text-muted">Nenhum comprovante anexado.</li>
             {% endfor %}
         </ul>
-
-        {% if prestacao and prestacao.status != 'ENCERRADA' %}
-        <form method="post" action="{% url 'encerrar_prestacao_action' diaria.id %}" class="mt-3 text-end"
-              onsubmit="return confirm('Deseja encerrar a prestação de contas desta diária?');">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-outline-danger">
-                <i class="bi bi-lock"></i> Encerrar Prestação
-            </button>
-        </form>
-        {% endif %}
     </div>
 </div>
 

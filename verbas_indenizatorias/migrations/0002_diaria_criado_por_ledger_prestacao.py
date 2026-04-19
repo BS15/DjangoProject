@@ -38,6 +38,10 @@ class Migration(migrations.Migration):
                         "operar_prestacao_contas",
                         "Pode operar prestação de contas em nome de terceiros",
                     ),
+                    (
+                        "analisar_prestacao_contas",
+                        "Pode analisar e revisar prestações de contas",
+                    ),
                 ]
             },
         ),

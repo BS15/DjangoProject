@@ -8,8 +8,8 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from django.core.exceptions import ValidationError
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.dateparse import parse_date
-from django.utils import timezone
 from decimal import Decimal, InvalidOperation
 
 from verbas_indenizatorias.forms import DiariaForm
@@ -17,13 +17,18 @@ from verbas_indenizatorias.models import ApostilaDiaria, DevolucaoDiaria, Diaria
 from verbas_indenizatorias.services.documentos import (
     gerar_e_anexar_pcd_diaria,
     gerar_e_anexar_scd_diaria,
-    obter_ou_criar_prestacao,
-    registrar_comprovante_prestacao,
 )
+from verbas_indenizatorias.services.prestacao import aceitar_prestacao, encerrar_prestacao, obter_ou_criar_prestacao, registrar_comprovante
 from ..shared.documents import _validar_upload_documento
 from .access import _pode_acessar_prestacao
 from commons.shared.integracoes.autentique import enviar_documento_para_assinatura
 
+
+def _redirect_com_next(request, fallback_name, **kwargs):
+    next_url = request.POST.get('next') or request.GET.get('next')
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        return redirect(next_url)
+    return redirect(fallback_name, **kwargs)
 
 
 def _preparar_nova_diaria(diaria):
@@ -95,7 +100,7 @@ def registrar_comprovante_action(request, pk):
             messages.error(request, erro)
         else:
             try:
-                registrar_comprovante_prestacao(diaria, arquivo, tipo_id)
+                registrar_comprovante(diaria, arquivo, tipo_id)
                 logger.info("mutation=registrar_comprovante_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
 
                 credor = diaria.beneficiario
@@ -109,7 +114,7 @@ def registrar_comprovante_action(request, pk):
             except ValidationError as exc:
                 messages.error(request, ' '.join(exc.messages))
 
-    return redirect('gerenciar_diaria', pk=diaria.id)
+    return _redirect_com_next(request, 'gerenciar_prestacao', pk=diaria.id)
 
 
 @require_POST
@@ -122,16 +127,42 @@ def encerrar_prestacao_action(request, pk):
         prestacao = obter_ou_criar_prestacao(diaria)
         if prestacao.status == PrestacaoContasDiaria.STATUS_ENCERRADA:
             messages.info(request, 'A prestação de contas já está encerrada.')
-            return redirect('gerenciar_diaria', pk=diaria.id)
+            return _redirect_com_next(request, 'gerenciar_prestacao', pk=diaria.id)
 
-        prestacao.status = PrestacaoContasDiaria.STATUS_ENCERRADA
-        prestacao.encerrado_em = timezone.now()
-        prestacao.encerrado_por = request.user
-        prestacao.save(update_fields=['status', 'encerrado_em', 'encerrado_por'])
+        encerrar_prestacao(prestacao, request.user)
         logger.info("mutation=encerrar_prestacao_diaria diaria_id=%s prestacao_id=%s user_id=%s", diaria.id, prestacao.id, request.user.pk)
 
     messages.success(request, 'Prestação de contas encerrada com sucesso.')
-    return redirect('gerenciar_diaria', pk=diaria.id)
+    return _redirect_com_next(request, 'gerenciar_prestacao', pk=diaria.id)
+
+
+@require_POST
+@permission_required('verbas_indenizatorias.analisar_prestacao_contas', raise_exception=True)
+def aceitar_prestacao_action(request, pk):
+    with transaction.atomic():
+        prestacao = get_object_or_404(
+            PrestacaoContasDiaria.objects.select_for_update().select_related('diaria__processo'),
+            pk=pk,
+        )
+        diaria = prestacao.diaria
+        if not diaria.processo:
+            messages.error(request, 'A diária precisa estar vinculada a um processo para aceitar a prestação.')
+            return redirect('revisar_prestacao', pk=prestacao.id)
+
+        try:
+            aceitar_prestacao(prestacao, request.user, diaria.processo)
+            logger.info(
+                "mutation=aceitar_prestacao_diaria diaria_id=%s prestacao_id=%s processo_id=%s user_id=%s",
+                diaria.id,
+                prestacao.id,
+                diaria.processo.id,
+                request.user.pk,
+            )
+            messages.success(request, 'Prestação aceita e comprovantes anexados ao processo com sucesso.')
+        except ValidationError as exc:
+            messages.error(request, ' '.join(exc.messages))
+
+    return redirect('revisar_prestacao', pk=pk)
 
 
 @require_POST

@@ -96,6 +96,7 @@ class TiposDeVerbasIndenizatorias(models.Model):
             ("pode_criar_diarias", "Pode criar diárias"),
             ("pode_gerenciar_diarias", "Pode gerenciar diárias"),
             ("operar_prestacao_contas", "Pode operar prestação de contas em nome de terceiros"),
+            ("analisar_prestacao_contas", "Pode analisar e revisar prestações de contas"),
         ]
 
 
