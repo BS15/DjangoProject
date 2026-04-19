@@ -61,11 +61,11 @@ Campos usados em cada entrada:
 | Permissão | `fiscal.acesso_backoffice` |
 | Método | `POST` |
 | Entrada | `competencia` (formatos `MM/AAAA` ou `AAAA-MM`) |
-| Validações | normaliza competência e usa mês/ano atual em fallback |
+| Validações | exige competência no formato AAAA-MM; mês deve estar em 1-12; retorna HTTP 400 com mensagem descritiva quando ausente ou inválida |
 | Worker | `fiscal.services.gerar_lotes_reinf` |
 | Efeitos | gera XMLs de lotes EFD-Reinf e devolve zip em resposta HTTP |
 | Redirect | não aplica (retorna arquivo) |
-| Feedback | erro funcional via `HttpResponse` 404 quando não há lotes |
+| Feedback | HTTP 400 com mensagem de erro quando competência inválida; HTTP 404 quando não há lotes elegíveis para a competência informada |
 
 ### transmitir_lote_reinf_action
 
@@ -261,7 +261,91 @@ Campos usados em cada entrada:
 | Erros/retorno | pode lançar `ValueError` para competência sem dados |
 | Atomicidade | não aplica |
 
+### Helpers Fiscais de Nota Fiscal (impostos)
+
+### atualizar_retencoes_nota
+
+| Campo | Valor |
+|---|---|
+| Worker | `atualizar_retencoes_nota` |
+| Arquivo | `fiscal/views/impostos/helpers.py` |
+| Assinatura | `(nota, retencoes_data) -> None` |
+| Pré-condições | nota fiscal e lista de retenções válida |
+| Mutações | deleta retenções existentes da nota e recria com novos dados; salva nota com `update_fields` |
+| Auditoria | histórico de retenções e da nota fiscal |
+| Erros/retorno | propaga `ValidationError` e `DatabaseError` |
+| Atomicidade | `transaction.atomic` |
+
+### criar_documento_fiscal
+
+| Campo | Valor |
+|---|---|
+| Worker | `criar_documento_fiscal` |
+| Arquivo | `fiscal/views/impostos/helpers.py` |
+| Assinatura | `(processo, dados) -> DocumentoFiscal` |
+| Pré-condições | processo existente e dados documentais válidos |
+| Mutações | cria `DocumentoFiscal` vinculado ao processo fiscal |
+| Auditoria | histórico de criação do `DocumentoFiscal` |
+| Erros/retorno | propaga `ValidationError` e `DatabaseError` |
+| Atomicidade | `transaction.atomic` |
+
 ## Dicionário de Workers/Helpers do Fluxo
+
+### Helpers de Cadastro de Processos (pre_payment)
+
+### salvar_retencoes_nota_fiscal
+
+| Campo | Valor |
+|---|---|
+| Worker | `salvar_retencoes_nota_fiscal` |
+| Arquivo | `fluxo/views/pre_payment/cadastro/helpers.py` |
+| Assinatura | `(nota, retencoes_data, processo) -> None` |
+| Pré-condições | nota fiscal e processo existentes; `retencoes_data` lista válida |
+| Mutações | deleta retenções antigas e recria a partir de `retencoes_data`; salva nota com `update_fields` |
+| Auditoria | histórico do modelo nota e das retenções vinculadas |
+| Erros/retorno | propaga `ValidationError` e `DatabaseError` |
+| Atomicidade | `transaction.atomic` |
+
+### criar_nota_fiscal
+
+| Campo | Valor |
+|---|---|
+| Worker | `criar_nota_fiscal` |
+| Arquivo | `fluxo/views/pre_payment/cadastro/helpers.py` |
+| Assinatura | `(processo, dados) -> DocumentoFiscal` |
+| Pré-condições | processo existente e dados de nota validados |
+| Mutações | cria `DocumentoFiscal` vinculado ao processo |
+| Auditoria | histórico de criação do `DocumentoFiscal` |
+| Erros/retorno | propaga `ValidationError` e `DatabaseError` |
+| Atomicidade | `transaction.atomic` |
+
+### sincronizar_pendencia_nota
+
+| Campo | Valor |
+|---|---|
+| Worker | `sincronizar_pendencia_nota` |
+| Arquivo | `fluxo/views/pre_payment/cadastro/helpers.py` |
+| Assinatura | `(processo, tipo_pendencia, nota) -> None` |
+| Pré-condições | processo existente e `tipo_pendencia` definido |
+| Mutações | cria ou remove pendências conforme estado da nota |
+| Auditoria | pendências vinculadas ao processo com rastreio temporal |
+| Erros/retorno | propaga `DatabaseError` |
+| Atomicidade | `transaction.atomic` (parte do contexto da action chamadora) |
+
+### Helpers de Comprovantes de Pagamento
+
+### processar_e_salvar_comprovantes
+
+| Campo | Valor |
+|---|---|
+| Worker | `processar_e_salvar_comprovantes` |
+| Arquivo | `fluxo/views/payment/comprovantes/helpers.py` |
+| Assinatura | `(processo, paginas_processadas, usuario) -> None` |
+| Pré-condições | processo elegível para registro de comprovante e páginas geradas |
+| Mutações | cria `ComprovanteDePagamento` e `DocumentoProcesso`; chama `processo.avancar_status`; salva retenções com `update_fields`; remove arquivo temporário de storage |
+| Auditoria | transição de status rastreada em `avancar_status(usuario=...)` |
+| Erros/retorno | propaga `ValidationError`; `storage.delete` falha com log |
+| Atomicidade | `transaction.atomic` |
 
 ### _salvar_processo_completo
 
@@ -367,6 +451,34 @@ Campos usados em cada entrada:
 | Erros/retorno | retorna `(False, mensagem)` quando houver inconsistência |
 | Atomicidade | `transaction.atomic` |
 
+### Helpers de Contingências
+
+### processar_aprovacao_contingencia
+
+| Campo | Valor |
+|---|---|
+| Worker | `processar_aprovacao_contingencia` |
+| Arquivo | `fluxo/views/helpers.py` |
+| Assinatura | `(contingencia, usuario, parecer) -> tuple[bool, str|None]` |
+| Pré-condições | contingência em status `PENDENTE_SUPERVISOR`, `PENDENTE_ORDENADOR` ou `PENDENTE_CONSELHO` |
+| Mutações | atribui campos de aprovação por etapa; chama `aplicar_aprovacao_contingencia` quando etapa final; chama `sincronizar_flag_contingencia_processo` |
+| Auditoria | campos de aprovador e data rastreados; histórico do processo |
+| Erros/retorno | retorna `(False, mensagem)` para etapa inválida ou quando `aplicar_aprovacao` falha; retorna `(True, None)` no sucesso |
+| Atomicidade | `transaction.atomic` |
+
+### processar_revisao_contadora_contingencia
+
+| Campo | Valor |
+|---|---|
+| Worker | `processar_revisao_contadora_contingencia` |
+| Arquivo | `fluxo/views/helpers.py` |
+| Assinatura | `(contingencia, usuario, parecer) -> tuple[bool, str|None]` |
+| Pré-condições | contingência em status `PENDENTE_CONTADOR`; parecer não vazio |
+| Mutações | atribui `parecer_contadora`, `revisado_por_contadora` e `data_revisao_contadora`; chama `save(update_fields)`; chama `aplicar_aprovacao_contingencia` |
+| Auditoria | campos de revisão rastreados; histórico do processo |
+| Erros/retorno | retorna `(False, "parecer obrigatório")` se parecer vazio; retorna `(False, msg)` se `aplicar_aprovacao` falha; retorna `(True, None)` no sucesso |
+| Atomicidade | `transaction.atomic` |
+
 ## Dicionário de Workers/Helpers de Verbas Indenizatórias
 
 ### criar_processo_e_vincular_verbas
@@ -428,7 +540,7 @@ Campos usados em cada entrada:
 | Campo | Valor |
 |---|---|
 | Worker | `_persistir_suprimento_com_processo` |
-| Arquivo | `suprimentos/views/cadastro/actions.py` |
+| Arquivo | `suprimentos/views/cadastro/helpers.py` |
 | Assinatura | `(form_suprimento) -> SuprimentoDeFundos` |
 | Pré-condições | formulário válido |
 | Mutações | cria suprimento em status aberto e dispara criação do processo vinculado |

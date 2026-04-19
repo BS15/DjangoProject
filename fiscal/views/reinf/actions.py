@@ -1,7 +1,5 @@
 """Views de acoes para EFD-Reinf."""
 
-from datetime import date
-
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.http import HttpRequest, HttpResponse
@@ -18,24 +16,19 @@ logger = logging.getLogger(__name__)
 
 
 def _parse_competencia_post(request: HttpRequest) -> tuple[int, int]:
-    competencia = (request.POST.get("competencia") or "").strip()
-    if competencia:
-        try:
-            if "/" in competencia:
-                mes_str, ano_str = competencia.split("/", 1)
-                mes = int(mes_str)
-                ano = int(ano_str)
-            elif "-" in competencia:
-                ano_str, mes_str = competencia.split("-", 1)
-                mes = int(mes_str)
-                ano = int(ano_str)
-            else:
-                raise ValueError
-            if 1 <= mes <= 12:
-                return mes, ano
-        except (ValueError, TypeError):
-            raise ValidationError("Competência inválida. Use MM/AAAA ou AAAA-MM.")
-    raise ValidationError("Competência é obrigatória.")
+    competencia = request.POST.get("competencia")
+    if not competencia or not competencia.strip():
+        raise ValidationError("Competência obrigatória. Informe no formato AAAA-MM.")
+    competencia = competencia.strip()
+    try:
+        ano_str, mes_str = competencia.split("-", 1)
+        mes = int(mes_str)
+        ano = int(ano_str)
+    except (ValueError, TypeError):
+        raise ValidationError("Formato de competência inválido. Use AAAA-MM (ex: 2024-03).")
+    if not 1 <= mes <= 12:
+        raise ValidationError("Mês inválido na competência. Use valores de 01 a 12.")
+    return mes, ano
 
 
 @require_POST

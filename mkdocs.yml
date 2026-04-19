@@ -70,23 +70,9 @@ nav:
       - Trilha de Auditoria: governanca/trilha_auditoria.md
       - Matriz de Permissões: governanca/matriz_permissoes.md
   - Guia do Desenvolvedor:
-      - Setup de Ambiente: desenvolvedor/setup_ambiente.md
+      - Setup do Ambiente: desenvolvedor/setup_ambiente.md
+      - Padrões de Código: desenvolvedor/padroes_codigo.md
       - Dicionários Operacionais: desenvolvedor/dicionarios_operacionais.md
       - Funcionalidades Transversais: desenvolvedor/funcionalidades_transversais.md
-      - Padrões de Código: desenvolvedor/padroes_codigo.md
-    - Interface Hub-and-Spoke: arquitetura/hub_spoke.md
-    - Camada de Services: arquitetura/camada_services.md
-  - Manual de Módulos (Funcional):
-    - Fluxo Core: modulos/fluxo_core.md
-    - Verbas Indenizatórias: modulos/verbas_indenizatorias.md
-    - Suprimento de Fundos: modulos/suprimento_fundos.md
-    - Módulo Fiscal: modulos/modulo_fiscal.md
-  - Segurança e Governança:
-    - Matriz de Permissões (RBAC): governanca/matriz_permissoes.md
-    - Trilha de Auditoria: governanca/trilha_auditoria.md
-  - Guia do Desenvolvedor:
-    - Setup do Ambiente: desenvolvedor/setup_ambiente.md
-    - Padrões de Código: desenvolvedor/padroes_codigo.md
-    - Dicionários Operacionais: desenvolvedor/dicionarios_operacionais.md
-    - Guia de Instalação: instalacao.md
-    - Referência de API: api.md
+      - Guia de Instalação: instalacao.md
+      - Referência de API: api.md
