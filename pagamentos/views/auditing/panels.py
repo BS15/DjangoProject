@@ -12,14 +12,14 @@ from ..helpers import _aplicar_filtros_historico
 
 
 def _get_history_model_configs():
-    """Lista dinamicamente todos os modelos com django-simple-history habilitado."""
+    """Lista dinamicamente todos os modelos com django-simple-history."""
     model_configs = []
     for model in apps.get_models():
         history_manager = getattr(model, "history", None)
         history_model = getattr(history_manager, "model", None)
         if not history_model:
             continue
-        model_configs.append((history_model, model._meta.verbose_name.title()))
+        model_configs.append((history_model, str(model._meta.verbose_name)))
     model_configs.sort(key=lambda item: item[1].lower())
     return model_configs
 
@@ -88,7 +88,7 @@ def auditoria_view(request):
             all_records.append(
                 {
                     "modelo": label,
-                    "object_id": getattr(record, "id", None),
+                    "object_id": record.id,
                     "history_date": record.history_date,
                     "history_user": record.history_user,
                     "history_type": record.history_type,
