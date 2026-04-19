@@ -14,15 +14,15 @@ from ..helpers import _aplicar_filtros_historico
 
 @lru_cache(maxsize=1)
 def _get_history_model_configs():
-    """Retorna lista ordenada de tuplas (history_model, verbose_name) com histórico habilitado."""
+    """Retorna lista ordenada de tuplas (history_model_class, verbose_name) com histórico habilitado."""
     model_configs = []
     for model in apps.get_models():
         history_manager = getattr(model, "history", None)
         history_model = getattr(history_manager, "model", None)
         if not history_model:
             continue
-        model_configs.append((history_model, str(model._meta.verbose_name)))
-    model_configs.sort(key=lambda item: item[1].lower())
+        model_configs.append((history_model, model._meta.verbose_name))
+    model_configs.sort(key=lambda item: str(item[1]).lower())
     return model_configs
 
 
@@ -32,7 +32,7 @@ def auditoria_view(request):
     history_type_labels = {"+": "Criação", "~": "Alteração", "-": "Exclusão"}
     model_configs = _get_history_model_configs()
 
-    modelos_disponiveis = [label for _, label in model_configs]
+    modelos_disponiveis = [str(label) for _, label in model_configs]
     modelo_filter = normalize_choice(
         request.GET.get("modelo", "").strip(),
         {*modelos_disponiveis, ""},
@@ -69,7 +69,8 @@ def auditoria_view(request):
     reverse_sort = direcao == "desc"
 
     all_records = []
-    for history_model, label in model_configs:
+    for history_model, raw_label in model_configs:
+        label = str(raw_label)
         if modelo_filter and modelo_filter != label:
             continue
         try:
