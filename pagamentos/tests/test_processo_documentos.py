@@ -8,7 +8,7 @@ from django.core.files.storage import default_storage
 from pypdf import PdfReader, PdfWriter
 
 from credores.models import Credor
-from fluxo.domain_models import (
+from pagamentos.domain_models import (
     Boleto_Bancario,
     DocumentoProcesso,
     FormasDePagamento,
@@ -18,8 +18,8 @@ from fluxo.domain_models import (
     TiposDeDocumento,
     TiposDePagamento,
 )
-from fluxo.services import processo_documentos
-from fluxo.services.processo_documentos import (
+from pagamentos.services import processo_documentos
+from pagamentos.services.processo_documentos import (
     DocumentoGeradoDuplicadoError,
     gerar_documentos_automaticos_processo,
     gerar_e_anexar_documento_processo,

@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from commons.shared.text_tools import parse_brl_decimal
-from fluxo.domain_models import (
+from pagamentos.domain_models import (
     PROCESSO_STATUS_PRE_AUTORIZACAO,
     ProcessoStatus,
 )

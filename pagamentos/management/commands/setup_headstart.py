@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from fluxo.domain_models import FormasDePagamento, Processo, TiposDeDocumento, TiposDePagamento
+from pagamentos.domain_models import FormasDePagamento, Processo, TiposDeDocumento, TiposDePagamento
 
 
 FORMAS_PAGAMENTO_CANONICAS = [

@@ -4,10 +4,10 @@ from django.contrib.auth.decorators import permission_required
 
 from fiscal.filters import DocumentoFiscalFilter
 from fiscal.models import DocumentoFiscal
-from fluxo.views.shared import render_filtered_list
+from pagamentos.views.shared import render_filtered_list
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def painel_liquidacoes_view(request):
     queryset_base = DocumentoFiscal.objects.select_related(
         "processo", "nome_emitente", "fiscal_contrato"
@@ -25,10 +25,10 @@ def painel_liquidacoes_view(request):
         request,
         queryset=queryset_base,
         filter_class=DocumentoFiscalFilter,
-        template_name="fluxo/painel_liquidacoes.html",
+        template_name="pagamentos/painel_liquidacoes.html",
         items_key="notas",
         extra_context={
-            "pode_interagir": request.user.has_perm("fluxo.pode_atestar_liquidacao"),
+            "pode_interagir": request.user.has_perm("pagamentos.pode_atestar_liquidacao"),
         },
     )
 

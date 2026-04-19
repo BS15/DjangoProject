@@ -11,14 +11,14 @@ from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
 from fiscal.models import DocumentoFiscal
-from fluxo.domain_models import Processo, ProcessoStatus
+from pagamentos.domain_models import Processo, ProcessoStatus
 
 
 logger = logging.getLogger(__name__)
 
 
 @require_POST
-@permission_required("fluxo.pode_atestar_liquidacao", raise_exception=True)
+@permission_required("pagamentos.pode_atestar_liquidacao", raise_exception=True)
 def alternar_ateste_nota_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Permite definir explicitamente o estado de ateste de uma nota pelo painel."""
     estado_bruto = (request.POST.get("estado_alvo") or "").strip().lower()
@@ -45,7 +45,7 @@ def alternar_ateste_nota_action(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @require_POST
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 def avancar_para_pagamento_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Avanca processo de AGUARDANDO LIQUIDACAO para A PAGAR - PENDENTE AUTORIZACAO."""
     try:

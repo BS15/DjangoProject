@@ -4,24 +4,24 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
-from fluxo.forms import PendenciaForm
-from fluxo.domain_models import Processo, ProcessoStatus, ReuniaoConselho
+from pagamentos.forms import PendenciaForm
+from pagamentos.domain_models import Processo, ProcessoStatus, ReuniaoConselho
 
 
 @require_GET
-@permission_required("fluxo.pode_auditar_conselho", raise_exception=True)
+@permission_required("pagamentos.pode_auditar_conselho", raise_exception=True)
 def gerenciar_reunioes_view(request):
     """Exibe listagem de reunioes cadastradas do conselho fiscal."""
     reunioes = ReuniaoConselho.objects.all()
     context = {
         "reunioes": reunioes,
-        "pode_interagir": request.user.has_perm("fluxo.pode_auditar_conselho"),
+        "pode_interagir": request.user.has_perm("pagamentos.pode_auditar_conselho"),
     }
-    return render(request, "fluxo/gerenciar_reunioes.html", context)
+    return render(request, "pagamentos/gerenciar_reunioes.html", context)
 
 
 @require_GET
-@permission_required("fluxo.pode_auditar_conselho", raise_exception=True)
+@permission_required("pagamentos.pode_auditar_conselho", raise_exception=True)
 def montar_pauta_reuniao_view(request, reuniao_id):
     """Exibe montagem de pauta de uma reuniao especifica do conselho."""
     reuniao = get_object_or_404(ReuniaoConselho, id=reuniao_id)
@@ -36,13 +36,13 @@ def montar_pauta_reuniao_view(request, reuniao_id):
         "reuniao": reuniao,
         "processos_na_pauta": processos_na_pauta,
         "processos_elegiveis": processos_elegiveis,
-        "pode_interagir": request.user.has_perm("fluxo.pode_auditar_conselho"),
+        "pode_interagir": request.user.has_perm("pagamentos.pode_auditar_conselho"),
     }
-    return render(request, "fluxo/montar_pauta_conselho.html", context)
+    return render(request, "pagamentos/montar_pauta_conselho.html", context)
 
 
 @require_GET
-@permission_required("fluxo.pode_auditar_conselho", raise_exception=True)
+@permission_required("pagamentos.pode_auditar_conselho", raise_exception=True)
 def analise_reuniao_view(request, reuniao_id):
     """Exibe painel de analise dos processos da pauta da reuniao."""
     reuniao = get_object_or_404(ReuniaoConselho, id=reuniao_id)
@@ -53,7 +53,7 @@ def analise_reuniao_view(request, reuniao_id):
         "pendencia_form": PendenciaForm(),
         "pode_interagir": True,
     }
-    return render(request, "fluxo/analise_reuniao.html", context)
+    return render(request, "pagamentos/analise_reuniao.html", context)
 
 
 __all__ = ["gerenciar_reunioes_view", "montar_pauta_reuniao_view", "analise_reuniao_view"]

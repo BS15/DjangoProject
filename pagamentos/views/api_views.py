@@ -14,14 +14,14 @@ from django.contrib.auth.decorators import permission_required
 from django.http import JsonResponse
 
 from commons.shared.text_tools import format_brl_amount
-from fluxo.domain_models import Processo
-from fluxo.views.helpers.audit_builders import get_detalhes_pagamento
+from pagamentos.domain_models import Processo
+from pagamentos.views.helpers.audit_builders import get_detalhes_pagamento
 
 
 logger = logging.getLogger(__name__)
 
 
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 def api_detalhes_pagamento(request):
     """Monta resumo de detalhes de pagamento para uma lista de processos.
 

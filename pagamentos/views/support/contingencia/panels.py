@@ -4,9 +4,9 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponse
 from django.views.decorators.http import require_GET
 
-from fluxo.filters import ContingenciaFilter
-from fluxo.domain_models import Contingencia
-from fluxo.views.shared import apply_filterset, render_filtered_list
+from pagamentos.filters import ContingenciaFilter
+from pagamentos.domain_models import Contingencia
+from pagamentos.views.shared import apply_filterset, render_filtered_list
 from .helpers import _usuario_pode_acessar_painel_contingencias
 
 
@@ -28,7 +28,7 @@ def painel_contingencias_view(request: HttpRequest) -> HttpResponse:
         request,
         queryset=queryset,
         filter_class=ContingenciaFilter,
-        template_name="fluxo/painel_contingencias.html",
+        template_name="pagamentos/painel_contingencias.html",
         items_key="contingencias",
         filter_key="filter",
     )
@@ -40,9 +40,9 @@ def add_contingencia_view(request: HttpRequest) -> HttpResponse:
     from django.contrib.auth.decorators import permission_required
     from django.shortcuts import render
 
-    @permission_required("fluxo.acesso_backoffice", raise_exception=True)
+    @permission_required("pagamentos.acesso_backoffice", raise_exception=True)
     def _view(request: HttpRequest) -> HttpResponse:
-        return render(request, "fluxo/add_contingencia.html")
+        return render(request, "pagamentos/add_contingencia.html")
 
     return _view(request)
 

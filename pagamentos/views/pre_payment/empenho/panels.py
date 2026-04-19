@@ -4,14 +4,14 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
-from fluxo.filters import AEmpenharFilter
-from fluxo.domain_models import Processo, ProcessoStatus
-from fluxo.views.shared import apply_filterset
-from fluxo.views.helpers import _obter_campo_ordenacao
+from pagamentos.filters import AEmpenharFilter
+from pagamentos.domain_models import Processo, ProcessoStatus
+from pagamentos.views.shared import apply_filterset
+from pagamentos.views.helpers import _obter_campo_ordenacao
 
 
 @require_GET
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 def a_empenhar_view(request):
     """Exibe a fila filtravel/ordenavel dos processos pendentes de empenho."""
     order_field = _obter_campo_ordenacao(
@@ -39,7 +39,7 @@ def a_empenhar_view(request):
         "direcao": request.GET.get("direcao", "asc"),
         "pode_interagir": True,
     }
-    return render(request, "fluxo/a_empenhar.html", context)
+    return render(request, "pagamentos/a_empenhar.html", context)
 
 
 __all__ = ["a_empenhar_view"]

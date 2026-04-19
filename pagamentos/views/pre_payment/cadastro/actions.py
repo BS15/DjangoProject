@@ -15,7 +15,7 @@ import json
 from django.db.models import Sum
 from django.contrib.contenttypes.models import ContentType
 from fiscal.models import DocumentoFiscal, RetencaoImposto
-from fluxo.domain_models import (
+from pagamentos.domain_models import (
     Boleto_Bancario,
     TiposDePendencias,
     StatusChoicesPendencias,
@@ -88,7 +88,7 @@ def _atualizar_status_pendencia(pendencia: Pendencia, status_destino: str) -> No
 
 
 @require_POST
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def add_process_action(request: HttpRequest) -> HttpResponse:
     """Persiste a capa inicial do processo."""
     processo_form = ProcessoForm(request.POST, prefix="processo")
@@ -99,7 +99,7 @@ def add_process_action(request: HttpRequest) -> HttpResponse:
         messages.error(request, "Verifique os erros no formulário da capa do processo.")
         return render(
             request,
-            "fluxo/add_process.html",
+            "pagamentos/add_process.html",
             {
                 "processo_form": processo_form,
                 "next_url": next_url,
@@ -125,7 +125,7 @@ def add_process_action(request: HttpRequest) -> HttpResponse:
 
 
 @require_POST
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def editar_processo_capa_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Persiste alterações da capa do processo."""
     processo, status_inicial, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
@@ -157,7 +157,7 @@ def editar_processo_capa_action(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @require_POST
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def editar_processo_documentos_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Persiste anexos e documentos orçamentários do processo."""
     processo, _, redirecionamento, _ = _obter_contexto_edicao(request, pk)
@@ -182,7 +182,7 @@ def editar_processo_documentos_action(request: HttpRequest, pk: int) -> HttpResp
 
 
 @require_POST
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def editar_processo_pendencias_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Persiste pendências administrativas do processo."""
     processo, _, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
@@ -229,7 +229,7 @@ def editar_processo_pendencias_action(request: HttpRequest, pk: int) -> HttpResp
         return redirect("editar_processo_pendencias", pk=pk)
 
 
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 @require_POST
 @transaction.atomic
 def toggle_documento_fiscal_action(request, processo_pk, documento_pk):
@@ -286,7 +286,7 @@ def toggle_documento_fiscal_action(request, processo_pk, documento_pk):
     )
 
 
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 @require_POST
 @transaction.atomic
 def salvar_nota_fiscal_action(request, processo_pk, nota_pk):

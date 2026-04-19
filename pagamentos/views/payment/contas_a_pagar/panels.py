@@ -6,8 +6,8 @@ from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
 from fiscal.models import RetencaoImposto
-from fluxo.domain_models import PROCESSO_STATUS_CONTAS_A_PAGAR, Pendencia, Processo
-from fluxo.views.helpers import (
+from pagamentos.domain_models import PROCESSO_STATUS_CONTAS_A_PAGAR, Pendencia, Processo
+from pagamentos.views.helpers import (
     _aplicar_filtros_contas_a_pagar,
     _gerar_agrupamentos_contas_a_pagar,
     _obter_campo_ordenacao,
@@ -18,7 +18,7 @@ STATUSES_CONTAS_A_PAGAR = list(PROCESSO_STATUS_CONTAS_A_PAGAR)
 
 
 @require_GET
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 def contas_a_pagar(request):
     """Renderiza a fila de contas a pagar com facetas, filtros e ordenacao."""
     processos_base = Processo.objects.filter(status__status_choice__in=STATUSES_CONTAS_A_PAGAR)
@@ -64,7 +64,7 @@ def contas_a_pagar(request):
         "pode_interagir": True,
     }
 
-    return render(request, "fluxo/contas_a_pagar.html", context)
+    return render(request, "pagamentos/contas_a_pagar.html", context)
 
 
 __all__ = ["STATUSES_CONTAS_A_PAGAR", "contas_a_pagar"]

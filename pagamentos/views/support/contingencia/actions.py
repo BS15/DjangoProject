@@ -13,8 +13,8 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
-from fluxo.domain_models import Contingencia, Processo
-from fluxo.views.helpers import (
+from pagamentos.domain_models import Contingencia, Processo
+from pagamentos.views.helpers import (
     determinar_requisitos_contingencia,
     normalizar_dados_propostos_contingencia,
     sincronizar_flag_contingencia_processo,
@@ -25,7 +25,7 @@ from .helpers import _validar_permissao_por_etapa
 
 
 @require_POST
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def add_contingencia_action(request: HttpRequest) -> HttpResponse:
     """Cria uma contingencia (correcao manual) para um processo."""
     processo_id = (request.POST.get("processo_id", "") or "").strip()
@@ -92,7 +92,7 @@ def add_contingencia_action(request: HttpRequest) -> HttpResponse:
 
 
 @require_POST
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def analisar_contingencia_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Aprova ou rejeita uma contingencia pendente."""
     acao = (request.POST.get("action", "")).strip()

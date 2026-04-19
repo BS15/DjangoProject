@@ -9,8 +9,8 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
-from fluxo.domain_models import Processo, ProcessoStatus
-from fluxo.views.helpers import (
+from pagamentos.domain_models import Processo, ProcessoStatus
+from pagamentos.views.helpers import (
     ArquivamentoDefinitivoError,
     ArquivamentoSemDocumentosError,
     _executar_arquivamento_definitivo,
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 @require_POST
-@permission_required("fluxo.pode_arquivar", raise_exception=True)
+@permission_required("pagamentos.pode_arquivar", raise_exception=True)
 def arquivar_processo_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Executa o arquivamento definitivo de um processo elegivel."""
     try:

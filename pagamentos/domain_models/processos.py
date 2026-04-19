@@ -297,7 +297,7 @@ class Processo(models.Model):
 
     def registrar_documento_orcamentario(self, numero_nota_empenho=None, data_empenho=None, ano_exercicio=None):
         """Registra um novo documento orçamentário mantendo histórico de versões."""
-        from fluxo.domain_models.documentos import DocumentoOrcamentario
+        from pagamentos.domain_models.documentos import DocumentoOrcamentario
 
         if isinstance(data_empenho, str):
             data_empenho = datetime.strptime(data_empenho, "%Y-%m-%d").date()
@@ -407,7 +407,7 @@ class Processo(models.Model):
 
     def _atribuir_status_manual(self, nome_status):
         """Atribui um status diretamente ao processo sem executar turnpike."""
-        from fluxo.domain_models.catalogos import StatusChoicesProcesso
+        from pagamentos.domain_models.catalogos import StatusChoicesProcesso
 
         status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
             status_choice__iexact=nome_status,
@@ -431,10 +431,10 @@ class Processo(models.Model):
 
     def avancar_status(self, novo_status_str, usuario=None):
         """Avança status validando turnpike e delega integrações aos serviços."""
-        from fluxo.domain_models.catalogos import StatusChoicesProcesso
-        from fluxo.services.integracoes.processo_relacionados import sincronizar_relacoes_apos_transicao
-        from fluxo.services.processo_documentos import gerar_documentos_automaticos_processo
-        from fluxo.validators import verificar_turnpike
+        from pagamentos.domain_models.catalogos import StatusChoicesProcesso
+        from pagamentos.services.integracoes.processo_relacionados import sincronizar_relacoes_apos_transicao
+        from pagamentos.services.processo_documentos import gerar_documentos_automaticos_processo
+        from pagamentos.validators import verificar_turnpike
 
         status_anterior = self.status.status_choice if self.status else ""
         erros = verificar_turnpike(self, status_anterior, novo_status_str)

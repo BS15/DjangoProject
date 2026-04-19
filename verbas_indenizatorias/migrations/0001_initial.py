@@ -280,7 +280,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="diarias",
-                        to="fluxo.processo",
+                        to="pagamentos.processo",
                     ),
                 ),
                 (
@@ -348,7 +348,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.FileField(
                         upload_to=caminho_documento,
-                        validators=[fluxo.validators.validar_arquivo_seguro],
+                        validators=[pagamentos.validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -394,7 +394,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.FileField(
                         upload_to=caminho_documento,
-                        validators=[fluxo.validators.validar_arquivo_seguro],
+                        validators=[pagamentos.validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -415,7 +415,7 @@ class Migration(migrations.Migration):
                     "tipo",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.PROTECT,
-                        to="fluxo.tiposdedocumento",
+                        to="pagamentos.tiposdedocumento",
                     ),
                 ),
             ],
@@ -437,7 +437,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.TextField(
                         max_length=100,
-                        validators=[fluxo.validators.validar_arquivo_seguro],
+                        validators=[pagamentos.validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -484,7 +484,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="fluxo.tiposdedocumento",
+                        to="pagamentos.tiposdedocumento",
                     ),
                 ),
             ],
@@ -509,7 +509,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.TextField(
                         max_length=100,
-                        validators=[fluxo.validators.validar_arquivo_seguro],
+                        validators=[pagamentos.validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -556,7 +556,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="fluxo.tiposdedocumento",
+                        to="pagamentos.tiposdedocumento",
                     ),
                 ),
             ],
@@ -628,7 +628,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="jetons",
-                        to="fluxo.processo",
+                        to="pagamentos.processo",
                     ),
                 ),
                 (
@@ -663,7 +663,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.TextField(
                         max_length=100,
-                        validators=[fluxo.validators.validar_arquivo_seguro],
+                        validators=[pagamentos.validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -699,7 +699,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="fluxo.tiposdedocumento",
+                        to="pagamentos.tiposdedocumento",
                     ),
                 ),
                 (
@@ -738,7 +738,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.FileField(
                         upload_to=caminho_documento,
-                        validators=[fluxo.validators.validar_arquivo_seguro],
+                        validators=[pagamentos.validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -751,7 +751,7 @@ class Migration(migrations.Migration):
                     "tipo",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.PROTECT,
-                        to="fluxo.tiposdedocumento",
+                        to="pagamentos.tiposdedocumento",
                     ),
                 ),
                 (
@@ -856,7 +856,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="reembolsos_combustivel",
-                        to="fluxo.processo",
+                        to="pagamentos.processo",
                     ),
                 ),
                 (
@@ -895,7 +895,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.TextField(
                         max_length=100,
-                        validators=[fluxo.validators.validar_arquivo_seguro],
+                        validators=[pagamentos.validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -931,7 +931,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="fluxo.tiposdedocumento",
+                        to="pagamentos.tiposdedocumento",
                     ),
                 ),
                 (
@@ -970,7 +970,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.FileField(
                         upload_to=caminho_documento,
-                        validators=[fluxo.validators.validar_arquivo_seguro],
+                        validators=[pagamentos.validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -983,7 +983,7 @@ class Migration(migrations.Migration):
                     "tipo",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.PROTECT,
-                        to="fluxo.tiposdedocumento",
+                        to="pagamentos.tiposdedocumento",
                     ),
                 ),
                 (
@@ -1110,7 +1110,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="fluxo.processo",
+                        to="pagamentos.processo",
                     ),
                 ),
                 (
@@ -1214,7 +1214,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="fluxo.processo",
+                        to="pagamentos.processo",
                     ),
                 ),
                 (
@@ -1362,7 +1362,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="fluxo.processo",
+                        to="pagamentos.processo",
                     ),
                 ),
                 (
@@ -1494,7 +1494,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="fluxo.processo",
+                        to="pagamentos.processo",
                     ),
                 ),
                 (

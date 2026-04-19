@@ -6,8 +6,8 @@ from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from fluxo.forms import DocumentoFormSet, PendenciaForm, PendenciaFormSet
-from fluxo.domain_models import (
+from pagamentos.forms import DocumentoFormSet, PendenciaForm, PendenciaFormSet
+from pagamentos.domain_models import (
     Contingencia,
     Processo,
     StatusChoicesPendencias,

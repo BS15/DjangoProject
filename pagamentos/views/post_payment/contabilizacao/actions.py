@@ -4,12 +4,12 @@ from django.contrib.auth.decorators import permission_required
 from django.http import HttpRequest, HttpResponse
 from django.views.decorators.http import require_POST
 
-from fluxo.domain_models import ProcessoStatus
-from fluxo.views.helpers import _aprovar_processo_view, _iniciar_fila_sessao, _recusar_processo_view
+from pagamentos.domain_models import ProcessoStatus
+from pagamentos.views.helpers import _aprovar_processo_view, _iniciar_fila_sessao, _recusar_processo_view
 
 
 @require_POST
-@permission_required("fluxo.pode_contabilizar", raise_exception=True)
+@permission_required("pagamentos.pode_contabilizar", raise_exception=True)
 def iniciar_contabilizacao_action(request: HttpRequest) -> HttpResponse:
     """Inicializa a fila de trabalho da contabilizacao na sessao."""
     return _iniciar_fila_sessao(
@@ -21,13 +21,13 @@ def iniciar_contabilizacao_action(request: HttpRequest) -> HttpResponse:
 
 
 @require_POST
-@permission_required("fluxo.pode_contabilizar", raise_exception=True)
+@permission_required("pagamentos.pode_contabilizar", raise_exception=True)
 def aprovar_contabilizacao_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Aprova contabilizacao por rota direta e avanca status do processo."""
     return _aprovar_processo_view(
         request,
         pk,
-        permission="fluxo.pode_contabilizar",
+        permission="pagamentos.pode_contabilizar",
         new_status=ProcessoStatus.CONTABILIZADO_CONSELHO,
         success_message="Processo #{processo_id} contabilizado e enviado ao Conselho Fiscal!",
         redirect_to="painel_contabilizacao",
@@ -35,13 +35,13 @@ def aprovar_contabilizacao_action(request: HttpRequest, pk: int) -> HttpResponse
 
 
 @require_POST
-@permission_required("fluxo.pode_contabilizar", raise_exception=True)
+@permission_required("pagamentos.pode_contabilizar", raise_exception=True)
 def recusar_contabilizacao_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Recusa contabilizacao e devolve o processo para conferencia."""
     return _recusar_processo_view(
         request,
         pk,
-        permission="fluxo.pode_contabilizar",
+        permission="pagamentos.pode_contabilizar",
         status_devolucao=ProcessoStatus.PAGO_EM_CONFERENCIA,
         error_message="Processo #{processo_id} recusado pela Contabilidade e devolvido para a Conferência!",
         redirect_to="painel_contabilizacao",

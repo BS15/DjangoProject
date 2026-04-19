@@ -13,13 +13,13 @@ from django.core.files.storage import default_storage
 from django.core.exceptions import ValidationError
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import permission_required
-from fluxo.domain_models.documentos import ComprovanteDePagamento
-from fluxo.domain_models import DocumentoProcesso, Processo, ProcessoStatus, TiposDeDocumento
+from pagamentos.domain_models.documentos import ComprovanteDePagamento
+from pagamentos.domain_models import DocumentoProcesso, Processo, ProcessoStatus, TiposDeDocumento
 
 __all__ = []
 
 
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 @require_POST
 def vincular_comprovantes_action(request):
     try:

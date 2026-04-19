@@ -7,5 +7,4 @@ urlpatterns = [
     path('dados-fake/', dev_views.gerar_dados_fake_view, name='gerar_dados_fake'),
     path('testes/pdfs/', dev_views.painel_teste_pdfs, name='painel_teste_pdfs'),
     path('testes/pdfs/gerar/<str:doc_type>/', dev_views.gerar_pdf_fake_view, name='gerar_pdf_fake'),
-    path('ferramentas/chaos-testing/', dev_views.chaos_testing_view, name='chaos_testing'),
 ]

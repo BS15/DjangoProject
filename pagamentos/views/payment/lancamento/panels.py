@@ -5,12 +5,12 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET
 
-from fluxo.domain_models import Processo, ProcessoStatus, StatusChoicesProcesso
-from fluxo.views.helpers import _build_detalhes_pagamento, _consolidar_totais_pagamento
+from pagamentos.domain_models import Processo, ProcessoStatus, StatusChoicesProcesso
+from pagamentos.views.helpers import _build_detalhes_pagamento, _consolidar_totais_pagamento
 
 
 @require_GET
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 def lancamento_bancario(request):
     """Renderiza o painel de lancamento bancario com totais consolidados."""
     ids = request.session.get("processos_lancamento", [])
@@ -47,7 +47,7 @@ def lancamento_bancario(request):
         "totais_lancados": totais_lancados,
         **totais_consolidados,
     }
-    return render(request, "fluxo/lancamento_bancario.html", context)
+    return render(request, "pagamentos/lancamento_bancario.html", context)
 
 
 __all__ = ["lancamento_bancario"]

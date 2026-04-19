@@ -1,7 +1,7 @@
 """Fachada pública dos modelos do domínio de fluxo financeiro."""
 
 
-from fluxo.domain_models import (
+from pagamentos.domain_models import (
     AssinaturaEletronica,
     ComprovantePagamento,
     ContingenciaProcessual,

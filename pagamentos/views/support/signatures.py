@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from commons.shared.signature_services import AssinaturaSignatariosError, disparar_assinatura_rascunho_com_signatarios
-from fluxo.models import AssinaturaAutentique
+from pagamentos.models import AssinaturaAutentique
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ def painel_assinaturas_view(request):
 
     return render(
         request,
-        "fluxo/painel_assinaturas.html",
+        "pagamentos/painel_assinaturas.html",
         {
             "meus_documentos": meus_documentos,
             "para_assinar": para_assinar,

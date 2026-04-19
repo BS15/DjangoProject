@@ -4,12 +4,12 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
-from fluxo.forms import PendenciaForm
-from fluxo.domain_models import Processo, ProcessoStatus
+from pagamentos.forms import PendenciaForm
+from pagamentos.domain_models import Processo, ProcessoStatus
 
 
 @require_GET
-@permission_required("fluxo.pode_autorizar_pagamento", raise_exception=True)
+@permission_required("pagamentos.pode_autorizar_pagamento", raise_exception=True)
 def painel_autorizacao_view(request):
     """Renderiza o painel de autorizacao com filas pendente e autorizada."""
     processos = Processo.objects.filter(
@@ -28,9 +28,9 @@ def painel_autorizacao_view(request):
         "processos": processos,
         "processos_autorizados": processos_autorizados,
         "pendencia_form": PendenciaForm(),
-        "pode_interagir": request.user.has_perm("fluxo.pode_autorizar_pagamento"),
+        "pode_interagir": request.user.has_perm("pagamentos.pode_autorizar_pagamento"),
     }
-    return render(request, "fluxo/autorizacao.html", context)
+    return render(request, "pagamentos/autorizacao.html", context)
 
 
 __all__ = ["painel_autorizacao_view"]

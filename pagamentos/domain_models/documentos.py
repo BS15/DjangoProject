@@ -21,7 +21,7 @@ from commons.shared.storage_utils import _delete_file, caminho_documento
 
 class DocumentoProcessual(DocumentoBase):
     """Documento genérico anexado ao processo com controle de imutabilidade."""
-    processo = models.ForeignKey("fluxo.Processo", on_delete=models.CASCADE, related_name="documentos")
+    processo = models.ForeignKey("pagamentos.Processo", on_delete=models.CASCADE, related_name="documentos")
     imutavel = models.BooleanField(
         "Imutável",
         default=False,
@@ -50,7 +50,7 @@ class BoletoBancario(DocumentoProcessual):
 
 class DocumentoOrcamentarioProcessual(DocumentoBase):
     """Documento orçamentário vinculado ao processo."""
-    processo = models.ForeignKey("fluxo.Processo", on_delete=models.CASCADE, related_name="documentos_orcamentarios")
+    processo = models.ForeignKey("pagamentos.Processo", on_delete=models.CASCADE, related_name="documentos_orcamentarios")
     numero_nota_empenho = models.CharField(max_length=50, blank=True, null=True)
     data_empenho = models.DateField(blank=True, null=True)
     ano_exercicio = models.IntegerField(
@@ -71,7 +71,7 @@ class DocumentoOrcamentarioProcessual(DocumentoBase):
 class ComprovantePagamento(DocumentoBase):
     """Comprovante bancário anexado para lastrear pagamento do processo."""
     processo = models.ForeignKey(
-        "fluxo.Processo",
+        "pagamentos.Processo",
         on_delete=models.CASCADE,
         related_name="comprovantes_pagamento",
         verbose_name="Processo",

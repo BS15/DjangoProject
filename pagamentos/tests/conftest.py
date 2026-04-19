@@ -9,7 +9,7 @@ from pypdf import PdfWriter
 
 from credores.models import Credor
 from fiscal.models import DocumentoFiscal
-from fluxo.domain_models import (
+from pagamentos.domain_models import (
     ComprovanteDePagamento,
     DocumentoProcesso,
     FormasDePagamento,

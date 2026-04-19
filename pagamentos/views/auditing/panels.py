@@ -26,7 +26,7 @@ def _get_history_model_configs():
     return model_configs
 
 
-@permission_required("fluxo.pode_auditar_conselho", raise_exception=True)
+@permission_required("pagamentos.pode_auditar_conselho", raise_exception=True)
 def auditoria_view(request):
     """Renderiza a trilha de auditoria consolidada de modelos financeiros."""
     history_type_labels = {"+": "Criação", "~": "Alteração", "-": "Exclusão"}
@@ -145,7 +145,7 @@ def auditoria_view(request):
             "usuario": usuario_filter,
         },
     }
-    return render(request, "fluxo/auditoria.html", context)
+    return render(request, "pagamentos/auditoria.html", context)
 
 
 __all__ = ["auditoria_view"]

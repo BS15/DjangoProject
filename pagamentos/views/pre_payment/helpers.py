@@ -9,8 +9,8 @@ from django.db.models import F
 from django.shortcuts import redirect
 from django.utils.http import url_has_allowed_host_and_scheme
 
-from fluxo.domain_models import DocumentoProcesso, Processo, TiposDeDocumento
-from fluxo.validators import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
+from pagamentos.domain_models import DocumentoProcesso, Processo, TiposDeDocumento
+from pagamentos.validators import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
 
 
 def _salvar_processo_completo(processo_form, mutator_func=None, **formsets):

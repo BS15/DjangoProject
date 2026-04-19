@@ -1,0 +1,195 @@
+{% extends "layouts/base_list.html" %}
+
+{% block page_title %}Auditoria - Histórico de Alterações{% endblock %}
+
+{% block page_heading %}<span class="text-dark"><i class="bi bi-clock-history text-primary me-2"></i> Auditoria — Histórico de Alterações</span>{% endblock %}
+
+{% block page_subtitle %}Registro de todas as criações, alterações e exclusões do sistema{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'home_page' %}" class="btn btn-outline-secondary"><i class="bi bi-house"></i> Voltar à Home</a>
+{% endblock %}
+
+{% block filter_title %}Filtrar Registros{% endblock %}
+
+{% block extra_css %}
+<style>
+	.badge-criacao  { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+	.badge-alteracao { background-color: #fff3cd; color: #664d03; border: 1px solid #ffecb5; }
+	.badge-exclusao  { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+	.th-sort-link { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: .35rem; }
+	.th-sort-link:hover { text-decoration: underline; color: #cfe2ff; }
+</style>
+{% endblock %}
+
+{% block filter_form %}
+<div class="col-md-3">
+	<label class="form-label small fw-bold text-muted mb-1">Modelo</label>
+	<select name="modelo" class="form-control form-control-sm">
+		<option value="">— Todos —</option>
+		{% for modelo in modelos_disponiveis %}
+		<option value="{{ modelo }}" {% if filtros.modelo == modelo %}selected{% endif %}>{{ modelo }}</option>
+		{% endfor %}
+	</select>
+</div>
+<div class="col-md-2">
+	<label class="form-label small fw-bold text-muted mb-1">Tipo de Ação</label>
+	<select name="tipo_acao" class="form-control form-control-sm">
+		<option value="">— Todos —</option>
+		<option value="+" {% if filtros.tipo_acao == "+" %}selected{% endif %}>Criação</option>
+		<option value="~" {% if filtros.tipo_acao == "~" %}selected{% endif %}>Alteração</option>
+		<option value="-" {% if filtros.tipo_acao == "-" %}selected{% endif %}>Exclusão</option>
+	</select>
+</div>
+<div class="col-md-2">
+	<label class="form-label small fw-bold text-muted mb-1">Data Início</label>
+	<input type="date" name="data_inicio" class="form-control form-control-sm" value="{{ filtros.data_inicio }}">
+</div>
+<div class="col-md-2">
+	<label class="form-label small fw-bold text-muted mb-1">Data Fim</label>
+	<input type="date" name="data_fim" class="form-control form-control-sm" value="{{ filtros.data_fim }}">
+</div>
+<div class="col-md-2">
+	<label class="form-label small fw-bold text-muted mb-1">Usuário</label>
+	<input type="text" name="usuario" class="form-control form-control-sm" placeholder="Nome de usuário" value="{{ filtros.usuario }}">
+</div>
+<div class="col-md-1">
+	<label class="form-label small fw-bold text-muted mb-1">Ordenar</label>
+	<select name="ordem" class="form-control form-control-sm">
+		<option value="data" {% if ordem == "data" %}selected{% endif %}>Data</option>
+		<option value="modelo" {% if ordem == "modelo" %}selected{% endif %}>Modelo</option>
+		<option value="id" {% if ordem == "id" %}selected{% endif %}>ID</option>
+		<option value="acao" {% if ordem == "acao" %}selected{% endif %}>Ação</option>
+		<option value="usuario" {% if ordem == "usuario" %}selected{% endif %}>Usuário</option>
+	</select>
+</div>
+<div class="col-md-1">
+	<label class="form-label small fw-bold text-muted mb-1">Direção</label>
+	<select name="direcao" class="form-control form-control-sm">
+		<option value="desc" {% if direcao == "desc" %}selected{% endif %}>Desc</option>
+		<option value="asc" {% if direcao == "asc" %}selected{% endif %}>Asc</option>
+	</select>
+</div>
+{% endblock %}
+
+{% block table_headers %}
+<th class="ps-4" style="width:13%;">
+	<a class="th-sort-link" href="?{{ sort_base_qs }}ordem=data&amp;direcao={% if ordem == 'data' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
+		Data / Hora
+		{% if ordem == "data" %}
+			<i class="bi {% if direcao == 'asc' %}bi-sort-up{% else %}bi-sort-down{% endif %}"></i>
+		{% else %}
+			<i class="bi bi-arrow-down-up"></i>
+		{% endif %}
+	</a>
+</th>
+<th style="width:18%;">
+	<a class="th-sort-link" href="?{{ sort_base_qs }}ordem=modelo&amp;direcao={% if ordem == 'modelo' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
+		Modelo
+		{% if ordem == "modelo" %}
+			<i class="bi {% if direcao == 'asc' %}bi-sort-up{% else %}bi-sort-down{% endif %}"></i>
+		{% else %}
+			<i class="bi bi-arrow-down-up"></i>
+		{% endif %}
+	</a>
+</th>
+<th style="width:8%;">
+	<a class="th-sort-link" href="?{{ sort_base_qs }}ordem=id&amp;direcao={% if ordem == 'id' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
+		ID Objeto
+		{% if ordem == "id" %}
+			<i class="bi {% if direcao == 'asc' %}bi-sort-up{% else %}bi-sort-down{% endif %}"></i>
+		{% else %}
+			<i class="bi bi-arrow-down-up"></i>
+		{% endif %}
+	</a>
+</th>
+<th style="width:10%;">
+	<a class="th-sort-link" href="?{{ sort_base_qs }}ordem=acao&amp;direcao={% if ordem == 'acao' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
+		Ação
+		{% if ordem == "acao" %}
+			<i class="bi {% if direcao == 'asc' %}bi-sort-up{% else %}bi-sort-down{% endif %}"></i>
+		{% else %}
+			<i class="bi bi-arrow-down-up"></i>
+		{% endif %}
+	</a>
+</th>
+<th style="width:15%;">
+	<a class="th-sort-link" href="?{{ sort_base_qs }}ordem=usuario&amp;direcao={% if ordem == 'usuario' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
+		Usuário
+		{% if ordem == "usuario" %}
+			<i class="bi {% if direcao == 'asc' %}bi-sort-up{% else %}bi-sort-down{% endif %}"></i>
+		{% else %}
+			<i class="bi bi-arrow-down-up"></i>
+		{% endif %}
+	</a>
+</th>
+<th>
+	<a class="th-sort-link" href="?{{ sort_base_qs }}ordem=descricao&amp;direcao={% if ordem == 'descricao' and direcao == 'asc' %}desc{% else %}asc{% endif %}">
+		Descrição do Registro
+		{% if ordem == "descricao" %}
+			<i class="bi {% if direcao == 'asc' %}bi-sort-up{% else %}bi-sort-down{% endif %}"></i>
+		{% else %}
+			<i class="bi bi-arrow-down-up"></i>
+		{% endif %}
+	</a>
+</th>
+<th style="width:18%;">Motivo da Alteração</th>
+{% endblock %}
+
+{% block table_rows %}
+{% for r in registros %}
+<tr>
+	<td class="ps-4 text-nowrap small">
+		{{ r.history_date|date:"d/m/Y H:i:s" }}
+	</td>
+	<td>
+		<span class="badge bg-secondary">{{ r.modelo }}</span>
+	</td>
+	<td class="fw-bold text-center">
+		#{{ r.object_id }}
+	</td>
+	<td class="text-center">
+		{% if r.history_type == "+" %}
+			<span class="badge badge-criacao px-2 py-1 rounded-pill">
+				<i class="bi bi-plus-circle"></i> {{ r.history_type_label }}
+			</span>
+		{% elif r.history_type == "~" %}
+			<span class="badge badge-alteracao px-2 py-1 rounded-pill">
+				<i class="bi bi-pencil-square"></i> {{ r.history_type_label }}
+			</span>
+		{% else %}
+			<span class="badge badge-exclusao px-2 py-1 rounded-pill">
+				<i class="bi bi-trash"></i> {{ r.history_type_label }}
+			</span>
+		{% endif %}
+	</td>
+	<td class="small">
+		{% if r.history_user %}
+			<i class="bi bi-person-fill text-secondary me-1"></i>{{ r.history_user.get_full_name|default:r.history_user.username }}
+		{% else %}
+			<span class="text-muted fst-italic">Sistema</span>
+		{% endif %}
+	</td>
+	<td class="small text-truncate" style="max-width:250px;" title="{{ r.str_repr }}">
+		{{ r.str_repr }}
+	</td>
+	<td class="small text-muted fst-italic">
+		{{ r.history_change_reason|default:"—" }}
+	</td>
+</tr>
+{% empty %}
+<tr>
+	<td colspan="7" class="text-center py-5 text-muted">
+		<i class="bi bi-clock-history fs-1 d-block mb-3 text-secondary"></i>
+		Nenhum registro de auditoria encontrado com os filtros atuais.
+	</td>
+</tr>
+{% endfor %}
+{% endblock %}
+
+{% block list_footer %}
+<div class="mt-3 d-flex justify-content-between align-items-center text-muted small">
+	<span>Exibindo até 500 registros mais recentes.</span>
+	<span>Total de registros encontrados: <strong>{{ total }}</strong></span>
+</div>
+{% endblock %}

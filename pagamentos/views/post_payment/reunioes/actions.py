@@ -8,7 +8,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
-from fluxo.domain_models import Processo, ProcessoStatus, ReuniaoConselho, ReuniaoConselhoStatus
+from pagamentos.domain_models import Processo, ProcessoStatus, ReuniaoConselho, ReuniaoConselhoStatus
 
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ REUNIAO_STATUS_ANALISE = {ReuniaoConselhoStatus.AGENDADA, ReuniaoConselhoStatus.
 
 
 @require_POST
-@permission_required("fluxo.pode_auditar_conselho", raise_exception=True)
+@permission_required("pagamentos.pode_auditar_conselho", raise_exception=True)
 def gerenciar_reunioes_action(request: HttpRequest) -> HttpResponse:
     """Cria reuniao do conselho a partir do formulario do painel."""
     numero = request.POST.get("numero", "").strip()
@@ -48,7 +48,7 @@ def gerenciar_reunioes_action(request: HttpRequest) -> HttpResponse:
 
 
 @require_POST
-@permission_required("fluxo.pode_auditar_conselho", raise_exception=True)
+@permission_required("pagamentos.pode_auditar_conselho", raise_exception=True)
 def montar_pauta_reuniao_action(request: HttpRequest, reuniao_id: int) -> HttpResponse:
     """Vincula processos selecionados a pauta da reuniao do conselho."""
     reuniao = get_object_or_404(ReuniaoConselho, id=reuniao_id)
@@ -68,7 +68,7 @@ def montar_pauta_reuniao_action(request: HttpRequest, reuniao_id: int) -> HttpRe
 
 
 @require_POST
-@permission_required("fluxo.pode_auditar_conselho", raise_exception=True)
+@permission_required("pagamentos.pode_auditar_conselho", raise_exception=True)
 def iniciar_conselho_reuniao_action(request: HttpRequest, reuniao_id: int) -> HttpResponse:
     """Inicializa fila de analise para processos selecionados de uma reuniao."""
     reuniao = get_object_or_404(ReuniaoConselho, id=reuniao_id)

@@ -7,12 +7,12 @@ from django.views.decorators.http import require_GET
 
 from commons.shared.text_tools import normalize_choice
 from fiscal.models import RetencaoImposto
-from fluxo.domain_models import Contingencia, Processo, ProcessoStatus
-from fluxo.views.helpers import _aplicar_filtro_por_opcao
+from pagamentos.domain_models import Contingencia, Processo, ProcessoStatus
+from pagamentos.views.helpers import _aplicar_filtro_por_opcao
 
 
 @require_GET
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 def painel_conferencia_view(request):
     """Exibe o painel de conferencia de processos pagos."""
     processos_pagos = (
@@ -45,10 +45,10 @@ def painel_conferencia_view(request):
 
     context = {
         "processos": processos_pagos,
-        "pode_interagir": request.user.has_perm("fluxo.pode_operar_contas_pagar"),
+        "pode_interagir": request.user.has_perm("pagamentos.pode_operar_contas_pagar"),
         "filtro_ativo": filtro,
     }
-    return render(request, "fluxo/conferencia.html", context)
+    return render(request, "pagamentos/conferencia.html", context)
 
 
 __all__ = ["painel_conferencia_view"]

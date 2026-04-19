@@ -6,9 +6,9 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
 from commons.shared.text_tools import format_br_date, format_brl_currency
-from fluxo.domain_models.documentos import ComprovanteDePagamento
+from pagamentos.domain_models.documentos import ComprovanteDePagamento
 from fiscal.models import DocumentoFiscal, RetencaoImposto
-from fluxo.domain_models import (
+from pagamentos.domain_models import (
     Devolucao,
     Boleto_Bancario,
     DocumentoProcesso,

@@ -539,11 +539,6 @@ def gerar_pdf_fake_view(request, doc_type):
     return response
 
 
-def chaos_testing_view(request):
-    """Ferramenta de caos para desenvolvimento baseada em gremlins.js."""
-    return render(request, "ferramentas/chaos_testing.html")
-
-
 __all__ = [
     "painel_importacao_view",
     "download_template_csv_credores",
@@ -552,5 +547,4 @@ __all__ = [
     "gerar_dummy_pdf_view",
     "painel_teste_pdfs",
     "gerar_pdf_fake_view",
-    "chaos_testing_view",
 ]

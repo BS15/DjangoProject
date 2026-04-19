@@ -2,9 +2,9 @@ import io
 
 import pytest
 
-from fluxo.domain_models import ProcessoStatus
-from fluxo.views.helpers.archival import _executar_arquivamento_definitivo
-from fluxo.views.helpers.errors import ArquivamentoDefinitivoError, ArquivamentoSemDocumentosError
+from pagamentos.domain_models import ProcessoStatus
+from pagamentos.views.helpers.archival import _executar_arquivamento_definitivo
+from pagamentos.views.helpers.errors import ArquivamentoDefinitivoError, ArquivamentoSemDocumentosError
 
 
 class _BufferComFalhaLeitura:
@@ -23,7 +23,7 @@ def test_arquivamento_falha_sem_documentos_validos(processo_factory, user_factor
 def test_arquivamento_aborta_quando_consolidado_tem_zero_bytes(monkeypatch, processo_factory, user_factory):
     processo = processo_factory(status=ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO)
     monkeypatch.setattr(
-        "fluxo.views.helpers.archival.gerar_pdf_consolidado_processo",
+        "pagamentos.views.helpers.archival.gerar_pdf_consolidado_processo",
         lambda _processo: io.BytesIO(b""),
     )
 
@@ -39,7 +39,7 @@ def test_arquivamento_aborta_quando_consolidado_tem_zero_bytes(monkeypatch, proc
 def test_arquivamento_aborta_em_falha_de_leitura_cloud(monkeypatch, processo_factory, user_factory):
     processo = processo_factory(status=ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO)
     monkeypatch.setattr(
-        "fluxo.views.helpers.archival.gerar_pdf_consolidado_processo",
+        "pagamentos.views.helpers.archival.gerar_pdf_consolidado_processo",
         lambda _processo: _BufferComFalhaLeitura(),
     )
 
@@ -60,7 +60,7 @@ def test_arquivamento_rollback_mid_flight_ao_falhar_avanco_de_status(
 ):
     processo = processo_factory(status=ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO)
     monkeypatch.setattr(
-        "fluxo.views.helpers.archival.gerar_pdf_consolidado_processo",
+        "pagamentos.views.helpers.archival.gerar_pdf_consolidado_processo",
         lambda _processo: io.BytesIO(pdf_bytes),
     )
 

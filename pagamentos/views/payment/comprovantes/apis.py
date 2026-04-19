@@ -13,8 +13,8 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 
-from fluxo.domain_models.documentos import ComprovanteDePagamento
-from fluxo.domain_models import DocumentoProcesso, Processo, ProcessoStatus, TiposDeDocumento
+from pagamentos.domain_models.documentos import ComprovanteDePagamento
+from pagamentos.domain_models import DocumentoProcesso, Processo, ProcessoStatus, TiposDeDocumento
 from commons.shared.pdf_tools import split_pdf_to_temp_pages
 from .helpers import processar_pdf_comprovantes
 
@@ -41,7 +41,7 @@ def serializar_comprovante(comp):
     }
 
 
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 @require_POST
 def api_fatiar_comprovantes(request):
     if request.FILES.get("pdf_banco"):
