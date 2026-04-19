@@ -1,0 +1,101 @@
+{% extends "layouts/base_review.html" %}
+
+{% block page_title %}Contabilização — Processo #{{ processo.id }}{% endblock %}
+
+{% block review_extra_css %}
+{% include "pagamentos/partials/_review_extra_css.html" %}
+{% endblock %}
+
+{# ═══ TOP BAR: context navbar + queue progress ═══════════════════════════ #}
+{% block review_topbar %}
+{% with topbar_color="primary" topbar_icon="bi bi-calculator" topbar_title="Contabilização" topbar_sair_label="Sair da Contabilização" %}
+    {% include "pagamentos/partials/_review_topbar.html" %}
+{% endwith %}
+{% endblock %}
+
+{# ═══ LEFT PANE: PDF viewer ═══════════════════════════════════════════════ #}
+{% block document_viewer %}
+{% with viewer_color="primary" %}
+    {% include "pagamentos/partials/_review_pdf_viewer.html" %}
+{% endwith %}
+{% endblock %}
+
+{# ═══ RIGHT PANE: forms, info, history ═══════════════════════════════════ #}
+{% block review_panel %}
+<form method="post" enctype="multipart/form-data" id="contabilizacao-form">
+    {% csrf_token %}
+    {{ doc_formset.management_form }}
+    {{ pendencia_formset.management_form }}
+
+    {% with badge_color="primary" value_color="text-primary" %}
+        {% include "pagamentos/partials/_processo_info_card.html" %}
+    {% endwith %}
+
+    {% with add_btn_class="btn-outline-primary" %}
+        {% include "pagamentos/partials/_processo_doc_formset.html" %}
+    {% endwith %}
+
+    {% include "pagamentos/partials/_processo_pendencias_formset.html" %}
+
+    {% include "pagamentos/partials/_processo_history_card.html" %}
+
+    {% include "pagamentos/partials/_processo_contingencias_card.html" %}
+
+</form><!-- #contabilizacao-form -->
+{% endblock %}
+
+{# ═══ REJECTION MODAL ════════════════════════════════════════════════════ #}
+{% block extra_modals %}
+{% with rejeitar_modal_title="Devolver Processo" rejeitar_modal_body="Informe o erro que impede a contabilização. O processo retornará à Conferência." rejeitar_label_tipo="Tipo de Pendência" rejeitar_label_descricao="Descrição do Erro" rejeitar_confirm_label="Confirmar Devolução" %}
+    {% include "pagamentos/partials/_processo_rejeitar_modal.html" %}
+{% endwith %}
+{% endblock %}
+
+{# ═══ STICKY ACTION BAR ══════════════════════════════════════════════════ #}
+{% block queue_navigation %}
+<div class="d-flex align-items-center gap-2 flex-wrap">
+
+    {% if pode_interagir %}
+    <!-- Approve → Conselho Fiscal -->
+    <button type="button"
+            class="btn btn-primary fw-bold shadow-sm"
+            id="btn-aprovar"
+            data-action="aprovar"
+            title="Salvar alterações, confirmar contabilização e enviar para o Conselho Fiscal">
+        <i class="bi bi-check2-all me-1"></i>
+        Confirmar e Enviar para Conselho Fiscal
+    </button>
+
+    <!-- Save without advancing -->
+    <button type="button"
+            class="btn btn-outline-secondary fw-bold"
+            id="btn-salvar"
+            data-action="salvar"
+            title="Salvar alterações sem avançar">
+        <i class="bi bi-floppy me-1"></i>
+        Salvar
+    </button>
+
+    <!-- Reject → back to Conferência -->
+    <button type="button"
+            class="btn btn-outline-danger fw-bold"
+            data-bs-toggle="modal"
+            data-bs-target="#modalRejeitar"
+            title="Devolver para a Conferência">
+        <i class="bi bi-arrow-return-left me-1"></i>
+        Devolver para Conferência
+    </button>
+    {% endif %}
+
+    {% with nav_sair_label="Sair da Contabilização" %}
+        {% include "pagamentos/partials/_review_queue_nav.html" %}
+    {% endwith %}
+</div>
+{% endblock %}
+
+{# ═══ JAVASCRIPT ═════════════════════════════════════════════════════════ #}
+{% block extra_js %}
+{% with js_form_id="contabilizacao-form" js_primary_btn="btn-aprovar" js_primary_action="aprovar" js_confirm_msg_prefix="Confirmar a contabilização e enviar o Processo #" js_confirm_msg_suffix=" para o Conselho Fiscal?" %}
+    {% include "pagamentos/partials/_processo_formset_js.html" %}
+{% endwith %}
+{% endblock %}

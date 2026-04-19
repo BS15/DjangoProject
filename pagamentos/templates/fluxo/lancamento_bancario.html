@@ -1,0 +1,421 @@
+{% load static %}
+<!DOCTYPE html>
+{% extends "layouts/base_batch.html" %}
+
+{% block page_heading %}<i class="bi bi-bank me-2"></i> Lançamento Bancário em Lote{% endblock %}
+{% block page_subtitle %}Realize lançamentos bancários em lote para múltiplos processos.{% endblock %}
+{% block page_actions %}
+<a href="{% url 'home_page' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar para Home</a>
+{% endblock %}
+
+{% block batch_content %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow-sm section-card mb-4">
+        <div class="card-header d-flex align-items-center gap-2 py-2">
+            <i class="bi bi-search"></i>
+            <span class="fw-bold">1. Seleção dos Processos</span>
+        </div>
+        <div class="card-body">
+            ...existing code for process selection...
+        </div>
+    </div>
+
+    <div class="card shadow-sm section-card mb-4">
+        <div class="card-header d-flex align-items-center gap-2 py-2">
+            <i class="bi bi-cash-coin"></i>
+            <span class="fw-bold">2. Lançamento Bancário</span>
+        </div>
+        <div class="card-body">
+            ...existing code for batch bank entry form...
+        </div>
+    </div>
+
+    {% block extra_content %}{% endblock %}
+{% endblock %}
+                        <p class="text-muted small fw-bold mb-2 text-uppercase"><i class="bi bi-check2-all me-1 text-success"></i> Lançados</p>
+                        <div class="row g-2">
+                            {% for forma, total in totais_lancados.items %}
+                            <div class="col-sm-6 col-md-3">
+                                <div class="card border-0 bg-light h-100">
+                                    <div class="card-body text-center py-2">
+                                        <p class="text-muted small fw-bold mb-1 text-uppercase">{{ forma }}</p>
+                                        <p class="fs-6 fw-bold text-success mb-0">R$ {{ total|floatformat:2 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="col-12 text-muted small">Nenhum pagamento lançado.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <hr class="my-2">
+                <div class="row g-2 align-items-center">
+                    <div class="col-auto">
+                        <span class="text-muted small fw-bold text-uppercase"><i class="bi bi-sigma me-1"></i> Total Geral (A Pagar + Lançados):</span>
+                    </div>
+                    {% for forma, total in totais.items %}
+                    <div class="col-auto">
+                        <span class="badge bg-secondary px-3 py-2" style="font-size:0.85rem;">
+                            {{ forma }}: <strong>R$ {{ total|floatformat:2 }}</strong>
+                        </span>
+                    </div>
+                    {% endfor %}
+                    <div class="col-auto ms-auto">
+                        <span class="badge bg-primary px-3 py-2 fs-6">
+                            <i class="bi bi-currency-dollar me-1"></i> R$ {{ total_geral|floatformat:2 }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {# ── List 1: A PAGAR - AUTORIZADO ── #}
+    <div class="mb-4">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <h5 class="fw-bold text-primary mb-0 flex-grow-1 section-toggle"
+                data-bs-toggle="collapse" data-bs-target="#collapse-a-pagar" aria-expanded="true" aria-controls="collapse-a-pagar">
+                <i class="bi bi-chevron-down toggle-icon me-1"></i>
+                <i class="bi bi-hourglass-split me-1"></i> A Pagar – Autorizados
+                <span class="badge bg-primary ms-2 small">{{ processos_a_pagar|length }}</span>
+            </h5>
+            {% if totais_a_pagar %}
+            <span class="text-muted small fw-semibold">Total: <strong class="text-primary">R$ {{ total_a_pagar|floatformat:2 }}</strong></span>
+            {% endif %}
+        </div>
+        <div class="collapse show" id="collapse-a-pagar">
+            <div class="card shadow-sm border-0 mb-2">
+                <div class="card-body p-0">
+                    <table id="table-a-pagar" class="table table-hover table-bordered mb-0 align-middle">
+                        <thead class="table-primary">
+                            <tr>
+                                <th style="width: 7%; cursor: pointer;" class="sortable" data-table="table-a-pagar" data-col="0"># ID <i class="bi bi-arrow-down-up ms-1 text-muted sort-icon"></i></th>
+                                <th style="width: 20%; cursor: pointer;" class="sortable" data-table="table-a-pagar" data-col="1">Credor <i class="bi bi-arrow-down-up ms-1 text-muted sort-icon"></i></th>
+                                <th style="width: 12%; cursor: pointer;" class="sortable" data-table="table-a-pagar" data-col="2">CPF/CNPJ <i class="bi bi-arrow-down-up ms-1 text-muted sort-icon"></i></th>
+                                <th style="width: 10%; cursor: pointer;" class="text-end pe-3 sortable" data-table="table-a-pagar" data-col="3">Valor Líquido <i class="bi bi-arrow-down-up ms-1 text-muted sort-icon"></i></th>
+                                <th style="width: 13%; cursor: pointer;" class="sortable" data-table="table-a-pagar" data-col="4">Forma de Pagamento <i class="bi bi-arrow-down-up ms-1 text-muted sort-icon"></i></th>
+                                <th style="width: 30%;">Dados de Pagamento Bancário</th>
+                                <th style="width: 8%;" class="text-center no-print">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in processos_a_pagar %}
+                            {% with p=item.processo dp=item.dados_pagamento %}
+                            <tr>
+                                <td class="fw-bold text-muted" data-sort-value="{{ p.id }}">#{{ p.id }}</td>
+                                <td class="fw-medium" style="font-size: 0.85rem;" data-sort-value="{{ p.credor|default:'' }}">{{ p.credor|default:"-"|truncatechars:45 }}</td>
+                                <td class="small fw-medium" data-sort-value="{{ p.credor.cpf_cnpj|default:'' }}">{{ p.credor.cpf_cnpj|default:"-" }}</td>
+                                <td class="text-end pe-3 fw-bold text-success" data-sort-value="{{ p.valor_liquido }}">R$ {{ p.valor_liquido|floatformat:2 }}</td>
+                                <td data-sort-value="{{ p.forma_pagamento|default:'' }}">
+                                    {% if p.forma_pagamento %}
+                                        <span class="badge bg-secondary">{{ p.forma_pagamento }}</span>
+                                    {% else %}
+                                        <span class="text-muted small">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{% include "pagamentos/partials/_dados_pagamento.html" with dp=dp %}</td>
+                                <td class="text-center no-print">
+                                    <div class="d-flex justify-content-center gap-1">
+                                    <button type="button" class="btn btn-sm btn-primary fw-bold shadow-sm btn-preview"
+                                            data-processo-id="{{ p.id }}"
+                                            title="Pré-visualizar Documentos">
+                                        <i class="bi bi-eye"></i> Preview
+                                    </button>
+                                    <form method="POST" action="{% url 'marcar_como_lancado' %}" onsubmit="return confirm('Confirmar lançamento do Processo #{{ p.id }}?');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="processo_id" value="{{ p.id }}">
+                                        <button type="submit" class="btn btn-sm btn-success fw-bold shadow-sm" title="Marcar como Lançado">
+                                            <i class="bi bi-check2-circle"></i> Lançado
+                                        </button>
+                                    </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endwith %}
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                    Nenhum processo pendente de lançamento.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {# Totais A Pagar por Forma de Pagamento #}
+            {% if totais_a_pagar %}
+            <div class="card shadow-sm border-0 border-start border-primary border-3 mb-2">
+                <div class="card-body py-2 px-3">
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <span class="text-muted small fw-bold text-uppercase me-1"><i class="bi bi-calculator me-1"></i>Totais A Pagar:</span>
+                        {% for forma, total in totais_a_pagar.items %}
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1" style="font-size:0.82rem;">
+                            {{ forma }}: <strong>R$ {{ total|floatformat:2 }}</strong>
+                        </span>
+                        {% endfor %}
+                        <span class="ms-auto fw-bold text-primary small">Total Geral: R$ {{ total_a_pagar|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ── List 2: LANÇADO - AGUARDANDO COMPROVANTE ── #}
+    <div class="mb-4 mt-4">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <h5 class="fw-bold text-success mb-0 flex-grow-1 section-toggle"
+                data-bs-toggle="collapse" data-bs-target="#collapse-lancados" aria-expanded="true" aria-controls="collapse-lancados">
+                <i class="bi bi-chevron-down toggle-icon me-1"></i>
+                <i class="bi bi-check2-all me-1"></i> Lançados – Aguardando Comprovante
+                <span class="badge bg-success ms-2 small">{{ processos_lancados|length }}</span>
+            </h5>
+            {% if totais_lancados %}
+            <span class="text-muted small fw-semibold">Total: <strong class="text-success">R$ {{ total_lancados|floatformat:2 }}</strong></span>
+            {% endif %}
+        </div>
+        <div class="collapse show" id="collapse-lancados">
+            <div class="card shadow-sm border-0 mb-2">
+                <div class="card-body p-0">
+                    <table id="table-lancados" class="table table-hover table-bordered mb-0 align-middle">
+                        <thead class="table-success">
+                            <tr>
+                                <th style="width: 7%; cursor: pointer;" class="sortable" data-table="table-lancados" data-col="0"># ID <i class="bi bi-arrow-down-up ms-1 text-muted sort-icon"></i></th>
+                                <th style="width: 20%; cursor: pointer;" class="sortable" data-table="table-lancados" data-col="1">Credor <i class="bi bi-arrow-down-up ms-1 text-muted sort-icon"></i></th>
+                                <th style="width: 12%; cursor: pointer;" class="sortable" data-table="table-lancados" data-col="2">CPF/CNPJ <i class="bi bi-arrow-down-up ms-1 text-muted sort-icon"></i></th>
+                                <th style="width: 10%; cursor: pointer;" class="text-end pe-3 sortable" data-table="table-lancados" data-col="3">Valor Líquido <i class="bi bi-arrow-down-up ms-1 text-muted sort-icon"></i></th>
+                                <th style="width: 13%; cursor: pointer;" class="sortable" data-table="table-lancados" data-col="4">Forma de Pagamento <i class="bi bi-arrow-down-up ms-1 text-muted sort-icon"></i></th>
+                                <th style="width: 30%;">Dados de Pagamento Bancário</th>
+                                <th style="width: 8%;" class="text-center no-print">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in processos_lancados %}
+                            {% with p=item.processo dp=item.dados_pagamento %}
+                            <tr class="table-success bg-opacity-25">
+                                <td class="fw-bold text-muted" data-sort-value="{{ p.id }}">#{{ p.id }}</td>
+                                <td class="fw-medium" style="font-size: 0.85rem;" data-sort-value="{{ p.credor|default:'' }}">{{ p.credor|default:"-"|truncatechars:45 }}</td>
+                                <td class="small fw-medium" data-sort-value="{{ p.credor.cpf_cnpj|default:'' }}">{{ p.credor.cpf_cnpj|default:"-" }}</td>
+                                <td class="text-end pe-3 fw-bold text-success" data-sort-value="{{ p.valor_liquido }}">R$ {{ p.valor_liquido|floatformat:2 }}</td>
+                                <td data-sort-value="{{ p.forma_pagamento|default:'' }}">
+                                    {% if p.forma_pagamento %}
+                                        <span class="badge bg-secondary">{{ p.forma_pagamento }}</span>
+                                    {% else %}
+                                        <span class="text-muted small">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{% include "pagamentos/partials/_dados_pagamento.html" with dp=dp %}</td>
+                                <td class="text-center no-print">
+                                    <div class="d-flex justify-content-center gap-1">
+                                    <button type="button" class="btn btn-sm btn-primary fw-bold shadow-sm btn-preview"
+                                            data-processo-id="{{ p.id }}"
+                                            title="Pré-visualizar Documentos">
+                                        <i class="bi bi-eye"></i> Preview
+                                    </button>
+                                    <form method="POST" action="{% url 'desmarcar_lancamento' %}" onsubmit="return confirm('Desmarcar lançamento do Processo #{{ p.id }}?');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="processo_id" value="{{ p.id }}">
+                                        <button type="submit" class="btn btn-sm btn-warning fw-bold shadow-sm" title="Desmarcar Lançamento">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Desmarcar Lançamento
+                                        </button>
+                                    </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endwith %}
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                    Nenhum processo lançado ainda.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {# Totais Lançados por Forma de Pagamento #}
+            {% if totais_lancados %}
+            <div class="card shadow-sm border-0 border-start border-success border-3 mb-2">
+                <div class="card-body py-2 px-3">
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <span class="text-muted small fw-bold text-uppercase me-1"><i class="bi bi-calculator me-1"></i>Totais Lançados:</span>
+                        {% for forma, total in totais_lancados.items %}
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1" style="font-size:0.82rem;">
+                            {{ forma }}: <strong>R$ {{ total|floatformat:2 }}</strong>
+                        </span>
+                        {% endfor %}
+                        <span class="ms-auto fw-bold text-success small">Total Geral: R$ {{ total_lancados|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+{% include 'pagamentos/partials/preview_modal.html' %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const barcodeApiBase = "{% url 'api_extrair_codigos_barras_processo' pk=0 %}".replace('/0/', '/');
+
+    function buildBarcodeItemHtml(codigo) {
+        return `
+            <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
+                <span class="font-monospace text-primary text-break small fw-bold me-2">${codigo}</span>
+                <button class="btn btn-sm btn-outline-secondary copy-btn flex-shrink-0 px-2 py-1 no-print" data-clipboard="${codigo}" title="Copiar">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </li>
+        `;
+    }
+
+    function bindCopyButtons(scope) {
+        scope.querySelectorAll('.copy-btn').forEach(function (btn) {
+            if (btn.dataset.boundCopy === '1') {
+                return;
+            }
+            btn.dataset.boundCopy = '1';
+            btn.addEventListener('click', function () {
+                var text = this.getAttribute('data-clipboard');
+                navigator.clipboard.writeText(text).then(function () {
+                    var icon = btn.querySelector('i');
+                    icon.classList.replace('bi-clipboard', 'bi-check-lg');
+                    btn.classList.replace('btn-outline-secondary', 'btn-success');
+                    btn.classList.add('text-white');
+                    setTimeout(function () {
+                        icon.classList.replace('bi-check-lg', 'bi-clipboard');
+                        btn.classList.replace('btn-success', 'btn-outline-secondary');
+                        btn.classList.remove('text-white');
+                    }, 2000);
+                }).catch(function () {
+                    alert('Não foi possível copiar automaticamente. Selecione o texto e use Ctrl+C.');
+                });
+            });
+        });
+    }
+
+    document.querySelectorAll('.js-refresh-barcodes').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const processoId = this.dataset.processoId;
+            const listEl = document.getElementById(`barcodeList_${processoId}`);
+            const emptyEl = document.getElementById(`barcodeEmpty_${processoId}`);
+            const statusEl = document.getElementById(`barcodeStatus_${processoId}`);
+
+            if (!processoId || !listEl) {
+                return;
+            }
+
+            this.disabled = true;
+            if (statusEl) {
+                statusEl.textContent = 'Atualizando...';
+            }
+
+            fetch(`${barcodeApiBase}${processoId}/`)
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (!data.sucesso) {
+                        throw new Error(data.erro || 'Falha ao carregar códigos.');
+                    }
+
+                    const codigos = data.barcodes || [];
+                    listEl.innerHTML = codigos.map(buildBarcodeItemHtml).join('');
+                    listEl.classList.toggle('d-none', codigos.length === 0);
+
+                    if (emptyEl) {
+                        emptyEl.classList.toggle('d-none', codigos.length > 0);
+                    }
+                    if (statusEl) {
+                        statusEl.textContent = codigos.length > 0
+                            ? `${codigos.length} código(s) atualizado(s).`
+                            : 'Nenhum código salvo nos documentos de boleto.';
+                    }
+                    bindCopyButtons(listEl);
+                })
+                .catch(function (err) {
+                    if (statusEl) {
+                        statusEl.textContent = 'Erro ao atualizar códigos.';
+                    }
+                    console.error(err);
+                })
+                .finally(() => {
+                    this.disabled = false;
+                });
+        });
+    });
+
+    bindCopyButtons(document);
+
+    var sortState = {};
+
+    document.querySelectorAll('th.sortable').forEach(function (th) {
+        th.addEventListener('click', function () {
+            var tableId = this.dataset.table;
+            var colIndex = parseInt(this.dataset.col);
+
+            if (!sortState[tableId]) sortState[tableId] = {};
+            var currentDir = sortState[tableId].col === colIndex ? sortState[tableId].dir : 'none';
+            var newDir = currentDir === 'asc' ? 'desc' : 'asc';
+            sortState[tableId] = { col: colIndex, dir: newDir };
+
+            document.querySelectorAll('th.sortable[data-table="' + tableId + '"] .sort-icon').forEach(function (icon) {
+                icon.className = 'bi bi-arrow-down-up ms-1 text-muted sort-icon';
+            });
+            var icon = this.querySelector('.sort-icon');
+            if (newDir === 'asc') {
+                icon.className = 'bi bi-arrow-up ms-1 text-primary sort-icon';
+            } else {
+                icon.className = 'bi bi-arrow-down ms-1 text-primary sort-icon';
+            }
+
+            var table = document.getElementById(tableId);
+            var tbody = table.querySelector('tbody');
+            var rows = Array.from(tbody.querySelectorAll('tr'));
+
+            if (rows.length <= 1) return;
+
+            rows.sort(function (a, b) {
+                var aCell = a.cells[colIndex];
+                var bCell = b.cells[colIndex];
+                if (!aCell || !bCell) return 0;
+
+                var aVal = aCell.dataset.sortValue !== undefined ? aCell.dataset.sortValue : aCell.textContent.trim();
+                var bVal = bCell.dataset.sortValue !== undefined ? bCell.dataset.sortValue : bCell.textContent.trim();
+
+                var aNum = parseFloat(aVal.replace(/[^\d.,]/g, '').replace(',', '.'));
+                var bNum = parseFloat(bVal.replace(/[^\d.,]/g, '').replace(',', '.'));
+
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return newDir === 'asc' ? aNum - bNum : bNum - aNum;
+                }
+
+                return newDir === 'asc'
+                    ? aVal.localeCompare(bVal, 'pt-BR', { sensitivity: 'base' })
+                    : bVal.localeCompare(aVal, 'pt-BR', { sensitivity: 'base' });
+            });
+
+            rows.forEach(function (row) { tbody.appendChild(row); });
+        });
+    });
+});
+</script>
+
+</body>
+</html>
