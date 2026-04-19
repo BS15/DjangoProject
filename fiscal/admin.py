@@ -6,6 +6,7 @@ from simple_history.admin import SimpleHistoryAdmin
 from .models import (
     CodigosImposto,
     DocumentoFiscal,
+    DocumentoPagamentoImposto,
     RetencaoImposto,
     StatusChoicesRetencoes,
 )
@@ -20,5 +21,6 @@ class CodigosImpostoAdmin(admin.ModelAdmin):
 
 
 admin.site.register(DocumentoFiscal, SimpleHistoryAdmin)
+admin.site.register(DocumentoPagamentoImposto, SimpleHistoryAdmin)
 admin.site.register(RetencaoImposto, SimpleHistoryAdmin)
 admin.site.register(StatusChoicesRetencoes)

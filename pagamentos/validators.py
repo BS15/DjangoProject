@@ -21,6 +21,37 @@ STATUS_SOMENTE_DOCUMENTOS = set(PROCESSO_STATUS_SOMENTE_DOCUMENTOS)
 STATUS_BLOQUEADOS_FORM = list(PROCESSO_STATUS_BLOQUEADOS_FORM)
 
 
+def validar_completude_recolhimento_impostos(processo):
+    """Valida se o processo de recolhimento de impostos possui documentação completa por retenção."""
+    tipo_pagamento_nome = ""
+    if getattr(processo, "tipo_pagamento_id", None):
+        try:
+            tipo_pagamento_nome = (processo.tipo_pagamento.tipo_de_pagamento or "").upper()
+        except AttributeError:
+            tipo_pagamento_nome = ""
+
+    if "IMPOSTO" not in tipo_pagamento_nome:
+        return []
+
+    from fiscal.services.impostos import verificar_completude_documentos_impostos
+
+    pendentes = verificar_completude_documentos_impostos(processo)
+    if not pendentes:
+        return []
+
+    lista = ", ".join(str(ret_id) for ret_id in pendentes[:10])
+    return [
+        "Para avançar o processo de recolhimento de impostos, todas as retenções devem possuir "
+        "DocumentoPagamentoImposto completo (relatório, guia e comprovante). "
+        f"Retenção(ões) pendente(s): {lista}."
+    ]
+
+
+def pode_limpar_pendencias_impostos(processo) -> bool:
+    """Retorna True quando a documentação de recolhimento de impostos está completa."""
+    return not validar_completude_recolhimento_impostos(processo)
+
+
 def verificar_turnpike(processo, status_anterior, status_novo):
     """
     Valida as regras de transição de status do processo (turnpike).
@@ -109,6 +140,8 @@ def verificar_turnpike(processo, status_anterior, status_novo):
                 )
 
     if anterior == ProcessoStatus.LANCADO_AGUARDANDO_COMPROVANTE and novo == ProcessoStatus.PAGO_EM_CONFERENCIA:
+        erros.extend(validar_completude_recolhimento_impostos(processo))
+
         tipo_pagamento_nome = ''
         if getattr(processo, 'tipo_pagamento_id', None):
             try:

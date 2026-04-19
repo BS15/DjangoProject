@@ -202,20 +202,20 @@ def verificar_completude_documentos_impostos(processo) -> list:
     if not retencoes:
         return []
 
-    pendentes = []
-    for retencao in retencoes:
-        docs = DocumentoPagamentoImposto.objects.filter(
-            retencao=retencao,
-            codigo_imposto=retencao.codigo,
+    retencao_ids = [r.id for r in retencoes]
+    docs_completos = set(
+        DocumentoPagamentoImposto.objects.filter(
+            retencao_id__in=retencao_ids,
+            relatorio_retencoes__isnull=False,
+            guia_recolhimento__isnull=False,
+            comprovante_pagamento__isnull=False,
         )
-        completo = any(
-            d.relatorio_retencoes and d.guia_recolhimento and d.comprovante_pagamento
-            for d in docs
-        )
-        if not completo:
-            pendentes.append(retencao.id)
-
-    return pendentes
+        .exclude(relatorio_retencoes="")
+        .exclude(guia_recolhimento="")
+        .exclude(comprovante_pagamento="")
+        .values_list("retencao_id", flat=True)
+    )
+    return [retencao.id for retencao in retencoes if retencao.id not in docs_completos]
 
 
 __all__ = [
