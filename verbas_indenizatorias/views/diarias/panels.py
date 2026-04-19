@@ -1,14 +1,15 @@
 from django.contrib.auth.decorators import permission_required
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render
 
 from fluxo.views.shared import render_filtered_list
 from verbas_indenizatorias.forms import DiariaForm
 from verbas_indenizatorias.models import Diaria
 from verbas_indenizatorias.filters import DiariaFilter
+from .access import _pode_acessar_prestacao
 from ..shared.registry import _get_tipos_documento_verbas
 
-@permission_required("fluxo.pode_visualizar_verbas", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_visualizar_verbas", raise_exception=True)
 def diarias_list_view(request):
     queryset = Diaria.objects.select_related("beneficiario", "status", "processo").order_by("-id")
     return render_filtered_list(
@@ -21,14 +22,16 @@ def diarias_list_view(request):
     )
 
 
-@permission_required("fluxo.pode_criar_diarias", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_criar_diarias", raise_exception=True)
 def add_diaria_view(request):
     return render(request, 'verbas/add_diaria.html', {'form': DiariaForm()})
 
 
-@permission_required("fluxo.pode_gerenciar_diarias", raise_exception=True)
 def gerenciar_diaria_view(request, pk):
     diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status', 'processo'), id=pk)
+    if not _pode_acessar_prestacao(request.user, diaria):
+        return HttpResponseForbidden("Acesso negado para prestação de contas desta diária.")
+
     comprovantes = diaria.documentos.select_related('tipo').all()
 
     context = {
@@ -39,7 +42,7 @@ def gerenciar_diaria_view(request, pk):
     return render(request, 'verbas/gerenciar_diaria.html', context)
 
 
-@permission_required("fluxo.pode_importar_diarias", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_importar_diarias", raise_exception=True)
 def download_template_diarias_csv(request):
     """Baixa um CSV-modelo para importação de diárias."""
     conteudo = (

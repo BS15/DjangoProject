@@ -92,8 +92,10 @@ class TiposDeVerbasIndenizatorias(models.Model):
             ("pode_gerenciar_reembolsos", "Pode gerenciar reembolsos"),
             ("pode_autorizar_diarias", "Pode autorizar diárias"),
             ("pode_importar_diarias", "Pode importar diárias"),
+            ("pode_sincronizar_diarias_siscac", "Pode sincronizar/importar diárias via SISCAC"),
             ("pode_criar_diarias", "Pode criar diárias"),
             ("pode_gerenciar_diarias", "Pode gerenciar diárias"),
+            ("operar_prestacao_contas", "Pode operar prestação de contas em nome de terceiros"),
         ]
 
 
@@ -130,6 +132,8 @@ class Diaria(models.Model):
                                      verbose_name="Beneficiário", related_name='diarias_como_beneficiario')
     proponente = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                    related_name='diarias_propostas', verbose_name="Proponente")
+    criado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='diarias_criadas', verbose_name="Criado por")
 
     tipo_solicitacao = models.CharField(max_length=20, choices=TIPO_SOLICITACAO, default='INICIAL')
     diaria_inicial = models.ForeignKey(
@@ -175,6 +179,7 @@ class Diaria(models.Model):
         "numero_siscac",
         "processo_id",
     }
+    _CAMPOS_RETIFICACAO_OFICIO = {"numero_siscac"}
     objects = SealedMutationQuerySet.as_manager()
 
     def clean(self):
@@ -271,6 +276,14 @@ class Diaria(models.Model):
         campos_avaliados = set(update_fields) & campos_sensiveis if update_fields is not None else campos_sensiveis
         alterados = [campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)]
 
+        status_processo = ""
+        if self.processo and self.processo.status:
+            status_processo = (self.processo.status.status_choice or "").upper()
+        processo_pago = status_processo.startswith("PAGO")
+
+        if alterados and set(alterados).issubset(self._CAMPOS_RETIFICACAO_OFICIO) and not processo_pago:
+            return
+
         if alterados:
             raise DjangoValidationError(
                 {
@@ -328,6 +341,45 @@ class DocumentoDiaria(DocumentoBase):
 
     diaria = models.ForeignKey('Diaria', on_delete=models.CASCADE, related_name='documentos')
     history = HistoricalRecords()
+
+
+class DevolucaoDiaria(models.Model):
+    """Devolução parcial registrada para ajuste de diária sem edição direta do título pago."""
+
+    diaria = models.ForeignKey('Diaria', on_delete=models.PROTECT, related_name='devolucoes')
+    valor_devolvido = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+    data_devolucao = models.DateField()
+    motivo = models.TextField()
+    registrado_por = models.ForeignKey(User, on_delete=models.PROTECT)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    def clean(self):
+        if self.diaria_id and self.valor_devolvido and self.valor_devolvido > self.diaria.valor_total:
+            raise DjangoValidationError(
+                {'valor_devolvido': 'Valor devolvido não pode exceder o valor total da diária.'}
+            )
+
+
+class ApostilaDiaria(models.Model):
+    """Apostila para correção formal não financeira em dados de diária."""
+
+    diaria = models.ForeignKey('Diaria', on_delete=models.PROTECT, related_name='apostilas')
+    texto_correcao = models.TextField("Texto da Apostila")
+    campo_corrigido = models.CharField("Campo Corrigido", max_length=100)
+    valor_anterior = models.TextField("Valor Anterior", blank=True)
+    valor_novo = models.TextField("Valor Novo", blank=True)
+    registrado_por = models.ForeignKey(User, on_delete=models.PROTECT)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=~models.Q(campo_corrigido__in=['valor_total', 'quantidade_diarias']),
+                name='apostila_nao_altera_valores_financeiros_chk',
+            )
+        ]
 
 
 class ReembolsoCombustivel(models.Model):

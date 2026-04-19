@@ -81,6 +81,10 @@ class Migration(migrations.Migration):
                     ("pode_gerenciar_reembolsos", "Pode gerenciar reembolsos"),
                     ("pode_autorizar_diarias", "Pode autorizar diárias"),
                     ("pode_importar_diarias", "Pode importar diárias"),
+                    (
+                        "pode_sincronizar_diarias_siscac",
+                        "Pode sincronizar/importar diárias via SISCAC",
+                    ),
                     ("pode_criar_diarias", "Pode criar diárias"),
                     ("pode_gerenciar_diarias", "Pode gerenciar diárias"),
                 ],

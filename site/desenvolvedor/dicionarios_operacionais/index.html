@@ -14,7 +14,7 @@
         <link rel="prev" href="../padroes_codigo/">
       
       
-        <link rel="next" href="../../instalacao/">
+        <link rel="next" href="../funcionalidades_transversais/">
       
       
         
@@ -450,14 +450,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../arquitetura/hub_spoke/" class="md-nav__link">
+      <a href="../../arquitetura/camada_services/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Interface Hub-and-Spoke
+    Camada de Services
   
 
     
@@ -478,14 +478,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../arquitetura/camada_services/" class="md-nav__link">
+      <a href="../../arquitetura/hub_spoke/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Camada de Services
+    Hub-and-Spoke
   
 
     
@@ -538,7 +538,7 @@
   <span class="md-ellipsis">
     
   
-    Manual de Módulos (Funcional)
+    Manual de Módulos
   
 
     
@@ -554,7 +554,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Manual de Módulos (Funcional)
+    Manual de Módulos
   
 
           </label>
@@ -567,14 +567,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../modulos/fluxo_core/" class="md-nav__link">
+      <a href="../../modulos/pagamentos_core/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Fluxo Core
+    Pagamentos Core
   
 
     
@@ -740,14 +740,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../governanca/matriz_permissoes/" class="md-nav__link">
+      <a href="../../governanca/trilha_auditoria/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Matriz de Permissões (RBAC)
+    Trilha de Auditoria
   
 
     
@@ -768,14 +768,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../governanca/trilha_auditoria/" class="md-nav__link">
+      <a href="../../governanca/matriz_permissoes/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Trilha de Auditoria
+    Matriz de Permissões
   
 
     
@@ -1007,17 +1007,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#agrupar_impostos_action-legado" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        agrupar_impostos_action (legado)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#anexar_documentos_retencoes_action" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1050,32 +1039,21 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#gerar_lote_reinf_legacy_action-legado" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        gerar_lote_reinf_legacy_action (legado)
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#catalogo-de-actions-do-fluxo" class="md-nav__link">
+  <a href="#catalogo-de-actions-de-pagamentos" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Catálogo de Actions do Fluxo
+        Catálogo de Actions de Pagamentos
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Catálogo de Actions do Fluxo">
+    <nav class="md-nav" aria-label="Catálogo de Actions de Pagamentos">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1372,22 +1350,121 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#helpers-fiscais-de-nota-fiscal-impostos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helpers Fiscais de Nota Fiscal (impostos)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#atualizar_retencoes_nota" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        atualizar_retencoes_nota
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#criar_documento_fiscal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        criar_documento_fiscal
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#dicionario-de-workershelpers-do-fluxo" class="md-nav__link">
+  <a href="#dicionario-de-workershelpers-de-pagamentos" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Dicionário de Workers/Helpers do Fluxo
+        Dicionário de Workers/Helpers de Pagamentos
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Dicionário de Workers/Helpers do Fluxo">
+    <nav class="md-nav" aria-label="Dicionário de Workers/Helpers de Pagamentos">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#helpers-de-cadastro-de-processos-pre_payment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helpers de Cadastro de Processos (pre_payment)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#salvar_retencoes_nota_fiscal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        salvar_retencoes_nota_fiscal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#criar_nota_fiscal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        criar_nota_fiscal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sincronizar_pendencia_nota" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sincronizar_pendencia_nota
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helpers-de-comprovantes-de-pagamento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helpers de Comprovantes de Pagamento
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#processar_e_salvar_comprovantes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        processar_e_salvar_comprovantes
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#_salvar_processo_completo" class="md-nav__link">
@@ -1471,6 +1548,39 @@
     <span class="md-ellipsis">
       
         aplicar_aprovacao_contingencia
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helpers-de-contingencias" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helpers de Contingências
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#processar_aprovacao_contingencia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        processar_aprovacao_contingencia
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#processar_revisao_contadora_contingencia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        processar_revisao_contadora_contingencia
       
     </span>
   </a>
@@ -1586,6 +1696,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../funcionalidades_transversais/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Funcionalidades Transversais
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1715,17 +1853,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#agrupar_impostos_action-legado" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        agrupar_impostos_action (legado)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#anexar_documentos_retencoes_action" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1758,32 +1885,21 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#gerar_lote_reinf_legacy_action-legado" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        gerar_lote_reinf_legacy_action (legado)
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#catalogo-de-actions-do-fluxo" class="md-nav__link">
+  <a href="#catalogo-de-actions-de-pagamentos" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Catálogo de Actions do Fluxo
+        Catálogo de Actions de Pagamentos
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Catálogo de Actions do Fluxo">
+    <nav class="md-nav" aria-label="Catálogo de Actions de Pagamentos">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2080,22 +2196,121 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#helpers-fiscais-de-nota-fiscal-impostos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helpers Fiscais de Nota Fiscal (impostos)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#atualizar_retencoes_nota" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        atualizar_retencoes_nota
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#criar_documento_fiscal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        criar_documento_fiscal
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#dicionario-de-workershelpers-do-fluxo" class="md-nav__link">
+  <a href="#dicionario-de-workershelpers-de-pagamentos" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Dicionário de Workers/Helpers do Fluxo
+        Dicionário de Workers/Helpers de Pagamentos
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Dicionário de Workers/Helpers do Fluxo">
+    <nav class="md-nav" aria-label="Dicionário de Workers/Helpers de Pagamentos">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#helpers-de-cadastro-de-processos-pre_payment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helpers de Cadastro de Processos (pre_payment)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#salvar_retencoes_nota_fiscal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        salvar_retencoes_nota_fiscal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#criar_nota_fiscal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        criar_nota_fiscal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sincronizar_pendencia_nota" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sincronizar_pendencia_nota
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helpers-de-comprovantes-de-pagamento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helpers de Comprovantes de Pagamento
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#processar_e_salvar_comprovantes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        processar_e_salvar_comprovantes
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#_salvar_processo_completo" class="md-nav__link">
@@ -2179,6 +2394,39 @@
     <span class="md-ellipsis">
       
         aplicar_aprovacao_contingencia
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helpers-de-contingencias" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helpers de Contingências
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#processar_aprovacao_contingencia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        processar_aprovacao_contingencia
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#processar_revisao_contadora_contingencia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        processar_revisao_contadora_contingencia
       
     </span>
   </a>
@@ -2378,61 +2626,6 @@
 </tr>
 </tbody>
 </table>
-<h3 id="agrupar_impostos_action-legado">agrupar_impostos_action (legado)<a class="headerlink" href="#agrupar_impostos_action-legado" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Campo</th>
-<th>Valor</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Action</td>
-<td><code>agrupar_impostos_action</code></td>
-</tr>
-<tr>
-<td>Arquivo</td>
-<td><code>fiscal/views/impostos/actions.py</code></td>
-</tr>
-<tr>
-<td>Rota</td>
-<td><code>agrupar_impostos</code> (<code>/impostos/agrupar/legacy/</code>)</td>
-</tr>
-<tr>
-<td>Permissão</td>
-<td><code>fiscal.acesso_backoffice</code></td>
-</tr>
-<tr>
-<td>Método</td>
-<td><code>POST</code></td>
-</tr>
-<tr>
-<td>Entrada</td>
-<td>idêntica à <code>agrupar_retencoes_action</code></td>
-</tr>
-<tr>
-<td>Validações</td>
-<td>delegadas para <code>agrupar_retencoes_action</code></td>
-</tr>
-<tr>
-<td>Worker</td>
-<td>delega para <code>agrupar_retencoes_action</code></td>
-</tr>
-<tr>
-<td>Efeitos</td>
-<td>iguais ao endpoint principal</td>
-</tr>
-<tr>
-<td>Redirect</td>
-<td>igual ao endpoint principal</td>
-</tr>
-<tr>
-<td>Feedback</td>
-<td>igual ao endpoint principal</td>
-</tr>
-</tbody>
-</table>
 <h3 id="anexar_documentos_retencoes_action">anexar_documentos_retencoes_action<a class="headerlink" href="#anexar_documentos_retencoes_action" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -2523,7 +2716,7 @@
 </tr>
 <tr>
 <td>Validações</td>
-<td>normaliza competência e usa mês/ano atual em fallback</td>
+<td>exige competência no formato AAAA-MM; mês deve estar em 1-12; retorna HTTP 400 com mensagem descritiva quando ausente ou inválida</td>
 </tr>
 <tr>
 <td>Worker</td>
@@ -2539,7 +2732,7 @@
 </tr>
 <tr>
 <td>Feedback</td>
-<td>erro funcional via <code>HttpResponse</code> 404 quando não há lotes</td>
+<td>HTTP 400 com mensagem de erro quando competência inválida; HTTP 404 quando não há lotes elegíveis para a competência informada</td>
 </tr>
 </tbody>
 </table>
@@ -2582,7 +2775,7 @@
 </tr>
 <tr>
 <td>Worker</td>
-<td>placeholder (integração externa ainda não habilitada)</td>
+<td>sem worker dedicado (integração externa ainda não habilitada)</td>
 </tr>
 <tr>
 <td>Efeitos</td>
@@ -2598,62 +2791,7 @@
 </tr>
 </tbody>
 </table>
-<h3 id="gerar_lote_reinf_legacy_action-legado">gerar_lote_reinf_legacy_action (legado)<a class="headerlink" href="#gerar_lote_reinf_legacy_action-legado" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Campo</th>
-<th>Valor</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Action</td>
-<td><code>gerar_lote_reinf_legacy_action</code></td>
-</tr>
-<tr>
-<td>Arquivo</td>
-<td><code>fiscal/views/reinf/actions.py</code></td>
-</tr>
-<tr>
-<td>Rota</td>
-<td><code>gerar_lote_reinf</code> (<code>/reinf/gerar-lotes/legacy/</code>)</td>
-</tr>
-<tr>
-<td>Permissão</td>
-<td><code>fiscal.acesso_backoffice</code></td>
-</tr>
-<tr>
-<td>Método</td>
-<td><code>POST</code></td>
-</tr>
-<tr>
-<td>Entrada</td>
-<td>competência via parser legado</td>
-</tr>
-<tr>
-<td>Validações</td>
-<td>delegadas para <code>parse_competencia</code></td>
-</tr>
-<tr>
-<td>Worker</td>
-<td><code>fiscal.services.gerar_lotes_reinf</code></td>
-</tr>
-<tr>
-<td>Efeitos</td>
-<td>gera XMLs e devolve zip</td>
-</tr>
-<tr>
-<td>Redirect</td>
-<td>não aplica (retorna arquivo)</td>
-</tr>
-<tr>
-<td>Feedback</td>
-<td>erro funcional via <code>HttpResponse</code> 404 quando não há lotes</td>
-</tr>
-</tbody>
-</table>
-<h2 id="catalogo-de-actions-do-fluxo">Catálogo de Actions do Fluxo<a class="headerlink" href="#catalogo-de-actions-do-fluxo" title="Permanent link">&para;</a></h2>
+<h2 id="catalogo-de-actions-de-pagamentos">Catálogo de Actions de Pagamentos<a class="headerlink" href="#catalogo-de-actions-de-pagamentos" title="Permanent link">&para;</a></h2>
 <h3 id="namespace-pre_payment">Namespace <code>pre_payment</code><a class="headerlink" href="#namespace-pre_payment" title="Permanent link">&para;</a></h3>
 <h4 id="etapa-cadastro">Etapa <code>cadastro</code><a class="headerlink" href="#etapa-cadastro" title="Permanent link">&para;</a></h4>
 <table>
@@ -2675,52 +2813,52 @@
 <tbody>
 <tr>
 <td><code>add_process_action</code></td>
-<td><code>fluxo/views/pre_payment/cadastro/actions.py</code></td>
+<td><code>pagamentos/views/pre_payment/cadastro/actions.py</code></td>
 <td><code>add_process_action</code> (<code>/adicionar/action/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.acesso_backoffice</code></td>
 <td><code>POST</code></td>
 <td>dados de capa e formsets iniciais</td>
 <td>regras de criação e consistência de processo</td>
-<td>services/helpers de cadastro quando aplicável</td>
+<td><code>_salvar_processo_completo</code> (orquestração)</td>
 <td>cria processo e registros associados</td>
 <td><code>editar_processo</code></td>
 <td><code>messages</code> success/error</td>
 </tr>
 <tr>
 <td><code>editar_processo_capa_action</code></td>
-<td><code>fluxo/views/pre_payment/cadastro/actions.py</code></td>
+<td><code>pagamentos/views/pre_payment/cadastro/actions.py</code></td>
 <td><code>editar_processo_capa_action</code> (<code>/processo/&lt;int:pk&gt;/editar/capa/action/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.acesso_backoffice</code></td>
 <td><code>POST</code></td>
 <td>dados de capa do processo</td>
 <td>validação de formulário e status elegível</td>
-<td>services/helpers de cadastro quando aplicável</td>
+<td><code>_salvar_processo_completo</code> (orquestração)</td>
 <td>atualiza dados de capa</td>
 <td>tela de edição do processo</td>
 <td><code>messages</code> success/error</td>
 </tr>
 <tr>
 <td><code>editar_processo_documentos_action</code></td>
-<td><code>fluxo/views/pre_payment/cadastro/actions.py</code></td>
+<td><code>pagamentos/views/pre_payment/cadastro/actions.py</code></td>
 <td><code>editar_processo_documentos_action</code> (<code>/processo/&lt;int:pk&gt;/editar/documentos/action/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.acesso_backoffice</code></td>
 <td><code>POST</code></td>
 <td>payload documental e anexos</td>
 <td>regras documentais e de etapa</td>
-<td>services/helpers documentais quando aplicável</td>
+<td><code>_salvar_formsets_em_transacao</code> (orquestração)</td>
 <td>cria/atualiza documentos e pendências</td>
 <td>tela de edição do processo</td>
 <td><code>messages</code> success/error</td>
 </tr>
 <tr>
 <td><code>editar_processo_pendencias_action</code></td>
-<td><code>fluxo/views/pre_payment/cadastro/actions.py</code></td>
+<td><code>pagamentos/views/pre_payment/cadastro/actions.py</code></td>
 <td><code>editar_processo_pendencias_action</code> (<code>/processo/&lt;int:pk&gt;/editar/pendencias/action/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.acesso_backoffice</code></td>
 <td><code>POST</code></td>
 <td>atualização de pendências</td>
 <td>validação de estado de pendências</td>
-<td>helpers de pendência quando aplicável</td>
+<td><code>_atualizar_status_pendencia</code> (orquestração)</td>
 <td>altera status de pendências</td>
 <td>tela de edição do processo</td>
 <td><code>messages</code> success/error</td>
@@ -2747,13 +2885,13 @@
 <tbody>
 <tr>
 <td><code>registrar_empenho_action</code></td>
-<td><code>fluxo/views/pre_payment/empenho/actions.py</code></td>
+<td><code>pagamentos/views/pre_payment/empenho/actions.py</code></td>
 <td><code>registrar_empenho_action</code> (<code>/a-empenhar/registrar-empenho/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_operar_contas_pagar</code></td>
 <td><code>POST</code></td>
 <td>dados de empenho e processo alvo</td>
 <td>consistência de valores e elegibilidade</td>
-<td>services de empenho quando aplicável</td>
+<td><code>_registrar_empenho_e_anexar_siscac</code></td>
 <td>registra dados de empenho no processo</td>
 <td>painel/fluxo de empenho</td>
 <td><code>messages</code> success/error</td>
@@ -2780,26 +2918,26 @@
 <tbody>
 <tr>
 <td><code>alternar_ateste_nota_action</code></td>
-<td><code>fluxo/views/pre_payment/liquidacoes/actions.py</code></td>
+<td><code>pagamentos/views/pre_payment/liquidacoes/actions.py</code></td>
 <td><code>alternar_ateste_nota</code> (<code>/liquidacoes/atestar/&lt;int:pk&gt;/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_atestar_liquidacao</code></td>
 <td><code>POST</code></td>
 <td>identificação da nota</td>
 <td>valida elegibilidade de ateste</td>
-<td>service/helper de liquidação quando aplicável</td>
+<td>sem worker dedicado (mutação local na action)</td>
 <td>alterna estado de ateste</td>
 <td>painel de liquidações</td>
 <td><code>messages</code> success/error</td>
 </tr>
 <tr>
 <td><code>avancar_para_pagamento_action</code></td>
-<td><code>fluxo/views/pre_payment/liquidacoes/actions.py</code></td>
+<td><code>pagamentos/views/pre_payment/liquidacoes/actions.py</code></td>
 <td><code>avancar_para_pagamento</code> (<code>/processo/&lt;int:pk&gt;/avancar-para-pagamento/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_operar_contas_pagar</code></td>
 <td><code>POST</code></td>
 <td>processo alvo</td>
 <td>turnpikes de liquidação e obrigatoriedades</td>
-<td>service de transição de etapa</td>
+<td><code>processo.avancar_status(...)</code> (método de domínio)</td>
 <td>avança processo para pagamento</td>
 <td>hub do processo/painel</td>
 <td><code>messages</code> success/error</td>
@@ -2827,13 +2965,13 @@
 <tbody>
 <tr>
 <td><code>enviar_para_autorizacao_action</code></td>
-<td><code>fluxo/views/payment/contas_a_pagar/actions.py</code></td>
+<td><code>pagamentos/views/payment/contas_a_pagar/actions.py</code></td>
 <td><code>enviar_para_autorizacao</code> (<code>/processos/enviar-autorizacao/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_operar_contas_pagar</code></td>
 <td><code>POST</code></td>
 <td>seleção de processos</td>
 <td>validação de elegibilidade para autorização</td>
-<td>service de contas a pagar</td>
+<td><code>_processar_acao_lote</code></td>
 <td>altera estado para autorização</td>
 <td>painel de contas a pagar</td>
 <td><code>messages</code> success/error</td>
@@ -2860,26 +2998,26 @@
 <tbody>
 <tr>
 <td><code>autorizar_pagamento</code></td>
-<td><code>fluxo/views/payment/autorizacao/actions.py</code></td>
+<td><code>pagamentos/views/payment/autorizacao/actions.py</code></td>
 <td><code>autorizar_pagamento</code> (<code>/processos/autorizar-pagamento/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_autorizar_pagamento</code></td>
 <td><code>POST</code></td>
 <td>seleção de processos para autorização</td>
 <td>valida permissão e critérios de autorização</td>
-<td>service de autorização quando aplicável</td>
+<td><code>_processar_acao_lote</code></td>
 <td>autoriza pagamento de processos</td>
 <td>painel de autorização</td>
 <td><code>messages</code> success/error</td>
 </tr>
 <tr>
 <td><code>recusar_autorizacao_action</code></td>
-<td><code>fluxo/views/payment/autorizacao/actions.py</code></td>
+<td><code>pagamentos/views/payment/autorizacao/actions.py</code></td>
 <td><code>recusar_autorizacao</code> (<code>/processos/autorizacao/&lt;int:pk&gt;/recusar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_autorizar_pagamento</code></td>
 <td><code>POST</code></td>
 <td>processo e motivo de recusa</td>
 <td>validação de estado e permissão</td>
-<td>service de recusa quando aplicável</td>
+<td><code>_recusar_processo_view</code></td>
 <td>registra recusa e atualiza estado</td>
 <td>painel de autorização</td>
 <td><code>messages</code> success/error</td>
@@ -2906,39 +3044,39 @@
 <tbody>
 <tr>
 <td><code>separar_para_lancamento_bancario_action</code></td>
-<td><code>fluxo/views/payment/lancamento/actions.py</code></td>
+<td><code>pagamentos/views/payment/lancamento/actions.py</code></td>
 <td><code>separar_para_lancamento_bancario</code> (<code>/processos/separar-lancamento/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_operar_contas_pagar</code></td>
 <td><code>POST</code></td>
 <td>seleção de processos</td>
 <td>validação de status elegível para lançamento</td>
-<td>service de lançamento bancário</td>
+<td>sem worker dedicado (orquestração em sessão)</td>
 <td>separa processos para lançamento</td>
 <td>painel de lançamento bancário</td>
 <td><code>messages</code> success/error</td>
 </tr>
 <tr>
 <td><code>marcar_como_lancado_action</code></td>
-<td><code>fluxo/views/payment/lancamento/actions.py</code></td>
+<td><code>pagamentos/views/payment/lancamento/actions.py</code></td>
 <td><code>marcar_como_lancado</code> (<code>/processos/marcar-lancado/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_operar_contas_pagar</code></td>
 <td><code>POST</code></td>
 <td>seleção de processos lançados</td>
 <td>validação de lote e estado</td>
-<td>service de lançamento bancário</td>
+<td><code>_processar_acao_lote</code></td>
 <td>marca processos como lançados</td>
 <td>painel de lançamento bancário</td>
 <td><code>messages</code> success/error</td>
 </tr>
 <tr>
 <td><code>desmarcar_lancamento_action</code></td>
-<td><code>fluxo/views/payment/lancamento/actions.py</code></td>
+<td><code>pagamentos/views/payment/lancamento/actions.py</code></td>
 <td><code>desmarcar_lancamento</code> (<code>/processos/desmarcar-lancamento/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_operar_contas_pagar</code></td>
 <td><code>POST</code></td>
 <td>seleção de processos</td>
 <td>validação de reversão permitida</td>
-<td>service de lançamento bancário</td>
+<td><code>_processar_acao_lote</code></td>
 <td>reverte marcação de lançamento</td>
 <td>painel de lançamento bancário</td>
 <td><code>messages</code> success/error</td>
@@ -2966,26 +3104,26 @@
 <tbody>
 <tr>
 <td><code>iniciar_conferencia_action</code></td>
-<td><code>fluxo/views/post_payment/conferencia/actions.py</code></td>
+<td><code>pagamentos/views/post_payment/conferencia/actions.py</code></td>
 <td><code>iniciar_conferencia</code> (<code>/processos/conferencia/iniciar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_operar_contas_pagar</code></td>
 <td><code>POST</code></td>
 <td>seleção de processos</td>
 <td>valida elegibilidade para conferência</td>
-<td>service de conferência quando aplicável</td>
+<td><code>_iniciar_fila_sessao</code></td>
 <td>move processos para revisão de conferência</td>
 <td>painel de conferência</td>
 <td><code>messages</code> success/error</td>
 </tr>
 <tr>
 <td><code>aprovar_conferencia_action</code></td>
-<td><code>fluxo/views/post_payment/conferencia/actions.py</code></td>
+<td><code>pagamentos/views/post_payment/conferencia/actions.py</code></td>
 <td><code>aprovar_conferencia</code> (<code>/processos/conferencia/&lt;int:pk&gt;/aprovar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_operar_contas_pagar</code></td>
 <td><code>POST</code></td>
 <td>processo alvo</td>
 <td>valida checklist da etapa</td>
-<td>service de conferência quando aplicável</td>
+<td>sem worker dedicado (ação atualmente sem mutação)</td>
 <td>aprova conferência e avança fluxo</td>
 <td>painel de conferência</td>
 <td><code>messages</code> success/error</td>
@@ -3012,39 +3150,39 @@
 <tbody>
 <tr>
 <td><code>iniciar_contabilizacao_action</code></td>
-<td><code>fluxo/views/post_payment/contabilizacao/actions.py</code></td>
+<td><code>pagamentos/views/post_payment/contabilizacao/actions.py</code></td>
 <td><code>iniciar_contabilizacao</code> (<code>/processos/contabilizacao/iniciar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_contabilizar</code></td>
 <td><code>POST</code></td>
 <td>seleção de processos</td>
 <td>valida elegibilidade para contabilização</td>
-<td>service de contabilização quando aplicável</td>
+<td><code>_iniciar_fila_sessao</code></td>
 <td>inicia etapa de contabilização</td>
 <td>painel de contabilização</td>
 <td><code>messages</code> success/error</td>
 </tr>
 <tr>
 <td><code>aprovar_contabilizacao_action</code></td>
-<td><code>fluxo/views/post_payment/contabilizacao/actions.py</code></td>
+<td><code>pagamentos/views/post_payment/contabilizacao/actions.py</code></td>
 <td><code>aprovar_contabilizacao</code> (<code>/processos/contabilizacao/&lt;int:pk&gt;/aprovar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_contabilizar</code></td>
 <td><code>POST</code></td>
 <td>processo alvo</td>
 <td>valida regras da etapa</td>
-<td>service de contabilização quando aplicável</td>
+<td><code>_aprovar_processo_view</code></td>
 <td>aprova contabilização</td>
 <td>painel de contabilização</td>
 <td><code>messages</code> success/error</td>
 </tr>
 <tr>
 <td><code>recusar_contabilizacao_action</code></td>
-<td><code>fluxo/views/post_payment/contabilizacao/actions.py</code></td>
+<td><code>pagamentos/views/post_payment/contabilizacao/actions.py</code></td>
 <td><code>recusar_contabilizacao</code> (<code>/processos/contabilizacao/&lt;int:pk&gt;/recusar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_contabilizar</code></td>
 <td><code>POST</code></td>
 <td>processo e justificativa</td>
 <td>valida recusa permitida</td>
-<td>service de contabilização quando aplicável</td>
+<td><code>_recusar_processo_view</code></td>
 <td>recusa contabilização e ajusta estado</td>
 <td>painel de contabilização</td>
 <td><code>messages</code> success/error</td>
@@ -3071,26 +3209,26 @@
 <tbody>
 <tr>
 <td><code>aprovar_conselho_action</code></td>
-<td><code>fluxo/views/post_payment/conselho/actions.py</code></td>
+<td><code>pagamentos/views/post_payment/conselho/actions.py</code></td>
 <td><code>aprovar_conselho</code> (<code>/processos/conselho/&lt;int:pk&gt;/aprovar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_auditar_conselho</code></td>
 <td><code>POST</code></td>
 <td>processo em análise de conselho</td>
 <td>validações de deliberação</td>
-<td>service de conselho quando aplicável</td>
+<td><code>_aprovar_processo_view</code></td>
 <td>aprova deliberação</td>
 <td>painel de conselho</td>
 <td><code>messages</code> success/error</td>
 </tr>
 <tr>
 <td><code>recusar_conselho_action</code></td>
-<td><code>fluxo/views/post_payment/conselho/actions.py</code></td>
+<td><code>pagamentos/views/post_payment/conselho/actions.py</code></td>
 <td><code>recusar_conselho</code> (<code>/processos/conselho/&lt;int:pk&gt;/recusar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_auditar_conselho</code></td>
 <td><code>POST</code></td>
 <td>processo e justificativa</td>
 <td>validações de recusa</td>
-<td>service de conselho quando aplicável</td>
+<td><code>_recusar_processo_view</code></td>
 <td>recusa deliberação</td>
 <td>painel de conselho</td>
 <td><code>messages</code> success/error</td>
@@ -3117,39 +3255,39 @@
 <tbody>
 <tr>
 <td><code>gerenciar_reunioes_action</code></td>
-<td><code>fluxo/views/post_payment/reunioes/actions.py</code></td>
+<td><code>pagamentos/views/post_payment/reunioes/actions.py</code></td>
 <td><code>gerenciar_reunioes_action</code> (<code>/processos/conselho/reunioes/criar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_auditar_conselho</code></td>
 <td><code>POST</code></td>
 <td>dados da reunião</td>
 <td>validações de criação de reunião</td>
-<td>service de reuniões quando aplicável</td>
+<td>sem worker dedicado (orquestração na própria action)</td>
 <td>cria/atualiza reunião</td>
 <td>painel de reuniões</td>
 <td><code>messages</code> success/error</td>
 </tr>
 <tr>
 <td><code>montar_pauta_reuniao_action</code></td>
-<td><code>fluxo/views/post_payment/reunioes/actions.py</code></td>
+<td><code>pagamentos/views/post_payment/reunioes/actions.py</code></td>
 <td><code>montar_pauta_reuniao_action</code> (<code>/processos/conselho/reunioes/&lt;int:reuniao_id&gt;/montar-pauta/adicionar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_auditar_conselho</code></td>
 <td><code>POST</code></td>
 <td>itens da pauta e reunião alvo</td>
 <td>validações de elegibilidade dos processos</td>
-<td>service de reuniões quando aplicável</td>
+<td>sem worker dedicado (orquestração na própria action)</td>
 <td>vincula itens na pauta</td>
 <td>tela de pauta da reunião</td>
 <td><code>messages</code> success/error</td>
 </tr>
 <tr>
 <td><code>iniciar_conselho_reuniao_action</code></td>
-<td><code>fluxo/views/post_payment/reunioes/actions.py</code></td>
+<td><code>pagamentos/views/post_payment/reunioes/actions.py</code></td>
 <td><code>iniciar_conselho_reuniao</code> (<code>/processos/conselho/reunioes/&lt;int:reuniao_id&gt;/iniciar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_auditar_conselho</code></td>
 <td><code>POST</code></td>
 <td>reunião alvo</td>
 <td>validações de prontidão da pauta</td>
-<td>service de reuniões quando aplicável</td>
+<td>sem worker dedicado (orquestração na própria action)</td>
 <td>inicia sessão de conselho</td>
 <td>análise de reunião/painel</td>
 <td><code>messages</code> success/error</td>
@@ -3176,13 +3314,13 @@
 <tbody>
 <tr>
 <td><code>arquivar_processo_action</code></td>
-<td><code>fluxo/views/post_payment/arquivamento/actions.py</code></td>
+<td><code>pagamentos/views/post_payment/arquivamento/actions.py</code></td>
 <td><code>arquivar_processo_action</code> (<code>/processos/arquivamento/&lt;int:pk&gt;/executar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_arquivar</code></td>
 <td><code>POST</code></td>
 <td>processo alvo</td>
 <td>validações de encerramento e completude</td>
-<td>service de arquivamento quando aplicável</td>
+<td><code>_executar_arquivamento_definitivo</code></td>
 <td>arquiva processo</td>
 <td>painel de arquivamento</td>
 <td><code>messages</code> success/error</td>
@@ -3210,13 +3348,13 @@
 <tbody>
 <tr>
 <td><code>atualizar_pendencias_lote_action</code></td>
-<td><code>fluxo/views/support/pendencia/actions.py</code></td>
+<td><code>pagamentos/views/support/pendencia/actions.py</code></td>
 <td><code>painel_pendencias_action</code> (<code>/pendencias/action/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.acesso_backoffice</code></td>
 <td><code>POST</code></td>
 <td>lote de pendências e status</td>
 <td>validação de lote e transições permitidas</td>
-<td>helper/service de pendência</td>
+<td>sem worker dedicado (mutação local na action)</td>
 <td>atualiza múltiplas pendências</td>
 <td>painel de pendências</td>
 <td><code>messages</code> success/error</td>
@@ -3243,13 +3381,13 @@
 <tbody>
 <tr>
 <td><code>registrar_devolucao_action</code></td>
-<td><code>fluxo/views/support/devolucao/actions.py</code></td>
+<td><code>pagamentos/views/support/devolucao/actions.py</code></td>
 <td><code>registrar_devolucao_action</code> (<code>/processo/&lt;int:processo_id&gt;/devolucao/salvar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.acesso_backoffice</code></td>
 <td><code>POST</code></td>
 <td>dados da devolução e processo</td>
 <td>validações de devolução e anexos</td>
-<td>service de devolução quando aplicável</td>
+<td>sem worker dedicado (<code>form.save()</code> na action)</td>
 <td>registra devolução financeira/documental</td>
 <td>painel de devoluções/processo</td>
 <td><code>messages</code> success/error</td>
@@ -3276,26 +3414,26 @@
 <tbody>
 <tr>
 <td><code>add_contingencia_action</code></td>
-<td><code>fluxo/views/support/contingencia/actions.py</code></td>
+<td><code>pagamentos/views/support/contingencia/actions.py</code></td>
 <td><code>add_contingencia_action</code> (<code>/contingencias/nova/enviar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.acesso_backoffice</code></td>
 <td><code>POST</code></td>
 <td>dados de contingência</td>
 <td>validação de elegibilidade e campos obrigatórios</td>
-<td>service/helper de contingência</td>
+<td><code>normalizar_dados_propostos_contingencia</code> + <code>determinar_requisitos_contingencia</code></td>
 <td>cria contingência vinculada ao processo</td>
 <td>painel de contingências</td>
 <td><code>messages</code> success/error</td>
 </tr>
 <tr>
 <td><code>analisar_contingencia_action</code></td>
-<td><code>fluxo/views/support/contingencia/actions.py</code></td>
+<td><code>pagamentos/views/support/contingencia/actions.py</code></td>
 <td><code>analisar_contingencia</code> (<code>/contingencias/&lt;int:pk&gt;/analisar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.acesso_backoffice</code></td>
 <td><code>POST</code></td>
 <td>decisão sobre contingência</td>
 <td>validação de estado e permissão</td>
-<td>service/helper de contingência</td>
+<td><code>processar_aprovacao_contingencia</code> + <code>processar_revisao_contadora_contingencia</code></td>
 <td>aprova/recusa contingência e atualiza estado</td>
 <td>painel de contingências</td>
 <td><code>messages</code> success/error</td>
@@ -3322,52 +3460,52 @@
 <tbody>
 <tr>
 <td><code>add_conta_fixa_action</code></td>
-<td><code>fluxo/views/support/contas_fixas/actions.py</code></td>
+<td><code>pagamentos/views/support/contas_fixas/actions.py</code></td>
 <td><code>add_conta_fixa_action</code> (<code>/contas-fixas/nova/action/</code>)</td>
-<td>ver decorator da action</td>
+<td>não implementado no codebase (<code>actions.py/</code> vazio)</td>
 <td><code>POST</code></td>
 <td>dados da conta fixa</td>
 <td>validação de formulário</td>
-<td>service/helper de contas fixas</td>
+<td>não implementado no codebase (<code>actions.py/</code> vazio)</td>
 <td>cria conta/fatura</td>
 <td>painel de contas fixas</td>
 <td><code>messages</code> success/error</td>
 </tr>
 <tr>
 <td><code>edit_conta_fixa_action</code></td>
-<td><code>fluxo/views/support/contas_fixas/actions.py</code></td>
+<td><code>pagamentos/views/support/contas_fixas/actions.py</code></td>
 <td><code>edit_conta_fixa_action</code> (<code>/contas-fixas/&lt;int:pk&gt;/editar/action/</code>)</td>
-<td>ver decorator da action</td>
+<td>não implementado no codebase (<code>actions.py/</code> vazio)</td>
 <td><code>POST</code></td>
 <td>atualização de conta fixa</td>
 <td>validação de formulário</td>
-<td>service/helper de contas fixas</td>
+<td>não implementado no codebase (<code>actions.py/</code> vazio)</td>
 <td>atualiza conta/fatura</td>
 <td>painel de contas fixas</td>
 <td><code>messages</code> success/error</td>
 </tr>
 <tr>
 <td><code>vincular_processo_fatura_action</code></td>
-<td><code>fluxo/views/support/contas_fixas/actions.py</code></td>
+<td><code>pagamentos/views/support/contas_fixas/actions.py</code></td>
 <td><code>vincular_processo_fatura</code> (<code>/contas-fixas/&lt;int:fatura_id&gt;/vincular/</code>)</td>
-<td>ver decorator da action</td>
+<td>não implementado no codebase (<code>actions.py/</code> vazio)</td>
 <td><code>POST</code></td>
 <td>fatura e processo alvo</td>
 <td>validação de vínculo permitido</td>
-<td>service/helper de contas fixas</td>
+<td>não implementado no codebase (<code>actions.py/</code> vazio)</td>
 <td>vincula fatura a processo</td>
 <td>painel de contas fixas</td>
 <td><code>messages</code> success/error</td>
 </tr>
 <tr>
 <td><code>excluir_conta_fixa_action</code></td>
-<td><code>fluxo/views/support/contas_fixas/actions.py</code></td>
+<td><code>pagamentos/views/support/contas_fixas/actions.py</code></td>
 <td><code>excluir_conta_fixa</code> (<code>/contas-fixas/&lt;int:pk&gt;/excluir/</code>)</td>
-<td>ver decorator da action</td>
+<td>não implementado no codebase (<code>actions.py/</code> vazio)</td>
 <td><code>POST</code></td>
 <td>conta fixa alvo</td>
 <td>validação de exclusão permitida</td>
-<td>service/helper de contas fixas</td>
+<td>não implementado no codebase (<code>actions.py/</code> vazio)</td>
 <td>remove/desativa vínculo conforme regra do módulo</td>
 <td>painel de contas fixas</td>
 <td><code>messages</code> success/error</td>
@@ -3396,11 +3534,11 @@
 <td><code>editar_processo_verbas_capa_action</code></td>
 <td><code>verbas_indenizatorias/views/processo/actions.py</code></td>
 <td><code>editar_processo_verbas_capa_action</code> (<code>/processo/&lt;int:pk&gt;/editar-verbas/capa/action/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>verbas_indenizatorias.pode_gerenciar_processos_verbas</code></td>
 <td><code>POST</code></td>
 <td>dados de capa do processo de verbas</td>
 <td>validação de formulário</td>
-<td>services/helpers de processo de verbas</td>
+<td><code>_forcar_campos_canonicos_processo_verbas</code> + <code>ProcessoForm.save()</code></td>
 <td>atualiza capa do processo</td>
 <td>tela de edição de verbas</td>
 <td><code>messages</code> success/error</td>
@@ -3409,11 +3547,11 @@
 <td><code>editar_processo_verbas_pendencias_action</code></td>
 <td><code>verbas_indenizatorias/views/processo/actions.py</code></td>
 <td><code>editar_processo_verbas_pendencias_action</code> (<code>/processo/&lt;int:pk&gt;/editar-verbas/pendencias/action/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>verbas_indenizatorias.pode_gerenciar_processos_verbas</code></td>
 <td><code>POST</code></td>
 <td>atualização de pendências</td>
 <td>validação de transições de pendência</td>
-<td>helpers de pendências do módulo</td>
+<td><code>PendenciaFormSet.save()</code> + <code>_forcar_campos_canonicos_processo_verbas</code></td>
 <td>atualiza pendências</td>
 <td>tela de edição de verbas</td>
 <td><code>messages</code> success/error</td>
@@ -3422,11 +3560,11 @@
 <td><code>editar_processo_verbas_documentos_action</code></td>
 <td><code>verbas_indenizatorias/views/processo/actions.py</code></td>
 <td><code>editar_processo_verbas_documentos_action</code> (<code>/processo/&lt;int:pk&gt;/editar-verbas/documentos/action/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>verbas_indenizatorias.pode_gerenciar_processos_verbas</code></td>
 <td><code>POST</code></td>
 <td>dados documentais e anexos</td>
 <td>regras documentais da etapa</td>
-<td>services/helpers documentais</td>
+<td><code>DocumentoFormSet.save()</code></td>
 <td>cria/atualiza documentos</td>
 <td>tela de edição de verbas</td>
 <td><code>messages</code> success/error</td>
@@ -3435,11 +3573,11 @@
 <td><code>agrupar_verbas_view</code></td>
 <td><code>verbas_indenizatorias/views/processo/actions.py</code></td>
 <td><code>agrupar_verbas</code> (<code>/verbas/agrupar/&lt;str:tipo_verba&gt;/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>verbas_indenizatorias.pode_agrupar_verbas</code></td>
 <td><code>POST</code></td>
 <td>tipo de verba + seleção de itens</td>
 <td>validação por tipo de verba</td>
-<td>service de agrupamento</td>
+<td><code>criar_processo_e_vincular_verbas</code></td>
 <td>agrupa verbas em processo de pagamento</td>
 <td>painel de verbas</td>
 <td><code>messages</code> success/error</td>
@@ -3448,11 +3586,11 @@
 <td><code>add_diaria_action</code></td>
 <td><code>verbas_indenizatorias/views/diarias/actions.py</code></td>
 <td><code>add_diaria_action</code> (<code>/verbas/diarias/nova/action/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_criar_diarias</code></td>
 <td><code>POST</code></td>
 <td>dados de diária</td>
 <td>validações de beneficiário e período</td>
-<td>services/helpers de diárias</td>
+<td><code>_salvar_diaria_base</code></td>
 <td>cria diária e estado inicial</td>
 <td>listas/gerência de diárias</td>
 <td><code>messages</code> success/error</td>
@@ -3461,11 +3599,11 @@
 <td><code>registrar_comprovante_action</code></td>
 <td><code>verbas_indenizatorias/views/diarias/actions.py</code></td>
 <td><code>registrar_comprovante_action</code> (<code>/verbas/diarias/&lt;int:pk&gt;/comprovantes/registrar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_gerenciar_diarias</code></td>
 <td><code>POST</code></td>
 <td>comprovante e diária alvo</td>
 <td>validação de arquivo e estado</td>
-<td>helper de comprovantes</td>
+<td><code>_salvar_documento_upload</code></td>
 <td>anexa comprovante e ajusta estado</td>
 <td>gerência da diária</td>
 <td><code>messages</code> success/error</td>
@@ -3474,11 +3612,11 @@
 <td><code>cancelar_diaria_action</code></td>
 <td><code>verbas_indenizatorias/views/diarias/actions.py</code></td>
 <td><code>cancelar_diaria_action</code> (<code>/verbas/diarias/&lt;int:pk&gt;/cancelar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_gerenciar_diarias</code></td>
 <td><code>POST</code></td>
 <td>diária alvo</td>
 <td>validação de cancelamento permitido</td>
-<td>service de diárias</td>
+<td><code>diaria.avancar_status(...)</code> + <code>_set_status_case_insensitive</code></td>
 <td>cancela diária</td>
 <td>listas/gerência de diárias</td>
 <td><code>messages</code> success/error</td>
@@ -3487,11 +3625,11 @@
 <td><code>add_reembolso_action</code></td>
 <td><code>verbas_indenizatorias/views/reembolsos/actions.py</code></td>
 <td><code>add_reembolso_action</code> (<code>/verbas/reembolsos/novo/action/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_gerenciar_reembolsos</code></td>
 <td><code>POST</code></td>
 <td>dados de reembolso</td>
 <td>validações de campos e valores</td>
-<td>services/helpers de reembolso</td>
+<td><code>ReembolsoForm.save()</code></td>
 <td>cria reembolso</td>
 <td>listas/gerência de reembolsos</td>
 <td><code>messages</code> success/error</td>
@@ -3500,11 +3638,11 @@
 <td><code>solicitar_autorizacao_reembolso_action</code></td>
 <td><code>verbas_indenizatorias/views/reembolsos/actions.py</code></td>
 <td><code>solicitar_autorizacao_reembolso_action</code> (<code>/verbas/reembolsos/&lt;int:pk&gt;/solicitar-autorizacao/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_gerenciar_reembolsos</code></td>
 <td><code>POST</code></td>
 <td>reembolso alvo</td>
 <td>validações de elegibilidade</td>
-<td>service de status</td>
+<td><code>_set_status_case_insensitive</code></td>
 <td>altera status para solicitação de autorização</td>
 <td>gerência de reembolso</td>
 <td><code>messages</code> success/error</td>
@@ -3513,11 +3651,11 @@
 <td><code>autorizar_reembolso_action</code></td>
 <td><code>verbas_indenizatorias/views/reembolsos/actions.py</code></td>
 <td><code>autorizar_reembolso_action</code> (<code>/verbas/reembolsos/&lt;int:pk&gt;/autorizar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_gerenciar_reembolsos</code></td>
 <td><code>POST</code></td>
 <td>reembolso alvo</td>
 <td>validações de autorização</td>
-<td>service de status</td>
+<td><code>_set_status_case_insensitive</code></td>
 <td>autoriza reembolso</td>
 <td>gerência de reembolso</td>
 <td><code>messages</code> success/error</td>
@@ -3526,11 +3664,11 @@
 <td><code>cancelar_reembolso_action</code></td>
 <td><code>verbas_indenizatorias/views/reembolsos/actions.py</code></td>
 <td><code>cancelar_reembolso_action</code> (<code>/verbas/reembolsos/&lt;int:pk&gt;/cancelar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_gerenciar_reembolsos</code></td>
 <td><code>POST</code></td>
 <td>reembolso alvo</td>
 <td>validações de cancelamento</td>
-<td>service de status</td>
+<td><code>_set_status_case_insensitive</code></td>
 <td>cancela reembolso</td>
 <td>gerência de reembolso</td>
 <td><code>messages</code> success/error</td>
@@ -3539,11 +3677,11 @@
 <td><code>registrar_comprovante_reembolso_action</code></td>
 <td><code>verbas_indenizatorias/views/reembolsos/actions.py</code></td>
 <td><code>registrar_comprovante_reembolso_action</code> (<code>/verbas/reembolsos/&lt;int:pk&gt;/comprovantes/registrar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_gerenciar_reembolsos</code></td>
 <td><code>POST</code></td>
 <td>comprovante e reembolso alvo</td>
 <td>validação de arquivo e elegibilidade</td>
-<td>helper de comprovantes</td>
+<td><code>_salvar_documento_upload</code></td>
 <td>anexa comprovante</td>
 <td>gerência de reembolso</td>
 <td><code>messages</code> success/error</td>
@@ -3552,11 +3690,11 @@
 <td><code>add_jeton_action</code></td>
 <td><code>verbas_indenizatorias/views/jetons/actions.py</code></td>
 <td><code>add_jeton_action</code> (<code>/verbas/jetons/novo/action/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>verbas_indenizatorias.pode_gerenciar_jetons</code></td>
 <td><code>POST</code></td>
 <td>dados de jeton</td>
 <td>validações de sessão/beneficiário</td>
-<td>services/helpers de jetons</td>
+<td><code>JetonForm.save()</code></td>
 <td>cria jeton</td>
 <td>listas/gerência de jetons</td>
 <td><code>messages</code> success/error</td>
@@ -3565,11 +3703,11 @@
 <td><code>solicitar_autorizacao_jeton_action</code></td>
 <td><code>verbas_indenizatorias/views/jetons/actions.py</code></td>
 <td><code>solicitar_autorizacao_jeton_action</code> (<code>/verbas/jetons/&lt;int:pk&gt;/solicitar-autorizacao/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>verbas_indenizatorias.pode_gerenciar_jetons</code></td>
 <td><code>POST</code></td>
 <td>jeton alvo</td>
 <td>validações de elegibilidade</td>
-<td>service de status</td>
+<td><code>_set_status_case_insensitive</code></td>
 <td>solicita autorização de jeton</td>
 <td>gerência de jeton</td>
 <td><code>messages</code> success/error</td>
@@ -3578,11 +3716,11 @@
 <td><code>autorizar_jeton_action</code></td>
 <td><code>verbas_indenizatorias/views/jetons/actions.py</code></td>
 <td><code>autorizar_jeton_action</code> (<code>/verbas/jetons/&lt;int:pk&gt;/autorizar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>verbas_indenizatorias.pode_gerenciar_jetons</code></td>
 <td><code>POST</code></td>
 <td>jeton alvo</td>
 <td>validações de autorização</td>
-<td>service de status</td>
+<td><code>_set_status_case_insensitive</code></td>
 <td>autoriza jeton</td>
 <td>gerência de jeton</td>
 <td><code>messages</code> success/error</td>
@@ -3591,11 +3729,11 @@
 <td><code>cancelar_jeton_action</code></td>
 <td><code>verbas_indenizatorias/views/jetons/actions.py</code></td>
 <td><code>cancelar_jeton_action</code> (<code>/verbas/jetons/&lt;int:pk&gt;/cancelar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>verbas_indenizatorias.pode_gerenciar_jetons</code></td>
 <td><code>POST</code></td>
 <td>jeton alvo</td>
 <td>validações de cancelamento</td>
-<td>service de status</td>
+<td><code>_set_status_case_insensitive</code></td>
 <td>cancela jeton</td>
 <td>gerência de jeton</td>
 <td><code>messages</code> success/error</td>
@@ -3604,11 +3742,11 @@
 <td><code>add_auxilio_action</code></td>
 <td><code>verbas_indenizatorias/views/auxilios/actions.py</code></td>
 <td><code>add_auxilio_action</code> (<code>/verbas/auxilios/novo/action/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_gerenciar_auxilios</code></td>
 <td><code>POST</code></td>
 <td>dados de auxílio</td>
 <td>validações de elegibilidade</td>
-<td>services/helpers de auxílios</td>
+<td><code>AuxilioForm.save()</code></td>
 <td>cria auxílio</td>
 <td>listas/gerência de auxílios</td>
 <td><code>messages</code> success/error</td>
@@ -3617,11 +3755,11 @@
 <td><code>solicitar_autorizacao_auxilio_action</code></td>
 <td><code>verbas_indenizatorias/views/auxilios/actions.py</code></td>
 <td><code>solicitar_autorizacao_auxilio_action</code> (<code>/verbas/auxilios/&lt;int:pk&gt;/solicitar-autorizacao/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_gerenciar_auxilios</code></td>
 <td><code>POST</code></td>
 <td>auxílio alvo</td>
 <td>validações de elegibilidade</td>
-<td>service de status</td>
+<td><code>_set_status_case_insensitive</code></td>
 <td>solicita autorização de auxílio</td>
 <td>gerência de auxílio</td>
 <td><code>messages</code> success/error</td>
@@ -3630,11 +3768,11 @@
 <td><code>autorizar_auxilio_action</code></td>
 <td><code>verbas_indenizatorias/views/auxilios/actions.py</code></td>
 <td><code>autorizar_auxilio_action</code> (<code>/verbas/auxilios/&lt;int:pk&gt;/autorizar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_gerenciar_auxilios</code></td>
 <td><code>POST</code></td>
 <td>auxílio alvo</td>
 <td>validações de autorização</td>
-<td>service de status</td>
+<td><code>_set_status_case_insensitive</code></td>
 <td>autoriza auxílio</td>
 <td>gerência de auxílio</td>
 <td><code>messages</code> success/error</td>
@@ -3643,11 +3781,11 @@
 <td><code>cancelar_auxilio_action</code></td>
 <td><code>verbas_indenizatorias/views/auxilios/actions.py</code></td>
 <td><code>cancelar_auxilio_action</code> (<code>/verbas/auxilios/&lt;int:pk&gt;/cancelar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>fluxo.pode_gerenciar_auxilios</code></td>
 <td><code>POST</code></td>
 <td>auxílio alvo</td>
 <td>validações de cancelamento</td>
-<td>service de status</td>
+<td><code>_set_status_case_insensitive</code></td>
 <td>cancela auxílio</td>
 <td>gerência de auxílio</td>
 <td><code>messages</code> success/error</td>
@@ -3676,11 +3814,11 @@
 <td><code>add_suprimento_action</code></td>
 <td><code>suprimentos/views/cadastro/actions.py</code></td>
 <td><code>add_suprimento_action</code> (<code>/suprimentos/novo/action/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>suprimentos.acesso_backoffice</code></td>
 <td><code>POST</code></td>
 <td>dados cadastrais de suprimento</td>
 <td>validação de formulário e limites</td>
-<td>service de cadastro de suprimento</td>
+<td><code>_persistir_suprimento_com_processo</code></td>
 <td>cria suprimento e processo associado</td>
 <td>painel/lista de suprimentos</td>
 <td><code>messages</code> success/error</td>
@@ -3689,11 +3827,11 @@
 <td><code>adicionar_despesa_action</code></td>
 <td><code>suprimentos/views/prestacao_contas/actions.py</code></td>
 <td><code>registrar_despesa_action</code> (<code>/suprimentos/&lt;int:pk&gt;/despesas/adicionar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>suprimentos.acesso_backoffice</code></td>
 <td><code>POST</code></td>
 <td>despesa e suprimento alvo</td>
 <td>validação de prestação e documentos</td>
-<td>service de prestação de contas</td>
+<td><code>DespesaSuprimentoForm.save()</code></td>
 <td>registra despesa do suprimento</td>
 <td>gerência de suprimento</td>
 <td><code>messages</code> success/error</td>
@@ -3702,11 +3840,11 @@
 <td><code>fechar_suprimento_action</code></td>
 <td><code>suprimentos/views/prestacao_contas/actions.py</code></td>
 <td><code>concluir_prestacao_action</code> (<code>/suprimentos/&lt;int:pk&gt;/fechar/</code>)</td>
-<td>ver decorator da action</td>
+<td><code>suprimentos.acesso_backoffice</code></td>
 <td><code>POST</code></td>
 <td>suprimento alvo</td>
 <td>validação de fechamento e pendências</td>
-<td>service de prestação de contas</td>
+<td><code>_atualizar_status_apos_fechamento</code></td>
 <td>conclui prestação do suprimento</td>
 <td>gerência/painel de suprimentos</td>
 <td><code>messages</code> success/error</td>
@@ -3800,7 +3938,268 @@
 </tr>
 </tbody>
 </table>
-<h2 id="dicionario-de-workershelpers-do-fluxo">Dicionário de Workers/Helpers do Fluxo<a class="headerlink" href="#dicionario-de-workershelpers-do-fluxo" title="Permanent link">&para;</a></h2>
+<h3 id="helpers-fiscais-de-nota-fiscal-impostos">Helpers Fiscais de Nota Fiscal (impostos)<a class="headerlink" href="#helpers-fiscais-de-nota-fiscal-impostos" title="Permanent link">&para;</a></h3>
+<h3 id="atualizar_retencoes_nota">atualizar_retencoes_nota<a class="headerlink" href="#atualizar_retencoes_nota" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Worker</td>
+<td><code>atualizar_retencoes_nota</code></td>
+</tr>
+<tr>
+<td>Arquivo</td>
+<td><code>fiscal/views/impostos/helpers.py</code></td>
+</tr>
+<tr>
+<td>Assinatura</td>
+<td><code>(nota, retencoes_data) -&gt; None</code></td>
+</tr>
+<tr>
+<td>Pré-condições</td>
+<td>nota fiscal e lista de retenções válida</td>
+</tr>
+<tr>
+<td>Mutações</td>
+<td>deleta retenções existentes da nota e recria com novos dados; salva nota com <code>update_fields</code></td>
+</tr>
+<tr>
+<td>Auditoria</td>
+<td>histórico de retenções e da nota fiscal</td>
+</tr>
+<tr>
+<td>Erros/retorno</td>
+<td>propaga <code>ValidationError</code> e <code>DatabaseError</code></td>
+</tr>
+<tr>
+<td>Atomicidade</td>
+<td><code>transaction.atomic</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="criar_documento_fiscal">criar_documento_fiscal<a class="headerlink" href="#criar_documento_fiscal" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Worker</td>
+<td><code>criar_documento_fiscal</code></td>
+</tr>
+<tr>
+<td>Arquivo</td>
+<td><code>fiscal/views/impostos/helpers.py</code></td>
+</tr>
+<tr>
+<td>Assinatura</td>
+<td><code>(processo, dados) -&gt; DocumentoFiscal</code></td>
+</tr>
+<tr>
+<td>Pré-condições</td>
+<td>processo existente e dados documentais válidos</td>
+</tr>
+<tr>
+<td>Mutações</td>
+<td>cria <code>DocumentoFiscal</code> vinculado ao processo fiscal</td>
+</tr>
+<tr>
+<td>Auditoria</td>
+<td>histórico de criação do <code>DocumentoFiscal</code></td>
+</tr>
+<tr>
+<td>Erros/retorno</td>
+<td>propaga <code>ValidationError</code> e <code>DatabaseError</code></td>
+</tr>
+<tr>
+<td>Atomicidade</td>
+<td><code>transaction.atomic</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="dicionario-de-workershelpers-de-pagamentos">Dicionário de Workers/Helpers de Pagamentos<a class="headerlink" href="#dicionario-de-workershelpers-de-pagamentos" title="Permanent link">&para;</a></h2>
+<h3 id="helpers-de-cadastro-de-processos-pre_payment">Helpers de Cadastro de Processos (pre_payment)<a class="headerlink" href="#helpers-de-cadastro-de-processos-pre_payment" title="Permanent link">&para;</a></h3>
+<h3 id="salvar_retencoes_nota_fiscal">salvar_retencoes_nota_fiscal<a class="headerlink" href="#salvar_retencoes_nota_fiscal" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Worker</td>
+<td><code>salvar_retencoes_nota_fiscal</code></td>
+</tr>
+<tr>
+<td>Arquivo</td>
+<td><code>pagamentos/views/pre_payment/cadastro/helpers.py</code></td>
+</tr>
+<tr>
+<td>Assinatura</td>
+<td><code>(nota, retencoes_data, processo) -&gt; None</code></td>
+</tr>
+<tr>
+<td>Pré-condições</td>
+<td>nota fiscal e processo existentes; <code>retencoes_data</code> lista válida</td>
+</tr>
+<tr>
+<td>Mutações</td>
+<td>deleta retenções antigas e recria a partir de <code>retencoes_data</code>; salva nota com <code>update_fields</code></td>
+</tr>
+<tr>
+<td>Auditoria</td>
+<td>histórico do modelo nota e das retenções vinculadas</td>
+</tr>
+<tr>
+<td>Erros/retorno</td>
+<td>propaga <code>ValidationError</code> e <code>DatabaseError</code></td>
+</tr>
+<tr>
+<td>Atomicidade</td>
+<td><code>transaction.atomic</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="criar_nota_fiscal">criar_nota_fiscal<a class="headerlink" href="#criar_nota_fiscal" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Worker</td>
+<td><code>criar_nota_fiscal</code></td>
+</tr>
+<tr>
+<td>Arquivo</td>
+<td><code>pagamentos/views/pre_payment/cadastro/helpers.py</code></td>
+</tr>
+<tr>
+<td>Assinatura</td>
+<td><code>(processo, dados) -&gt; DocumentoFiscal</code></td>
+</tr>
+<tr>
+<td>Pré-condições</td>
+<td>processo existente e dados de nota validados</td>
+</tr>
+<tr>
+<td>Mutações</td>
+<td>cria <code>DocumentoFiscal</code> vinculado ao processo</td>
+</tr>
+<tr>
+<td>Auditoria</td>
+<td>histórico de criação do <code>DocumentoFiscal</code></td>
+</tr>
+<tr>
+<td>Erros/retorno</td>
+<td>propaga <code>ValidationError</code> e <code>DatabaseError</code></td>
+</tr>
+<tr>
+<td>Atomicidade</td>
+<td><code>transaction.atomic</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="sincronizar_pendencia_nota">sincronizar_pendencia_nota<a class="headerlink" href="#sincronizar_pendencia_nota" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Worker</td>
+<td><code>sincronizar_pendencia_nota</code></td>
+</tr>
+<tr>
+<td>Arquivo</td>
+<td><code>pagamentos/views/pre_payment/cadastro/helpers.py</code></td>
+</tr>
+<tr>
+<td>Assinatura</td>
+<td><code>(processo, tipo_pendencia, nota) -&gt; None</code></td>
+</tr>
+<tr>
+<td>Pré-condições</td>
+<td>processo existente e <code>tipo_pendencia</code> definido</td>
+</tr>
+<tr>
+<td>Mutações</td>
+<td>cria ou remove pendências conforme estado da nota</td>
+</tr>
+<tr>
+<td>Auditoria</td>
+<td>pendências vinculadas ao processo com rastreio temporal</td>
+</tr>
+<tr>
+<td>Erros/retorno</td>
+<td>propaga <code>DatabaseError</code></td>
+</tr>
+<tr>
+<td>Atomicidade</td>
+<td><code>transaction.atomic</code> (parte do contexto da action chamadora)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="helpers-de-comprovantes-de-pagamento">Helpers de Comprovantes de Pagamento<a class="headerlink" href="#helpers-de-comprovantes-de-pagamento" title="Permanent link">&para;</a></h3>
+<h3 id="processar_e_salvar_comprovantes">processar_e_salvar_comprovantes<a class="headerlink" href="#processar_e_salvar_comprovantes" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Worker</td>
+<td><code>processar_e_salvar_comprovantes</code></td>
+</tr>
+<tr>
+<td>Arquivo</td>
+<td><code>pagamentos/views/payment/comprovantes/helpers.py</code></td>
+</tr>
+<tr>
+<td>Assinatura</td>
+<td><code>(processo, paginas_processadas, usuario) -&gt; None</code></td>
+</tr>
+<tr>
+<td>Pré-condições</td>
+<td>processo elegível para registro de comprovante e páginas geradas</td>
+</tr>
+<tr>
+<td>Mutações</td>
+<td>cria <code>ComprovanteDePagamento</code> e <code>DocumentoProcesso</code>; chama <code>processo.avancar_status</code>; salva retenções com <code>update_fields</code>; remove arquivo temporário de storage</td>
+</tr>
+<tr>
+<td>Auditoria</td>
+<td>transição de status rastreada em <code>avancar_status(usuario=...)</code></td>
+</tr>
+<tr>
+<td>Erros/retorno</td>
+<td>propaga <code>ValidationError</code>; <code>storage.delete</code> falha com log</td>
+</tr>
+<tr>
+<td>Atomicidade</td>
+<td><code>transaction.atomic</code></td>
+</tr>
+</tbody>
+</table>
 <h3 id="_salvar_processo_completo">_salvar_processo_completo<a class="headerlink" href="#_salvar_processo_completo" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -3816,7 +4215,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>fluxo/views/pre_payment/helpers.py</code></td>
+<td><code>pagamentos/views/pre_payment/helpers.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -3859,7 +4258,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>fluxo/views/pre_payment/helpers.py</code></td>
+<td><code>pagamentos/views/pre_payment/helpers.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -3902,7 +4301,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>fluxo/views/helpers/payment_builders.py</code></td>
+<td><code>pagamentos/views/helpers/payment_builders.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -3945,7 +4344,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>fluxo/views/helpers/workflows.py</code></td>
+<td><code>pagamentos/views/helpers/workflows.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -3988,7 +4387,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>fluxo/views/helpers/workflows.py</code></td>
+<td><code>pagamentos/views/helpers/workflows.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4031,7 +4430,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>fluxo/views/helpers/workflows.py</code></td>
+<td><code>pagamentos/views/helpers/workflows.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4074,7 +4473,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>fluxo/views/helpers/archival.py</code></td>
+<td><code>pagamentos/views/helpers/archival.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4117,7 +4516,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>fluxo/views/helpers/contingencias.py</code></td>
+<td><code>pagamentos/views/helpers/contingencias.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4138,6 +4537,93 @@
 <tr>
 <td>Erros/retorno</td>
 <td>retorna <code>(False, mensagem)</code> quando houver inconsistência</td>
+</tr>
+<tr>
+<td>Atomicidade</td>
+<td><code>transaction.atomic</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="helpers-de-contingencias">Helpers de Contingências<a class="headerlink" href="#helpers-de-contingencias" title="Permanent link">&para;</a></h3>
+<h3 id="processar_aprovacao_contingencia">processar_aprovacao_contingencia<a class="headerlink" href="#processar_aprovacao_contingencia" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Worker</td>
+<td><code>processar_aprovacao_contingencia</code></td>
+</tr>
+<tr>
+<td>Arquivo</td>
+<td><code>pagamentos/views/helpers/contingencias.py</code></td>
+</tr>
+<tr>
+<td>Assinatura</td>
+<td><code>(contingencia, usuario, parecer) -&gt; tuple[bool, str|None]</code></td>
+</tr>
+<tr>
+<td>Pré-condições</td>
+<td>contingência em status <code>PENDENTE_SUPERVISOR</code>, <code>PENDENTE_ORDENADOR</code> ou <code>PENDENTE_CONSELHO</code></td>
+</tr>
+<tr>
+<td>Mutações</td>
+<td>atribui campos de aprovação por etapa; chama <code>aplicar_aprovacao_contingencia</code> quando etapa final; chama <code>sincronizar_flag_contingencia_processo</code></td>
+</tr>
+<tr>
+<td>Auditoria</td>
+<td>campos de aprovador e data rastreados; histórico do processo</td>
+</tr>
+<tr>
+<td>Erros/retorno</td>
+<td>retorna <code>(False, mensagem)</code> para etapa inválida ou quando <code>aplicar_aprovacao</code> falha; retorna <code>(True, None)</code> no sucesso</td>
+</tr>
+<tr>
+<td>Atomicidade</td>
+<td><code>transaction.atomic</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="processar_revisao_contadora_contingencia">processar_revisao_contadora_contingencia<a class="headerlink" href="#processar_revisao_contadora_contingencia" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Worker</td>
+<td><code>processar_revisao_contadora_contingencia</code></td>
+</tr>
+<tr>
+<td>Arquivo</td>
+<td><code>pagamentos/views/helpers/contingencias.py</code></td>
+</tr>
+<tr>
+<td>Assinatura</td>
+<td><code>(contingencia, usuario, parecer) -&gt; tuple[bool, str|None]</code></td>
+</tr>
+<tr>
+<td>Pré-condições</td>
+<td>contingência em status <code>PENDENTE_CONTADOR</code>; parecer não vazio</td>
+</tr>
+<tr>
+<td>Mutações</td>
+<td>atribui <code>parecer_contadora</code>, <code>revisado_por_contadora</code> e <code>data_revisao_contadora</code>; chama <code>save(update_fields)</code>; chama <code>aplicar_aprovacao_contingencia</code></td>
+</tr>
+<tr>
+<td>Auditoria</td>
+<td>campos de revisão rastreados; histórico do processo</td>
+</tr>
+<tr>
+<td>Erros/retorno</td>
+<td>retorna <code>(False, "parecer obrigatório")</code> se parecer vazio; retorna <code>(False, msg)</code> se <code>aplicar_aprovacao</code> falha; retorna <code>(True, None)</code> no sucesso</td>
 </tr>
 <tr>
 <td>Atomicidade</td>
@@ -4334,7 +4820,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>suprimentos/views/cadastro/actions.py</code></td>
+<td><code>suprimentos/views/cadastro/helpers.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>

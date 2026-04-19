@@ -24,6 +24,9 @@
         <h5 class="card-title mb-0">Detalhes da Viagem</h5>
     </div>
     <div class="card-body">
+        <p><strong>Número SISCAC:</strong> {{ diaria.numero_siscac|default:"Não informado" }}</p>
+        <p><strong>Proponente:</strong> {{ diaria.proponente|default:"Não informado" }}</p>
+        <p><strong>Criado por:</strong> {{ diaria.criado_por|default:"Não informado" }}</p>
         <p><strong>Destino:</strong> {{ diaria.cidade_destino }}</p>
         <p><strong>Período:</strong> {{ diaria.data_saida|date:"d/m/Y" }} a {{ diaria.data_retorno|date:"d/m/Y" }}</p>
         <p><strong>Motivo:</strong> {{ diaria.objetivo }}</p>
@@ -78,10 +81,78 @@
         </ul>
     </div>
 </div>
+
+{% if perms.verbas_indenizatorias.pode_gerenciar_diarias and diaria.status.status_choice != 'PAGA' %}
+<div class="card shadow-sm border-warning mb-4">
+    <div class="card-header bg-warning-subtle">
+        <h5 class="card-title mb-0"><i class="bi bi-pencil-square"></i> Contingências da Diária</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                    <h6 class="mb-3">Registrar Devolução</h6>
+                    <form method="post" action="{% url 'registrar_devolucao_diaria_action' diaria.id %}">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            <label class="form-label">Valor devolvido</label>
+                            <input type="number" name="valor_devolvido" class="form-control" min="0.01" step="0.01" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Data da devolução</label>
+                            <input type="date" name="data_devolucao" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Motivo</label>
+                            <textarea name="motivo" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-outline-warning w-100">
+                            <i class="bi bi-arrow-counterclockwise"></i> Registrar Devolução
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                    <h6 class="mb-3">Registrar Apostila</h6>
+                    <form method="post" action="{% url 'registrar_apostila_diaria_action' diaria.id %}">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            <label class="form-label">Campo corrigido</label>
+                            <input type="text" name="campo_corrigido" class="form-control" maxlength="100" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Valor anterior (opcional)</label>
+                            <input type="text" name="valor_anterior" class="form-control">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Valor novo (opcional)</label>
+                            <input type="text" name="valor_novo" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Texto da apostila</label>
+                            <textarea name="texto_correcao" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-journal-text"></i> Registrar Apostila
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block detail_actions %}
-{% if diaria.status.status_choice != 'PAGA' and diaria.status.status_choice != 'REJEITADA' and diaria.status.status_choice != 'CANCELADO / ANULADO' %}
+{% if perms.verbas_indenizatorias.pode_gerenciar_diarias and diaria.status.status_choice != 'PAGA' and diaria.status.status_choice != 'REJEITADA' and diaria.status.status_choice != 'CANCELADO / ANULADO' %}
+<form method="post" action="{% url 'liberar_para_assinatura_action' diaria.id %}" onsubmit="return confirm('Liberar documento para assinatura eletrônica?');">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline-success w-100 btn-sm mt-2"><i class="bi bi-pen"></i> Liberar Para Assinatura</button>
+</form>
+
 <form method="post" action="{% url 'cancelar_diaria_action' diaria.id %}" onsubmit="return confirm('Deseja realmente cancelar esta diária?');">
     {% csrf_token %}
     <button type="submit" class="btn btn-outline-danger w-100 btn-sm mt-2"><i class="bi bi-x-circle"></i> Cancelar Diária</button>
@@ -90,5 +161,9 @@
 
 <a href="{% url 'gerar_pcd' diaria.pk %}" target="_blank" class="btn btn-outline-primary w-100 mt-2">
     <i class="bi bi-file-earmark-pdf"></i> Emitir PCD
+</a>
+
+<a href="{% url 'gerar_termo_prestacao_contas' diaria.pk %}" target="_blank" class="btn btn-outline-dark w-100 mt-2">
+    <i class="bi bi-file-earmark-text"></i> Termo de Prestação de Contas
 </a>
 {% endblock %}

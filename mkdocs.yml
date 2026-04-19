@@ -64,7 +64,6 @@ nav:
       - Pagamentos Core: modulos/pagamentos_core.md
       - Verbas Indenizatórias: modulos/verbas_indenizatorias.md
       - Suprimento de Fundos: modulos/suprimento_fundos.md
-      - Fluxo Core: modulos/fluxo_core.md
       - Módulo Fiscal: modulos/modulo_fiscal.md
   - Segurança e Governança:
       - Trilha de Auditoria: governanca/trilha_auditoria.md

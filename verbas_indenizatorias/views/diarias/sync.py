@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import redirect
 
 
-@permission_required("fluxo.pode_sincronizar_diarias_siscac", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_sincronizar_diarias_siscac", raise_exception=True)
 def sincronizar_diarias(request):
     """Ponto de entrada da sincronização de diárias via SISCAC.
 

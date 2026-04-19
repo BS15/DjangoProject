@@ -26,7 +26,7 @@ def _set_status_case_insensitive(reembolso, status_str):
 
 
 @require_POST
-@permission_required("fluxo.pode_gerenciar_reembolsos", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_reembolsos", raise_exception=True)
 def add_reembolso_action(request):
     form = ReembolsoForm(request.POST)
     if not form.is_valid():
@@ -40,7 +40,7 @@ def add_reembolso_action(request):
 
 
 @require_POST
-@permission_required("fluxo.pode_gerenciar_reembolsos", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_reembolsos", raise_exception=True)
 def solicitar_autorizacao_reembolso_action(request, pk):
     reembolso = get_object_or_404(ReembolsoCombustivel, id=pk)
     _set_status_case_insensitive(reembolso, "SOLICITADA")
@@ -50,7 +50,7 @@ def solicitar_autorizacao_reembolso_action(request, pk):
 
 
 @require_POST
-@permission_required("fluxo.pode_gerenciar_reembolsos", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_reembolsos", raise_exception=True)
 def autorizar_reembolso_action(request, pk):
     reembolso = get_object_or_404(ReembolsoCombustivel, id=pk)
     _set_status_case_insensitive(reembolso, "APROVADA")
@@ -60,7 +60,7 @@ def autorizar_reembolso_action(request, pk):
 
 
 @require_POST
-@permission_required("fluxo.pode_gerenciar_reembolsos", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_reembolsos", raise_exception=True)
 def cancelar_reembolso_action(request, pk):
     reembolso = get_object_or_404(ReembolsoCombustivel, id=pk)
     _set_status_case_insensitive(reembolso, "CANCELADO / ANULADO")
@@ -70,7 +70,7 @@ def cancelar_reembolso_action(request, pk):
 
 
 @require_POST
-@permission_required("fluxo.pode_gerenciar_reembolsos", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_reembolsos", raise_exception=True)
 def registrar_comprovante_reembolso_action(request, pk):
     reembolso = get_object_or_404(ReembolsoCombustivel, id=pk)
     arquivo = request.FILES.get("arquivo")

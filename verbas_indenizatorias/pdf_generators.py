@@ -454,10 +454,92 @@ class ReciboDocument(BasePDFDocument):
 		self._draw_recibo_evento(obj, beneficiario, valor_formatado, tipo_verba)
 
 
+class TermoPrestacaoContasDocument(BasePDFDocument):
+	"""Gera termo de veracidade para prestação de contas de diária."""
+
+	def draw_content(self):
+		diaria = self.obj
+		c = self.canvas
+		width = self.page_width
+		height = self.page_height
+
+		margin_left = 70
+		margin_right = 70
+		text_width = width - margin_left - margin_right
+		y = height - 160
+
+		c.setFont("Helvetica-Bold", 13)
+		c.drawCentredString(width / 2.0, y, "TERMO DE PRESTAÇÃO DE CONTAS — DIÁRIA")
+		y -= 24
+
+		numero = diaria.numero_siscac or diaria.id
+		beneficiario = _safe_text(getattr(diaria.beneficiario, "nome", None), "Não informado")
+		c.setFont("Helvetica", 10)
+		c.drawString(margin_left, y, f"Diária: {numero}")
+		y -= 14
+		c.drawString(margin_left, y, f"Beneficiário: {beneficiario}")
+		y -= 24
+
+		c.setFont("Helvetica-Bold", 11)
+		c.drawString(margin_left, y, "Documentos anexados:")
+		y -= 16
+		c.setFont("Helvetica", 10)
+
+		documentos = diaria.documentos.select_related("tipo").all().order_by("id")
+		if not documentos:
+			c.drawString(margin_left, y, "- Nenhum documento anexado.")
+			y -= 14
+		else:
+			for indice, documento in enumerate(documentos, start=1):
+				nome_arquivo = _safe_text(getattr(getattr(documento, "arquivo", None), "name", None), "Sem arquivo")
+				tipo = _safe_text(getattr(documento.tipo, "tipo", None), "Sem tipo")
+				y = _draw_wrapped_text(
+					c,
+					f"{indice}. {nome_arquivo} ({tipo})",
+					margin_left,
+					y,
+					text_width,
+					font_name="Helvetica",
+					font_size=10,
+					leading=14,
+					justify=False,
+				)
+
+		y -= 20
+		boilerplate = (
+			"Declaro, para os devidos fins, que os comprovantes anexados a esta prestação de contas "
+			"são autênticos, íntegros e correspondem às despesas efetivamente realizadas no contexto "
+			"da diária informada."
+		)
+		y = _draw_wrapped_text(
+			c,
+			boilerplate,
+			margin_left,
+			y,
+			text_width,
+			font_name="Helvetica",
+			font_size=10,
+			leading=14,
+			justify=True,
+		)
+
+		sig_y = max(120, y - 80)
+		sig_left_x = margin_left + _PCD_SIG_HALF_WIDTH
+		sig_right_x = width - margin_right - _PCD_SIG_HALF_WIDTH
+
+		c.setFont("Helvetica", 9)
+		c.line(sig_left_x - _PCD_SIG_HALF_WIDTH, sig_y, sig_left_x + _PCD_SIG_HALF_WIDTH, sig_y)
+		c.drawCentredString(sig_left_x, sig_y - 12, "Beneficiário")
+
+		c.line(sig_right_x - _PCD_SIG_HALF_WIDTH, sig_y, sig_right_x + _PCD_SIG_HALF_WIDTH, sig_y)
+		c.drawCentredString(sig_right_x, sig_y - 12, "Operador / Fiscal")
+
+
 # Registry de documentos específicos de Verbas Indenizatórias
 VERBAS_DOCUMENT_REGISTRY = {
 	'scd': SCDDocument,
 	'pcd': PCDDocument,
+	'termo_prestacao_contas': TermoPrestacaoContasDocument,
 	'recibo_reembolso': ReciboDocument,
 	'recibo_auxilio': ReciboDocument,
 	'recibo_jeton': ReciboDocument,
@@ -468,5 +550,6 @@ __all__ = [
 	"PCDDocument",
 	"SCDDocument",
 	"ReciboDocument",
+	"TermoPrestacaoContasDocument",
 	"VERBAS_DOCUMENT_REGISTRY",
 ]

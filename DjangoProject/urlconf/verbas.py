@@ -37,6 +37,9 @@ urlpatterns = [
     path('verbas/diarias/<int:pk>/gerenciar/', verbas_diarias_panels.gerenciar_diaria_view, name='gerenciar_diaria'),
 
     path('verbas/diarias/<int:pk>/comprovantes/registrar/', verbas_diarias_actions.registrar_comprovante_action, name='registrar_comprovante_action'),
+    path('verbas/diarias/<int:pk>/liberar-assinatura/', verbas_diarias_actions.liberar_para_assinatura_action, name='liberar_para_assinatura_action'),
+    path('verbas/diarias/<int:pk>/devolucao/registrar/', verbas_diarias_actions.registrar_devolucao_diaria_action, name='registrar_devolucao_diaria_action'),
+    path('verbas/diarias/<int:pk>/apostila/registrar/', verbas_diarias_actions.registrar_apostila_diaria_action, name='registrar_apostila_diaria_action'),
     path('verbas/diarias/<int:pk>/cancelar/', verbas_diarias_actions.cancelar_diaria_action, name='cancelar_diaria_action'),
     path('verbas/reembolsos/novo/', verbas_reembolso_panels.add_reembolso_view, name='add_reembolso'),
     path('verbas/reembolsos/novo/action/', verbas_reembolso_actions.add_reembolso_action, name='add_reembolso_action'),
@@ -65,6 +68,7 @@ urlpatterns = [
     path('api/diarias-iniciais/<int:beneficiario_id>/', verbas_diarias_apis.api_diarias_iniciais_por_beneficiario, name='api_diarias_iniciais_por_beneficiario'),
 
     path('verbas/diarias/<int:pk>/pcd/', verbas_diarias_pdf.gerar_pcd_view, name='gerar_pcd'),
+    path('verbas/diarias/<int:pk>/termo-prestacao-contas/', verbas_diarias_pdf.gerar_termo_prestacao_contas_view, name='gerar_termo_prestacao_contas'),
     path('verbas/sincronizar-diarias/', verbas_diarias_sync.sincronizar_diarias, name='sincronizar_diarias'),
     path('verbas/diarias/importar/', verbas_diarias_imports.importar_diarias_view, name='importar_diarias'),
     path('verbas/diarias/template-csv/', verbas_diarias_panels.download_template_diarias_csv, name='download_template_diarias_csv'),

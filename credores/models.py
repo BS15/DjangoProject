@@ -63,6 +63,10 @@ class Credor(models.Model):
 
     nome = models.CharField("Nome", max_length=50, null=False, blank=False)
     cpf_cnpj = models.CharField("CPF/CNPJ", max_length=50, null=False, blank=False, validators=[validar_cpf_cnpj])
+    usuario = models.OneToOneField(
+        'auth.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='credor_vinculado', verbose_name="Usuário do Portal"
+    )
     conta = models.ForeignKey('ContasBancarias', on_delete=models.PROTECT, blank=True, null=True, verbose_name="Conta Credor")
     chave_pix = models.CharField("Chave PIX do credor", max_length=50, null=True, blank=True)
     cargo_funcao = models.ForeignKey('CargosFuncoes', on_delete=models.PROTECT, blank=True, null=True)

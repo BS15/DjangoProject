@@ -47,10 +47,10 @@ _VERBA_CONFIG = {
 }
 
 _VERBA_PERMISSION_MAP = {
-    "diaria": "fluxo.pode_gerenciar_diarias",
-    "reembolso": "fluxo.pode_gerenciar_reembolsos",
-    "jeton": "fluxo.pode_gerenciar_jetons",
-    "auxilio": "fluxo.pode_gerenciar_auxilios",
+    "diaria": "verbas_indenizatorias.pode_gerenciar_diarias",
+    "reembolso": "verbas_indenizatorias.pode_gerenciar_reembolsos",
+    "jeton": "verbas_indenizatorias.pode_gerenciar_jetons",
+    "auxilio": "verbas_indenizatorias.pode_gerenciar_auxilios",
 }
 
 
