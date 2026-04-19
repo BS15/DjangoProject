@@ -6,16 +6,16 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from commons.shared.signature_services import AssinaturaSignatariosError, disparar_assinatura_rascunho_com_signatarios
-from pagamentos.models import AssinaturaAutentique
+from pagamentos.models import AssinaturaEletronica
 
 logger = logging.getLogger(__name__)
 
 
 def painel_assinaturas_view(request):
     """Exibe painel de assinaturas do usuário atual."""
-    meus_documentos = AssinaturaAutentique.objects.filter(criador=request.user).select_related("content_type").order_by("-id")
+    meus_documentos = AssinaturaEletronica.objects.filter(criador=request.user).select_related("content_type").order_by("-id")
 
-    pendentes = AssinaturaAutentique.objects.filter(status="PENDENTE").select_related("content_type")
+    pendentes = AssinaturaEletronica.objects.filter(status="PENDENTE").select_related("content_type")
 
     user_email = request.user.email
     para_assinar = []
@@ -39,7 +39,7 @@ def painel_assinaturas_view(request):
 @require_POST
 def disparar_assinatura_view(request, assinatura_id):
     """Dispara um rascunho de assinatura para a Autentique via POST."""
-    assinatura = get_object_or_404(AssinaturaAutentique, id=assinatura_id, status="RASCUNHO")
+    assinatura = get_object_or_404(AssinaturaEletronica, id=assinatura_id, status="RASCUNHO")
 
     if assinatura.criador != request.user:
         raise PermissionDenied("Apenas o criador do documento pode disparar esta assinatura.")

@@ -7,7 +7,11 @@ from django.views.decorators.http import require_GET
 from pagamentos.filters import ContingenciaFilter
 from pagamentos.domain_models import Contingencia
 from pagamentos.views.shared import apply_filterset, render_filtered_list
-from .helpers import _usuario_pode_acessar_painel_contingencias
+
+
+def _usuario_pode_acessar_painel_contingencias(user):
+    """Verifica se o usuário pode acessar o painel de contingências."""
+    return user.has_perm("pagamentos.acesso_backoffice")
 
 
 @require_GET

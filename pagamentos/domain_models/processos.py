@@ -81,6 +81,16 @@ STATUS_PROCESSO_PRE_AUTORIZACAO = (
     StatusProcesso.A_PAGAR_ENVIADO_PARA_AUTORIZACAO,
 )
 
+# Aliases legados para módulos ainda não migrados.
+ProcessoStatus = StatusProcesso
+PROCESSO_STATUS_BLOQUEADOS_TOTAL = STATUS_PROCESSO_BLOQUEADOS_TOTAL
+PROCESSO_STATUS_SOMENTE_DOCUMENTOS = STATUS_PROCESSO_SOMENTE_DOCUMENTOS
+PROCESSO_STATUS_BLOQUEADOS_FORM = STATUS_PROCESSO_BLOQUEADOS_FORM
+PROCESSO_STATUS_CONTAS_A_PAGAR = STATUS_PROCESSO_CONTAS_A_PAGAR
+PROCESSO_STATUS_PAGOS = STATUS_PROCESSO_PAGOS
+PROCESSO_STATUS_PAGOS_E_POSTERIORES = STATUS_PROCESSO_PAGOS_E_POSTERIORES
+PROCESSO_STATUS_PRE_AUTORIZACAO = STATUS_PROCESSO_PRE_AUTORIZACAO
+
 
 
 class StatusReuniaoConselho(models.TextChoices):
@@ -345,8 +355,8 @@ class Processo(models.Model):
         if self.em_contingencia:
             return
 
-        status_atual = (self.status.status_choice or "").upper() if self.status else ""
-        if status_atual not in PROCESSO_STATUS_PAGOS_E_POSTERIORES:
+        status_atual = (self.status.opcao_status or "").upper() if self.status else ""
+        if status_atual not in STATUS_PROCESSO_PAGOS_E_POSTERIORES:
             return
 
         original = type(self).objects.get(pk=self.pk)
@@ -407,11 +417,11 @@ class Processo(models.Model):
 
     def _atribuir_status_manual(self, nome_status):
         """Atribui um status diretamente ao processo sem executar turnpike."""
-        from pagamentos.domain_models.catalogos import StatusChoicesProcesso
+        from pagamentos.domain_models.catalogos import StatusOpcoesProcesso
 
-        status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
-            status_choice__iexact=nome_status,
-            defaults={"status_choice": nome_status},
+        status_obj, _ = StatusOpcoesProcesso.objects.get_or_create(
+            opcao_status__iexact=nome_status,
+            defaults={"opcao_status": nome_status},
         )
         self.status = status_obj
 
@@ -424,26 +434,26 @@ class Processo(models.Model):
 
     def converter_para_extraorcamentario(self, confirmar=False):
         """Reclassifica o processo para extraorçamentário quando cabível."""
-        status_atual = (self.status.status_choice or "").upper() if self.status else ""
+        status_atual = (self.status.opcao_status or "").upper() if self.status else ""
         if confirmar and status_atual == ProcessoStatus.A_EMPENHAR:
             self._atribuir_status_manual(ProcessoStatus.A_PAGAR_PENDENTE_AUTORIZACAO)
             self.extraorcamentario = True
 
     def avancar_status(self, novo_status_str, usuario=None):
         """Avança status validando turnpike e delega integrações aos serviços."""
-        from pagamentos.domain_models.catalogos import StatusChoicesProcesso
+        from pagamentos.domain_models.catalogos import StatusOpcoesProcesso
         from pagamentos.services.integracoes.processo_relacionados import sincronizar_relacoes_apos_transicao
         from pagamentos.services.processo_documentos import gerar_documentos_automaticos_processo
         from pagamentos.validators import verificar_turnpike
 
-        status_anterior = self.status.status_choice if self.status else ""
+        status_anterior = self.status.opcao_status if self.status else ""
         erros = verificar_turnpike(self, status_anterior, novo_status_str)
         if erros:
             raise ValidationError(erros)
 
-        novo_status, _ = StatusChoicesProcesso.objects.get_or_create(
-            status_choice__iexact=novo_status_str,
-            defaults={"status_choice": novo_status_str},
+        novo_status, _ = StatusOpcoesProcesso.objects.get_or_create(
+            opcao_status__iexact=novo_status_str,
+            defaults={"opcao_status": novo_status_str},
         )
         self.status = novo_status
 

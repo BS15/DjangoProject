@@ -7,18 +7,18 @@ from pypdf import PdfReader
 from commons.shared.file_validators import validar_arquivo_seguro
 from commons.shared.text_tools import format_brl_currency
 from pagamentos.domain_models.processos import (
-    PROCESSO_STATUS_BLOQUEADOS_FORM,
-    PROCESSO_STATUS_BLOQUEADOS_TOTAL,
-    PROCESSO_STATUS_SOMENTE_DOCUMENTOS,
-    ProcessoStatus,
+    STATUS_PROCESSO_BLOQUEADOS_FORM,
+    STATUS_PROCESSO_BLOQUEADOS_TOTAL,
+    STATUS_PROCESSO_SOMENTE_DOCUMENTOS,
+    StatusProcesso,
 )
 
 
-STATUS_BLOQUEADOS_TOTAL = set(PROCESSO_STATUS_BLOQUEADOS_TOTAL)
+STATUS_BLOQUEADOS_TOTAL = set(STATUS_PROCESSO_BLOQUEADOS_TOTAL)
 
-STATUS_SOMENTE_DOCUMENTOS = set(PROCESSO_STATUS_SOMENTE_DOCUMENTOS)
+STATUS_SOMENTE_DOCUMENTOS = set(STATUS_PROCESSO_SOMENTE_DOCUMENTOS)
 
-STATUS_BLOQUEADOS_FORM = list(PROCESSO_STATUS_BLOQUEADOS_FORM)
+STATUS_BLOQUEADOS_FORM = list(STATUS_PROCESSO_BLOQUEADOS_FORM)
 
 
 def validar_completude_recolhimento_impostos(processo):
@@ -63,7 +63,7 @@ def verificar_turnpike(processo, status_anterior, status_novo):
     anterior = status_anterior.upper().strip()
     novo = status_novo.upper().strip()
 
-    if anterior == ProcessoStatus.A_EMPENHAR and novo == ProcessoStatus.AGUARDANDO_LIQUIDACAO:
+    if anterior == StatusProcesso.A_EMPENHAR and novo == StatusProcesso.AGUARDANDO_LIQUIDACAO:
         docs_orcamentarios = processo.documentos.filter(
             tipo__tipo_de_documento__iexact='DOCUMENTOS ORÇAMENTÁRIOS'
         )
@@ -106,7 +106,7 @@ def verificar_turnpike(processo, status_anterior, status_novo):
                     'materialmente válido (arquivo existente, legível e não vazio).'
                 )
 
-    if anterior == ProcessoStatus.AGUARDANDO_LIQUIDACAO and novo == ProcessoStatus.A_PAGAR_PENDENTE_AUTORIZACAO:
+    if anterior == StatusProcesso.AGUARDANDO_LIQUIDACAO and novo == StatusProcesso.A_PAGAR_PENDENTE_AUTORIZACAO:
         notas = processo.notas_fiscais.all()
         if not notas.exists():
             erros.append(
@@ -139,7 +139,7 @@ def verificar_turnpike(processo, status_anterior, status_novo):
                     f'Documento(s) fiscal(is) com valor inválido (<= 0) impedem o avanço: {nomes_invalidos}.'
                 )
 
-    if anterior == ProcessoStatus.LANCADO_AGUARDANDO_COMPROVANTE and novo == ProcessoStatus.PAGO_EM_CONFERENCIA:
+    if anterior == StatusProcesso.LANCADO_AGUARDANDO_COMPROVANTE and novo == StatusProcesso.PAGO_EM_CONFERENCIA:
         erros.extend(validar_completude_recolhimento_impostos(processo))
 
         tipo_pagamento_nome = ''

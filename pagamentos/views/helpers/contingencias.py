@@ -8,8 +8,8 @@ from django.db import transaction
 
 from commons.shared.text_tools import parse_brl_decimal
 from pagamentos.domain_models import (
-    PROCESSO_STATUS_PRE_AUTORIZACAO,
-    ProcessoStatus,
+    STATUS_PROCESSO_PRE_AUTORIZACAO,
+    StatusProcesso,
 )
 
 
@@ -29,7 +29,7 @@ _CAMPOS_PERMITIDOS_CONTINGENCIA = {
 }
 
 _STATUS_CONTINGENCIA_FINAL = {"APROVADA", "REJEITADA"}
-_STATUS_PRE_AUTORIZACAO = set(PROCESSO_STATUS_PRE_AUTORIZACAO)
+_STATUS_PRE_AUTORIZACAO = set(STATUS_PROCESSO_PRE_AUTORIZACAO)
 
 
 def determinar_requisitos_contingencia(status_processo):
@@ -42,7 +42,7 @@ def determinar_requisitos_contingencia(status_processo):
     """
     status_norm = (status_processo or "").upper().strip()
 
-    if status_norm in {ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO, ProcessoStatus.ARQUIVADO}:
+    if status_norm in {StatusProcesso.APROVADO_PENDENTE_ARQUIVAMENTO, StatusProcesso.ARQUIVADO}:
         return True, True, True
 
     if status_norm in _STATUS_PRE_AUTORIZACAO:

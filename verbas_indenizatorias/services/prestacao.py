@@ -5,7 +5,7 @@ from django.core.files.base import ContentFile
 from django.utils import timezone
 
 from commons.shared.document_services import obter_proxima_ordem_documento
-from pagamentos.models import DocumentoProcessual
+from pagamentos.models import DocumentoProcesso
 from verbas_indenizatorias.models import DocumentoComprovacao, PrestacaoContasDiaria
 
 
@@ -58,7 +58,7 @@ def _anexar_comprovantes_ao_processo(prestacao, processo):
             except Exception:
                 pass
 
-        DocumentoProcessual.objects.create(
+        DocumentoProcesso.objects.create(
             processo=processo,
             arquivo=ContentFile(conteudo, name=nome_arquivo),
             tipo=comprovante.tipo,

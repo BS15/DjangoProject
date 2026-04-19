@@ -11,6 +11,7 @@ from django.db.models import Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django.contrib.auth.decorators import permission_required
 from django.views.decorators.http import require_POST
 
 from .helpers import processar_pdf_boleto

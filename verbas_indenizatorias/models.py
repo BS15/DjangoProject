@@ -23,10 +23,10 @@ def _is_processo_selado(processo):
     if not processo or processo.em_contingencia or not processo.status:
         return False
 
-    from pagamentos.domain_models.processos import PROCESSO_STATUS_PAGOS_E_POSTERIORES
+    from pagamentos.domain_models.processos import STATUS_PROCESSO_PAGOS_E_POSTERIORES
 
-    status_atual = (processo.status.status_choice or "").upper()
-    return status_atual in PROCESSO_STATUS_PAGOS_E_POSTERIORES
+    status_atual = (processo.status.opcao_status or "").upper()
+    return status_atual in STATUS_PROCESSO_PAGOS_E_POSTERIORES
 
 
 class SealedMutationQuerySet(models.QuerySet):
@@ -160,7 +160,7 @@ class Diaria(models.Model):
     autorizada = models.BooleanField("Autorizada", default=False)
     numero_siscac = models.CharField("Nº SISCAC", max_length=20, unique=True, null=True, blank=True)
 
-    assinaturas_autentique = GenericRelation('pagamentos.AssinaturaAutentique')
+    assinaturas_autentique = GenericRelation('pagamentos.AssinaturaEletronica')
 
     history = HistoricalRecords()
     _CAMPOS_SENSIVEIS_POS_PAGAMENTO = {

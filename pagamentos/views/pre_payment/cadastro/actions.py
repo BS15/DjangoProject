@@ -20,6 +20,7 @@ from pagamentos.domain_models import (
     TiposDePendencias,
     StatusChoicesPendencias,
     Pendencia,
+    Processo,
 )
 from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoForm
 from ..helpers import (
@@ -38,7 +39,7 @@ PENDENCIA_ACAO_STATUS = {
 
 
 def _get_status_inicial(processo):
-    return processo.status.status_choice.upper() if processo.status else ""
+    return processo.status.opcao_status.upper() if processo.status else ""
 
 
 def _obter_contexto_edicao(request: HttpRequest, pk: int) -> tuple[Processo, str, Optional[HttpResponse], bool]:

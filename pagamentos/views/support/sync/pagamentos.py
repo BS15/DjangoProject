@@ -10,7 +10,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
 from commons.shared.text_tools import decimals_equal_money, names_bidirectional_match
-from pagamentos.domain_models import PROCESSO_STATUS_PAGOS_E_POSTERIORES, Processo
+from pagamentos.domain_models import STATUS_PROCESSO_PAGOS_E_POSTERIORES, Processo
 from pagamentos.utils import parse_siscac_report
 
 logger = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ def sync_siscac_payments(extracted_payments):
                 matched_processo_ids.append(processo.id)
 
     orphans = (
-        Processo.objects.filter(status__status_choice__in=PROCESSO_STATUS_PAGOS_E_POSTERIORES)
+        Processo.objects.filter(status__opcao_status__in=STATUS_PROCESSO_PAGOS_E_POSTERIORES)
         .filter(Q(n_pagamento_siscac__isnull=True) | Q(n_pagamento_siscac__exact=""))
         .exclude(id__in=matched_processo_ids)
         .select_related("credor")

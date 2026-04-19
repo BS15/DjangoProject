@@ -138,7 +138,7 @@ class Command(BaseCommand):
                 None,
             )
             if tipo is None:
-                TiposDePagamento.objects.create(tipo_de_pagamento=nome, is_active=True)
+                TiposDePagamento.objects.create(tipo_de_pagamento=nome, ativo=True)
                 tipos_criados += 1
                 self.stdout.write(f"Tipo de pagamento criado: {nome}")
                 continue

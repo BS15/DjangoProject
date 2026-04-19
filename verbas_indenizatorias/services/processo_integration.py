@@ -11,20 +11,19 @@ def criar_processo_e_vincular_verbas(itens, tipo_verba, credor_obj, usuario=None
     from django.db import transaction
 
     from commons.shared.signature_services import criar_assinatura_rascunho
-    from pagamentos.models import Processo, StatusChoicesProcesso, TiposDePagamento
-    from pagamentos.models import AssinaturaAutentique
+    from pagamentos.models import AssinaturaEletronica, Processo, StatusOpcoesProcesso, TiposPagamento
     from commons.shared.pdf_response import gerar_documento_bytes
     from verbas_indenizatorias.models import Diaria
     from verbas_indenizatorias.pdf_generators import VERBAS_DOCUMENT_REGISTRY
 
     total = sum(item.valor_total for item in itens if item.valor_total)
-    status_padrao, _ = StatusChoicesProcesso.objects.get_or_create(
-        status_choice__iexact="A PAGAR - PENDENTE AUTORIZAÇÃO",
-        defaults={"status_choice": "A PAGAR - PENDENTE AUTORIZAÇÃO"},
+    status_padrao, _ = StatusOpcoesProcesso.objects.get_or_create(
+        opcao_status__iexact="A PAGAR - PENDENTE AUTORIZAÇÃO",
+        defaults={"opcao_status": "A PAGAR - PENDENTE AUTORIZAÇÃO"},
     )
-    tipo_pagamento_verbas, _ = TiposDePagamento.objects.get_or_create(
-        tipo_de_pagamento__iexact="VERBAS INDENIZATÓRIAS",
-        defaults={"tipo_de_pagamento": "VERBAS INDENIZATÓRIAS"},
+    tipo_pagamento_verbas, _ = TiposPagamento.objects.get_or_create(
+        tipo_pagamento__iexact="VERBAS INDENIZATÓRIAS",
+        defaults={"tipo_pagamento": "VERBAS INDENIZATÓRIAS"},
     )
 
     falhas_pcd = []
@@ -50,7 +49,7 @@ def criar_processo_e_vincular_verbas(itens, tipo_verba, credor_obj, usuario=None
                         criador=usuario,
                         pdf_bytes=pdf_bytes,
                         nome_arquivo=f"PCD_{item.id}.pdf",
-                        assinatura_model=AssinaturaAutentique,
+                        assinatura_model=AssinaturaEletronica,
                     )
                 except (OSError, RuntimeError, TypeError, ValueError):
                     logger.exception("Falha ao gerar PCD da diária %s", item.id)

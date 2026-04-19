@@ -8,7 +8,7 @@ from pagamentos.models import (
     ComprovantePagamento,
     DevolucaoProcessual,
     DocumentoOrcamentarioProcessual,
-    DocumentoProcessual,
+    DocumentoProcesso,
     RegistroAcessoArquivoProcessual,
 )
 from suprimentos.models import DespesaSuprimento
@@ -24,7 +24,7 @@ from verbas_indenizatorias.models import (
 def _resolve_documento(tipo_documento, documento_id):
     """Resolve documento e objeto-pai para validação de acesso."""
     if tipo_documento == "processo":
-        documento = get_object_or_404(DocumentoProcessual, id=documento_id)
+        documento = get_object_or_404(DocumentoProcesso, id=documento_id)
         return documento, documento.processo
     if tipo_documento == "orcamentario":
         documento = get_object_or_404(DocumentoOrcamentarioProcessual, id=documento_id)

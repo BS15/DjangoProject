@@ -8,7 +8,7 @@ from commons.shared.pdf_response import gerar_documento_bytes
 from commons.shared.signature_services import criar_assinatura_rascunho
 from django.core.files.base import ContentFile
 from django.core.exceptions import ValidationError
-from pagamentos.models import AssinaturaAutentique
+from pagamentos.models import AssinaturaEletronica
 from verbas_indenizatorias.pdf_generators import VERBAS_DOCUMENT_REGISTRY
 from verbas_indenizatorias.models import (
     DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio,
@@ -47,7 +47,7 @@ def gerar_e_anexar_scd_diaria(diaria, criador):
         criador=criador,
         pdf_bytes=pdf_bytes,
         nome_arquivo=f"SCD_{diaria.id}.pdf",
-        assinatura_model=AssinaturaAutentique,
+        assinatura_model=AssinaturaEletronica,
     )
 
 def gerar_e_anexar_pcd_diaria(diaria, criador):
@@ -69,7 +69,7 @@ def gerar_e_anexar_pcd_diaria(diaria, criador):
         criador=criador,
         pdf_bytes=pdf_bytes,
         nome_arquivo=f"PCD_{diaria.id}.pdf",
-        assinatura_model=AssinaturaAutentique,
+        assinatura_model=AssinaturaEletronica,
     )
 
 def gerar_e_anexar_recibo_reembolso(reembolso, criador):
@@ -91,7 +91,7 @@ def gerar_e_anexar_recibo_reembolso(reembolso, criador):
         criador=criador,
         pdf_bytes=pdf_bytes,
         nome_arquivo=f"Requerimento_Reembolso_{reembolso.id}.pdf",
-        assinatura_model=AssinaturaAutentique,
+        assinatura_model=AssinaturaEletronica,
     )
 
 def gerar_e_anexar_recibo_jeton(jeton, criador):
@@ -113,7 +113,7 @@ def gerar_e_anexar_recibo_jeton(jeton, criador):
         criador=criador,
         pdf_bytes=pdf_bytes,
         nome_arquivo=f"Recibo_Jeton_{jeton.id}.pdf",
-        assinatura_model=AssinaturaAutentique,
+        assinatura_model=AssinaturaEletronica,
     )
 
 def gerar_e_anexar_recibo_auxilio(auxilio, criador):
@@ -135,5 +135,5 @@ def gerar_e_anexar_recibo_auxilio(auxilio, criador):
         criador=criador,
         pdf_bytes=pdf_bytes,
         nome_arquivo=f"Recibo_Auxilio_{auxilio.id}.pdf",
-        assinatura_model=AssinaturaAutentique,
+        assinatura_model=AssinaturaEletronica,
     )

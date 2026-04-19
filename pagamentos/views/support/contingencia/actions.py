@@ -21,7 +21,6 @@ from pagamentos.views.helpers import (
     processar_aprovacao_contingencia,
     processar_revisao_contadora_contingencia,
 )
-from .helpers import _validar_permissao_por_etapa
 
 
 @require_POST
@@ -58,7 +57,7 @@ def add_contingencia_action(request: HttpRequest) -> HttpResponse:
         messages.error(request, "Dados propostos inválidos. Verifique o formato e tente novamente.")
         return redirect("add_contingencia")
 
-    status_atual_processo = processo.status.status_choice if processo.status else ""
+    status_atual_processo = processo.status.opcao_status if processo.status else ""
     exige_aprovacao_ordenador, exige_aprovacao_conselho, exige_revisao_contadora = determinar_requisitos_contingencia(status_atual_processo)
 
     with transaction.atomic():
