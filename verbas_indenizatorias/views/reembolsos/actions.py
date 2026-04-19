@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, redirect
@@ -30,6 +34,7 @@ def add_reembolso_action(request):
         return redirect("add_reembolso")
 
     reembolso = form.save()
+    logger.info("mutation=add_reembolso reembolso_id=%s user_id=%s", reembolso.id, request.user.pk)
     messages.success(request, "Reembolso cadastrado com sucesso.")
     return redirect("gerenciar_reembolso", pk=reembolso.id)
 
@@ -39,6 +44,7 @@ def add_reembolso_action(request):
 def solicitar_autorizacao_reembolso_action(request, pk):
     reembolso = get_object_or_404(ReembolsoCombustivel, id=pk)
     _set_status_case_insensitive(reembolso, "SOLICITADA")
+    logger.info("mutation=solicitar_autorizacao_reembolso reembolso_id=%s user_id=%s", reembolso.id, request.user.pk)
     messages.success(request, "Solicitação de reembolso enviada para autorização.")
     return redirect("gerenciar_reembolso", pk=reembolso.id)
 
@@ -48,6 +54,7 @@ def solicitar_autorizacao_reembolso_action(request, pk):
 def autorizar_reembolso_action(request, pk):
     reembolso = get_object_or_404(ReembolsoCombustivel, id=pk)
     _set_status_case_insensitive(reembolso, "APROVADA")
+    logger.info("mutation=autorizar_reembolso reembolso_id=%s user_id=%s", reembolso.id, request.user.pk)
     messages.success(request, "Reembolso autorizado com sucesso.")
     return redirect("gerenciar_reembolso", pk=reembolso.id)
 
@@ -57,6 +64,7 @@ def autorizar_reembolso_action(request, pk):
 def cancelar_reembolso_action(request, pk):
     reembolso = get_object_or_404(ReembolsoCombustivel, id=pk)
     _set_status_case_insensitive(reembolso, "CANCELADO / ANULADO")
+    logger.info("mutation=cancelar_reembolso reembolso_id=%s user_id=%s", reembolso.id, request.user.pk)
     messages.warning(request, "Reembolso cancelado.")
     return redirect("gerenciar_reembolso", pk=reembolso.id)
 

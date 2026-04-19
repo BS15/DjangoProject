@@ -1,3 +1,6 @@
+import logging
+logger = logging.getLogger(__name__)
+
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, redirect
@@ -25,6 +28,7 @@ def add_auxilio_action(request):
         return redirect("add_auxilio")
 
     auxilio = form.save()
+    logger.info("mutation=add_auxilio auxilio_id=%s user_id=%s", auxilio.id, request.user.pk)
     messages.success(request, "Auxílio cadastrado com sucesso.")
     return redirect("gerenciar_auxilio", pk=auxilio.id)
 
@@ -34,6 +38,7 @@ def add_auxilio_action(request):
 def solicitar_autorizacao_auxilio_action(request, pk):
     auxilio = get_object_or_404(AuxilioRepresentacao, id=pk)
     _set_status_case_insensitive(auxilio, "SOLICITADA")
+    logger.info("mutation=solicitar_autorizacao_auxilio auxilio_id=%s user_id=%s", auxilio.id, request.user.pk)
     messages.success(request, "Solicitação de auxílio enviada para autorização.")
     return redirect("gerenciar_auxilio", pk=auxilio.id)
 
@@ -43,6 +48,7 @@ def solicitar_autorizacao_auxilio_action(request, pk):
 def autorizar_auxilio_action(request, pk):
     auxilio = get_object_or_404(AuxilioRepresentacao, id=pk)
     _set_status_case_insensitive(auxilio, "APROVADA")
+    logger.info("mutation=autorizar_auxilio auxilio_id=%s user_id=%s", auxilio.id, request.user.pk)
     messages.success(request, "Auxílio autorizado com sucesso.")
     return redirect("gerenciar_auxilio", pk=auxilio.id)
 
@@ -52,5 +58,6 @@ def autorizar_auxilio_action(request, pk):
 def cancelar_auxilio_action(request, pk):
     auxilio = get_object_or_404(AuxilioRepresentacao, id=pk)
     _set_status_case_insensitive(auxilio, "CANCELADO / ANULADO")
+    logger.info("mutation=cancelar_auxilio auxilio_id=%s user_id=%s", auxilio.id, request.user.pk)
     messages.warning(request, "Auxílio cancelado.")
     return redirect("gerenciar_auxilio", pk=auxilio.id)

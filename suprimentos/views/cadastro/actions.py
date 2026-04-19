@@ -45,7 +45,8 @@ def add_suprimento_action(request: HttpRequest) -> HttpResponse:
         return redirect("add_suprimento_view")
 
     try:
-        _persistir_suprimento_com_processo(form)
+        suprimento = _persistir_suprimento_com_processo(form)
+        logger.info("mutation=add_suprimento suprimento_id=%s user_id=%s", suprimento.id, request.user.pk)
         messages.success(request, "Suprimento de Fundos cadastrado com sucesso!")
     except (ValidationError, DatabaseError, TypeError, ValueError):
         logger.exception("Erro ao cadastrar suprimento de fundos")

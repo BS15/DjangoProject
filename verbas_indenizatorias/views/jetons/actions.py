@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, redirect
@@ -25,6 +29,7 @@ def add_jeton_action(request):
         return redirect("add_jeton")
 
     jeton = form.save()
+    logger.info("mutation=add_jeton jeton_id=%s user_id=%s", jeton.id, request.user.pk)
     messages.success(request, "Jeton cadastrado com sucesso.")
     return redirect("gerenciar_jeton", pk=jeton.id)
 
@@ -34,6 +39,7 @@ def add_jeton_action(request):
 def solicitar_autorizacao_jeton_action(request, pk):
     jeton = get_object_or_404(Jeton, id=pk)
     _set_status_case_insensitive(jeton, "SOLICITADA")
+    logger.info("mutation=solicitar_autorizacao_jeton jeton_id=%s user_id=%s", jeton.id, request.user.pk)
     messages.success(request, "Solicitação de Jeton enviada para autorização.")
     return redirect("gerenciar_jeton", pk=jeton.id)
 
@@ -43,6 +49,7 @@ def solicitar_autorizacao_jeton_action(request, pk):
 def autorizar_jeton_action(request, pk):
     jeton = get_object_or_404(Jeton, id=pk)
     _set_status_case_insensitive(jeton, "APROVADA")
+    logger.info("mutation=autorizar_jeton jeton_id=%s user_id=%s", jeton.id, request.user.pk)
     messages.success(request, "Jeton autorizado com sucesso.")
     return redirect("gerenciar_jeton", pk=jeton.id)
 
@@ -52,5 +59,6 @@ def autorizar_jeton_action(request, pk):
 def cancelar_jeton_action(request, pk):
     jeton = get_object_or_404(Jeton, id=pk)
     _set_status_case_insensitive(jeton, "CANCELADO / ANULADO")
+    logger.info("mutation=cancelar_jeton jeton_id=%s user_id=%s", jeton.id, request.user.pk)
     messages.warning(request, "Jeton cancelado.")
     return redirect("gerenciar_jeton", pk=jeton.id)

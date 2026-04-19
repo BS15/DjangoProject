@@ -11,6 +11,10 @@ from django.views.decorators.http import require_POST
 from fiscal.services import gerar_lotes_reinf
 
 from .shared import build_zip_response
+from .validators import ValidationError
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 def _parse_competencia_post(request: HttpRequest) -> tuple[int, int]:
@@ -30,17 +34,20 @@ def _parse_competencia_post(request: HttpRequest) -> tuple[int, int]:
             if 1 <= mes <= 12:
                 return mes, ano
         except (ValueError, TypeError):
-            pass
-
-    today = date.today()
-    return today.month, today.year
+            raise ValidationError("Competência inválida. Use MM/AAAA ou AAAA-MM.")
+    raise ValidationError("Competência é obrigatória.")
 
 
 @require_POST
 @permission_required("fiscal.acesso_backoffice", raise_exception=True)
 def gerar_lote_reinf_action(request: HttpRequest) -> HttpResponse:
     """Gera e devolve zip com lotes XML da EFD-Reinf para a competência."""
-    mes, ano = _parse_competencia_post(request)
+    try:
+        mes, ano = _parse_competencia_post(request)
+    except ValidationError as exc:
+        return HttpResponse(str(exc), status=400)
+
+    logger.info("mutation=gerar_lote_reinf user_id=%s competencia=%02d/%04d", request.user.pk, mes, ano)
 
     try:
         xmls = gerar_lotes_reinf(mes, ano)

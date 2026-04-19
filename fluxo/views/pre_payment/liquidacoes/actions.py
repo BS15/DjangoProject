@@ -33,6 +33,7 @@ def alternar_ateste_nota_action(request: HttpRequest, pk: int) -> HttpResponse:
         if nota.atestada != estado_alvo:
             nota.atestada = estado_alvo
             nota.save(update_fields=["atestada"])
+            logger.info("mutation=alternar_ateste_nota nota_id=%s user_id=%s atestada=%s", nota.pk, request.user.pk, nota.atestada)
 
     if nota.atestada == estado_alvo:
         if estado_alvo:
@@ -61,6 +62,7 @@ def avancar_para_pagamento_action(request: HttpRequest, pk: int) -> HttpResponse
                 return redirect("editar_processo", pk=pk)
 
             processo.avancar_status(ProcessoStatus.A_PAGAR_PENDENTE_AUTORIZACAO, usuario=request.user)
+            logger.info("mutation=avancar_para_pagamento processo_id=%s user_id=%s novo_status=%s", processo.pk, request.user.pk, ProcessoStatus.A_PAGAR_PENDENTE_AUTORIZACAO)
 
         messages.success(request, f'Processo #{pk} avançado com sucesso para "A Pagar - Pendente Autorização".')
     except ValidationError as ve:

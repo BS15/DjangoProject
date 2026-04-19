@@ -11,6 +11,9 @@ from credores.models import Credor
 from fiscal.models import RetencaoImposto
 from fiscal.services.impostos import anexar_guia_comprovante_relatorio_em_processos
 from fluxo.domain_models import Processo, StatusChoicesProcesso, TiposDePagamento
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @require_POST
@@ -61,6 +64,7 @@ def agrupar_retencoes_action(request: HttpRequest) -> HttpResponse:
             status=status_padrao,
             tipo_pagamento=tipo_pagamento_impostos,
         )
+        logger.info("mutation=agrupar_retencoes novo_processo_id=%s user_id=%s", novo_processo.id, request.user.pk)
 
         for retencao in retencoes:
             retencao.processo_pagamento = novo_processo

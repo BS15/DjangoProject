@@ -1,3 +1,6 @@
+import logging
+logger = logging.getLogger(__name__)
+
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, redirect
@@ -51,6 +54,7 @@ def add_diaria_action(request):
         return redirect('add_diaria')
 
     diaria = _salvar_diaria_base(form)
+    logger.info("mutation=add_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
     messages.success(request, 'Diária cadastrada com sucesso.')
     return redirect('gerenciar_diaria', pk=diaria.id)
 
@@ -75,6 +79,7 @@ def registrar_comprovante_action(request, pk):
     if erro:
         messages.error(request, erro)
     else:
+        logger.info("mutation=registrar_comprovante_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
         messages.success(request, 'Comprovante anexado com sucesso.')
 
     return redirect('gerenciar_diaria', pk=diaria.id)

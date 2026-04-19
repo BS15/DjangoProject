@@ -54,7 +54,13 @@ def montar_pauta_reuniao_action(request: HttpRequest, reuniao_id: int) -> HttpRe
     reuniao = get_object_or_404(ReuniaoConselho, id=reuniao_id)
     processos_ids = request.POST.getlist("processos_selecionados")
     if processos_ids:
-        updated = Processo.objects.filter(id__in=processos_ids).update(reuniao_conselho=reuniao)
+        processos = Processo.objects.select_for_update().filter(id__in=processos_ids)
+        updated = 0
+        for processo in processos:
+            processo.reuniao_conselho = reuniao
+            processo.full_clean()
+            processo.save(update_fields=["reuniao_conselho"])
+            updated += 1
         messages.success(request, f"{updated} processo(s) adicionado(s) à pauta.")
     else:
         messages.warning(request, "Nenhum processo selecionado.")

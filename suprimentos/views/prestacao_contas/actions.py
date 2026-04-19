@@ -11,6 +11,9 @@ from django.views.decorators.http import require_POST
 from suprimentos.models import SuprimentoDeFundos
 from ..helpers import _atualizar_status_apos_fechamento, _suprimento_encerrado
 from suprimentos.forms import DespesaSuprimentoForm
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @require_POST
@@ -28,6 +31,12 @@ def adicionar_despesa_action(request: HttpRequest, pk: int) -> HttpResponse:
         despesa = form.save(commit=False)
         despesa.suprimento = suprimento
         despesa.save()
+        logger.info(
+            "mutation=add_despesa_suprimento suprimento_id=%s despesa_id=%s user_id=%s",
+            suprimento.id,
+            despesa.id,
+            request.user.pk,
+        )
         messages.success(request, "Despesa e documento anexados com sucesso!")
         return redirect("gerenciar_suprimento_view", pk=suprimento.id)
     else:
@@ -46,6 +55,7 @@ def fechar_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
         return redirect("suprimentos_list")
 
     _atualizar_status_apos_fechamento(suprimento)
+    logger.info("mutation=fechar_suprimento suprimento_id=%s user_id=%s", suprimento.id, request.user.pk)
     messages.success(
         request,
         f"Prestação de contas do suprimento #{suprimento.id} encerrada e enviada para Conferência!",

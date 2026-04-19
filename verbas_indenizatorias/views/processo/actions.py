@@ -1,3 +1,6 @@
+import logging
+logger = logging.getLogger(__name__)
+
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, redirect
@@ -64,6 +67,7 @@ def agrupar_verbas_view(request, tipo_verba):
         credor_obj,
         usuario=request.user,
     )
+    logger.info("mutation=agrupar_verbas novo_processo_id=%s user_id=%s tipo_verba=%s", novo_processo.id, request.user.pk, tipo_verba)
 
     for identificador in falhas_pcd:
         messages.warning(
@@ -152,3 +156,39 @@ def editar_processo_verbas_documentos_action(request, pk):
     documento_formset.save()
     messages.success(request, f"Documentos do Processo #{processo.id} atualizados com sucesso!")
     return redirect("editar_processo_verbas", pk=processo.id)
+
+
+@require_POST
+def add_documento_verba_action(request, tipo_verba, pk):
+    config = _VERBA_CONFIG.get(tipo_verba)
+    if not config:
+        return JsonResponse({'ok': False, 'error': 'Tipo de verba invalido.'}, status=400)
+
+    permissao = _get_permissao_gestao_verba(tipo_verba)
+    if not permissao or not request.user.has_perm(permissao):
+        raise PermissionDenied('Voce nao tem permissao para anexar documentos nesta verba.')
+
+    modelo_verba = config['model']
+    modelo_documento = config['doc_model']
+    fk_name = config['doc_fk']
+    tipo_doc_seguro = config['doc_tipo_seguro']
+    verba = get_object_or_404(modelo_verba, id=pk)
+
+    try:
+        arquivo, tipo_id = _obter_dados_upload_documento(request)
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=400)
+
+    doc, erro = _salvar_documento_upload(
+        verba,
+        modelo_documento=modelo_documento,
+        fk_name=fk_name,
+        arquivo=arquivo,
+        tipo_id=tipo_id,
+        obrigatorio=True,
+        tipo_doc_seguro=tipo_doc_seguro,
+    )
+    if erro:
+        return JsonResponse({'ok': False, 'error': erro}, status=400)
+    logger.info("mutation=add_documento_verba tipo_verba=%s verba_id=%s user_id=%s doc_id=%s", tipo_verba, pk, request.user.pk, getattr(doc, 'id', None))
+    return JsonResponse({'ok': True, 'doc_id': getattr(doc, 'id', None)})

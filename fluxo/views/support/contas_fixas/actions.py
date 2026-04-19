@@ -68,7 +68,11 @@ def vincular_processo_fatura_action(request: HttpRequest, fatura_id: int) -> Htt
 def excluir_conta_fixa_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Exclui conta fixa mediante confirmação por requisição POST."""
     conta = get_object_or_404(ContaFixa, pk=pk)
-    conta.delete()
+    conta.ativo = False
+    conta.save(update_fields=["ativo"])
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info("mutation=desativar_conta_fixa conta_id=%s user_id=%s", conta.pk, request.user.pk)
     messages.success(request, "Conta fixa excluída com sucesso!")
     return redirect("painel_contas_fixas")
 
