@@ -1,5 +1,6 @@
 """Painel de auditoria consolidada."""
 
+from functools import lru_cache
 from urllib.parse import urlencode
 
 from django.apps import apps
@@ -11,8 +12,9 @@ from commons.shared.text_tools import normalize_choice
 from ..helpers import _aplicar_filtros_historico
 
 
+@lru_cache(maxsize=1)
 def _get_history_model_configs():
-    """Lista dinamicamente todos os modelos com django-simple-history."""
+    """Retorna lista ordenada de tuplas (history_model, verbose_name) com histórico habilitado."""
     model_configs = []
     for model in apps.get_models():
         history_manager = getattr(model, "history", None)
