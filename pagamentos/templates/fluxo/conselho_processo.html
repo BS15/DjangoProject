@@ -1,0 +1,88 @@
+{% extends "layouts/base_review.html" %}
+
+{% block page_title %}Conselho Fiscal — Processo #{{ processo.id }}{% endblock %}
+
+{% block review_extra_css %}
+{% include "fluxo/partials/_review_extra_css.html" %}
+<style>
+    .readonly-overlay { pointer-events: none; opacity: 0.75; }
+</style>
+{% endblock %}
+
+{# ═══ TOP BAR: context navbar + queue progress ═══════════════════════════ #}
+{% block review_topbar %}
+{% with topbar_color="info" topbar_icon="bi bi-people-fill" topbar_title="Conselho Fiscal" topbar_sair_label="Sair da Revisão" %}
+    {% include "fluxo/partials/_review_topbar.html" %}
+{% endwith %}
+{% endblock %}
+
+{# ═══ LEFT PANE: PDF viewer ═══════════════════════════════════════════════ #}
+{% block document_viewer %}
+{% with viewer_color="info" %}
+    {% include "fluxo/partials/_review_pdf_viewer.html" %}
+{% endwith %}
+{% endblock %}
+
+{# ═══ RIGHT PANE: read-only info, docs, pendências, history ══════════════ #}
+{% block review_panel %}
+
+<div class="alert alert-info border-info mb-3 py-2 small">
+    <i class="bi bi-lock-fill me-1"></i>
+    <strong>Modo somente leitura.</strong> Como Conselho Fiscal, você pode apenas aprovar ou devolver o processo. Nenhuma alteração de dados, documentos ou pendências é permitida.
+</div>
+
+{% with badge_color="info" value_color="text-info" %}
+    {% include "fluxo/partials/_processo_info_card.html" %}
+{% endwith %}
+
+{% include "fluxo/partials/_processo_doc_readonly.html" %}
+
+{% include "fluxo/partials/_processo_pendencias_readonly.html" %}
+
+{% include "fluxo/partials/_processo_history_card.html" %}
+
+{% include "fluxo/partials/_processo_contingencias_card.html" %}
+
+{% endblock %}
+
+{# ═══ REJECTION MODAL ════════════════════════════════════════════════════ #}
+{% block extra_modals %}
+{% with rejeitar_modal_title="Recusar Contas — Processo" rejeitar_modal_body="Aponte a inconsistência identificada pelo Conselho. O processo retornará à Contabilização para ajustes." rejeitar_label_tipo="Tipo de Apontamento" rejeitar_label_descricao="Despacho / Justificativa" rejeitar_confirm_label="Registrar Recusa" %}
+    {% include "fluxo/partials/_processo_rejeitar_modal.html" %}
+{% endwith %}
+{% endblock %}
+
+{# ═══ STICKY ACTION BAR ══════════════════════════════════════════════════ #}
+{% block queue_navigation %}
+<div class="d-flex align-items-center gap-2 flex-wrap">
+
+    {% if pode_interagir %}
+    <!-- Approve → Arquivamento -->
+    <form method="post" id="aprovar-form" style="display:inline;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="aprovar">
+        <button type="submit"
+                class="btn btn-info text-white fw-bold shadow-sm"
+                onclick="return confirm('Aprovar o Processo #{{ processo.id }} e liberar para arquivamento?');"
+                title="Aprovar e liberar para Arquivamento">
+            <i class="bi bi-check-circle me-1"></i>
+            Aprovar
+        </button>
+    </form>
+
+    <!-- Reject → back to Contabilização -->
+    <button type="button"
+            class="btn btn-outline-danger fw-bold"
+            data-bs-toggle="modal"
+            data-bs-target="#modalRejeitar"
+            title="Devolver para a Contabilização">
+        <i class="bi bi-arrow-return-left me-1"></i>
+        Devolver para Contabilização
+    </button>
+    {% endif %}
+
+    {% with nav_sair_label="Sair da Revisão" nav_use_inline_forms=1 %}
+        {% include "fluxo/partials/_review_queue_nav.html" %}
+    {% endwith %}
+</div>
+{% endblock %}

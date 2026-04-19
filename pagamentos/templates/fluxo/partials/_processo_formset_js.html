@@ -1,0 +1,178 @@
+{% comment %}
+  _processo_formset_js.html — Formset management + action-button JS
+  Parameters (via {% with %}):
+    js_form_id            : id of the main <form> element
+    js_primary_btn        : id of the primary action button
+    js_primary_action     : action value that triggers the JS confirmation dialog
+    js_confirm_msg_prefix : text before process ID in confirm() message
+    js_confirm_msg_suffix : text after process ID in confirm() message
+  Context: processo
+{% endcomment %}
+<script>
+(function () {
+    'use strict';
+
+    // ── Action buttons submit the main form with the right action value ──
+    var form = document.getElementById('{{ js_form_id }}');
+
+    ['{{ js_primary_btn }}', 'btn-salvar', 'btn-pular', 'btn-voltar'].forEach(function (btnId) {
+        var btn = document.getElementById(btnId);
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+            var action = btn.getAttribute('data-action');
+            var hidden = document.createElement('input');
+            hidden.type  = 'hidden';
+            hidden.name  = 'action';
+            hidden.value = action;
+            form.appendChild(hidden);
+
+            if (action === '{{ js_primary_action }}') {
+                if (!confirm('{{ js_confirm_msg_prefix }}{{ processo.id }}{{ js_confirm_msg_suffix }}')) {
+                    form.removeChild(hidden);
+                    return;
+                }
+            }
+            form.submit();
+        });
+    });
+
+    // ── Document formset: dynamic add ────────────────────────────────────
+    var docList      = document.getElementById('document-list');
+    var emptyDocForm = document.getElementById('empty-doc-form');
+    var mgmtTotal    = document.getElementById('id_documentos-TOTAL_FORMS');
+    var addDocBtn    = document.getElementById('add-doc-btn');
+
+    if (addDocBtn && emptyDocForm && mgmtTotal) {
+        addDocBtn.addEventListener('click', function () {
+            var totalForms = parseInt(mgmtTotal.value, 10);
+            var newRow     = emptyDocForm.cloneNode(true);
+            newRow.id      = '';
+            newRow.style.display = '';
+            newRow.innerHTML = newRow.innerHTML.replace(/__prefix__/g, totalForms);
+            docList.appendChild(newRow);
+            mgmtTotal.value = totalForms + 1;
+            attachRemoveDocBtn(newRow);
+            refreshDocumentOrder();
+            attachDocumentRowDnD(newRow);
+        });
+    }
+
+    function refreshDocumentOrder() {
+        if (!docList) return;
+        var visibleRows = Array.prototype.filter.call(docList.querySelectorAll('.document-row'), function (row) {
+            return row.style.display !== 'none';
+        });
+
+        visibleRows.forEach(function (row, index) {
+            var ordemField = row.querySelector('input[name$="-ordem"]');
+            if (ordemField) {
+                ordemField.value = String(index + 1);
+            }
+        });
+    }
+
+    function attachDocumentRowDnD(row) {
+        if (!row || !docList) return;
+        row.setAttribute('draggable', 'true');
+
+        row.addEventListener('dragstart', function () {
+            row.classList.add('opacity-50');
+        });
+
+        row.addEventListener('dragend', function () {
+            row.classList.remove('opacity-50');
+            refreshDocumentOrder();
+        });
+
+        row.addEventListener('dragover', function (event) {
+            event.preventDefault();
+            var dragging = docList.querySelector('.document-row.opacity-50');
+            if (!dragging || dragging === row) return;
+
+            var rowRect = row.getBoundingClientRect();
+            var shouldInsertBefore = event.clientY < (rowRect.top + rowRect.height / 2);
+            if (shouldInsertBefore) {
+                docList.insertBefore(dragging, row);
+            } else {
+                docList.insertBefore(dragging, row.nextSibling);
+            }
+        });
+    }
+
+    function attachRemoveDocBtn(row) {
+        var btn = row.querySelector('.remove-doc-btn');
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+            var delCheck = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+            if (delCheck) {
+                delCheck.checked = true;
+                row.style.display = 'none';
+            } else {
+                row.remove();
+            }
+            refreshDocumentOrder();
+        });
+    }
+
+    docList && docList.querySelectorAll('.remove-doc-btn').forEach(function (btn) {
+        attachRemoveDocBtn(btn.closest('.document-row'));
+    });
+
+    docList && docList.querySelectorAll('.document-row').forEach(function (row) {
+        attachDocumentRowDnD(row);
+    });
+
+    refreshDocumentOrder();
+
+    // ── Pendência formset: dynamic add ───────────────────────────────────
+    var pendList      = document.getElementById('pendencia-list');
+    var emptyPendForm = document.getElementById('empty-pendencia-form');
+    var pendMgmtTotal = document.getElementById('id_pendencias-TOTAL_FORMS');
+    var addPendBtn    = document.getElementById('add-pendencia-btn');
+
+    var tipoOptions = '';
+    var firstTipoSelect = pendList ? pendList.querySelector('select[name$="-tipo"]') : null;
+    if (firstTipoSelect) {
+        tipoOptions = firstTipoSelect.innerHTML;
+    }
+
+    if (addPendBtn && emptyPendForm && pendMgmtTotal) {
+        addPendBtn.addEventListener('click', function () {
+            var totalForms = parseInt(pendMgmtTotal.value, 10);
+            var newRow     = emptyPendForm.cloneNode(true);
+            newRow.id      = '';
+            newRow.style.display = '';
+            newRow.innerHTML = newRow.innerHTML.replace(/__prefix__/g, totalForms);
+            if (tipoOptions) {
+                var sel = newRow.querySelector('select[name$="-tipo"]');
+                if (sel) sel.innerHTML = tipoOptions;
+            }
+            pendList.appendChild(newRow);
+            pendMgmtTotal.value = totalForms + 1;
+            attachRemovePendBtn(newRow);
+
+            var noMsg = document.getElementById('no-pendencia-msg');
+            if (noMsg) noMsg.style.display = 'none';
+        });
+    }
+
+    function attachRemovePendBtn(row) {
+        var btn = row.querySelector('.remove-pendencia-btn');
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+            var delCheck = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+            if (delCheck) {
+                delCheck.checked = true;
+                row.style.display = 'none';
+            } else {
+                row.remove();
+            }
+        });
+    }
+
+    pendList && pendList.querySelectorAll('.remove-pendencia-btn').forEach(function (btn) {
+        attachRemovePendBtn(btn.closest('.pendencia-row'));
+    });
+
+}());
+</script>

@@ -1,0 +1,205 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Montar Pauta - {{ reuniao }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
+</head>
+<body class="bg-light">
+{% include 'partials/sidebar.html' %}
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow-sm">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold" href="{% url 'home_page' %}">System X</a>
+    </div>
+</nav>
+
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2><i class="bi bi-list-check text-info"></i> Montagem de Pauta</h2>
+            <p class="text-muted small mb-0">{{ reuniao }}</p>
+        </div>
+        <a href="{% url 'gerenciar_reunioes' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Detalhes da Reunião -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light fw-semibold">
+            <i class="bi bi-info-circle text-primary"></i> Detalhes da Reunião
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <span class="text-muted small d-block">Número</span>
+                    <strong>{{ reuniao.numero }}ª Reunião</strong>
+                </div>
+                <div class="col-md-3">
+                    <span class="text-muted small d-block">Trimestre/Ano</span>
+                    <strong>{{ reuniao.trimestre_referencia }}</strong>
+                </div>
+                <div class="col-md-3">
+                    <span class="text-muted small d-block">Data</span>
+                    <strong>{{ reuniao.data_reuniao|br_date:"Não definida" }}</strong>
+                </div>
+                <div class="col-md-3">
+                    <span class="text-muted small d-block">Status</span>
+                    {% if reuniao.status == 'AGENDADA' %}
+                        <span class="badge bg-secondary">{{ reuniao.get_status_display }}</span>
+                    {% elif reuniao.status == 'EM_ANALISE' %}
+                        <span class="badge bg-warning text-dark">{{ reuniao.get_status_display }}</span>
+                    {% else %}
+                        <span class="badge bg-success">{{ reuniao.get_status_display }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Processos já na Pauta -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light fw-semibold">
+            <i class="bi bi-check2-circle text-success"></i>
+            Processos na Pauta
+            <span class="badge bg-success ms-2">{{ processos_na_pauta.count }}</span>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-sm table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3"># ID</th>
+                        <th>Credor</th>
+                        <th>N° SISCAC</th>
+                        <th>Data Pag.</th>
+                        <th class="text-end pe-4">Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for processo in processos_na_pauta %}
+                    <tr>
+                        <td class="ps-3 fw-bold text-muted">#{{ processo.id }}</td>
+                        <td class="fw-medium">{{ processo.credor|default:"-"|truncatechars:40 }}</td>
+                        <td>{{ processo.n_pagamento_siscac|default:"-" }}</td>
+                        <td>{{ processo.data_pagamento|br_date }}</td>
+                        <td class="text-end pe-4 fw-bold">{{ processo.valor_liquido|br_currency }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox d-block mb-1"></i>
+                            Nenhum processo na pauta ainda.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Processos Elegíveis para adicionar -->
+    {% if pode_interagir %}
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-light fw-semibold">
+            <i class="bi bi-plus-circle text-primary"></i>
+            Processos Elegíveis
+            <span class="badge bg-primary ms-2">{{ processos_elegiveis.count }}</span>
+            <span class="text-muted small ms-2 fw-normal">Selecione e adicione à pauta desta reunião.</span>
+        </div>
+        <div class="card-body p-0">
+            <form method="POST" action="{% url 'montar_pauta_reuniao_action' reuniao_id=reuniao.id %}">
+                {% csrf_token %}
+                <table class="table table-hover table-striped mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">
+                                <input type="checkbox" id="select-all" class="form-check-input"
+                                       title="Selecionar todos">
+                            </th>
+                            <th># ID</th>
+                            <th>Credor</th>
+                            <th>Tipo de Pagamento</th>
+                            <th>N° SISCAC</th>
+                            <th>Data Pag.</th>
+                            <th class="text-end pe-4">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for processo in processos_elegiveis %}
+                        <tr>
+                            <td class="ps-3">
+                                <input type="checkbox" name="processos_selecionados"
+                                       value="{{ processo.id }}"
+                                       class="form-check-input row-check"
+                                       aria-label="Selecionar processo #{{ processo.id }}">
+                            </td>
+                            <td class="fw-bold text-muted">#{{ processo.id }}</td>
+                            <td class="fw-medium">{{ processo.credor|default:"-"|truncatechars:40 }}</td>
+                            <td>{{ processo.tipo_pagamento|default:"-" }}</td>
+                            <td>{{ processo.n_pagamento_siscac|default:"-" }}</td>
+                            <td>{{ processo.data_pagamento|br_date }}</td>
+                            <td class="text-end pe-4 fw-bold">{{ processo.valor_liquido|br_currency }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                                Nenhum processo elegível disponível.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if processos_elegiveis %}
+                <div class="p-3 border-top bg-light d-flex gap-2 align-items-center">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-plus-lg me-1"></i> Adicionar Selecionados à Pauta
+                    </button>
+                    <span class="text-muted small" id="selected-info"></span>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function () {
+    'use strict';
+    var selectAll = document.getElementById('select-all');
+    var rowChecks = document.querySelectorAll('.row-check');
+    var info = document.getElementById('selected-info');
+
+    function updateInfo() {
+        var n = document.querySelectorAll('.row-check:checked').length;
+        if (info) info.textContent = n > 0 ? n + ' selecionado(s)' : '';
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            rowChecks.forEach(function (cb) { cb.checked = selectAll.checked; });
+            updateInfo();
+        });
+    }
+    rowChecks.forEach(function (cb) {
+        cb.addEventListener('change', updateInfo);
+    });
+})();
+</script>
+</body>
+</html>

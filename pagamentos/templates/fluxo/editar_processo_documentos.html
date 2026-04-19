@@ -1,0 +1,113 @@
+{% extends "layouts/base_form.html" %}
+
+{% load static %}
+
+{% block page_heading %}Editar Documentos do Processo #{{ processo.id }}{% endblock %}
+{% block page_subtitle %}Gerencie anexos e ordem dos documentos do processo.{% endblock %}
+{% block form_enctype %}multipart/form-data{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'editar_processo' pk=processo.id %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i> Voltar ao Hub de Edição
+</a>
+{% endblock %}
+
+{% block form_action %}{% url 'editar_processo_documentos_action' pk=processo.id %}{% endblock %}
+
+{% block form_fields %}
+<input type="hidden" name="next" value="{{ next_url }}">
+{{ documento_formset.management_form }}
+
+<!-- Layout: formset (esquerda) + viewer (direita) -->
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="alert alert-light border small mb-3">
+            Status atual: <strong>{{ status_inicial|default:"-" }}</strong>
+        </div>
+        {% if precisa_documento_orcamentario %}
+        <div class="alert alert-warning small">
+            <strong>Atenção:</strong> este processo não é extraorçamentário e não está em <strong>A EMPENHAR</strong>.
+            Inclua ao menos um documento do tipo <strong>DOCUMENTOS ORÇAMENTÁRIOS</strong> para evitar bloqueios.
+        </div>
+        {% endif %}
+
+        {% with formset=documento_formset form_prefix="documentos" tipos_documento=tipos_documento add_btn_class="btn-outline-primary" entity_label=entity_label pode_interagir=pode_interagir show_order_field=True show_immutable_badge=True download_tipo_documento="processo" %}
+          {% include "commons/partials/_documento_formset_generic.html" %}
+        {% endwith %}
+    </div>
+
+    <!-- PDF Viewer sticky -->
+    <div class="col-lg-5">
+        <div class="sticky-viewer">
+            <div class="card shadow-sm border-primary">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-file-earmark-pdf"></i> Visualizador</h6>
+                    <span class="badge bg-light text-primary" id="viewer-label">Selecione um documento</span>
+                </div>
+                <div class="card-body p-2 bg-light" style="min-height: 520px;">
+                    <div id="pdf-placeholder" class="text-center text-muted pt-5">
+                        <i class="bi bi-file-earmark-arrow-up fs-1 d-block mb-3"></i>
+                        <p class="small">Clique no ícone <i class="bi bi-eye"></i> de um documento para visualizá-lo aqui.</p>
+                    </div>
+                    <iframe id="pdf-viewer" src="" width="100%" height="520px" style="border:none; border-radius:6px; display:none;"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block form_actions %}
+<a href="{% url 'editar_processo' pk=processo.id %}" class="btn btn-secondary px-4">Cancelar</a>
+<button type="submit" class="btn btn-success px-4 fw-bold">
+    <i class="bi bi-check-lg"></i> Salvar Documentos
+</button>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'js/documento_formset_manager.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    new DocumentoFormsetManager('documentos');
+
+    /* Redirecionar todos os botões de olho do formset para o viewer inline */
+    function bindPreviewButtons() {
+        document.querySelectorAll('#document-list-documentos .document-row a[title="Ver arquivo"]').forEach(function(link) {
+            if (link.dataset.previewBound === '1') {
+                return;
+            }
+            link.dataset.previewBound = '1';
+            link.removeAttribute('target');
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                showPdf(this.href, this.closest('.document-row')?.querySelector('select,span.text-success')?.textContent?.trim() || 'Documento');
+            });
+        });
+    }
+
+    bindPreviewButtons();
+
+    /* Re-bind quando o formset adicionar novas linhas */
+    const listEl = document.getElementById('document-list-documentos');
+    if (listEl) {
+        new MutationObserver(bindPreviewButtons).observe(listEl, { childList: true, subtree: false });
+    }
+});
+
+function showPdf(url, label) {
+    const viewer = document.getElementById('pdf-viewer');
+    const placeholder = document.getElementById('pdf-placeholder');
+    const lbl = document.getElementById('viewer-label');
+    if (!viewer || !placeholder || !lbl) return;
+    viewer.src = url;
+    viewer.style.display = 'block';
+    placeholder.style.display = 'none';
+    lbl.textContent = label;
+}
+</script>
+<style>
+.sticky-viewer { position: sticky; top: 80px; }
+</style>
+{% endblock %}
+

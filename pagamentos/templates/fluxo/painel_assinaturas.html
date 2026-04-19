@@ -1,0 +1,151 @@
+{% extends "layouts/base_list.html" %}
+
+{% block page_title %}Painel de Assinaturas{% endblock %}
+
+{% block page_heading %}<i class="bi bi-pen text-primary"></i> Painel de Assinaturas{% endblock %}
+
+{% block page_subtitle %}Gerencie os documentos enviados para assinatura digital via Autentique.{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'home_page' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-house"></i> Início
+    </a>
+{% endblock %}
+
+{% comment %}Suppress the filter card — no server-side filter for this view.{% endcomment %}
+{% block filter_card %}{% endblock %}
+
+{% comment %}
+    Section 1 — "Para Eu Assinar"
+    Rendered using the standard table blocks provided by base_list.html.
+{% endcomment %}
+{% block table_headers %}
+    <th>ID</th>
+    <th>Tipo</th>
+    <th>Entidade</th>
+    <th>Criado em</th>
+    <th class="text-center">Ação</th>
+{% endblock %}
+
+{% block table_rows %}
+    {% for assinatura in para_assinar %}
+    <tr>
+        <td class="fw-bold text-primary">#{{ assinatura.id }}</td>
+        <td>{{ assinatura.tipo_documento }}</td>
+        <td>
+            {% if assinatura.entidade_relacionada %}{{ assinatura.entidade_relacionada }}{% else %}<span class="text-muted">—</span>{% endif %}
+        </td>
+        <td>{{ assinatura.criado_em|date:"d/m/Y H:i" }}</td>
+        <td class="text-center">
+            {% if assinatura.meu_link %}
+                <a href="{{ assinatura.meu_link }}" target="_blank" class="btn btn-sm btn-warning fw-bold">
+                    <i class="bi bi-pen-fill"></i> Assinar Agora
+                </a>
+            {% else %}
+                <span class="text-muted small">Link indisponível</span>
+            {% endif %}
+        </td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="5" class="text-center py-4 text-muted">
+            <i class="bi bi-check-circle fs-3 d-block mb-2 text-success"></i>
+            Nenhum documento aguardando sua assinatura.
+        </td>
+    </tr>
+    {% endfor %}
+{% endblock %}
+
+{% block list_footer %}
+{% comment %}
+    ──────────────────────────────────────────────────────────────────────
+    Section 2 — "Meus Documentos"
+    Placed in list_footer so it appears below the first card as a separate
+    full-width table, matching the two-section dashboard design.
+    ──────────────────────────────────────────────────────────────────────
+{% endcomment %}
+<div class="d-flex justify-content-between align-items-center mt-4 mb-2">
+    <h5 class="fw-bold mb-0">
+        <i class="bi bi-file-earmark-text text-primary"></i> Meus Documentos
+        <span class="badge bg-secondary ms-2">{{ meus_documentos|length }}</span>
+    </h5>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Tipo</th>
+                        <th>Entidade</th>
+                        <th class="text-center">Status</th>
+                        <th>Criado em</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for assinatura in meus_documentos %}
+                    <tr>
+                        <td class="fw-bold text-primary">#{{ assinatura.id }}</td>
+                        <td>{{ assinatura.tipo_documento }}</td>
+                        <td>
+                            {% if assinatura.entidade_relacionada %}{{ assinatura.entidade_relacionada }}{% else %}<span class="text-muted">—</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if assinatura.status == 'RASCUNHO' %}
+                                <span class="badge bg-secondary rounded-pill"><i class="bi bi-pencil"></i> Rascunho</span>
+                            {% elif assinatura.status == 'PENDENTE' %}
+                                <span class="badge bg-warning text-dark rounded-pill"><i class="bi bi-hourglass-split"></i> Pendente</span>
+                            {% elif assinatura.status == 'ASSINADO' %}
+                                <span class="badge bg-success rounded-pill"><i class="bi bi-check-circle-fill"></i> Assinado</span>
+                            {% elif assinatura.status == 'REJEITADO' %}
+                                <span class="badge bg-danger rounded-pill"><i class="bi bi-x-circle-fill"></i> Rejeitado</span>
+                            {% elif assinatura.status == 'ERRO' %}
+                                <span class="badge bg-dark rounded-pill"><i class="bi bi-exclamation-triangle-fill"></i> Erro</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark rounded-pill">{{ assinatura.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ assinatura.criado_em|date:"d/m/Y H:i" }}</td>
+                        <td class="text-center">
+                            <div class="d-flex gap-1 justify-content-center flex-wrap">
+                                {% if assinatura.status == 'RASCUNHO' and assinatura.arquivo %}
+                                    <form method="post" action="{% url 'disparar_assinatura' assinatura.id %}"
+                                          onsubmit="return confirm('Enviar este documento para assinatura no Autentique?')">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-send"></i> Enviar para Autentique
+                                        </button>
+                                    </form>
+                                {% endif %}
+                                {% if assinatura.status == 'PENDENTE' and assinatura.autentique_url %}
+                                    <a href="{{ assinatura.autentique_url }}" target="_blank"
+                                       class="btn btn-sm btn-outline-warning">
+                                        <i class="bi bi-link-45deg"></i> Link
+                                    </a>
+                                {% endif %}
+                                {% if assinatura.status == 'ASSINADO' and assinatura.arquivo_assinado %}
+                                    <a href="{{ assinatura.arquivo_assinado.url }}" target="_blank"
+                                       class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-download"></i> Baixar
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-file-earmark-x fs-2 d-block mb-2 text-secondary"></i>
+                            Nenhum documento encontrado.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock list_footer %}

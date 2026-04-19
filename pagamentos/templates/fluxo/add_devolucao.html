@@ -1,0 +1,78 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Registrar Devolução - System X</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
+</head>
+<body class="bg-light">
+{% include 'partials/sidebar.html' %}
+
+
+<div class="container mt-5 mb-5">
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home_page' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'process_detail' processo.id %}">Processo #{{ processo.id }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Registrar Devolução</li>
+        </ol>
+    {% extends "layouts/base_form.html" %}
+
+    {% block page_heading %}<i class="bi bi-arrow-return-left"></i> Registrar Devolução ao Erário - Processo {{ processo.n_nota_empenho|default:processo.id }}{% endblock %}
+    {% block page_subtitle %}Informe os dados da devolução ao erário para o processo selecionado.{% endblock %}
+    {% block page_actions %}
+    <a href="{% url 'process_detail' processo.id %}" class="btn btn-secondary">Cancelar</a>
+    {% endblock %}
+
+    {% block form_fields %}
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="mb-3">
+            <label for="{{ form.valor_devolvido.id_for_label }}" class="form-label fw-bold">Valor Devolvido (R$)</label>
+            {{ form.valor_devolvido }}
+            {% if form.valor_devolvido.errors %}
+            <div class="text-danger small">{{ form.valor_devolvido.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label for="{{ form.data_devolucao.id_for_label }}" class="form-label fw-bold">Data da Devolução</label>
+            {{ form.data_devolucao }}
+            {% if form.data_devolucao.errors %}
+            <div class="text-danger small">{{ form.data_devolucao.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label for="{{ form.motivo.id_for_label }}" class="form-label fw-bold">Motivo</label>
+            {{ form.motivo }}
+            {% if form.motivo.errors %}
+            <div class="text-danger small">{{ form.motivo.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label for="{{ form.comprovante.id_for_label }}" class="form-label fw-bold">Comprovante</label>
+            {{ form.comprovante }}
+            <div class="form-text">{{ form.comprovante.help_text }}</div>
+            {% if form.comprovante.errors %}
+            <div class="text-danger small">{{ form.comprovante.errors }}</div>
+            {% endif %}
+        </div>
+    {% endblock %}
+
+    {% block form_actions %}
+    <button type="submit" class="btn btn-success fw-bold">Registrar Devolução</button>
+    {% endblock %}
+                        </div>

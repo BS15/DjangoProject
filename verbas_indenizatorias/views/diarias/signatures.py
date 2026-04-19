@@ -8,7 +8,7 @@ from commons.shared.integracoes.autentique import (
     enviar_documento_para_assinatura,
     verificar_e_baixar_documento,
 )
-from fluxo.domain_models import AssinaturaAutentique
+from pagamentos.domain_models import AssinaturaEletronica as AssinaturaAutentique
 from verbas_indenizatorias.models import Diaria
 
 

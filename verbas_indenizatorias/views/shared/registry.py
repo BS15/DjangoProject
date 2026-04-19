@@ -1,7 +1,7 @@
 """Registry e utilitarios de configuracao por tipo de verba."""
 
 from credores.models import Credor
-from fluxo.domain_models import TiposDeDocumento
+from pagamentos.domain_models import TiposDocumento
 from verbas_indenizatorias.models import (
     AuxilioRepresentacao,
     Diaria,

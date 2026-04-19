@@ -73,7 +73,7 @@ def importar_credores_csv(csv_file):
 
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def painel_importacao_view(request):
     """Renderiza painel de importação em lote de credores e contas fixas."""
     context = {}

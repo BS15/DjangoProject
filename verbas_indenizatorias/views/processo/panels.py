@@ -2,8 +2,8 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
-from fluxo.domain_models import Processo
-from fluxo.forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoForm
+from pagamentos.domain_models import Processo
+from pagamentos.forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoForm
 from .helpers import _montar_contexto_processo_verbas
 
 

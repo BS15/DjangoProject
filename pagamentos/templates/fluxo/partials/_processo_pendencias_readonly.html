@@ -1,0 +1,28 @@
+{% comment %}
+  _processo_pendencias_readonly.html — Read-only pendências list card
+  Context: processo
+{% endcomment %}
+<!-- ┌ PENDÊNCIAS (somente leitura) ────────────────────────┐ -->
+<div class="card shadow-sm border-0 mb-3">
+    <div class="card-header bg-light fw-bold text-secondary py-2 d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-exclamation-triangle me-1"></i> Pendências</span>
+        <span class="badge bg-warning text-dark">{{ processo.pendencias.count }}</span>
+    </div>
+    <div class="card-body py-2 px-2">
+        {% for pend in processo.pendencias.all %}
+        <div class="row g-1 align-items-start mb-2 border-bottom pb-2
+            {% if pend.status.status_choice|lower == 'resolvido' %}pendencia-row-resolvida{% endif %}">
+            <div class="col-4 small">{{ pend.tipo|default:"—" }}</div>
+            <div class="col small">{{ pend.descricao|default:"—" }}</div>
+            <div class="col-auto">
+                {% if pend.status %}
+                <span class="badge bg-secondary small">{{ pend.status }}</span>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted small mb-0">Nenhuma pendência registrada.</p>
+        {% endfor %}
+    </div>
+</div>
+<!-- └──────────────────────────────────────────────────────┘ -->

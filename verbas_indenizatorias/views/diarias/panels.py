@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import permission_required
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render
 
-from fluxo.views.shared import render_filtered_list
+from pagamentos.views.shared import render_filtered_list
 from verbas_indenizatorias.forms import DiariaForm
 from verbas_indenizatorias.models import Diaria
 from verbas_indenizatorias.filters import DiariaFilter

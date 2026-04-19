@@ -5,7 +5,7 @@ from django.shortcuts import render
 
 from fiscal.filters import RetencaoIndividualFilter
 from fiscal.models import RetencaoImposto
-from fluxo.views.shared import apply_filterset
+from pagamentos.views.shared import apply_filterset
 
 
 def _resolve_fonte_retentora_nome(retencao: RetencaoImposto) -> str:

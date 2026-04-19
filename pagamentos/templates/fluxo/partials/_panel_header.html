@@ -1,0 +1,39 @@
+{% comment %}
+  _panel_header.html — Standard page-heading row for panel list views.
+
+  Renders a flex row with the panel title/subtitle on the left and action
+  buttons on the right. Always includes a "Voltar para Home" link; an optional
+  single extra link can be added via the panel_extra_link_* parameters.
+
+  Parameters (pass via the "with" tag):
+    panel_icon            : Full Bootstrap Icons class, e.g. "bi bi-shield-check"
+    panel_color           : Bootstrap colour token for the icon, e.g. "success"
+    panel_title           : Main heading text
+    panel_subtitle        : Short descriptive subtitle shown below the heading
+
+  Optional parameters:
+    panel_extra_link_url  : href for an additional action button (pre-resolved URL)
+    panel_extra_link_label: Visible label text for the extra button
+    panel_extra_link_icon : Bootstrap Icons class for the extra button icon,
+                            e.g. "bi bi-calendar3" (omit to show no icon)
+    panel_extra_link_class: Bootstrap button variant class,
+                            e.g. "btn-outline-primary" (defaults to btn-outline-secondary)
+
+  Context: none beyond the parameters above
+{% endcomment %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="{{ panel_icon }} text-{{ panel_color }}"></i> {{ panel_title }}</h2>
+        <p class="text-muted small">{{ panel_subtitle }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        {% if panel_extra_link_url %}
+        <a href="{{ panel_extra_link_url }}"
+           class="btn {{ panel_extra_link_class|default:'btn-outline-secondary' }}">
+            {% if panel_extra_link_icon %}<i class="{{ panel_extra_link_icon }} me-1"></i>{% endif %}
+            {{ panel_extra_link_label }}
+        </a>
+        {% endif %}
+        <a href="{% url 'home_page' %}" class="btn btn-outline-secondary">Voltar para Home</a>
+    </div>
+</div>

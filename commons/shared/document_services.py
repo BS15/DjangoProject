@@ -10,7 +10,7 @@ def obter_proxima_ordem_documento(manager_documentos):
 
 def obter_ou_criar_tipo_documento(nome_tipo_documento, tipo_pagamento=None):
     """Resolve um tipo documental por nome, com fallback para tipo geral."""
-    from fluxo.domain_models import TiposDeDocumento
+    from pagamentos.domain_models import TiposDocumento as TiposDeDocumento
 
     if tipo_pagamento is not None:
         tipo_especifico = TiposDeDocumento.objects.filter(

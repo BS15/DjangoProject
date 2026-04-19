@@ -7,8 +7,8 @@ from django.db.models import DecimalField, Sum
 from django.db.models.functions import Coalesce
 from django.urls import reverse
 
-from fluxo.forms import PendenciaFormSet, ProcessoForm
-from fluxo.models import TiposDePagamento
+from pagamentos.forms import PendenciaFormSet, ProcessoForm
+from pagamentos.models import TiposDePagamento
 from verbas_indenizatorias.models import AuxilioRepresentacao, Diaria, Jeton, ReembolsoCombustivel
 from ..shared.registry import _get_tipos_documento_verbas
 

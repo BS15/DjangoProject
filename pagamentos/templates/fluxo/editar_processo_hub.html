@@ -1,0 +1,349 @@
+{% extends "layouts/base_detail.html" %}
+{% load static %}
+
+{% block detail_breadcrumb %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home_page' %}">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Hub de Edição do Processo #{{ processo.id }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block detail_header %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+    <div>
+        <h4 class="mb-1 text-warning fw-bold"><i class="bi bi-diagram-3"></i> Hub de Edição</h4>
+        <div class="text-muted small">Processo #{{ processo.id }} | Credor: {{ processo.credor|default:"-" }}</div>
+    </div>
+    <span class="badge bg-secondary fs-6">{{ processo.status|default:"Sem status" }}</span>
+</div>
+<hr class="my-3">
+<div class="row g-3 small">
+    <div class="col-md-3"><strong>Documentos:</strong> {{ total_documentos }}</div>
+    <div class="col-md-3"><strong>Notas Fiscais:</strong> {{ total_notas }}</div>
+    <div class="col-md-3"><strong>NF não atestadas:</strong> {{ notas_nao_atestadas }}</div>
+    <div class="col-md-3"><strong>Pendências abertas:</strong> {{ pendencias_abertas }} / {{ total_pendencias }}</div>
+</div>
+{% if somente_documentos %}
+<div class="alert alert-warning mt-3 mb-0 py-2">
+    <i class="bi bi-lock"></i> Neste status, apenas o módulo de documentos está habilitado.
+</div>
+{% endif %}
+{% endblock %}
+
+{% block detail_body %}
+<style>
+    .sticky-viewer { position: sticky; top: 20px; z-index: 100; }
+    .bg-light-blue { background-color: #f0f8ff; }
+    .modules-bar {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .module-btn-wrapper {
+        flex: 0 1 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    .module-btn-wrapper h6 {
+        font-size: 0.85rem;
+        margin: 0;
+        font-weight: 600;
+        min-height: 2rem;
+        display: flex;
+        align-items: center;
+    }
+</style>
+
+<!-- Módulos de Edição (Barra Horizontal) -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-light fw-bold"><i class="bi bi-grid"></i> Módulos de Edição</div>
+    <div class="card-body">
+        <div class="modules-bar">
+            <!-- Capa -->
+            <div class="module-btn-wrapper">
+                <h6>Capa</h6>
+                {% if somente_documentos %}
+                <button class="btn btn-outline-secondary btn-sm" disabled title="Bloqueado neste status">
+                    <i class="bi bi-file-earmark"></i>
+                </button>
+                {% else %}
+                <a href="{% url 'editar_processo_capa' pk=processo.id %}?next={% url 'editar_processo' pk=processo.id %}" 
+                   class="btn btn-outline-primary btn-sm" title="Abrir Capa">
+                    <i class="bi bi-file-earmark"></i>
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Documentos -->
+            <div class="module-btn-wrapper">
+                <h6>Documentos</h6>
+                <a href="{% url 'editar_processo_documentos' pk=processo.id %}?next={% url 'editar_processo' pk=processo.id %}" 
+                   class="btn btn-outline-primary btn-sm" title="Abrir Documentos">
+                    <i class="bi bi-paperclip"></i>
+                </a>
+            </div>
+
+            <!-- Pendências -->
+            <div class="module-btn-wrapper">
+                <h6>Pendências</h6>
+                {% if somente_documentos %}
+                <button class="btn btn-outline-secondary btn-sm" disabled title="Bloqueado neste status">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </button>
+                {% else %}
+                <a href="{% url 'editar_processo_pendencias' pk=processo.id %}?next={% url 'editar_processo' pk=processo.id %}" 
+                   class="btn btn-outline-primary btn-sm" title="Abrir Pendências">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Documentos Fiscais -->
+            <div class="module-btn-wrapper">
+                <h6>Fiscais</h6>
+                <a href="{% url 'documentos_fiscais' pk=processo.id %}" 
+                   class="btn btn-outline-info btn-sm" title="Abrir Documentos Fiscais">
+                    <i class="bi bi-receipt"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PDF Viewer + Documentos Layout -->
+<div class="row g-4 mb-4">
+    <!-- PDF Viewer (sticky left column) -->
+    <div class="col-lg-5">
+        <div class="sticky-viewer">
+            <div class="card shadow-sm border-primary">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-file-earmark-pdf"></i> Visualizador</h6>
+                    <span class="badge bg-light text-primary" id="viewer-label">Selecione um documento</span>
+                </div>
+                <div class="card-body p-2 bg-light-blue" style="min-height: 500px;">
+                    <div id="pdf-placeholder" class="text-center text-muted pt-5">
+                        <i class="bi bi-file-earmark-arrow-up fs-1 d-block mb-3"></i>
+                        <p class="small">Clique no ícone <i class="bi bi-eye"></i> de um documento para visualizá-lo aqui.</p>
+                    </div>
+                    <iframe id="pdf-viewer" src="" width="100%" height="500px" style="border:none; border-radius:6px; display:none;"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Documentos Table (right column) -->
+    <div class="col-lg-7">
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-paperclip"></i> Documentos (Somente Leitura)</span>
+                <span class="badge bg-secondary">{{ documentos_page.paginator.count }}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 40px;">Ord.</th>
+                            <th>Tipo</th>
+                            <th style="width: 50px;">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doc in documentos_page %}
+                        <tr>
+                            <td class="fw-bold">{{ doc.ordem }}</td>
+                            <td class="small">{{ doc.tipo|default:"-" }}</td>
+                            <td>
+                                {% if doc.arquivo %}
+                                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2"
+                                        onclick="showPdf('{% url 'download_arquivo_seguro' 'processo' doc.id %}', '{{ doc.tipo.tipo_de_documento|default:doc.tipo }} #{{ doc.ordem }}')">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                {% else %}
+                                <span class="small text-muted">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-center text-muted py-3">Sem documentos.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if documentos_page.has_other_pages %}
+            <div class="card-footer bg-white py-2">
+                {% if documentos_page.has_previous %}
+                <a class="btn btn-sm btn-outline-secondary" href="?docs_page={{ documentos_page.previous_page_number }}&pend_page={{ pendencias_page.number }}&liq_page={{ liquidacoes_page.number }}&ret_page={{ retencoes_page.number }}">Anterior</a>
+                {% endif %}
+                <span class="small text-muted mx-2">Página {{ documentos_page.number }} de {{ documentos_page.paginator.num_pages }}</span>
+                {% if documentos_page.has_next %}
+                <a class="btn btn-sm btn-outline-secondary" href="?docs_page={{ documentos_page.next_page_number }}&pend_page={{ pendencias_page.number }}&liq_page={{ liquidacoes_page.number }}&ret_page={{ retencoes_page.number }}">Próxima</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-receipt"></i> Liquidações (Atestes)</span>
+        <span class="badge bg-info text-dark">{{ liquidacoes_page.paginator.count }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>NF</th>
+                    <th>Emitente</th>
+                    <th>Emissão</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for nota in liquidacoes_page %}
+                <tr>
+                    <td class="fw-bold">{{ nota.numero_nota_fiscal }}</td>
+                    <td>{{ nota.nome_emitente|default:"-" }}</td>
+                    <td>{{ nota.data_emissao|date:"d/m/Y"|default:"-" }}</td>
+                    <td>
+                        <span class="badge {% if nota.atestada %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                            {% if nota.atestada %}Atestada{% else %}Pendente{% endif %}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center text-muted py-3">Sem liquidações.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if liquidacoes_page.has_other_pages %}
+    <div class="card-footer bg-white">
+        {% if liquidacoes_page.has_previous %}
+        <a class="btn btn-sm btn-outline-secondary" href="?docs_page={{ documentos_page.number }}&pend_page={{ pendencias_page.number }}&liq_page={{ liquidacoes_page.previous_page_number }}&ret_page={{ retencoes_page.number }}">Anterior</a>
+        {% endif %}
+        <span class="small text-muted mx-2">Página {{ liquidacoes_page.number }}</span>
+        {% if liquidacoes_page.has_next %}
+        <a class="btn btn-sm btn-outline-secondary" href="?docs_page={{ documentos_page.number }}&pend_page={{ pendencias_page.number }}&liq_page={{ liquidacoes_page.next_page_number }}&ret_page={{ retencoes_page.number }}">Próxima</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-exclamation-triangle"></i> Pendências</span>
+        <span class="badge bg-warning text-dark">{{ pendencias_page.paginator.count }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Tipo</th>
+                    <th>Descrição</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pendencia in pendencias_page %}
+                <tr>
+                    <td class="fw-bold">{{ pendencia.tipo|default:"-" }}</td>
+                    <td>{{ pendencia.descricao|default:"-" }}</td>
+                    <td>{{ pendencia.status|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="text-center text-muted py-3">Sem pendências.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if pendencias_page.has_other_pages %}
+    <div class="card-footer bg-white">
+        {% if pendencias_page.has_previous %}
+        <a class="btn btn-sm btn-outline-secondary" href="?docs_page={{ documentos_page.number }}&pend_page={{ pendencias_page.previous_page_number }}&liq_page={{ liquidacoes_page.number }}&ret_page={{ retencoes_page.number }}">Anterior</a>
+        {% endif %}
+        <span class="small text-muted mx-2">Página {{ pendencias_page.number }}</span>
+        {% if pendencias_page.has_next %}
+        <a class="btn btn-sm btn-outline-secondary" href="?docs_page={{ documentos_page.number }}&pend_page={{ pendencias_page.next_page_number }}&liq_page={{ liquidacoes_page.number }}&ret_page={{ retencoes_page.number }}">Próxima</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-percent"></i> Retenções</span>
+        <span class="badge bg-secondary">{{ retencoes_page.paginator.count }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>NF</th>
+                    <th>Código</th>
+                    <th>Valor</th>
+                    <th>Data Pagamento</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for retencao in retencoes_page %}
+                <tr>
+                    <td>{{ retencao.nota_fiscal.numero_nota_fiscal|default:"-" }}</td>
+                    <td>{{ retencao.codigo|default:"-" }}</td>
+                    <td class="fw-bold">R$ {{ retencao.valor|floatformat:2 }}</td>
+                    <td>{{ retencao.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center text-muted py-3">Sem retenções.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if retencoes_page.has_other_pages %}
+    <div class="card-footer bg-white">
+        {% if retencoes_page.has_previous %}
+        <a class="btn btn-sm btn-outline-secondary" href="?docs_page={{ documentos_page.number }}&pend_page={{ pendencias_page.number }}&liq_page={{ liquidacoes_page.number }}&ret_page={{ retencoes_page.previous_page_number }}">Anterior</a>
+        {% endif %}
+        <span class="small text-muted mx-2">Página {{ retencoes_page.number }}</span>
+        {% if retencoes_page.has_next %}
+        <a class="btn btn-sm btn-outline-secondary" href="?docs_page={{ documentos_page.number }}&pend_page={{ pendencias_page.number }}&liq_page={{ liquidacoes_page.number }}&ret_page={{ retencoes_page.next_page_number }}">Próxima</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block detail_actions %}
+<a href="{% url 'home_page' %}" class="btn btn-outline-dark"><i class="bi bi-arrow-left"></i> Voltar para Home</a>
+{% if aguardando_liquidacao %}
+<form method="post" action="{% url 'avancar_para_pagamento' pk=processo.id %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-success">
+        <i class="bi bi-check2-circle"></i> Avançar para Pagamento
+    </button>
+</form>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* ── PDF Viewer for process hub documents ── */
+function showPdf(url, label) {
+    const viewer = document.getElementById('pdf-viewer');
+    const placeholder = document.getElementById('pdf-placeholder');
+    const lbl = document.getElementById('viewer-label');
+    if (!viewer || !placeholder || !lbl) return;
+    viewer.src = url;
+    viewer.style.display = 'block';
+    placeholder.style.display = 'none';
+    lbl.textContent = label;
+}
+</script>
+{% endblock %}

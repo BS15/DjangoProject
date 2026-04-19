@@ -23,7 +23,7 @@ def _is_processo_selado(processo):
     if not processo or processo.em_contingencia or not processo.status:
         return False
 
-    from fluxo.domain_models.processos import PROCESSO_STATUS_PAGOS_E_POSTERIORES
+    from pagamentos.domain_models.processos import PROCESSO_STATUS_PAGOS_E_POSTERIORES
 
     status_atual = (processo.status.status_choice or "").upper()
     return status_atual in PROCESSO_STATUS_PAGOS_E_POSTERIORES
@@ -127,7 +127,7 @@ class Diaria(models.Model):
         ('COMPLEMENTACAO', 'Complementação')
     ]
 
-    processo = models.ForeignKey('fluxo.Processo', on_delete=models.CASCADE, related_name='diarias', null=True, blank=True)
+    processo = models.ForeignKey('pagamentos.Processo', on_delete=models.CASCADE, related_name='diarias', null=True, blank=True)
     beneficiario = models.ForeignKey('credores.Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
                                      verbose_name="Beneficiário", related_name='diarias_como_beneficiario')
     proponente = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
@@ -159,7 +159,7 @@ class Diaria(models.Model):
     autorizada = models.BooleanField("Autorizada", default=False)
     numero_siscac = models.CharField("Nº SISCAC", max_length=20, unique=True, null=True, blank=True)
 
-    assinaturas_autentique = GenericRelation('fluxo.AssinaturaAutentique')
+    assinaturas_autentique = GenericRelation('pagamentos.AssinaturaAutentique')
 
     history = HistoricalRecords()
     _CAMPOS_SENSIVEIS_POS_PAGAMENTO = {
@@ -301,7 +301,7 @@ class Diaria(models.Model):
     def avancar_status(self, novo_status_str):
         """Avança status da diária com validação de turnpike específico."""
         from django.core.exceptions import ValidationError
-        from fluxo.validators import verificar_turnpike_diaria
+        from pagamentos.validators import verificar_turnpike_diaria
 
         status_anterior = self.status.status_choice if self.status else ''
         erros = verificar_turnpike_diaria(self, status_anterior, novo_status_str)
@@ -385,7 +385,7 @@ class ApostilaDiaria(models.Model):
 class ReembolsoCombustivel(models.Model):
     """Registro de reembolso de combustível vinculado a diária/processo."""
 
-    processo = models.ForeignKey('fluxo.Processo', on_delete=models.CASCADE, related_name='reembolsos_combustivel', null=True,
+    processo = models.ForeignKey('pagamentos.Processo', on_delete=models.CASCADE, related_name='reembolsos_combustivel', null=True,
                                  blank=True)
     diaria = models.ForeignKey('Diaria', on_delete=models.CASCADE, related_name='reembolsos_combustivel', null=True,
                                blank=True, verbose_name="Diária")
@@ -492,7 +492,7 @@ class DocumentoReembolso(DocumentoBase):
 class Jeton(models.Model):
     """Pagamento de jeton para participação em reunião/sessão."""
 
-    processo = models.ForeignKey('fluxo.Processo', on_delete=models.CASCADE, related_name='jetons', null=True, blank=True)
+    processo = models.ForeignKey('pagamentos.Processo', on_delete=models.CASCADE, related_name='jetons', null=True, blank=True)
     numero_sequencial = models.CharField("Número Sequencial", max_length=50)
     beneficiario = models.ForeignKey('credores.Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
                                      verbose_name="Conselheiro(a)")
@@ -565,7 +565,7 @@ class DocumentoJeton(DocumentoBase):
 class AuxilioRepresentacao(models.Model):
     """Pagamento de auxílio representação para beneficiário elegível."""
 
-    processo = models.ForeignKey('fluxo.Processo', on_delete=models.CASCADE, related_name='auxilios_representacao', null=True,
+    processo = models.ForeignKey('pagamentos.Processo', on_delete=models.CASCADE, related_name='auxilios_representacao', null=True,
                                  blank=True)
     numero_sequencial = models.CharField("Número Sequencial", max_length=50)
     beneficiario = models.ForeignKey('credores.Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},

@@ -1,6 +1,6 @@
 """Helpers de listagem para telas de verbas indenizatorias."""
 
-from fluxo.views.shared import render_filtered_list
+from pagamentos.views.shared import render_filtered_list
 
 
 def _render_lista_verba(request, model, filter_class, template_name):
