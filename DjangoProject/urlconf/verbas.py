@@ -37,6 +37,7 @@ urlpatterns = [
     path('verbas/diarias/<int:pk>/gerenciar/', verbas_diarias_panels.gerenciar_diaria_view, name='gerenciar_diaria'),
 
     path('verbas/diarias/<int:pk>/comprovantes/registrar/', verbas_diarias_actions.registrar_comprovante_action, name='registrar_comprovante_action'),
+    path('verbas/diarias/<int:pk>/prestacao/encerrar/', verbas_diarias_actions.encerrar_prestacao_action, name='encerrar_prestacao_action'),
     path('verbas/diarias/<int:pk>/liberar-assinatura/', verbas_diarias_actions.liberar_para_assinatura_action, name='liberar_para_assinatura_action'),
     path('verbas/diarias/<int:pk>/devolucao/registrar/', verbas_diarias_actions.registrar_devolucao_diaria_action, name='registrar_devolucao_diaria_action'),
     path('verbas/diarias/<int:pk>/apostila/registrar/', verbas_diarias_actions.registrar_apostila_diaria_action, name='registrar_apostila_diaria_action'),

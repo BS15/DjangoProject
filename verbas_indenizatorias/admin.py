@@ -7,11 +7,13 @@ from .models import (
     AuxilioRepresentacao,
     Diaria,
     DocumentoAuxilio,
+    DocumentoComprovacao,
     DocumentoDiaria,
     DocumentoJeton,
     DocumentoReembolso,
     Jeton,
     MeiosDeTransporte,
+    PrestacaoContasDiaria,
     ReembolsoCombustivel,
     StatusChoicesVerbasIndenizatorias,
     Tabela_Valores_Unitarios_Verbas_Indenizatorias,
@@ -32,6 +34,8 @@ admin.site.register(TiposDeVerbasIndenizatorias)
 admin.site.register(Tabela_Valores_Unitarios_Verbas_Indenizatorias)
 admin.site.register(Diaria, SimpleHistoryAdmin)
 admin.site.register(DocumentoDiaria, SimpleHistoryAdmin)
+admin.site.register(PrestacaoContasDiaria, SimpleHistoryAdmin)
+admin.site.register(DocumentoComprovacao, SimpleHistoryAdmin)
 admin.site.register(ReembolsoCombustivel, SimpleHistoryAdmin)
 admin.site.register(DocumentoReembolso, SimpleHistoryAdmin)
 admin.site.register(Jeton, SimpleHistoryAdmin)

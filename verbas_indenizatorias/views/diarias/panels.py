@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404, render
 
 from pagamentos.views.shared import render_filtered_list
 from verbas_indenizatorias.forms import DiariaForm
-from verbas_indenizatorias.models import Diaria
+from verbas_indenizatorias.models import Diaria, DocumentoComprovacao
 from verbas_indenizatorias.filters import DiariaFilter
 from .access import _pode_acessar_prestacao
 from ..shared.registry import _get_tipos_documento_verbas
@@ -28,14 +28,16 @@ def add_diaria_view(request):
 
 
 def gerenciar_diaria_view(request, pk):
-    diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status', 'processo'), id=pk)
+    diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status', 'processo', 'prestacao_contas'), id=pk)
     if not _pode_acessar_prestacao(request.user, diaria):
         return HttpResponseForbidden("Acesso negado para prestação de contas desta diária.")
 
-    comprovantes = diaria.documentos.select_related('tipo').all()
+    prestacao = getattr(diaria, 'prestacao_contas', None)
+    comprovantes = prestacao.documentos.select_related('tipo').all() if prestacao else DocumentoComprovacao.objects.none()
 
     context = {
         'diaria': diaria,
+        'prestacao': prestacao,
         'comprovantes': comprovantes,
         'tipos_documento': _get_tipos_documento_verbas(),
     }

@@ -319,6 +319,13 @@ class Diaria(models.Model):
     def __str__(self):
         return f"Diária {self.numero_siscac} - {self.beneficiario}"
 
+    @property
+    def comprovantes(self):
+        prestacao = getattr(self, "prestacao_contas", None)
+        if prestacao:
+            return prestacao.documentos.all()
+        return DocumentoComprovacao.objects.none()
+
     class Meta:
         constraints = [
             models.CheckConstraint(
@@ -340,6 +347,31 @@ class DocumentoDiaria(DocumentoBase):
     """Documento comprobatório associado a diária."""
 
     diaria = models.ForeignKey('Diaria', on_delete=models.CASCADE, related_name='documentos')
+    history = HistoricalRecords()
+
+
+class PrestacaoContasDiaria(models.Model):
+    """Prestação de contas da diária com ciclo de abertura e encerramento."""
+
+    STATUS_ABERTA = "ABERTA"
+    STATUS_ENCERRADA = "ENCERRADA"
+    STATUS_CHOICES = [
+        (STATUS_ABERTA, "Aberta"),
+        (STATUS_ENCERRADA, "Encerrada"),
+    ]
+
+    diaria = models.OneToOneField('Diaria', on_delete=models.PROTECT, related_name='prestacao_contas')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_ABERTA)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    encerrado_em = models.DateTimeField(null=True, blank=True)
+    encerrado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='prestacoes_diaria_encerradas')
+    history = HistoricalRecords()
+
+
+class DocumentoComprovacao(DocumentoBase):
+    """Comprovante anexado pelo usuário na prestação de contas da diária."""
+
+    prestacao = models.ForeignKey('PrestacaoContasDiaria', on_delete=models.CASCADE, related_name='documentos')
     history = HistoricalRecords()
 
 
@@ -666,7 +698,7 @@ def _make_verba_presave_signal(model_cls):
     return _cleanup_old_file
 
 
-for _doc_model in (DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio):
+for _doc_model in (DocumentoDiaria, DocumentoComprovacao, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio):
     _make_verba_delete_signal(_doc_model)
     _make_verba_presave_signal(_doc_model)
 

@@ -9,12 +9,18 @@ from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from django.core.exceptions import ValidationError
 from django.utils.dateparse import parse_date
+from django.utils import timezone
 from decimal import Decimal, InvalidOperation
 
 from verbas_indenizatorias.forms import DiariaForm
-from verbas_indenizatorias.models import ApostilaDiaria, DevolucaoDiaria, Diaria
-from verbas_indenizatorias.services.documentos import gerar_e_anexar_pcd_diaria, gerar_e_anexar_scd_diaria
-from ..shared.documents import _salvar_documento_upload
+from verbas_indenizatorias.models import ApostilaDiaria, DevolucaoDiaria, Diaria, PrestacaoContasDiaria
+from verbas_indenizatorias.services.documentos import (
+    gerar_e_anexar_pcd_diaria,
+    gerar_e_anexar_scd_diaria,
+    obter_ou_criar_prestacao,
+    registrar_comprovante_prestacao,
+)
+from ..shared.documents import _validar_upload_documento
 from .access import _pode_acessar_prestacao
 from commons.shared.integracoes.autentique import enviar_documento_para_assinatura
 
@@ -83,29 +89,48 @@ def registrar_comprovante_action(request, pk):
         if not _pode_acessar_prestacao(request.user, diaria):
             return HttpResponseForbidden("Acesso negado para prestação de contas desta diária.")
 
-        _, erro = _salvar_documento_upload(
-            diaria,
-            modelo_documento=diaria.documentos.model,
-            fk_name='diaria',
-            arquivo=arquivo,
-            tipo_id=tipo_id,
-            obrigatorio=True,
-        )
+        erro = _validar_upload_documento(arquivo, tipo_id, obrigatorio=True)
 
         if erro:
             messages.error(request, erro)
         else:
-            logger.info("mutation=registrar_comprovante_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
+            try:
+                registrar_comprovante_prestacao(diaria, arquivo, tipo_id)
+                logger.info("mutation=registrar_comprovante_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
 
-            credor = diaria.beneficiario
-            if not (hasattr(credor, 'usuario') and credor.usuario == request.user):
-                logger.info(
-                    "proxy_upload diaria_id=%s operador_id=%s beneficiario_id=%s",
-                    diaria.id, request.user.pk, credor.pk,
-                )
+                credor = diaria.beneficiario
+                if not (hasattr(credor, 'usuario') and credor.usuario == request.user):
+                    logger.info(
+                        "proxy_upload diaria_id=%s operador_id=%s beneficiario_id=%s",
+                        diaria.id, request.user.pk, credor.pk,
+                    )
 
-            messages.success(request, 'Comprovante anexado com sucesso.')
+                messages.success(request, 'Comprovante anexado com sucesso.')
+            except ValidationError as exc:
+                messages.error(request, ' '.join(exc.messages))
 
+    return redirect('gerenciar_diaria', pk=diaria.id)
+
+
+@require_POST
+def encerrar_prestacao_action(request, pk):
+    with transaction.atomic():
+        diaria = get_object_or_404(Diaria.objects.select_for_update().select_related('beneficiario'), id=pk)
+        if not _pode_acessar_prestacao(request.user, diaria):
+            return HttpResponseForbidden("Acesso negado para prestação de contas desta diária.")
+
+        prestacao = obter_ou_criar_prestacao(diaria)
+        if prestacao.status == PrestacaoContasDiaria.STATUS_ENCERRADA:
+            messages.info(request, 'A prestação de contas já está encerrada.')
+            return redirect('gerenciar_diaria', pk=diaria.id)
+
+        prestacao.status = PrestacaoContasDiaria.STATUS_ENCERRADA
+        prestacao.encerrado_em = timezone.now()
+        prestacao.encerrado_por = request.user
+        prestacao.save(update_fields=['status', 'encerrado_em', 'encerrado_por'])
+        logger.info("mutation=encerrar_prestacao_diaria diaria_id=%s prestacao_id=%s user_id=%s", diaria.id, prestacao.id, request.user.pk)
+
+    messages.success(request, 'Prestação de contas encerrada com sucesso.')
     return redirect('gerenciar_diaria', pk=diaria.id)
 
 

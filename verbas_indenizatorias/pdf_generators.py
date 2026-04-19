@@ -485,7 +485,8 @@ class TermoPrestacaoContasDocument(BasePDFDocument):
 		y -= 16
 		c.setFont("Helvetica", 10)
 
-		documentos = diaria.documentos.select_related("tipo").all().order_by("id")
+		prestacao = getattr(diaria, 'prestacao_contas', None)
+		documentos = prestacao.documentos.select_related("tipo").all().order_by("id") if prestacao else []
 		if not documentos:
 			c.drawString(margin_left, y, "- Nenhum documento anexado.")
 			y -= 14

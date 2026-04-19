@@ -6,6 +6,7 @@ from verbas_indenizatorias.models import (
     AuxilioRepresentacao,
     Diaria,
     DocumentoAuxilio,
+    DocumentoComprovacao,
     DocumentoDiaria,
     DocumentoJeton,
     DocumentoReembolso,
@@ -22,6 +23,13 @@ _VERBA_CONFIG = {
         "doc_model": DocumentoDiaria,
         "doc_fk": "diaria",
         "doc_tipo_seguro": "verba_diaria_doc",
+    },
+    "diaria_comprovante": {
+        "model": Diaria,
+        "list_url": "diarias_list",
+        "doc_model": DocumentoComprovacao,
+        "doc_fk": "prestacao",
+        "doc_tipo_seguro": "verba_diaria_comprov",
     },
     "reembolso": {
         "model": ReembolsoCombustivel,
@@ -48,6 +56,7 @@ _VERBA_CONFIG = {
 
 _VERBA_PERMISSION_MAP = {
     "diaria": "verbas_indenizatorias.pode_gerenciar_diarias",
+    "diaria_comprovante": "verbas_indenizatorias.pode_gerenciar_diarias",
     "reembolso": "verbas_indenizatorias.pode_gerenciar_reembolsos",
     "jeton": "verbas_indenizatorias.pode_gerenciar_jetons",
     "auxilio": "verbas_indenizatorias.pode_gerenciar_auxilios",
