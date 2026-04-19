@@ -52,4 +52,4 @@ class CredorEditForm(forms.ModelForm):
 
 
 
-# Formulário ContaFixaForm migrado para fluxo.support.conta_fixa_forms
+# Formulário ContaFixaForm migrado para pagamentos.support.conta_fixa_forms

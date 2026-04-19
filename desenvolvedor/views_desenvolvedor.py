@@ -20,7 +20,7 @@ from credores.imports import (
 )
 from credores.models import CargosFuncoes, ContasBancarias, Credor
 from fiscal.models import CodigosImposto, DocumentoFiscal, RetencaoImposto, StatusChoicesRetencoes
-from fluxo.domain_models import (
+from pagamentos.domain_models import (
     Boleto_Bancario,
     DocumentoOrcamentario,
     FormasDePagamento,
@@ -30,10 +30,10 @@ from fluxo.domain_models import (
     TiposDeDocumento,
     TiposDePagamento,
 )
-from fluxo.views.support.contas_fixas.imports import download_template_csv_contas
+from pagamentos.views.support.contas_fixas.imports import download_template_csv_contas
 from commons.shared.text_tools import format_brl_currency
 from commons.shared.pdf_tools import gerar_documento_pdf
-from fluxo.pdf_generators import FLUXO_DOCUMENT_REGISTRY
+from pagamentos.pdf_generators import PAGAMENTOS_DOCUMENT_REGISTRY
 from suprimentos.pdf_generators import SUPRIMENTOS_DOCUMENT_REGISTRY
 from verbas_indenizatorias.models import Diaria, MeiosDeTransporte, StatusChoicesVerbasIndenizatorias
 from verbas_indenizatorias.pdf_generators import VERBAS_DOCUMENT_REGISTRY
@@ -320,7 +320,7 @@ def _create_fake_diarias(n, credores_pf, processos):
 
 
 @csrf_exempt
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def gerar_dados_fake_view(request):
     """Gera dados fictícios de processos, fiscais, retenções e diárias via formulário."""
     context = {"resultados": None}
@@ -390,7 +390,7 @@ def gerar_dados_fake_view(request):
     return render(request, "gerar_dados_fake.html", context)
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def gerar_dummy_pdf_view(request, pk):
     """Gera PDF fictício e anexa ao processo como documento de nota fiscal para testes."""
     from django.utils import timezone as tz
@@ -440,7 +440,7 @@ def gerar_dummy_pdf_view(request, pk):
 
 
 def painel_teste_pdfs(request):
-    return render(request, "fluxo/teste_pdfs.html")
+    return render(request, "pagamentos/teste_pdfs.html")
 
 
 def gerar_pdf_fake_view(request, doc_type):
@@ -531,7 +531,7 @@ def gerar_pdf_fake_view(request, doc_type):
     elif doc_type == "recibo_suprimento":
         registry = SUPRIMENTOS_DOCUMENT_REGISTRY
     else:
-        registry = FLUXO_DOCUMENT_REGISTRY
+        registry = PAGAMENTOS_DOCUMENT_REGISTRY
 
     pdf_bytes = gerar_documento_pdf(doc_type, obj, registry, **kwargs)
     response = HttpResponse(pdf_bytes, content_type="application/pdf")

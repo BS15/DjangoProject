@@ -4,7 +4,7 @@ import django.core.validators
 import django.db.models.deletion
 import django.utils.timezone
 from commons.shared.storage_utils import caminho_documento
-import fluxo.validators
+import pagamentos.validators
 import simple_history.models
 from django.conf import settings
 from django.db import migrations, models
@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("credores", "0001_initial"),
-        ("fluxo", "0001_initial"),
+        ("pagamentos", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -150,7 +150,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="auxilios_representacao",
-                        to="fluxo.processo",
+                        to="pagamentos.processo",
                     ),
                 ),
                 (
@@ -365,7 +365,7 @@ class Migration(migrations.Migration):
                     "tipo",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.PROTECT,
-                        to="fluxo.tiposdedocumento",
+                        to="pagamentos.tiposdedocumento",
                     ),
                 ),
             ],

@@ -7,7 +7,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 from fiscal.models import DocumentoFiscal, RetencaoImposto
-from fluxo.domain_models import Processo
+from pagamentos.domain_models import Processo
 
 
 class DocumentoFiscalForm(forms.ModelForm):

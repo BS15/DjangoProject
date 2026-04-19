@@ -5,7 +5,7 @@ Este módulo define formulários para cadastro, edição e validação de suprim
 
 from django import forms
 from suprimentos.models import SuprimentoDeFundos
-from fluxo.validators import validar_regras_suprimento
+from pagamentos.validators import validar_regras_suprimento
 from suprimentos.models import DespesaSuprimento
 
 

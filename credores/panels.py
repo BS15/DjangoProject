@@ -7,17 +7,17 @@ from django.shortcuts import get_object_or_404, render
 from credores.filters import CredorFilter
 from credores.forms import CredorEditForm, CredorForm
 from credores.models import Credor
-from fluxo.domain_models import Processo
-from fluxo.views.shared import render_filtered_list
+from pagamentos.domain_models import Processo
+from pagamentos.views.shared import render_filtered_list
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def add_credor_view(request):
     """Tela de entrada para cadastro de novo credor."""
     return render(request, "cadastros/add_credor.html", {"form": CredorForm()})
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def credores_list_view(request):
     """Lista filtrável de credores."""
     queryset = Credor.objects.all().order_by("nome")
@@ -31,7 +31,7 @@ def credores_list_view(request):
     )
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def gerenciar_credor_view(request, pk):
     """Hub de gestão do credor sem mutação por GET."""
     credor = get_object_or_404(Credor, pk=pk)
@@ -48,7 +48,7 @@ def gerenciar_credor_view(request, pk):
     return render(request, "cadastros/edit_credor.html", context)
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def api_dados_credor(request, credor_id):
     """Retorna em JSON dados de credor para autofill em formulários."""
     try:

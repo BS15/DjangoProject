@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         ("contenttypes", "__first__"),
         ("credores", "0002_initial"),
         ("fiscal", "0001_initial"),
-        ("fluxo", "0001_initial"),
+        ("pagamentos", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -67,7 +67,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name="notas_fiscais",
-                to="fluxo.processo",
+                to="pagamentos.processo",
             ),
         ),
         migrations.AddField(
@@ -146,7 +146,7 @@ class Migration(migrations.Migration):
                 null=True,
                 on_delete=django.db.models.deletion.DO_NOTHING,
                 related_name="+",
-                to="fluxo.processo",
+                to="pagamentos.processo",
             ),
         ),
         migrations.AddField(
@@ -206,7 +206,7 @@ class Migration(migrations.Migration):
                 null=True,
                 on_delete=django.db.models.deletion.DO_NOTHING,
                 related_name="+",
-                to="fluxo.processo",
+                to="pagamentos.processo",
                 verbose_name="Processo de Recolhimento",
             ),
         ),

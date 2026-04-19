@@ -10,7 +10,7 @@ from django.views.decorators.http import require_POST
 from credores.models import Credor
 from fiscal.models import RetencaoImposto
 from fiscal.services.impostos import anexar_guia_comprovante_relatorio_em_processos
-from fluxo.domain_models import Processo, StatusChoicesProcesso, TiposDePagamento
+from pagamentos.domain_models import Processo, StatusChoicesProcesso, TiposDePagamento
 import logging
 
 logger = logging.getLogger(__name__)

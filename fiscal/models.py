@@ -110,7 +110,7 @@ class StatusChoicesRetencoes(models.Model):
 class DocumentoFiscal(models.Model):
     """Nota fiscal vinculada ao processo com dados para ateste e retenção."""
 
-    processo = models.ForeignKey('fluxo.Processo', on_delete=models.CASCADE, related_name='notas_fiscais')
+    processo = models.ForeignKey('pagamentos.Processo', on_delete=models.CASCADE, related_name='notas_fiscais')
     nome_emitente = models.ForeignKey('credores.Credor', on_delete=models.PROTECT, blank=True, null=True)
     cnpj_emitente = models.CharField(max_length=20, blank=False, validators=[validar_cpf_cnpj])
     numero_nota_fiscal = models.CharField(max_length=50)
@@ -192,7 +192,7 @@ class RetencaoImposto(models.Model):
     valor = models.DecimalField("Valor Retido", max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
     status = models.ForeignKey('StatusChoicesRetencoes', on_delete=models.PROTECT, blank=True, null=True)
     processo_pagamento = models.ForeignKey(
-        'fluxo.Processo',
+        'pagamentos.Processo',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

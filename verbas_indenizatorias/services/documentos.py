@@ -7,7 +7,7 @@ from commons.shared.document_services import obter_ou_criar_tipo_documento, obte
 from commons.shared.pdf_response import gerar_documento_bytes
 from commons.shared.signature_services import criar_assinatura_rascunho
 from django.core.files.base import ContentFile
-from fluxo.models import AssinaturaAutentique
+from pagamentos.models import AssinaturaAutentique
 from verbas_indenizatorias.pdf_generators import VERBAS_DOCUMENT_REGISTRY
 from verbas_indenizatorias.models import (
     DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio,

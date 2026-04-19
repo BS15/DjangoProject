@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 def criar_processo_para_suprimento(suprimento, detalhamento):
     """Cria processo de pagamento para suprimento de fundos em transação atômica."""
     from django.db import transaction
-    from fluxo.models import Processo, StatusChoicesProcesso, TiposDePagamento
+    from pagamentos.models import Processo, StatusChoicesProcesso, TiposDePagamento
 
     # Definir status padrão
     status_padrao, _ = StatusChoicesProcesso.objects.get_or_create(

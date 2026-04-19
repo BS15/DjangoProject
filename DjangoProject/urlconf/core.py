@@ -1,52 +1,52 @@
 from django.urls import path
 
-from fluxo.views import api_views as fluxo_api_views
-from fluxo.views import auditing as fluxo_auditing_views
-from fluxo.views import pdf as fluxo_pdf_views
-from fluxo.views import security as fluxo_security_views
-from fluxo.views.support.core import home_page, process_detail_view
-from fluxo.views.support.sync import pagamentos as pagamentos_sync_views
-from fluxo.views.support.pendencia import painel_pendencias_view, atualizar_pendencias_lote_action
-from fluxo.views.support.contingencia import (
+from pagamentos.views import api_views as pagamentos_api_views
+from pagamentos.views import auditing as pagamentos_auditing_views
+from pagamentos.views import pdf as pagamentos_pdf_views
+from pagamentos.views import security as pagamentos_security_views
+from pagamentos.views.support.core import home_page, process_detail_view
+from pagamentos.views.support.sync import pagamentos as pagamentos_sync_views
+from pagamentos.views.support.pendencia import painel_pendencias_view, atualizar_pendencias_lote_action
+from pagamentos.views.support.contingencia import (
     painel_contingencias_view,
     add_contingencia_view,
     add_contingencia_action,
     analisar_contingencia_action,
 )
-from fluxo.views.support.devolucao import (
+from pagamentos.views.support.devolucao import (
     painel_devolucoes_view,
     registrar_devolucao_view,
     registrar_devolucao_action,
 )
-from fluxo.views.payment.autorizacao import actions as payment_autorizacao_actions
-from fluxo.views.payment.autorizacao import panels as payment_autorizacao_panels
-from fluxo.views.payment.contas_a_pagar import actions as payment_contas_actions
-from fluxo.views.payment.contas_a_pagar import apis as payment_contas_apis
-from fluxo.views.payment.contas_a_pagar import panels as payment_contas_panels
-from fluxo.views.payment.lancamento import actions as payment_lancamento_actions
-from fluxo.views.payment.lancamento import panels as payment_lancamento_panels
-from fluxo.views.post_payment.arquivamento import actions as post_payment_arquivamento_actions
-from fluxo.views.post_payment.arquivamento import panels as post_payment_arquivamento_panels
-from fluxo.views.post_payment.arquivamento import reviews as post_payment_arquivamento_reviews
-from fluxo.views.post_payment.conferencia import actions as post_payment_conferencia_actions
-from fluxo.views.post_payment.conferencia import panels as post_payment_conferencia_panels
-from fluxo.views.post_payment.conferencia import reviews as post_payment_conferencia_reviews
-from fluxo.views.post_payment.conselho import actions as post_payment_conselho_actions
-from fluxo.views.post_payment.conselho import panels as post_payment_conselho_panels
-from fluxo.views.post_payment.conselho import pdf as post_payment_conselho_pdf
-from fluxo.views.post_payment.conselho import reviews as post_payment_conselho_reviews
-from fluxo.views.post_payment.contabilizacao import actions as post_payment_contabilizacao_actions
-from fluxo.views.post_payment.contabilizacao import panels as post_payment_contabilizacao_panels
-from fluxo.views.post_payment.contabilizacao import reviews as post_payment_contabilizacao_reviews
-from fluxo.views.post_payment.reunioes import actions as post_payment_reunioes_actions
-from fluxo.views.post_payment.reunioes import panels as post_payment_reunioes_panels
-from fluxo.views.pre_payment.cadastro import actions as pre_payment_cadastro_actions
-from fluxo.views.pre_payment.cadastro import apis as pre_payment_cadastro_apis
-from fluxo.views.pre_payment.cadastro import panels as pre_payment_cadastro_panels
-from fluxo.views.pre_payment.empenho import actions as pre_payment_actions
-from fluxo.views.pre_payment.empenho import apis as pre_payment_empenho_apis
-from fluxo.views.pre_payment.empenho import panels as pre_payment_panels
-from fluxo.views.pre_payment.liquidacoes import actions as pre_payment_liquidacoes_actions
+from pagamentos.views.payment.autorizacao import actions as payment_autorizacao_actions
+from pagamentos.views.payment.autorizacao import panels as payment_autorizacao_panels
+from pagamentos.views.payment.contas_a_pagar import actions as payment_contas_actions
+from pagamentos.views.payment.contas_a_pagar import apis as payment_contas_apis
+from pagamentos.views.payment.contas_a_pagar import panels as payment_contas_panels
+from pagamentos.views.payment.lancamento import actions as payment_lancamento_actions
+from pagamentos.views.payment.lancamento import panels as payment_lancamento_panels
+from pagamentos.views.post_payment.arquivamento import actions as post_payment_arquivamento_actions
+from pagamentos.views.post_payment.arquivamento import panels as post_payment_arquivamento_panels
+from pagamentos.views.post_payment.arquivamento import reviews as post_payment_arquivamento_reviews
+from pagamentos.views.post_payment.conferencia import actions as post_payment_conferencia_actions
+from pagamentos.views.post_payment.conferencia import panels as post_payment_conferencia_panels
+from pagamentos.views.post_payment.conferencia import reviews as post_payment_conferencia_reviews
+from pagamentos.views.post_payment.conselho import actions as post_payment_conselho_actions
+from pagamentos.views.post_payment.conselho import panels as post_payment_conselho_panels
+from pagamentos.views.post_payment.conselho import pdf as post_payment_conselho_pdf
+from pagamentos.views.post_payment.conselho import reviews as post_payment_conselho_reviews
+from pagamentos.views.post_payment.contabilizacao import actions as post_payment_contabilizacao_actions
+from pagamentos.views.post_payment.contabilizacao import panels as post_payment_contabilizacao_panels
+from pagamentos.views.post_payment.contabilizacao import reviews as post_payment_contabilizacao_reviews
+from pagamentos.views.post_payment.reunioes import actions as post_payment_reunioes_actions
+from pagamentos.views.post_payment.reunioes import panels as post_payment_reunioes_panels
+from pagamentos.views.pre_payment.cadastro import actions as pre_payment_cadastro_actions
+from pagamentos.views.pre_payment.cadastro import apis as pre_payment_cadastro_apis
+from pagamentos.views.pre_payment.cadastro import panels as pre_payment_cadastro_panels
+from pagamentos.views.pre_payment.empenho import actions as pre_payment_actions
+from pagamentos.views.pre_payment.empenho import apis as pre_payment_empenho_apis
+from pagamentos.views.pre_payment.empenho import panels as pre_payment_panels
+from pagamentos.views.pre_payment.liquidacoes import actions as pre_payment_liquidacoes_actions
 
 urlpatterns = [
     path('', home_page, name='home_page'),
@@ -59,7 +59,7 @@ urlpatterns = [
     path('processo/<int:pk>/editar/documentos/action/', pre_payment_cadastro_actions.editar_processo_documentos_action, name='editar_processo_documentos_action'),
     path('processo/<int:pk>/editar/pendencias/', pre_payment_cadastro_panels.editar_processo_pendencias_view, name='editar_processo_pendencias'),
     path('processo/<int:pk>/editar/pendencias/action/', pre_payment_cadastro_actions.editar_processo_pendencias_action, name='editar_processo_pendencias_action'),
-    path('processo/<int:processo_id>/pdf/', fluxo_pdf_views.visualizar_pdf_processo, name='visualizar_pdf_processo'),
+    path('processo/<int:processo_id>/pdf/', pagamentos_pdf_views.visualizar_pdf_processo, name='visualizar_pdf_processo'),
     path('contas-a-pagar/', payment_contas_panels.contas_a_pagar, name='contas_a_pagar'),
     path('api/processo/<int:pk>/extrair-codigos-barras/', payment_contas_apis.api_extrair_codigos_barras_processo, name='api_extrair_codigos_barras_processo'),
     path('api/extrair-codigos-barras-upload/', pre_payment_cadastro_apis.api_extrair_codigos_barras_upload, name='api_extrair_codigos_barras_upload'),
@@ -100,24 +100,24 @@ urlpatterns = [
     path('pendencias/', painel_pendencias_view, name='painel_pendencias'),
     path('pendencias/action/', atualizar_pendencias_lote_action, name='painel_pendencias_action'),
     path('api/documentos-por-pagamento/', pre_payment_cadastro_apis.api_tipos_documento_por_pagamento, name='api_documentos_pagamento'),
-    path('api/detalhes-pagamento/', fluxo_api_views.api_detalhes_pagamento, name='api_detalhes_pagamento'),
+    path('api/detalhes-pagamento/', pagamentos_api_views.api_detalhes_pagamento, name='api_detalhes_pagamento'),
     path('processos/separar-lancamento/', payment_lancamento_actions.separar_para_lancamento_bancario_action, name='separar_para_lancamento_bancario'),
     path('processos/lancamento-bancario/', payment_lancamento_panels.lancamento_bancario, name='lancamento_bancario'),
     path('processos/marcar-lancado/', payment_lancamento_actions.marcar_como_lancado_action, name='marcar_como_lancado'),
     path('processos/desmarcar-lancamento/', payment_lancamento_actions.desmarcar_lancamento_action, name='desmarcar_lancamento'),
-    path('api/processo/<int:processo_id>/documentos/', fluxo_auditing_views.api_documentos_processo, name='api_documentos_processo'),
-    path('auditoria/', fluxo_auditing_views.auditoria_view, name='auditoria'),
+    path('api/processo/<int:processo_id>/documentos/', pagamentos_auditing_views.api_documentos_processo, name='api_documentos_processo'),
+    path('auditoria/', pagamentos_auditing_views.auditoria_view, name='auditoria'),
     path('contingencias/', painel_contingencias_view, name='painel_contingencias'),
     path('contingencias/nova/', add_contingencia_view, name='add_contingencia'),
     path('contingencias/nova/enviar/', add_contingencia_action, name='add_contingencia_action'),
     path('contingencias/<int:pk>/analisar/', analisar_contingencia_action, name='analisar_contingencia'),
-    path('api/processo_detalhes/', fluxo_auditing_views.api_processo_detalhes, name='api_processo_detalhes'),
-    path('processo/<int:pk>/autorizacao-pagamento/', fluxo_pdf_views.gerar_autorizacao_pagamento_view, name='gerar_autorizacao_pagamento'),
+    path('api/processo_detalhes/', pagamentos_auditing_views.api_processo_detalhes, name='api_processo_detalhes'),
+    path('processo/<int:pk>/autorizacao-pagamento/', pagamentos_pdf_views.gerar_autorizacao_pagamento_view, name='gerar_autorizacao_pagamento'),
     path('processo/<int:pk>/parecer-conselho/', post_payment_conselho_pdf.gerar_parecer_conselho_view, name='gerar_parecer_conselho'),
-    path('fluxo/sincronizar-siscac/', pagamentos_sync_views.sincronizar_siscac, name='sincronizar_siscac'),
-    path('fluxo/sincronizar-siscac/manual/', pagamentos_sync_views.sincronizar_siscac_manual_action, name='sincronizar_siscac_manual_action'),
-    path('fluxo/sincronizar-siscac/auto/', pagamentos_sync_views.sincronizar_siscac_auto_action, name='sincronizar_siscac_auto_action'),
-    path('documentos/secure/<str:tipo_documento>/<int:documento_id>/', fluxo_security_views.download_arquivo_seguro, name='download_arquivo_seguro'),
+    path('pagamentos/sincronizar-siscac/', pagamentos_sync_views.sincronizar_siscac, name='sincronizar_siscac'),
+    path('pagamentos/sincronizar-siscac/manual/', pagamentos_sync_views.sincronizar_siscac_manual_action, name='sincronizar_siscac_manual_action'),
+    path('pagamentos/sincronizar-siscac/auto/', pagamentos_sync_views.sincronizar_siscac_auto_action, name='sincronizar_siscac_auto_action'),
+    path('documentos/secure/<str:tipo_documento>/<int:documento_id>/', pagamentos_security_views.download_arquivo_seguro, name='download_arquivo_seguro'),
     path('processo/<int:pk>/', process_detail_view, name='process_detail'),
     path('processo/<int:processo_id>/devolucao/', registrar_devolucao_view, name='registrar_devolucao'),
     path('processo/<int:processo_id>/devolucao/salvar/', registrar_devolucao_action, name='registrar_devolucao_action'),

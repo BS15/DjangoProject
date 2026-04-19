@@ -9,7 +9,7 @@ from django.apps import apps
 from django.core.files.base import ContentFile
 from django.db import transaction
 
-from fluxo.domain_models import TiposDeDocumento, TiposDePagamento
+from pagamentos.domain_models import TiposDeDocumento, TiposDePagamento
 
 DOC_GUIA = "GUIA DE RECOLHIMENTO DE IMPOSTOS"
 DOC_COMPROVANTE = "COMPROVANTE DE RECOLHIMENTO DE IMPOSTOS"
@@ -97,7 +97,7 @@ def anexar_guia_comprovante_relatorio_em_processos(
     ano: int,
 ) -> int:
     """Anexa guia, comprovante e relatório mensal em cada processo de recolhimento envolvido."""
-    DocumentoProcesso = apps.get_model("fluxo", "DocumentoProcesso")
+    DocumentoProcesso = apps.get_model("pagamentos", "DocumentoProcesso")
     processo_ids = sorted({retencao.processo_pagamento_id for retencao in retencoes if retencao.processo_pagamento_id})
     if not processo_ids:
         return 0

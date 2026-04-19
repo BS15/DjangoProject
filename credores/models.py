@@ -142,7 +142,7 @@ class FaturaMensal(models.Model):
     )
     mes_referencia = models.DateField("Mês de Referência")
     processo_vinculado = models.ForeignKey(
-        'fluxo.Processo',
+        'pagamentos.Processo',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

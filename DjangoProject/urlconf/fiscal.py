@@ -5,12 +5,12 @@ from fiscal.views.impostos import panels as impostos_panels
 from fiscal.views.impostos import actions as impostos_actions
 from fiscal.views.reinf import actions as reinf_actions
 from fiscal.views.reinf import panels as reinf_panels
-from fluxo.views.payment.comprovantes import panels as comprovantes_panels
-from fluxo.views.payment.comprovantes import apis as comprovantes_apis
-from fluxo.views.pre_payment.liquidacoes import panels as liquidacoes_panels
-from fluxo.views.pre_payment.liquidacoes import actions as liquidacoes_actions
-from fluxo.views.pre_payment.cadastro import panels as documentos_fiscais_panels
-from fluxo.views.pre_payment.cadastro import apis as documentos_fiscais_apis
+from pagamentos.views.payment.comprovantes import panels as comprovantes_panels
+from pagamentos.views.payment.comprovantes import apis as comprovantes_apis
+from pagamentos.views.pre_payment.liquidacoes import panels as liquidacoes_panels
+from pagamentos.views.pre_payment.liquidacoes import actions as liquidacoes_actions
+from pagamentos.views.pre_payment.cadastro import panels as documentos_fiscais_panels
+from pagamentos.views.pre_payment.cadastro import apis as documentos_fiscais_apis
 
 urlpatterns = [
     path('retencao-impostos/', impostos_panels.painel_impostos_view, name='painel_impostos_view'),

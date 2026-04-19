@@ -1,4 +1,4 @@
-"""Funções auxiliares privadas do fluxo de suprimentos."""
+"""Funções auxiliares privadas do pagamentos de suprimentos."""
 
 from datetime import datetime
 from typing import Any, Mapping
@@ -8,8 +8,8 @@ from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
 
 from commons.shared.text_tools import parse_brl_decimal
-from fluxo.domain_models import StatusChoicesProcesso
-from fluxo.services.processo_documentos import gerar_documentos_automaticos_processo
+from pagamentos.domain_models import StatusChoicesProcesso
+from pagamentos.services.processo_documentos import gerar_documentos_automaticos_processo
 from suprimentos.models import DespesaSuprimento, StatusChoicesSuprimentoDeFundos
 
 def _suprimento_encerrado(suprimento: Any) -> bool:

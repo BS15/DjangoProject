@@ -92,10 +92,10 @@ def painel_importacao_view(request):
                 resultados = importar_contas_fixas_csv(request.FILES["file_contas"])
                 context["resultados"] = resultados
             context["tipo_importacao"] = "Contas Fixas"
-    return render(request, "fluxo/painel_importacao.html", context)
+    return render(request, "pagamentos/painel_importacao.html", context)
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def download_template_csv_credores(request):
     """Disponibiliza template CSV para importação de credores."""
     response = HttpResponse(content_type="text/csv")

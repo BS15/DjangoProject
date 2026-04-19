@@ -1,18 +1,36 @@
-# O Padrão Manager-Worker
+# Padrão Manager-Worker (CQRS-Lite)
 
-No PaGé, as views são divididas por responsabilidade HTTP e de negócio.
+!!! danger "Critical Invariant"
+	**Views NUNCA contêm lógica de negócio ou validação.**
+	- Panels (`panels.py`): apenas GET, montagem de contexto, sem mutação.
+	- Actions (`actions.py`): apenas POST, validação de formulário, roteamento para Services. Nunca renderizam templates.
 
 ## Panels (Manager)
-- Arquivo padrão: `panels.py`.
-- Responsabilidade: responder `GET` e montar contexto de tela.
-- Regra: não mutar banco de dados.
+- Arquivo: `panels.py`
+- Responde apenas a requisições GET.
+- Monta contexto de tela.
+- **Proibido mutar banco de dados ou chamar lógica de domínio.**
 
 ## Actions (Router para Workers)
-- Arquivo padrão: `actions.py`.
-- Responsabilidade: responder `POST`, validar entrada e acionar serviços.
-- Regra: não renderizar template; sempre redirecionar após sucesso/erro.
+- Arquivo: `actions.py`
+- Responde apenas a POST.
+- Valida entrada, chama Service, redireciona.
+- **Nunca executa lógica de negócio diretamente.**
+- **Nunca renderiza template.**
 
 ## Services/Helpers (Worker)
-- Diretório padrão: `services/`.
-- Responsabilidade: centralizar mutações, transições de estado e regras de domínio.
-- Benefício: regras testáveis, reuso e menor acoplamento com camada web.
+- Diretório: `services/`
+- Centralizam TODA mutação, transição de estado e regra de domínio.
+- **Devem sempre usar `transaction.atomic()` e locks pessimistas (`select_for_update()`).**
+- **Devem crashar imediatamente em caso de dados fiscais inválidos.**
+
+!!! tip
+	Este padrão garante rastreabilidade, previsibilidade e compliance regulatório.
+
+## Anti-padrões proibidos
+
+!!! danger "Proibido"
+	- Qualquer lógica de negócio em views/actions.
+	- Validação de regras em formulários.
+	- Mutação de estado sem lock pessimista.
+	- Uso de floats em cálculos financeiros.

@@ -54,10 +54,26 @@ markdown_extensions:
 nav:
   - Início: index.md
   - Visão Geral e Negócio:
-    - Missão do Sistema: negocio/missao_sistema.md
-    - Glossário do Conselho: negocio/glossario_conselho.md
+      - Missão do Sistema: negocio/missao_sistema.md
+      - Glossário do Conselho: negocio/glossario_conselho.md
   - Arquitetura de Software:
-    - Padrão Manager-Worker: arquitetura/manager_worker.md
+      - Padrão Manager-Worker: arquitetura/manager_worker.md
+      - Camada de Services: arquitetura/camada_services.md
+      - Hub-and-Spoke: arquitetura/hub_spoke.md
+  - Manual de Módulos:
+      - Pagamentos Core: modulos/pagamentos_core.md
+      - Verbas Indenizatórias: modulos/verbas_indenizatorias.md
+      - Suprimento de Fundos: modulos/suprimento_fundos.md
+      - Fluxo Core: modulos/fluxo_core.md
+      - Módulo Fiscal: modulos/modulo_fiscal.md
+  - Segurança e Governança:
+      - Trilha de Auditoria: governanca/trilha_auditoria.md
+      - Matriz de Permissões: governanca/matriz_permissoes.md
+  - Guia do Desenvolvedor:
+      - Setup de Ambiente: desenvolvedor/setup_ambiente.md
+      - Dicionários Operacionais: desenvolvedor/dicionarios_operacionais.md
+      - Funcionalidades Transversais: desenvolvedor/funcionalidades_transversais.md
+      - Padrões de Código: desenvolvedor/padroes_codigo.md
     - Interface Hub-and-Spoke: arquitetura/hub_spoke.md
     - Camada de Services: arquitetura/camada_services.md
   - Manual de Módulos (Funcional):

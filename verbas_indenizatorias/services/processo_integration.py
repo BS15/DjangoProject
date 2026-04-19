@@ -11,8 +11,8 @@ def criar_processo_e_vincular_verbas(itens, tipo_verba, credor_obj, usuario=None
     from django.db import transaction
 
     from commons.shared.signature_services import criar_assinatura_rascunho
-    from fluxo.models import Processo, StatusChoicesProcesso, TiposDePagamento
-    from fluxo.models import AssinaturaAutentique
+    from pagamentos.models import Processo, StatusChoicesProcesso, TiposDePagamento
+    from pagamentos.models import AssinaturaAutentique
     from commons.shared.pdf_response import gerar_documento_bytes
     from verbas_indenizatorias.models import Diaria
     from verbas_indenizatorias.pdf_generators import VERBAS_DOCUMENT_REGISTRY
@@ -62,7 +62,7 @@ def criar_processo_e_vincular_verbas(itens, tipo_verba, credor_obj, usuario=None
 
 def gerar_documentos_relacionados_por_transicao(processo, status_anterior, novo_status):
     """Gera documentos de verbas quando o processo atinge marcos de pagamento."""
-    from fluxo.services.processo_documentos import gerar_anexo_por_tipo
+    from pagamentos.services.processo_documentos import gerar_anexo_por_tipo
 
     entrou_em_pago = not status_anterior.startswith("PAGO") and novo_status.startswith("PAGO")
     if not entrou_em_pago:

@@ -1,7 +1,7 @@
 """Filtros de listagem para o domínio de credores."""
 
 import django_filters
-from fluxo.filters import BaseStyledFilterSet
+from pagamentos.filters import BaseStyledFilterSet
 from credores.models import Credor
 
 

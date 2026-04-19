@@ -20,7 +20,7 @@ def _is_processo_selado(processo):
     if not processo or processo.em_contingencia or not processo.status:
         return False
 
-    from fluxo.domain_models.processos import PROCESSO_STATUS_PAGOS_E_POSTERIORES
+    from pagamentos.domain_models.processos import PROCESSO_STATUS_PAGOS_E_POSTERIORES
 
     status_atual = (processo.status.status_choice or "").upper()
     return status_atual in PROCESSO_STATUS_PAGOS_E_POSTERIORES
@@ -65,7 +65,7 @@ class StatusChoicesSuprimentoDeFundos(models.Model):
 class SuprimentoDeFundos(models.Model):
     """Concessão de suprimento com controle de saldo e prestação de contas."""
 
-    processo = models.ForeignKey('fluxo.Processo', on_delete=models.CASCADE, related_name='suprimentos', null=True,
+    processo = models.ForeignKey('pagamentos.Processo', on_delete=models.CASCADE, related_name='suprimentos', null=True,
                                  blank=True)
     suprido = models.ForeignKey('credores.Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
                                 verbose_name="Suprido")
