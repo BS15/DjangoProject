@@ -5,8 +5,17 @@ Este módulo define formulários para cadastro, edição e validação de diári
 
 from django import forms
 from django.forms import inlineformset_factory
-from verbas_indenizatorias.models import Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao
-from verbas_indenizatorias.models import PrestacaoContasDiaria, DocumentoComprovacao
+from verbas_indenizatorias.models import (
+    Diaria,
+    ReembolsoCombustivel,
+    Jeton,
+    AuxilioRepresentacao,
+    DevolucaoDiaria,
+    ContingenciaDiaria,
+    PrestacaoContasDiaria,
+    DocumentoComprovacao,
+    _CAMPOS_PERMITIDOS_CONTINGENCIA_DIARIA,
+)
 
 
 class DiariaForm(forms.ModelForm):
@@ -132,3 +141,50 @@ ComprovanteDiariaFormSet = inlineformset_factory(
         'arquivo': forms.ClearableFileInput(attrs={'class': 'form-control form-control-sm'}),
     },
 )
+
+
+class DevolucaoDiariaForm(forms.ModelForm):
+    """Formulário para registrar uma devolução vinculada a uma diária."""
+
+    class Meta:
+        model = DevolucaoDiaria
+        fields = ['valor_devolvido', 'data_devolucao', 'motivo']
+        widgets = {
+            'valor_devolvido': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0.01'}),
+            'data_devolucao': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'motivo': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+        }
+
+
+_CAMPO_CHOICES = [('', '---------')] + sorted(
+    [(c, c) for c in _CAMPOS_PERMITIDOS_CONTINGENCIA_DIARIA]
+)
+
+
+class ContingenciaDiariaForm(forms.Form):
+    """Formulário para abrir uma contingência de retificação em uma diária."""
+
+    campo_corrigido = forms.ChoiceField(
+        label="Campo a Corrigir",
+        choices=_CAMPO_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+    valor_anterior = forms.CharField(
+        label="Valor Atual (referência)",
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+    )
+    valor_proposto = forms.CharField(
+        label="Novo Valor",
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+    )
+    justificativa = forms.CharField(
+        label="Justificativa",
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+    )
+
+    def clean_campo_corrigido(self):
+        campo = self.cleaned_data.get('campo_corrigido')
+        if campo not in _CAMPOS_PERMITIDOS_CONTINGENCIA_DIARIA:
+            raise forms.ValidationError("Campo não permitido para retificação via contingência.")
+        return campo

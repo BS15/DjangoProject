@@ -10,8 +10,11 @@ from verbas_indenizatorias.views.diarias import apis as verbas_diarias_apis
 from verbas_indenizatorias.views.diarias import imports as verbas_diarias_imports
 from verbas_indenizatorias.views.diarias import panels as verbas_diarias_panels
 from verbas_indenizatorias.views.diarias import pdf as verbas_diarias_pdf
-
 from verbas_indenizatorias.views.diarias import sync as verbas_diarias_sync
+from verbas_indenizatorias.views.diarias.contingencia import panels as contingencia_panels
+from verbas_indenizatorias.views.diarias.contingencia import actions as contingencia_actions
+from verbas_indenizatorias.views.diarias.devolucao import panels as devolucao_panels
+from verbas_indenizatorias.views.diarias.devolucao import actions as devolucao_actions
 from verbas_indenizatorias.views.jetons import actions as verbas_jeton_actions
 from verbas_indenizatorias.views.jetons import panels as verbas_jeton_panels
 from verbas_indenizatorias.views.reembolsos import actions as verbas_reembolso_actions
@@ -51,9 +54,19 @@ urlpatterns = [
     path('verbas/prestacoes/<int:pk>/revisar/', verbas_diarias_panels.revisar_prestacao_view, name='revisar_prestacao'),
     path('verbas/prestacoes/<int:pk>/aceitar/', verbas_diarias_actions.aceitar_prestacao_action, name='aceitar_prestacao_action'),
     path('verbas/diarias/<int:pk>/liberar-assinatura/action/', verbas_diarias_actions.liberar_para_assinatura_action, name='liberar_para_assinatura_action'),
-    path('verbas/diarias/<int:pk>/devolucao/registrar/action/', verbas_diarias_actions.registrar_devolucao_diaria_action, name='registrar_devolucao_diaria_action'),
-    path('verbas/diarias/<int:pk>/apostila/registrar/action/', verbas_diarias_actions.registrar_apostila_diaria_action, name='registrar_apostila_diaria_action'),
     path('verbas/diarias/<int:pk>/cancelar/action/', verbas_diarias_actions.cancelar_diaria_action, name='cancelar_diaria_action'),
+
+    # Contingências de Diárias
+    path('verbas/diarias/contingencias/', contingencia_panels.painel_contingencias_diarias_view, name='painel_contingencias_diarias'),
+    path('verbas/diarias/<int:pk>/contingencia/nova/', contingencia_panels.add_contingencia_diaria_view, name='add_contingencia_diaria'),
+    path('verbas/diarias/<int:pk>/contingencia/nova/action/', contingencia_actions.add_contingencia_diaria_action, name='add_contingencia_diaria_action'),
+    path('verbas/contingencias/<int:pk>/analisar/', contingencia_actions.analisar_contingencia_diaria_action, name='analisar_contingencia_diaria_action'),
+
+    # Devoluções de Diárias
+    path('verbas/diarias/devolucoes/', devolucao_panels.painel_devolucoes_diarias_view, name='painel_devolucoes_diarias'),
+    path('verbas/diarias/<int:pk>/devolucao/nova/', devolucao_panels.registrar_devolucao_diaria_view, name='registrar_devolucao_diaria'),
+    path('verbas/diarias/<int:pk>/devolucao/nova/action/', devolucao_actions.registrar_devolucao_diaria_action, name='registrar_devolucao_diaria_action'),
+
     path('verbas/reembolsos/novo/', verbas_reembolso_panels.add_reembolso_view, name='add_reembolso'),
     path('verbas/reembolsos/novo/action/', verbas_reembolso_actions.add_reembolso_action, name='add_reembolso_action'),
     path('verbas/jetons/novo/', verbas_jeton_panels.add_jeton_view, name='add_jeton'),
@@ -87,3 +100,4 @@ urlpatterns = [
     path('verbas/diarias/template-csv/', verbas_diarias_panels.download_template_diarias_csv, name='download_template_diarias_csv'),
 
 ]
+
