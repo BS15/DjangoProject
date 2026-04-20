@@ -1,47 +1,29 @@
-{% extends "layouts/base_detail.html" %}
+{% extends "layouts/base_review.html" %}
 
-{% block title %}Revisar Prestação #{{ prestacao.id }}{% endblock %}
+{% block title %}Revisão — Prestação #{{ prestacao.id }}{% endblock %}
 
-{% block detail_header %}
-<div class="d-flex justify-content-between align-items-center">
-    <div>
-        <h2><i class="bi bi-clipboard2-check text-primary"></i> Revisão da Prestação #{{ prestacao.id }}</h2>
-        <p class="text-muted mb-0">
-            Diária: <strong>{{ diaria.numero_siscac|default:diaria.id }}</strong>
-            | Beneficiário: <strong>{{ diaria.beneficiario.nome|upper }}</strong>
-            | Status: <span class="badge {% if prestacao.status == 'ENCERRADA' %}bg-success{% else %}bg-warning text-dark{% endif %}">{{ prestacao.status }}</span>
-        </p>
-    </div>
-    <div>
-        <a href="{% url 'painel_revisar_prestacoes' %}" class="btn btn-outline-secondary">Voltar</a>
+{% block review_topbar %}
+<div class="container-fluid px-3 pt-3">
+    <div class="card shadow-sm border-0">
+        <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-0 fw-bold"><i class="bi bi-clipboard2-check text-primary me-2"></i> Revisão da Prestação #{{ prestacao.id }}</h4>
+                <p class="text-muted mb-0">
+                    Diária: {{ diaria.numero_siscac|default:diaria.id }} — {{ diaria.beneficiario.nome|upper }}
+                </p>
+            </div>
+            <span class="badge {% if prestacao.status == 'ENCERRADA' %}bg-success{% else %}bg-warning text-dark{% endif %} fs-6">{{ prestacao.status }}</span>
+        </div>
     </div>
 </div>
 {% endblock %}
 
-{% block detail_body %}
-<div class="card shadow-sm mb-4">
-    <div class="card-header bg-light">
-        <h5 class="card-title mb-0">Dados da Diária</h5>
+{% block document_viewer %}
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white border-bottom py-3">
+        <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-paperclip"></i> Comprovantes</h6>
     </div>
-    <div class="card-body">
-        <p><strong>Destino:</strong> {{ diaria.cidade_destino }}</p>
-        <p><strong>Período:</strong> {{ diaria.data_saida|date:"d/m/Y" }} a {{ diaria.data_retorno|date:"d/m/Y" }}</p>
-        <p><strong>Objetivo:</strong> {{ diaria.objetivo }}</p>
-        <p><strong>Processo vinculado:</strong>
-            {% if processo_vinculado %}
-            #{{ processo_vinculado.id }}
-            {% else %}
-            <span class="text-danger">Não vinculado</span>
-            {% endif %}
-        </p>
-    </div>
-</div>
-
-<div class="card shadow-sm border-info mb-4">
-    <div class="card-header bg-info text-white">
-        <h5 class="card-title mb-0"><i class="bi bi-paperclip"></i> Comprovantes</h5>
-    </div>
-    <div class="card-body">
+    <div class="card-body p-0">
         <ul class="list-group list-group-flush">
             {% for doc in comprovantes %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -61,21 +43,40 @@
 </div>
 {% endblock %}
 
-{% block detail_actions %}
-{% if pode_aceitar %}
-<form method="post" action="{% url 'aceitar_prestacao_action' prestacao.id %}" onsubmit="return confirm('Aceitar prestação e anexar comprovantes ao processo?');">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-success">
-        <i class="bi bi-check-circle"></i> Aceitar Prestação
-    </button>
-</form>
+{% block review_panel %}
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white border-bottom py-3">
+        <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-file-text"></i> Dados da Diária</h6>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-4">Destino</dt><dd class="col-sm-8">{{ diaria.cidade_destino }}</dd>
+            <dt class="col-sm-4">Período</dt><dd class="col-sm-8">{{ diaria.data_saida|date:"d/m/Y" }} a {{ diaria.data_retorno|date:"d/m/Y" }}</dd>
+            <dt class="col-sm-4">Objetivo</dt><dd class="col-sm-8">{{ diaria.objetivo }}</dd>
+            <dt class="col-sm-4">Processo</dt>
+            <dd class="col-sm-8">{% if processo_vinculado %}#{{ processo_vinculado.id }}{% else %}<span class="text-danger">Não vinculado</span>{% endif %}</dd>
+        </dl>
+    </div>
+</div>
+{% endblock %}
 
-<form method="post" action="{% url 'encerrar_prestacao_action' diaria.id %}" onsubmit="return confirm('Encerrar sem aceitar anexação ao processo?');">
-    {% csrf_token %}
-    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-    <button type="submit" class="btn btn-outline-danger">
-        <i class="bi bi-lock"></i> Encerrar sem Aceitar
-    </button>
-</form>
-{% endif %}
+{% block queue_navigation %}
+<div class="container-fluid px-3 d-flex gap-2">
+    <a href="{% url 'painel_revisar_prestacoes' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Voltar</a>
+    {% if pode_aceitar %}
+    <form method="post" action="{% url 'aceitar_prestacao_action' prestacao.id %}" onsubmit="return confirm('Aceitar prestação e anexar comprovantes ao processo?');">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success fw-bold">
+            <i class="bi bi-check-circle"></i> Aceitar Prestação
+        </button>
+    </form>
+    <form method="post" action="{% url 'encerrar_prestacao_action' diaria.id %}" onsubmit="return confirm('Encerrar sem aceitar anexação ao processo?');">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="submit" class="btn btn-outline-danger fw-bold">
+            <i class="bi bi-lock"></i> Encerrar sem Aceitar
+        </button>
+    </form>
+    {% endif %}
+</div>
 {% endblock %}
