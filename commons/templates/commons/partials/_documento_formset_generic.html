@@ -28,9 +28,34 @@
             <i class="bi bi-paperclip me-1"></i> 
             Documentos{% if entity_label %} do {{ entity_label }}{% endif %}
         </span>
-        <span class="badge bg-secondary" id="doc-count-badge">{{ formset|length }} doc(s)</span>
+        <span class="badge bg-secondary" id="doc-count-badge-{{ form_prefix }}">{{ formset|length }} doc(s)</span>
     </div>
     <div class="card-body py-2 px-2">
+        {{ formset.management_form }}
+
+        {% if pode_interagir %}
+        <div class="border rounded-3 p-3 mb-3 bg-light-subtle doc-dropzone"
+             id="doc-dropzone-{{ form_prefix }}"
+             data-doc-prefix="{{ form_prefix }}">
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+                <div class="small text-muted">
+                    <i class="bi bi-upload me-1"></i>
+                    Arraste arquivos aqui para anexar ou selecione no botão ao lado.
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="select-drop-files-{{ form_prefix }}">
+                        <i class="bi bi-folder2-open"></i> Selecionar Arquivos
+                    </button>
+                    <input type="file"
+                           id="drop-upload-input-{{ form_prefix }}"
+                           class="d-none"
+                           accept=".pdf,.jpg,.jpeg,.png"
+                           multiple>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <div id="document-list-{{ form_prefix }}">
             {% for doc_f in formset %}
                 {% with is_existing=doc_f.instance.pk is_imutavel=doc_f.instance.imutavel %}
@@ -83,7 +108,7 @@
                             data-doc-name="{{ doc_f.instance.arquivo.name|default:'' }}"
                             title="Pré-visualizar arquivo"
                         >
-                            <i class="bi bi-eye"></i>
+                            <i class="bi bi-eye"></i><span class="ms-1 d-none d-md-inline">Pré-visualizar</span>
                         </button>
                         {% endif %}
                         <a href="{% url 'download_arquivo_seguro' download_tipo_documento|default:'processo' doc_f.instance.id %}"
@@ -145,7 +170,7 @@
         </div>
 
         <button type="button" id="add-doc-btn-{{ form_prefix }}" class="btn {{ add_btn_class }} btn-sm mt-2">
-            <i class="bi bi-plus-circle me-1"></i>Adicionar Documento
+            <i class="bi bi-plus-circle me-1"></i>Adicionar Documento Manualmente
         </button>
         {% endif %}
     </div>

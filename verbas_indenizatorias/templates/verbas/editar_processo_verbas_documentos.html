@@ -15,8 +15,6 @@
 {% block form_action %}{% url 'editar_processo_verbas_documentos_action' pk=processo.id %}{% endblock %}
 
 {% block form_fields %}
-{{ documento_formset.management_form }}
-
 <div class="alert alert-light border small">
     Arraste para reordenar documentos gerais e salve ao final. Os comprovantes das verbas individuais ficam nos cards abaixo.
 </div>
