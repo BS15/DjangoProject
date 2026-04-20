@@ -68,27 +68,15 @@
     </div>
 </div>
 
-{% if pode_gerenciar_vinculo_diaria or perms.verbas_indenizatorias.pode_gerenciar_diarias %}
+{% if pode_gerenciar_vinculo_diaria %}
 <div class="card shadow-sm border-warning mb-4">
     <div class="card-header bg-warning-subtle">
-        <h5 class="card-title mb-0"><i class="bi bi-pencil-square"></i> Ajustes e Contingências</h5>
+        <h5 class="card-title mb-0"><i class="bi bi-pencil-square"></i> Ajustes</h5>
     </div>
     <div class="card-body d-flex flex-column gap-2">
-        {% if pode_gerenciar_vinculo_diaria %}
         <a href="{% url 'vinculo_diaria_spoke' diaria.id %}" class="btn btn-outline-primary btn-sm">
             <i class="bi bi-link-45deg"></i> Gerenciar Vínculo com Processo
         </a>
-        {% endif %}
-        <a href="{% url 'add_contingencia_diaria' pk=diaria.pk %}" class="btn btn-outline-warning btn-sm">
-            <i class="bi bi-exclamation-triangle"></i> Registrar Contingência
-        </a>
-        <a href="{% url 'registrar_devolucao_diaria' pk=diaria.pk %}" class="btn btn-outline-danger btn-sm">
-            <i class="bi bi-arrow-counterclockwise"></i> Registrar Devolução
-        </a>
-        <a href="{% url 'painel_contingencias_diarias' %}?diaria={{ diaria.pk }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-list-check"></i> Ver Contingências desta Diária
-        </a>
-
     </div>
 </div>
 {% endif %}
