@@ -220,6 +220,30 @@ class Diaria(models.Model):
         if self.tipo_solicitacao == 'INICIAL' and self.diaria_inicial_id and self.pk and self.diaria_inicial_id != self.pk:
             errors['diaria_inicial'] = 'Diárias iniciais não podem apontar para outra diária.'
 
+        # Regra: datas só podem ser alteradas se preservarem a quantidade de diárias original.
+        if self.pk and not getattr(self, '_bypass_domain_seal', False) and 'data_saida' not in errors:
+            original = (
+                type(self).objects
+                .filter(pk=self.pk)
+                .values('data_saida', 'data_retorno', 'quantidade_diarias')
+                .first()
+            )
+            if original:
+                datas_alteradas = (
+                    self.data_saida != original['data_saida']
+                    or self.data_retorno != original['data_retorno']
+                )
+                if datas_alteradas and self.data_saida and self.data_retorno:
+                    nova_qtd = self.calcular_quantidade_diarias()
+                    if nova_qtd is None:
+                        nova_qtd = self.quantidade_diarias
+                    if nova_qtd != original['quantidade_diarias']:
+                        errors['data_saida'] = (
+                            f'As novas datas resultariam em {nova_qtd} diária(s), mas a quantidade '
+                            f'original é {original["quantidade_diarias"]}. '
+                            'A quantidade de diárias não pode ser alterada.'
+                        )
+
         if errors:
             raise DjangoValidationError(errors)
 
