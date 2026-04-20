@@ -17,6 +17,7 @@ from pagamentos.domain_models.documentos import ComprovanteDePagamento
 from pagamentos.domain_models import DocumentoProcesso, Processo, ProcessoStatus, TiposDeDocumento
 from commons.shared.pdf_tools import split_pdf_to_temp_pages
 from .helpers import processar_pdf_comprovantes
+from .actions import vincular_comprovantes_action as api_vincular_comprovantes
 
 
 logger = logging.getLogger(__name__)
@@ -61,4 +62,4 @@ def api_fatiar_comprovantes(request):
     return JsonResponse({"sucesso": False, "erro": "Arquivo não enviado."})
 
 
-__all__ = ["serializar_comprovante", "api_fatiar_comprovantes"]
+__all__ = ["serializar_comprovante", "api_fatiar_comprovantes", "api_vincular_comprovantes"]

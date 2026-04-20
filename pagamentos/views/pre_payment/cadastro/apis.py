@@ -15,6 +15,10 @@ from django.contrib.auth.decorators import permission_required
 from django.views.decorators.http import require_POST
 
 from .helpers import processar_pdf_boleto
+from .actions import (
+    toggle_documento_fiscal_action as api_toggle_documento_fiscal,
+    salvar_nota_fiscal_action as api_salvar_nota_fiscal,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -121,4 +125,6 @@ def api_extrair_codigos_barras_upload(request):
 __all__ = [
     "api_tipos_documento_por_pagamento",
     "api_extrair_codigos_barras_upload",
+    "api_toggle_documento_fiscal",
+    "api_salvar_nota_fiscal",
 ]
