@@ -59,6 +59,8 @@
         <div id="document-list-{{ form_prefix }}">
             {% for doc_f in formset %}
                 {% with is_existing=doc_f.instance.pk is_imutavel=doc_f.instance.imutavel %}
+                {# Render only persisted rows (or rows with validation errors) to avoid legacy single-upload rows. #}
+                {% if is_existing or doc_f.errors or doc_f.non_field_errors %}
                 <div class="row g-1 align-items-center mb-2 border-bottom pb-2 document-row" data-doc-id="{{ doc_f.instance.pk }}">
                     {% for hidden in doc_f.hidden_fields %}{{ hidden }}{% endfor %}
 
@@ -129,49 +131,42 @@
 
                     <div class="django-delete-checkbox d-none">{{ doc_f.DELETE }}</div>
                 </div>
+                {% endif %}
                 {% endwith %}
             {% endfor %}
         </div><!-- #document-list-{{ form_prefix }} -->
 
         <!-- Hidden empty form template for new docs -->
         {% if pode_interagir %}
+           {% with empty_form=formset.empty_form %}
            <div id="empty-doc-form-{{ form_prefix }}" class="row g-1 align-items-center mb-2 border-bottom pb-2 document-row"
                style="display:none;" data-form-prefix="{{ form_prefix }}">
+            {% for hidden in empty_form.hidden_fields %}{{ hidden }}{% endfor %}
             {% if show_order_field %}
             <div class="col-auto drag-handle ps-1">
                 <i class="bi bi-grip-vertical text-secondary"></i>
             </div>
             <div class="col-1">
                 <label class="small text-muted d-block">Ord.</label>
-                <input type="number" name="{{ form_prefix }}-__prefix__-ordem" value="1"
-                       class="form-control form-control-sm" style="width:55px;">
+                {{ empty_form.ordem }}
             </div>
             {% endif %}
             <div class="col-4">
                 <label class="small text-muted d-block">Tipo</label>
-                <select name="{{ form_prefix }}-__prefix__-tipo" class="form-select form-select-sm">
-                    <option value="">---------</option>
-                    {% for td in tipos_documento %}
-                    <option value="{{ td.pk }}">{{ td }}</option>
-                    {% endfor %}
-                </select>
+                {{ empty_form.tipo }}
             </div>
             <div class="col">
                 <label class="small text-muted d-block">Arquivo</label>
-                <input type="file" name="{{ form_prefix }}-__prefix__-arquivo"
-                       class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png">
+                {{ empty_form.arquivo }}
             </div>
             <div class="col-auto">
                 <button type="button" class="btn btn-sm btn-outline-danger remove-doc-btn" title="Remover">
                     <i class="bi bi-trash"></i>
                 </button>
-                <input type="hidden" name="{{ form_prefix }}-__prefix__-id" value="">
+                <div class="django-delete-checkbox d-none">{{ empty_form.DELETE }}</div>
             </div>
         </div>
-
-        <button type="button" id="add-doc-btn-{{ form_prefix }}" class="btn {{ add_btn_class }} btn-sm mt-2">
-            <i class="bi bi-plus-circle me-1"></i>Adicionar Documento Manualmente
-        </button>
+           {% endwith %}
         {% endif %}
     </div>
 </div>

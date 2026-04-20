@@ -15,7 +15,6 @@ class DocumentoFormsetManager {
     this.prefix = prefix;
     this.containerSelector = `#document-list-${prefix}`;
     this.emptyFormSelector = `#empty-doc-form-${prefix}`;
-    this.addBtnSelector = `#add-doc-btn-${prefix}`;
     this.managementForm = `#id_${prefix}-TOTAL_FORMS`;
     this.badgeSelector = `#doc-count-badge-${prefix}`;
     this.dropzoneSelector = `#doc-dropzone-${prefix}`;
@@ -38,11 +37,6 @@ class DocumentoFormsetManager {
   }
 
   attachEventHandlers() {
-    $(this.addBtnSelector).on('click', (e) => {
-      e.preventDefault();
-      this.addDocument();
-    });
-
     $(this.containerSelector).on('click', '.remove-doc-btn', (e) => {
       e.preventDefault();
       const row = $(e.target).closest('.document-row');
@@ -186,6 +180,14 @@ class DocumentoFormsetManager {
         return;
       }
       this.draggedRow = e.currentTarget;
+      if (e.originalEvent?.dataTransfer) {
+        e.originalEvent.dataTransfer.effectAllowed = 'move';
+        // Browser DnD APIs require non-empty drag data in some engines.
+        const dragToken = this.draggedRow.dataset.docId
+          || this.draggedRow.dataset.formIndex
+          || `new-${Date.now()}`;
+        e.originalEvent.dataTransfer.setData('text/plain', dragToken);
+      }
       $(this.draggedRow).addClass('opacity-50');
     });
 
