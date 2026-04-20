@@ -41,9 +41,9 @@ def api_tipos_documento_por_pagamento(request):
 
     try:
         documentos_validos = (
-            TiposDeDocumento.objects.filter(tipo_de_pagamento_id=tipo_pagamento_id, is_active=True)
-            .values("id", "tipo_de_documento")
-            .order_by("tipo_de_documento")
+            TiposDeDocumento.objects.filter(tipo_pagamento_id=tipo_pagamento_id, ativo=True)
+            .values("id", "tipo_documento")
+            .order_by("tipo_documento")
         )
 
         lista_docs = list(documentos_validos)
