@@ -63,7 +63,8 @@ class RetencaoIndividualFilter(BaseStyledFilterSet):
 
     mes = django_filters.NumberFilter(field_name='nota_fiscal__data_emissao', lookup_expr='month', label='Mês (Emissão NF)')
     ano = django_filters.NumberFilter(field_name='nota_fiscal__data_emissao', lookup_expr='year', label='Ano (Emissão NF)')
-    processo = django_filters.CharFilter(field_name='nota_fiscal__processo__id', lookup_expr='exact', label='Nº do Processo')
+    nota_fiscal = django_filters.CharFilter(field_name='nota_fiscal__numero_nota_fiscal', lookup_expr='icontains', label='Nº Documento Fiscal')
+    processo_lancamento = django_filters.CharFilter(field_name='nota_fiscal__processo__id', lookup_expr='exact', label='Processo de Lançamento')
     emitente = django_filters.CharFilter(field_name='nota_fiscal__nome_emitente', lookup_expr='exact', label='Emitente/Credor')
     beneficiario = django_filters.ModelChoiceFilter(
         field_name='beneficiario',
@@ -83,7 +84,7 @@ class RetencaoIndividualFilter(BaseStyledFilterSet):
 
     class Meta:
         model = RetencaoImposto
-        fields = ['mes', 'ano', 'processo', 'emitente', 'beneficiario', 'imposto', 'status']
+        fields = ['mes', 'ano', 'nota_fiscal', 'processo_lancamento', 'emitente', 'beneficiario', 'imposto', 'status']
 
 
 class DocumentoFiscalFilter(BaseStyledFilterSet):
