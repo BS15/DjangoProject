@@ -41,8 +41,15 @@ class DocumentoPreviewWidget {
       return;
     }
 
-    const sourceName = name || url;
-    const ext = (sourceName.split(".").pop() || "").toLowerCase();
+    let extensionSource = name || "";
+    if (!extensionSource && url) {
+      try {
+        extensionSource = new URL(url, window.location.origin).pathname;
+      } catch (_error) {
+        extensionSource = url;
+      }
+    }
+    const ext = (extensionSource.split(".").pop() || "").toLowerCase();
 
     document.querySelectorAll(`.doc-preview-btn[data-doc-prefix="${this.prefix}"]`).forEach((btn) => {
       btn.classList.remove("btn-primary", "text-white");
