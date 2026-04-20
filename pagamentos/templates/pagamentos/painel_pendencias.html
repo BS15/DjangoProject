@@ -46,13 +46,13 @@
 				{% csrf_token %}
 				<input type="hidden" name="pendencia_id" value="{{ pendencia.id }}">
 				<input type="hidden" name="acao_lote" value="resolver">
-				<button type="submit" class="btn btn-sm btn-outline-success">Resolver Pendência</button>
+				<button type="submit" class="btn btn-sm btn-outline-success pendencia-confirm-action" data-confirm-msg="Deseja resolver esta pendência?" aria-label="Resolver pendência #{{ pendencia.id }}">Resolver Pendência</button>
 			</form>
 			<form method="post" action="{% url 'painel_pendencias_action' %}" class="d-inline">
 				{% csrf_token %}
 				<input type="hidden" name="pendencia_id" value="{{ pendencia.id }}">
 				<input type="hidden" name="acao_lote" value="excluir">
-				<button type="submit" class="btn btn-sm btn-outline-danger">Excluir Pendência</button>
+				<button type="submit" class="btn btn-sm btn-outline-danger pendencia-confirm-action" data-confirm-msg="Deseja excluir esta pendência?" aria-label="Excluir pendência #{{ pendencia.id }}">Excluir Pendência</button>
 			</form>
 		</div>
 	</td>
@@ -60,4 +60,18 @@
 {% empty %}
 <tr><td colspan="6" class="text-center py-4 text-muted">Nenhuma pendência encontrada.</td></tr>
 {% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.querySelectorAll(".pendencia-confirm-action").forEach((button) => {
+	button.addEventListener("click", (event) => {
+		const mensagem = button.getAttribute("data-confirm-msg") || "Confirmar ação?";
+		if (!window.confirm(mensagem)) {
+			event.preventDefault();
+		}
+	});
+});
+</script>
 {% endblock %}
