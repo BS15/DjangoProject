@@ -72,6 +72,29 @@ def gerar_e_anexar_pcd_diaria(diaria, criador):
         assinatura_model=AssinaturaEletronica,
     )
 
+def gerar_e_anexar_termo_prestacao_diaria(diaria, criador):
+    """Gera Termo de Prestação de Contas da diária, anexa DocumentoDiaria e cria rascunho de assinatura."""
+    pdf_bytes = gerar_documento_bytes("termo_prestacao_contas", diaria, VERBAS_DOCUMENT_REGISTRY)
+    tipo_termo = obter_ou_criar_tipo_documento(
+        "TERMO DE PRESTAÇÃO DE CONTAS",
+    )
+    proxima_ordem = obter_proxima_ordem_documento(diaria.documentos)
+    DocumentoDiaria.objects.create(
+        diaria=diaria,
+        arquivo=ContentFile(pdf_bytes, name=f"Termo_Prestacao_Contas_{diaria.id}.pdf"),
+        tipo=tipo_termo,
+        ordem=proxima_ordem,
+    )
+    return criar_assinatura_rascunho(
+        entidade=diaria,
+        tipo_documento="TERMO DE PRESTAÇÃO DE CONTAS",
+        criador=criador,
+        pdf_bytes=pdf_bytes,
+        nome_arquivo=f"Termo_Prestacao_Contas_{diaria.id}.pdf",
+        assinatura_model=AssinaturaEletronica,
+    )
+
+
 def gerar_e_anexar_recibo_reembolso(reembolso, criador):
     """Gera requerimento de reembolso, anexa DocumentoReembolso e cria rascunho de assinatura."""
     pdf_bytes = gerar_documento_bytes("recibo_reembolso", reembolso, VERBAS_DOCUMENT_REGISTRY)

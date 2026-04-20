@@ -18,6 +18,7 @@ from verbas_indenizatorias.models import ApostilaDiaria, DevolucaoDiaria, Diaria
 from verbas_indenizatorias.services.documentos import (
     gerar_e_anexar_pcd_diaria,
     gerar_e_anexar_scd_diaria,
+    gerar_e_anexar_termo_prestacao_diaria,
 )
 from verbas_indenizatorias.services.prestacao import aceitar_prestacao, encerrar_prestacao, obter_ou_criar_prestacao
 from verbas_indenizatorias.services.vinculos_diaria import (
@@ -153,6 +154,7 @@ def encerrar_prestacao_action(request, pk):
             return _redirect_com_next(request, 'gerenciar_prestacao', pk=diaria.id)
 
         encerrar_prestacao(prestacao, request.user)
+        gerar_e_anexar_termo_prestacao_diaria(diaria, request.user)
         logger.info("mutation=encerrar_prestacao_diaria diaria_id=%s prestacao_id=%s user_id=%s", diaria.id, prestacao.id, request.user.pk)
 
     messages.success(request, 'Prestação de contas encerrada com sucesso.')
@@ -231,6 +233,7 @@ def aceitar_prestacao_action(request, pk):
 
         try:
             aceitar_prestacao(prestacao, request.user, diaria.processo)
+            gerar_e_anexar_termo_prestacao_diaria(diaria, request.user)
             logger.info(
                 "mutation=aceitar_prestacao_diaria diaria_id=%s prestacao_id=%s processo_id=%s user_id=%s",
                 diaria.id,
