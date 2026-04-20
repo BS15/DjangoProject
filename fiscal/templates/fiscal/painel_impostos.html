@@ -3,7 +3,7 @@
 {% block title %}Painel de Retenções de Impostos{% endblock %}
 
 {% block page_heading %}Gestão de Retenções Fiscais{% endblock %}
-{% block page_subtitle %}Visualização e agrupamento de retenções para geração de guias de recolhimento.{% endblock %}
+{% block page_subtitle %}Filtre, selecione retenções e execute agrupamento para pagamento ou anexação de guia/comprovante/relatório.{% endblock %}
 
 {% block page_actions %}
 <a href="{% url 'painel_reinf_view' %}" class="btn btn-outline-danger">
@@ -42,46 +42,12 @@
                 <label class="form-label small text-muted mb-1">Comprovante (PDF)</label>
                 <input type="file" class="form-control form-control-sm" name="comprovante_arquivo" accept=".pdf">
             </div>
-            <button type="submit" class="btn btn-danger" onclick="return confirm('Gerar processo de pagamento (Guia DARF) com as retenções selecionadas?');">
-                <i class="bi bi-collection"></i> Agrupar Selecionados para Guia
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Gerar processo de pagamento com as retenções selecionadas?');">
+                <i class="bi bi-collection"></i> Agrupar Selecionados para Pagamento
             </button>
             <button type="submit" class="btn btn-outline-primary" formaction="{% url 'anexar_documentos_retencoes_action' %}" onclick="return confirm('Anexar guia/comprovante e gerar relatório mensal por código de imposto para os processos envolvidos?');">
-                <i class="bi bi-paperclip"></i> Anexar Guia + Comprovante + Relatório
+                <i class="bi bi-paperclip"></i> Anexar Guia, Comprovante e Relatório
             </button>
-        </div>
-    </div>
-
-    {# ── Spoke: Registrar DocumentoPagamentoImposto ── #}
-    <div class="card border-secondary mb-3">
-        <div class="card-header bg-secondary text-white py-2">
-            <strong><i class="bi bi-file-earmark-check"></i> Registrar Documentação de Pagamento de Imposto</strong>
-        </div>
-        <div class="card-body">
-            <div class="row g-2 align-items-end">
-                <div class="col-md-2">
-                    <label class="form-label small text-muted mb-1">Competência (AAAA-MM)</label>
-                    <input type="month" class="form-control form-control-sm" name="competencia" placeholder="AAAA-MM">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small text-muted mb-1">Relatório de Retenções</label>
-                    <input type="file" class="form-control form-control-sm" name="relatorio_retencoes" accept=".pdf,.png,.jpg,.jpeg">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small text-muted mb-1">Guia de Recolhimento</label>
-                    <input type="file" class="form-control form-control-sm" name="guia_recolhimento" accept=".pdf,.png,.jpg,.jpeg">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small text-muted mb-1">Comprovante de Pagamento</label>
-                    <input type="file" class="form-control form-control-sm" name="comprovante_pagamento" accept=".pdf,.png,.jpg,.jpeg">
-                </div>
-                <div class="col-md-1">
-                    <button type="submit" class="btn btn-secondary btn-sm w-100"
-                        formaction="{% url 'registrar_documentos_pagamento_action' %}"
-                        onclick="return confirm('Registrar documentação de pagamento para as retenções selecionadas?');">
-                        <i class="bi bi-upload"></i> Registrar
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -102,11 +68,7 @@
 {% for retencao in retencoes %}
 <tr>
     <td>
-        {% if not retencao.processo_pagamento_id %}
         <input class="form-check-input retencao-check" type="checkbox" name="retencao_ids" value="{{ retencao.id }}">
-        {% else %}
-        <i class="bi bi-lock-fill text-muted" title="Já agrupado ou pago"></i>
-        {% endif %}
     </td>
     <td>{{ retencao.competencia|date:"m/Y"|default:"-" }}</td>
     <td>
