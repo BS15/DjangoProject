@@ -269,6 +269,9 @@ class Diaria(models.Model):
             super().save(update_fields=['diaria_inicial'])
 
     def _enforce_domain_seal(self, update_fields=None):
+        if getattr(self, '_bypass_domain_seal', False):
+            return
+
         if not self.pk or not _is_processo_selado(self.processo):
             return
 
@@ -394,25 +397,55 @@ class DevolucaoDiaria(models.Model):
             )
 
 
-class ApostilaDiaria(models.Model):
-    """Apostila para correção formal não financeira em dados de diária."""
+STATUS_CONTINGENCIA_DIARIA = [
+    ("PENDENTE_SUPERVISOR", "Pendente Supervisor"),
+    ("APROVADA", "Aprovada"),
+    ("REJEITADA", "Rejeitada"),
+]
 
-    diaria = models.ForeignKey('Diaria', on_delete=models.PROTECT, related_name='apostilas')
-    texto_correcao = models.TextField("Texto da Apostila")
+_CAMPOS_PERMITIDOS_CONTINGENCIA_DIARIA = {
+    "numero_siscac",
+    "cidade_origem",
+    "cidade_destino",
+    "objetivo",
+    "proponente_id",
+    "meio_de_transporte_id",
+}
+
+
+class ContingenciaDiaria(models.Model):
+    """Solicitação formal de retificação de diária com aprovação hierárquica."""
+
+    diaria = models.ForeignKey('Diaria', on_delete=models.PROTECT, related_name='contingencias')
+    solicitante = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name='contingencias_diaria_solicitadas'
+    )
+    justificativa = models.TextField("Justificativa")
     campo_corrigido = models.CharField("Campo Corrigido", max_length=100)
     valor_anterior = models.TextField("Valor Anterior", blank=True)
-    valor_novo = models.TextField("Valor Novo", blank=True)
-    registrado_por = models.ForeignKey(User, on_delete=models.PROTECT)
+    valor_proposto = models.TextField("Valor Proposto")
+    status = models.CharField(
+        max_length=25, choices=STATUS_CONTINGENCIA_DIARIA, default="PENDENTE_SUPERVISOR"
+    )
+    aprovado_por = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='contingencias_diaria_aprovadas',
+    )
+    data_aprovacao = models.DateTimeField(null=True, blank=True)
+    parecer = models.TextField("Parecer", null=True, blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     history = HistoricalRecords()
 
     class Meta:
-        constraints = [
-            models.CheckConstraint(
-                condition=~models.Q(campo_corrigido__in=['valor_total', 'quantidade_diarias']),
-                name='apostila_nao_altera_valores_financeiros_chk',
-            )
-        ]
+        verbose_name = "Contingência de Diária"
+        verbose_name_plural = "Contingências de Diárias"
+        ordering = ["-criado_em"]
+
+    def __str__(self):
+        return f"Contingência #{self.pk} – Diária #{self.diaria_id} [{self.get_status_display()}]"
 
 
 class ReembolsoCombustivel(models.Model):

@@ -9,11 +9,9 @@ from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from django.core.exceptions import ValidationError
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.utils.dateparse import parse_date
-from decimal import Decimal, InvalidOperation
 
 from verbas_indenizatorias.forms import DiariaForm
-from verbas_indenizatorias.models import ApostilaDiaria, DevolucaoDiaria, Diaria, PrestacaoContasDiaria
+from verbas_indenizatorias.models import Diaria, PrestacaoContasDiaria
 from verbas_indenizatorias.services.documentos import (
     gerar_e_anexar_pcd_diaria,
     gerar_e_anexar_scd_diaria,
@@ -243,81 +241,4 @@ def liberar_para_assinatura_action(request, pk):
 
     messages.success(request, 'Documento liberado para assinatura com sucesso.')
     return redirect('gerenciar_diaria', pk=pk)
-
-
-@require_POST
-@permission_required('verbas_indenizatorias.pode_gerenciar_diarias', raise_exception=True)
-def registrar_devolucao_diaria_action(request, pk):
-    valor_devolvido_raw = (request.POST.get('valor_devolvido') or '').strip().replace(',', '.')
-    data_devolucao = parse_date((request.POST.get('data_devolucao') or '').strip())
-    motivo = (request.POST.get('motivo') or '').strip()
-
-    if not valor_devolvido_raw or not data_devolucao or not motivo:
-        messages.error(request, 'Informe valor devolvido, data da devolução e motivo.')
-        return redirect('gerenciar_diaria', pk=pk)
-
-    try:
-        valor_devolvido = Decimal(valor_devolvido_raw)
-    except InvalidOperation:
-        messages.error(request, 'Valor devolvido inválido.')
-        return redirect('gerenciar_diaria', pk=pk)
-
-    with transaction.atomic():
-        diaria = get_object_or_404(Diaria.objects.select_for_update(), pk=pk)
-        devolucao = DevolucaoDiaria(
-            diaria=diaria,
-            valor_devolvido=valor_devolvido,
-            data_devolucao=data_devolucao,
-            motivo=motivo,
-            registrado_por=request.user,
-        )
-        devolucao.full_clean()
-        devolucao.save()
-        logger.info(
-            "mutation=registrar_devolucao_diaria diaria_id=%s devolucao_id=%s user_id=%s valor=%s",
-            diaria.id,
-            devolucao.id,
-            request.user.pk,
-            devolucao.valor_devolvido,
-        )
-
-    messages.success(request, 'Devolução da diária registrada com sucesso.')
-    return redirect('gerenciar_diaria', pk=pk)
-
-
-@require_POST
-@permission_required('verbas_indenizatorias.pode_gerenciar_diarias', raise_exception=True)
-def registrar_apostila_diaria_action(request, pk):
-    texto_correcao = (request.POST.get('texto_correcao') or '').strip()
-    campo_corrigido = (request.POST.get('campo_corrigido') or '').strip()
-    valor_anterior = (request.POST.get('valor_anterior') or '').strip()
-    valor_novo = (request.POST.get('valor_novo') or '').strip()
-
-    if not texto_correcao or not campo_corrigido:
-        messages.error(request, 'Informe o texto da apostila e o campo corrigido.')
-        return redirect('gerenciar_diaria', pk=pk)
-
-    with transaction.atomic():
-        diaria = get_object_or_404(Diaria.objects.select_for_update(), pk=pk)
-        apostila = ApostilaDiaria(
-            diaria=diaria,
-            texto_correcao=texto_correcao,
-            campo_corrigido=campo_corrigido,
-            valor_anterior=valor_anterior,
-            valor_novo=valor_novo,
-            registrado_por=request.user,
-        )
-        apostila.full_clean()
-        apostila.save()
-        logger.info(
-            "mutation=registrar_apostila_diaria diaria_id=%s apostila_id=%s user_id=%s campo_corrigido=%s",
-            diaria.id,
-            apostila.id,
-            request.user.pk,
-            apostila.campo_corrigido,
-        )
-
-    messages.success(request, 'Apostila da diária registrada com sucesso.')
-    return redirect('gerenciar_diaria', pk=pk)
-
 
