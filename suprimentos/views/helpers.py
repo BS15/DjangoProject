@@ -55,10 +55,10 @@ def _atualizar_status_apos_fechamento(suprimento: Any) -> None:
     with transaction.atomic():
         processo = suprimento.processo
         if processo:
-            status_anterior = processo.status.status_choice if processo.status else ""
+            status_anterior = processo.status.opcao_status if processo.status else ""
             status_conferencia, _ = StatusChoicesProcesso.objects.get_or_create(
-                status_choice__iexact="PAGO - EM CONFERÊNCIA",
-                defaults={"status_choice": "PAGO - EM CONFERÊNCIA"},
+                opcao_status__iexact="PAGO - EM CONFERÊNCIA",
+                defaults={"opcao_status": "PAGO - EM CONFERÊNCIA"},
             )
             processo.status = status_conferencia
             processo.save(update_fields=["status"])

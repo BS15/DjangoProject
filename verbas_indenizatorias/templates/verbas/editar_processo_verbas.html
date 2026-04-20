@@ -102,13 +102,13 @@
                             <div class="card-body pt-2 pb-2">
                                 <!-- Document list -->
                                 <ul class="list-group list-group-flush mb-2">
-                                    {% for doc in diaria.documentos.all %}
+                                    {% for doc in diaria.prestacao_contas.documentos.all %}
                                         <li class="list-group-item py-1 px-2 d-flex align-items-center justify-content-between small">
                                             <span>
                                                 <i class="bi bi-file-earmark text-secondary me-1"></i>
                                                 {{ doc.tipo }}
                                             </span>
-                                            <a href="{% url 'download_arquivo_seguro' 'verba_diaria_doc' doc.id %}" target="_blank"
+                                            <a href="{% url 'download_arquivo_seguro' 'verba_diaria_comprov' doc.id %}" target="_blank"
                                                class="btn btn-sm btn-outline-primary py-0 px-2">
                                                 <i class="bi bi-eye"></i> Ver
                                             </a>
@@ -120,7 +120,7 @@
                                     {% endfor %}
                                 </ul>
                                 <!-- Inline upload -->
-                                {% include "verbas/partials/_verba_doc_upload.html" with verba=diaria tipo_verba="diaria" btn_class="btn-primary" %}
+                                {% include "verbas/partials/_verba_doc_upload.html" with verba=diaria tipo_verba="diaria_comprovante" btn_class="btn-primary" %}
                                 <a href="{% url 'gerenciar_diaria' pk=diaria.id %}" class="btn btn-sm btn-outline-secondary w-100 mt-2">
                                     <i class="bi bi-gear"></i> Gerenciar esta Diária
                                 </a>

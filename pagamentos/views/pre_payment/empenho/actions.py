@@ -10,7 +10,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 
-from fluxo.domain_models import Processo, ProcessoStatus
+from pagamentos.domain_models import Processo, ProcessoStatus
 from ..helpers import _registrar_empenho_e_anexar_siscac
 
 
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 @require_POST
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 def registrar_empenho_action(request: HttpRequest) -> HttpResponse:
     """Registra empenho e avanca o processo para AGUARDANDO LIQUIDACAO."""
     processo_id = request.POST.get("processo_id")

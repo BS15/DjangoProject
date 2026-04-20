@@ -2,8 +2,8 @@ from decimal import Decimal
 
 import pytest
 
-from fluxo.domain_models import ProcessoStatus
-from fluxo.validators import verificar_turnpike
+from pagamentos.domain_models import ProcessoStatus
+from pagamentos.validators import verificar_turnpike
 
 
 @pytest.mark.django_db

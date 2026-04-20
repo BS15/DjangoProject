@@ -6,12 +6,12 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
-from fluxo.forms import DevolucaoForm
-from fluxo.domain_models import Processo
+from pagamentos.forms import DevolucaoForm
+from pagamentos.domain_models import Processo
 
 
 @require_POST
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def registrar_devolucao_action(request: HttpRequest, processo_id: int) -> HttpResponse:
     """Persiste devolucao vinculada ao processo a partir do POST do formulario."""
     processo = get_object_or_404(Processo, id=processo_id)

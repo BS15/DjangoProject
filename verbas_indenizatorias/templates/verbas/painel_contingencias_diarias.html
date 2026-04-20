@@ -1,0 +1,110 @@
+{% extends "layouts/base_list.html" %}
+
+{% block title %}Contingências de Diárias{% endblock %}
+
+{% block page_heading %}<i class="bi bi-exclamation-triangle-fill text-warning"></i> Contingências de Diárias{% endblock %}
+{% block page_subtitle %}Solicitações de retificação pendentes e encerradas.{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'verbas_panel' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i> Voltar
+</a>
+{% endblock %}
+
+{% block filter_form %}
+<div class="col-md-3">
+    <label class="small fw-bold text-secondary mb-1">Status</label>
+    <select name="status" class="form-select form-select-sm">
+        <option value="">Todos</option>
+        <option value="PENDENTE_SUPERVISOR" {% if filtro_status == "PENDENTE_SUPERVISOR" %}selected{% endif %}>Pendente Supervisor</option>
+        <option value="APROVADA" {% if filtro_status == "APROVADA" %}selected{% endif %}>Aprovada</option>
+        <option value="REJEITADA" {% if filtro_status == "REJEITADA" %}selected{% endif %}>Rejeitada</option>
+    </select>
+</div>
+{% endblock %}
+
+{% block table_headers %}
+<th>#</th>
+<th>Diária</th>
+<th>Beneficiário</th>
+<th>Campo</th>
+<th>Solicitante</th>
+<th>Status</th>
+<th>Aberta em</th>
+<th class="text-center">Ação</th>
+{% endblock %}
+
+{% block table_rows %}
+{% for cont in contingencias %}
+<tr>
+    <td class="fw-bold">#{{ cont.pk }}</td>
+    <td>
+        <a href="{% url 'gerenciar_diaria' pk=cont.diaria.pk %}" class="text-decoration-none">
+            Diária #{{ cont.diaria.pk }}
+            {% if cont.diaria.numero_siscac %}({{ cont.diaria.numero_siscac }}){% endif %}
+        </a>
+    </td>
+    <td>{{ cont.diaria.beneficiario.nome }}</td>
+    <td><code>{{ cont.campo_corrigido }}</code></td>
+    <td>{{ cont.solicitante.get_full_name|default:cont.solicitante.username }}</td>
+    <td>
+        {% if cont.status == "PENDENTE_SUPERVISOR" %}
+            <span class="badge bg-warning text-dark">Pendente Supervisor</span>
+        {% elif cont.status == "APROVADA" %}
+            <span class="badge bg-success">Aprovada</span>
+        {% else %}
+            <span class="badge bg-danger">Rejeitada</span>
+        {% endif %}
+    </td>
+    <td class="text-muted small">{{ cont.criado_em|date:"d/m/Y H:i" }}</td>
+    <td class="text-center">
+        {% if cont.status == "PENDENTE_SUPERVISOR" %}
+        <button type="button" class="btn btn-sm btn-outline-primary"
+            data-bs-toggle="modal" data-bs-target="#modal-analisar-{{ cont.pk }}">
+            Analisar
+        </button>
+
+        <div class="modal fade" id="modal-analisar-{{ cont.pk }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Contingência #{{ cont.pk }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Campo:</strong> <code>{{ cont.campo_corrigido }}</code></p>
+                        <p><strong>Valor anterior:</strong> {{ cont.valor_anterior|default:"—" }}</p>
+                        <p><strong>Novo valor:</strong> {{ cont.valor_proposto }}</p>
+                        <p><strong>Justificativa:</strong> {{ cont.justificativa }}</p>
+                        <form method="post" action="{% url 'analisar_contingencia_diaria_action' cont.pk %}" id="form-analisar-{{ cont.pk }}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label">Parecer <small class="text-muted">(obrigatório para rejeitar)</small></label>
+                                <textarea name="parecer" class="form-control" rows="3"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" form="form-analisar-{{ cont.pk }}" name="action" value="aprovar"
+                            class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Aprovar
+                        </button>
+                        <button type="submit" form="form-analisar-{{ cont.pk }}" name="action" value="rejeitar"
+                            class="btn btn-danger">
+                            <i class="bi bi-x-circle"></i> Rejeitar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <span class="text-muted small">{{ cont.aprovado_por.get_full_name|default:"—" }}</span>
+        {% endif %}
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="8" class="text-center text-muted py-4">Nenhuma contingência encontrada.</td>
+</tr>
+{% endfor %}
+{% endblock %}

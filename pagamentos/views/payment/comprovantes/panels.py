@@ -5,13 +5,13 @@ import json
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import render
 
-from fluxo.domain_models import Processo, ProcessoStatus
+from pagamentos.domain_models import Processo, ProcessoStatus
 
 
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 def painel_comprovantes_view(request):
     processos_lancados = Processo.objects.filter(
-        status__status_choice__iexact=ProcessoStatus.LANCADO_AGUARDANDO_COMPROVANTE
+        status__opcao_status__iexact=ProcessoStatus.LANCADO_AGUARDANDO_COMPROVANTE
     ).select_related("credor").order_by("credor__nome", "id")
 
     processos_list = []

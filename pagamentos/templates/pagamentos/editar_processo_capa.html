@@ -1,0 +1,27 @@
+{% extends "layouts/base_form.html" %}
+
+{% block page_title %}Capa — Processo #{{ processo.id }}{% endblock %}
+{% block page_heading %}Capa do Processo #{{ processo.id }}{% endblock %}
+{% block page_subtitle %}{{ processo.credor|default:"-" }} &mdash; {{ status_inicial }}</p>{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'editar_processo' pk=processo.id %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+{% endblock %}
+
+{% block form_action %}{% url 'editar_processo_capa_action' pk=processo.id %}{% endblock %}
+
+{% block form_fields %}
+{% for field in processo_form %}
+<div class="mb-3">
+	<label class="fw-bold text-secondary small mb-1">{{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>
+	{{ field }}
+	{% if field.help_text %}<div class="form-text text-muted small">{{ field.help_text }}</div>{% endif %}
+	{% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block form_actions %}
+<a href="{{ next_url|default:'/' }}" class="btn btn-secondary px-4">Cancelar</a>
+<button type="submit" class="btn btn-success px-4 fw-bold"><i class="bi bi-check-lg"></i> Salvar</button>
+{% endblock %}

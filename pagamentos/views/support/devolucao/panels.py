@@ -8,14 +8,14 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
-from fluxo.filters import DevolucaoFilter
-from fluxo.forms import DevolucaoForm
-from fluxo.domain_models import Devolucao, Processo
-from fluxo.views.shared import apply_filterset
+from pagamentos.filters import DevolucaoFilter
+from pagamentos.forms import DevolucaoForm
+from pagamentos.domain_models import Devolucao, Processo
+from pagamentos.views.shared import apply_filterset
 
 
 @require_GET
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def painel_devolucoes_view(request: HttpRequest) -> HttpResponse:
     """Lista devolucoes com filtro e valor total agregado."""
     queryset = Devolucao.objects.select_related("processo", "processo__credor").order_by("-data_devolucao")
@@ -23,7 +23,7 @@ def painel_devolucoes_view(request: HttpRequest) -> HttpResponse:
     total_valor = meu_filtro.qs.aggregate(total=Sum("valor_devolvido"))["total"] or Decimal("0")
     return render(
         request,
-        "fluxo/devolucoes_list.html",
+        "pagamentos/devolucoes_list.html",
         {
             "filter": meu_filtro,
             "devolucoes": meu_filtro.qs,
@@ -33,13 +33,13 @@ def painel_devolucoes_view(request: HttpRequest) -> HttpResponse:
 
 
 @require_GET
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def registrar_devolucao_view(request: HttpRequest, processo_id: int) -> HttpResponse:
     """Renderiza formulario para registrar devolucao vinculada ao processo."""
     processo = get_object_or_404(Processo, id=processo_id)
     form = DevolucaoForm()
 
-    return render(request, "fluxo/add_devolucao.html", {"form": form, "processo": processo})
+    return render(request, "pagamentos/add_devolucao.html", {"form": form, "processo": processo})
 
 
 __all__ = [

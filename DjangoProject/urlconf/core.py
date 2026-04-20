@@ -7,12 +7,8 @@ from pagamentos.views import security as pagamentos_security_views
 from pagamentos.views.support.core import home_page, process_detail_view
 from pagamentos.views.support.sync import pagamentos as pagamentos_sync_views
 from pagamentos.views.support.pendencia import painel_pendencias_view, atualizar_pendencias_lote_action
-from pagamentos.views.support.contingencia import (
-    painel_contingencias_view,
-    add_contingencia_view,
-    add_contingencia_action,
-    analisar_contingencia_action,
-)
+from pagamentos.views.support.contingencia.panels import painel_contingencias_view, add_contingencia_view
+from pagamentos.views.support.contingencia.actions import add_contingencia_action, analisar_contingencia_action
 from pagamentos.views.support.devolucao import (
     painel_devolucoes_view,
     registrar_devolucao_view,

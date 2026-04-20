@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block page_title %}Lançamento Bancário{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+	<div class="d-flex justify-content-between align-items-center mb-4">
+		<div>
+			<h3 class="mb-0 fw-bold"><i class="bi bi-bank text-primary me-2"></i> Lançamento Bancário</h3>
+			<p class="text-muted mb-0">Registrar pagamentos no sistema bancário</p>
+		</div>
+		<a href="{% url 'home_page' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+	</div>
+
+	{% if messages %}
+	{% for message in messages %}
+	<div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+		{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+	</div>
+	{% endfor %}
+	{% endif %}
+
+	{# Totais Consolidados #}
+	<div class="row g-3 mb-4">
+		{% for total in totais_consolidados %}
+		<div class="col-md-3">
+			<div class="card border-0 shadow-sm text-center h-100">
+				<div class="card-body py-3">
+					<div class="text-muted small">{{ total.label }}</div>
+					<div class="fw-bold fs-5">R$ {{ total.valor|default:"0,00" }}</div>
+				</div>
+			</div>
+		</div>
+		{% endfor %}
+	</div>
+
+	{# Processos a pagar #}
+	<div class="card shadow-sm border-0 mb-4">
+		<div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+			<h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-hourglass-split text-warning"></i> A Pagar ({{ processos_a_pagar|length }})</h6>
+			<span class="text-muted small">Total: R$ {{ totais_a_pagar.total|default:"0,00" }}</span>
+		</div>
+		<div class="card-body p-0">
+			<table class="table table-hover align-middle mb-0">
+				<thead class="table-dark">
+					<tr><th>#</th><th>Credor</th><th>Conta</th><th>Valor Líquido</th><th>Empenho</th><th class="text-center">Ação</th></tr>
+				</thead>
+				<tbody>
+					{% for processo in processos_a_pagar %}
+					<tr>
+						<td class="fw-bold text-muted">#{{ processo.id }}</td>
+						<td>{{ processo.credor|default:"-" }}</td>
+						<td>{{ processo.credor.conta|default:"-" }}</td>
+						<td class="fw-bold">R$ {{ processo.valor_liquido|default:"0,00" }}</td>
+						<td>{{ processo.n_nota_empenho|default:"-" }}</td>
+						<td class="text-center">
+							<a href="{% url 'process_detail' pk=processo.id %}" class="btn btn-sm btn-outline-primary">
+								<i class="bi bi-eye"></i>
+							</a>
+						</td>
+					</tr>
+					{% empty %}
+					<tr><td colspan="6" class="text-center py-3 text-muted">Nenhum processo a pagar.</td></tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+	{# Processos lançados #}
+	<div class="card shadow-sm border-0">
+		<div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+			<h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-check-circle text-success"></i> Lançados ({{ processos_lancados|length }})</h6>
+			<span class="text-muted small">Total: R$ {{ totais_lancados.total|default:"0,00" }}</span>
+		</div>
+		<div class="card-body p-0">
+			<table class="table table-hover align-middle mb-0">
+				<thead class="table-dark">
+					<tr><th>#</th><th>Credor</th><th>Valor Líquido</th><th>Empenho</th></tr>
+				</thead>
+				<tbody>
+					{% for processo in processos_lancados %}
+					<tr>
+						<td class="fw-bold text-muted">#{{ processo.id }}</td>
+						<td>{{ processo.credor|default:"-" }}</td>
+						<td class="fw-bold">R$ {{ processo.valor_liquido|default:"0,00" }}</td>
+						<td>{{ processo.n_nota_empenho|default:"-" }}</td>
+					</tr>
+					{% empty %}
+					<tr><td colspan="4" class="text-center py-3 text-muted">Nenhum processo lançado.</td></tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+{% endblock %}

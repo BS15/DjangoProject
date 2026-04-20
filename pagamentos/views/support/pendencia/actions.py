@@ -7,7 +7,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 
-from fluxo.domain_models import Pendencia, StatusChoicesPendencias
+from pagamentos.domain_models import Pendencia, StatusChoicesPendencias
 
 
 PENDENCIA_ACAO_STATUS = {
@@ -17,7 +17,7 @@ PENDENCIA_ACAO_STATUS = {
 
 
 @require_POST
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def atualizar_pendencias_lote_action(request: HttpRequest) -> HttpResponse:
     """Atualiza status de pendências selecionadas em lote sem exclusão física."""
     acao_lote = (request.POST.get("acao_lote") or "").strip().lower()

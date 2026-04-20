@@ -4,12 +4,12 @@ from django.contrib.auth.decorators import permission_required
 from django.http import HttpRequest, HttpResponse
 from django.views.decorators.http import require_POST
 
-from fluxo.domain_models import ProcessoStatus
-from fluxo.views.helpers import _processar_acao_lote, _recusar_processo_view
+from pagamentos.domain_models import ProcessoStatus
+from pagamentos.views.helpers import _processar_acao_lote, _recusar_processo_view
 
 
 @require_POST
-@permission_required("fluxo.pode_autorizar_pagamento", raise_exception=True)
+@permission_required("pagamentos.pode_autorizar_pagamento", raise_exception=True)
 def autorizar_pagamento(request: HttpRequest) -> HttpResponse:
     """Autoriza em lote processos selecionados para A PAGAR - AUTORIZADO."""
     return _processar_acao_lote(
@@ -26,13 +26,13 @@ def autorizar_pagamento(request: HttpRequest) -> HttpResponse:
 
 
 @require_POST
-@permission_required("fluxo.pode_autorizar_pagamento", raise_exception=True)
+@permission_required("pagamentos.pode_autorizar_pagamento", raise_exception=True)
 def recusar_autorizacao_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Recusa autorizacao de um processo e devolve ao fluxo de correcao."""
     return _recusar_processo_view(
         request,
         pk,
-        permission="fluxo.pode_autorizar_pagamento",
+        permission="pagamentos.pode_autorizar_pagamento",
         status_devolucao=ProcessoStatus.AGUARDANDO_LIQUIDACAO,
         error_message="Processo #{processo_id} não autorizado e devolvido com pendência!",
         redirect_to="painel_autorizacao",

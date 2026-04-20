@@ -23,10 +23,10 @@ def _is_processo_selado(processo):
     if not processo or processo.em_contingencia or not processo.status:
         return False
 
-    from pagamentos.domain_models.processos import PROCESSO_STATUS_PAGOS_E_POSTERIORES
+    from pagamentos.domain_models.processos import STATUS_PROCESSO_PAGOS_E_POSTERIORES
 
-    status_atual = (processo.status.status_choice or "").upper()
-    return status_atual in PROCESSO_STATUS_PAGOS_E_POSTERIORES
+    status_atual = (processo.status.opcao_status or "").upper()
+    return status_atual in STATUS_PROCESSO_PAGOS_E_POSTERIORES
 
 
 class SealedMutationQuerySet(models.QuerySet):
@@ -96,6 +96,7 @@ class TiposDeVerbasIndenizatorias(models.Model):
             ("pode_criar_diarias", "Pode criar diárias"),
             ("pode_gerenciar_diarias", "Pode gerenciar diárias"),
             ("operar_prestacao_contas", "Pode operar prestação de contas em nome de terceiros"),
+            ("analisar_prestacao_contas", "Pode analisar e revisar prestações de contas"),
         ]
 
 
@@ -159,7 +160,7 @@ class Diaria(models.Model):
     autorizada = models.BooleanField("Autorizada", default=False)
     numero_siscac = models.CharField("Nº SISCAC", max_length=20, unique=True, null=True, blank=True)
 
-    assinaturas_autentique = GenericRelation('pagamentos.AssinaturaAutentique')
+    assinaturas_autentique = GenericRelation('pagamentos.AssinaturaEletronica')
 
     history = HistoricalRecords()
     _CAMPOS_SENSIVEIS_POS_PAGAMENTO = {
@@ -219,6 +220,30 @@ class Diaria(models.Model):
         if self.tipo_solicitacao == 'INICIAL' and self.diaria_inicial_id and self.pk and self.diaria_inicial_id != self.pk:
             errors['diaria_inicial'] = 'Diárias iniciais não podem apontar para outra diária.'
 
+        # Regra: datas só podem ser alteradas se preservarem a quantidade de diárias original.
+        if self.pk and not getattr(self, '_bypass_domain_seal', False) and 'data_saida' not in errors:
+            original = (
+                type(self).objects
+                .filter(pk=self.pk)
+                .values('data_saida', 'data_retorno', 'quantidade_diarias')
+                .first()
+            )
+            if original:
+                datas_alteradas = (
+                    self.data_saida != original['data_saida']
+                    or self.data_retorno != original['data_retorno']
+                )
+                if datas_alteradas and self.data_saida and self.data_retorno:
+                    nova_qtd = self.calcular_quantidade_diarias()
+                    if nova_qtd is None:
+                        nova_qtd = self.quantidade_diarias
+                    if nova_qtd != original['quantidade_diarias']:
+                        errors['data_saida'] = (
+                            f'As novas datas resultariam em {nova_qtd} diária(s), mas a quantidade '
+                            f'original é {original["quantidade_diarias"]}. '
+                            'A quantidade de diárias não pode ser alterada.'
+                        )
+
         if errors:
             raise DjangoValidationError(errors)
 
@@ -268,6 +293,9 @@ class Diaria(models.Model):
             super().save(update_fields=['diaria_inicial'])
 
     def _enforce_domain_seal(self, update_fields=None):
+        if getattr(self, '_bypass_domain_seal', False):
+            return
+
         if not self.pk or not _is_processo_selado(self.processo):
             return
 
@@ -278,7 +306,7 @@ class Diaria(models.Model):
 
         status_processo = ""
         if self.processo and self.processo.status:
-            status_processo = (self.processo.status.status_choice or "").upper()
+            status_processo = (self.processo.status.opcao_status or "").upper()
         processo_pago = status_processo.startswith("PAGO")
 
         if alterados and set(alterados).issubset(self._CAMPOS_RETIFICACAO_OFICIO) and not processo_pago:
@@ -319,6 +347,13 @@ class Diaria(models.Model):
     def __str__(self):
         return f"Diária {self.numero_siscac} - {self.beneficiario}"
 
+    @property
+    def comprovantes(self):
+        prestacao = getattr(self, "prestacao_contas", None)
+        if prestacao:
+            return prestacao.documentos.all()
+        return DocumentoComprovacao.objects.none()
+
     class Meta:
         constraints = [
             models.CheckConstraint(
@@ -343,6 +378,31 @@ class DocumentoDiaria(DocumentoBase):
     history = HistoricalRecords()
 
 
+class PrestacaoContasDiaria(models.Model):
+    """Prestação de contas da diária com ciclo de abertura e encerramento."""
+
+    STATUS_ABERTA = "ABERTA"
+    STATUS_ENCERRADA = "ENCERRADA"
+    STATUS_CHOICES = [
+        (STATUS_ABERTA, "Aberta"),
+        (STATUS_ENCERRADA, "Encerrada"),
+    ]
+
+    diaria = models.OneToOneField('Diaria', on_delete=models.PROTECT, related_name='prestacao_contas')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_ABERTA)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    encerrado_em = models.DateTimeField(null=True, blank=True)
+    encerrado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='prestacoes_diaria_encerradas')
+    history = HistoricalRecords()
+
+
+class DocumentoComprovacao(DocumentoBase):
+    """Comprovante anexado pelo usuário na prestação de contas da diária."""
+
+    prestacao = models.ForeignKey('PrestacaoContasDiaria', on_delete=models.CASCADE, related_name='documentos')
+    history = HistoricalRecords()
+
+
 class DevolucaoDiaria(models.Model):
     """Devolução parcial registrada para ajuste de diária sem edição direta do título pago."""
 
@@ -361,25 +421,55 @@ class DevolucaoDiaria(models.Model):
             )
 
 
-class ApostilaDiaria(models.Model):
-    """Apostila para correção formal não financeira em dados de diária."""
+STATUS_CONTINGENCIA_DIARIA = [
+    ("PENDENTE_SUPERVISOR", "Pendente Supervisor"),
+    ("APROVADA", "Aprovada"),
+    ("REJEITADA", "Rejeitada"),
+]
 
-    diaria = models.ForeignKey('Diaria', on_delete=models.PROTECT, related_name='apostilas')
-    texto_correcao = models.TextField("Texto da Apostila")
+_CAMPOS_PERMITIDOS_CONTINGENCIA_DIARIA = {
+    "numero_siscac",
+    "cidade_origem",
+    "cidade_destino",
+    "objetivo",
+    "proponente_id",
+    "meio_de_transporte_id",
+}
+
+
+class ContingenciaDiaria(models.Model):
+    """Solicitação formal de retificação de diária com aprovação hierárquica."""
+
+    diaria = models.ForeignKey('Diaria', on_delete=models.PROTECT, related_name='contingencias')
+    solicitante = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name='contingencias_diaria_solicitadas'
+    )
+    justificativa = models.TextField("Justificativa")
     campo_corrigido = models.CharField("Campo Corrigido", max_length=100)
     valor_anterior = models.TextField("Valor Anterior", blank=True)
-    valor_novo = models.TextField("Valor Novo", blank=True)
-    registrado_por = models.ForeignKey(User, on_delete=models.PROTECT)
+    valor_proposto = models.TextField("Valor Proposto")
+    status = models.CharField(
+        max_length=25, choices=STATUS_CONTINGENCIA_DIARIA, default="PENDENTE_SUPERVISOR"
+    )
+    aprovado_por = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='contingencias_diaria_aprovadas',
+    )
+    data_aprovacao = models.DateTimeField(null=True, blank=True)
+    parecer = models.TextField("Parecer", null=True, blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     history = HistoricalRecords()
 
     class Meta:
-        constraints = [
-            models.CheckConstraint(
-                condition=~models.Q(campo_corrigido__in=['valor_total', 'quantidade_diarias']),
-                name='apostila_nao_altera_valores_financeiros_chk',
-            )
-        ]
+        verbose_name = "Contingência de Diária"
+        verbose_name_plural = "Contingências de Diárias"
+        ordering = ["-criado_em"]
+
+    def __str__(self):
+        return f"Contingência #{self.pk} – Diária #{self.diaria_id} [{self.get_status_display()}]"
 
 
 class ReembolsoCombustivel(models.Model):
@@ -666,7 +756,7 @@ def _make_verba_presave_signal(model_cls):
     return _cleanup_old_file
 
 
-for _doc_model in (DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio):
+for _doc_model in (DocumentoDiaria, DocumentoComprovacao, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio):
     _make_verba_delete_signal(_doc_model)
     _make_verba_presave_signal(_doc_model)
 

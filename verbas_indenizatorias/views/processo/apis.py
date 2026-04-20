@@ -13,6 +13,7 @@ from ..shared.registry import (
     _VERBA_CONFIG,
     _get_permissao_gestao_verba,
 )
+from ...services.documentos import obter_ou_criar_prestacao
 
 
 @require_POST
@@ -30,10 +31,11 @@ def api_add_documento_verba(request, tipo_verba, pk):
     fk_name = config['doc_fk']
     tipo_doc_seguro = config['doc_tipo_seguro']
     verba = get_object_or_404(modelo_verba, id=pk)
+    entidade_documento = obter_ou_criar_prestacao(verba) if fk_name == 'prestacao' else verba
 
     arquivo, tipo_id = _obter_dados_upload_documento(request)
     doc, erro = _salvar_documento_upload(
-        verba,
+        entidade_documento,
         modelo_documento=modelo_documento,
         fk_name=fk_name,
         arquivo=arquivo,

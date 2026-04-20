@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import render
 
 from fiscal.filters import RetencaoIndividualFilter
-from fiscal.models import RetencaoImposto
+from fiscal.models import DocumentoPagamentoImposto, RetencaoImposto
 from pagamentos.views.shared import apply_filterset
 
 
@@ -32,9 +32,23 @@ def painel_impostos_view(request):
         "beneficiario",
     ).order_by("-id")
     filtro = apply_filterset(request, RetencaoIndividualFilter, queryset_base)
-    retencoes = filtro.qs
+    retencoes = list(filtro.qs.prefetch_related("documentos_pagamento"))
+    retencao_ids = [r.id for r in retencoes]
+    docs_completos = set(
+        DocumentoPagamentoImposto.objects.filter(
+            retencao_id__in=retencao_ids,
+            relatorio_retencoes__isnull=False,
+            guia_recolhimento__isnull=False,
+            comprovante_pagamento__isnull=False,
+        )
+        .exclude(relatorio_retencoes="")
+        .exclude(guia_recolhimento="")
+        .exclude(comprovante_pagamento="")
+        .values_list("retencao_id", flat=True)
+    )
     for retencao in retencoes:
         retencao.fonte_retentora_nome = _resolve_fonte_retentora_nome(retencao)
+        retencao.documentacao_completa = retencao.id in docs_completos
 
     context = {
         "filter": filtro,

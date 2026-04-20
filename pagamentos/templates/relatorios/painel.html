@@ -115,7 +115,7 @@
                             <td>{{ obj.credor.nome|default:'-' }}</td>
                             <td>{{ obj.valor_bruto }}</td>
                             <td>{{ obj.valor_liquido }}</td>
-                            <td>{{ obj.status.status_choice|default:'-' }}</td>
+                            <td>{{ obj.status.opcao_status|default:'-' }}</td>
                             <td>{{ obj.data_pagamento|default:'-' }}</td>
                             {% elif tipo == 'diarias' %}
                             <td>{{ obj.id }}</td>

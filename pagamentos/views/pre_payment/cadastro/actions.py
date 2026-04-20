@@ -15,11 +15,12 @@ import json
 from django.db.models import Sum
 from django.contrib.contenttypes.models import ContentType
 from fiscal.models import DocumentoFiscal, RetencaoImposto
-from fluxo.domain_models import (
+from pagamentos.domain_models import (
     Boleto_Bancario,
     TiposDePendencias,
     StatusChoicesPendencias,
     Pendencia,
+    Processo,
 )
 from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoForm
 from ..helpers import (
@@ -38,7 +39,7 @@ PENDENCIA_ACAO_STATUS = {
 
 
 def _get_status_inicial(processo):
-    return processo.status.status_choice.upper() if processo.status else ""
+    return processo.status.opcao_status.upper() if processo.status else ""
 
 
 def _obter_contexto_edicao(request: HttpRequest, pk: int) -> tuple[Processo, str, Optional[HttpResponse], bool]:
@@ -67,7 +68,7 @@ def _status_bloqueia_gestao_fiscal(processo):
     if not processo.status:
         return False
 
-    status_atual = (processo.status.status_choice or "").upper()
+    status_atual = (processo.status.opcao_status or "").upper()
     return status_atual in {
         ProcessoStatus.PAGO_EM_CONFERENCIA,
         ProcessoStatus.PAGO_A_CONTABILIZAR,
@@ -80,15 +81,15 @@ def _status_bloqueia_gestao_fiscal(processo):
 def _atualizar_status_pendencia(pendencia: Pendencia, status_destino: str) -> None:
     """Atualiza o status da pendência com criação lazy do catálogo quando necessário."""
     status_obj, _ = StatusChoicesPendencias.objects.get_or_create(
-        status_choice__iexact=status_destino,
-        defaults={"status_choice": status_destino},
+        opcao_status__iexact=status_destino,
+        defaults={"opcao_status": status_destino},
     )
     pendencia.status = status_obj
     pendencia.save(update_fields=["status"])
 
 
 @require_POST
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def add_process_action(request: HttpRequest) -> HttpResponse:
     """Persiste a capa inicial do processo."""
     processo_form = ProcessoForm(request.POST, prefix="processo")
@@ -99,7 +100,7 @@ def add_process_action(request: HttpRequest) -> HttpResponse:
         messages.error(request, "Verifique os erros no formulário da capa do processo.")
         return render(
             request,
-            "fluxo/add_process.html",
+            "pagamentos/add_process.html",
             {
                 "processo_form": processo_form,
                 "next_url": next_url,
@@ -125,7 +126,7 @@ def add_process_action(request: HttpRequest) -> HttpResponse:
 
 
 @require_POST
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def editar_processo_capa_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Persiste alterações da capa do processo."""
     processo, status_inicial, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
@@ -157,7 +158,7 @@ def editar_processo_capa_action(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @require_POST
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def editar_processo_documentos_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Persiste anexos e documentos orçamentários do processo."""
     processo, _, redirecionamento, _ = _obter_contexto_edicao(request, pk)
@@ -182,7 +183,7 @@ def editar_processo_documentos_action(request: HttpRequest, pk: int) -> HttpResp
 
 
 @require_POST
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def editar_processo_pendencias_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Persiste pendências administrativas do processo."""
     processo, _, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
@@ -229,7 +230,7 @@ def editar_processo_pendencias_action(request: HttpRequest, pk: int) -> HttpResp
         return redirect("editar_processo_pendencias", pk=pk)
 
 
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 @require_POST
 @transaction.atomic
 def toggle_documento_fiscal_action(request, processo_pk, documento_pk):
@@ -286,7 +287,7 @@ def toggle_documento_fiscal_action(request, processo_pk, documento_pk):
     )
 
 
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 @require_POST
 @transaction.atomic
 def salvar_nota_fiscal_action(request, processo_pk, nota_pk):

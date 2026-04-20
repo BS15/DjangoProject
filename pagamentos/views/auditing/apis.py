@@ -7,11 +7,11 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_GET
 
-from fluxo.domain_models import Processo
+from pagamentos.domain_models import Processo
 from ..helpers import _build_payload_documentos_processo_auditoria, _build_payload_processo_detalhes
 
 
-@permission_required("fluxo.pode_auditar_conselho", raise_exception=True)
+@permission_required("pagamentos.pode_auditar_conselho", raise_exception=True)
 @require_GET
 @xframe_options_sameorigin
 def api_documentos_processo(request, processo_id):
@@ -24,8 +24,8 @@ def api_documentos_processo(request, processo_id):
 def api_processo_detalhes(request):
     """Retorna detalhes de um processo por ``id`` informado via query string."""
     if not (
-        request.user.has_perm("fluxo.pode_auditar_conselho")
-        or request.user.has_perm("fluxo.acesso_backoffice")
+        request.user.has_perm("pagamentos.pode_auditar_conselho")
+        or request.user.has_perm("pagamentos.acesso_backoffice")
     ):
         raise PermissionDenied
 

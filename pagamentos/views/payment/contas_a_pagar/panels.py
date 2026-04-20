@@ -6,22 +6,22 @@ from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
 from fiscal.models import RetencaoImposto
-from fluxo.domain_models import PROCESSO_STATUS_CONTAS_A_PAGAR, Pendencia, Processo
-from fluxo.views.helpers import (
+from pagamentos.domain_models import STATUS_PROCESSO_CONTAS_A_PAGAR, PendenciaProcessual, Processo
+from pagamentos.views.helpers import (
     _aplicar_filtros_contas_a_pagar,
     _gerar_agrupamentos_contas_a_pagar,
     _obter_campo_ordenacao,
 )
 
 
-STATUSES_CONTAS_A_PAGAR = list(PROCESSO_STATUS_CONTAS_A_PAGAR)
+STATUSES_CONTAS_A_PAGAR = list(STATUS_PROCESSO_CONTAS_A_PAGAR)
 
 
 @require_GET
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 def contas_a_pagar(request):
     """Renderiza a fila de contas a pagar com facetas, filtros e ordenacao."""
-    processos_base = Processo.objects.filter(status__status_choice__in=STATUSES_CONTAS_A_PAGAR)
+    processos_base = Processo.objects.filter(status__opcao_status__in=STATUSES_CONTAS_A_PAGAR)
     agrupamentos = _gerar_agrupamentos_contas_a_pagar(processos_base)
 
     data_selecionada = request.GET.get("data")
@@ -38,8 +38,8 @@ def contas_a_pagar(request):
             "data_pagamento": "data_pagamento",
             "credor": "credor__nome",
             "valor_liquido": "valor_liquido",
-            "status": "status__status_choice",
-            "tipo_pagamento": "tipo_pagamento__tipo_de_pagamento",
+            "status": "status__opcao_status",
+            "tipo_pagamento": "tipo_pagamento__tipo_pagamento",
         },
         default_ordem="id",
         default_direcao="asc",
@@ -48,7 +48,7 @@ def contas_a_pagar(request):
     qs_filtrada = _aplicar_filtros_contas_a_pagar(processos_base, request.GET)
 
     lista_processos = qs_filtrada.annotate(
-        has_pendencias=Exists(Pendencia.objects.filter(processo=OuterRef("pk"))),
+        has_pendencias=Exists(PendenciaProcessual.objects.filter(processo=OuterRef("pk"))),
         has_retencoes=Exists(RetencaoImposto.objects.filter(nota_fiscal__processo=OuterRef("pk"))),
     ).order_by(order_field)
 
@@ -64,7 +64,7 @@ def contas_a_pagar(request):
         "pode_interagir": True,
     }
 
-    return render(request, "fluxo/contas_a_pagar.html", context)
+    return render(request, "pagamentos/contas_a_pagar.html", context)
 
 
 __all__ = ["STATUSES_CONTAS_A_PAGAR", "contas_a_pagar"]

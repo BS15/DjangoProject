@@ -141,7 +141,86 @@ def anexar_guia_comprovante_relatorio_em_processos(
     return total_processos
 
 
+def criar_documentos_pagamento_impostos(
+    retencoes: list,
+    relatorio_bytes: bytes,
+    relatorio_nome: str,
+    guia_bytes: bytes,
+    guia_nome: str,
+    comprovante_bytes: bytes,
+    comprovante_nome: str,
+    competencia,
+) -> list:
+    """Cria um DocumentoPagamentoImposto por retenção selecionada, retornando os objetos criados.
+
+    Idempotente: se já existir documento para a combinação retencao/codigo/competencia, ignora.
+    """
+    from fiscal.models import DocumentoPagamentoImposto
+    from django.core.files.base import ContentFile
+    from datetime import date as _date
+
+    competencia_normalizada = _date(competencia.year, competencia.month, 1)
+    criados = []
+
+    with transaction.atomic():
+        for retencao in retencoes:
+            _, created = DocumentoPagamentoImposto.objects.get_or_create(
+                retencao=retencao,
+                codigo_imposto=retencao.codigo,
+                competencia=competencia_normalizada,
+                defaults={
+                    'relatorio_retencoes': ContentFile(
+                        relatorio_bytes,
+                        name=f"relatorio_{retencao.id}_{relatorio_nome}",
+                    ),
+                    'guia_recolhimento': ContentFile(
+                        guia_bytes,
+                        name=f"guia_{retencao.id}_{guia_nome}",
+                    ),
+                    'comprovante_pagamento': ContentFile(
+                        comprovante_bytes,
+                        name=f"comprovante_{retencao.id}_{comprovante_nome}",
+                    ),
+                },
+            )
+            if created:
+                criados.append(retencao.id)
+
+    return criados
+
+
+def verificar_completude_documentos_impostos(processo) -> list:
+    """Verifica se todas as retenções vinculadas ao processo possuem DocumentoPagamentoImposto completo.
+
+    Retorna lista de IDs de retenções pendentes. Lista vazia = processo completo.
+    """
+    from fiscal.models import DocumentoPagamentoImposto
+
+    retencoes = list(
+        processo.impostos_recolhidos.select_related('codigo').all()
+    )
+    if not retencoes:
+        return []
+
+    retencao_ids = [r.id for r in retencoes]
+    docs_completos = set(
+        DocumentoPagamentoImposto.objects.filter(
+            retencao_id__in=retencao_ids,
+            relatorio_retencoes__isnull=False,
+            guia_recolhimento__isnull=False,
+            comprovante_pagamento__isnull=False,
+        )
+        .exclude(relatorio_retencoes="")
+        .exclude(guia_recolhimento="")
+        .exclude(comprovante_pagamento="")
+        .values_list("retencao_id", flat=True)
+    )
+    return [retencao.id for retencao in retencoes if retencao.id not in docs_completos]
+
+
 __all__ = [
     "anexar_guia_comprovante_relatorio_em_processos",
     "gerar_relatorio_retencoes_mensal_csv",
+    "criar_documentos_pagamento_impostos",
+    "verificar_completude_documentos_impostos",
 ]

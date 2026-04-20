@@ -1,0 +1,69 @@
+{% extends "layouts/base_form.html" %}
+
+{% block title %}Nova Contingência — Diária #{{ diaria.pk }}{% endblock %}
+
+{% block page_heading %}
+<i class="bi bi-exclamation-triangle-fill text-warning"></i> Nova Contingência
+{% endblock %}
+
+{% block page_subtitle %}
+Solicite uma retificação formal em dados da Diária #{{ diaria.pk }} — {{ diaria.beneficiario.nome|upper }}.
+A alteração somente será aplicada após aprovação do supervisor.
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'gerenciar_diaria' pk=diaria.pk %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Voltar
+</a>
+{% endblock %}
+
+{% block form_action %}{% url 'add_contingencia_diaria_action' pk=diaria.pk %}{% endblock %}
+
+{% block form_fields %}
+{% if form.non_field_errors %}
+<div class="alert alert-danger">{{ form.non_field_errors }}</div>
+{% endif %}
+
+<div class="card shadow-sm mb-3">
+    <div class="card-header bg-light">
+        <h6 class="mb-0">Dados da Diária</h6>
+    </div>
+    <div class="card-body">
+        <p class="mb-1"><strong>Beneficiário:</strong> {{ diaria.beneficiario.nome }}</p>
+        <p class="mb-1"><strong>Destino:</strong> {{ diaria.cidade_destino }}</p>
+        <p class="mb-0"><strong>Período:</strong> {{ diaria.data_saida|date:"d/m/Y" }} a {{ diaria.data_retorno|date:"d/m/Y" }}</p>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <label class="form-label">{{ form.campo_corrigido.label }}</label>
+        {{ form.campo_corrigido }}
+        <div class="text-danger small">{{ form.campo_corrigido.errors }}</div>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">{{ form.valor_anterior.label }}</label>
+        {{ form.valor_anterior }}
+        <div class="form-text">Preencha para fins de rastreabilidade.</div>
+        <div class="text-danger small">{{ form.valor_anterior.errors }}</div>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">{{ form.valor_proposto.label }}</label>
+        {{ form.valor_proposto }}
+        <div class="text-danger small">{{ form.valor_proposto.errors }}</div>
+    </div>
+    <div class="col-12">
+        <label class="form-label">{{ form.justificativa.label }}</label>
+        {{ form.justificativa }}
+        <div class="form-text">Descreva o motivo da retificação com clareza.</div>
+        <div class="text-danger small">{{ form.justificativa.errors }}</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block form_actions %}
+<a href="{% url 'gerenciar_diaria' pk=diaria.pk %}" class="btn btn-outline-secondary me-2">Cancelar</a>
+<button type="submit" class="btn btn-warning">
+    <i class="bi bi-send"></i> Enviar para Aprovação
+</button>
+{% endblock %}

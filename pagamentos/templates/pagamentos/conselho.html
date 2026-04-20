@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block page_title %}Conselho Fiscal{% endblock %}
+
+{% block content %}
+{% include "pagamentos/partials/_panel_navbar.html" %}
+
+<div class="container mt-4 mb-5">
+	{% url 'gerenciar_reunioes' as url_gerenciar_reunioes %}
+	{% with panel_icon="bi bi-people-fill" panel_color="info" panel_title="Conselho Fiscal" panel_subtitle="Reuniões ativas e processos aguardando apreciação." panel_extra_link_url=url_gerenciar_reunioes panel_extra_link_label="Gerenciar Reuniões" panel_extra_link_icon="bi bi-calendar3" panel_extra_link_class="btn-outline-primary" %}
+		{% include "pagamentos/partials/_panel_header.html" %}
+	{% endwith %}
+
+	{% include "pagamentos/partials/_flash_messages.html" %}
+
+	<!-- Reuniões Ativas -->
+	<h5 class="fw-semibold mb-3"><i class="bi bi-calendar-check text-warning"></i> Reuniões em Andamento</h5>
+	<div class="card shadow-sm border-0 mb-4">
+		<div class="card-body p-0">
+			<table class="table table-hover table-striped mb-0 align-middle">
+				<thead class="table-light">
+					<tr>
+						<th class="ps-3">Nº</th>
+						<th>Trimestre/Ano</th>
+						<th>Data</th>
+						<th>Status</th>
+						<th>Processos na Pauta</th>
+						<th class="text-center">Ações</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for reuniao in reunioes_ativas %}
+					<tr>
+						<td class="ps-3 fw-bold">{{ reuniao.numero }}ª</td>
+						<td>{{ reuniao.trimestre_referencia }}</td>
+						<td>{{ reuniao.data_reuniao|date:"d/m/Y"|default:"-" }}</td>
+						<td>
+							{% if reuniao.status == 'AGENDADA' %}
+								<span class="badge bg-secondary">{{ reuniao.get_status_display }}</span>
+							{% elif reuniao.status == 'EM_ANALISE' %}
+								<span class="badge bg-warning text-dark">{{ reuniao.get_status_display }}</span>
+							{% endif %}
+						</td>
+						<td>{{ reuniao.processos_em_pauta.count }} processo(s)</td>
+						<td class="text-center d-flex justify-content-center gap-2">
+							{% if pode_interagir %}
+							<a href="{% url 'montar_pauta_reuniao' reuniao_id=reuniao.id %}"
+							   class="btn btn-sm btn-outline-primary" title="Montar Pauta">
+								<i class="bi bi-list-check"></i> Montar Pauta
+							</a>
+							{% endif %}
+							<a href="{% url 'analise_reuniao' reuniao_id=reuniao.id %}"
+							   class="btn btn-sm btn-info text-white" title="Analisar">
+								<i class="bi bi-eye-fill"></i> Analisar
+							</a>
+						</td>
+					</tr>
+					{% empty %}
+					<tr>
+						<td colspan="6" class="text-center py-4 text-muted">
+							<i class="bi bi-calendar-x d-block mb-1 fs-4"></i>
+							Nenhuma reunião ativa. <a href="{% url 'gerenciar_reunioes' %}">Criar uma nova</a>.
+						</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+	<!-- Processos sem reunião atribuída -->
+	<h5 class="fw-semibold mb-3"><i class="bi bi-hourglass-split text-secondary"></i> Processos Aguardando Atribuição</h5>
+	<div class="card shadow-sm border-0">
+		<div class="card-body p-0">
+			<table class="table table-hover table-striped mb-0 align-middle">
+				<thead class="table-light">
+					<tr>
+						<th class="ps-3"># ID</th>
+						<th>Credor</th>
+						<th>Tipo de Pagamento</th>
+						<th>N° SISCAC</th>
+						<th>Data Pag.</th>
+						<th class="text-end pe-4">Valor</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for processo in processos_sem_reuniao %}
+					<tr>
+						<td class="ps-3 fw-bold text-muted">#{{ processo.id }}</td>
+						<td class="fw-medium">{{ processo.credor|default:"-"|truncatechars:40 }}</td>
+						<td>{{ processo.tipo_pagamento|default:"-" }}</td>
+						<td>{{ processo.n_pagamento_siscac|default:"-" }}</td>
+						<td>{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
+						<td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
+					</tr>
+					{% empty %}
+					<tr>
+						<td colspan="6" class="text-center py-5 text-muted">
+							<i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+							Todos os processos estão atribuídos a uma reunião.
+						</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+{% endblock %}

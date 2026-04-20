@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from fluxo.domain_models import FormasDePagamento, Processo, TiposDeDocumento, TiposDePagamento
+from pagamentos.domain_models import FormasDePagamento, Processo, TiposDeDocumento, TiposDePagamento
 
 
 FORMAS_PAGAMENTO_CANONICAS = [
@@ -110,24 +110,24 @@ class Command(BaseCommand):
         formas_existentes = list(FormasDePagamento.objects.all())
         for nome in FORMAS_PAGAMENTO_CANONICAS:
             forma = next(
-                (f for f in formas_existentes if _normalizar_rotulo(f.forma_de_pagamento) == _normalizar_rotulo(nome)),
+                (f for f in formas_existentes if _normalizar_rotulo(f.forma_pagamento) == _normalizar_rotulo(nome)),
                 None,
             )
             if forma is None:
-                FormasDePagamento.objects.create(forma_de_pagamento=nome, is_active=True)
+                FormasDePagamento.objects.create(forma_pagamento=nome, ativo=True)
                 formas_criadas += 1
                 self.stdout.write(f"Forma criada: {nome}")
                 continue
 
             mudou = False
-            if forma.forma_de_pagamento != nome:
-                forma.forma_de_pagamento = nome
+            if forma.forma_pagamento != nome:
+                forma.forma_pagamento = nome
                 mudou = True
-            if not forma.is_active:
-                forma.is_active = True
+            if not forma.ativo:
+                forma.ativo = True
                 mudou = True
             if mudou:
-                forma.save(update_fields=["forma_de_pagamento", "is_active"])
+                forma.save(update_fields=["forma_pagamento", "ativo"])
                 formas_atualizadas += 1
                 self.stdout.write(f"Forma atualizada: {nome}")
 
@@ -138,7 +138,7 @@ class Command(BaseCommand):
                 None,
             )
             if tipo is None:
-                TiposDePagamento.objects.create(tipo_de_pagamento=nome, is_active=True)
+                TiposDePagamento.objects.create(tipo_de_pagamento=nome, ativo=True)
                 tipos_criados += 1
                 self.stdout.write(f"Tipo de pagamento criado: {nome}")
                 continue

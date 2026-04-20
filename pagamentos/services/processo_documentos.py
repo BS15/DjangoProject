@@ -10,9 +10,9 @@ from commons.shared.storage_utils import _safe_filename
 from django.apps import apps
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
-from fluxo.pdf_generators import FLUXO_DOCUMENT_REGISTRY
-from fluxo.domain_models.processos import ProcessoStatus
-from fluxo.services.integracoes.processo_relacionados import gerar_documentos_relacionados_por_transicao
+from pagamentos.pdf_generators import FLUXO_DOCUMENT_REGISTRY
+from pagamentos.domain_models.processos import ProcessoStatus
+from pagamentos.services.integracoes.processo_relacionados import gerar_documentos_relacionados_por_transicao
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ def gerar_pdf_consolidado_processo(processo):
 
 def anexar_pdf_gerado_ao_processo(processo, pdf_bytes, nome_arquivo, tipo_documento_nome):
     """Anexa PDF gerado como DocumentoProcesso na próxima ordem disponível."""
-    DocumentoProcesso = apps.get_model("fluxo", "DocumentoProcesso")
+    DocumentoProcesso = apps.get_model("pagamentos", "DocumentoProcesso")
     if _documento_automatico_ja_existe(processo, nome_arquivo):
         raise ValidationError(f"Documento automático já existe para o processo {processo.id}: {nome_arquivo}")
     proxima_ordem = obter_proxima_ordem_documento(processo.documentos)

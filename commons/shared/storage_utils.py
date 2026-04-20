@@ -67,6 +67,9 @@ def caminho_documento(instance, filename):
 			filename,
 		)
 
+	if hasattr(instance, 'prestacao') and instance.prestacao:
+		return _build_upload_path('verbasindenizatorias', 'prestacoes', f'prestacao_{instance.prestacao.id}', filename)
+
 	if hasattr(instance, 'diaria') and instance.diaria:
 		return _build_upload_path('verbasindenizatorias', 'diarias', f'diaria_{instance.diaria.id}', filename)
 	if hasattr(instance, 'reembolso') and instance.reembolso:

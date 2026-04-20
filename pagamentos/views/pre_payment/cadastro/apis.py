@@ -11,22 +11,27 @@ from django.db.models import Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django.contrib.auth.decorators import permission_required
 from django.views.decorators.http import require_POST
 
 from .helpers import processar_pdf_boleto
+from .actions import (
+    toggle_documento_fiscal_action as api_toggle_documento_fiscal,
+    salvar_nota_fiscal_action as api_salvar_nota_fiscal,
+)
 
 logger = logging.getLogger(__name__)
 
 from credores.models import Credor
 from fiscal.models import DocumentoFiscal, RetencaoImposto
-from fluxo.domain_models import Boleto_Bancario, Pendencia, Processo, StatusChoicesPendencias, TiposDeDocumento, TiposDePendencias
+from pagamentos.domain_models import Boleto_Bancario, Pendencia, Processo, StatusChoicesPendencias, TiposDeDocumento, TiposDePendencias
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 
 from .actions import _status_bloqueia_gestao_fiscal
 
 
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 def api_tipos_documento_por_pagamento(request):
     """Lista tipos de documento ativos vinculados a um tipo de pagamento."""
     tipo_pagamento_id = request.GET.get("tipo_pagamento_id")
@@ -47,7 +52,7 @@ def api_tipos_documento_por_pagamento(request):
         return JsonResponse({"sucesso": False, "erro": str(e)})
 
 
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 def api_extrair_codigos_barras_upload(request):
     """Extrai dados de boleto a partir de upload único ou em lote de PDFs.
 
@@ -120,4 +125,6 @@ def api_extrair_codigos_barras_upload(request):
 __all__ = [
     "api_tipos_documento_por_pagamento",
     "api_extrair_codigos_barras_upload",
+    "api_toggle_documento_fiscal",
+    "api_salvar_nota_fiscal",
 ]

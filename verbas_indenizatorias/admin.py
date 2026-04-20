@@ -5,13 +5,16 @@ from simple_history.admin import SimpleHistoryAdmin
 
 from .models import (
     AuxilioRepresentacao,
+    ContingenciaDiaria,
     Diaria,
     DocumentoAuxilio,
+    DocumentoComprovacao,
     DocumentoDiaria,
     DocumentoJeton,
     DocumentoReembolso,
     Jeton,
     MeiosDeTransporte,
+    PrestacaoContasDiaria,
     ReembolsoCombustivel,
     StatusChoicesVerbasIndenizatorias,
     Tabela_Valores_Unitarios_Verbas_Indenizatorias,
@@ -32,9 +35,12 @@ admin.site.register(TiposDeVerbasIndenizatorias)
 admin.site.register(Tabela_Valores_Unitarios_Verbas_Indenizatorias)
 admin.site.register(Diaria, SimpleHistoryAdmin)
 admin.site.register(DocumentoDiaria, SimpleHistoryAdmin)
+admin.site.register(PrestacaoContasDiaria, SimpleHistoryAdmin)
+admin.site.register(DocumentoComprovacao, SimpleHistoryAdmin)
 admin.site.register(ReembolsoCombustivel, SimpleHistoryAdmin)
 admin.site.register(DocumentoReembolso, SimpleHistoryAdmin)
 admin.site.register(Jeton, SimpleHistoryAdmin)
 admin.site.register(DocumentoJeton, SimpleHistoryAdmin)
 admin.site.register(AuxilioRepresentacao, SimpleHistoryAdmin)
 admin.site.register(DocumentoAuxilio, SimpleHistoryAdmin)
+admin.site.register(ContingenciaDiaria, SimpleHistoryAdmin)
