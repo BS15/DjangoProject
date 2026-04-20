@@ -11,7 +11,7 @@ from credores.models import Credor
 from fiscal.models import CodigosImposto, DocumentoFiscal, RetencaoImposto
 from pagamentos.domain_models import Processo, ProcessoStatus
 
-from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoForm
+from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoCapaEdicaoForm, ProcessoForm
 from ..helpers import _validar_regras_edicao_processo
 
 from .actions import _status_bloqueia_gestao_fiscal
@@ -126,7 +126,7 @@ def editar_processo_capa_view(request, pk):
         "pagamentos/editar_processo_capa.html",
         {
             "processo": processo,
-            "processo_form": ProcessoForm(instance=processo, prefix="processo"),
+            "processo_form": ProcessoCapaEdicaoForm(instance=processo, prefix="processo"),
             "status_inicial": status_inicial,
             "next_url": _get_next_url(request),
         },

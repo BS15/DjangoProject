@@ -163,6 +163,17 @@ class ProcessoForm(forms.ModelForm):
 		return processo
 
 
+class ProcessoCapaEdicaoForm(ProcessoForm):
+	"""Formulário de edição da capa sem campos de controle interno."""
+
+	class Meta(ProcessoForm.Meta):
+		exclude = ProcessoForm.Meta.exclude + [
+			'n_pagamento_siscac',
+			'em_contingencia',
+			'arquivo_final',
+		]
+
+
 DocumentoFormSet = inlineformset_factory(
 	Processo,
 	DocumentoProcesso,

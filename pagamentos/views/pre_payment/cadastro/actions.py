@@ -22,7 +22,7 @@ from pagamentos.domain_models import (
     Pendencia,
     Processo,
 )
-from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoForm
+from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoCapaEdicaoForm, ProcessoForm
 from ..helpers import (
     _redirect_seguro_ou_fallback,
     _salvar_processo_completo,
@@ -136,7 +136,7 @@ def editar_processo_capa_action(request: HttpRequest, pk: int) -> HttpResponse:
         messages.error(request, "Neste status, apenas documentos podem ser alterados. Use a tela específica de documentos.")
         return redirect("editar_processo_documentos", pk=pk)
 
-    processo_form = ProcessoForm(request.POST, instance=processo, prefix="processo")
+    processo_form = ProcessoCapaEdicaoForm(request.POST, instance=processo, prefix="processo")
     next_url = request.POST.get("next") or ""
 
     if not processo_form.is_valid():
