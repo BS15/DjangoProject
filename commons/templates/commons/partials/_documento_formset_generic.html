@@ -72,13 +72,25 @@
                         {% endif %}
                     </div>
 
-                    <div class="col-auto">
+                    <div class="col-auto d-flex gap-1">
                         {% if doc_f.instance.arquivo %}
+                        {% if show_preview_widget %}
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-outline-secondary doc-preview-btn"
+                            data-doc-prefix="{{ form_prefix }}"
+                            data-doc-url="{% url 'download_arquivo_seguro' download_tipo_documento|default:'processo' doc_f.instance.id %}"
+                            data-doc-name="{{ doc_f.instance.arquivo.name|default:'' }}"
+                            title="Pré-visualizar arquivo"
+                        >
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        {% endif %}
                         <a href="{% url 'download_arquivo_seguro' download_tipo_documento|default:'processo' doc_f.instance.id %}"
                            target="_blank"
                            class="btn btn-sm btn-outline-secondary"
-                           title="Ver arquivo">
-                            <i class="bi bi-eye"></i>
+                           title="Abrir em nova aba">
+                            <i class="bi bi-box-arrow-up-right"></i>
                         </a>
                         {% endif %}
                         {% if not is_existing and pode_interagir %}
@@ -138,4 +150,7 @@
         {% endif %}
     </div>
 </div>
+{% if show_preview_widget|default:False %}
+  {% include "commons/partials/_documento_preview_widget.html" %}
+{% endif %}
 <!-- └────────────────────────────────────────────────────────────────────────────────┘ -->

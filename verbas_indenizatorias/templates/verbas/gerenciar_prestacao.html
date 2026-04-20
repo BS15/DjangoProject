@@ -36,7 +36,7 @@ Prestação: <span class="badge {% if prestacao.status == 'ENCERRADA' %}bg-succe
     Use o padrão spoke para anexar comprovantes e salvar ao final.
 </div>
 
-{% with formset=comprovante_formset form_prefix="comprovante" tipos_documento=tipos_documento add_btn_class="btn-outline-info" entity_label="Prestação da Diária" pode_interagir=pode_editar show_order_field=True show_immutable_badge=True download_tipo_documento="verba_diaria_comprov" %}
+{% with formset=comprovante_formset form_prefix="comprovante" tipos_documento=tipos_documento add_btn_class="btn-outline-info" entity_label="Prestação da Diária" pode_interagir=pode_editar show_order_field=True show_immutable_badge=True download_tipo_documento="verba_diaria_comprov" show_preview_widget=True %}
   {% include "commons/partials/_documento_formset_generic.html" %}
 {% endwith %}
 {% endblock %}
@@ -60,9 +60,11 @@ Prestação: <span class="badge {% if prestacao.status == 'ENCERRADA' %}bg-succe
 {% block extra_js %}
 {{ block.super }}
 <script src="{% static 'js/documento_formset_manager.js' %}"></script>
+<script src="{% static 'js/documento_preview_widget.js' %}"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     new DocumentoFormsetManager('comprovante');
+    new DocumentoPreviewWidget('comprovante');
   });
 </script>
 {% endblock %}
