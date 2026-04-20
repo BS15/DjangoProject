@@ -65,14 +65,14 @@ _VERBA_PERMISSION_MAP = {
 
 def _get_tipos_documento_ativos():
     """Retorna os tipos de documento ativos disponíveis para anexação."""
-    return TiposDocumento.objects.filter(is_active=True)
+    return TiposDocumento.objects.filter(ativo=True)
 
 
 def _get_tipos_documento_verbas():
     """Retorna apenas os tipos de documento ativos vinculados a VERBAS INDENIZATÓRIAS."""
     return TiposDocumento.objects.filter(
-        is_active=True,
-        tipo_de_pagamento__tipo_de_pagamento__iexact="VERBAS INDENIZATÓRIAS",
+        ativo=True,
+        tipo_pagamento__tipo_pagamento__iexact="VERBAS INDENIZATÓRIAS",
     )
 
 

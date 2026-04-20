@@ -30,7 +30,7 @@ def lancamento_bancario(request):
         Processo.objects.filter(id__in=ids)
         .select_related("forma_pagamento", "tipo_pagamento", "conta", "credor__conta", "status")
         .prefetch_related("documentos")
-        .order_by("forma_pagamento__forma_de_pagamento", "id")
+        .order_by("forma_pagamento__forma_pagamento", "id")
     )
 
     a_pagar_qs = processos_qs.filter(status=status_autorizado) if status_autorizado else processos_qs.none()

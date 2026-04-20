@@ -27,7 +27,7 @@ def get_detalhes_pagamento(processo):
     forma_pagamento, conta e credor e devolve um dicionário pronto
     para serialização em JSON.
     """
-    forma = processo.forma_pagamento.forma_de_pagamento.lower() if processo.forma_pagamento else ""
+    forma = processo.forma_pagamento.forma_pagamento.lower() if processo.forma_pagamento else ""
     detalhe_tipo = "Não Especificado"
     detalhe_valor = "Verifique o processo"
     codigos_barras = None
