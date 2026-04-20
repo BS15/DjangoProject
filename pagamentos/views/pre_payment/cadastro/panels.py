@@ -157,7 +157,7 @@ def editar_processo_documentos_view(request, pk):
         {
             "processo": processo,
             "documento_formset": DocumentoFormSet(instance=processo, prefix="documento"),
-            "tipos_documento": TiposDeDocumento.objects.filter(is_active=True),
+            "tipos_documento": TiposDeDocumento.objects.filter(ativo=True),
             "entity_label": f"Processo {processo.id}",
             "pode_interagir": True,  # Users can always interact with docs; guards live at action level
             "status_inicial": status_inicial,
