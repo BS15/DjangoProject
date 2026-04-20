@@ -100,9 +100,9 @@ class DocumentoFormsetManager {
   addDocument({ file = null } = {}) {
     const container = $(this.containerSelector);
     const emptyForm = $(this.emptyFormSelector);
-    const totalForms = Number.parseInt($(this.managementForm).val(), 10);
+    const totalForms = parseInt($(this.managementForm).val(), 10);
 
-    if (!emptyForm.length || Number.isNaN(totalForms)) {
+    if (!emptyForm.length || isNaN(totalForms)) {
       return;
     }
 
