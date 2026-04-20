@@ -19,10 +19,13 @@ class DocumentoPreviewWidget {
   }
 
   bindEvents() {
-    document.querySelectorAll(`.doc-preview-btn[data-doc-prefix="${this.prefix}"]`).forEach((btn) => {
-      btn.addEventListener("click", () => {
-        this.preview(btn.dataset.docUrl || "", btn.dataset.docName || "", btn);
-      });
+    document.addEventListener("click", (event) => {
+      const btn = event.target.closest(`.doc-preview-btn[data-doc-prefix="${this.prefix}"]`);
+      if (!btn) {
+        return;
+      }
+      event.preventDefault();
+      this.preview(btn.dataset.docUrl || "", btn.dataset.docName || "", btn);
     });
   }
 
@@ -38,7 +41,8 @@ class DocumentoPreviewWidget {
       return;
     }
 
-    const ext = (name.split(".").pop() || "").toLowerCase();
+    const sourceName = name || url;
+    const ext = (sourceName.split(".").pop() || "").toLowerCase();
 
     document.querySelectorAll(`.doc-preview-btn[data-doc-prefix="${this.prefix}"]`).forEach((btn) => {
       btn.classList.remove("btn-primary", "text-white");

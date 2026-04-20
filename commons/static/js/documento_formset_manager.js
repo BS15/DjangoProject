@@ -38,10 +38,13 @@ class DocumentoFormsetManager {
   }
 
   attachEventHandlers() {
-    $(this.addBtnSelector).on('click', (e) => {
-      e.preventDefault();
-      this.addDocument();
-    });
+    const addBtn = $(this.addBtnSelector);
+    if (addBtn.length) {
+      addBtn.on('click', (e) => {
+        e.preventDefault();
+        this.addDocument();
+      });
+    }
 
     $(this.containerSelector).on('click', '.remove-doc-btn', (e) => {
       e.preventDefault();
@@ -186,6 +189,10 @@ class DocumentoFormsetManager {
         return;
       }
       this.draggedRow = e.currentTarget;
+      if (e.originalEvent?.dataTransfer) {
+        e.originalEvent.dataTransfer.effectAllowed = 'move';
+        e.originalEvent.dataTransfer.setData('text/plain', this.draggedRow.dataset.docId || '');
+      }
       $(this.draggedRow).addClass('opacity-50');
     });
 
