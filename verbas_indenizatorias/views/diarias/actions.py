@@ -12,8 +12,8 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.dateparse import parse_date
 from decimal import Decimal, InvalidOperation
 
-from pagamentos.domain_models import Processo, STATUS_PROCESSO_PRE_AUTORIZACAO
-from verbas_indenizatorias.forms import ComprovacaoDiariaFormSet, DiariaForm
+from pagamentos.domain_models import Processo
+from verbas_indenizatorias.forms import ComprovanteDiariaFormSet, DiariaForm
 from verbas_indenizatorias.models import ApostilaDiaria, DevolucaoDiaria, Diaria, PrestacaoContasDiaria
 from verbas_indenizatorias.services.documentos import (
     gerar_e_anexar_pcd_diaria,
@@ -22,10 +22,11 @@ from verbas_indenizatorias.services.documentos import (
 from verbas_indenizatorias.services.prestacao import aceitar_prestacao, encerrar_prestacao, obter_ou_criar_prestacao
 from verbas_indenizatorias.services.vinculos_diaria import (
     desvincular_diaria_do_processo,
+    processo_em_pre_autorizacao,
     vincular_diaria_em_processo_existente,
 )
 from ..shared.documents import _validar_upload_documento
-from .access import _pode_acessar_prestacao
+from .access import _pode_acessar_prestacao, _pode_gerenciar_vinculo_diaria
 from commons.shared.integracoes.autentique import enviar_documento_para_assinatura
 
 
@@ -70,14 +71,6 @@ def _set_status_case_insensitive(diaria, status_str):
     diaria.save(update_fields=['status'])
 
 
-def _pode_gerir_vinculo_diaria(user):
-    return user.has_perm("pagamentos.pode_operar_contas_pagar") or user.has_perm("pagamentos.acesso_backoffice")
-
-
-def _status_pre_autorizacao_set():
-    return {status.value for status in STATUS_PROCESSO_PRE_AUTORIZACAO}
-
-
 @require_POST
 @permission_required('verbas_indenizatorias.pode_criar_diarias', raise_exception=True)
 def add_diaria_action(request):
@@ -109,7 +102,7 @@ def registrar_comprovante_action(request, pk):
             messages.error(request, 'A prestação de contas desta diária já foi encerrada.')
             return _redirect_com_next(request, 'gerenciar_prestacao', pk=diaria.id)
 
-        comprovante_formset = ComprovacaoDiariaFormSet(
+        comprovante_formset = ComprovanteDiariaFormSet(
             request.POST,
             request.FILES,
             instance=prestacao,
@@ -120,25 +113,20 @@ def registrar_comprovante_action(request, pk):
             messages.error(request, 'Verifique os erros nos comprovantes.')
             return _redirect_com_next(request, 'gerenciar_prestacao', pk=diaria.id)
 
-        for form in comprovante_formset.forms:
-            if not form.cleaned_data:
-                continue
-            if form.cleaned_data.get('DELETE'):
-                continue
-            arquivo = form.cleaned_data.get('arquivo')
-            tipo_id = form.cleaned_data.get('tipo').id if form.cleaned_data.get('tipo') else None
-            if arquivo:
-                erro = _validar_upload_documento(arquivo, tipo_id, obrigatorio=True)
-                if erro:
-                    messages.error(request, erro)
-                    return _redirect_com_next(request, 'gerenciar_prestacao', pk=diaria.id)
-
         try:
             for form in comprovante_formset.forms:
-                if not form.cleaned_data:
+                cleaned_data = form.cleaned_data or {}
+                if cleaned_data.get('DELETE'):
                     continue
-                if form.cleaned_data.get('DELETE'):
+                if not cleaned_data:
                     continue
+                arquivo = cleaned_data.get('arquivo')
+                tipo_id = cleaned_data.get('tipo').id if cleaned_data.get('tipo') else None
+                if arquivo:
+                    erro = _validar_upload_documento(arquivo, tipo_id, obrigatorio=True)
+                    if erro:
+                        messages.error(request, erro)
+                        return _redirect_com_next(request, 'gerenciar_prestacao', pk=diaria.id)
                 is_existing = bool(form.instance.pk)
                 if form.has_changed() or not is_existing:
                     instance = form.save(commit=False)
@@ -173,7 +161,7 @@ def encerrar_prestacao_action(request, pk):
 
 @require_POST
 def vincular_diaria_processo_action(request, pk):
-    if not _pode_gerir_vinculo_diaria(request.user):
+    if not _pode_gerenciar_vinculo_diaria(request.user):
         return HttpResponseForbidden("Acesso negado para vinculação de diárias.")
 
     processo_id = request.POST.get('processo_id')
@@ -184,7 +172,7 @@ def vincular_diaria_processo_action(request, pk):
     with transaction.atomic():
         diaria = get_object_or_404(Diaria.objects.select_for_update().select_related('processo__status'), id=pk)
         processo = get_object_or_404(Processo.objects.select_for_update().select_related('status'), id=processo_id)
-        if not processo.status or (processo.status.opcao_status or "").upper() not in _status_pre_autorizacao_set():
+        if not processo_em_pre_autorizacao(processo):
             messages.error(request, 'O processo selecionado já passou da etapa de autorização.')
             return redirect('gerenciar_diaria', pk=pk)
         try:
@@ -204,7 +192,7 @@ def vincular_diaria_processo_action(request, pk):
 
 @require_POST
 def desvincular_diaria_processo_action(request, pk):
-    if not _pode_gerir_vinculo_diaria(request.user):
+    if not _pode_gerenciar_vinculo_diaria(request.user):
         return HttpResponseForbidden("Acesso negado para desvinculação de diárias.")
 
     with transaction.atomic():

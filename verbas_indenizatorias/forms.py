@@ -120,7 +120,7 @@ class AuxilioForm(forms.ModelForm):
         }
 
 
-ComprovacaoDiariaFormSet = inlineformset_factory(
+ComprovanteDiariaFormSet = inlineformset_factory(
     PrestacaoContasDiaria,
     DocumentoComprovacao,
     fields=['tipo', 'ordem', 'arquivo'],

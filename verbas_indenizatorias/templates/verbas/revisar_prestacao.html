@@ -1,10 +1,10 @@
-{% extends "base.html" %}
+{% extends "layouts/base_review.html" %}
 
-{% block page_title %}Revisão — Prestação #{{ prestacao.id }}{% endblock %}
+{% block title %}Revisão — Prestação #{{ prestacao.id }}{% endblock %}
 
-{% block content %}
-<div class="container mt-4 mb-5">
-    <div class="card shadow-sm border-0 mb-4">
+{% block review_topbar %}
+<div class="container-fluid px-3 pt-3">
+    <div class="card shadow-sm border-0">
         <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center">
             <div>
                 <h4 class="mb-0 fw-bold"><i class="bi bi-clipboard2-check text-primary me-2"></i> Revisão da Prestação #{{ prestacao.id }}</h4>
@@ -15,64 +15,68 @@
             <span class="badge {% if prestacao.status == 'ENCERRADA' %}bg-success{% else %}bg-warning text-dark{% endif %} fs-6">{{ prestacao.status }}</span>
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white border-bottom py-3">
-            <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-file-text"></i> Dados da Diária</h6>
-        </div>
-        <div class="card-body">
-            <dl class="row mb-0">
-                <dt class="col-sm-3">Destino</dt><dd class="col-sm-9">{{ diaria.cidade_destino }}</dd>
-                <dt class="col-sm-3">Período</dt><dd class="col-sm-9">{{ diaria.data_saida|date:"d/m/Y" }} a {{ diaria.data_retorno|date:"d/m/Y" }}</dd>
-                <dt class="col-sm-3">Objetivo</dt><dd class="col-sm-9">{{ diaria.objetivo }}</dd>
-                <dt class="col-sm-3">Processo vinculado</dt>
-                <dd class="col-sm-9">
-                    {% if processo_vinculado %}#{{ processo_vinculado.id }}{% else %}<span class="text-danger">Não vinculado</span>{% endif %}
-                </dd>
-            </dl>
-        </div>
+{% block document_viewer %}
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white border-bottom py-3">
+        <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-paperclip"></i> Comprovantes</h6>
     </div>
+    <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+            {% for doc in comprovantes %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="bi bi-file-earmark-pdf text-danger"></i>
+                    <a href="{% url 'download_arquivo_seguro' 'verba_diaria_comprov' doc.id %}" target="_blank" class="text-decoration-none">
+                        {{ doc.arquivo.name }}
+                    </a>
+                    <br><small class="text-muted">Tipo: {{ doc.tipo }}</small>
+                </div>
+            </li>
+            {% empty %}
+            <li class="list-group-item text-center text-muted">Nenhum comprovante anexado.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
 
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white border-bottom py-3">
-            <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-paperclip"></i> Comprovantes</h6>
-        </div>
-        <div class="card-body p-0">
-            <ul class="list-group list-group-flush">
-                {% for doc in comprovantes %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                        <i class="bi bi-file-earmark-pdf text-danger"></i>
-                        <a href="{% url 'download_arquivo_seguro' 'verba_diaria_comprov' doc.id %}" target="_blank" class="text-decoration-none">
-                            {{ doc.arquivo.name }}
-                        </a>
-                        <br><small class="text-muted">Tipo: {{ doc.tipo }}</small>
-                    </div>
-                </li>
-                {% empty %}
-                <li class="list-group-item text-center text-muted">Nenhum comprovante anexado.</li>
-                {% endfor %}
-            </ul>
-        </div>
+{% block review_panel %}
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white border-bottom py-3">
+        <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-file-text"></i> Dados da Diária</h6>
     </div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-4">Destino</dt><dd class="col-sm-8">{{ diaria.cidade_destino }}</dd>
+            <dt class="col-sm-4">Período</dt><dd class="col-sm-8">{{ diaria.data_saida|date:"d/m/Y" }} a {{ diaria.data_retorno|date:"d/m/Y" }}</dd>
+            <dt class="col-sm-4">Objetivo</dt><dd class="col-sm-8">{{ diaria.objetivo }}</dd>
+            <dt class="col-sm-4">Processo</dt>
+            <dd class="col-sm-8">{% if processo_vinculado %}#{{ processo_vinculado.id }}{% else %}<span class="text-danger">Não vinculado</span>{% endif %}</dd>
+        </dl>
+    </div>
+</div>
+{% endblock %}
 
-    <div class="d-flex gap-2">
-        <a href="{% url 'painel_revisar_prestacoes' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Voltar</a>
-        {% if pode_aceitar %}
-        <form method="post" action="{% url 'aceitar_prestacao_action' prestacao.id %}" onsubmit="return confirm('Aceitar prestação e anexar comprovantes ao processo?');">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-success fw-bold">
-                <i class="bi bi-check-circle"></i> Aceitar Prestação
-            </button>
-        </form>
-        <form method="post" action="{% url 'encerrar_prestacao_action' diaria.id %}" onsubmit="return confirm('Encerrar sem aceitar anexação ao processo?');">
-            {% csrf_token %}
-            <input type="hidden" name="next" value="{{ request.get_full_path }}">
-            <button type="submit" class="btn btn-outline-danger fw-bold">
-                <i class="bi bi-lock"></i> Encerrar sem Aceitar
-            </button>
-        </form>
-        {% endif %}
-    </div>
+{% block queue_navigation %}
+<div class="container-fluid px-3 d-flex gap-2">
+    <a href="{% url 'painel_revisar_prestacoes' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Voltar</a>
+    {% if pode_aceitar %}
+    <form method="post" action="{% url 'aceitar_prestacao_action' prestacao.id %}" onsubmit="return confirm('Aceitar prestação e anexar comprovantes ao processo?');">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success fw-bold">
+            <i class="bi bi-check-circle"></i> Aceitar Prestação
+        </button>
+    </form>
+    <form method="post" action="{% url 'encerrar_prestacao_action' diaria.id %}" onsubmit="return confirm('Encerrar sem aceitar anexação ao processo?');">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button type="submit" class="btn btn-outline-danger fw-bold">
+            <i class="bi bi-lock"></i> Encerrar sem Aceitar
+        </button>
+    </form>
+    {% endif %}
 </div>
 {% endblock %}
