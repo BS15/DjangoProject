@@ -27,7 +27,7 @@ def _get_next_url(request, *, allow_referer=False):
 
 def _get_status_inicial(processo):
     """Normaliza o status textual do processo para uso nas guards da UI."""
-    return processo.status.status_choice.upper() if processo.status else ""
+    return processo.status.opcao_status.upper() if processo.status else ""
 
 
 def _obter_contexto_edicao(request, pk):
@@ -49,7 +49,7 @@ def _montar_contexto_hub(processo, status_inicial, somente_documentos):
         "total_notas": processo.notas_fiscais.count(),
         "notas_nao_atestadas": processo.notas_fiscais.filter(atestada=False).count(),
         "total_pendencias": processo.pendencias.count(),
-        "pendencias_abertas": processo.pendencias.filter(status__status_choice__iexact="A RESOLVER").count(),
+        "pendencias_abertas": processo.pendencias.filter(status__opcao_status__iexact="A RESOLVER").count(),
     }
 
 

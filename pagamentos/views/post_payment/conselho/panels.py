@@ -15,7 +15,7 @@ def painel_conselho_view(request):
         status__in=[ReuniaoConselhoStatus.AGENDADA, ReuniaoConselhoStatus.EM_ANALISE]
     ).order_by("-numero")
     processos_sem_reuniao = Processo.objects.filter(
-        status__status_choice__iexact=ProcessoStatus.CONTABILIZADO_CONSELHO,
+        status__opcao_status__iexact=ProcessoStatus.CONTABILIZADO_CONSELHO,
         reuniao_conselho__isnull=True,
     ).order_by("data_pagamento")
     context = {

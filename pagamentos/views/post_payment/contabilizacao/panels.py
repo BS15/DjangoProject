@@ -12,7 +12,7 @@ from pagamentos.domain_models import Processo, ProcessoStatus
 @permission_required("pagamentos.pode_contabilizar", raise_exception=True)
 def painel_contabilizacao_view(request):
     """Exibe o painel de processos prontos para contabilizacao."""
-    processos = Processo.objects.filter(status__status_choice__iexact=ProcessoStatus.PAGO_A_CONTABILIZAR).order_by("data_pagamento")
+    processos = Processo.objects.filter(status__opcao_status__iexact=ProcessoStatus.PAGO_A_CONTABILIZAR).order_by("data_pagamento")
     context = {
         "processos": processos,
         "pendencia_form": PendenciaForm(),

@@ -1,6 +1,7 @@
 from django.urls import path
 
 from credores import imports as credores_import_views
+from desenvolvedor import views_desenvolvedor as dev_views
 from pagamentos.views.support import reports as relatorio_views
 from pagamentos.views.support import signatures as assinatura_views
 from pagamentos.views.support.contas_fixas import imports as conta_fixa_imports
@@ -42,6 +43,7 @@ urlpatterns = [
     path('contas-fixas/<int:fatura_id>/vincular/', conta_actions.vincular_processo_fatura_action, name='vincular_processo_fatura'),
     path('relatorios/', relatorio_views.painel_relatorios_view, name='painel_relatorios'),
     path('relatorios/documentos-gerados/', relatorio_views.relatorio_documentos_gerados_view, name='relatorio_documentos_gerados'),
+    path('dados-fake/', dev_views.gerar_dados_fake_view, name='gerar_dados_fake'),
     path('assinaturas/', assinatura_views.painel_assinaturas_view, name='painel_assinaturas'),
     path('assinaturas/disparar/<int:assinatura_id>/', assinatura_views.disparar_assinatura_view, name='disparar_assinatura'),
 ]

@@ -16,7 +16,7 @@ from pagamentos.views.helpers import _aplicar_filtro_por_opcao
 def painel_conferencia_view(request):
     """Exibe o painel de conferencia de processos pagos."""
     processos_pagos = (
-        Processo.objects.filter(status__status_choice__iexact=ProcessoStatus.PAGO_EM_CONFERENCIA)
+        Processo.objects.filter(status__opcao_status__iexact=ProcessoStatus.PAGO_EM_CONFERENCIA)
         .annotate(
             tem_pendencia=Exists(Contingencia.objects.filter(processo=OuterRef("pk"))),
             tem_retencao=Exists(

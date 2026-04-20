@@ -27,10 +27,10 @@ def _gerar_agrupamentos_contas_a_pagar(queryset):
     return {
         "datas_agrupadas": queryset.values("data_pagamento").annotate(total=Count("id")).order_by("data_pagamento"),
         "formas_agrupadas": queryset.values(
-            "forma_pagamento__id", "forma_pagamento__forma_de_pagamento"
-        ).annotate(total=Count("id")).order_by("forma_pagamento__forma_de_pagamento"),
-        "statuses_agrupados": queryset.values("status__status_choice").annotate(total=Count("id")).order_by(
-            "status__status_choice"
+            "forma_pagamento__id", "forma_pagamento__forma_pagamento"
+        ).annotate(total=Count("id")).order_by("forma_pagamento__forma_pagamento"),
+        "statuses_agrupados": queryset.values("status__opcao_status").annotate(total=Count("id")).order_by(
+            "status__opcao_status"
         ),
         "contas_agrupadas": queryset.values(
             "conta__id",
@@ -52,7 +52,7 @@ def _aplicar_filtros_contas_a_pagar(queryset, params):
     conta = params.get("conta")
 
     if status:
-        qs = qs.filter(status__status_choice=status)
+        qs = qs.filter(status__opcao_status=status)
 
     if data:
         qs = qs.filter(data_pagamento__isnull=True) if data == "sem_data" else qs.filter(data_pagamento=data)
@@ -82,9 +82,9 @@ def _build_detalhes_pagamento(processos):
     detalhes = []
     totais = {}
     for p in processos:
-        forma = p.forma_pagamento.forma_de_pagamento.lower() if p.forma_pagamento else ""
-        forma_nome = p.forma_pagamento.forma_de_pagamento if p.forma_pagamento else "N/A"
-        tipo = p.tipo_pagamento.tipo_de_pagamento.upper() if p.tipo_pagamento else ""
+        forma = p.forma_pagamento.forma_pagamento.lower() if p.forma_pagamento else ""
+        forma_nome = p.forma_pagamento.forma_pagamento if p.forma_pagamento else "N/A"
+        tipo = p.tipo_pagamento.tipo_pagamento.upper() if p.tipo_pagamento else ""
 
         if tipo == "GERENCIADOR/BOLETO BANCÁRIO" or "boleto" in forma or "gerenciador" in forma:
             estatisticas_boletos = _obter_estatisticas_boletos(p)
@@ -183,7 +183,7 @@ def _processar_acao_lote(
 
     elegiveis = Processo.objects.filter(
         id__in=selecionados,
-        status__status_choice__iexact=status_origem_esperado,
+        status__opcao_status__iexact=status_origem_esperado,
     )
     count_elegiveis = elegiveis.count()
     count_ignorados = len(selecionados) - count_elegiveis
