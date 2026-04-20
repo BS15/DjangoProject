@@ -49,9 +49,8 @@ def _aplicar_contingencia_diaria(contingencia):
     if campo not in _CAMPOS_PERMITIDOS_CONTINGENCIA_DIARIA:
         return False, f"Campo '{campo}' não está na lista de campos permitidos."
 
-    if not hasattr(diaria, campo.rstrip("_id")):
-        if not hasattr(diaria, campo):
-            return False, f"A diária não possui o campo '{campo}'."
+    if not hasattr(diaria, campo):
+        return False, f"A diária não possui o atributo '{campo}'."
 
     with transaction.atomic():
         setattr(diaria, campo, valor)
