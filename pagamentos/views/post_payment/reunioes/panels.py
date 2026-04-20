@@ -28,7 +28,7 @@ def montar_pauta_reuniao_view(request, reuniao_id):
 
     processos_na_pauta = reuniao.processos_em_pauta.all().order_by("data_pagamento")
     processos_elegiveis = Processo.objects.filter(
-        status__status_choice__iexact=ProcessoStatus.CONTABILIZADO_CONSELHO,
+        status__opcao_status__iexact=ProcessoStatus.CONTABILIZADO_CONSELHO,
         reuniao_conselho__isnull=True,
     ).order_by("data_pagamento")
 

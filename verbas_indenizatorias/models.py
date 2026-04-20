@@ -279,7 +279,7 @@ class Diaria(models.Model):
 
         status_processo = ""
         if self.processo and self.processo.status:
-            status_processo = (self.processo.status.status_choice or "").upper()
+            status_processo = (self.processo.status.opcao_status or "").upper()
         processo_pago = status_processo.startswith("PAGO")
 
         if alterados and set(alterados).issubset(self._CAMPOS_RETIFICACAO_OFICIO) and not processo_pago:

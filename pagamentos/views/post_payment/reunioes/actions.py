@@ -86,7 +86,7 @@ def iniciar_conselho_reuniao_action(request: HttpRequest, reuniao_id: int) -> Ht
         Processo.objects.filter(
             id__in=process_ids,
             reuniao_conselho_id=reuniao_id,
-            status__status_choice__iexact=ProcessoStatus.CONTABILIZADO_CONSELHO,
+            status__opcao_status__iexact=ProcessoStatus.CONTABILIZADO_CONSELHO,
         ).values_list("id", flat=True)
     )
     fila = [pid for pid in process_ids if pid in processos_validos]

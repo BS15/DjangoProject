@@ -51,7 +51,7 @@ def avancar_para_pagamento_action(request: HttpRequest, pk: int) -> HttpResponse
     try:
         with transaction.atomic():
             processo = Processo.objects.select_for_update().select_related("status").get(id=pk)
-            status_atual = processo.status.status_choice.upper() if processo.status else ""
+            status_atual = processo.status.opcao_status.upper() if processo.status else ""
 
             if status_atual != ProcessoStatus.AGUARDANDO_LIQUIDACAO:
                 messages.error(

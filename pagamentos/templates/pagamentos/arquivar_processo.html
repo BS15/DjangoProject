@@ -1,1 +1,61 @@
-{% comment %}Template namespace migrated to pagamentos.{% endcomment %}
+{% extends "layouts/base_detail.html" %}
+
+{% block page_title %}Arquivamento — Processo #{{ processo.id }}{% endblock %}
+
+{% block detail_breadcrumb %}
+<nav aria-label="breadcrumb">
+	<ol class="breadcrumb small">
+		<li class="breadcrumb-item"><a href="{% url 'painel_arquivamento' %}">Arquivamento</a></li>
+		<li class="breadcrumb-item active">Processo #{{ processo.id }}</li>
+	</ol>
+</nav>
+{% endblock %}
+
+{% block detail_header %}
+<div class="d-flex justify-content-between align-items-center">
+	<div>
+		<h4 class="mb-0 fw-bold"><i class="bi bi-archive text-secondary me-2"></i> Arquivamento — Processo #{{ processo.id }}</h4>
+		<p class="text-muted mb-0">{{ processo.credor|default:"-" }} &mdash; R$ {{ processo.valor_liquido|default:"0,00" }}</p>
+	</div>
+	<span class="badge {% if elegivel_para_arquivamento %}bg-warning text-dark{% else %}bg-secondary{% endif %} fs-6">
+		{{ processo.status.opcao_status|default:"—" }}
+	</span>
+</div>
+{% endblock %}
+
+{% block detail_body %}
+<div class="card shadow-sm border-0 mb-4">
+	<div class="card-header bg-white border-bottom py-3">
+		<h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-file-text"></i> Dados para Arquivamento</h6>
+	</div>
+	<div class="card-body">
+		<dl class="row mb-0">
+			<dt class="col-sm-3">Credor</dt><dd class="col-sm-9">{{ processo.credor|default:"-" }}</dd>
+			<dt class="col-sm-3">Empenho</dt><dd class="col-sm-9">{{ processo.n_nota_empenho|default:"-" }}</dd>
+			<dt class="col-sm-3">Data Pagamento</dt><dd class="col-sm-9">{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</dd>
+			<dt class="col-sm-3">Valor Líquido</dt><dd class="col-sm-9"><strong>R$ {{ processo.valor_liquido|default:"0,00" }}</strong></dd>
+			<dt class="col-sm-3">Documentos</dt><dd class="col-sm-9">{{ processo.documentos.count }} arquivo(s)</dd>
+		</dl>
+	</div>
+</div>
+
+{% if not elegivel_para_arquivamento %}
+<div class="alert alert-danger">
+	<i class="bi bi-x-circle-fill"></i> Este processo não está no status correto para arquivamento.
+</div>
+{% endif %}
+{% endblock %}
+
+{% block detail_actions %}
+{% if elegivel_para_arquivamento and pode_interagir %}
+<form method="post" action="{% url 'arquivar_processo_action' pk=processo.id %}">
+	{% csrf_token %}
+	<button type="submit" class="btn btn-danger fw-bold" onclick="return confirm('Confirma o arquivamento definitivo do Processo #{{ processo.id }}?')">
+		<i class="bi bi-archive-fill"></i> Arquivar Definitivamente
+	</button>
+</form>
+{% endif %}
+<a href="{% url 'painel_arquivamento' %}" class="btn btn-outline-secondary">
+	<i class="bi bi-arrow-left"></i> Voltar
+</a>
+{% endblock %}

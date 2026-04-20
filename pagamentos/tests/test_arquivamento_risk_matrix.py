@@ -6,6 +6,8 @@ from pagamentos.domain_models import ProcessoStatus
 from pagamentos.views.helpers.archival import _executar_arquivamento_definitivo
 from pagamentos.views.helpers.errors import ArquivamentoDefinitivoError, ArquivamentoSemDocumentosError
 
+_STATUS_FIELD = "opcao_status"
+
 
 class _BufferComFalhaLeitura:
     def read(self):
@@ -32,7 +34,7 @@ def test_arquivamento_aborta_quando_consolidado_tem_zero_bytes(monkeypatch, proc
 
     processo.refresh_from_db()
     assert not processo.arquivo_final
-    assert processo.status.status_choice == ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO
+    assert processo.status.opcao_status == ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO
 
 
 @pytest.mark.django_db(transaction=True)
@@ -48,7 +50,7 @@ def test_arquivamento_aborta_em_falha_de_leitura_cloud(monkeypatch, processo_fac
 
     processo.refresh_from_db()
     assert not processo.arquivo_final
-    assert processo.status.status_choice == ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO
+    assert processo.status.opcao_status == ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO
 
 
 @pytest.mark.django_db(transaction=True)
@@ -74,4 +76,4 @@ def test_arquivamento_rollback_mid_flight_ao_falhar_avanco_de_status(
 
     processo.refresh_from_db()
     assert not processo.arquivo_final
-    assert processo.status.status_choice == ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO
+    assert processo.status.opcao_status == ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO

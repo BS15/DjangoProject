@@ -27,7 +27,7 @@ def _registrar_recusa(request, processo, form, status_devolucao):
         pendencia = form.save(commit=False)
         pendencia.processo = processo_lock
         status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
-            status_choice__iexact="A RESOLVER", defaults={"status_choice": "A RESOLVER"}
+            opcao_status__iexact="A RESOLVER", defaults={"opcao_status": "A RESOLVER"}
         )
         pendencia.status = status_pendencia
         pendencia.save()
