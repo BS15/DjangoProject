@@ -14,6 +14,9 @@ from ..helpers import _build_payload_documentos_processo_auditoria, _build_paylo
 @xframe_options_sameorigin
 def api_documentos_processo(request, processo_id):
     """Retorna documentos e metadados correlatos de um processo para auditoria."""
+    if not request.user.is_authenticated:
+        raise PermissionDenied
+
     if not (
         request.user.has_perm("pagamentos.pode_auditar_conselho")
         or request.user.has_perm("pagamentos.acesso_backoffice")
@@ -28,6 +31,9 @@ def api_documentos_processo(request, processo_id):
 @require_GET
 def api_processo_detalhes(request):
     """Retorna detalhes de um processo por ``id`` informado via query string."""
+    if not request.user.is_authenticated:
+        raise PermissionDenied
+
     if not (
         request.user.has_perm("pagamentos.pode_auditar_conselho")
         or request.user.has_perm("pagamentos.acesso_backoffice")
