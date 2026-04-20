@@ -9,6 +9,8 @@
 ───────────────────────────────────────────────────────────────────────────── */
 
 class DocumentoFormsetManager {
+  static DRAG_MIDPOINT_DIVISOR = 2;
+
   constructor(prefix) {
     this.prefix = prefix;
     this.containerSelector = `#document-list-${prefix}`;
@@ -98,7 +100,7 @@ class DocumentoFormsetManager {
   addDocument({ file = null } = {}) {
     const container = $(this.containerSelector);
     const emptyForm = $(this.emptyFormSelector);
-    const totalForms = parseInt($(this.managementForm).val(), 10);
+    const totalForms = Number.parseInt($(this.managementForm).val(), 10);
 
     if (!emptyForm.length || Number.isNaN(totalForms)) {
       return;
@@ -125,9 +127,13 @@ class DocumentoFormsetManager {
     if (file) {
       const fileInput = newForm.find(`input[type="file"][name="${this.prefix}-${totalForms}-arquivo"]`);
       if (fileInput.length && typeof DataTransfer !== 'undefined') {
-        const dt = new DataTransfer();
-        dt.items.add(file);
-        fileInput[0].files = dt.files;
+        try {
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          fileInput[0].files = dt.files;
+        } catch (error) {
+          console.warn('Não foi possível vincular automaticamente o arquivo ao formulário.', error);
+        }
       }
     }
     this.makeFormsetDraggable();
@@ -198,7 +204,8 @@ class DocumentoFormsetManager {
       }
       const target = e.currentTarget;
       const targetRect = target.getBoundingClientRect();
-      const shouldInsertAfter = e.originalEvent.clientY > targetRect.top + targetRect.height / 2;
+      const halfHeight = targetRect.height / DocumentoFormsetManager.DRAG_MIDPOINT_DIVISOR;
+      const shouldInsertAfter = e.originalEvent.clientY > targetRect.top + halfHeight;
 
       if (shouldInsertAfter) {
         target.parentNode.insertBefore(this.draggedRow, target.nextSibling);
