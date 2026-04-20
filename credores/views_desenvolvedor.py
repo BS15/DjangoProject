@@ -49,13 +49,16 @@ def _ensure_fake_lookup_tables():
         "ARQUIVADO",
         "CANCELADO / ANULADO",
     ]:
-        StatusChoicesProcesso.objects.get_or_create(status_choice=s)
+        StatusChoicesProcesso.objects.get_or_create(
+            opcao_status__iexact=s,
+            defaults={"opcao_status": s},
+        )
 
     for t in ["Serviços", "Material", "Contrato", "Diárias"]:
-        TagChoices.objects.get_or_create(tag_choice=t)
+        TagChoices.objects.get_or_create(opcao_etiqueta=t)
 
     for f in ["PIX", "TRANSFERÊNCIA (TED)", "REMESSA BANCÁRIA"]:
-        FormasDePagamento.objects.get_or_create(forma_de_pagamento=f)
+        FormasDePagamento.objects.get_or_create(forma_pagamento=f)
 
     for t in ["CONTAS FIXAS", "VERBAS INDENIZATÓRIAS", "IMPOSTOS"]:
         TiposDePagamento.objects.get_or_create(tipo_de_pagamento=t)

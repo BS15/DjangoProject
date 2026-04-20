@@ -1,1 +1,95 @@
-{% comment %}Template namespace migrated to pagamentos.{% endcomment %}
+{% extends "base.html" %}
+
+{% block page_title %}Montar Pauta — Reunião #{{ reuniao.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+	<div class="d-flex justify-content-between align-items-center mb-4">
+		<div>
+			<h3 class="mb-0 fw-bold"><i class="bi bi-list-check text-primary me-2"></i> Pauta — Reunião #{{ reuniao.id }}</h3>
+			<p class="text-muted mb-0">{{ reuniao.data|date:"d/m/Y" }} &mdash; {{ reuniao.descricao|default:"Sem descrição" }}</p>
+		</div>
+		<a href="{% url 'gerenciar_reunioes' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+	</div>
+
+	{# Processos já na pauta #}
+	<div class="card shadow-sm border-0 mb-4">
+		<div class="card-header bg-white border-bottom py-3">
+			<h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-check2-circle text-success"></i> Processos na Pauta ({{ processos_na_pauta|length }})</h6>
+		</div>
+		<div class="card-body p-0">
+			<table class="table table-hover align-middle mb-0">
+				<thead class="table-dark">
+					<tr><th>#</th><th>Credor</th><th>Valor Líquido</th><th>Status</th><th class="text-center">Remover</th></tr>
+				</thead>
+				<tbody>
+					{% for processo in processos_na_pauta %}
+					<tr>
+						<td class="fw-bold text-muted">#{{ processo.id }}</td>
+						<td>{{ processo.credor|default:"-" }}</td>
+						<td>R$ {{ processo.valor_liquido|default:"0,00" }}</td>
+						<td><span class="badge bg-primary">{{ processo.status.opcao_status|default:"-" }}</span></td>
+						<td class="text-center">
+							{% if pode_interagir %}
+							<form method="post" action="{% url 'remover_da_pauta_action' reuniao_id=reuniao.id processo_id=processo.id %}">
+								{% csrf_token %}
+								<button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i></button>
+							</form>
+							{% endif %}
+						</td>
+					</tr>
+					{% empty %}
+					<tr><td colspan="5" class="text-center py-3 text-muted">Nenhum processo na pauta ainda.</td></tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+	{# Processos elegíveis para adicionar #}
+	{% if pode_interagir %}
+	<div class="card shadow-sm border-0">
+		<div class="card-header bg-white border-bottom py-3">
+			<h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-plus-circle"></i> Adicionar à Pauta</h6>
+		</div>
+		<div class="card-body p-0">
+			<form method="post" action="{% url 'adicionar_a_pauta_action' reuniao_id=reuniao.id %}">
+				{% csrf_token %}
+				<table class="table table-hover align-middle mb-0">
+					<thead class="table-dark">
+						<tr><th><input type="checkbox" id="checkAll" class="form-check-input"></th><th>#</th><th>Credor</th><th>Valor Líquido</th></tr>
+					</thead>
+					<tbody>
+						{% for processo in processos_elegiveis %}
+						<tr>
+							<td><input type="checkbox" name="processo_ids" value="{{ processo.id }}" class="form-check-input item-check"></td>
+							<td class="fw-bold text-muted">#{{ processo.id }}</td>
+							<td>{{ processo.credor|default:"-" }}</td>
+							<td>R$ {{ processo.valor_liquido|default:"0,00" }}</td>
+						</tr>
+						{% empty %}
+						<tr><td colspan="4" class="text-center py-3 text-muted">Nenhum processo elegível disponível.</td></tr>
+						{% endfor %}
+					</tbody>
+				</table>
+				{% if processos_elegiveis %}
+				<div class="p-3">
+					<button type="submit" class="btn btn-primary fw-bold"><i class="bi bi-plus-lg"></i> Adicionar Selecionados</button>
+				</div>
+				{% endif %}
+			</form>
+		</div>
+	</div>
+	{% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.getElementById('checkAll')?.addEventListener('change', function() {
+	document.querySelectorAll('.item-check').forEach(cb => cb.checked = this.checked);
+});
+</script>
+{% endblock %}

@@ -1,1 +1,60 @@
-{% comment %}Template namespace migrated to pagamentos.{% endcomment %}
+{% extends "base.html" %}
+
+{% block page_title %}Sincronização SISCAC{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5" style="max-width: 800px;">
+	<div class="d-flex justify-content-between align-items-center mb-4">
+		<div>
+			<h3 class="mb-0 fw-bold"><i class="bi bi-arrow-repeat text-primary me-2"></i> Sincronização SISCAC</h3>
+			<p class="text-muted mb-0">Importação e atualização de dados orçamentários</p>
+		</div>
+		<a href="{% url 'home_page' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+	</div>
+
+	{% if messages %}
+	{% for message in messages %}
+	<div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+		{{ message }}
+		<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+	</div>
+	{% endfor %}
+	{% endif %}
+
+	<div class="row g-3">
+		<div class="col-md-6">
+			<div class="card shadow-sm border-0 h-100">
+				<div class="card-body text-center py-5">
+					<i class="bi bi-upload fs-1 text-primary mb-3 d-block"></i>
+					<h5 class="fw-bold">Sincronização Manual</h5>
+					<p class="text-muted small">Importa dados a partir de arquivo CSV</p>
+					<form method="post" action="{% url 'sincronizar_siscac_manual_action' %}" enctype="multipart/form-data">
+						{% csrf_token %}
+						<div class="mb-3">
+							<input type="file" name="arquivo_csv" accept=".csv" class="form-control" required>
+						</div>
+						<button type="submit" class="btn btn-primary fw-bold w-100">
+							<i class="bi bi-cloud-upload"></i> Importar CSV
+						</button>
+					</form>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-6">
+			<div class="card shadow-sm border-0 h-100">
+				<div class="card-body text-center py-5">
+					<i class="bi bi-cloud-download fs-1 text-success mb-3 d-block"></i>
+					<h5 class="fw-bold">Sincronização Automática</h5>
+					<p class="text-muted small">Busca dados diretamente da API SISCAC</p>
+					<form method="post" action="{% url 'sincronizar_siscac_auto_action' %}">
+						{% csrf_token %}
+						<button type="submit" class="btn btn-success fw-bold w-100">
+							<i class="bi bi-arrow-repeat"></i> Sincronizar Agora
+						</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

@@ -14,12 +14,12 @@ from pagamentos.views.shared import apply_filterset
 def painel_arquivamento_view(request):
     """Exibe painel de arquivamento com pendentes e historico arquivado."""
     processos_pendentes = Processo.objects.filter(
-        status__status_choice__iexact=ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO
+        status__opcao_status__iexact=ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO
     ).order_by(
         "data_pagamento"
     )
 
-    arquivados_qs = Processo.objects.filter(status__status_choice__iexact=ProcessoStatus.ARQUIVADO).order_by("-id")
+    arquivados_qs = Processo.objects.filter(status__opcao_status__iexact=ProcessoStatus.ARQUIVADO).order_by("-id")
 
     arquivamento_filtro = apply_filterset(request, ProcessoFilter, arquivados_qs)
     processos_arquivados = arquivamento_filtro.qs

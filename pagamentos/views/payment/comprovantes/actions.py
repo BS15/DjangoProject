@@ -33,7 +33,7 @@ def vincular_comprovantes_action(request):
             return JsonResponse({"sucesso": False, "erro": "Nenhum comprovante enviado."})
 
         processo = get_object_or_404(Processo, id=processo_id)
-        if not processo.status or processo.status.status_choice.upper() != ProcessoStatus.LANCADO_AGUARDANDO_COMPROVANTE:
+        if not processo.status or processo.status.opcao_status.upper() != ProcessoStatus.LANCADO_AGUARDANDO_COMPROVANTE:
             return JsonResponse(
                 {
                     "sucesso": False,

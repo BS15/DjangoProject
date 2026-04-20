@@ -68,7 +68,7 @@ def _status_bloqueia_gestao_fiscal(processo):
     if not processo.status:
         return False
 
-    status_atual = (processo.status.status_choice or "").upper()
+    status_atual = (processo.status.opcao_status or "").upper()
     return status_atual in {
         ProcessoStatus.PAGO_EM_CONFERENCIA,
         ProcessoStatus.PAGO_A_CONTABILIZAR,
@@ -81,8 +81,8 @@ def _status_bloqueia_gestao_fiscal(processo):
 def _atualizar_status_pendencia(pendencia: Pendencia, status_destino: str) -> None:
     """Atualiza o status da pendência com criação lazy do catálogo quando necessário."""
     status_obj, _ = StatusChoicesPendencias.objects.get_or_create(
-        status_choice__iexact=status_destino,
-        defaults={"status_choice": status_destino},
+        opcao_status__iexact=status_destino,
+        defaults={"opcao_status": status_destino},
     )
     pendencia.status = status_obj
     pendencia.save(update_fields=["status"])

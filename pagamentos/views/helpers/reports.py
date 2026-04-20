@@ -21,7 +21,7 @@ def gerar_csv_relatorio(queryset, tipo_relatorio):
 				p.credor.nome if p.credor else "",
 				p.valor_bruto,
 				p.valor_liquido,
-				p.status.status_choice if p.status else "",
+				p.status.opcao_status if p.status else "",
 				p.data_pagamento,
 			],
 		),

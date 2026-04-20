@@ -12,7 +12,7 @@ from pagamentos.domain_models import Processo, ProcessoStatus
 def arquivar_processo_view(request, pk):
     """Exibe a ficha de conferencia pre-arquivamento de um processo."""
     processo = get_object_or_404(Processo, id=pk)
-    status_atual = processo.status.status_choice if processo.status else ""
+    status_atual = processo.status.opcao_status if processo.status else ""
     elegivel = status_atual.upper() == ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO
 
     return render(

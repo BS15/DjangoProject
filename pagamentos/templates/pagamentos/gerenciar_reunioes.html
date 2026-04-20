@@ -1,1 +1,51 @@
-{% comment %}Template namespace migrated to pagamentos.{% endcomment %}
+{% extends "layouts/base_list.html" %}
+
+{% block page_title %}Gerenciar Reuniões do Conselho{% endblock %}
+{% block page_heading %}Reuniões do Conselho{% endblock %}
+{% block page_subtitle %}Programação e controle de pautas{% endblock %}
+
+{% block page_actions %}
+{% if pode_interagir %}
+<form method="post" action="{% url 'criar_reuniao_action' %}" class="d-inline">
+	{% csrf_token %}
+	<button type="submit" class="btn btn-success btn-sm fw-bold"><i class="bi bi-plus-lg"></i> Nova Reunião</button>
+</form>
+{% endif %}
+<a href="{% url 'home_page' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+{% endblock %}
+
+{% block filter_card %}{% endblock %}
+
+{% block table_headers %}
+<th>#</th>
+<th>Data</th>
+<th>Descrição</th>
+<th>Processos</th>
+<th>Status</th>
+<th class="text-center">Ações</th>
+{% endblock %}
+
+{% block table_rows %}
+{% for reuniao in reunioes %}
+<tr>
+	<td class="fw-bold text-muted">#{{ reuniao.id }}</td>
+	<td>{{ reuniao.data|date:"d/m/Y"|default:"-" }}</td>
+	<td>{{ reuniao.descricao|default:"-"|truncatechars:50 }}</td>
+	<td><span class="badge bg-secondary">{{ reuniao.processos.count }} processo(s)</span></td>
+	<td>
+		{% if reuniao.encerrada %}
+			<span class="badge bg-success"><i class="bi bi-check-circle"></i> Encerrada</span>
+		{% else %}
+			<span class="badge bg-primary"><i class="bi bi-clock"></i> Em aberto</span>
+		{% endif %}
+	</td>
+	<td class="text-center">
+		<a href="{% url 'montar_pauta_reuniao' pk=reuniao.id %}" class="btn btn-sm btn-outline-primary">
+			<i class="bi bi-list-check"></i> Pauta
+		</a>
+	</td>
+</tr>
+{% empty %}
+<tr><td colspan="6" class="text-center py-4 text-muted">Nenhuma reunião cadastrada.</td></tr>
+{% endfor %}
+{% endblock %}

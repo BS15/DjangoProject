@@ -57,7 +57,7 @@ def processo_factory(db):
             tipo="PF",
         )
         forma_pagamento = FormasDePagamento.objects.create(
-            forma_de_pagamento=f"PIX-{uuid.uuid4().hex[:6]}"
+            forma_pagamento=f"PIX-{uuid.uuid4().hex[:6]}"
         )
         tipo_pagamento = TiposDePagamento.objects.create(
             tipo_de_pagamento=f"{tipo_pagamento_nome}-{uuid.uuid4().hex[:6]}"

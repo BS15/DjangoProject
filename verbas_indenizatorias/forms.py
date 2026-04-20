@@ -4,6 +4,7 @@ Este módulo define formulários para cadastro, edição e validação de diári
 """
 
 from django import forms
+from django.forms import inlineformset_factory
 from verbas_indenizatorias.models import (
     Diaria,
     ReembolsoCombustivel,
@@ -11,6 +12,8 @@ from verbas_indenizatorias.models import (
     AuxilioRepresentacao,
     DevolucaoDiaria,
     ContingenciaDiaria,
+    PrestacaoContasDiaria,
+    DocumentoComprovacao,
     _CAMPOS_PERMITIDOS_CONTINGENCIA_DIARIA,
 )
 
@@ -124,6 +127,20 @@ class AuxilioForm(forms.ModelForm):
             'local_evento': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Local do evento ou ato de representação'}),
             'valor_total': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
+
+
+ComprovanteDiariaFormSet = inlineformset_factory(
+    PrestacaoContasDiaria,
+    DocumentoComprovacao,
+    fields=['tipo', 'ordem', 'arquivo'],
+    extra=1,
+    can_delete=True,
+    widgets={
+        'tipo': forms.Select(attrs={'class': 'form-select form-select-sm'}),
+        'ordem': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'style': 'width: 60px'}),
+        'arquivo': forms.ClearableFileInput(attrs={'class': 'form-control form-control-sm'}),
+    },
+)
 
 
 class DevolucaoDiariaForm(forms.ModelForm):

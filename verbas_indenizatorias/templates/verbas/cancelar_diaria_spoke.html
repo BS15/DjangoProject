@@ -1,0 +1,22 @@
+{% extends "layouts/base_form.html" %}
+
+{% block page_heading %}Cancelar Diária #{{ diaria.id }}{% endblock %}
+{% block page_subtitle %}A ação altera o status da diária e deve ser usada apenas em situações excepcionais.{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'gerenciar_diaria' pk=diaria.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
+{% endblock %}
+
+{% block form_action %}{% url 'cancelar_diaria_action' pk=diaria.id %}{% endblock %}
+
+{% block form_fields %}
+<div class="alert alert-danger mb-0">
+    <p class="mb-2"><strong>Confirma o cancelamento desta diária?</strong></p>
+    <p class="mb-0">Após confirmação, o status será atualizado para cancelado/rejeitado conforme as regras do fluxo.</p>
+</div>
+{% endblock %}
+
+{% block form_actions %}
+<a href="{% url 'gerenciar_diaria' pk=diaria.id %}" class="btn btn-secondary px-4">Voltar</a>
+<button type="submit" class="btn btn-danger px-4 fw-bold"><i class="bi bi-x-circle"></i> Confirmar Cancelamento</button>
+{% endblock %}

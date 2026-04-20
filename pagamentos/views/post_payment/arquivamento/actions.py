@@ -31,7 +31,7 @@ def arquivar_processo_action(request: HttpRequest, pk: int) -> HttpResponse:
                 id=pk,
             )
 
-            status_atual = processo.status.status_choice if processo.status else ""
+            status_atual = processo.status.opcao_status if processo.status else ""
             if status_atual.upper() != ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO:
                 messages.error(request, f"Processo #{processo.id} não está no status correto para arquivamento.")
                 return redirect("painel_arquivamento")

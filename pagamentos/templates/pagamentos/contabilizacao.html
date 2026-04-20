@@ -1,1 +1,45 @@
-{% comment %}Template namespace migrated to pagamentos.{% endcomment %}
+{% extends "layouts/base_list.html" %}
+
+{% block page_title %}Painel de Contabilização{% endblock %}
+{% block page_heading %}Contabilização{% endblock %}
+{% block page_subtitle %}Processos aguardando contabilização pós-pagamento{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'home_page' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+{% endblock %}
+
+{% block filter_card %}{% endblock %}
+
+{% block table_headers %}
+<th>#</th>
+<th>Credor</th>
+<th>Data Pagamento</th>
+<th>Valor Líquido</th>
+<th>Status</th>
+<th class="text-center">Ações</th>
+{% endblock %}
+
+{% block table_rows %}
+{% for processo in processos %}
+<tr>
+	<td class="fw-bold text-muted">#{{ processo.id }}</td>
+	<td>{{ processo.credor|default:"-" }}</td>
+	<td>{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
+	<td class="fw-bold">R$ {{ processo.valor_liquido|default:"0,00" }}</td>
+	<td>
+		{% if processo.status %}
+			<span class="badge bg-info text-dark">{{ processo.status.opcao_status }}</span>
+		{% endif %}
+	</td>
+	<td class="text-center">
+		{% if pode_interagir %}
+		<a href="{% url 'contabilizacao_processo' pk=processo.id %}" class="btn btn-sm btn-primary fw-bold">
+			<i class="bi bi-calculator"></i> Contabilizar
+		</a>
+		{% endif %}
+	</td>
+</tr>
+{% empty %}
+<tr><td colspan="6" class="text-center py-4 text-muted">Nenhum processo aguardando contabilização.</td></tr>
+{% endfor %}
+{% endblock %}
