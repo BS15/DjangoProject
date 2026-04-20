@@ -7,11 +7,26 @@ from commons.shared.document_services import obter_ou_criar_tipo_documento, obte
 from commons.shared.pdf_response import gerar_documento_bytes
 from commons.shared.signature_services import criar_assinatura_rascunho
 from django.core.files.base import ContentFile
-from pagamentos.models import AssinaturaAutentique
+from django.core.exceptions import ValidationError
+from pagamentos.models import AssinaturaEletronica
 from verbas_indenizatorias.pdf_generators import VERBAS_DOCUMENT_REGISTRY
 from verbas_indenizatorias.models import (
     DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio,
 )
+from verbas_indenizatorias.services.prestacao import (
+    obter_ou_criar_prestacao as _obter_ou_criar_prestacao,
+    registrar_comprovante as _registrar_comprovante,
+)
+
+
+def obter_ou_criar_prestacao(diaria):
+    """Obtém prestação de contas da diária, criando em estado aberto quando ausente."""
+    return _obter_ou_criar_prestacao(diaria)
+
+
+def registrar_comprovante_prestacao(diaria, arquivo, tipo_id):
+    """Registra comprovante na prestação de contas da diária, bloqueando prestação encerrada."""
+    return _registrar_comprovante(diaria, arquivo, tipo_id)
 
 def gerar_e_anexar_scd_diaria(diaria, criador):
     """Gera SCD da diária, anexa DocumentoDiaria e cria rascunho de assinatura."""
@@ -32,7 +47,7 @@ def gerar_e_anexar_scd_diaria(diaria, criador):
         criador=criador,
         pdf_bytes=pdf_bytes,
         nome_arquivo=f"SCD_{diaria.id}.pdf",
-        assinatura_model=AssinaturaAutentique,
+        assinatura_model=AssinaturaEletronica,
     )
 
 def gerar_e_anexar_pcd_diaria(diaria, criador):
@@ -54,8 +69,31 @@ def gerar_e_anexar_pcd_diaria(diaria, criador):
         criador=criador,
         pdf_bytes=pdf_bytes,
         nome_arquivo=f"PCD_{diaria.id}.pdf",
-        assinatura_model=AssinaturaAutentique,
+        assinatura_model=AssinaturaEletronica,
     )
+
+def gerar_e_anexar_termo_prestacao_diaria(diaria, criador):
+    """Gera Termo de Prestação de Contas da diária, anexa DocumentoDiaria e cria rascunho de assinatura."""
+    pdf_bytes = gerar_documento_bytes("termo_prestacao_contas", diaria, VERBAS_DOCUMENT_REGISTRY)
+    tipo_termo = obter_ou_criar_tipo_documento(
+        "TERMO DE PRESTAÇÃO DE CONTAS",
+    )
+    proxima_ordem = obter_proxima_ordem_documento(diaria.documentos)
+    DocumentoDiaria.objects.create(
+        diaria=diaria,
+        arquivo=ContentFile(pdf_bytes, name=f"Termo_Prestacao_Contas_{diaria.id}.pdf"),
+        tipo=tipo_termo,
+        ordem=proxima_ordem,
+    )
+    return criar_assinatura_rascunho(
+        entidade=diaria,
+        tipo_documento="TERMO DE PRESTAÇÃO DE CONTAS",
+        criador=criador,
+        pdf_bytes=pdf_bytes,
+        nome_arquivo=f"Termo_Prestacao_Contas_{diaria.id}.pdf",
+        assinatura_model=AssinaturaEletronica,
+    )
+
 
 def gerar_e_anexar_recibo_reembolso(reembolso, criador):
     """Gera requerimento de reembolso, anexa DocumentoReembolso e cria rascunho de assinatura."""
@@ -76,7 +114,7 @@ def gerar_e_anexar_recibo_reembolso(reembolso, criador):
         criador=criador,
         pdf_bytes=pdf_bytes,
         nome_arquivo=f"Requerimento_Reembolso_{reembolso.id}.pdf",
-        assinatura_model=AssinaturaAutentique,
+        assinatura_model=AssinaturaEletronica,
     )
 
 def gerar_e_anexar_recibo_jeton(jeton, criador):
@@ -98,7 +136,7 @@ def gerar_e_anexar_recibo_jeton(jeton, criador):
         criador=criador,
         pdf_bytes=pdf_bytes,
         nome_arquivo=f"Recibo_Jeton_{jeton.id}.pdf",
-        assinatura_model=AssinaturaAutentique,
+        assinatura_model=AssinaturaEletronica,
     )
 
 def gerar_e_anexar_recibo_auxilio(auxilio, criador):
@@ -120,5 +158,5 @@ def gerar_e_anexar_recibo_auxilio(auxilio, criador):
         criador=criador,
         pdf_bytes=pdf_bytes,
         nome_arquivo=f"Recibo_Auxilio_{auxilio.id}.pdf",
-        assinatura_model=AssinaturaAutentique,
+        assinatura_model=AssinaturaEletronica,
     )

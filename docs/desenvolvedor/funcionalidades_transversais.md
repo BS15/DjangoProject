@@ -12,24 +12,6 @@ Ele cobre sete frentes:
 - assinaturas via Autentique
 - auditoria e logging
 
-## Já existe documentação sobre isso?
-
-Existe documentação parcial, mas não um guia único com este recorte.
-
-Material já existente no repositório:
-
-- `docs/desenvolvedor/dicionarios_operacionais.md`: catálogo operacional de actions e workers, incluindo fluxos fiscais, uploads documentais e ações em lote.
-- `docs/modulos/modulo_fiscal.md`: visão funcional do módulo fiscal, com foco em retenções e EFD-Reinf.
-- `docs/governanca/trilha_auditoria.md`: princípios de trilha de auditoria e compliance.
-- `docs/desenvolvedor/padroes_codigo.md`: padrões arquiteturais para views, services e documentação operacional.
-
-Este arquivo complementa esse material ao responder, para cada feature, quatro perguntas:
-
-1. o que é
-2. o que faz e para que serve
-3. como funciona na prática
-4. como se reflete no código
-
 ## 1. Gestão de Documentos
 
 ### O que é
@@ -185,7 +167,7 @@ Arquivos centrais:
   - implementa `importar_credores_csv`, que cria ou reaproveita `Credor`, `ContasBancarias` e `CargosFuncoes`
   - concentra também o fluxo de download de template de credores
 
-- `fluxo/views/support/contas_fixas/imports.py`
+- `pagamentos/views/support/contas_fixas/imports.py`
   - implementa `importar_contas_fixas_csv`
   - cria `ContaFixa` a partir de linhas CSV vinculadas a credores já existentes
   - também fornece template CSV para o usuário
@@ -215,7 +197,7 @@ As funcionalidades de sync sincronizam o estado interno do PaGé com artefatos o
 Há dois eixos principais:
 
 - sincronização externa, especialmente com relatórios SISCAC
-- sincronização interna entre `fluxo`, `verbas_indenizatorias` e `suprimentos`
+- sincronização interna entre `pagamentos`, `verbas_indenizatorias` e `suprimentos`
 
 ### O que faz e para que serve
 
@@ -267,14 +249,14 @@ Saídas típicas:
 
 Arquivos centrais:
 
-- `fluxo/views/support/sync/pagamentos.py`
+- `pagamentos/views/support/sync/pagamentos.py`
   - implementa `sincronizar_siscac`, `sincronizar_siscac_auto_action` e `sincronizar_siscac_manual_action`
   - implementa `sync_siscac_payments`, núcleo de conciliação entre relatório externo e processos internos
 
-- `fluxo/utils.py`
+- `pagamentos/utils.py`
   - contém o parser de relatório SISCAC usado na sincronização automática
 
-- `fluxo/services/integracoes/processo_relacionados.py`
+- `pagamentos/services/integracoes/processo_relacionados.py`
   - centraliza a orquestração cross-domain
   - `sincronizar_relacoes_apos_transicao` delega propagação para módulos satélite
   - `gerar_documentos_relacionados_por_transicao` dispara documentos dependentes do status do processo
@@ -337,15 +319,15 @@ Saídas típicas:
 
 Arquivos centrais:
 
-- `fluxo/views/helpers/payment_builders.py`
+- `pagamentos/views/helpers/payment_builders.py`
   - implementa `_processar_acao_lote`, helper genérico para ações em lote
   - implementa `_atualizar_status_em_lote`, que itera processo a processo chamando `avancar_status(..., usuario=...)`
   - usa `transaction.atomic` para garantir integridade da operação
 
-- `fluxo/views/payment/lancamento/actions.py`
+- `pagamentos/views/payment/lancamento/actions.py`
   - usa esse padrão para separar processos para lançamento bancário, marcar como lançados e desfazer lançamentos
 
-- `fluxo/views/support/pendencia/actions.py`
+- `pagamentos/views/support/pendencia/actions.py`
   - aplica o mesmo raciocínio a tratamento de pendências em lote
 
 ### Observações arquiteturais
@@ -486,7 +468,7 @@ Saídas típicas:
 
 Arquivos centrais:
 
-- `fluxo/domain_models/suporte.py`
+- `pagamentos/domain_models/suporte.py`
   - define o modelo `AssinaturaAutentique`
   - guarda vínculo genérico com a entidade relacionada, status, arquivos e metadados da integração
 
@@ -499,7 +481,7 @@ Arquivos centrais:
   - implementa o cliente GraphQL da Autentique
   - envia documentos, processa respostas e consulta status para download do assinado
 
-- `fluxo/views/support/signatures.py`
+- `pagamentos/views/support/signatures.py`
   - implementa o painel do usuário e a action de disparo
   - aplica controle de permissão operacional no nível de dono do rascunho
 
@@ -567,12 +549,12 @@ Arquivos centrais:
 - `docs/governanca/trilha_auditoria.md`
   - documenta os princípios de não exclusão, histórico e compliance do sistema
 
-- `fluxo/views/auditing/panels.py`
+- `pagamentos/views/auditing/panels.py`
   - implementa `auditoria_view`
   - consolida históricos de vários modelos financeiros, fiscais e documentais
   - aplica filtros por modelo, ação, data e usuário
 
-- `fluxo/domain_models/suporte.py`
+- `pagamentos/domain_models/suporte.py`
   - define `RegistroAcessoArquivo`, `Contingencia`, `Devolucao` e `AssinaturaAutentique` com histórico
   - registra evidências importantes para controle e auditoria
 
@@ -583,8 +565,8 @@ Arquivos centrais:
 - módulos com logging técnico
   - `commons/shared/storage_utils.py`
   - `verbas_indenizatorias/views/shared/documents.py`
-  - `fluxo/views/support/sync/pagamentos.py`
-  - `fluxo/views/support/signatures.py`
+- `pagamentos/views/support/sync/pagamentos.py`
+- `pagamentos/views/support/signatures.py`
   - `verbas_indenizatorias/services/processo_integration.py`
   - nesses pontos, falhas técnicas são registradas sem quebrar a separação entre erro operacional e erro de infraestrutura
 
@@ -593,15 +575,3 @@ Arquivos centrais:
 - No projeto, auditoria não é só “log de sistema”. Ela é requisito funcional e de compliance.
 - O logging técnico aparece como apoio à operação, mas a trilha principal de governança está no histórico persistente de modelos e nos registros de acesso.
 - A decisão de chamar `avancar_status(..., usuario=...)` em vez de atualizar tudo diretamente reforça esse compromisso com rastreabilidade.
-
-## Fechamento
-
-Hoje o repositório já contém essas features em produção de desenvolvimento, mas a documentação estava fragmentada.
-
-Em resumo:
-
-- já existia documentação parcial para auditoria, fiscal e contratos operacionais
-- não existia um arquivo único explicando essas funcionalidades de ponta a ponta
-- a base técnica já está espalhada de forma coerente entre `commons`, `fluxo`, `fiscal`, `verbas_indenizatorias` e `suprimentos`
-
-Este documento foi criado para servir como ponte entre visão funcional e implementação real do sistema.

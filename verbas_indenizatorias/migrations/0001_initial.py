@@ -3,9 +3,11 @@
 import django.core.validators
 import django.db.models.deletion
 import django.utils.timezone
+import commons.shared.file_validators
 from commons.shared.storage_utils import caminho_documento
 import pagamentos.validators
 import simple_history.models
+from decimal import Decimal
 from django.conf import settings
 from django.db import migrations, models
 
@@ -81,8 +83,20 @@ class Migration(migrations.Migration):
                     ("pode_gerenciar_reembolsos", "Pode gerenciar reembolsos"),
                     ("pode_autorizar_diarias", "Pode autorizar diárias"),
                     ("pode_importar_diarias", "Pode importar diárias"),
+                    (
+                        "pode_sincronizar_diarias_siscac",
+                        "Pode sincronizar/importar diárias via SISCAC",
+                    ),
                     ("pode_criar_diarias", "Pode criar diárias"),
                     ("pode_gerenciar_diarias", "Pode gerenciar diárias"),
+                    (
+                        "operar_prestacao_contas",
+                        "Pode operar prestação de contas em nome de terceiros",
+                    ),
+                    (
+                        "analisar_prestacao_contas",
+                        "Pode analisar e revisar prestações de contas",
+                    ),
                 ],
             },
         ),
@@ -276,7 +290,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="diarias",
-                        to="fluxo.processo",
+                        to="pagamentos.processo",
                     ),
                 ),
                 (
@@ -344,7 +358,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.FileField(
                         upload_to=caminho_documento,
-                        validators=[fluxo.validators.validar_arquivo_seguro],
+                        validators=[pagamentos.validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -390,7 +404,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.FileField(
                         upload_to=caminho_documento,
-                        validators=[fluxo.validators.validar_arquivo_seguro],
+                        validators=[pagamentos.validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -411,7 +425,7 @@ class Migration(migrations.Migration):
                     "tipo",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.PROTECT,
-                        to="fluxo.tiposdedocumento",
+                        to="pagamentos.tiposdedocumento",
                     ),
                 ),
             ],
@@ -433,7 +447,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.TextField(
                         max_length=100,
-                        validators=[fluxo.validators.validar_arquivo_seguro],
+                        validators=[pagamentos.validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -480,7 +494,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="fluxo.tiposdedocumento",
+                        to="pagamentos.tiposdedocumento",
                     ),
                 ),
             ],
@@ -505,7 +519,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.TextField(
                         max_length=100,
-                        validators=[fluxo.validators.validar_arquivo_seguro],
+                        validators=[pagamentos.validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -552,7 +566,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="fluxo.tiposdedocumento",
+                        to="pagamentos.tiposdedocumento",
                     ),
                 ),
             ],
@@ -624,7 +638,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="jetons",
-                        to="fluxo.processo",
+                        to="pagamentos.processo",
                     ),
                 ),
                 (
@@ -659,7 +673,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.TextField(
                         max_length=100,
-                        validators=[fluxo.validators.validar_arquivo_seguro],
+                        validators=[pagamentos.validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -695,7 +709,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="fluxo.tiposdedocumento",
+                        to="pagamentos.tiposdedocumento",
                     ),
                 ),
                 (
@@ -734,7 +748,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.FileField(
                         upload_to=caminho_documento,
-                        validators=[fluxo.validators.validar_arquivo_seguro],
+                        validators=[pagamentos.validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -747,7 +761,7 @@ class Migration(migrations.Migration):
                     "tipo",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.PROTECT,
-                        to="fluxo.tiposdedocumento",
+                        to="pagamentos.tiposdedocumento",
                     ),
                 ),
                 (
@@ -852,7 +866,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="reembolsos_combustivel",
-                        to="fluxo.processo",
+                        to="pagamentos.processo",
                     ),
                 ),
                 (
@@ -891,7 +905,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.TextField(
                         max_length=100,
-                        validators=[fluxo.validators.validar_arquivo_seguro],
+                        validators=[pagamentos.validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -927,7 +941,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="fluxo.tiposdedocumento",
+                        to="pagamentos.tiposdedocumento",
                     ),
                 ),
                 (
@@ -966,7 +980,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.FileField(
                         upload_to=caminho_documento,
-                        validators=[fluxo.validators.validar_arquivo_seguro],
+                        validators=[pagamentos.validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -979,7 +993,7 @@ class Migration(migrations.Migration):
                     "tipo",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.PROTECT,
-                        to="fluxo.tiposdedocumento",
+                        to="pagamentos.tiposdedocumento",
                     ),
                 ),
                 (
@@ -1106,7 +1120,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="fluxo.processo",
+                        to="pagamentos.processo",
                     ),
                 ),
                 (
@@ -1210,7 +1224,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="fluxo.processo",
+                        to="pagamentos.processo",
                     ),
                 ),
                 (
@@ -1358,7 +1372,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="fluxo.processo",
+                        to="pagamentos.processo",
                     ),
                 ),
                 (
@@ -1490,7 +1504,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="fluxo.processo",
+                        to="pagamentos.processo",
                     ),
                 ),
                 (
@@ -1550,5 +1564,505 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
+        ),
+        migrations.AddField(
+            model_name="diaria",
+            name="criado_por",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="diarias_criadas",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Criado por",
+            ),
+        ),
+        migrations.AddField(
+            model_name="historicaldiaria",
+            name="criado_por",
+            field=models.ForeignKey(
+                blank=True,
+                db_constraint=False,
+                null=True,
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                related_name="+",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Criado por",
+            ),
+        ),
+        migrations.CreateModel(
+            name="ApostilaDiaria",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("texto_correcao", models.TextField(verbose_name="Texto da Apostila")),
+                (
+                    "campo_corrigido",
+                    models.CharField(max_length=100, verbose_name="Campo Corrigido"),
+                ),
+                (
+                    "valor_anterior",
+                    models.TextField(blank=True, verbose_name="Valor Anterior"),
+                ),
+                ("valor_novo", models.TextField(blank=True, verbose_name="Valor Novo")),
+                ("criado_em", models.DateTimeField(auto_now_add=True)),
+                (
+                    "diaria",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="apostilas",
+                        to="verbas_indenizatorias.diaria",
+                    ),
+                ),
+                (
+                    "registrado_por",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+            ],
+            options={
+                "constraints": [
+                    models.CheckConstraint(
+                        condition=~models.Q(campo_corrigido__in=["valor_total", "quantidade_diarias"]),
+                        name="apostila_nao_altera_valores_financeiros_chk",
+                    )
+                ]
+            },
+        ),
+        migrations.CreateModel(
+            name="DevolucaoDiaria",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "valor_devolvido",
+                    models.DecimalField(
+                        decimal_places=2,
+                        max_digits=12,
+                        validators=[
+                            django.core.validators.MinValueValidator(Decimal("0.01"))
+                        ],
+                    ),
+                ),
+                ("data_devolucao", models.DateField()),
+                ("motivo", models.TextField()),
+                ("criado_em", models.DateTimeField(auto_now_add=True)),
+                (
+                    "diaria",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="devolucoes",
+                        to="verbas_indenizatorias.diaria",
+                    ),
+                ),
+                (
+                    "registrado_por",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+            ],
+        ),
+        migrations.CreateModel(
+            name="HistoricalApostilaDiaria",
+            fields=[
+                (
+                    "id",
+                    models.BigIntegerField(
+                        auto_created=True,
+                        blank=True,
+                        db_index=True,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("texto_correcao", models.TextField(verbose_name="Texto da Apostila")),
+                (
+                    "campo_corrigido",
+                    models.CharField(max_length=100, verbose_name="Campo Corrigido"),
+                ),
+                (
+                    "valor_anterior",
+                    models.TextField(blank=True, verbose_name="Valor Anterior"),
+                ),
+                ("valor_novo", models.TextField(blank=True, verbose_name="Valor Novo")),
+                ("criado_em", models.DateTimeField(blank=True, editable=False)),
+                ("history_id", models.AutoField(primary_key=True, serialize=False)),
+                ("history_date", models.DateTimeField(db_index=True)),
+                ("history_change_reason", models.CharField(max_length=100, null=True)),
+                (
+                    "history_type",
+                    models.CharField(
+                        choices=[("+", "Created"), ("~", "Changed"), ("-", "Deleted")],
+                        max_length=1,
+                    ),
+                ),
+                (
+                    "diaria",
+                    models.ForeignKey(
+                        blank=True,
+                        db_constraint=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        related_name="+",
+                        to="verbas_indenizatorias.diaria",
+                    ),
+                ),
+                (
+                    "history_user",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "registrado_por",
+                    models.ForeignKey(
+                        blank=True,
+                        db_constraint=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        related_name="+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+            ],
+            options={
+                "verbose_name": "historical apostila diaria",
+                "verbose_name_plural": "historical apostila diarias",
+                "ordering": ("-history_date", "-history_id"),
+                "get_latest_by": ("history_date", "history_id"),
+            },
+            bases=(simple_history.models.HistoricalChanges, models.Model),
+        ),
+        migrations.CreateModel(
+            name="HistoricalDevolucaoDiaria",
+            fields=[
+                (
+                    "id",
+                    models.BigIntegerField(
+                        auto_created=True,
+                        blank=True,
+                        db_index=True,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "valor_devolvido",
+                    models.DecimalField(
+                        decimal_places=2,
+                        max_digits=12,
+                        validators=[
+                            django.core.validators.MinValueValidator(Decimal("0.01"))
+                        ],
+                    ),
+                ),
+                ("data_devolucao", models.DateField()),
+                ("motivo", models.TextField()),
+                ("criado_em", models.DateTimeField(blank=True, editable=False)),
+                ("history_id", models.AutoField(primary_key=True, serialize=False)),
+                ("history_date", models.DateTimeField(db_index=True)),
+                ("history_change_reason", models.CharField(max_length=100, null=True)),
+                (
+                    "history_type",
+                    models.CharField(
+                        choices=[("+", "Created"), ("~", "Changed"), ("-", "Deleted")],
+                        max_length=1,
+                    ),
+                ),
+                (
+                    "diaria",
+                    models.ForeignKey(
+                        blank=True,
+                        db_constraint=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        related_name="+",
+                        to="verbas_indenizatorias.diaria",
+                    ),
+                ),
+                (
+                    "history_user",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "registrado_por",
+                    models.ForeignKey(
+                        blank=True,
+                        db_constraint=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        related_name="+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+            ],
+            options={
+                "verbose_name": "historical devolucao diaria",
+                "verbose_name_plural": "historical devolucao diarias",
+                "ordering": ("-history_date", "-history_id"),
+                "get_latest_by": ("history_date", "history_id"),
+            },
+            bases=(simple_history.models.HistoricalChanges, models.Model),
+        ),
+        migrations.CreateModel(
+            name="PrestacaoContasDiaria",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("ABERTA", "Aberta"), ("ENCERRADA", "Encerrada")],
+                        default="ABERTA",
+                        max_length=10,
+                    ),
+                ),
+                ("criado_em", models.DateTimeField(auto_now_add=True)),
+                ("encerrado_em", models.DateTimeField(blank=True, null=True)),
+                (
+                    "diaria",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="prestacao_contas",
+                        to="verbas_indenizatorias.diaria",
+                    ),
+                ),
+                (
+                    "encerrado_por",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="prestacoes_diaria_encerradas",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+            ],
+        ),
+        migrations.CreateModel(
+            name="HistoricalPrestacaoContasDiaria",
+            fields=[
+                (
+                    "id",
+                    models.BigIntegerField(
+                        auto_created=True,
+                        blank=True,
+                        db_index=True,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("ABERTA", "Aberta"), ("ENCERRADA", "Encerrada")],
+                        default="ABERTA",
+                        max_length=10,
+                    ),
+                ),
+                ("criado_em", models.DateTimeField(blank=True, editable=False)),
+                ("encerrado_em", models.DateTimeField(blank=True, null=True)),
+                ("history_id", models.AutoField(primary_key=True, serialize=False)),
+                ("history_date", models.DateTimeField(db_index=True)),
+                ("history_change_reason", models.CharField(max_length=100, null=True)),
+                (
+                    "history_type",
+                    models.CharField(
+                        choices=[("+", "Created"), ("~", "Changed"), ("-", "Deleted")],
+                        max_length=1,
+                    ),
+                ),
+                (
+                    "diaria",
+                    models.ForeignKey(
+                        blank=True,
+                        db_constraint=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        related_name="+",
+                        to="verbas_indenizatorias.diaria",
+                    ),
+                ),
+                (
+                    "encerrado_por",
+                    models.ForeignKey(
+                        blank=True,
+                        db_constraint=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        related_name="+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "history_user",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+            ],
+            options={
+                "verbose_name": "historical prestacao contas diaria",
+                "verbose_name_plural": "historical prestacao contas diarias",
+                "ordering": ("-history_date", "-history_id"),
+                "get_latest_by": ("history_date", "history_id"),
+            },
+            bases=(simple_history.models.HistoricalChanges, models.Model),
+        ),
+        migrations.CreateModel(
+            name="DocumentoComprovacao",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "arquivo",
+                    models.FileField(
+                        upload_to=caminho_documento,
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
+                    ),
+                ),
+                (
+                    "ordem",
+                    models.PositiveIntegerField(
+                        default=1,
+                        help_text="Ordem do arquivo",
+                    ),
+                ),
+                (
+                    "prestacao",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="documentos",
+                        to="verbas_indenizatorias.prestacaocontasdiaria",
+                    ),
+                ),
+                (
+                    "tipo",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="pagamentos.tiposdedocumento",
+                    ),
+                ),
+            ],
+            options={
+                "ordering": ["ordem"],
+                "abstract": False,
+            },
+        ),
+        migrations.CreateModel(
+            name="HistoricalDocumentoComprovacao",
+            fields=[
+                (
+                    "id",
+                    models.BigIntegerField(
+                        auto_created=True,
+                        blank=True,
+                        db_index=True,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "arquivo",
+                    models.TextField(
+                        max_length=100,
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
+                    ),
+                ),
+                (
+                    "ordem",
+                    models.PositiveIntegerField(
+                        default=1,
+                        help_text="Ordem do arquivo",
+                    ),
+                ),
+                ("history_id", models.AutoField(primary_key=True, serialize=False)),
+                ("history_date", models.DateTimeField(db_index=True)),
+                ("history_change_reason", models.CharField(max_length=100, null=True)),
+                (
+                    "history_type",
+                    models.CharField(
+                        choices=[("+", "Created"), ("~", "Changed"), ("-", "Deleted")],
+                        max_length=1,
+                    ),
+                ),
+                (
+                    "history_user",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "prestacao",
+                    models.ForeignKey(
+                        blank=True,
+                        db_constraint=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        related_name="+",
+                        to="verbas_indenizatorias.prestacaocontasdiaria",
+                    ),
+                ),
+                (
+                    "tipo",
+                    models.ForeignKey(
+                        blank=True,
+                        db_constraint=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        related_name="+",
+                        to="pagamentos.tiposdedocumento",
+                    ),
+                ),
+            ],
+            options={
+                "verbose_name": "historical documento comprovacao",
+                "verbose_name_plural": "historical documento comprovacaos",
+                "ordering": ("-history_date", "-history_id"),
+                "get_latest_by": ("history_date", "history_id"),
+            },
+            bases=(simple_history.models.HistoricalChanges, models.Model),
         ),
     ]

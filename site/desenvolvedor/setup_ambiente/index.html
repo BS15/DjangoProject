@@ -11,7 +11,7 @@
       
       
       
-        <link rel="prev" href="../../governanca/trilha_auditoria/">
+        <link rel="prev" href="../../governanca/matriz_permissoes/">
       
       
         <link rel="next" href="../padroes_codigo/">
@@ -450,14 +450,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../arquitetura/hub_spoke/" class="md-nav__link">
+      <a href="../../arquitetura/camada_services/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Interface Hub-and-Spoke
+    Camada de Services
   
 
     
@@ -478,14 +478,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../arquitetura/camada_services/" class="md-nav__link">
+      <a href="../../arquitetura/hub_spoke/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Camada de Services
+    Hub-and-Spoke
   
 
     
@@ -538,7 +538,7 @@
   <span class="md-ellipsis">
     
   
-    Manual de Módulos (Funcional)
+    Manual de Módulos
   
 
     
@@ -554,7 +554,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Manual de Módulos (Funcional)
+    Manual de Módulos
   
 
           </label>
@@ -567,14 +567,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../modulos/fluxo_core/" class="md-nav__link">
+      <a href="../../modulos/pagamentos_core/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Fluxo Core
+    Pagamentos Core
   
 
     
@@ -740,14 +740,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../governanca/matriz_permissoes/" class="md-nav__link">
+      <a href="../../governanca/trilha_auditoria/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Matriz de Permissões (RBAC)
+    Trilha de Auditoria
   
 
     
@@ -768,14 +768,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../governanca/trilha_auditoria/" class="md-nav__link">
+      <a href="../../governanca/matriz_permissoes/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Trilha de Auditoria
+    Matriz de Permissões
   
 
     
@@ -928,6 +928,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#variaveis-de-ambiente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variáveis de Ambiente
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#subida-do-ambiente" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -943,6 +954,17 @@
     <span class="md-ellipsis">
       
         Banco de dados em modo de desenvolvimento
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#executando-os-testes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executando os Testes
       
     </span>
   </a>
@@ -1012,6 +1034,34 @@
     
   
     Dicionários Operacionais
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../funcionalidades_transversais/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Funcionalidades Transversais
   
 
     
@@ -1126,6 +1176,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#variaveis-de-ambiente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variáveis de Ambiente
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#subida-do-ambiente" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1141,6 +1202,17 @@
     <span class="md-ellipsis">
       
         Banco de dados em modo de desenvolvimento
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#executando-os-testes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executando os Testes
       
     </span>
   </a>
@@ -1181,17 +1253,38 @@
 <li>Docker e Docker Compose.</li>
 <li>Arquivo <code>.env</code> com variáveis obrigatórias do projeto.</li>
 </ul>
+<h2 id="variaveis-de-ambiente">Variáveis de Ambiente<a class="headerlink" href="#variaveis-de-ambiente" title="Permanent link">&para;</a></h2>
+<p>Copie <code>.env.example</code> para <code>.env</code> e preencha as variáveis obrigatórias:</p>
+<div class="highlight"><pre><span></span><code>cp<span class="w"> </span>.env.example<span class="w"> </span>.env
+</code></pre></div>
+<p>Consulte os comentários em <code>.env.example</code> para descrição de cada variável. As variáveis essenciais incluem configuração do banco de dados PostgreSQL, chave secreta Django (<code>SECRET_KEY</code>), modo de debug e, quando aplicável, token da API Autentique.</p>
 <h2 id="subida-do-ambiente">Subida do ambiente<a class="headerlink" href="#subida-do-ambiente" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>--build
 </code></pre></div>
 <h2 id="banco-de-dados-em-modo-de-desenvolvimento">Banco de dados em modo de desenvolvimento<a class="headerlink" href="#banco-de-dados-em-modo-de-desenvolvimento" title="Permanent link">&para;</a></h2>
-<p>Projeto em modo pré-V1 com protocolo de base limpa quando necessário.</p>
-<p>Fluxo comum:
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>manage.py<span class="w"> </span>migrate
+<p>Projeto em modo pré-V1 com protocolo de base limpa (Clean Slate Protocol).</p>
+<p>Para inicializar ou reinicializar completamente o banco:
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>manage.py<span class="w"> </span>flush<span class="w"> </span>--no-input
+python<span class="w"> </span>manage.py<span class="w"> </span>migrate
 python<span class="w"> </span>manage.py<span class="w"> </span>createsuperuser
 </code></pre></div></p>
+<p>Para uma reinicialização total (útil quando há mudanças de schema incompatíveis):
+<div class="highlight"><pre><span></span><code><span class="c1"># Destruir e recriar o banco no container Docker</span>
+docker<span class="w"> </span>compose<span class="w"> </span>down<span class="w"> </span>-v
+docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>--build
+python<span class="w"> </span>manage.py<span class="w"> </span>migrate
+python<span class="w"> </span>manage.py<span class="w"> </span>createsuperuser
+</code></pre></div></p>
+<h2 id="executando-os-testes">Executando os Testes<a class="headerlink" href="#executando-os-testes" title="Permanent link">&para;</a></h2>
+<p>O projeto usa pytest com o plugin Django.</p>
+<div class="highlight"><pre><span></span><code>pytest
+</code></pre></div>
+<p>A configuração está em <code>pytest.ini</code> na raiz do projeto. Para executar um módulo específico:</p>
+<div class="highlight"><pre><span></span><code>pytest<span class="w"> </span>fiscal/
+pytest<span class="w"> </span>pagamentos/
+</code></pre></div>
 <h2 id="seed-e-dados-de-apoio">Seed e dados de apoio<a class="headerlink" href="#seed-e-dados-de-apoio" title="Permanent link">&para;</a></h2>
-<p>Quando houver scripts de carga, execute-os após preparar o banco para viabilizar cenários de teste funcional.</p>
+<p>Para viabilizar cenários de teste funcional, execute os scripts de carga após preparar o banco. Verifique se existem scripts de seed disponíveis na raiz do projeto ou em <code>desenvolvedor/</code> e execute-os conforme documentado nos próprios scripts.</p>
 
 
 

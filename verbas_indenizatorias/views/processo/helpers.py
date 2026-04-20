@@ -7,8 +7,8 @@ from django.db.models import DecimalField, Sum
 from django.db.models.functions import Coalesce
 from django.urls import reverse
 
-from fluxo.forms import PendenciaFormSet, ProcessoForm
-from fluxo.models import TiposDePagamento
+from pagamentos.forms import PendenciaFormSet, ProcessoForm
+from pagamentos.models import TiposDePagamento
 from verbas_indenizatorias.models import AuxilioRepresentacao, Diaria, Jeton, ReembolsoCombustivel
 from ..shared.registry import _get_tipos_documento_verbas
 
@@ -107,7 +107,11 @@ def _salvar_formularios_processo_verbas(request, *, processo_form, pendencia_for
 def _contar_docs_verbas(diarias, reembolsos, jetons, auxilios):
     """Conta total de documentos anexados a todas as verbas do processo."""
     total = 0
-    for qs in (diarias, reembolsos, jetons, auxilios):
+    for item in diarias:
+        prestacao = getattr(item, "prestacao_contas", None)
+        if prestacao:
+            total += len(prestacao.documentos.all())
+    for qs in (reembolsos, jetons, auxilios):
         for item in qs:
             total += len(item.documentos.all())
     return total
@@ -122,6 +126,7 @@ def _montar_cards_documentos_verba(*, diarias, reembolsos, jetons, auxilios):
             "gerenciar_url": "gerenciar_diaria",
             "border_class": "border-primary",
             "btn_class": "btn-outline-primary",
+            "is_diaria": True,
         },
         {
             "queryset": reembolsos,
@@ -129,6 +134,7 @@ def _montar_cards_documentos_verba(*, diarias, reembolsos, jetons, auxilios):
             "gerenciar_url": "gerenciar_reembolso",
             "border_class": "border-success",
             "btn_class": "btn-outline-success",
+            "is_diaria": False,
         },
         {
             "queryset": jetons,
@@ -136,6 +142,7 @@ def _montar_cards_documentos_verba(*, diarias, reembolsos, jetons, auxilios):
             "gerenciar_url": "gerenciar_jeton",
             "border_class": "border-warning",
             "btn_class": "btn-outline-warning",
+            "is_diaria": False,
         },
         {
             "queryset": auxilios,
@@ -143,17 +150,24 @@ def _montar_cards_documentos_verba(*, diarias, reembolsos, jetons, auxilios):
             "gerenciar_url": "gerenciar_auxilio",
             "border_class": "border-info",
             "btn_class": "btn-outline-info",
+            "is_diaria": False,
         },
     ]
 
     cards = []
     for cfg in config:
         for item in cfg["queryset"]:
+            if cfg["is_diaria"]:
+                prestacao = getattr(item, "prestacao_contas", None)
+                documentos = list(prestacao.documentos.all()) if prestacao else []
+            else:
+                documentos = list(item.documentos.all())
+
             cards.append(
                 {
                     "titulo": f"{cfg['titulo']} #{item.id} - {getattr(item.beneficiario, 'nome', '-')}",
                     "gerenciar_url": reverse(cfg["gerenciar_url"], kwargs={"pk": item.id}),
-                    "documentos": list(item.documentos.all()),
+                    "documentos": documentos,
                     "border_class": cfg["border_class"],
                     "btn_class": cfg["btn_class"],
                 }
@@ -169,7 +183,7 @@ def _montar_contexto_processo_verbas(processo, *, processo_form=None, pendencia_
     """Monta contexto consolidado usado no hub e spokes de verbas."""
     totais = _forcar_campos_canonicos_processo_verbas(processo)
 
-    diarias = Diaria.objects.filter(processo=processo).select_related("beneficiario", "status").prefetch_related("documentos__tipo")
+    diarias = Diaria.objects.filter(processo=processo).select_related("beneficiario", "status").prefetch_related("prestacao_contas__documentos__tipo")
     reembolsos = ReembolsoCombustivel.objects.filter(processo=processo).select_related("beneficiario", "status").prefetch_related("documentos__tipo")
     jetons = Jeton.objects.filter(processo=processo).select_related("beneficiario", "status").prefetch_related("documentos__tipo")
     auxilios = AuxilioRepresentacao.objects.filter(processo=processo).select_related("beneficiario", "status").prefetch_related("documentos__tipo")
@@ -201,7 +215,7 @@ def _montar_contexto_processo_verbas(processo, *, processo_form=None, pendencia_
         + processo.documentos_orcamentarios.count()
         + processo.comprovantes_pagamento.count()
     )
-    total_docs_verbas = sum(len(card["documentos"]) for card in documentos_verba_cards)
+    total_docs_verbas = _contar_docs_verbas(diarias, reembolsos, jetons, auxilios)
 
     return {
         "processo": processo,

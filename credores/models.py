@@ -10,10 +10,10 @@ from simple_history.models import HistoricalRecords
 
 def validar_cpf_cnpj(value):
     """Valida formato básico de CPF/CNPJ (apenas dígitos e separadores)."""
-    clean = re.sub(r'[\.\-\/]', '', value)
-    if not re.match(r'^\d{11}(\d{2})?$', clean):
+    clean = re.sub(r'\D', '', value)
+    if not re.match(r'^(\d{11}|\d{14})$', clean):
         raise ValidationError(
-            'CPF deve ter 11 dígitos e CNPJ deve ter 13 dígitos.',
+            'CPF deve ter 11 dígitos e CNPJ deve ter 14 dígitos.',
             code='invalid_cpf_cnpj'
         )
 
@@ -63,6 +63,10 @@ class Credor(models.Model):
 
     nome = models.CharField("Nome", max_length=50, null=False, blank=False)
     cpf_cnpj = models.CharField("CPF/CNPJ", max_length=50, null=False, blank=False, validators=[validar_cpf_cnpj])
+    usuario = models.OneToOneField(
+        'auth.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='credor_vinculado', verbose_name="Usuário do Portal"
+    )
     conta = models.ForeignKey('ContasBancarias', on_delete=models.PROTECT, blank=True, null=True, verbose_name="Conta Credor")
     chave_pix = models.CharField("Chave PIX do credor", max_length=50, null=True, blank=True)
     cargo_funcao = models.ForeignKey('CargosFuncoes', on_delete=models.PROTECT, blank=True, null=True)
@@ -93,6 +97,17 @@ class Credor(models.Model):
 
     def __str__(self):
         return f"{self.nome}"
+
+    def clean(self):
+        """Garante consistência entre tipo de pessoa e documento informado."""
+        super().clean()
+        documento = re.sub(r'\D', '', self.cpf_cnpj or '')
+
+        if self.tipo == 'PF' and len(documento) != 11:
+            raise ValidationError({'cpf_cnpj': 'Para Pessoa Física, informe um CPF com 11 dígitos.'})
+
+        if self.tipo == 'PJ' and len(documento) != 14:
+            raise ValidationError({'cpf_cnpj': 'Para Pessoa Jurídica, informe um CNPJ com 14 dígitos.'})
 
 
 
@@ -172,7 +187,7 @@ class FaturaMensal(models.Model):
         """Retorna estado operacional da fatura: pendente, em andamento ou pago."""
         if not self.processo_vinculado:
             return 'PENDENTE'
-        if self.processo_vinculado.status and 'PAGO' in self.processo_vinculado.status.status_choice.upper():
+        if self.processo_vinculado.status and 'PAGO' in self.processo_vinculado.status.opcao_status.upper():
             return 'PAGO'
         return 'EM ANDAMENTO'
 

@@ -55,10 +55,6 @@
         <a href="{{ painel_teste_pdfs_url }}" class="btn btn-warning w-100 fw-bold shadow-sm mt-2"><i class="bi bi-file-earmark-pdf"></i> Laboratório de PDFs</a>
         {% endif %}
         <a href="{% url 'painel_importacao' %}" class="btn btn-warning w-100 fw-bold shadow-sm mt-2"><i class="bi bi-cloud-upload"></i> Importar Dados SISCAC</a>
-        {% url 'chaos_testing' as chaos_testing_url %}
-        {% if chaos_testing_url %}
-        <a href="{{ chaos_testing_url }}" class="btn btn-danger w-100 fw-bold shadow-sm mt-2"><i class="bi bi-bug-fill"></i> Chaos Testing (Gremlins)</a>
-        {% endif %}
 
     </div>
 </div>

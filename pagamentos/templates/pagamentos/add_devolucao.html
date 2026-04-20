@@ -1,0 +1,21 @@
+{% extends "layouts/base_form.html" %}
+
+{% block page_title %}Registrar Devolução{% endblock %}
+{% block page_heading %}Registrar Devolução{% endblock %}
+{% block page_subtitle %}Processo #{{ processo.id }} — {{ processo.credor|default:"-" }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'process_detail' pk=processo.id %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+{% endblock %}
+
+{% block form_action %}{% url 'registrar_devolucao_action' processo_id=processo.id %}{% endblock %}
+
+{% block form_fields %}
+{% for field in form %}
+<div class="mb-3">
+	<label class="fw-bold text-secondary small mb-1">{{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>
+	{{ field }}
+	{% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+</div>
+{% endfor %}
+{% endblock %}

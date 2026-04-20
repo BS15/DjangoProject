@@ -1,0 +1,19 @@
+<div class="card shadow-sm border-0 mb-3" id="document-preview-widget-{{ form_prefix }}" data-unsupported-message="{{ unsupported_message|default:'Este arquivo não pode ser pré-visualizado aqui. Use o botão Abrir em nova aba.' }}">
+    <div class="card-header bg-light fw-bold text-secondary py-2 d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-file-earmark-pdf me-1"></i> Pré-visualização</span>
+        <a href="about:blank" id="document-preview-open-{{ form_prefix }}" class="btn btn-sm btn-outline-secondary disabled" target="_blank" rel="noopener noreferrer" aria-disabled="true">
+            <i class="bi bi-box-arrow-up-right"></i> Abrir em nova aba
+        </a>
+    </div>
+    <div class="card-body p-0" style="height: var(--document-preview-height, 520px);">
+        <div id="document-preview-placeholder-{{ form_prefix }}" class="h-100 d-flex align-items-center justify-content-center text-muted small text-center px-3">
+            Selecione um documento na lista para pré-visualizar.
+        </div>
+        <iframe
+            id="document-preview-iframe-{{ form_prefix }}"
+            src="about:blank"
+            class="w-100 h-100 border-0 d-none"
+            title="Pré-visualização de documento"
+        ></iframe>
+    </div>
+</div>

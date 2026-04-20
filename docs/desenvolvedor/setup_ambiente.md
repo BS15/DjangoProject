@@ -48,7 +48,7 @@ A configuração está em `pytest.ini` na raiz do projeto. Para executar um mód
 
 ```bash
 pytest fiscal/
-pytest fluxo/
+pytest pagamentos/
 ```
 
 ## Seed e dados de apoio

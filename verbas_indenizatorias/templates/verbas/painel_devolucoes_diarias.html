@@ -1,0 +1,77 @@
+{% extends "layouts/base_list.html" %}
+
+{% block title %}Devoluções de Diárias{% endblock %}
+
+{% block page_heading %}<i class="bi bi-arrow-return-left text-danger"></i> Devoluções de Diárias{% endblock %}
+{% block page_subtitle %}Registro e histórico de devoluções de valores de diárias.{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'verbas_panel' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i> Voltar
+</a>
+{% endblock %}
+
+{% block filter_form %}
+<div class="col-md-4">
+    <label class="small fw-bold text-secondary mb-1">Beneficiário</label>
+    <input type="text" name="beneficiario" value="{{ filtro_beneficiario }}"
+        class="form-control form-control-sm" placeholder="Nome do beneficiário">
+</div>
+{% endblock %}
+
+{% block table_headers %}
+<th>Diária</th>
+<th>Beneficiário</th>
+<th>Data</th>
+<th class="text-end">Valor Devolvido</th>
+<th>Motivo</th>
+<th>Registrado por</th>
+<th>Em</th>
+{% endblock %}
+
+{% block table_rows %}
+{% for dev in devolucoes %}
+<tr>
+    <td>
+        <a href="{% url 'gerenciar_diaria' pk=dev.diaria.pk %}" class="btn btn-sm btn-outline-secondary py-0">
+            <i class="bi bi-folder2-open"></i>
+            #{{ dev.diaria.pk }}
+            {% if dev.diaria.numero_siscac %}({{ dev.diaria.numero_siscac }}){% endif %}
+        </a>
+    </td>
+    <td>{{ dev.diaria.beneficiario.nome }}</td>
+    <td>{{ dev.data_devolucao|date:"d/m/Y" }}</td>
+    <td class="text-end text-danger fw-bold">R$ {{ dev.valor_devolvido }}</td>
+    <td>
+        <span class="text-truncate d-inline-block" style="max-width:260px;" title="{{ dev.motivo }}">
+            {{ dev.motivo }}
+        </span>
+    </td>
+    <td>{{ dev.registrado_por.get_full_name|default:dev.registrado_por.username }}</td>
+    <td class="text-muted small">{{ dev.criado_em|date:"d/m/Y H:i" }}</td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="7" class="text-center text-muted py-4">
+        <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+        Nenhuma devolução encontrada.
+    </td>
+</tr>
+{% endfor %}
+{% endblock %}
+
+{% block extra_stats %}
+<div class="row mb-3">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-danger text-white">
+            <div class="card-body py-2 d-flex align-items-center gap-3">
+                <i class="bi bi-currency-dollar fs-3"></i>
+                <div>
+                    <div class="small fw-bold text-white-50">Total Devolvido</div>
+                    <div class="fs-5 fw-bold">R$ {{ total_devolvido|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block page_title %}Painel de Assinaturas Eletrônicas{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+	<div class="d-flex justify-content-between align-items-center mb-4">
+		<div>
+			<h3 class="mb-0 fw-bold"><i class="bi bi-pen text-primary me-2"></i> Assinaturas Eletrônicas</h3>
+			<p class="text-muted mb-0">Documentos gerados para assinatura via Autentique</p>
+		</div>
+		<a href="{% url 'home_page' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+	</div>
+
+	{% if para_assinar %}
+	<div class="card shadow-sm border-0 mb-4">
+		<div class="card-header bg-warning bg-opacity-25 border-bottom py-3">
+			<h6 class="mb-0 fw-bold text-warning-emphasis"><i class="bi bi-pen-fill"></i> Aguardando Minha Assinatura ({{ para_assinar|length }})</h6>
+		</div>
+		<div class="card-body p-0">
+			<table class="table table-hover align-middle mb-0">
+				<thead class="table-dark">
+					<tr>
+						<th>#</th>
+						<th>Tipo</th>
+						<th>Processo</th>
+						<th>Criado em</th>
+						<th>Status</th>
+						<th class="text-center">Ação</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for assinatura in para_assinar %}
+					<tr>
+						<td class="fw-bold text-muted">#{{ assinatura.id }}</td>
+						<td>{{ assinatura.tipo_documento }}</td>
+						<td>
+							{% if assinatura.entidade_relacionada %}
+							<a href="{% url 'process_detail' pk=assinatura.entidade_relacionada.id %}">#{{ assinatura.entidade_relacionada.id }}</a>
+							{% else %}-{% endif %}
+						</td>
+						<td>{{ assinatura.criado_em|date:"d/m/Y H:i" }}</td>
+						<td><span class="badge bg-warning text-dark">{{ assinatura.status }}</span></td>
+						<td class="text-center">
+							{% if assinatura.autentique_url %}
+							<a href="{{ assinatura.autentique_url }}" target="_blank" class="btn btn-sm btn-success fw-bold">
+								<i class="bi bi-box-arrow-up-right"></i> Assinar
+							</a>
+							{% else %}
+							<form method="post" action="{% url 'disparar_assinatura' assinatura_id=assinatura.id %}">
+								{% csrf_token %}
+								<button type="submit" class="btn btn-sm btn-primary fw-bold">
+									<i class="bi bi-send"></i> Disparar
+								</button>
+							</form>
+							{% endif %}
+						</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+	{% endif %}
+
+	<div class="card shadow-sm border-0">
+		<div class="card-header bg-white border-bottom py-3">
+			<h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-archive"></i> Meus Documentos ({{ meus_documentos|length }})</h6>
+		</div>
+		<div class="card-body p-0">
+			<table class="table table-hover align-middle mb-0">
+				<thead class="table-dark">
+					<tr>
+						<th>#</th>
+						<th>Tipo</th>
+						<th>Processo</th>
+						<th>Criado em</th>
+						<th>Status</th>
+						<th class="text-center">Arquivo</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for assinatura in meus_documentos %}
+					<tr>
+						<td class="fw-bold text-muted">#{{ assinatura.id }}</td>
+						<td>{{ assinatura.tipo_documento }}</td>
+						<td>
+							{% if assinatura.entidade_relacionada %}
+							<a href="{% url 'process_detail' pk=assinatura.entidade_relacionada.id %}">#{{ assinatura.entidade_relacionada.id }}</a>
+							{% else %}-{% endif %}
+						</td>
+						<td>{{ assinatura.criado_em|date:"d/m/Y H:i" }}</td>
+						<td>
+							{% if assinatura.status == 'ASSINADO' %}<span class="badge bg-success">{{ assinatura.status }}</span>
+							{% elif assinatura.status == 'REJEITADO' or assinatura.status == 'ERRO' %}<span class="badge bg-danger">{{ assinatura.status }}</span>
+							{% elif assinatura.status == 'PENDENTE' %}<span class="badge bg-warning text-dark">{{ assinatura.status }}</span>
+							{% else %}<span class="badge bg-secondary">{{ assinatura.status }}</span>{% endif %}
+						</td>
+						<td class="text-center">
+							{% if assinatura.arquivo_assinado %}
+							<a href="{{ assinatura.arquivo_assinado.url }}" target="_blank" class="btn btn-sm btn-outline-success">
+								<i class="bi bi-file-earmark-check"></i>
+							</a>
+							{% elif assinatura.arquivo %}
+							<a href="{{ assinatura.arquivo.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+								<i class="bi bi-file-earmark"></i>
+							</a>
+							{% else %}-{% endif %}
+						</td>
+					</tr>
+					{% empty %}
+					<tr><td colspan="6" class="text-center py-4 text-muted">Nenhum documento encontrado.</td></tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+{% endblock %}

@@ -1,7 +1,7 @@
 """Filtros de listagem para o domínio de verbas indenizatórias."""
 
 import django_filters
-from fluxo.filters import BaseStyledFilterSet
+from pagamentos.filters import BaseStyledFilterSet
 from verbas_indenizatorias.models import Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao
 
 

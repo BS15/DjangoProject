@@ -10,7 +10,7 @@ from verbas_indenizatorias.models import Diaria
 from verbas_indenizatorias.pdf_generators import VERBAS_DOCUMENT_REGISTRY
 
 
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
 @xframe_options_sameorigin
 def gerar_pcd_view(request, pk):
     """Gera e exibe o PDF da Proposta de Concessão de Diárias (PCD)."""
@@ -20,4 +20,14 @@ def gerar_pcd_view(request, pk):
     return montar_resposta_pdf(pdf_bytes, nome_arquivo, inline=True)
 
 
-__all__ = ["gerar_pcd_view"]
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
+@xframe_options_sameorigin
+def gerar_termo_prestacao_contas_view(request, pk):
+    """Gera e exibe o PDF do termo de prestação de contas da diária."""
+    diaria = get_object_or_404(Diaria, pk=pk)
+    pdf_bytes = gerar_documento_pdf("termo_prestacao_contas", diaria, VERBAS_DOCUMENT_REGISTRY)
+    nome_arquivo = f"Termo_Prestacao_Contas_Diaria_{diaria.pk}.pdf"
+    return montar_resposta_pdf(pdf_bytes, nome_arquivo, inline=True)
+
+
+__all__ = ["gerar_pcd_view", "gerar_termo_prestacao_contas_view"]

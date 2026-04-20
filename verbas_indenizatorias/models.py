@@ -23,10 +23,10 @@ def _is_processo_selado(processo):
     if not processo or processo.em_contingencia or not processo.status:
         return False
 
-    from fluxo.domain_models.processos import PROCESSO_STATUS_PAGOS_E_POSTERIORES
+    from pagamentos.domain_models.processos import STATUS_PROCESSO_PAGOS_E_POSTERIORES
 
-    status_atual = (processo.status.status_choice or "").upper()
-    return status_atual in PROCESSO_STATUS_PAGOS_E_POSTERIORES
+    status_atual = (processo.status.opcao_status or "").upper()
+    return status_atual in STATUS_PROCESSO_PAGOS_E_POSTERIORES
 
 
 class SealedMutationQuerySet(models.QuerySet):
@@ -92,8 +92,11 @@ class TiposDeVerbasIndenizatorias(models.Model):
             ("pode_gerenciar_reembolsos", "Pode gerenciar reembolsos"),
             ("pode_autorizar_diarias", "Pode autorizar diárias"),
             ("pode_importar_diarias", "Pode importar diárias"),
+            ("pode_sincronizar_diarias_siscac", "Pode sincronizar/importar diárias via SISCAC"),
             ("pode_criar_diarias", "Pode criar diárias"),
             ("pode_gerenciar_diarias", "Pode gerenciar diárias"),
+            ("operar_prestacao_contas", "Pode operar prestação de contas em nome de terceiros"),
+            ("analisar_prestacao_contas", "Pode analisar e revisar prestações de contas"),
         ]
 
 
@@ -125,11 +128,13 @@ class Diaria(models.Model):
         ('COMPLEMENTACAO', 'Complementação')
     ]
 
-    processo = models.ForeignKey('fluxo.Processo', on_delete=models.CASCADE, related_name='diarias', null=True, blank=True)
+    processo = models.ForeignKey('pagamentos.Processo', on_delete=models.CASCADE, related_name='diarias', null=True, blank=True)
     beneficiario = models.ForeignKey('credores.Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
                                      verbose_name="Beneficiário", related_name='diarias_como_beneficiario')
     proponente = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                    related_name='diarias_propostas', verbose_name="Proponente")
+    criado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='diarias_criadas', verbose_name="Criado por")
 
     tipo_solicitacao = models.CharField(max_length=20, choices=TIPO_SOLICITACAO, default='INICIAL')
     diaria_inicial = models.ForeignKey(
@@ -155,7 +160,7 @@ class Diaria(models.Model):
     autorizada = models.BooleanField("Autorizada", default=False)
     numero_siscac = models.CharField("Nº SISCAC", max_length=20, unique=True, null=True, blank=True)
 
-    assinaturas_autentique = GenericRelation('fluxo.AssinaturaAutentique')
+    assinaturas_autentique = GenericRelation('pagamentos.AssinaturaEletronica')
 
     history = HistoricalRecords()
     _CAMPOS_SENSIVEIS_POS_PAGAMENTO = {
@@ -175,6 +180,7 @@ class Diaria(models.Model):
         "numero_siscac",
         "processo_id",
     }
+    _CAMPOS_RETIFICACAO_OFICIO = {"numero_siscac"}
     objects = SealedMutationQuerySet.as_manager()
 
     def clean(self):
@@ -213,6 +219,30 @@ class Diaria(models.Model):
 
         if self.tipo_solicitacao == 'INICIAL' and self.diaria_inicial_id and self.pk and self.diaria_inicial_id != self.pk:
             errors['diaria_inicial'] = 'Diárias iniciais não podem apontar para outra diária.'
+
+        # Regra: datas só podem ser alteradas se preservarem a quantidade de diárias original.
+        if self.pk and not getattr(self, '_bypass_domain_seal', False) and 'data_saida' not in errors:
+            original = (
+                type(self).objects
+                .filter(pk=self.pk)
+                .values('data_saida', 'data_retorno', 'quantidade_diarias')
+                .first()
+            )
+            if original:
+                datas_alteradas = (
+                    self.data_saida != original['data_saida']
+                    or self.data_retorno != original['data_retorno']
+                )
+                if datas_alteradas and self.data_saida and self.data_retorno:
+                    nova_qtd = self.calcular_quantidade_diarias()
+                    if nova_qtd is None:
+                        nova_qtd = self.quantidade_diarias
+                    if nova_qtd != original['quantidade_diarias']:
+                        errors['data_saida'] = (
+                            f'As novas datas resultariam em {nova_qtd} diária(s), mas a quantidade '
+                            f'original é {original["quantidade_diarias"]}. '
+                            'A quantidade de diárias não pode ser alterada.'
+                        )
 
         if errors:
             raise DjangoValidationError(errors)
@@ -263,6 +293,9 @@ class Diaria(models.Model):
             super().save(update_fields=['diaria_inicial'])
 
     def _enforce_domain_seal(self, update_fields=None):
+        if getattr(self, '_bypass_domain_seal', False):
+            return
+
         if not self.pk or not _is_processo_selado(self.processo):
             return
 
@@ -270,6 +303,14 @@ class Diaria(models.Model):
         campos_sensiveis = self._CAMPOS_SENSIVEIS_POS_PAGAMENTO
         campos_avaliados = set(update_fields) & campos_sensiveis if update_fields is not None else campos_sensiveis
         alterados = [campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)]
+
+        status_processo = ""
+        if self.processo and self.processo.status:
+            status_processo = (self.processo.status.opcao_status or "").upper()
+        processo_pago = status_processo.startswith("PAGO")
+
+        if alterados and set(alterados).issubset(self._CAMPOS_RETIFICACAO_OFICIO) and not processo_pago:
+            return
 
         if alterados:
             raise DjangoValidationError(
@@ -288,7 +329,7 @@ class Diaria(models.Model):
     def avancar_status(self, novo_status_str):
         """Avança status da diária com validação de turnpike específico."""
         from django.core.exceptions import ValidationError
-        from fluxo.validators import verificar_turnpike_diaria
+        from pagamentos.validators import verificar_turnpike_diaria
 
         status_anterior = self.status.status_choice if self.status else ''
         erros = verificar_turnpike_diaria(self, status_anterior, novo_status_str)
@@ -305,6 +346,13 @@ class Diaria(models.Model):
 
     def __str__(self):
         return f"Diária {self.numero_siscac} - {self.beneficiario}"
+
+    @property
+    def comprovantes(self):
+        prestacao = getattr(self, "prestacao_contas", None)
+        if prestacao:
+            return prestacao.documentos.all()
+        return DocumentoComprovacao.objects.none()
 
     class Meta:
         constraints = [
@@ -330,10 +378,104 @@ class DocumentoDiaria(DocumentoBase):
     history = HistoricalRecords()
 
 
+class PrestacaoContasDiaria(models.Model):
+    """Prestação de contas da diária com ciclo de abertura e encerramento."""
+
+    STATUS_ABERTA = "ABERTA"
+    STATUS_ENCERRADA = "ENCERRADA"
+    STATUS_CHOICES = [
+        (STATUS_ABERTA, "Aberta"),
+        (STATUS_ENCERRADA, "Encerrada"),
+    ]
+
+    diaria = models.OneToOneField('Diaria', on_delete=models.PROTECT, related_name='prestacao_contas')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_ABERTA)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    encerrado_em = models.DateTimeField(null=True, blank=True)
+    encerrado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='prestacoes_diaria_encerradas')
+    history = HistoricalRecords()
+
+
+class DocumentoComprovacao(DocumentoBase):
+    """Comprovante anexado pelo usuário na prestação de contas da diária."""
+
+    prestacao = models.ForeignKey('PrestacaoContasDiaria', on_delete=models.CASCADE, related_name='documentos')
+    history = HistoricalRecords()
+
+
+class DevolucaoDiaria(models.Model):
+    """Devolução parcial registrada para ajuste de diária sem edição direta do título pago."""
+
+    diaria = models.ForeignKey('Diaria', on_delete=models.PROTECT, related_name='devolucoes')
+    valor_devolvido = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+    data_devolucao = models.DateField()
+    motivo = models.TextField()
+    registrado_por = models.ForeignKey(User, on_delete=models.PROTECT)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    def clean(self):
+        if self.diaria_id and self.valor_devolvido and self.valor_devolvido > self.diaria.valor_total:
+            raise DjangoValidationError(
+                {'valor_devolvido': 'Valor devolvido não pode exceder o valor total da diária.'}
+            )
+
+
+STATUS_CONTINGENCIA_DIARIA = [
+    ("PENDENTE_SUPERVISOR", "Pendente Supervisor"),
+    ("APROVADA", "Aprovada"),
+    ("REJEITADA", "Rejeitada"),
+]
+
+_CAMPOS_PERMITIDOS_CONTINGENCIA_DIARIA = {
+    "numero_siscac",
+    "cidade_origem",
+    "cidade_destino",
+    "objetivo",
+    "proponente_id",
+    "meio_de_transporte_id",
+}
+
+
+class ContingenciaDiaria(models.Model):
+    """Solicitação formal de retificação de diária com aprovação hierárquica."""
+
+    diaria = models.ForeignKey('Diaria', on_delete=models.PROTECT, related_name='contingencias')
+    solicitante = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name='contingencias_diaria_solicitadas'
+    )
+    justificativa = models.TextField("Justificativa")
+    campo_corrigido = models.CharField("Campo Corrigido", max_length=100)
+    valor_anterior = models.TextField("Valor Anterior", blank=True)
+    valor_proposto = models.TextField("Valor Proposto")
+    status = models.CharField(
+        max_length=25, choices=STATUS_CONTINGENCIA_DIARIA, default="PENDENTE_SUPERVISOR"
+    )
+    aprovado_por = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='contingencias_diaria_aprovadas',
+    )
+    data_aprovacao = models.DateTimeField(null=True, blank=True)
+    parecer = models.TextField("Parecer", null=True, blank=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = "Contingência de Diária"
+        verbose_name_plural = "Contingências de Diárias"
+        ordering = ["-criado_em"]
+
+    def __str__(self):
+        return f"Contingência #{self.pk} – Diária #{self.diaria_id} [{self.get_status_display()}]"
+
+
 class ReembolsoCombustivel(models.Model):
     """Registro de reembolso de combustível vinculado a diária/processo."""
 
-    processo = models.ForeignKey('fluxo.Processo', on_delete=models.CASCADE, related_name='reembolsos_combustivel', null=True,
+    processo = models.ForeignKey('pagamentos.Processo', on_delete=models.CASCADE, related_name='reembolsos_combustivel', null=True,
                                  blank=True)
     diaria = models.ForeignKey('Diaria', on_delete=models.CASCADE, related_name='reembolsos_combustivel', null=True,
                                blank=True, verbose_name="Diária")
@@ -440,7 +582,7 @@ class DocumentoReembolso(DocumentoBase):
 class Jeton(models.Model):
     """Pagamento de jeton para participação em reunião/sessão."""
 
-    processo = models.ForeignKey('fluxo.Processo', on_delete=models.CASCADE, related_name='jetons', null=True, blank=True)
+    processo = models.ForeignKey('pagamentos.Processo', on_delete=models.CASCADE, related_name='jetons', null=True, blank=True)
     numero_sequencial = models.CharField("Número Sequencial", max_length=50)
     beneficiario = models.ForeignKey('credores.Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
                                      verbose_name="Conselheiro(a)")
@@ -513,7 +655,7 @@ class DocumentoJeton(DocumentoBase):
 class AuxilioRepresentacao(models.Model):
     """Pagamento de auxílio representação para beneficiário elegível."""
 
-    processo = models.ForeignKey('fluxo.Processo', on_delete=models.CASCADE, related_name='auxilios_representacao', null=True,
+    processo = models.ForeignKey('pagamentos.Processo', on_delete=models.CASCADE, related_name='auxilios_representacao', null=True,
                                  blank=True)
     numero_sequencial = models.CharField("Número Sequencial", max_length=50)
     beneficiario = models.ForeignKey('credores.Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
@@ -614,7 +756,7 @@ def _make_verba_presave_signal(model_cls):
     return _cleanup_old_file
 
 
-for _doc_model in (DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio):
+for _doc_model in (DocumentoDiaria, DocumentoComprovacao, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio):
     _make_verba_delete_signal(_doc_model)
     _make_verba_presave_signal(_doc_model)
 

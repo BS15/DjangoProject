@@ -6,9 +6,9 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
-from fluxo.domain_models import Processo
-from fluxo.forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoForm
-from fluxo.models import TiposDePagamento
+from pagamentos.domain_models import Processo
+from pagamentos.forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoForm
+from pagamentos.models import TiposDePagamento
 from verbas_indenizatorias.services.processo_integration import criar_processo_e_vincular_verbas
 from .helpers import _forcar_campos_canonicos_processo_verbas
 from ..shared.registry import (

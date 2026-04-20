@@ -1,0 +1,45 @@
+{% extends "layouts/base_form.html" %}
+
+{% block page_heading %}Vínculo da Diária #{{ diaria.id }} com Processo{% endblock %}
+{% block page_subtitle %}Vincule ou desvincule a diária de um processo em pré-autorização.{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'gerenciar_diaria' pk=diaria.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
+{% endblock %}
+
+{% block form_action %}{% url 'vincular_diaria_processo_action' pk=diaria.id %}{% endblock %}
+
+{% block form_fields %}
+<div class="mb-3">
+    <label class="form-label">Processo de destino</label>
+    <select name="processo_id" class="form-select" required>
+        <option value="">Selecione...</option>
+        {% for processo in processos_vinculaveis %}
+        <option value="{{ processo.id }}" {% if diaria.processo_id == processo.id %}selected{% endif %}>
+            #{{ processo.id }} - {{ processo.credor|default:"Sem credor" }} - {{ processo.status.opcao_status|default:"Sem status" }}
+        </option>
+        {% endfor %}
+    </select>
+    <div class="form-text">Apenas processos em pré-autorização são elegíveis para vínculo.</div>
+</div>
+
+{% if diaria.processo_id %}
+<div class="alert alert-info d-flex justify-content-between align-items-center mb-0">
+    <span>Vínculo atual: Processo #{{ diaria.processo_id }}</span>
+    <button
+        type="submit"
+        class="btn btn-outline-danger btn-sm"
+        formaction="{% url 'desvincular_diaria_processo_action' pk=diaria.id %}"
+        formnovalidate
+        onclick="return confirm('Deseja desvincular esta diária do processo atual?');"
+    >
+        <i class="bi bi-link-45deg"></i> Desvincular
+    </button>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block form_actions %}
+<a href="{% url 'gerenciar_diaria' pk=diaria.id %}" class="btn btn-secondary px-4">Cancelar</a>
+<button type="submit" class="btn btn-primary px-4 fw-bold"><i class="bi bi-link-45deg"></i> Vincular Diária</button>
+{% endblock %}

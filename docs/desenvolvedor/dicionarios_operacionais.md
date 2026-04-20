@@ -78,12 +78,12 @@ Campos usados em cada entrada:
 | Método | `POST` |
 | Entrada | sem payload obrigatório |
 | Validações | não aplica |
-| Worker | placeholder (integração externa ainda não habilitada) |
+| Worker | sem worker dedicado (integração externa ainda não habilitada) |
 | Efeitos | sem mutação de dados |
 | Redirect | `painel_reinf_view` |
 | Feedback | warning de funcionalidade indisponível |
 
-## Catálogo de Actions do Fluxo
+## Catálogo de Actions de Pagamentos
 
 ### Namespace `pre_payment`
 
@@ -91,23 +91,23 @@ Campos usados em cada entrada:
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `add_process_action` | `fluxo/views/pre_payment/cadastro/actions.py` | `add_process_action` (`/adicionar/action/`) | ver decorator da action | `POST` | dados de capa e formsets iniciais | regras de criação e consistência de processo | services/helpers de cadastro quando aplicável | cria processo e registros associados | `editar_processo` | `messages` success/error |
-| `editar_processo_capa_action` | `fluxo/views/pre_payment/cadastro/actions.py` | `editar_processo_capa_action` (`/processo/<int:pk>/editar/capa/action/`) | ver decorator da action | `POST` | dados de capa do processo | validação de formulário e status elegível | services/helpers de cadastro quando aplicável | atualiza dados de capa | tela de edição do processo | `messages` success/error |
-| `editar_processo_documentos_action` | `fluxo/views/pre_payment/cadastro/actions.py` | `editar_processo_documentos_action` (`/processo/<int:pk>/editar/documentos/action/`) | ver decorator da action | `POST` | payload documental e anexos | regras documentais e de etapa | services/helpers documentais quando aplicável | cria/atualiza documentos e pendências | tela de edição do processo | `messages` success/error |
-| `editar_processo_pendencias_action` | `fluxo/views/pre_payment/cadastro/actions.py` | `editar_processo_pendencias_action` (`/processo/<int:pk>/editar/pendencias/action/`) | ver decorator da action | `POST` | atualização de pendências | validação de estado de pendências | helpers de pendência quando aplicável | altera status de pendências | tela de edição do processo | `messages` success/error |
+| `add_process_action` | `pagamentos/views/pre_payment/cadastro/actions.py` | `add_process_action` (`/adicionar/action/`) | `fluxo.acesso_backoffice` | `POST` | dados de capa e formsets iniciais | regras de criação e consistência de processo | `_salvar_processo_completo` (orquestração) | cria processo e registros associados | `editar_processo` | `messages` success/error |
+| `editar_processo_capa_action` | `pagamentos/views/pre_payment/cadastro/actions.py` | `editar_processo_capa_action` (`/processo/<int:pk>/editar/capa/action/`) | `fluxo.acesso_backoffice` | `POST` | dados de capa do processo | validação de formulário e status elegível | `_salvar_processo_completo` (orquestração) | atualiza dados de capa | tela de edição do processo | `messages` success/error |
+| `editar_processo_documentos_action` | `pagamentos/views/pre_payment/cadastro/actions.py` | `editar_processo_documentos_action` (`/processo/<int:pk>/editar/documentos/action/`) | `fluxo.acesso_backoffice` | `POST` | payload documental e anexos | regras documentais e de etapa | `_salvar_formsets_em_transacao` (orquestração) | cria/atualiza documentos e pendências | tela de edição do processo | `messages` success/error |
+| `editar_processo_pendencias_action` | `pagamentos/views/pre_payment/cadastro/actions.py` | `editar_processo_pendencias_action` (`/processo/<int:pk>/editar/pendencias/action/`) | `fluxo.acesso_backoffice` | `POST` | atualização de pendências | validação de estado de pendências | `_atualizar_status_pendencia` (orquestração) | altera status de pendências | tela de edição do processo | `messages` success/error |
 
 #### Etapa `empenho`
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `registrar_empenho_action` | `fluxo/views/pre_payment/empenho/actions.py` | `registrar_empenho_action` (`/a-empenhar/registrar-empenho/`) | ver decorator da action | `POST` | dados de empenho e processo alvo | consistência de valores e elegibilidade | services de empenho quando aplicável | registra dados de empenho no processo | painel/fluxo de empenho | `messages` success/error |
+| `registrar_empenho_action` | `pagamentos/views/pre_payment/empenho/actions.py` | `registrar_empenho_action` (`/a-empenhar/registrar-empenho/`) | `fluxo.pode_operar_contas_pagar` | `POST` | dados de empenho e processo alvo | consistência de valores e elegibilidade | `_registrar_empenho_e_anexar_siscac` | registra dados de empenho no processo | painel/fluxo de empenho | `messages` success/error |
 
 #### Etapa `liquidacoes`
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `alternar_ateste_nota_action` | `fluxo/views/pre_payment/liquidacoes/actions.py` | `alternar_ateste_nota` (`/liquidacoes/atestar/<int:pk>/`) | ver decorator da action | `POST` | identificação da nota | valida elegibilidade de ateste | service/helper de liquidação quando aplicável | alterna estado de ateste | painel de liquidações | `messages` success/error |
-| `avancar_para_pagamento_action` | `fluxo/views/pre_payment/liquidacoes/actions.py` | `avancar_para_pagamento` (`/processo/<int:pk>/avancar-para-pagamento/`) | ver decorator da action | `POST` | processo alvo | turnpikes de liquidação e obrigatoriedades | service de transição de etapa | avança processo para pagamento | hub do processo/painel | `messages` success/error |
+| `alternar_ateste_nota_action` | `pagamentos/views/pre_payment/liquidacoes/actions.py` | `alternar_ateste_nota` (`/liquidacoes/atestar/<int:pk>/`) | `fluxo.pode_atestar_liquidacao` | `POST` | identificação da nota | valida elegibilidade de ateste | sem worker dedicado (mutação local na action) | alterna estado de ateste | painel de liquidações | `messages` success/error |
+| `avancar_para_pagamento_action` | `pagamentos/views/pre_payment/liquidacoes/actions.py` | `avancar_para_pagamento` (`/processo/<int:pk>/avancar-para-pagamento/`) | `fluxo.pode_operar_contas_pagar` | `POST` | processo alvo | turnpikes de liquidação e obrigatoriedades | `processo.avancar_status(...)` (método de domínio) | avança processo para pagamento | hub do processo/painel | `messages` success/error |
 
 ### Namespace `payment`
 
@@ -115,22 +115,22 @@ Campos usados em cada entrada:
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `enviar_para_autorizacao_action` | `fluxo/views/payment/contas_a_pagar/actions.py` | `enviar_para_autorizacao` (`/processos/enviar-autorizacao/`) | ver decorator da action | `POST` | seleção de processos | validação de elegibilidade para autorização | service de contas a pagar | altera estado para autorização | painel de contas a pagar | `messages` success/error |
+| `enviar_para_autorizacao_action` | `pagamentos/views/payment/contas_a_pagar/actions.py` | `enviar_para_autorizacao` (`/processos/enviar-autorizacao/`) | `fluxo.pode_operar_contas_pagar` | `POST` | seleção de processos | validação de elegibilidade para autorização | `_processar_acao_lote` | altera estado para autorização | painel de contas a pagar | `messages` success/error |
 
 #### Etapa `autorizacao`
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `autorizar_pagamento` | `fluxo/views/payment/autorizacao/actions.py` | `autorizar_pagamento` (`/processos/autorizar-pagamento/`) | ver decorator da action | `POST` | seleção de processos para autorização | valida permissão e critérios de autorização | service de autorização quando aplicável | autoriza pagamento de processos | painel de autorização | `messages` success/error |
-| `recusar_autorizacao_action` | `fluxo/views/payment/autorizacao/actions.py` | `recusar_autorizacao` (`/processos/autorizacao/<int:pk>/recusar/`) | ver decorator da action | `POST` | processo e motivo de recusa | validação de estado e permissão | service de recusa quando aplicável | registra recusa e atualiza estado | painel de autorização | `messages` success/error |
+| `autorizar_pagamento` | `pagamentos/views/payment/autorizacao/actions.py` | `autorizar_pagamento` (`/processos/autorizar-pagamento/`) | `fluxo.pode_autorizar_pagamento` | `POST` | seleção de processos para autorização | valida permissão e critérios de autorização | `_processar_acao_lote` | autoriza pagamento de processos | painel de autorização | `messages` success/error |
+| `recusar_autorizacao_action` | `pagamentos/views/payment/autorizacao/actions.py` | `recusar_autorizacao` (`/processos/autorizacao/<int:pk>/recusar/`) | `fluxo.pode_autorizar_pagamento` | `POST` | processo e motivo de recusa | validação de estado e permissão | `_recusar_processo_view` | registra recusa e atualiza estado | painel de autorização | `messages` success/error |
 
 #### Etapa `lancamento`
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `separar_para_lancamento_bancario_action` | `fluxo/views/payment/lancamento/actions.py` | `separar_para_lancamento_bancario` (`/processos/separar-lancamento/`) | ver decorator da action | `POST` | seleção de processos | validação de status elegível para lançamento | service de lançamento bancário | separa processos para lançamento | painel de lançamento bancário | `messages` success/error |
-| `marcar_como_lancado_action` | `fluxo/views/payment/lancamento/actions.py` | `marcar_como_lancado` (`/processos/marcar-lancado/`) | ver decorator da action | `POST` | seleção de processos lançados | validação de lote e estado | service de lançamento bancário | marca processos como lançados | painel de lançamento bancário | `messages` success/error |
-| `desmarcar_lancamento_action` | `fluxo/views/payment/lancamento/actions.py` | `desmarcar_lancamento` (`/processos/desmarcar-lancamento/`) | ver decorator da action | `POST` | seleção de processos | validação de reversão permitida | service de lançamento bancário | reverte marcação de lançamento | painel de lançamento bancário | `messages` success/error |
+| `separar_para_lancamento_bancario_action` | `pagamentos/views/payment/lancamento/actions.py` | `separar_para_lancamento_bancario` (`/processos/separar-lancamento/`) | `fluxo.pode_operar_contas_pagar` | `POST` | seleção de processos | validação de status elegível para lançamento | sem worker dedicado (orquestração em sessão) | separa processos para lançamento | painel de lançamento bancário | `messages` success/error |
+| `marcar_como_lancado_action` | `pagamentos/views/payment/lancamento/actions.py` | `marcar_como_lancado` (`/processos/marcar-lancado/`) | `fluxo.pode_operar_contas_pagar` | `POST` | seleção de processos lançados | validação de lote e estado | `_processar_acao_lote` | marca processos como lançados | painel de lançamento bancário | `messages` success/error |
+| `desmarcar_lancamento_action` | `pagamentos/views/payment/lancamento/actions.py` | `desmarcar_lancamento` (`/processos/desmarcar-lancamento/`) | `fluxo.pode_operar_contas_pagar` | `POST` | seleção de processos | validação de reversão permitida | `_processar_acao_lote` | reverte marcação de lançamento | painel de lançamento bancário | `messages` success/error |
 
 ### Namespace `post_payment`
 
@@ -138,37 +138,37 @@ Campos usados em cada entrada:
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `iniciar_conferencia_action` | `fluxo/views/post_payment/conferencia/actions.py` | `iniciar_conferencia` (`/processos/conferencia/iniciar/`) | ver decorator da action | `POST` | seleção de processos | valida elegibilidade para conferência | service de conferência quando aplicável | move processos para revisão de conferência | painel de conferência | `messages` success/error |
-| `aprovar_conferencia_action` | `fluxo/views/post_payment/conferencia/actions.py` | `aprovar_conferencia` (`/processos/conferencia/<int:pk>/aprovar/`) | ver decorator da action | `POST` | processo alvo | valida checklist da etapa | service de conferência quando aplicável | aprova conferência e avança fluxo | painel de conferência | `messages` success/error |
+| `iniciar_conferencia_action` | `pagamentos/views/post_payment/conferencia/actions.py` | `iniciar_conferencia` (`/processos/conferencia/iniciar/`) | `fluxo.pode_operar_contas_pagar` | `POST` | seleção de processos | valida elegibilidade para conferência | `_iniciar_fila_sessao` | move processos para revisão de conferência | painel de conferência | `messages` success/error |
+| `aprovar_conferencia_action` | `pagamentos/views/post_payment/conferencia/actions.py` | `aprovar_conferencia` (`/processos/conferencia/<int:pk>/aprovar/`) | `fluxo.pode_operar_contas_pagar` | `POST` | processo alvo | valida checklist da etapa | sem worker dedicado (ação atualmente sem mutação) | aprova conferência e avança fluxo | painel de conferência | `messages` success/error |
 
 #### Etapa `contabilizacao`
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `iniciar_contabilizacao_action` | `fluxo/views/post_payment/contabilizacao/actions.py` | `iniciar_contabilizacao` (`/processos/contabilizacao/iniciar/`) | ver decorator da action | `POST` | seleção de processos | valida elegibilidade para contabilização | service de contabilização quando aplicável | inicia etapa de contabilização | painel de contabilização | `messages` success/error |
-| `aprovar_contabilizacao_action` | `fluxo/views/post_payment/contabilizacao/actions.py` | `aprovar_contabilizacao` (`/processos/contabilizacao/<int:pk>/aprovar/`) | ver decorator da action | `POST` | processo alvo | valida regras da etapa | service de contabilização quando aplicável | aprova contabilização | painel de contabilização | `messages` success/error |
-| `recusar_contabilizacao_action` | `fluxo/views/post_payment/contabilizacao/actions.py` | `recusar_contabilizacao` (`/processos/contabilizacao/<int:pk>/recusar/`) | ver decorator da action | `POST` | processo e justificativa | valida recusa permitida | service de contabilização quando aplicável | recusa contabilização e ajusta estado | painel de contabilização | `messages` success/error |
+| `iniciar_contabilizacao_action` | `pagamentos/views/post_payment/contabilizacao/actions.py` | `iniciar_contabilizacao` (`/processos/contabilizacao/iniciar/`) | `fluxo.pode_contabilizar` | `POST` | seleção de processos | valida elegibilidade para contabilização | `_iniciar_fila_sessao` | inicia etapa de contabilização | painel de contabilização | `messages` success/error |
+| `aprovar_contabilizacao_action` | `pagamentos/views/post_payment/contabilizacao/actions.py` | `aprovar_contabilizacao` (`/processos/contabilizacao/<int:pk>/aprovar/`) | `fluxo.pode_contabilizar` | `POST` | processo alvo | valida regras da etapa | `_aprovar_processo_view` | aprova contabilização | painel de contabilização | `messages` success/error |
+| `recusar_contabilizacao_action` | `pagamentos/views/post_payment/contabilizacao/actions.py` | `recusar_contabilizacao` (`/processos/contabilizacao/<int:pk>/recusar/`) | `fluxo.pode_contabilizar` | `POST` | processo e justificativa | valida recusa permitida | `_recusar_processo_view` | recusa contabilização e ajusta estado | painel de contabilização | `messages` success/error |
 
 #### Etapa `conselho`
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `aprovar_conselho_action` | `fluxo/views/post_payment/conselho/actions.py` | `aprovar_conselho` (`/processos/conselho/<int:pk>/aprovar/`) | ver decorator da action | `POST` | processo em análise de conselho | validações de deliberação | service de conselho quando aplicável | aprova deliberação | painel de conselho | `messages` success/error |
-| `recusar_conselho_action` | `fluxo/views/post_payment/conselho/actions.py` | `recusar_conselho` (`/processos/conselho/<int:pk>/recusar/`) | ver decorator da action | `POST` | processo e justificativa | validações de recusa | service de conselho quando aplicável | recusa deliberação | painel de conselho | `messages` success/error |
+| `aprovar_conselho_action` | `pagamentos/views/post_payment/conselho/actions.py` | `aprovar_conselho` (`/processos/conselho/<int:pk>/aprovar/`) | `fluxo.pode_auditar_conselho` | `POST` | processo em análise de conselho | validações de deliberação | `_aprovar_processo_view` | aprova deliberação | painel de conselho | `messages` success/error |
+| `recusar_conselho_action` | `pagamentos/views/post_payment/conselho/actions.py` | `recusar_conselho` (`/processos/conselho/<int:pk>/recusar/`) | `fluxo.pode_auditar_conselho` | `POST` | processo e justificativa | validações de recusa | `_recusar_processo_view` | recusa deliberação | painel de conselho | `messages` success/error |
 
 #### Etapa `reunioes`
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `gerenciar_reunioes_action` | `fluxo/views/post_payment/reunioes/actions.py` | `gerenciar_reunioes_action` (`/processos/conselho/reunioes/criar/`) | ver decorator da action | `POST` | dados da reunião | validações de criação de reunião | service de reuniões quando aplicável | cria/atualiza reunião | painel de reuniões | `messages` success/error |
-| `montar_pauta_reuniao_action` | `fluxo/views/post_payment/reunioes/actions.py` | `montar_pauta_reuniao_action` (`/processos/conselho/reunioes/<int:reuniao_id>/montar-pauta/adicionar/`) | ver decorator da action | `POST` | itens da pauta e reunião alvo | validações de elegibilidade dos processos | service de reuniões quando aplicável | vincula itens na pauta | tela de pauta da reunião | `messages` success/error |
-| `iniciar_conselho_reuniao_action` | `fluxo/views/post_payment/reunioes/actions.py` | `iniciar_conselho_reuniao` (`/processos/conselho/reunioes/<int:reuniao_id>/iniciar/`) | ver decorator da action | `POST` | reunião alvo | validações de prontidão da pauta | service de reuniões quando aplicável | inicia sessão de conselho | análise de reunião/painel | `messages` success/error |
+| `gerenciar_reunioes_action` | `pagamentos/views/post_payment/reunioes/actions.py` | `gerenciar_reunioes_action` (`/processos/conselho/reunioes/criar/`) | `fluxo.pode_auditar_conselho` | `POST` | dados da reunião | validações de criação de reunião | sem worker dedicado (orquestração na própria action) | cria/atualiza reunião | painel de reuniões | `messages` success/error |
+| `montar_pauta_reuniao_action` | `pagamentos/views/post_payment/reunioes/actions.py` | `montar_pauta_reuniao_action` (`/processos/conselho/reunioes/<int:reuniao_id>/montar-pauta/adicionar/`) | `fluxo.pode_auditar_conselho` | `POST` | itens da pauta e reunião alvo | validações de elegibilidade dos processos | sem worker dedicado (orquestração na própria action) | vincula itens na pauta | tela de pauta da reunião | `messages` success/error |
+| `iniciar_conselho_reuniao_action` | `pagamentos/views/post_payment/reunioes/actions.py` | `iniciar_conselho_reuniao` (`/processos/conselho/reunioes/<int:reuniao_id>/iniciar/`) | `fluxo.pode_auditar_conselho` | `POST` | reunião alvo | validações de prontidão da pauta | sem worker dedicado (orquestração na própria action) | inicia sessão de conselho | análise de reunião/painel | `messages` success/error |
 
 #### Etapa `arquivamento`
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `arquivar_processo_action` | `fluxo/views/post_payment/arquivamento/actions.py` | `arquivar_processo_action` (`/processos/arquivamento/<int:pk>/executar/`) | ver decorator da action | `POST` | processo alvo | validações de encerramento e completude | service de arquivamento quando aplicável | arquiva processo | painel de arquivamento | `messages` success/error |
+| `arquivar_processo_action` | `pagamentos/views/post_payment/arquivamento/actions.py` | `arquivar_processo_action` (`/processos/arquivamento/<int:pk>/executar/`) | `fluxo.pode_arquivar` | `POST` | processo alvo | validações de encerramento e completude | `_executar_arquivamento_definitivo` | arquiva processo | painel de arquivamento | `messages` success/error |
 
 ### Namespace `support`
 
@@ -176,62 +176,62 @@ Campos usados em cada entrada:
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `atualizar_pendencias_lote_action` | `fluxo/views/support/pendencia/actions.py` | `painel_pendencias_action` (`/pendencias/action/`) | ver decorator da action | `POST` | lote de pendências e status | validação de lote e transições permitidas | helper/service de pendência | atualiza múltiplas pendências | painel de pendências | `messages` success/error |
+| `atualizar_pendencias_lote_action` | `pagamentos/views/support/pendencia/actions.py` | `painel_pendencias_action` (`/pendencias/action/`) | `fluxo.acesso_backoffice` | `POST` | lote de pendências e status | validação de lote e transições permitidas | sem worker dedicado (mutação local na action) | atualiza múltiplas pendências | painel de pendências | `messages` success/error |
 
 #### Etapa `devolucao`
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `registrar_devolucao_action` | `fluxo/views/support/devolucao/actions.py` | `registrar_devolucao_action` (`/processo/<int:processo_id>/devolucao/salvar/`) | ver decorator da action | `POST` | dados da devolução e processo | validações de devolução e anexos | service de devolução quando aplicável | registra devolução financeira/documental | painel de devoluções/processo | `messages` success/error |
+| `registrar_devolucao_action` | `pagamentos/views/support/devolucao/actions.py` | `registrar_devolucao_action` (`/processo/<int:processo_id>/devolucao/salvar/`) | `fluxo.acesso_backoffice` | `POST` | dados da devolução e processo | validações de devolução e anexos | sem worker dedicado (`form.save()` na action) | registra devolução financeira/documental | painel de devoluções/processo | `messages` success/error |
 
 #### Etapa `contingencia`
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `add_contingencia_action` | `fluxo/views/support/contingencia/actions.py` | `add_contingencia_action` (`/contingencias/nova/enviar/`) | ver decorator da action | `POST` | dados de contingência | validação de elegibilidade e campos obrigatórios | service/helper de contingência | cria contingência vinculada ao processo | painel de contingências | `messages` success/error |
-| `analisar_contingencia_action` | `fluxo/views/support/contingencia/actions.py` | `analisar_contingencia` (`/contingencias/<int:pk>/analisar/`) | ver decorator da action | `POST` | decisão sobre contingência | validação de estado e permissão | service/helper de contingência | aprova/recusa contingência e atualiza estado | painel de contingências | `messages` success/error |
+| `add_contingencia_action` | `pagamentos/views/support/contingencia/actions.py` | `add_contingencia_action` (`/contingencias/nova/enviar/`) | `fluxo.acesso_backoffice` | `POST` | dados de contingência | validação de elegibilidade e campos obrigatórios | `normalizar_dados_propostos_contingencia` + `determinar_requisitos_contingencia` | cria contingência vinculada ao processo | painel de contingências | `messages` success/error |
+| `analisar_contingencia_action` | `pagamentos/views/support/contingencia/actions.py` | `analisar_contingencia` (`/contingencias/<int:pk>/analisar/`) | `fluxo.acesso_backoffice` | `POST` | decisão sobre contingência | validação de estado e permissão | `processar_aprovacao_contingencia` + `processar_revisao_contadora_contingencia` | aprova/recusa contingência e atualiza estado | painel de contingências | `messages` success/error |
 
 #### Etapa `contas_fixas`
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `add_conta_fixa_action` | `fluxo/views/support/contas_fixas/actions.py` | `add_conta_fixa_action` (`/contas-fixas/nova/action/`) | ver decorator da action | `POST` | dados da conta fixa | validação de formulário | service/helper de contas fixas | cria conta/fatura | painel de contas fixas | `messages` success/error |
-| `edit_conta_fixa_action` | `fluxo/views/support/contas_fixas/actions.py` | `edit_conta_fixa_action` (`/contas-fixas/<int:pk>/editar/action/`) | ver decorator da action | `POST` | atualização de conta fixa | validação de formulário | service/helper de contas fixas | atualiza conta/fatura | painel de contas fixas | `messages` success/error |
-| `vincular_processo_fatura_action` | `fluxo/views/support/contas_fixas/actions.py` | `vincular_processo_fatura` (`/contas-fixas/<int:fatura_id>/vincular/`) | ver decorator da action | `POST` | fatura e processo alvo | validação de vínculo permitido | service/helper de contas fixas | vincula fatura a processo | painel de contas fixas | `messages` success/error |
-| `excluir_conta_fixa_action` | `fluxo/views/support/contas_fixas/actions.py` | `excluir_conta_fixa` (`/contas-fixas/<int:pk>/excluir/`) | ver decorator da action | `POST` | conta fixa alvo | validação de exclusão permitida | service/helper de contas fixas | remove/desativa vínculo conforme regra do módulo | painel de contas fixas | `messages` success/error |
+| `add_conta_fixa_action` | `pagamentos/views/support/contas_fixas/actions.py` | `add_conta_fixa_action` (`/contas-fixas/nova/action/`) | não implementado no codebase (`actions.py/` vazio) | `POST` | dados da conta fixa | validação de formulário | não implementado no codebase (`actions.py/` vazio) | cria conta/fatura | painel de contas fixas | `messages` success/error |
+| `edit_conta_fixa_action` | `pagamentos/views/support/contas_fixas/actions.py` | `edit_conta_fixa_action` (`/contas-fixas/<int:pk>/editar/action/`) | não implementado no codebase (`actions.py/` vazio) | `POST` | atualização de conta fixa | validação de formulário | não implementado no codebase (`actions.py/` vazio) | atualiza conta/fatura | painel de contas fixas | `messages` success/error |
+| `vincular_processo_fatura_action` | `pagamentos/views/support/contas_fixas/actions.py` | `vincular_processo_fatura` (`/contas-fixas/<int:fatura_id>/vincular/`) | não implementado no codebase (`actions.py/` vazio) | `POST` | fatura e processo alvo | validação de vínculo permitido | não implementado no codebase (`actions.py/` vazio) | vincula fatura a processo | painel de contas fixas | `messages` success/error |
+| `excluir_conta_fixa_action` | `pagamentos/views/support/contas_fixas/actions.py` | `excluir_conta_fixa` (`/contas-fixas/<int:pk>/excluir/`) | não implementado no codebase (`actions.py/` vazio) | `POST` | conta fixa alvo | validação de exclusão permitida | não implementado no codebase (`actions.py/` vazio) | remove/desativa vínculo conforme regra do módulo | painel de contas fixas | `messages` success/error |
 
 ## Catálogo de Actions de Verbas Indenizatórias
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `editar_processo_verbas_capa_action` | `verbas_indenizatorias/views/processo/actions.py` | `editar_processo_verbas_capa_action` (`/processo/<int:pk>/editar-verbas/capa/action/`) | ver decorator da action | `POST` | dados de capa do processo de verbas | validação de formulário | services/helpers de processo de verbas | atualiza capa do processo | tela de edição de verbas | `messages` success/error |
-| `editar_processo_verbas_pendencias_action` | `verbas_indenizatorias/views/processo/actions.py` | `editar_processo_verbas_pendencias_action` (`/processo/<int:pk>/editar-verbas/pendencias/action/`) | ver decorator da action | `POST` | atualização de pendências | validação de transições de pendência | helpers de pendências do módulo | atualiza pendências | tela de edição de verbas | `messages` success/error |
-| `editar_processo_verbas_documentos_action` | `verbas_indenizatorias/views/processo/actions.py` | `editar_processo_verbas_documentos_action` (`/processo/<int:pk>/editar-verbas/documentos/action/`) | ver decorator da action | `POST` | dados documentais e anexos | regras documentais da etapa | services/helpers documentais | cria/atualiza documentos | tela de edição de verbas | `messages` success/error |
-| `agrupar_verbas_view` | `verbas_indenizatorias/views/processo/actions.py` | `agrupar_verbas` (`/verbas/agrupar/<str:tipo_verba>/`) | ver decorator da action | `POST` | tipo de verba + seleção de itens | validação por tipo de verba | service de agrupamento | agrupa verbas em processo de pagamento | painel de verbas | `messages` success/error |
-| `add_diaria_action` | `verbas_indenizatorias/views/diarias/actions.py` | `add_diaria_action` (`/verbas/diarias/nova/action/`) | ver decorator da action | `POST` | dados de diária | validações de beneficiário e período | services/helpers de diárias | cria diária e estado inicial | listas/gerência de diárias | `messages` success/error |
-| `registrar_comprovante_action` | `verbas_indenizatorias/views/diarias/actions.py` | `registrar_comprovante_action` (`/verbas/diarias/<int:pk>/comprovantes/registrar/`) | ver decorator da action | `POST` | comprovante e diária alvo | validação de arquivo e estado | helper de comprovantes | anexa comprovante e ajusta estado | gerência da diária | `messages` success/error |
-| `cancelar_diaria_action` | `verbas_indenizatorias/views/diarias/actions.py` | `cancelar_diaria_action` (`/verbas/diarias/<int:pk>/cancelar/`) | ver decorator da action | `POST` | diária alvo | validação de cancelamento permitido | service de diárias | cancela diária | listas/gerência de diárias | `messages` success/error |
-| `add_reembolso_action` | `verbas_indenizatorias/views/reembolsos/actions.py` | `add_reembolso_action` (`/verbas/reembolsos/novo/action/`) | ver decorator da action | `POST` | dados de reembolso | validações de campos e valores | services/helpers de reembolso | cria reembolso | listas/gerência de reembolsos | `messages` success/error |
-| `solicitar_autorizacao_reembolso_action` | `verbas_indenizatorias/views/reembolsos/actions.py` | `solicitar_autorizacao_reembolso_action` (`/verbas/reembolsos/<int:pk>/solicitar-autorizacao/`) | ver decorator da action | `POST` | reembolso alvo | validações de elegibilidade | service de status | altera status para solicitação de autorização | gerência de reembolso | `messages` success/error |
-| `autorizar_reembolso_action` | `verbas_indenizatorias/views/reembolsos/actions.py` | `autorizar_reembolso_action` (`/verbas/reembolsos/<int:pk>/autorizar/`) | ver decorator da action | `POST` | reembolso alvo | validações de autorização | service de status | autoriza reembolso | gerência de reembolso | `messages` success/error |
-| `cancelar_reembolso_action` | `verbas_indenizatorias/views/reembolsos/actions.py` | `cancelar_reembolso_action` (`/verbas/reembolsos/<int:pk>/cancelar/`) | ver decorator da action | `POST` | reembolso alvo | validações de cancelamento | service de status | cancela reembolso | gerência de reembolso | `messages` success/error |
-| `registrar_comprovante_reembolso_action` | `verbas_indenizatorias/views/reembolsos/actions.py` | `registrar_comprovante_reembolso_action` (`/verbas/reembolsos/<int:pk>/comprovantes/registrar/`) | ver decorator da action | `POST` | comprovante e reembolso alvo | validação de arquivo e elegibilidade | helper de comprovantes | anexa comprovante | gerência de reembolso | `messages` success/error |
-| `add_jeton_action` | `verbas_indenizatorias/views/jetons/actions.py` | `add_jeton_action` (`/verbas/jetons/novo/action/`) | ver decorator da action | `POST` | dados de jeton | validações de sessão/beneficiário | services/helpers de jetons | cria jeton | listas/gerência de jetons | `messages` success/error |
-| `solicitar_autorizacao_jeton_action` | `verbas_indenizatorias/views/jetons/actions.py` | `solicitar_autorizacao_jeton_action` (`/verbas/jetons/<int:pk>/solicitar-autorizacao/`) | ver decorator da action | `POST` | jeton alvo | validações de elegibilidade | service de status | solicita autorização de jeton | gerência de jeton | `messages` success/error |
-| `autorizar_jeton_action` | `verbas_indenizatorias/views/jetons/actions.py` | `autorizar_jeton_action` (`/verbas/jetons/<int:pk>/autorizar/`) | ver decorator da action | `POST` | jeton alvo | validações de autorização | service de status | autoriza jeton | gerência de jeton | `messages` success/error |
-| `cancelar_jeton_action` | `verbas_indenizatorias/views/jetons/actions.py` | `cancelar_jeton_action` (`/verbas/jetons/<int:pk>/cancelar/`) | ver decorator da action | `POST` | jeton alvo | validações de cancelamento | service de status | cancela jeton | gerência de jeton | `messages` success/error |
-| `add_auxilio_action` | `verbas_indenizatorias/views/auxilios/actions.py` | `add_auxilio_action` (`/verbas/auxilios/novo/action/`) | ver decorator da action | `POST` | dados de auxílio | validações de elegibilidade | services/helpers de auxílios | cria auxílio | listas/gerência de auxílios | `messages` success/error |
-| `solicitar_autorizacao_auxilio_action` | `verbas_indenizatorias/views/auxilios/actions.py` | `solicitar_autorizacao_auxilio_action` (`/verbas/auxilios/<int:pk>/solicitar-autorizacao/`) | ver decorator da action | `POST` | auxílio alvo | validações de elegibilidade | service de status | solicita autorização de auxílio | gerência de auxílio | `messages` success/error |
-| `autorizar_auxilio_action` | `verbas_indenizatorias/views/auxilios/actions.py` | `autorizar_auxilio_action` (`/verbas/auxilios/<int:pk>/autorizar/`) | ver decorator da action | `POST` | auxílio alvo | validações de autorização | service de status | autoriza auxílio | gerência de auxílio | `messages` success/error |
-| `cancelar_auxilio_action` | `verbas_indenizatorias/views/auxilios/actions.py` | `cancelar_auxilio_action` (`/verbas/auxilios/<int:pk>/cancelar/`) | ver decorator da action | `POST` | auxílio alvo | validações de cancelamento | service de status | cancela auxílio | gerência de auxílio | `messages` success/error |
+| `editar_processo_verbas_capa_action` | `verbas_indenizatorias/views/processo/actions.py` | `editar_processo_verbas_capa_action` (`/processo/<int:pk>/editar-verbas/capa/action/`) | `verbas_indenizatorias.pode_gerenciar_processos_verbas` | `POST` | dados de capa do processo de verbas | validação de formulário | `_forcar_campos_canonicos_processo_verbas` + `ProcessoForm.save()` | atualiza capa do processo | tela de edição de verbas | `messages` success/error |
+| `editar_processo_verbas_pendencias_action` | `verbas_indenizatorias/views/processo/actions.py` | `editar_processo_verbas_pendencias_action` (`/processo/<int:pk>/editar-verbas/pendencias/action/`) | `verbas_indenizatorias.pode_gerenciar_processos_verbas` | `POST` | atualização de pendências | validação de transições de pendência | `PendenciaFormSet.save()` + `_forcar_campos_canonicos_processo_verbas` | atualiza pendências | tela de edição de verbas | `messages` success/error |
+| `editar_processo_verbas_documentos_action` | `verbas_indenizatorias/views/processo/actions.py` | `editar_processo_verbas_documentos_action` (`/processo/<int:pk>/editar-verbas/documentos/action/`) | `verbas_indenizatorias.pode_gerenciar_processos_verbas` | `POST` | dados documentais e anexos | regras documentais da etapa | `DocumentoFormSet.save()` | cria/atualiza documentos | tela de edição de verbas | `messages` success/error |
+| `agrupar_verbas_view` | `verbas_indenizatorias/views/processo/actions.py` | `agrupar_verbas` (`/verbas/agrupar/<str:tipo_verba>/`) | `verbas_indenizatorias.pode_agrupar_verbas` | `POST` | tipo de verba + seleção de itens | validação por tipo de verba | `criar_processo_e_vincular_verbas` | agrupa verbas em processo de pagamento | painel de verbas | `messages` success/error |
+| `add_diaria_action` | `verbas_indenizatorias/views/diarias/actions.py` | `add_diaria_action` (`/verbas/diarias/nova/action/`) | `verbas_indenizatorias.pode_criar_diarias` | `POST` | dados de diária | validações de beneficiário e período | `_salvar_diaria_base` | cria diária e estado inicial | listas/gerência de diárias | `messages` success/error |
+| `registrar_comprovante_action` | `verbas_indenizatorias/views/diarias/actions.py` | `registrar_comprovante_action` (`/verbas/diarias/<int:pk>/comprovantes/registrar/`) | `verbas_indenizatorias.pode_gerenciar_diarias` | `POST` | comprovante e diária alvo | validação de arquivo e estado | `_salvar_documento_upload` | anexa comprovante e ajusta estado | gerência da diária | `messages` success/error |
+| `cancelar_diaria_action` | `verbas_indenizatorias/views/diarias/actions.py` | `cancelar_diaria_action` (`/verbas/diarias/<int:pk>/cancelar/`) | `verbas_indenizatorias.pode_gerenciar_diarias` | `POST` | diária alvo | validação de cancelamento permitido | `diaria.avancar_status(...)` + `_set_status_case_insensitive` | cancela diária | listas/gerência de diárias | `messages` success/error |
+| `add_reembolso_action` | `verbas_indenizatorias/views/reembolsos/actions.py` | `add_reembolso_action` (`/verbas/reembolsos/novo/action/`) | `verbas_indenizatorias.pode_gerenciar_reembolsos` | `POST` | dados de reembolso | validações de campos e valores | `ReembolsoForm.save()` | cria reembolso | listas/gerência de reembolsos | `messages` success/error |
+| `solicitar_autorizacao_reembolso_action` | `verbas_indenizatorias/views/reembolsos/actions.py` | `solicitar_autorizacao_reembolso_action` (`/verbas/reembolsos/<int:pk>/solicitar-autorizacao/`) | `verbas_indenizatorias.pode_gerenciar_reembolsos` | `POST` | reembolso alvo | validações de elegibilidade | `_set_status_case_insensitive` | altera status para solicitação de autorização | gerência de reembolso | `messages` success/error |
+| `autorizar_reembolso_action` | `verbas_indenizatorias/views/reembolsos/actions.py` | `autorizar_reembolso_action` (`/verbas/reembolsos/<int:pk>/autorizar/`) | `verbas_indenizatorias.pode_gerenciar_reembolsos` | `POST` | reembolso alvo | validações de autorização | `_set_status_case_insensitive` | autoriza reembolso | gerência de reembolso | `messages` success/error |
+| `cancelar_reembolso_action` | `verbas_indenizatorias/views/reembolsos/actions.py` | `cancelar_reembolso_action` (`/verbas/reembolsos/<int:pk>/cancelar/`) | `verbas_indenizatorias.pode_gerenciar_reembolsos` | `POST` | reembolso alvo | validações de cancelamento | `_set_status_case_insensitive` | cancela reembolso | gerência de reembolso | `messages` success/error |
+| `registrar_comprovante_reembolso_action` | `verbas_indenizatorias/views/reembolsos/actions.py` | `registrar_comprovante_reembolso_action` (`/verbas/reembolsos/<int:pk>/comprovantes/registrar/`) | `verbas_indenizatorias.pode_gerenciar_reembolsos` | `POST` | comprovante e reembolso alvo | validação de arquivo e elegibilidade | `_salvar_documento_upload` | anexa comprovante | gerência de reembolso | `messages` success/error |
+| `add_jeton_action` | `verbas_indenizatorias/views/jetons/actions.py` | `add_jeton_action` (`/verbas/jetons/novo/action/`) | `verbas_indenizatorias.pode_gerenciar_jetons` | `POST` | dados de jeton | validações de sessão/beneficiário | `JetonForm.save()` | cria jeton | listas/gerência de jetons | `messages` success/error |
+| `solicitar_autorizacao_jeton_action` | `verbas_indenizatorias/views/jetons/actions.py` | `solicitar_autorizacao_jeton_action` (`/verbas/jetons/<int:pk>/solicitar-autorizacao/`) | `verbas_indenizatorias.pode_gerenciar_jetons` | `POST` | jeton alvo | validações de elegibilidade | `_set_status_case_insensitive` | solicita autorização de jeton | gerência de jeton | `messages` success/error |
+| `autorizar_jeton_action` | `verbas_indenizatorias/views/jetons/actions.py` | `autorizar_jeton_action` (`/verbas/jetons/<int:pk>/autorizar/`) | `verbas_indenizatorias.pode_gerenciar_jetons` | `POST` | jeton alvo | validações de autorização | `_set_status_case_insensitive` | autoriza jeton | gerência de jeton | `messages` success/error |
+| `cancelar_jeton_action` | `verbas_indenizatorias/views/jetons/actions.py` | `cancelar_jeton_action` (`/verbas/jetons/<int:pk>/cancelar/`) | `verbas_indenizatorias.pode_gerenciar_jetons` | `POST` | jeton alvo | validações de cancelamento | `_set_status_case_insensitive` | cancela jeton | gerência de jeton | `messages` success/error |
+| `add_auxilio_action` | `verbas_indenizatorias/views/auxilios/actions.py` | `add_auxilio_action` (`/verbas/auxilios/novo/action/`) | `verbas_indenizatorias.pode_gerenciar_auxilios` | `POST` | dados de auxílio | validações de elegibilidade | `AuxilioForm.save()` | cria auxílio | listas/gerência de auxílios | `messages` success/error |
+| `solicitar_autorizacao_auxilio_action` | `verbas_indenizatorias/views/auxilios/actions.py` | `solicitar_autorizacao_auxilio_action` (`/verbas/auxilios/<int:pk>/solicitar-autorizacao/`) | `verbas_indenizatorias.pode_gerenciar_auxilios` | `POST` | auxílio alvo | validações de elegibilidade | `_set_status_case_insensitive` | solicita autorização de auxílio | gerência de auxílio | `messages` success/error |
+| `autorizar_auxilio_action` | `verbas_indenizatorias/views/auxilios/actions.py` | `autorizar_auxilio_action` (`/verbas/auxilios/<int:pk>/autorizar/`) | `verbas_indenizatorias.pode_gerenciar_auxilios` | `POST` | auxílio alvo | validações de autorização | `_set_status_case_insensitive` | autoriza auxílio | gerência de auxílio | `messages` success/error |
+| `cancelar_auxilio_action` | `verbas_indenizatorias/views/auxilios/actions.py` | `cancelar_auxilio_action` (`/verbas/auxilios/<int:pk>/cancelar/`) | `verbas_indenizatorias.pode_gerenciar_auxilios` | `POST` | auxílio alvo | validações de cancelamento | `_set_status_case_insensitive` | cancela auxílio | gerência de auxílio | `messages` success/error |
 
 ## Catálogo de Actions de Suprimentos
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `add_suprimento_action` | `suprimentos/views/cadastro/actions.py` | `add_suprimento_action` (`/suprimentos/novo/action/`) | ver decorator da action | `POST` | dados cadastrais de suprimento | validação de formulário e limites | service de cadastro de suprimento | cria suprimento e processo associado | painel/lista de suprimentos | `messages` success/error |
-| `adicionar_despesa_action` | `suprimentos/views/prestacao_contas/actions.py` | `registrar_despesa_action` (`/suprimentos/<int:pk>/despesas/adicionar/`) | ver decorator da action | `POST` | despesa e suprimento alvo | validação de prestação e documentos | service de prestação de contas | registra despesa do suprimento | gerência de suprimento | `messages` success/error |
-| `fechar_suprimento_action` | `suprimentos/views/prestacao_contas/actions.py` | `concluir_prestacao_action` (`/suprimentos/<int:pk>/fechar/`) | ver decorator da action | `POST` | suprimento alvo | validação de fechamento e pendências | service de prestação de contas | conclui prestação do suprimento | gerência/painel de suprimentos | `messages` success/error |
+| `add_suprimento_action` | `suprimentos/views/cadastro/actions.py` | `add_suprimento_action` (`/suprimentos/novo/action/`) | `suprimentos.acesso_backoffice` | `POST` | dados cadastrais de suprimento | validação de formulário e limites | `_persistir_suprimento_com_processo` | cria suprimento e processo associado | painel/lista de suprimentos | `messages` success/error |
+| `adicionar_despesa_action` | `suprimentos/views/prestacao_contas/actions.py` | `registrar_despesa_action` (`/suprimentos/<int:pk>/despesas/adicionar/`) | `suprimentos.acesso_backoffice` | `POST` | despesa e suprimento alvo | validação de prestação e documentos | `DespesaSuprimentoForm.save()` | registra despesa do suprimento | gerência de suprimento | `messages` success/error |
+| `fechar_suprimento_action` | `suprimentos/views/prestacao_contas/actions.py` | `concluir_prestacao_action` (`/suprimentos/<int:pk>/fechar/`) | `suprimentos.acesso_backoffice` | `POST` | suprimento alvo | validação de fechamento e pendências | `_atualizar_status_apos_fechamento` | conclui prestação do suprimento | gerência/painel de suprimentos | `messages` success/error |
 
 ## Dicionário de Workers/Helpers Fiscais
 
@@ -289,7 +289,7 @@ Campos usados em cada entrada:
 | Erros/retorno | propaga `ValidationError` e `DatabaseError` |
 | Atomicidade | `transaction.atomic` |
 
-## Dicionário de Workers/Helpers do Fluxo
+## Dicionário de Workers/Helpers de Pagamentos
 
 ### Helpers de Cadastro de Processos (pre_payment)
 
@@ -298,7 +298,7 @@ Campos usados em cada entrada:
 | Campo | Valor |
 |---|---|
 | Worker | `salvar_retencoes_nota_fiscal` |
-| Arquivo | `fluxo/views/pre_payment/cadastro/helpers.py` |
+| Arquivo | `pagamentos/views/pre_payment/cadastro/helpers.py` |
 | Assinatura | `(nota, retencoes_data, processo) -> None` |
 | Pré-condições | nota fiscal e processo existentes; `retencoes_data` lista válida |
 | Mutações | deleta retenções antigas e recria a partir de `retencoes_data`; salva nota com `update_fields` |
@@ -311,7 +311,7 @@ Campos usados em cada entrada:
 | Campo | Valor |
 |---|---|
 | Worker | `criar_nota_fiscal` |
-| Arquivo | `fluxo/views/pre_payment/cadastro/helpers.py` |
+| Arquivo | `pagamentos/views/pre_payment/cadastro/helpers.py` |
 | Assinatura | `(processo, dados) -> DocumentoFiscal` |
 | Pré-condições | processo existente e dados de nota validados |
 | Mutações | cria `DocumentoFiscal` vinculado ao processo |
@@ -324,7 +324,7 @@ Campos usados em cada entrada:
 | Campo | Valor |
 |---|---|
 | Worker | `sincronizar_pendencia_nota` |
-| Arquivo | `fluxo/views/pre_payment/cadastro/helpers.py` |
+| Arquivo | `pagamentos/views/pre_payment/cadastro/helpers.py` |
 | Assinatura | `(processo, tipo_pendencia, nota) -> None` |
 | Pré-condições | processo existente e `tipo_pendencia` definido |
 | Mutações | cria ou remove pendências conforme estado da nota |
@@ -339,7 +339,7 @@ Campos usados em cada entrada:
 | Campo | Valor |
 |---|---|
 | Worker | `processar_e_salvar_comprovantes` |
-| Arquivo | `fluxo/views/payment/comprovantes/helpers.py` |
+| Arquivo | `pagamentos/views/payment/comprovantes/helpers.py` |
 | Assinatura | `(processo, paginas_processadas, usuario) -> None` |
 | Pré-condições | processo elegível para registro de comprovante e páginas geradas |
 | Mutações | cria `ComprovanteDePagamento` e `DocumentoProcesso`; chama `processo.avancar_status`; salva retenções com `update_fields`; remove arquivo temporário de storage |
@@ -352,7 +352,7 @@ Campos usados em cada entrada:
 | Campo | Valor |
 |---|---|
 | Worker | `_salvar_processo_completo` |
-| Arquivo | `fluxo/views/pre_payment/helpers.py` |
+| Arquivo | `pagamentos/views/pre_payment/helpers.py` |
 | Assinatura | `(processo_form, mutator_func=None, **formsets) -> Processo` |
 | Pré-condições | formulário principal válido e formsets consistentes |
 | Mutações | salva processo e formsets associados |
@@ -365,7 +365,7 @@ Campos usados em cada entrada:
 | Campo | Valor |
 |---|---|
 | Worker | `_registrar_empenho_e_anexar_siscac` |
-| Arquivo | `fluxo/views/pre_payment/helpers.py` |
+| Arquivo | `pagamentos/views/pre_payment/helpers.py` |
 | Assinatura | `(processo, n_empenho, data_empenho_str, siscac_file, ano_exercicio=None) -> None` |
 | Pré-condições | número/data de empenho válidos |
 | Mutações | registra dados orçamentários e anexa SISCAC como documento orçamentário |
@@ -378,7 +378,7 @@ Campos usados em cada entrada:
 | Campo | Valor |
 |---|---|
 | Worker | `_processar_acao_lote` |
-| Arquivo | `fluxo/views/helpers/payment_builders.py` |
+| Arquivo | `pagamentos/views/helpers/payment_builders.py` |
 | Assinatura | `(request, *, param_name, status_origem_esperado, status_destino, ..., redirect_to) -> HttpResponse` |
 | Pré-condições | seleção de IDs via POST e status de origem elegível |
 | Mutações | transições de status em lote via `_atualizar_status_em_lote` |
@@ -391,7 +391,7 @@ Campos usados em cada entrada:
 | Campo | Valor |
 |---|---|
 | Worker | `_iniciar_fila_sessao` |
-| Arquivo | `fluxo/views/helpers/workflows.py` |
+| Arquivo | `pagamentos/views/helpers/workflows.py` |
 | Assinatura | `(request, queue_key, fallback_view, detail_view, extra_args=None) -> HttpResponse` |
 | Pré-condições | requisição `POST` com IDs de processo |
 | Mutações | grava fila de revisão em sessão do usuário |
@@ -404,7 +404,7 @@ Campos usados em cada entrada:
 | Campo | Valor |
 |---|---|
 | Worker | `_aprovar_processo_view` |
-| Arquivo | `fluxo/views/helpers/workflows.py` |
+| Arquivo | `pagamentos/views/helpers/workflows.py` |
 | Assinatura | `(request, pk, *, permission, new_status, success_message, redirect_to) -> HttpResponse` |
 | Pré-condições | usuário com permissão e processo existente |
 | Mutações | avança status do processo para etapa de destino |
@@ -417,7 +417,7 @@ Campos usados em cada entrada:
 | Campo | Valor |
 |---|---|
 | Worker | `_recusar_processo_view` |
-| Arquivo | `fluxo/views/helpers/workflows.py` |
+| Arquivo | `pagamentos/views/helpers/workflows.py` |
 | Assinatura | `(request, pk, *, permission, status_devolucao, error_message, redirect_to) -> HttpResponse` |
 | Pré-condições | permissão válida e pendência de recusa válida |
 | Mutações | cria pendência e devolve processo ao status anterior definido |
@@ -430,7 +430,7 @@ Campos usados em cada entrada:
 | Campo | Valor |
 |---|---|
 | Worker | `_executar_arquivamento_definitivo` |
-| Arquivo | `fluxo/views/helpers/archival.py` |
+| Arquivo | `pagamentos/views/helpers/archival.py` |
 | Assinatura | `(processo, usuario) -> bool` |
 | Pré-condições | processo com documentos válidos para consolidar |
 | Mutações | gera PDF final, salva `arquivo_final` e avança para `ARQUIVADO` |
@@ -443,7 +443,7 @@ Campos usados em cada entrada:
 | Campo | Valor |
 |---|---|
 | Worker | `aplicar_aprovacao_contingencia` |
-| Arquivo | `fluxo/views/helpers/contingencias.py` |
+| Arquivo | `pagamentos/views/helpers/contingencias.py` |
 | Assinatura | `(contingencia) -> tuple[bool, str|None]` |
 | Pré-condições | contingência aprovada em etapa válida e dados normalizados |
 | Mutações | aplica alterações ao processo e encerra contingência |
@@ -458,7 +458,7 @@ Campos usados em cada entrada:
 | Campo | Valor |
 |---|---|
 | Worker | `processar_aprovacao_contingencia` |
-| Arquivo | `fluxo/views/helpers.py` |
+| Arquivo | `pagamentos/views/helpers/contingencias.py` |
 | Assinatura | `(contingencia, usuario, parecer) -> tuple[bool, str|None]` |
 | Pré-condições | contingência em status `PENDENTE_SUPERVISOR`, `PENDENTE_ORDENADOR` ou `PENDENTE_CONSELHO` |
 | Mutações | atribui campos de aprovação por etapa; chama `aplicar_aprovacao_contingencia` quando etapa final; chama `sincronizar_flag_contingencia_processo` |
@@ -471,7 +471,7 @@ Campos usados em cada entrada:
 | Campo | Valor |
 |---|---|
 | Worker | `processar_revisao_contadora_contingencia` |
-| Arquivo | `fluxo/views/helpers.py` |
+| Arquivo | `pagamentos/views/helpers/contingencias.py` |
 | Assinatura | `(contingencia, usuario, parecer) -> tuple[bool, str|None]` |
 | Pré-condições | contingência em status `PENDENTE_CONTADOR`; parecer não vazio |
 | Mutações | atribui `parecer_contadora`, `revisado_por_contadora` e `data_revisao_contadora`; chama `save(update_fields)`; chama `aplicar_aprovacao_contingencia` |

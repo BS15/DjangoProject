@@ -1,1 +1,1 @@
-"""Módulo de formulários para processos de verbas. Os forms estão definidos em fluxo.forms."""
+"""Módulo de formulários para processos de verbas. Os forms estão definidos em pagamentos.forms."""

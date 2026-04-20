@@ -1,11 +1,12 @@
 """Registry e utilitarios de configuracao por tipo de verba."""
 
 from credores.models import Credor
-from fluxo.domain_models import TiposDeDocumento
+from pagamentos.domain_models import TiposDocumento
 from verbas_indenizatorias.models import (
     AuxilioRepresentacao,
     Diaria,
     DocumentoAuxilio,
+    DocumentoComprovacao,
     DocumentoDiaria,
     DocumentoJeton,
     DocumentoReembolso,
@@ -22,6 +23,13 @@ _VERBA_CONFIG = {
         "doc_model": DocumentoDiaria,
         "doc_fk": "diaria",
         "doc_tipo_seguro": "verba_diaria_doc",
+    },
+    "diaria_comprovante": {
+        "model": Diaria,
+        "list_url": "diarias_list",
+        "doc_model": DocumentoComprovacao,
+        "doc_fk": "prestacao",
+        "doc_tipo_seguro": "verba_diaria_comprov",
     },
     "reembolso": {
         "model": ReembolsoCombustivel,
@@ -47,23 +55,24 @@ _VERBA_CONFIG = {
 }
 
 _VERBA_PERMISSION_MAP = {
-    "diaria": "fluxo.pode_gerenciar_diarias",
-    "reembolso": "fluxo.pode_gerenciar_reembolsos",
-    "jeton": "fluxo.pode_gerenciar_jetons",
-    "auxilio": "fluxo.pode_gerenciar_auxilios",
+    "diaria": "verbas_indenizatorias.pode_gerenciar_diarias",
+    "diaria_comprovante": "verbas_indenizatorias.pode_gerenciar_diarias",
+    "reembolso": "verbas_indenizatorias.pode_gerenciar_reembolsos",
+    "jeton": "verbas_indenizatorias.pode_gerenciar_jetons",
+    "auxilio": "verbas_indenizatorias.pode_gerenciar_auxilios",
 }
 
 
 def _get_tipos_documento_ativos():
     """Retorna os tipos de documento ativos disponíveis para anexação."""
-    return TiposDeDocumento.objects.filter(is_active=True)
+    return TiposDocumento.objects.filter(ativo=True)
 
 
 def _get_tipos_documento_verbas():
     """Retorna apenas os tipos de documento ativos vinculados a VERBAS INDENIZATÓRIAS."""
-    return TiposDeDocumento.objects.filter(
-        is_active=True,
-        tipo_de_pagamento__tipo_de_pagamento__iexact="VERBAS INDENIZATÓRIAS",
+    return TiposDocumento.objects.filter(
+        ativo=True,
+        tipo_pagamento__tipo_pagamento__iexact="VERBAS INDENIZATÓRIAS",
     )
 
 

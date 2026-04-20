@@ -4,7 +4,7 @@ def user_can_access_document(user, document):
     Extend this logic according to business rules (ownership, department, etc).
     """
     # Superusers and auditors always have access
-    if user.is_superuser or user.has_perm("fluxo.pode_auditar_conselho"):
+    if user.is_superuser or user.has_perm("pagamentos.pode_auditar_conselho"):
         return True
     # Owner-based access (using existing utility)
     from .access_utils import user_is_entity_owner

@@ -1,0 +1,290 @@
+{% comment %}Modal + JS reutilizável de preview de documentos de processo.{% endcomment %}
+{% with preview_placeholder_id='999999' %}
+<div class="modal fade" id="modalPreview" tabindex="-1" aria-labelledby="modalPreviewLabel" aria-hidden="true"
+	data-api-documentos-template="{% url 'api_documentos_processo' processo_id=preview_placeholder_id %}"
+	data-pdf-template="{% url 'visualizar_pdf_processo' processo_id=preview_placeholder_id %}"
+	data-preview-placeholder-id="{{ preview_placeholder_id }}">
+	<div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 95vw;">
+		<div class="modal-content border-0 shadow-lg" style="height: 90vh;">
+			<div class="modal-header bg-dark text-white py-2">
+				<h5 class="modal-title fw-bold" id="modalPreviewLabel">
+					<i class="bi bi-eye me-2"></i>
+					Pré-visualizador de Documentos &mdash; Processo <span id="previewProcessoLabel"></span>
+				</h5>
+				<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+			</div>
+			<div class="modal-body p-0 d-flex flex-column" style="overflow: hidden; height: 100%;">
+				<div id="previewInfoHeader" class="border-bottom bg-light px-3 py-2" style="flex-shrink:0;">
+					<div class="d-flex flex-wrap align-items-center gap-3">
+						<div class="d-flex align-items-center gap-2">
+							<span class="text-muted small fw-semibold">Credor:</span>
+							<span id="previewCredorHeader" class="fw-bold small">—</span>
+						</div>
+						<div class="d-flex align-items-center gap-2">
+							<span class="text-muted small fw-semibold">Valor Bruto:</span>
+							<span id="previewValorBruto" class="fw-bold small text-dark">—</span>
+						</div>
+						<div class="d-flex align-items-center gap-2">
+							<span class="text-muted small fw-semibold">Valor Líquido:</span>
+							<span id="previewValorLiquido" class="fw-bold small text-success">—</span>
+						</div>
+						<div class="d-flex align-items-center gap-2">
+							<span class="text-muted small fw-semibold">Empenho:</span>
+							<span id="previewDataEmpenho" class="small">—</span>
+						</div>
+						<div class="d-flex align-items-center gap-2">
+							<span class="text-muted small fw-semibold">Vencimento:</span>
+							<span id="previewDataVencimento" class="small">—</span>
+						</div>
+						<div class="d-flex align-items-center gap-2">
+							<span class="text-muted small fw-semibold">Pagamento:</span>
+							<span id="previewDataPagamento" class="small">—</span>
+						</div>
+						<div class="d-flex align-items-center gap-2">
+							<span class="text-muted small fw-semibold">Status:</span>
+							<span id="previewStatus" class="badge bg-secondary small">—</span>
+						</div>
+						<div id="previewPendenciasWrap" class="d-none">
+							<button type="button" id="previewPendenciasBadge" class="badge bg-warning text-dark small border-0" data-bs-toggle="tooltip" title="">
+								<i class="bi bi-exclamation-triangle-fill me-1"></i><span id="previewPendenciasCount">0</span> Pendência(s)
+							</button>
+						</div>
+						<div id="previewRetencoesWrap" class="d-none">
+							<button type="button" id="previewRetencoesBadge" class="badge bg-info text-dark small border-0" data-bs-toggle="tooltip" title="">
+								<i class="bi bi-scissors me-1"></i><span id="previewRetencoesCount">0</span> Retenção(ões)
+							</button>
+						</div>
+					</div>
+				</div>
+
+				<div class="d-flex flex-grow-1" style="overflow: hidden; min-height: 0;">
+					<div id="previewSidebar" class="d-flex flex-column border-end bg-white" style="width: 280px; min-width: 220px; overflow-y: auto;">
+						<div class="p-3 border-bottom bg-light">
+							<h6 class="mb-0 fw-bold text-muted small text-uppercase">
+								<i class="bi bi-paperclip me-1"></i> Documentos Anexados
+							</h6>
+							<small class="text-muted" id="previewCredorLabel"></small>
+						</div>
+						<div id="previewDocList" class="flex-grow-1 p-2"></div>
+						<div class="p-2 border-top text-center">
+							<a id="btnVerPdfCompleto" href="#" target="_blank" class="btn btn-danger btn-sm fw-bold w-100">
+								<i class="bi bi-file-earmark-pdf"></i> PDF Completo (Mesclado)
+							</a>
+						</div>
+					</div>
+
+					<div class="flex-grow-1 d-flex flex-column" style="overflow: hidden;">
+						<div id="previewPlaceholder" class="flex-grow-1 d-flex align-items-center justify-content-center text-muted">
+							<div class="text-center">
+								<i class="bi bi-arrow-left-circle fs-1 d-block mb-3"></i>
+								<p>Selecione um documento na lista ao lado para pré-visualizar.</p>
+							</div>
+						</div>
+						<iframe id="previewIframe" src="about:blank" class="flex-grow-1 border-0 d-none" style="height: 100%;" title="Pré-visualização do Documento"></iframe>
+						<div id="previewUnsupported" class="flex-grow-1 d-none align-items-center justify-content-center p-4">
+							<div class="text-center">
+								<i class="bi bi-file-earmark-x fs-1 text-warning d-block mb-3"></i>
+								<p class="text-muted">Este tipo de arquivo não pode ser pré-visualizado diretamente.<br>
+								   Use o link abaixo para abrí-lo.</p>
+								<a id="linkDownloadDoc" href="#" target="_blank" class="btn btn-outline-primary btn-sm fw-bold mt-2">
+									<i class="bi bi-box-arrow-up-right"></i> Abrir em nova aba
+								</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	const modalElement = document.getElementById('modalPreview');
+	if (!modalElement) {
+		return;
+	}
+
+	const previewModal = new bootstrap.Modal(modalElement);
+	const previewDocList = document.getElementById('previewDocList');
+	const previewIframe = document.getElementById('previewIframe');
+	const previewPlaceholder = document.getElementById('previewPlaceholder');
+	const previewUnsupported = document.getElementById('previewUnsupported');
+	const previewProcessoLabel = document.getElementById('previewProcessoLabel');
+	const previewCredorLabel = document.getElementById('previewCredorLabel');
+	const btnVerPdfCompleto = document.getElementById('btnVerPdfCompleto');
+	const linkDownloadDoc = document.getElementById('linkDownloadDoc');
+	const previewCredorHeader = document.getElementById('previewCredorHeader');
+	const previewValorBruto = document.getElementById('previewValorBruto');
+	const previewValorLiquido = document.getElementById('previewValorLiquido');
+	const previewDataEmpenho = document.getElementById('previewDataEmpenho');
+	const previewDataVencimento = document.getElementById('previewDataVencimento');
+	const previewDataPagamento = document.getElementById('previewDataPagamento');
+	const previewStatus = document.getElementById('previewStatus');
+	const previewPendenciasWrap = document.getElementById('previewPendenciasWrap');
+	const previewPendenciasCount = document.getElementById('previewPendenciasCount');
+	const previewPendenciasBadge = document.getElementById('previewPendenciasBadge');
+	const previewRetencoesWrap = document.getElementById('previewRetencoesWrap');
+	const previewRetencoesCount = document.getElementById('previewRetencoesCount');
+	const previewRetencoesBadge = document.getElementById('previewRetencoesBadge');
+	const VIEWABLE_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg'];
+	const apiDocumentosTemplate = modalElement.dataset.apiDocumentosTemplate;
+	const pdfTemplate = modalElement.dataset.pdfTemplate;
+	const PLACEHOLDER_PROCESSO_ID = modalElement.dataset.previewPlaceholderId;
+
+	function withProcessoId(url, processoId) {
+		return url.replace(PLACEHOLDER_PROCESSO_ID, String(processoId));
+	}
+
+	function resetInfoHeader() {
+		previewCredorHeader.textContent = '—';
+		previewValorBruto.textContent = '—';
+		previewValorLiquido.textContent = '—';
+		previewDataEmpenho.textContent = '—';
+		previewDataVencimento.textContent = '—';
+		previewDataPagamento.textContent = '—';
+		previewStatus.textContent = '—';
+		previewStatus.className = 'badge bg-secondary small';
+		previewPendenciasWrap.classList.add('d-none');
+		previewRetencoesWrap.classList.add('d-none');
+	}
+
+	function populateInfoHeader(data) {
+		previewCredorHeader.textContent = data.credor || '—';
+		previewValorBruto.textContent = data.valor_bruto || '—';
+		previewValorLiquido.textContent = data.valor_liquido || '—';
+		previewDataEmpenho.textContent = data.data_empenho || '—';
+		previewDataVencimento.textContent = data.data_vencimento || '—';
+		previewDataPagamento.textContent = data.data_pagamento || '—';
+		previewStatus.textContent = data.status || '—';
+
+		if (data.pendencias && data.pendencias.length > 0) {
+			previewPendenciasCount.textContent = data.pendencias.length;
+			const tooltipLines = data.pendencias.map(function(p) {
+				return p.tipo + (p.descricao ? ': ' + p.descricao : '') + ' [' + p.status + ']';
+			}).join(' | ');
+			previewPendenciasBadge.setAttribute('title', tooltipLines);
+			previewPendenciasWrap.classList.remove('d-none');
+		} else {
+			previewPendenciasWrap.classList.add('d-none');
+		}
+
+		if (data.retencoes && data.retencoes.length > 0) {
+			previewRetencoesCount.textContent = data.retencoes.length;
+			const tooltipLines = data.retencoes.map(function(r) {
+				return r.codigo + ': R$ ' + r.valor + ' [' + r.status + ']';
+			}).join(' | ');
+			previewRetencoesBadge.setAttribute('title', tooltipLines);
+			previewRetencoesWrap.classList.remove('d-none');
+		} else {
+			previewRetencoesWrap.classList.add('d-none');
+		}
+
+		[previewPendenciasBadge, previewRetencoesBadge].forEach(function(el) {
+			const existing = bootstrap.Tooltip.getInstance(el);
+			if (existing) {
+				existing.dispose();
+			}
+			new bootstrap.Tooltip(el, { trigger: 'hover focus', placement: 'bottom' });
+		});
+	}
+
+	function showPlaceholder() {
+		previewPlaceholder.classList.remove('d-none');
+		previewPlaceholder.classList.add('d-flex');
+		previewIframe.classList.add('d-none');
+		previewUnsupported.classList.add('d-none');
+		previewUnsupported.classList.remove('d-flex');
+	}
+
+	function loadDocument(url, nome) {
+		const ext = nome.split('.').pop().toLowerCase();
+		previewPlaceholder.classList.add('d-none');
+		previewPlaceholder.classList.remove('d-flex');
+		previewUnsupported.classList.add('d-none');
+		previewUnsupported.classList.remove('d-flex');
+
+		if (VIEWABLE_EXTENSIONS.includes(ext)) {
+			previewIframe.src = url;
+			previewIframe.classList.remove('d-none');
+		} else {
+			previewIframe.classList.add('d-none');
+			linkDownloadDoc.href = url;
+			previewUnsupported.classList.remove('d-none');
+			previewUnsupported.classList.add('d-flex');
+		}
+	}
+
+	function renderSidebar(documentos) {
+		previewDocList.innerHTML = '';
+		if (documentos.length === 0) {
+			previewDocList.innerHTML = '<p class="text-muted small p-2">Nenhum documento anexado a este processo.</p>';
+			return;
+		}
+		documentos.forEach(function(doc, idx) {
+			const btn = document.createElement('button');
+			btn.type = 'button';
+			btn.className = 'btn btn-light btn-sm w-100 text-start mb-1 d-flex align-items-start gap-2 doc-item';
+			btn.innerHTML =
+				'<span class="badge bg-secondary mt-1" style="min-width:22px;">' + doc.ordem + '</span>' +
+				'<span class="flex-grow-1 lh-sm">' +
+					'<span class="d-block fw-semibold small text-truncate" style="max-width:190px;" title="' + doc.nome + '">' + doc.nome + '</span>' +
+					'<span class="d-block text-muted doc-tipo" style="font-size:0.72rem;">' + doc.tipo + '</span>' +
+				'</span>';
+
+			btn.addEventListener('click', function() {
+				document.querySelectorAll('.doc-item').forEach(function(b) {
+					b.classList.remove('active', 'btn-primary', 'text-white');
+					b.classList.add('btn-light');
+					const t = b.querySelector('.doc-tipo');
+					if (t) {
+						t.classList.add('text-muted');
+						t.classList.remove('text-white');
+					}
+				});
+				btn.classList.add('active', 'btn-primary', 'text-white');
+				btn.classList.remove('btn-light');
+				const tipo = btn.querySelector('.doc-tipo');
+				if (tipo) {
+					tipo.classList.remove('text-muted');
+					tipo.classList.add('text-white');
+				}
+				loadDocument(doc.url, doc.nome);
+			});
+			previewDocList.appendChild(btn);
+			if (idx === 0) {
+				btn.click();
+			}
+		});
+	}
+
+	document.querySelectorAll('.btn-preview').forEach(function(btn) {
+		btn.addEventListener('click', function() {
+			const processoId = this.dataset.processoId;
+			showPlaceholder();
+			resetInfoHeader();
+			previewIframe.src = 'about:blank';
+			previewDocList.innerHTML = '<p class="text-muted small p-2"><span class="spinner-border spinner-border-sm me-2"></span>Carregando documentos...</p>';
+			previewProcessoLabel.textContent = '#' + processoId;
+			previewCredorLabel.textContent = '';
+			btnVerPdfCompleto.href = withProcessoId(pdfTemplate, processoId);
+
+			previewModal.show();
+
+			fetch(withProcessoId(apiDocumentosTemplate, processoId))
+				.then(function(resp) { return resp.json(); })
+				.then(function(data) {
+					previewProcessoLabel.textContent = '#' + data.n_nota_empenho;
+					previewCredorLabel.textContent = data.credor;
+					populateInfoHeader(data);
+					renderSidebar(data.documentos || []);
+				})
+				.catch(function(err) {
+					previewDocList.innerHTML = '<p class="text-danger small p-2">Erro ao carregar documentos.</p>';
+					console.error('Erro ao buscar documentos do processo:', err);
+				});
+		});
+	});
+});
+</script>
+{% endwith %}

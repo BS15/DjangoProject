@@ -7,7 +7,7 @@ from commons.shared.document_services import obter_ou_criar_tipo_documento, obte
 from commons.shared.pdf_response import gerar_documento_bytes
 from commons.shared.signature_services import criar_assinatura_rascunho
 from django.core.files.base import ContentFile
-from pagamentos.models import AssinaturaAutentique
+from pagamentos.models import AssinaturaEletronica
 from suprimentos.pdf_generators import SUPRIMENTOS_DOCUMENT_REGISTRY
 from suprimentos.models import DocumentoSuprimentoDeFundos
 
@@ -30,5 +30,5 @@ def gerar_e_anexar_recibo_suprimento(suprimento, criador):
         criador=criador,
         pdf_bytes=pdf_bytes,
         nome_arquivo=f"Recibo_Suprimento_{suprimento.id}.pdf",
-        assinatura_model=AssinaturaAutentique,
+        assinatura_model=AssinaturaEletronica,
     )

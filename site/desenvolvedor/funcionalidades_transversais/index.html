@@ -1,0 +1,3022 @@
+
+<!doctype html>
+<html lang="pt" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentação de negócio, arquitetura e operação do PaGé">
+      
+      
+      
+      
+        <link rel="prev" href="../dicionarios_operacionais/">
+      
+      
+        <link rel="next" href="../../instalacao/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Funcionalidades Transversais - Wiki PaGé</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#funcionalidades-transversais-do-page" class="md-skip">
+          Pular para conteúdo
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabeçalho">
+    <a href="../.." title="Wiki PaGé" class="md-header__button md-logo" aria-label="Wiki PaGé" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Wiki PaGé
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Funcionalidades Transversais
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Buscar" placeholder="Buscar" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Pesquisar">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpar" aria-label="Limpar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando busca
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navegação" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Wiki PaGé" class="md-nav__button md-logo" aria-label="Wiki PaGé" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Wiki PaGé
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Início
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visão Geral e Negócio
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Visão Geral e Negócio
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../negocio/missao_sistema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Missão do Sistema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../negocio/glossario_conselho/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossário do Conselho
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arquitetura de Software
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Arquitetura de Software
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../arquitetura/manager_worker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Padrão Manager-Worker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../arquitetura/camada_services/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Camada de Services
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../arquitetura/hub_spoke/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hub-and-Spoke
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manual de Módulos
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Manual de Módulos
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modulos/pagamentos_core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pagamentos Core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modulos/verbas_indenizatorias/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verbas Indenizatórias
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modulos/suprimento_fundos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Suprimento de Fundos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modulos/modulo_fiscal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Módulo Fiscal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segurança e Governança
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Segurança e Governança
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../governanca/trilha_auditoria/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trilha de Auditoria
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../governanca/matriz_permissoes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Matriz de Permissões
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guia do Desenvolvedor
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guia do Desenvolvedor
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../setup_ambiente/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setup do Ambiente
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../padroes_codigo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Padrões de Código
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dicionarios_operacionais/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dicionários Operacionais
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Funcionalidades Transversais
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Funcionalidades Transversais
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ja-existe-documentacao-sobre-isso" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Já existe documentação sobre isso?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-gestao-de-documentos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Gestão de Documentos
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Gestão de Documentos">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#o-que-e" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que é
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#o-que-faz-e-para-que-serve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que faz e para que serve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-funciona" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como funciona
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-se-reflete-no-codigo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como se reflete no código
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#observacoes-arquiteturais" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observações arquiteturais
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-funcionalidades-de-importacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Funcionalidades de Importação
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Funcionalidades de Importação">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#o-que-e_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que é
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#o-que-faz-e-para-que-serve_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que faz e para que serve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-funciona_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como funciona
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Como funciona">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#padrao-1-importacao-direta-com-resultado-resumido" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Padrão 1: importação direta com resultado resumido
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#padrao-2-preview-antes-de-confirmacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Padrão 2: preview antes de confirmação
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-se-reflete-no-codigo_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como se reflete no código
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#observacoes-arquiteturais_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observações arquiteturais
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-funcionalidades-de-sync" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Funcionalidades de Sync
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Funcionalidades de Sync">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#o-que-e_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que é
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#o-que-faz-e-para-que-serve_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que faz e para que serve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-funciona_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como funciona
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Como funciona">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sync-externo-de-pagamentos-siscac" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sync externo de pagamentos SISCAC
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sync-interno-apos-transicoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sync interno após transições
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-se-reflete-no-codigo_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como se reflete no código
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#observacoes-arquiteturais_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observações arquiteturais
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-funcionalidades-em-lote" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Funcionalidades em Lote
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Funcionalidades em Lote">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#o-que-e_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que é
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#o-que-faz-e-para-que-serve_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que faz e para que serve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-funciona_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como funciona
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-se-reflete-no-codigo_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como se reflete no código
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#observacoes-arquiteturais_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observações arquiteturais
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-retencao-de-impostos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Retenção de Impostos
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Retenção de Impostos">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#o-que-e_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que é
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#o-que-faz-e-para-que-serve_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que faz e para que serve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-funciona_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como funciona
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-se-reflete-no-codigo_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como se reflete no código
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#observacoes-arquiteturais_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observações arquiteturais
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-assinaturas-autentique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Assinaturas Autentique
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Assinaturas Autentique">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#o-que-e_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que é
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#o-que-faz-e-para-que-serve_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que faz e para que serve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-funciona_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como funciona
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-se-reflete-no-codigo_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como se reflete no código
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#observacoes-arquiteturais_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observações arquiteturais
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-auditoria-e-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Auditoria e Logging
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Auditoria e Logging">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#o-que-e_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que é
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#o-que-faz-e-para-que-serve_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que faz e para que serve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-funciona_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como funciona
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Como funciona">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#auditoria-persistente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Auditoria persistente
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#logging-tecnico" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logging técnico
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-se-reflete-no-codigo_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como se reflete no código
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#observacoes-arquiteturais_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observações arquiteturais
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fechamento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fechamento
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../instalacao/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guia de Instalação
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Referência de API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ja-existe-documentacao-sobre-isso" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Já existe documentação sobre isso?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-gestao-de-documentos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Gestão de Documentos
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Gestão de Documentos">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#o-que-e" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que é
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#o-que-faz-e-para-que-serve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que faz e para que serve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-funciona" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como funciona
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-se-reflete-no-codigo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como se reflete no código
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#observacoes-arquiteturais" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observações arquiteturais
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-funcionalidades-de-importacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Funcionalidades de Importação
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Funcionalidades de Importação">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#o-que-e_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que é
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#o-que-faz-e-para-que-serve_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que faz e para que serve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-funciona_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como funciona
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Como funciona">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#padrao-1-importacao-direta-com-resultado-resumido" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Padrão 1: importação direta com resultado resumido
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#padrao-2-preview-antes-de-confirmacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Padrão 2: preview antes de confirmação
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-se-reflete-no-codigo_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como se reflete no código
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#observacoes-arquiteturais_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observações arquiteturais
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-funcionalidades-de-sync" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Funcionalidades de Sync
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Funcionalidades de Sync">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#o-que-e_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que é
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#o-que-faz-e-para-que-serve_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que faz e para que serve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-funciona_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como funciona
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Como funciona">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sync-externo-de-pagamentos-siscac" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sync externo de pagamentos SISCAC
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sync-interno-apos-transicoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sync interno após transições
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-se-reflete-no-codigo_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como se reflete no código
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#observacoes-arquiteturais_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observações arquiteturais
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-funcionalidades-em-lote" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Funcionalidades em Lote
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Funcionalidades em Lote">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#o-que-e_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que é
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#o-que-faz-e-para-que-serve_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que faz e para que serve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-funciona_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como funciona
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-se-reflete-no-codigo_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como se reflete no código
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#observacoes-arquiteturais_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observações arquiteturais
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-retencao-de-impostos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Retenção de Impostos
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Retenção de Impostos">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#o-que-e_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que é
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#o-que-faz-e-para-que-serve_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que faz e para que serve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-funciona_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como funciona
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-se-reflete-no-codigo_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como se reflete no código
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#observacoes-arquiteturais_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observações arquiteturais
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-assinaturas-autentique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Assinaturas Autentique
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Assinaturas Autentique">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#o-que-e_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que é
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#o-que-faz-e-para-que-serve_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que faz e para que serve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-funciona_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como funciona
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-se-reflete-no-codigo_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como se reflete no código
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#observacoes-arquiteturais_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observações arquiteturais
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-auditoria-e-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Auditoria e Logging
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Auditoria e Logging">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#o-que-e_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que é
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#o-que-faz-e-para-que-serve_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que faz e para que serve
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-funciona_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como funciona
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Como funciona">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#auditoria-persistente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Auditoria persistente
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#logging-tecnico" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logging técnico
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#como-se-reflete-no-codigo_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como se reflete no código
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#observacoes-arquiteturais_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observações arquiteturais
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fechamento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fechamento
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="funcionalidades-transversais-do-page">Funcionalidades Transversais do PaGé<a class="headerlink" href="#funcionalidades-transversais-do-page" title="Permanent link">&para;</a></h1>
+<p>Este documento consolida funcionalidades transversais que já existem no sistema, mas que hoje estão espalhadas entre código-fonte e documentação parcial.</p>
+<p>Ele cobre sete frentes:</p>
+<ul>
+<li>gestão de documentos</li>
+<li>importações</li>
+<li>sincronizações</li>
+<li>operações em lote</li>
+<li>retenção de impostos</li>
+<li>assinaturas via Autentique</li>
+<li>auditoria e logging</li>
+</ul>
+<h2 id="ja-existe-documentacao-sobre-isso">Já existe documentação sobre isso?<a class="headerlink" href="#ja-existe-documentacao-sobre-isso" title="Permanent link">&para;</a></h2>
+<p>Existe documentação parcial, mas não um guia único com este recorte.</p>
+<p>Material já existente no repositório:</p>
+<ul>
+<li><code>docs/desenvolvedor/dicionarios_operacionais.md</code>: catálogo operacional de actions e workers, incluindo fluxos fiscais, uploads documentais e ações em lote.</li>
+<li><code>docs/modulos/modulo_fiscal.md</code>: visão funcional do módulo fiscal, com foco em retenções e EFD-Reinf.</li>
+<li><code>docs/governanca/trilha_auditoria.md</code>: princípios de trilha de auditoria e compliance.</li>
+<li><code>docs/desenvolvedor/padroes_codigo.md</code>: padrões arquiteturais para views, services e documentação operacional.</li>
+</ul>
+<p>Este arquivo complementa esse material ao responder, para cada feature, quatro perguntas:</p>
+<ol>
+<li>o que é</li>
+<li>o que faz e para que serve</li>
+<li>como funciona na prática</li>
+<li>como se reflete no código</li>
+</ol>
+<h2 id="1-gestao-de-documentos">1. Gestão de Documentos<a class="headerlink" href="#1-gestao-de-documentos" title="Permanent link">&para;</a></h2>
+<h3 id="o-que-e">O que é<a class="headerlink" href="#o-que-e" title="Permanent link">&para;</a></h3>
+<p>A gestão de documentos é a infraestrutura que recebe, valida, organiza, armazena e vincula arquivos aos objetos de negócio do sistema, como processos, diárias, reembolsos, jetons, auxílios, suprimentos e retenções.</p>
+<p>No PaGé, documentos não são um detalhe periférico. Eles são parte do próprio fluxo administrativo: comprovam etapas, habilitam avanços de status, alimentam auditoria e materializam saídas do sistema, como PDFs e anexos finais.</p>
+<h3 id="o-que-faz-e-para-que-serve">O que faz e para que serve<a class="headerlink" href="#o-que-faz-e-para-que-serve" title="Permanent link">&para;</a></h3>
+<p>Essa feature serve para:</p>
+<ul>
+<li>receber uploads enviados por usuários em formulários e actions</li>
+<li>validar se o arquivo é seguro e está em formato aceito</li>
+<li>decidir onde o arquivo será armazenado no storage</li>
+<li>vincular o arquivo ao objeto correto do domínio</li>
+<li>manter ordenação documental por entidade</li>
+<li>sustentar turnpikes do fluxo, já que várias etapas dependem da presença de anexos obrigatórios</li>
+<li>apoiar auditoria, arquivamento e geração de artefatos finais</li>
+</ul>
+<h3 id="como-funciona">Como funciona<a class="headerlink" href="#como-funciona" title="Permanent link">&para;</a></h3>
+<p>Fluxo operacional típico:</p>
+<ol>
+<li>A entrada acontece por <code>request.FILES</code>, normalmente em actions de edição ou cadastro.</li>
+<li>O sistema valida o arquivo em dois níveis:</li>
+<li>validação por tipo real do arquivo com <code>magic bytes</code></li>
+<li>validação de extensão em alguns fluxos específicos de upload documental</li>
+<li>O caminho de armazenamento é calculado conforme a entidade dona do arquivo.</li>
+<li>O documento é persistido em um modelo concreto que reutiliza a base documental compartilhada.</li>
+<li>A action devolve uma saída compatível com o padrão manager-worker:</li>
+<li>redirect com <code>messages</code></li>
+<li>render de tela com erros</li>
+<li>ou anexação silenciosa em fluxos internos de serviço</li>
+</ol>
+<p>Entradas mais comuns:</p>
+<ul>
+<li>arquivos PDF, JPG e PNG</li>
+<li>tipo documental selecionado pelo usuário</li>
+<li>entidade de negócio alvo</li>
+<li>contexto do processo ou da verba</li>
+</ul>
+<p>Saídas mais comuns:</p>
+<ul>
+<li>registro documental persistido no banco</li>
+<li>arquivo salvo em storage organizado por domínio</li>
+<li>mensagem de sucesso ou erro para o usuário</li>
+<li>anexos usados em auditoria, arquivamento ou pagamento</li>
+</ul>
+<h3 id="como-se-reflete-no-codigo">Como se reflete no código<a class="headerlink" href="#como-se-reflete-no-codigo" title="Permanent link">&para;</a></h3>
+<p>Arquivos centrais:</p>
+<ul>
+<li><code>commons/shared/models.py</code></li>
+<li>define <code>DocumentoBase</code>, modelo abstrato com <code>arquivo</code>, <code>ordem</code> e <code>tipo</code></li>
+<li>
+<p>padroniza a estrutura documental usada por múltiplos apps</p>
+</li>
+<li>
+<p><code>commons/shared/storage_utils.py</code></p>
+</li>
+<li>implementa <code>caminho_documento</code>, que resolve o diretório físico conforme a entidade relacionada</li>
+<li>organiza uploads por áreas como <code>pagamentos</code>, <code>verbasindenizatorias</code> e <code>suprimentosdefundos</code></li>
+<li>implementa <code>_safe_filename</code>, para impedir nomes com caminhos aninhados acidentais</li>
+<li>
+<p>implementa <code>_delete_file</code>, para limpeza segura no storage</p>
+</li>
+<li>
+<p><code>commons/shared/file_validators.py</code></p>
+</li>
+<li>implementa <code>validar_arquivo_seguro</code></li>
+<li>usa detecção real de MIME para aceitar apenas PDF, JPEG e PNG</li>
+<li>
+<p>reduz risco de arquivos adulterados ou extensões enganosas</p>
+</li>
+<li>
+<p><code>commons/shared/document_services.py</code></p>
+</li>
+<li>fornece utilitários reutilizáveis como <code>obter_proxima_ordem_documento</code></li>
+<li>
+<p>resolve ou cria tipos documentais com <code>obter_ou_criar_tipo_documento</code></p>
+</li>
+<li>
+<p><code>verbas_indenizatorias/views/shared/documents.py</code></p>
+</li>
+<li>concentra workers reutilizáveis de upload no domínio de verbas</li>
+<li><code>_salvar_documento_upload</code> valida e persiste um anexo retornando <code>(documento, erro)</code></li>
+<li>
+<p><code>_processar_upload_documento</code> e <code>_salvar_verba_com_anexo_opcional</code> conectam request, persistência e feedback ao usuário</p>
+</li>
+<li>
+<p><code>fiscal/services/impostos.py</code></p>
+</li>
+<li>cria anexos documentais automáticos em processos de recolhimento de impostos</li>
+<li>materializa guia, comprovante e relatório mensal como documentos de pagamento</li>
+</ul>
+<h3 id="observacoes-arquiteturais">Observações arquiteturais<a class="headerlink" href="#observacoes-arquiteturais" title="Permanent link">&para;</a></h3>
+<ul>
+<li>A feature segue o padrão do projeto: a view recebe a requisição, mas a mutação relevante tende a ficar em helper ou service.</li>
+<li>O storage é orientado por domínio, não por upload genérico. Isso facilita operação, manutenção e rastreabilidade.</li>
+<li>Documentos também são produzidos internamente pelo sistema, não apenas recebidos do usuário. Isso aparece em geração de PCD, relatórios fiscais e consolidado final de arquivamento.</li>
+</ul>
+<h2 id="2-funcionalidades-de-importacao">2. Funcionalidades de Importação<a class="headerlink" href="#2-funcionalidades-de-importacao" title="Permanent link">&para;</a></h2>
+<h3 id="o-que-e_1">O que é<a class="headerlink" href="#o-que-e_1" title="Permanent link">&para;</a></h3>
+<p>As funcionalidades de importação permitem cadastrar ou preparar dados em lote a partir de arquivos externos, principalmente CSV.</p>
+<p>No estado atual do projeto, a importação é usada para alimentar cadastros e operações com menor digitação manual, especialmente em credores, contas fixas e diárias.</p>
+<h3 id="o-que-faz-e-para-que-serve_1">O que faz e para que serve<a class="headerlink" href="#o-que-faz-e-para-que-serve_1" title="Permanent link">&para;</a></h3>
+<p>Essa feature serve para:</p>
+<ul>
+<li>reduzir retrabalho operacional em cadastros repetitivos</li>
+<li>absorver dados vindos de planilhas ou exportações externas</li>
+<li>validar dados antes de persistir em massa</li>
+<li>separar etapas de pré-visualização e confirmação quando o risco operacional é maior</li>
+</ul>
+<h3 id="como-funciona_1">Como funciona<a class="headerlink" href="#como-funciona_1" title="Permanent link">&para;</a></h3>
+<p>Há dois padrões principais de importação no projeto.</p>
+<h4 id="padrao-1-importacao-direta-com-resultado-resumido">Padrão 1: importação direta com resultado resumido<a class="headerlink" href="#padrao-1-importacao-direta-com-resultado-resumido" title="Permanent link">&para;</a></h4>
+<p>Usado em credores e contas fixas.</p>
+<ol>
+<li>O usuário envia um CSV pelo painel de importação.</li>
+<li>O sistema decodifica o arquivo com fallback de encoding.</li>
+<li>Cada linha é lida como dicionário.</li>
+<li>O sistema tenta localizar entidades relacionadas, normalizar campos e criar ou reaproveitar registros.</li>
+<li>O retorno é um resumo com:</li>
+<li>quantidade de sucessos</li>
+<li>lista de erros por linha</li>
+</ol>
+<h4 id="padrao-2-preview-antes-de-confirmacao">Padrão 2: preview antes de confirmação<a class="headerlink" href="#padrao-2-preview-antes-de-confirmacao" title="Permanent link">&para;</a></h4>
+<p>Usado na importação de diárias.</p>
+<ol>
+<li>O usuário envia o CSV.</li>
+<li>O sistema gera uma prévia serializável em sessão.</li>
+<li>Erros de validação são exibidos sem gravar nada.</li>
+<li>Só após confirmação explícita os objetos são criados.</li>
+</ol>
+<p>Entradas típicas:</p>
+<ul>
+<li>arquivo CSV</li>
+<li>colunas padronizadas por template</li>
+<li>dados referenciais já existentes no banco, como credores</li>
+</ul>
+<p>Saídas típicas:</p>
+<ul>
+<li>resumo de importação</li>
+<li>preview temporário em sessão</li>
+<li>objetos criados em lote</li>
+<li>mensagens de erro por linha</li>
+</ul>
+<h3 id="como-se-reflete-no-codigo_1">Como se reflete no código<a class="headerlink" href="#como-se-reflete-no-codigo_1" title="Permanent link">&para;</a></h3>
+<p>Arquivos centrais:</p>
+<ul>
+<li><code>commons/shared/csv_import_utils.py</code></li>
+<li>oferece funções compartilhadas de leitura, decodificação e construção de <code>DictReader</code></li>
+<li>
+<p>é a base técnica para vários fluxos de importação</p>
+</li>
+<li>
+<p><code>credores/imports.py</code></p>
+</li>
+<li>implementa <code>painel_importacao_view</code></li>
+<li>implementa <code>importar_credores_csv</code>, que cria ou reaproveita <code>Credor</code>, <code>ContasBancarias</code> e <code>CargosFuncoes</code></li>
+<li>
+<p>concentra também o fluxo de download de template de credores</p>
+</li>
+<li>
+<p><code>pagamentos/views/support/contas_fixas/imports.py</code></p>
+</li>
+<li>implementa <code>importar_contas_fixas_csv</code></li>
+<li>cria <code>ContaFixa</code> a partir de linhas CSV vinculadas a credores já existentes</li>
+<li>
+<p>também fornece template CSV para o usuário</p>
+</li>
+<li>
+<p><code>verbas_indenizatorias/views/diarias/imports.py</code></p>
+</li>
+<li>implementa a view <code>importar_diarias_view</code></li>
+<li>controla as ações de preview, confirmação e cancelamento</li>
+<li>
+<p>usa sessão para segurar o lote provisório até a confirmação</p>
+</li>
+<li>
+<p><code>verbas_indenizatorias/views/diarias/import_services.py</code></p>
+</li>
+<li>implementa <code>_parse_diaria_row</code>, <code>preview_diarias_lote</code> e <code>confirmar_diarias_lote</code></li>
+<li>valida datas, quantidade de diárias, existência do beneficiário e coerência da linha</li>
+<li>transforma a prévia em objetos <code>Diaria</code> no momento da confirmação</li>
+</ul>
+<h3 id="observacoes-arquiteturais_1">Observações arquiteturais<a class="headerlink" href="#observacoes-arquiteturais_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Nem toda importação já foi desacoplada em <code>panels.py</code> e <code>actions.py</code>; parte do legado ainda concentra fluxo numa view específica de importação.</li>
+<li>O padrão mais robusto hoje é o de diárias, porque separa parsing e persistência em duas fases.</li>
+<li>As importações já demonstram uma tendência forte no projeto: primeiro validar e estruturar dados, depois persistir.</li>
+</ul>
+<h2 id="3-funcionalidades-de-sync">3. Funcionalidades de Sync<a class="headerlink" href="#3-funcionalidades-de-sync" title="Permanent link">&para;</a></h2>
+<h3 id="o-que-e_2">O que é<a class="headerlink" href="#o-que-e_2" title="Permanent link">&para;</a></h3>
+<p>As funcionalidades de sync sincronizam o estado interno do PaGé com artefatos ou eventos externos e também propagam efeitos entre domínios internos quando um processo muda de etapa.</p>
+<p>Há dois eixos principais:</p>
+<ul>
+<li>sincronização externa, especialmente com relatórios SISCAC</li>
+<li>sincronização interna entre <code>pagamentos</code>, <code>verbas_indenizatorias</code> e <code>suprimentos</code></li>
+</ul>
+<h3 id="o-que-faz-e-para-que-serve_2">O que faz e para que serve<a class="headerlink" href="#o-que-faz-e-para-que-serve_2" title="Permanent link">&para;</a></h3>
+<p>Essa feature serve para:</p>
+<ul>
+<li>reconciliar pagamentos registrados externamente com processos do sistema</li>
+<li>reduzir divergência entre sistemas auxiliares e o estado interno do backoffice</li>
+<li>propagar mudanças de status do processo para objetos relacionados em outros módulos</li>
+<li>disparar efeitos colaterais controlados quando marcos do fluxo são atingidos</li>
+</ul>
+<h3 id="como-funciona_2">Como funciona<a class="headerlink" href="#como-funciona_2" title="Permanent link">&para;</a></h3>
+<h4 id="sync-externo-de-pagamentos-siscac">Sync externo de pagamentos SISCAC<a class="headerlink" href="#sync-externo-de-pagamentos-siscac" title="Permanent link">&para;</a></h4>
+<ol>
+<li>O usuário acessa o painel de sincronização.</li>
+<li>Pode enviar um PDF SISCAC para processamento automático ou selecionar pares para sincronização manual.</li>
+<li>O parser extrai pagamentos do relatório.</li>
+<li>O sistema concilia cada pagamento com processos internos usando dados como:</li>
+<li>número de comprovante</li>
+<li>nota de empenho</li>
+<li>nome do credor</li>
+<li>valor líquido</li>
+<li>O resultado é classificado em:</li>
+<li>sucessos</li>
+<li>divergências</li>
+<li>não encontrados</li>
+<li>retroativos corrigidos</li>
+</ol>
+<h4 id="sync-interno-apos-transicoes">Sync interno após transições<a class="headerlink" href="#sync-interno-apos-transicoes" title="Permanent link">&para;</a></h4>
+<ol>
+<li>Um <code>Processo</code> muda de status.</li>
+<li>Serviços de integração são chamados para propagar efeitos.</li>
+<li>Cada domínio relacionado atualiza seus itens, gera documentos ou ajusta estados derivados.</li>
+</ol>
+<p>Entradas típicas:</p>
+<ul>
+<li>PDF SISCAC</li>
+<li>seleção manual de pares processo x número SISCAC</li>
+<li>transições de status do fluxo principal</li>
+</ul>
+<p>Saídas típicas:</p>
+<ul>
+<li>atualização de <code>n_pagamento_siscac</code></li>
+<li>tela com conciliações e divergências</li>
+<li>atualização de status em verbas e suprimentos vinculados</li>
+<li>geração de documentos decorrentes da transição</li>
+</ul>
+<h3 id="como-se-reflete-no-codigo_2">Como se reflete no código<a class="headerlink" href="#como-se-reflete-no-codigo_2" title="Permanent link">&para;</a></h3>
+<p>Arquivos centrais:</p>
+<ul>
+<li><code>pagamentos/views/support/sync/pagamentos.py</code></li>
+<li>implementa <code>sincronizar_siscac</code>, <code>sincronizar_siscac_auto_action</code> e <code>sincronizar_siscac_manual_action</code></li>
+<li>
+<p>implementa <code>sync_siscac_payments</code>, núcleo de conciliação entre relatório externo e processos internos</p>
+</li>
+<li>
+<p><code>pagamentos/utils.py</code></p>
+</li>
+<li>
+<p>contém o parser de relatório SISCAC usado na sincronização automática</p>
+</li>
+<li>
+<p><code>pagamentos/services/integracoes/processo_relacionados.py</code></p>
+</li>
+<li>centraliza a orquestração cross-domain</li>
+<li><code>sincronizar_relacoes_apos_transicao</code> delega propagação para módulos satélite</li>
+<li>
+<p><code>gerar_documentos_relacionados_por_transicao</code> dispara documentos dependentes do status do processo</p>
+</li>
+<li>
+<p><code>verbas_indenizatorias/services/processo_integration.py</code></p>
+</li>
+<li>propaga status de processo pago para diárias, reembolsos, jetons e auxílios</li>
+<li>cria documentos relacionados e rascunhos de assinatura em fluxos específicos</li>
+</ul>
+<h3 id="observacoes-arquiteturais_2">Observações arquiteturais<a class="headerlink" href="#observacoes-arquiteturais_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Sync não significa apenas integração externa. No projeto, também significa coerência entre domínios internos desacoplados.</li>
+<li>A sincronização externa é orientada por reconciliação; a interna é orientada por eventos de transição de status.</li>
+<li>O padrão é conservador: conciliar primeiro, classificar divergências e só depois aplicar mutações controladas.</li>
+</ul>
+<h2 id="4-funcionalidades-em-lote">4. Funcionalidades em Lote<a class="headerlink" href="#4-funcionalidades-em-lote" title="Permanent link">&para;</a></h2>
+<h3 id="o-que-e_3">O que é<a class="headerlink" href="#o-que-e_3" title="Permanent link">&para;</a></h3>
+<p>As funcionalidades em lote permitem aplicar uma mesma ação a vários registros de uma vez, principalmente em painéis operacionais do fluxo financeiro.</p>
+<p>São uma peça importante de produtividade no backoffice, especialmente quando o operador precisa mover dezenas de processos entre etapas ou tratar um conjunto de pendências.</p>
+<h3 id="o-que-faz-e-para-que-serve_3">O que faz e para que serve<a class="headerlink" href="#o-que-faz-e-para-que-serve_3" title="Permanent link">&para;</a></h3>
+<p>Essa feature serve para:</p>
+<ul>
+<li>acelerar operações repetitivas</li>
+<li>reduzir cliques em transições de status</li>
+<li>manter consistência operacional ao aplicar a mesma regra a vários itens</li>
+<li>preservar auditoria mesmo quando a operação atinge múltiplos objetos</li>
+</ul>
+<h3 id="como-funciona_3">Como funciona<a class="headerlink" href="#como-funciona_3" title="Permanent link">&para;</a></h3>
+<p>Fluxo típico:</p>
+<ol>
+<li>O usuário seleciona vários IDs em um painel.</li>
+<li>A action recebe a lista de IDs via <code>POST</code>.</li>
+<li>O sistema filtra quais itens estão no status de origem esperado.</li>
+<li>Apenas os elegíveis sofrem mutação.</li>
+<li>A transição é executada em transação atômica.</li>
+<li>O retorno informa:</li>
+<li>quantos foram processados</li>
+<li>quantos foram ignorados</li>
+<li>se não havia itens elegíveis</li>
+</ol>
+<p>Entradas típicas:</p>
+<ul>
+<li>listas de IDs selecionados</li>
+<li>status de origem esperado</li>
+<li>status de destino</li>
+<li>contexto do painel de origem</li>
+</ul>
+<p>Saídas típicas:</p>
+<ul>
+<li>atualização em lote de status</li>
+<li>mensagens de sucesso, warning ou erro</li>
+<li>redirect de volta ao painel operacional</li>
+</ul>
+<h3 id="como-se-reflete-no-codigo_3">Como se reflete no código<a class="headerlink" href="#como-se-reflete-no-codigo_3" title="Permanent link">&para;</a></h3>
+<p>Arquivos centrais:</p>
+<ul>
+<li><code>pagamentos/views/helpers/payment_builders.py</code></li>
+<li>implementa <code>_processar_acao_lote</code>, helper genérico para ações em lote</li>
+<li>implementa <code>_atualizar_status_em_lote</code>, que itera processo a processo chamando <code>avancar_status(..., usuario=...)</code></li>
+<li>
+<p>usa <code>transaction.atomic</code> para garantir integridade da operação</p>
+</li>
+<li>
+<p><code>pagamentos/views/payment/lancamento/actions.py</code></p>
+</li>
+<li>
+<p>usa esse padrão para separar processos para lançamento bancário, marcar como lançados e desfazer lançamentos</p>
+</li>
+<li>
+<p><code>pagamentos/views/support/pendencia/actions.py</code></p>
+</li>
+<li>aplica o mesmo raciocínio a tratamento de pendências em lote</li>
+</ul>
+<h3 id="observacoes-arquiteturais_3">Observações arquiteturais<a class="headerlink" href="#observacoes-arquiteturais_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>O sistema evita <code>update()</code> cego quando a operação precisa manter trilha e regras de negócio.</li>
+<li>A opção por chamar <code>avancar_status</code> individualmente preserva turnpikes, signals e histórico.</li>
+<li>O lote é operacional, mas não sacrifica compliance.</li>
+</ul>
+<h2 id="5-retencao-de-impostos">5. Retenção de Impostos<a class="headerlink" href="#5-retencao-de-impostos" title="Permanent link">&para;</a></h2>
+<h3 id="o-que-e_4">O que é<a class="headerlink" href="#o-que-e_4" title="Permanent link">&para;</a></h3>
+<p>A feature de retenção de impostos concentra o tratamento das retenções tributárias associadas ao ciclo de pagamento, incluindo apuração, agrupamento, anexação documental e preparação de informações para obrigações acessórias.</p>
+<p>Ela está concentrada no app <code>fiscal</code> e conversa diretamente com processos de pagamento e com a esteira de recolhimento.</p>
+<h3 id="o-que-faz-e-para-que-serve_4">O que faz e para que serve<a class="headerlink" href="#o-que-faz-e-para-que-serve_4" title="Permanent link">&para;</a></h3>
+<p>Essa feature serve para:</p>
+<ul>
+<li>registrar e controlar retenções tributárias por documento fiscal</li>
+<li>agrupar retenções em processos de recolhimento</li>
+<li>anexar evidências do recolhimento, como guia e comprovante</li>
+<li>gerar relatório mensal consolidado das retenções</li>
+<li>preparar dados para geração de lotes EFD-Reinf</li>
+</ul>
+<h3 id="como-funciona_4">Como funciona<a class="headerlink" href="#como-funciona_4" title="Permanent link">&para;</a></h3>
+<p>Fluxo principal de recolhimento:</p>
+<ol>
+<li>O operador seleciona retenções no painel fiscal.</li>
+<li>A action de agrupamento cria um <code>Processo</code> de recolhimento e vincula as retenções ao processo.</li>
+<li>Em seguida, o operador envia:</li>
+<li>guia de recolhimento</li>
+<li>comprovante de recolhimento</li>
+<li>competência mês/ano</li>
+<li>O service fiscal gera um relatório mensal CSV consolidado.</li>
+<li>O sistema anexa três artefatos ao processo de recolhimento:</li>
+<li>guia</li>
+<li>comprovante</li>
+<li>relatório mensal</li>
+</ol>
+<p>Além disso, o módulo também possui geração de lotes EFD-Reinf em memória, com retorno em arquivo compactado.</p>
+<p>Entradas típicas:</p>
+<ul>
+<li>seleção de <code>retencao_ids</code></li>
+<li>arquivos de guia e comprovante</li>
+<li>competência fiscal</li>
+<li>dados de documentos fiscais e códigos de imposto</li>
+</ul>
+<p>Saídas típicas:</p>
+<ul>
+<li>retenções agrupadas em processo de pagamento</li>
+<li>documentos fiscais anexados ao processo de recolhimento</li>
+<li>relatório mensal consolidado em CSV</li>
+<li>ZIP de lotes EFD-Reinf quando aplicável</li>
+</ul>
+<h3 id="como-se-reflete-no-codigo_4">Como se reflete no código<a class="headerlink" href="#como-se-reflete-no-codigo_4" title="Permanent link">&para;</a></h3>
+<p>Arquivos centrais:</p>
+<ul>
+<li><code>fiscal/models.py</code></li>
+<li>define entidades como <code>DocumentoFiscal</code>, <code>RetencaoImposto</code>, <code>CodigosImposto</code> e status do domínio</li>
+<li>
+<p>representa o núcleo persistente da feature</p>
+</li>
+<li>
+<p><code>fiscal/views/impostos/actions.py</code></p>
+</li>
+<li>expõe as actions de agrupamento e anexação documental</li>
+<li>
+<p>faz a ponte entre o painel fiscal e os services do módulo</p>
+</li>
+<li>
+<p><code>fiscal/views/impostos/panels.py</code></p>
+</li>
+<li>
+<p>renderiza o painel de retenções com filtros operacionais</p>
+</li>
+<li>
+<p><code>fiscal/services/impostos.py</code></p>
+</li>
+<li>implementa <code>anexar_guia_comprovante_relatorio_em_processos</code></li>
+<li>implementa <code>gerar_relatorio_retencoes_mensal_csv</code></li>
+<li>
+<p>cria artefatos e documentos com ordens reservadas para o recolhimento</p>
+</li>
+<li>
+<p><code>fiscal/services/reinf.py</code></p>
+</li>
+<li>centraliza a geração dos lotes EFD-Reinf a partir da competência informada</li>
+</ul>
+<h3 id="observacoes-arquiteturais_4">Observações arquiteturais<a class="headerlink" href="#observacoes-arquiteturais_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>A retenção não é tratada como dado isolado. Ela participa de um fluxo completo, com processo, anexos e obrigação acessória.</li>
+<li>O módulo fiscal faz forte uso de anexação automática de documentos, o que o conecta diretamente à infraestrutura transversal de gestão documental.</li>
+<li>É uma feature com alto peso de compliance, então a rastreabilidade dos anexos e dos vínculos com processo é essencial.</li>
+</ul>
+<h2 id="6-assinaturas-autentique">6. Assinaturas Autentique<a class="headerlink" href="#6-assinaturas-autentique" title="Permanent link">&para;</a></h2>
+<h3 id="o-que-e_5">O que é<a class="headerlink" href="#o-que-e_5" title="Permanent link">&para;</a></h3>
+<p>As assinaturas Autentique implementam a integração de assinatura eletrônica do sistema com a API da Autentique.</p>
+<p>O projeto usa essa feature para produzir um documento interno, registrá-lo como rascunho, enviá-lo à plataforma de assinatura e acompanhar o ciclo de vida do documento assinado.</p>
+<h3 id="o-que-faz-e-para-que-serve_5">O que faz e para que serve<a class="headerlink" href="#o-que-faz-e-para-que-serve_5" title="Permanent link">&para;</a></h3>
+<p>Essa feature serve para:</p>
+<ul>
+<li>gerar rascunhos de documentos que exigem assinatura</li>
+<li>disparar envio eletrônico para a Autentique</li>
+<li>guardar metadados do documento remoto e dos signatários</li>
+<li>expor links de assinatura para o usuário correto</li>
+<li>sustentar fluxos formais como PCD e outros artefatos assináveis</li>
+</ul>
+<h3 id="como-funciona_5">Como funciona<a class="headerlink" href="#como-funciona_5" title="Permanent link">&para;</a></h3>
+<p>Fluxo principal:</p>
+<ol>
+<li>Um documento PDF é gerado pelo sistema ou preparado para assinatura.</li>
+<li>O serviço cria um registro local em status <code>RASCUNHO</code>.</li>
+<li>O usuário responsável dispara o envio.</li>
+<li>O cliente de integração chama a API GraphQL da Autentique.</li>
+<li>O retorno da plataforma alimenta o registro local com:</li>
+<li><code>autentique_id</code></li>
+<li>URL de assinatura</li>
+<li>dados dos signatários</li>
+<li>status <code>PENDENTE</code></li>
+<li>Em etapas posteriores, o sistema pode consultar o status e baixar o PDF assinado.</li>
+</ol>
+<p>Entradas típicas:</p>
+<ul>
+<li>bytes do PDF gerado</li>
+<li>tipo documental</li>
+<li>usuário criador</li>
+<li>e-mail do signatário</li>
+<li>token da API via variável de ambiente</li>
+</ul>
+<p>Saídas típicas:</p>
+<ul>
+<li>registro <code>AssinaturaAutentique</code></li>
+<li>URL de assinatura</li>
+<li>dados de signatários</li>
+<li>mudança de status do ciclo de assinatura</li>
+<li>arquivo assinado quando a assinatura é concluída</li>
+</ul>
+<h3 id="como-se-reflete-no-codigo_5">Como se reflete no código<a class="headerlink" href="#como-se-reflete-no-codigo_5" title="Permanent link">&para;</a></h3>
+<p>Arquivos centrais:</p>
+<ul>
+<li><code>pagamentos/domain_models/suporte.py</code></li>
+<li>define o modelo <code>AssinaturaAutentique</code></li>
+<li>
+<p>guarda vínculo genérico com a entidade relacionada, status, arquivos e metadados da integração</p>
+</li>
+<li>
+<p><code>commons/shared/signature_services.py</code></p>
+</li>
+<li>implementa <code>criar_assinatura_rascunho</code></li>
+<li>implementa <code>disparar_assinatura_rascunho_com_signatarios</code></li>
+<li>
+<p>concentra a lógica transversal do ciclo local de assinatura</p>
+</li>
+<li>
+<p><code>commons/shared/integracoes/autentique.py</code></p>
+</li>
+<li>implementa o cliente GraphQL da Autentique</li>
+<li>
+<p>envia documentos, processa respostas e consulta status para download do assinado</p>
+</li>
+<li>
+<p><code>pagamentos/views/support/signatures.py</code></p>
+</li>
+<li>implementa o painel do usuário e a action de disparo</li>
+<li>
+<p>aplica controle de permissão operacional no nível de dono do rascunho</p>
+</li>
+<li>
+<p><code>verbas_indenizatorias/services/processo_integration.py</code></p>
+</li>
+<li>usa a infraestrutura de assinatura para criar rascunhos de PCD em fluxos de diárias</li>
+</ul>
+<h3 id="observacoes-arquiteturais_5">Observações arquiteturais<a class="headerlink" href="#observacoes-arquiteturais_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li>A integração foi desenhada para ser transversal: o serviço de assinatura não pertence a um único domínio de negócio.</li>
+<li>O registro local é tão importante quanto a chamada externa, porque ele preserva rastreabilidade, permite reprocessamento e desacopla o domínio da API remota.</li>
+<li>O padrão do projeto é primeiro persistir o rascunho local e só depois acionar a integração externa.</li>
+</ul>
+<h2 id="7-auditoria-e-logging">7. Auditoria e Logging<a class="headerlink" href="#7-auditoria-e-logging" title="Permanent link">&para;</a></h2>
+<h3 id="o-que-e_6">O que é<a class="headerlink" href="#o-que-e_6" title="Permanent link">&para;</a></h3>
+<p>Auditoria e logging formam a camada de rastreabilidade do sistema.</p>
+<p>No PaGé, isso aparece em dois níveis complementares:</p>
+<ul>
+<li>auditoria persistente de negócio, com histórico de objetos e trilha de acesso</li>
+<li>logging técnico de aplicação, usado para registrar falhas operacionais e exceções</li>
+</ul>
+<h3 id="o-que-faz-e-para-que-serve_6">O que faz e para que serve<a class="headerlink" href="#o-que-faz-e-para-que-serve_6" title="Permanent link">&para;</a></h3>
+<p>Essa feature serve para:</p>
+<ul>
+<li>demonstrar quem alterou o quê e quando</li>
+<li>registrar eventos sensíveis de acesso e mudança de estado</li>
+<li>permitir revisão operacional, investigação e prestação de contas</li>
+<li>diagnosticar falhas em integrações, uploads e processos automáticos</li>
+</ul>
+<h3 id="como-funciona_6">Como funciona<a class="headerlink" href="#como-funciona_6" title="Permanent link">&para;</a></h3>
+<h4 id="auditoria-persistente">Auditoria persistente<a class="headerlink" href="#auditoria-persistente" title="Permanent link">&para;</a></h4>
+<ol>
+<li>Modelos sensíveis usam <code>django-simple-history</code>.</li>
+<li>Cada criação, alteração ou exclusão relevante gera histórico.</li>
+<li>O painel de auditoria consolida históricos de múltiplos modelos em uma visão unificada.</li>
+<li>O usuário pode filtrar por modelo, tipo de ação, período e usuário.</li>
+</ol>
+<h4 id="logging-tecnico">Logging técnico<a class="headerlink" href="#logging-tecnico" title="Permanent link">&para;</a></h4>
+<ol>
+<li>Módulos mais sensíveis criam <code>logger = logging.getLogger(__name__)</code>.</li>
+<li>Exceções operacionais são registradas com <code>logger.exception(...)</code>.</li>
+<li>O sistema devolve feedback funcional ao usuário, mas preserva detalhe técnico no log.</li>
+</ol>
+<p>Entradas típicas:</p>
+<ul>
+<li>mutações de modelos com histórico</li>
+<li>acesso a arquivos</li>
+<li>exceções em integrações e uploads</li>
+</ul>
+<p>Saídas típicas:</p>
+<ul>
+<li>registros em tabelas históricas</li>
+<li>trilha consolidada no painel de auditoria</li>
+<li>logs de aplicação para troubleshooting</li>
+<li>evidência de acesso a arquivos</li>
+</ul>
+<h3 id="como-se-reflete-no-codigo_6">Como se reflete no código<a class="headerlink" href="#como-se-reflete-no-codigo_6" title="Permanent link">&para;</a></h3>
+<p>Arquivos centrais:</p>
+<ul>
+<li><code>docs/governanca/trilha_auditoria.md</code></li>
+<li>
+<p>documenta os princípios de não exclusão, histórico e compliance do sistema</p>
+</li>
+<li>
+<p><code>pagamentos/views/auditing/panels.py</code></p>
+</li>
+<li>implementa <code>auditoria_view</code></li>
+<li>consolida históricos de vários modelos financeiros, fiscais e documentais</li>
+<li>
+<p>aplica filtros por modelo, ação, data e usuário</p>
+</li>
+<li>
+<p><code>pagamentos/domain_models/suporte.py</code></p>
+</li>
+<li>define <code>RegistroAcessoArquivo</code>, <code>Contingencia</code>, <code>Devolucao</code> e <code>AssinaturaAutentique</code> com histórico</li>
+<li>
+<p>registra evidências importantes para controle e auditoria</p>
+</li>
+<li>
+<p>modelos críticos em múltiplos apps</p>
+</li>
+<li>usam <code>HistoricalRecords()</code> para manter trilha das alterações</li>
+<li>
+<p>isso aparece em entidades como processo, retenção, documentos, suprimentos e assinatura</p>
+</li>
+<li>
+<p>módulos com logging técnico</p>
+</li>
+<li><code>commons/shared/storage_utils.py</code></li>
+<li><code>verbas_indenizatorias/views/shared/documents.py</code></li>
+<li><code>pagamentos/views/support/sync/pagamentos.py</code></li>
+<li><code>pagamentos/views/support/signatures.py</code></li>
+<li><code>verbas_indenizatorias/services/processo_integration.py</code></li>
+<li>nesses pontos, falhas técnicas são registradas sem quebrar a separação entre erro operacional e erro de infraestrutura</li>
+</ul>
+<h3 id="observacoes-arquiteturais_6">Observações arquiteturais<a class="headerlink" href="#observacoes-arquiteturais_6" title="Permanent link">&para;</a></h3>
+<ul>
+<li>No projeto, auditoria não é só “log de sistema”. Ela é requisito funcional e de compliance.</li>
+<li>O logging técnico aparece como apoio à operação, mas a trilha principal de governança está no histórico persistente de modelos e nos registros de acesso.</li>
+<li>A decisão de chamar <code>avancar_status(..., usuario=...)</code> em vez de atualizar tudo diretamente reforça esse compromisso com rastreabilidade.</li>
+</ul>
+<h2 id="fechamento">Fechamento<a class="headerlink" href="#fechamento" title="Permanent link">&para;</a></h2>
+<p>Hoje o repositório já contém essas features em produção de desenvolvimento, mas a documentação estava fragmentada.</p>
+<p>Em resumo:</p>
+<ul>
+<li>já existia documentação parcial para auditoria, fiscal e contratos operacionais</li>
+<li>não existia um arquivo único explicando essas funcionalidades de ponta a ponta</li>
+<li>a base técnica já está espalhada de forma coerente entre <code>commons</code>, <code>pagamentos</code>, <code>fiscal</code>, <code>verbas_indenizatorias</code> e <code>suprimentos</code></li>
+</ul>
+<p>Este documento foi criado para servir como ponte entre visão funcional e implementação real do sistema.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.sections", "navigation.expand", "toc.follow", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado para \u00e1rea de transfer\u00eancia", "clipboard.copy": "Copiar para \u00e1rea de transfer\u00eancia", "search.result.more.one": "mais 1 nesta p\u00e1gina", "search.result.more.other": "# mais nesta p\u00e1gina", "search.result.none": "Nenhum documento encontrado", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Digite para iniciar a busca", "search.result.term.missing": "Ausente", "select.version": "Selecione a vers\u00e3o"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

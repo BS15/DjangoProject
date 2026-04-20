@@ -31,6 +31,7 @@
             </button>
         </div>
     </div>
+
 {% endblock %}
 
 {% block table_headers %}
@@ -41,17 +42,14 @@
 <th>Base de Cálculo</th>
 <th>Valor Retido</th>
 <th>Status Reinf</th>
+<th>Documentação</th>
 {% endblock %}
 
 {% block table_rows %}
 {% for retencao in retencoes %}
 <tr>
     <td>
-        {% if not retencao.processo_pagamento_id %}
         <input class="form-check-input retencao-check" type="checkbox" name="retencao_ids" value="{{ retencao.id }}">
-        {% else %}
-        <i class="bi bi-lock-fill text-muted" title="Já agrupado ou pago"></i>
-        {% endif %}
     </td>
     <td>{{ retencao.competencia|date:"m/Y"|default:"-" }}</td>
     <td>
@@ -68,10 +66,17 @@
         <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Pendente</span>
         {% endif %}
     </td>
+    <td>
+        {% if retencao.documentacao_completa %}
+        <span class="badge bg-success"><i class="bi bi-file-earmark-check"></i> Documentado</span>
+        {% else %}
+        <span class="badge bg-danger"><i class="bi bi-file-earmark-x"></i> Pendente</span>
+        {% endif %}
+    </td>
 </tr>
 {% empty %}
 <tr>
-    <td colspan="7" class="text-center text-muted py-4">Nenhuma retenção fiscal encontrada para os filtros aplicados.</td>
+    <td colspan="8" class="text-center text-muted py-4">Nenhuma retenção fiscal encontrada para os filtros aplicados.</td>
 </tr>
 {% endfor %}
 {% endblock %}

@@ -14,7 +14,7 @@
         <link rel="prev" href="../suprimento_fundos/">
       
       
-        <link rel="next" href="../../governanca/matriz_permissoes/">
+        <link rel="next" href="../../governanca/trilha_auditoria/">
       
       
         
@@ -450,14 +450,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../arquitetura/hub_spoke/" class="md-nav__link">
+      <a href="../../arquitetura/camada_services/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Interface Hub-and-Spoke
+    Camada de Services
   
 
     
@@ -478,14 +478,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../arquitetura/camada_services/" class="md-nav__link">
+      <a href="../../arquitetura/hub_spoke/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Camada de Services
+    Hub-and-Spoke
   
 
     
@@ -538,7 +538,7 @@
   <span class="md-ellipsis">
     
   
-    Manual de Módulos (Funcional)
+    Manual de Módulos
   
 
     
@@ -554,7 +554,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Manual de Módulos (Funcional)
+    Manual de Módulos
   
 
           </label>
@@ -567,14 +567,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../fluxo_core/" class="md-nav__link">
+      <a href="../pagamentos_core/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Fluxo Core
+    Pagamentos Core
   
 
     
@@ -744,28 +744,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#fluxo-de-recolhimento-de-impostos-com-anexacao-documental" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Fluxo de recolhimento de impostos (com anexação documental)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#mapeamento-action-service-fiscal" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Mapeamento Action -&gt; Service (Fiscal)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#controles-e-validacoes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -853,14 +831,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../governanca/matriz_permissoes/" class="md-nav__link">
+      <a href="../../governanca/trilha_auditoria/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Matriz de Permissões (RBAC)
+    Trilha de Auditoria
   
 
     
@@ -881,14 +859,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../governanca/trilha_auditoria/" class="md-nav__link">
+      <a href="../../governanca/matriz_permissoes/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Trilha de Auditoria
+    Matriz de Permissões
   
 
     
@@ -1054,6 +1032,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../desenvolvedor/funcionalidades_transversais/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Funcionalidades Transversais
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../instalacao/" class="md-nav__link">
         
   
@@ -1170,28 +1176,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#fluxo-de-recolhimento-de-impostos-com-anexacao-documental" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Fluxo de recolhimento de impostos (com anexação documental)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#mapeamento-action-service-fiscal" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Mapeamento Action -&gt; Service (Fiscal)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#controles-e-validacoes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1227,6 +1211,14 @@
 <li>Consolidação de dados fiscais por pagamento/lote.</li>
 <li>Preparação de informações para integrações oficiais.</li>
 </ul>
+<div class="admonition danger">
+<p class="admonition-title">Critical Invariant</p>
+<ul>
+<li><strong>Toda rotina fiscal DEVE usar <code>decimal.Decimal</code> para cálculos.</strong></li>
+<li><strong>Qualquer inconsistência ou dado inválido (ex: EFD-Reinf) resulta em crash imediato.</strong></li>
+<li><strong>Todas as mutações são protegidas por <code>transaction.atomic()</code> e <code>select_for_update()</code>.</strong></li>
+</ul>
+</div>
 <h2 id="integracao-efd-reinf">Integração EFD-Reinf<a class="headerlink" href="#integracao-efd-reinf" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Agrupamento de eventos fiscais.</li>
@@ -1235,42 +1227,6 @@
 </ul>
 <h2 id="relacao-com-o-fluxo">Relação com o fluxo<a class="headerlink" href="#relacao-com-o-fluxo" title="Permanent link">&para;</a></h2>
 <p>A etapa fiscal atua como gate para progressão segura até pagamento e contabilização.</p>
-<h2 id="fluxo-de-recolhimento-de-impostos-com-anexacao-documental">Fluxo de recolhimento de impostos (com anexação documental)<a class="headerlink" href="#fluxo-de-recolhimento-de-impostos-com-anexacao-documental" title="Permanent link">&para;</a></h2>
-<p>O domínio fiscal agora contempla explicitamente o ciclo de anexação de guia e comprovante de recolhimento, com geração de relatório mensal consolidado.</p>
-<p>Sequência operacional:
-1. Seleção de retenções no painel fiscal.
-2. Agrupamento das retenções em processo de recolhimento (<code>agrupar_retencoes_action</code>).
-3. Upload de guia e comprovante com competência (mês/ano).
-4. Execução do worker <code>anexar_guia_comprovante_relatorio_em_processos(...)</code>.
-5. Anexação automática de três documentos por processo de recolhimento:
-    - guia de recolhimento de impostos (<code>ordem=97</code>)
-    - comprovante de recolhimento de impostos (<code>ordem=98</code>)
-    - relatório mensal de retenções (<code>ordem=99</code>)</p>
-<h2 id="mapeamento-action-service-fiscal">Mapeamento Action -&gt; Service (Fiscal)<a class="headerlink" href="#mapeamento-action-service-fiscal" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Action</th>
-<th>Permissão</th>
-<th>Worker</th>
-<th>Resultado</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>agrupar_retencoes_action</code></td>
-<td><code>fiscal.acesso_backoffice</code></td>
-<td>n/a (orquestração local da action)</td>
-<td>cria processo de recolhimento e vincula retenções</td>
-</tr>
-<tr>
-<td><code>anexar_documentos_retencoes_action</code></td>
-<td><code>fiscal.acesso_backoffice</code></td>
-<td><code>anexar_guia_comprovante_relatorio_em_processos(...)</code></td>
-<td>anexa guia, comprovante e relatório mensal</td>
-</tr>
-</tbody>
-</table>
 <h2 id="controles-e-validacoes">Controles e validações<a class="headerlink" href="#controles-e-validacoes" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Obrigatório informar retenções selecionadas.</li>
@@ -1278,7 +1234,10 @@
 <li>Obrigatório informar competência válida (<code>mes_referencia</code>, <code>ano_referencia</code>).</li>
 <li>Apenas retenções já agrupadas em processo de pagamento são elegíveis para anexação.</li>
 </ul>
-<p>Para o padrão completo de documentação operacional de actions e workers, consulte o guia <a href="../../desenvolvedor/dicionarios_operacionais/">Dicionários Operacionais</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Para detalhes operacionais, consulte <a href="../../desenvolvedor/dicionarios_operacionais/">Dicionários Operacionais</a>.</p>
+</div>
 
 
 

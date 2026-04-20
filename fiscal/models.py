@@ -225,3 +225,87 @@ class RetencaoImposto(models.Model):
 
     def __str__(self):
         return f"{self.codigo} - R$ {self.valor}"
+
+
+def _upload_documento_pagamento_imposto(instance, filename):
+    """Monta caminho de upload para documentos de pagamento de imposto."""
+    from commons.shared.storage_utils import _build_upload_path, _safe_filename
+    competencia_str = instance.competencia.strftime("%Y-%m") if instance.competencia else "sem-competencia"
+    return _build_upload_path("fiscal", "pagamentos_impostos", competencia_str, _safe_filename(filename))
+
+
+class DocumentoPagamentoImposto(models.Model):
+    """Documentação probatória do pagamento de imposto retido para uma competência."""
+
+    retencao = models.ForeignKey(
+        'RetencaoImposto',
+        on_delete=models.PROTECT,
+        related_name='documentos_pagamento',
+        db_index=True,
+        verbose_name="Retenção",
+    )
+    codigo_imposto = models.ForeignKey(
+        'CodigosImposto',
+        on_delete=models.PROTECT,
+        verbose_name="Código de Imposto",
+    )
+    competencia = models.DateField(
+        "Mês de Competência",
+        help_text="Normalizado internamente para o primeiro dia do mês (YYYY-MM-01).",
+    )
+    relatorio_retencoes = models.FileField(
+        "Relatório de Retenções",
+        upload_to=_upload_documento_pagamento_imposto,
+        validators=[validar_arquivo_seguro],
+    )
+    guia_recolhimento = models.FileField(
+        "Guia de Recolhimento",
+        upload_to=_upload_documento_pagamento_imposto,
+        validators=[validar_arquivo_seguro],
+    )
+    comprovante_pagamento = models.FileField(
+        "Comprovante de Pagamento",
+        upload_to=_upload_documento_pagamento_imposto,
+        validators=[validar_arquivo_seguro],
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = "Documento de Pagamento de Imposto"
+        verbose_name_plural = "Documentos de Pagamento de Imposto"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['retencao', 'codigo_imposto', 'competencia'],
+                name='unique_doc_pagamento_por_retencao_codigo_competencia',
+            )
+        ]
+
+    def clean(self):
+        errors = {}
+        if self.retencao_id and self.codigo_imposto_id:
+            if self.retencao.codigo_id != self.codigo_imposto_id:
+                errors['codigo_imposto'] = ValidationError(
+                    "O código de imposto deve corresponder ao código da retenção vinculada."
+                )
+        if self.retencao_id and self.competencia:
+            retencao_competencia = getattr(self.retencao, 'competencia', None)
+            if retencao_competencia and retencao_competencia != date(self.competencia.year, self.competencia.month, 1):
+                errors['competencia'] = ValidationError(
+                    "A competência deve corresponder à competência da retenção vinculada."
+                )
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs):
+        if self.competencia:
+            self.competencia = date(self.competencia.year, self.competencia.month, 1)
+        super().save(*args, **kwargs)
+
+    def documentacao_completa(self) -> bool:
+        """Retorna True se todos os três arquivos estão preenchidos."""
+        return bool(self.relatorio_retencoes and self.guia_recolhimento and self.comprovante_pagamento)
+
+    def __str__(self):
+        return f"DocPagImposto #{self.pk} – {self.codigo_imposto} / {self.competencia}"

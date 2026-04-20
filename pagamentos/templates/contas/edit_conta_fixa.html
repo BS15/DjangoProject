@@ -1,0 +1,85 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Conta Fixa - System X</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/institutional.css' %}">
+</head>
+<body class="bg-light">
+{% include 'partials/sidebar.html' %}
+
+<div class="container mt-4 mb-5" style="max-width: 900px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Editar Conta Fixa: {{ conta }}</h4>
+        <a href="{% url 'painel_contas_fixas' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+    </div>
+
+    {% if messages %}
+    <div class="mb-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <form method="post" action="{% url 'edit_conta_fixa_action' conta.pk %}">
+                {% csrf_token %}
+
+                <h6 class="text-secondary border-bottom pb-2 mb-3">Dados da Conta Fixa</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">{{ form.credor.label }}</label>
+                        {{ form.credor }}
+                        {{ form.credor.errors }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">{{ form.referencia.label }}</label>
+                        {{ form.referencia }}
+                        <div class="form-text text-muted small">{{ form.referencia.field.help_text }}</div>
+                        {{ form.referencia.errors }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">{{ form.dia_vencimento.label }}</label>
+                        {{ form.dia_vencimento }}
+                        <div class="form-text text-muted small">Informe o dia do mês (1 a 31).</div>
+                        {{ form.dia_vencimento.errors }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">{{ form.data_inicio.label }}</label>
+                        {{ form.data_inicio }}
+                        <div class="form-text text-muted small">{{ form.data_inicio.field.help_text }}</div>
+                        {{ form.data_inicio.errors }}
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="form-check">
+                            {{ form.ativa }}
+                            <label class="form-check-label fw-bold" for="{{ form.ativa.id_for_label }}">{{ form.ativa.label }}</label>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="mt-4 mb-4">
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'painel_contas_fixas' %}" class="btn btn-secondary px-4">Cancelar</a>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold">
+                        <i class="bi bi-check-lg"></i> Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

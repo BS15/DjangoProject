@@ -15,13 +15,11 @@
 {% block form_action %}{% url 'editar_processo_verbas_documentos_action' pk=processo.id %}{% endblock %}
 
 {% block form_fields %}
-{{ documento_formset.management_form }}
-
 <div class="alert alert-light border small">
     Arraste para reordenar documentos gerais e salve ao final. Os comprovantes das verbas individuais ficam nos cards abaixo.
 </div>
 
-{% with formset=documento_formset form_prefix="documento" tipos_documento=tipos_documento add_btn_class="btn-outline-primary" entity_label="Processo de Verbas" pode_interagir=True show_order_field=True show_immutable_badge=True download_tipo_documento="processo" %}
+{% with formset=documento_formset form_prefix="documento" tipos_documento=tipos_documento add_btn_class="btn-outline-primary" entity_label="Processo de Verbas" pode_interagir=True show_order_field=True show_immutable_badge=True download_tipo_documento="processo" show_preview_widget=True %}
   {% include "commons/partials/_documento_formset_generic.html" %}
 {% endwith %}
 
@@ -77,10 +75,11 @@
 {% block extra_js %}
 {{ block.super }}
 <script src="{% static 'js/documento_formset_manager.js' %}"></script>
+<script src="{% static 'js/documento_preview_widget.js' %}"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     new DocumentoFormsetManager('documento');
+    new DocumentoPreviewWidget('documento');
   });
 </script>
 {% endblock %}
-

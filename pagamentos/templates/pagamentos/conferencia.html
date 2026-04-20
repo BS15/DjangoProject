@@ -1,0 +1,60 @@
+{% extends "layouts/base_list.html" %}
+
+{% block page_title %}Conferência de Processos Pagos{% endblock %}
+
+{% block page_heading %}Conferência{% endblock %}
+{% block page_subtitle %}Processos pagos aguardando conferência e encerramento{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'home_page' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+{% endblock %}
+
+{% block filter_card %}
+<div class="card shadow-sm border-0 mb-3">
+	<div class="card-body pb-2">
+		<div class="d-flex gap-2 flex-wrap">
+			<a href="?filtro=com_pendencia" class="btn btn-sm {% if filtro_ativo == 'com_pendencia' %}btn-danger{% else %}btn-outline-danger{% endif %}">Com Pendências</a>
+			<a href="?filtro=com_retencao" class="btn btn-sm {% if filtro_ativo == 'com_retencao' %}btn-warning{% else %}btn-outline-warning{% endif %}">Com Retenção</a>
+			<a href="?filtro=com_ambos" class="btn btn-sm {% if filtro_ativo == 'com_ambos' %}btn-dark{% else %}btn-outline-dark{% endif %}">Ambos</a>
+			<a href="?filtro=sem_pendencias" class="btn btn-sm {% if filtro_ativo == 'sem_pendencias' %}btn-success{% else %}btn-outline-success{% endif %}">Sem Pendências</a>
+			<a href="?" class="btn btn-sm btn-outline-secondary">Todos</a>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block table_headers %}
+<th>#</th>
+<th>Credor</th>
+<th>Empenho</th>
+<th>Data Pagamento</th>
+<th>Valor Líquido</th>
+<th>Alertas</th>
+<th class="text-center">Ações</th>
+{% endblock %}
+
+{% block table_rows %}
+{% for processo in processos %}
+<tr>
+	<td class="fw-bold text-muted">#{{ processo.id }}</td>
+	<td>{{ processo.credor|default:"-" }}</td>
+	<td>{{ processo.n_nota_empenho|default:"-" }}</td>
+	<td>{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
+	<td class="fw-bold">R$ {{ processo.valor_liquido|default:"0,00" }}</td>
+	<td>
+		{% if processo.tem_pendencia %}<span class="badge bg-danger me-1"><i class="bi bi-exclamation-triangle-fill"></i> Pendência</span>{% endif %}
+		{% if processo.tem_retencao %}<span class="badge bg-warning text-dark"><i class="bi bi-receipt"></i> Retenção</span>{% endif %}
+		{% if not processo.tem_pendencia and not processo.tem_retencao %}<span class="badge bg-success"><i class="bi bi-check-circle"></i> Ok</span>{% endif %}
+	</td>
+	<td class="text-center">
+		{% if pode_interagir %}
+		<a href="{% url 'conferencia_processo' pk=processo.id %}" class="btn btn-sm btn-primary fw-bold">
+			<i class="bi bi-clipboard-check"></i> Conferir
+		</a>
+		{% endif %}
+	</td>
+</tr>
+{% empty %}
+<tr><td colspan="7" class="text-center py-4 text-muted">Nenhum processo aguardando conferência.</td></tr>
+{% endfor %}
+{% endblock %}

@@ -15,7 +15,7 @@ class DocumentoBase(models.Model):
 
     arquivo = models.FileField(upload_to=caminho_documento, validators=[validar_arquivo_seguro])
     ordem = models.PositiveIntegerField(default=1, help_text="Ordem do arquivo")
-    tipo = models.ForeignKey("fluxo.TiposDeDocumento", on_delete=models.PROTECT)
+    tipo = models.ForeignKey("pagamentos.TiposDocumento", on_delete=models.PROTECT)
 
     class Meta:
         abstract = True

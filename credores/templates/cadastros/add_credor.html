@@ -21,3 +21,39 @@
     <i class="bi bi-save"></i> Salvar Cadastro
 </button>
 {% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    $(function () {
+        var $tipo = $('#id_tipo');
+        var $documento = $('#id_cpf_cnpj');
+
+        if (!$tipo.length || !$documento.length) {
+            return;
+        }
+
+        function aplicarMascaraPorTipo() {
+            var tipo = $tipo.val();
+            var valorAtual = $documento.val();
+
+            $documento.unmask();
+
+            if (tipo === 'PF') {
+                $documento.mask('000.000.000-00');
+                $documento.attr('placeholder', '000.000.000-00');
+            } else if (tipo === 'PJ') {
+                $documento.mask('00.000.000/0000-00');
+                $documento.attr('placeholder', '00.000.000/0000-00');
+            } else {
+                $documento.attr('placeholder', 'Documento fiscal');
+            }
+
+            $documento.val(valorAtual);
+        }
+
+        $tipo.on('change', aplicarMascaraPorTipo);
+        aplicarMascaraPorTipo();
+    });
+</script>
+{% endblock %}

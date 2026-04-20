@@ -6,7 +6,7 @@
 
 ::: fiscal
 
-::: fluxo
+::: pagamentos
 
 ::: suprimentos
 

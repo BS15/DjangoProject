@@ -1,0 +1,410 @@
+{% extends "layouts/base_batch.html" %}
+
+{# --- Strict 3-tier: all content in blocks, no direct HTML outside blocks --- #}
+
+{% block page_title %}Contas a Pagar{% endblock %}
+
+{% block extra_css %}
+<style>
+	.copy-btn { transition: all 0.2s ease-in-out; }
+</style>
+{% endblock %}
+
+{% block page_heading %}<i class="bi bi-wallet2 text-primary me-2"></i> Contas a Pagar{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'painel_autorizacao' %}" class="btn btn-warning fw-bold shadow-sm">
+	<i class="bi bi-person-badge"></i> Painel do Ordenador
+</a>
+<a href="{% url 'painel_comprovantes' %}" class="btn btn-success fw-bold shadow-sm">
+	<i class="bi bi-file-earmark-break"></i> Baixa em Lote de Comprovantes
+</a>
+<a href="{% url 'home_page' %}" class="btn btn-outline-secondary">Voltar para Home</a>
+{% endblock %}
+
+{% block filter_form %}
+<div class="bg-light border-top border-bottom px-3 py-2">
+	<span class="fw-bold text-secondary text-uppercase" style="font-size:0.75rem;"><i class="bi bi-funnel me-1"></i> Status</span>
+</div>
+<div class="list-group list-group-flush">
+	<a href="?{% if data_selecionada %}data={{ data_selecionada }}&{% endif %}{% if forma_selecionada %}forma={{ forma_selecionada }}&{% endif %}{% if conta_selecionada %}conta={{ conta_selecionada }}{% endif %}"
+	   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if not status_selecionado %}active fw-bold{% endif %}">
+		Todos os Status
+	</a>
+	{% for item in statuses_agrupados %}
+		<a href="?status={{ item.status__opcao_status|urlencode }}{% if data_selecionada %}&data={{ data_selecionada }}{% endif %}{% if forma_selecionada %}&forma={{ forma_selecionada }}{% endif %}{% if conta_selecionada %}&conta={{ conta_selecionada }}{% endif %}"
+		   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center
+		   {% if status_selecionado == item.status__opcao_status %}active fw-bold{% endif %}">
+			{{ item.status__opcao_status }}
+			<span class="badge {% if status_selecionado == item.status__opcao_status %}bg-light text-primary{% else %}bg-primary{% endif %} rounded-pill">
+				{{ item.total }}
+			</span>
+		</a>
+	{% endfor %}
+</div>
+
+<div class="bg-light border-top border-bottom px-3 py-2">
+	<span class="fw-bold text-secondary text-uppercase" style="font-size:0.75rem;"><i class="bi bi-credit-card me-1"></i> Forma de Pagamento</span>
+</div>
+<div class="list-group list-group-flush">
+	<a href="?{% if data_selecionada %}data={{ data_selecionada }}&{% endif %}{% if status_selecionado %}status={{ status_selecionado|urlencode }}&{% endif %}{% if conta_selecionada %}conta={{ conta_selecionada }}{% endif %}"
+	   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if not forma_selecionada %}active fw-bold{% endif %}">
+		Todas as Formas
+	</a>
+	{% for item in formas_agrupadas %}
+		{% if item.forma_pagamento__forma_pagamento %}
+			<a href="?forma={{ item.forma_pagamento__id }}{% if data_selecionada %}&data={{ data_selecionada }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado|urlencode }}{% endif %}{% if conta_selecionada %}&conta={{ conta_selecionada }}{% endif %}"
+			   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center
+			   {% if forma_selecionada == item.forma_pagamento__id|stringformat:'s' %}active fw-bold{% endif %}">
+				{{ item.forma_pagamento__forma_pagamento }}
+				<span class="badge {% if forma_selecionada == item.forma_pagamento__id|stringformat:'s' %}bg-light text-primary{% else %}bg-primary{% endif %} rounded-pill">
+					{{ item.total }}
+				</span>
+			</a>
+		{% else %}
+			<a href="?forma=sem_forma{% if data_selecionada %}&data={{ data_selecionada }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado|urlencode }}{% endif %}{% if conta_selecionada %}&conta={{ conta_selecionada }}{% endif %}"
+			   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center text-danger
+			   {% if forma_selecionada == 'sem_forma' %}active text-white fw-bold{% endif %}">
+				Sem Forma Definida
+				<span class="badge {% if forma_selecionada == 'sem_forma' %}bg-light text-danger{% else %}bg-danger{% endif %} rounded-pill">
+					{{ item.total }}
+				</span>
+			</a>
+		{% endif %}
+	{% endfor %}
+</div>
+
+<div class="bg-light border-top border-bottom px-3 py-2">
+	<span class="fw-bold text-secondary text-uppercase" style="font-size:0.75rem;"><i class="bi bi-calendar-event me-1"></i> Datas de Pagamento</span>
+</div>
+<div class="list-group list-group-flush">
+	<a href="?{% if forma_selecionada %}forma={{ forma_selecionada }}&{% endif %}{% if status_selecionado %}status={{ status_selecionado|urlencode }}&{% endif %}{% if conta_selecionada %}conta={{ conta_selecionada }}{% endif %}"
+	   class="list-group-item list-group-item-action {% if not data_selecionada %}active fw-bold{% endif %}">
+		Todas as Datas
+	</a>
+	{% for item in datas_agrupadas %}
+		{% if item.data_pagamento %}
+			<a href="?data={{ item.data_pagamento|date:'Y-m-d' }}{% if forma_selecionada %}&forma={{ forma_selecionada }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado|urlencode }}{% endif %}{% if conta_selecionada %}&conta={{ conta_selecionada }}{% endif %}"
+			   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center
+			   {% if data_selecionada == item.data_pagamento|date:'Y-m-d' %}active fw-bold{% endif %}">
+				{{ item.data_pagamento|date:"d/m/Y" }}
+				<span class="badge {% if data_selecionada == item.data_pagamento|date:'Y-m-d' %}bg-light text-primary{% else %}bg-primary{% endif %} rounded-pill">
+					{{ item.total }}
+				</span>
+			</a>
+		{% else %}
+			<a href="?data=sem_data{% if forma_selecionada %}&forma={{ forma_selecionada }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado|urlencode }}{% endif %}{% if conta_selecionada %}&conta={{ conta_selecionada }}{% endif %}"
+			   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center text-danger
+			   {% if data_selecionada == 'sem_data' %}active text-white fw-bold{% endif %}">
+				Sem Data Definida
+				<span class="badge {% if data_selecionada == 'sem_data' %}bg-light text-danger{% else %}bg-danger{% endif %} rounded-pill">
+					{{ item.total }}
+				</span>
+			</a>
+		{% endif %}
+	{% endfor %}
+</div>
+
+{% endblock filter_form %}
+
+{# ── Table headers (with master checkbox) ────────────────────────────── #}
+{% block table_headers %}
+{% if pode_interagir %}
+<th class="text-center" style="width: 40px;">
+	<input type="checkbox" class="form-check-input" id="batchCheckAll">
+</th>
+{% endif %}
+<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="id"># ID {% if ordem == 'id' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt"></i>{% else %}<i class="bi bi-sort-alt opacity-50"></i>{% endif %}</a></th>
+<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="data_pagamento">Data Pagamento {% if ordem == 'data_pagamento' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt"></i>{% else %}<i class="bi bi-sort-alt opacity-50"></i>{% endif %}</a></th>
+<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="credor">Credor {% if ordem == 'credor' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %}"></i>{% else %}<i class="bi bi-sort-alt opacity-50"></i>{% endif %}</a></th>
+<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="status">Status {% if ordem == 'status' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %}"></i>{% else %}<i class="bi bi-sort-alt opacity-50"></i>{% endif %}</a></th>
+<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="tipo_pagamento">Tipo de Pagamento {% if ordem == 'tipo_pagamento' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %}"></i>{% else %}<i class="bi bi-sort-alt opacity-50"></i>{% endif %}</a></th>
+<th class="text-end pe-4"><a href="#" class="sort-header text-decoration-none text-white" data-campo="valor_liquido">Valor Líquido {% if ordem == 'valor_liquido' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt"></i>{% else %}<i class="bi bi-sort-alt opacity-50"></i>{% endif %}</a></th>
+<th>Ação</th>
+{% endblock %}
+
+{# ── Table rows (checkboxes bound to processo_ids) ────────────────────── #}
+{% block table_rows %}
+{% for processo in lista_processos %}
+<tr>
+	{% if pode_interagir %}
+	<td class="text-center">
+		<input type="checkbox" name="processos_selecionados" value="{{ processo.id }}" class="form-check-input batch-item-check">
+	</td>
+	{% endif %}
+	<td class="fw-bold text-muted">#{{ processo.id }}</td>
+	<td class="fw-medium text-primary">{{ processo.data_pagamento|date:"d/m/Y"|default:"-" }}</td>
+	<td class="fw-medium">{{ processo.credor|truncatechars:35 }}</td>
+	<td>
+		<span class="badge bg-primary px-2 py-1">{{ processo.status|default:"-" }}</span>
+		{% if processo.has_retencoes %}
+			<span class="badge bg-warning text-dark px-2 py-1 ms-1" title="Possui retenções de impostos">Retenções</span>
+		{% endif %}
+		{% if processo.has_pendencias %}
+			<span class="badge bg-danger px-2 py-1 ms-1" title="Possui pendências">Pendências</span>
+		{% endif %}
+	</td>
+	<td>{{ processo.tipo_pagamento|default:"-" }}</td>
+	<td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
+	<td>
+		<button type="button" class="btn btn-sm btn-primary fw-bold shadow-sm btn-preview"
+				data-processo-id="{{ processo.id }}"
+				title="Pré-visualizar Documentos">
+			<i class="bi bi-eye"></i> Preview
+		</button>
+		<a href="{% url 'editar_processo' pk=processo.id %}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+	</td>
+</tr>
+{% empty %}
+<tr>
+	<td colspan="8" class="text-center py-5 text-muted">
+		<i class="bi bi-inbox fs-2 d-block mb-2"></i>
+		Nenhum processo pendente nesta data.
+	</td>
+</tr>
+{% endfor %}
+{% endblock %}
+
+{# ── Sticky batch action bar ──────────────────────────────────────────── #}
+{% block batch_actions %}
+{% if pode_interagir %}
+<button type="submit"
+		formaction="{% url 'enviar_para_autorizacao' %}"
+		class="btn btn-primary fw-bold shadow-sm"
+		onclick="return confirm('Enviar os processos selecionados para a mesa do Ordenador de Despesa?');">
+	<i class="bi bi-send-check"></i> Enviar para Autorização
+</button>
+{% endif %}
+
+<button type="button" class="btn btn-info text-white fw-bold shadow-sm" id="btn-visualizar-pagamentos">
+	<i class="bi bi-eye"></i> Visualizar Dados de Pagamento
+</button>
+
+<button type="submit"
+		formaction="{% url 'separar_para_lancamento_bancario' %}"
+		class="btn btn-warning fw-bold shadow-sm"
+		onclick="return confirm('Separar os processos selecionados para lançamento bancário?');">
+	<i class="bi bi-bank"></i> Separar para Lançamento Bancário
+</button>
+{% endblock %}
+
+{# ── Modals + extra content below the table ───────────────────────────── #}
+{% block list_footer %}
+{% include 'pagamentos/partials/preview_modal.html' %}
+
+<div class="modal fade" id="pagamentosModal" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog modal-xl">
+		<div class="modal-content">
+			<div class="modal-header bg-info text-white">
+				<h5 class="modal-title fw-bold"><i class="bi bi-cash-coin"></i> Detalhes para Pagamento na Tesouraria</h5>
+				<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body bg-light">
+				<div id="pagamentos-loading" class="text-center py-4" style="display: none;">
+					<div class="spinner-border text-info" role="status"></div>
+					<p class="mt-2 text-muted fw-bold">Analisando processos selecionados...</p>
+				</div>
+				<div class="table-responsive">
+					<table class="table table-hover table-bordered bg-white shadow-sm" id="tabela-pagamentos" style="display: none;">
+						<thead class="table-light">
+							<tr>
+								<th style="width: 10%;">Processo/NE</th>
+								<th style="width: 25%;">Credor</th>
+								<th style="width: 15%;">Valor Líquido</th>
+								<th style="width: 15%;">Forma de Pagto</th>
+								<th style="width: 35%;">Dados de Pagamento Bancário</th>
+							</tr>
+						</thead>
+						<tbody id="pagamentos-tbody"></tbody>
+					</table>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar Painel</button>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{# ── JavaScript: sort headers, batch validation, visualizar pagamentos ─── #}
+{% block extra_js %}
+{{ block.super }}
+<script>
+const sortOrdemAtual    = "{{ ordem }}";
+const sortDirecaoAtual  = "{{ direcao }}";
+
+document.addEventListener('DOMContentLoaded', function () {
+	const barcodeApiBase = "{% url 'api_extrair_codigos_barras_processo' pk=0 %}".replace('/0/', '/');
+
+	// ------------------------------------------------------------------
+	// 1. SORTABLE HEADERS
+	// ------------------------------------------------------------------
+	document.querySelectorAll('.sort-header').forEach(function (link) {
+		link.addEventListener('click', function (e) {
+			e.preventDefault();
+			const campo  = this.getAttribute('data-campo');
+			const params = new URLSearchParams(window.location.search);
+			if (params.get('ordem') === campo) {
+				params.set('direcao', params.get('direcao') === 'asc' ? 'desc' : 'asc');
+			} else {
+				params.set('ordem', campo);
+				params.set('direcao', 'asc');
+			}
+			window.location.href = '?' + params.toString();
+		});
+	});
+
+	// ------------------------------------------------------------------
+	// 2. BATCH FORM: require at least one item selected before submit
+	// ------------------------------------------------------------------
+	const batchForm = document.getElementById('batchForm');
+	if (batchForm) {
+		batchForm.addEventListener('submit', function (e) {
+			const checked = document.querySelectorAll('input[name="processos_selecionados"]:checked');
+			if (checked.length === 0) {
+				e.preventDefault();
+				alert('Selecione pelo menos um processo antes de executar esta ação.');
+			}
+		});
+	}
+
+	// ------------------------------------------------------------------
+	// 3. VISUALIZAR DADOS DE PAGAMENTO
+	// ------------------------------------------------------------------
+	const btnVisualizar = document.getElementById('btn-visualizar-pagamentos');
+	if (btnVisualizar) {
+		btnVisualizar.addEventListener('click', function () {
+			const checkboxes = document.querySelectorAll('input[name="processos_selecionados"]:checked');
+			const ids = Array.from(checkboxes).map(cb => cb.value);
+
+			if (ids.length === 0) {
+				alert('Selecione pelo menos um processo na tabela para visualizar os detalhes.');
+				return;
+			}
+
+			const modalElement = document.getElementById('pagamentosModal');
+			const modal = new bootstrap.Modal(modalElement);
+			modal.show();
+
+			document.getElementById('pagamentos-loading').style.display = 'block';
+			document.getElementById('tabela-pagamentos').style.display  = 'none';
+			const tbody = document.getElementById('pagamentos-tbody');
+			tbody.innerHTML = '';
+
+			fetch("{% url 'api_detalhes_pagamento' %}", {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+				},
+				body: JSON.stringify({ ids: ids })
+			})
+			.then(res => res.json())
+			.then(async (data) => {
+				document.getElementById('pagamentos-loading').style.display = 'none';
+
+				if (data.sucesso) {
+					const processosComBoleto = data.dados.filter(
+						p => p.detalhe_tipo === 'Código de Barras' && (!p.codigos_barras || p.codigos_barras.length === 0)
+					);
+
+					await Promise.all(
+						processosComBoleto.map(async (p) => {
+							try {
+								const resp = await fetch(`${barcodeApiBase}${p.id}/`);
+								const payload = await resp.json();
+								if (payload.sucesso && Array.isArray(payload.barcodes) && payload.barcodes.length > 0) {
+									p.codigos_barras = payload.barcodes;
+									p.detalhe_valor = payload.barcodes[0];
+								}
+							} catch (err) {
+								console.error(`Falha ao buscar códigos do processo ${p.id}:`, err);
+							}
+						})
+					);
+
+					data.dados.forEach(p => {
+						let valorHtml = `<span class="fw-bold text-dark">${p.detalhe_valor}</span>`;
+
+						if (p.detalhe_tipo === 'Código de Barras') {
+							if (p.codigos_barras && p.codigos_barras.length > 0) {
+								valorHtml = p.codigos_barras.map(cb => `
+									<div class="d-flex align-items-center justify-content-between p-2 bg-light rounded border border-secondary border-opacity-25 mb-1">
+										<span class="fw-bold text-primary font-monospace text-break me-2" style="font-size: 0.9rem;">${cb}</span>
+										<button class="btn btn-sm btn-outline-secondary copy-btn px-2 py-1" data-clipboard="${cb}" title="Copiar para a área de transferência">
+											<i class="bi bi-clipboard fs-6"></i>
+										</button>
+									</div>
+								`).join('');
+							} else {
+								valorHtml = `<span class="fw-bold text-dark">Não preenchido</span>`;
+							}
+						} else if (p.detalhe_tipo === 'Chave PIX') {
+							if (p.detalhe_valor !== "Não preenchido" && !p.detalhe_valor.includes("sem PIX")) {
+								valorHtml = `
+									<div class="d-flex align-items-center justify-content-between p-2 bg-light rounded border border-secondary border-opacity-25">
+										<span class="fw-bold text-primary font-monospace text-break me-2" style="font-size: 0.9rem;">${p.detalhe_valor}</span>
+										<button class="btn btn-sm btn-outline-secondary copy-btn px-2 py-1" data-clipboard="${p.detalhe_valor}" title="Copiar para a área de transferência">
+											<i class="bi bi-clipboard fs-6"></i>
+										</button>
+									</div>
+								`;
+							}
+						}
+
+						const tr = document.createElement('tr');
+						tr.innerHTML = `
+							<td>
+								<span class="badge bg-secondary mb-1">Proc #${p.id}</span><br>
+								<span class="small fw-bold text-muted">${p.empenho}</span>
+							</td>
+							<td><span class="fw-medium text-dark" style="font-size: 0.85rem;">${p.credor}</span></td>
+							<td class="text-success fw-bold">R$ ${p.valor}</td>
+							<td><span class="badge bg-light text-dark border">${p.forma}</span></td>
+							<td>
+								<span class="text-muted small fw-bold d-block mb-1">${p.detalhe_tipo}</span>
+								${valorHtml}
+							</td>
+						`;
+						tbody.appendChild(tr);
+					});
+
+					document.getElementById('tabela-pagamentos').style.display = 'table';
+
+					document.querySelectorAll('.copy-btn').forEach(btn => {
+						btn.addEventListener('click', function () {
+							const textToCopy = this.getAttribute('data-clipboard');
+							navigator.clipboard.writeText(textToCopy).then(() => {
+								const icone = this.querySelector('i');
+								icone.classList.replace('bi-clipboard', 'bi-check-lg');
+								this.classList.replace('btn-outline-secondary', 'btn-success');
+								this.classList.add('text-white');
+								setTimeout(() => {
+									icone.classList.replace('bi-check-lg', 'bi-clipboard');
+									this.classList.replace('btn-success', 'btn-outline-secondary');
+									this.classList.remove('text-white');
+								}, 2000);
+							}).catch(err => {
+								console.error('Falha ao copiar: ', err);
+								alert("Não foi possível copiar automaticamente. Selecione o texto e use Ctrl+C.");
+							});
+						});
+					});
+
+				} else {
+					tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger fw-bold py-4"><i class="bi bi-x-circle fs-3 d-block mb-2"></i>Erro ao carregar dados: ${data.erro}</td></tr>`;
+					document.getElementById('tabela-pagamentos').style.display = 'table';
+				}
+			})
+			.catch(err => {
+				document.getElementById('pagamentos-loading').style.display = 'none';
+				tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger fw-bold py-4"><i class="bi bi-wifi-off fs-3 d-block mb-2"></i>Erro de conexão com o servidor.</td></tr>`;
+				document.getElementById('tabela-pagamentos').style.display = 'table';
+				console.error(err);
+			});
+		});
+	}
+});
+</script>
+{% endblock %}
