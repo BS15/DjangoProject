@@ -5,6 +5,7 @@ import datetime
 import django.core.validators
 import django.db.models.deletion
 import simple_history.models
+from django.conf import settings
 from django.db import migrations, models
 
 
@@ -12,7 +13,9 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = []
+    dependencies = [
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+    ]
 
     operations = [
         migrations.CreateModel(
@@ -525,5 +528,146 @@ class Migration(migrations.Migration):
                 "verbose_name": "Fatura Mensal",
                 "verbose_name_plural": "Faturas Mensais",
             },
+        ),
+        migrations.AddField(
+            model_name="historicalcargosfuncoes",
+            name="history_user",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="+",
+                to=settings.AUTH_USER_MODEL,
+            ),
+        ),
+        migrations.AddField(
+            model_name="historicalcontafixa",
+            name="credor",
+            field=models.ForeignKey(
+                blank=True,
+                db_constraint=False,
+                null=True,
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                related_name="+",
+                to="credores.credor",
+                verbose_name="Credor/Fornecedor",
+            ),
+        ),
+        migrations.AddField(
+            model_name="historicalcontafixa",
+            name="history_user",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="+",
+                to=settings.AUTH_USER_MODEL,
+            ),
+        ),
+        migrations.AddField(
+            model_name="historicalcontasbancarias",
+            name="history_user",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="+",
+                to=settings.AUTH_USER_MODEL,
+            ),
+        ),
+        migrations.AddField(
+            model_name="historicalcontasbancarias",
+            name="titular",
+            field=models.ForeignKey(
+                blank=True,
+                db_constraint=False,
+                null=True,
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                related_name="+",
+                to="credores.credor",
+            ),
+        ),
+        migrations.AddField(
+            model_name="historicalcredor",
+            name="cargo_funcao",
+            field=models.ForeignKey(
+                blank=True,
+                db_constraint=False,
+                null=True,
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                related_name="+",
+                to="credores.cargosfuncoes",
+            ),
+        ),
+        migrations.AddField(
+            model_name="historicalcredor",
+            name="conta",
+            field=models.ForeignKey(
+                blank=True,
+                db_constraint=False,
+                null=True,
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                related_name="+",
+                to="credores.contasbancarias",
+                verbose_name="Conta Credor",
+            ),
+        ),
+        migrations.AddField(
+            model_name="historicalcredor",
+            name="history_user",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="+",
+                to=settings.AUTH_USER_MODEL,
+            ),
+        ),
+        migrations.AddField(
+            model_name="historicalfaturamensal",
+            name="conta_fixa",
+            field=models.ForeignKey(
+                blank=True,
+                db_constraint=False,
+                null=True,
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                related_name="+",
+                to="credores.contafixa",
+            ),
+        ),
+        migrations.AddField(
+            model_name="historicalfaturamensal",
+            name="history_user",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="+",
+                to=settings.AUTH_USER_MODEL,
+            ),
+        ),
+        migrations.AlterUniqueTogether(
+            name="faturamensal",
+            unique_together={("conta_fixa", "mes_referencia")},
+        ),
+        migrations.AddField(
+            model_name="credor",
+            name="usuario",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="credor_vinculado",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Usuário do Portal",
+            ),
+        ),
+        migrations.AddField(
+            model_name="historicalcredor",
+            name="usuario",
+            field=models.ForeignKey(
+                blank=True,
+                db_constraint=False,
+                null=True,
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                related_name="+",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Usuário do Portal",
+            ),
         ),
     ]
