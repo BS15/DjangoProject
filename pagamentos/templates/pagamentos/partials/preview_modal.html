@@ -2,7 +2,7 @@
 {% with preview_placeholder_id='999999' %}
 <div class="modal fade" id="modalPreview" tabindex="-1" aria-labelledby="modalPreviewLabel" aria-hidden="true"
 	data-api-documentos-template="{% url 'api_documentos_processo' processo_id=preview_placeholder_id %}"
-	data-pdf-template="{% url 'visualizar_pdf_processo' pk=preview_placeholder_id %}"
+	data-pdf-template="{% url 'visualizar_pdf_processo' processo_id=preview_placeholder_id %}"
 	data-preview-placeholder-id="{{ preview_placeholder_id }}">
 	<div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 95vw;">
 		<div class="modal-content border-0 shadow-lg" style="height: 90vh;">
