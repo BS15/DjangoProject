@@ -45,14 +45,14 @@
 							<span id="previewStatus" class="badge bg-secondary small">—</span>
 						</div>
 						<div id="previewPendenciasWrap" class="d-none">
-							<span id="previewPendenciasBadge" class="badge bg-warning text-dark small" style="cursor:pointer;" data-bs-toggle="tooltip" title="">
+							<button type="button" id="previewPendenciasBadge" class="badge bg-warning text-dark small border-0" data-bs-toggle="tooltip" title="">
 								<i class="bi bi-exclamation-triangle-fill me-1"></i><span id="previewPendenciasCount">0</span> Pendência(s)
-							</span>
+							</button>
 						</div>
 						<div id="previewRetencoesWrap" class="d-none">
-							<span id="previewRetencoesBadge" class="badge bg-info text-dark small" style="cursor:pointer;" data-bs-toggle="tooltip" title="">
+							<button type="button" id="previewRetencoesBadge" class="badge bg-info text-dark small border-0" data-bs-toggle="tooltip" title="">
 								<i class="bi bi-scissors me-1"></i><span id="previewRetencoesCount">0</span> Retenção(ões)
-							</span>
+							</button>
 						</div>
 					</div>
 				</div>
@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			previewPendenciasCount.textContent = data.pendencias.length;
 			const tooltipLines = data.pendencias.map(function(p) {
 				return p.tipo + (p.descricao ? ': ' + p.descricao : '') + ' [' + p.status + ']';
-			}).join('\n');
+			}).join(' | ');
 			previewPendenciasBadge.setAttribute('title', tooltipLines);
 			previewPendenciasWrap.classList.remove('d-none');
 		} else {
@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			previewRetencoesCount.textContent = data.retencoes.length;
 			const tooltipLines = data.retencoes.map(function(r) {
 				return r.codigo + ': R$ ' + r.valor + ' [' + r.status + ']';
-			}).join('\n');
+			}).join(' | ');
 			previewRetencoesBadge.setAttribute('title', tooltipLines);
 			previewRetencoesWrap.classList.remove('d-none');
 		} else {

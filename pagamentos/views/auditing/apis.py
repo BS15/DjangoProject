@@ -7,7 +7,6 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_GET
-from django.contrib.auth.decorators import permission_required
 
 from pagamentos.domain_models import Processo
 from ..helpers import _build_payload_documentos_processo_auditoria, _build_payload_processo_detalhes
@@ -16,18 +15,14 @@ from ..helpers import _build_payload_documentos_processo_auditoria, _build_paylo
 def any_permission_required(*permissions):
     """Exige que o usuário possua ao menos uma das permissões informadas."""
 
-    checks = [permission_required(perm, raise_exception=True)(lambda request, *a, **k: None) for perm in permissions]
-
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped(request, *args, **kwargs):
-            for check in checks:
-                try:
-                    check(request, *args, **kwargs)
-                    return view_func(request, *args, **kwargs)
-                except PermissionDenied:
-                    continue
-            raise PermissionDenied
+            if not request.user.is_authenticated:
+                raise PermissionDenied
+            if not any(request.user.has_perm(perm) for perm in permissions):
+                raise PermissionDenied
+            return view_func(request, *args, **kwargs)
 
         return _wrapped
 
