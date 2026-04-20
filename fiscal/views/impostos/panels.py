@@ -1,12 +1,16 @@
 """Panel views for tax retention management."""
 
 from django.contrib.auth.decorators import permission_required
+from django.db.models import Count, Sum
 from django.shortcuts import render
 
 from fiscal.filters import RetencaoIndividualFilter, RetencaoNotaFilter, RetencaoProcessoFilter
 from fiscal.models import DocumentoFiscal, DocumentoPagamentoImposto, RetencaoImposto
 from pagamentos.domain_models import Processo
 from pagamentos.views.shared import apply_filterset
+
+DEFAULT_VIEW = "individual"
+VALID_VIEWS = {"individual", "nf", "processo"}
 
 
 def _resolve_fonte_retentora_nome(retencao: RetencaoImposto) -> str:
@@ -25,35 +29,34 @@ def _resolve_fonte_retentora_nome(retencao: RetencaoImposto) -> str:
 @permission_required("fiscal.acesso_backoffice", raise_exception=True)
 def painel_impostos_view(request):
     """Hub de gestão fiscal com retenções individuais filtráveis."""
-    visao = (request.GET.get("visao") or "individual").strip().lower()
-    if visao not in {"individual", "nf", "processo"}:
-        visao = "individual"
+    visao = (request.GET.get("visao") or DEFAULT_VIEW).strip().lower()
+    if visao not in VALID_VIEWS:
+        visao = DEFAULT_VIEW
 
     context = {"visao": visao}
     if visao == "nf":
         queryset_base = DocumentoFiscal.objects.select_related(
             "processo",
             "nome_emitente",
-        ).prefetch_related("retencoes__codigo")
+        )
         filtro = apply_filterset(request, RetencaoNotaFilter, queryset_base.order_by("-id"))
-        notas = list(filtro.qs.distinct())
-        for nota in notas:
-            retencoes_nota = list(nota.retencoes.all())
-            nota.total_retido = sum((ret.valor or 0) for ret in retencoes_nota)
-            nota.qtd_retencoes = len(retencoes_nota)
+        notas = list(
+            filtro.qs.distinct().annotate(
+                total_retido=Sum("retencoes__valor"),
+                qtd_retencoes=Count("retencoes", distinct=True),
+            )
+        )
         context.update({"filter": filtro, "notas_fiscais": notas})
     elif visao == "processo":
-        queryset_base = Processo.objects.prefetch_related("notas_fiscais__retencoes__codigo").select_related("credor")
+        queryset_base = Processo.objects.select_related("credor")
         filtro = apply_filterset(request, RetencaoProcessoFilter, queryset_base.order_by("-id"))
-        processos = list(filtro.qs.distinct())
-        for processo in processos:
-            retencoes = [
-                ret
-                for nota in processo.notas_fiscais.all()
-                for ret in nota.retencoes.all()
-            ]
-            processo.total_retido = sum((ret.valor or 0) for ret in retencoes)
-            processo.qtd_retencoes = len(retencoes)
+        processos = list(
+            filtro.qs.distinct().annotate(
+                total_retido=Sum("notas_fiscais__retencoes__valor"),
+                qtd_retencoes=Count("notas_fiscais__retencoes", distinct=True),
+                qtd_notas=Count("notas_fiscais", distinct=True),
+            )
+        )
         context.update({"filter": filtro, "processos": processos})
     else:
         queryset_base = RetencaoImposto.objects.select_related(
