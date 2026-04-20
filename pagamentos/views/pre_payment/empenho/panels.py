@@ -21,13 +21,13 @@ def a_empenhar_view(request):
             "credor": "credor__nome",
             "valor_liquido": "valor_liquido",
             "data_vencimento": "data_vencimento",
-            "tipo_pagamento": "tipo_pagamento__tipo_de_pagamento",
+            "tipo_pagamento": "tipo_pagamento__tipo_pagamento",
         },
         default_ordem="data_vencimento",
         default_direcao="asc",
     )
 
-    processos_base = Processo.objects.filter(status__status_choice__iexact=ProcessoStatus.A_EMPENHAR).select_related(
+    processos_base = Processo.objects.filter(status__opcao_status__iexact=ProcessoStatus.A_EMPENHAR).select_related(
         "credor", "status", "tipo_pagamento"
     )
     meu_filtro = apply_filterset(request, AEmpenharFilter, processos_base)

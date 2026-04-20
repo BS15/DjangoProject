@@ -32,11 +32,11 @@
 		Todos os Status
 	</a>
 	{% for item in statuses_agrupados %}
-		<a href="?status={{ item.status__status_choice|urlencode }}{% if data_selecionada %}&data={{ data_selecionada }}{% endif %}{% if forma_selecionada %}&forma={{ forma_selecionada }}{% endif %}{% if conta_selecionada %}&conta={{ conta_selecionada }}{% endif %}"
+		<a href="?status={{ item.status__opcao_status|urlencode }}{% if data_selecionada %}&data={{ data_selecionada }}{% endif %}{% if forma_selecionada %}&forma={{ forma_selecionada }}{% endif %}{% if conta_selecionada %}&conta={{ conta_selecionada }}{% endif %}"
 		   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center
-		   {% if status_selecionado == item.status__status_choice %}active fw-bold{% endif %}">
-			{{ item.status__status_choice }}
-			<span class="badge {% if status_selecionado == item.status__status_choice %}bg-light text-primary{% else %}bg-primary{% endif %} rounded-pill">
+		   {% if status_selecionado == item.status__opcao_status %}active fw-bold{% endif %}">
+			{{ item.status__opcao_status }}
+			<span class="badge {% if status_selecionado == item.status__opcao_status %}bg-light text-primary{% else %}bg-primary{% endif %} rounded-pill">
 				{{ item.total }}
 			</span>
 		</a>
@@ -52,11 +52,11 @@
 		Todas as Formas
 	</a>
 	{% for item in formas_agrupadas %}
-		{% if item.forma_pagamento__forma_de_pagamento %}
+		{% if item.forma_pagamento__forma_pagamento %}
 			<a href="?forma={{ item.forma_pagamento__id }}{% if data_selecionada %}&data={{ data_selecionada }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado|urlencode }}{% endif %}{% if conta_selecionada %}&conta={{ conta_selecionada }}{% endif %}"
 			   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center
 			   {% if forma_selecionada == item.forma_pagamento__id|stringformat:'s' %}active fw-bold{% endif %}">
-				{{ item.forma_pagamento__forma_de_pagamento }}
+				{{ item.forma_pagamento__forma_pagamento }}
 				<span class="badge {% if forma_selecionada == item.forma_pagamento__id|stringformat:'s' %}bg-light text-primary{% else %}bg-primary{% endif %} rounded-pill">
 					{{ item.total }}
 				</span>

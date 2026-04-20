@@ -13,13 +13,13 @@ from pagamentos.domain_models import Processo, ProcessoStatus
 def painel_autorizacao_view(request):
     """Renderiza o painel de autorizacao com filas pendente e autorizada."""
     processos = Processo.objects.filter(
-        status__status_choice__iexact=ProcessoStatus.A_PAGAR_ENVIADO_PARA_AUTORIZACAO
+        status__opcao_status__iexact=ProcessoStatus.A_PAGAR_ENVIADO_PARA_AUTORIZACAO
     ).order_by(
         "data_pagamento", "id"
     )
 
     processos_autorizados = Processo.objects.filter(
-        status__status_choice__iexact=ProcessoStatus.A_PAGAR_AUTORIZADO
+        status__opcao_status__iexact=ProcessoStatus.A_PAGAR_AUTORIZADO
     ).order_by(
         "data_pagamento", "id"
     )

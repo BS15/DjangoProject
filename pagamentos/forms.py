@@ -76,7 +76,7 @@ class ProcessoForm(forms.ModelForm):
 			self.fields['ano_exercicio'].initial = self.instance.ano_exercicio
 
 		if self.instance and self.instance.pk and self.instance.status:
-			status_atual = self.instance.status.status_choice.upper()
+			status_atual = self.instance.status.opcao_status.upper()
 
 			if status_atual in self.status_bloqueados:
 
@@ -90,9 +90,9 @@ class ProcessoForm(forms.ModelForm):
 					self.fields['credor'].widget.attrs['class'] = self.fields['credor'].widget.attrs.get('class', '') + ' bg-light'
 					self.fields['credor'].required = False
 
-		qs = TiposDePagamento.objects.exclude(tipo_de_pagamento__iexact=SUPRIMENTO_DE_FUNDOS)
+		qs = TiposDePagamento.objects.exclude(tipo_pagamento__iexact=SUPRIMENTO_DE_FUNDOS)
 		if self.instance and self.instance.pk and self.instance.tipo_pagamento:
-			if self.instance.tipo_pagamento.tipo_de_pagamento.upper() == SUPRIMENTO_DE_FUNDOS:
+			if self.instance.tipo_pagamento.tipo_pagamento.upper() == SUPRIMENTO_DE_FUNDOS:
 				qs = TiposDePagamento.objects.all()
 		self.fields['tipo_pagamento'].queryset = qs
 
@@ -108,7 +108,7 @@ class ProcessoForm(forms.ModelForm):
 		"""Preserva o credor original quando o processo está em estágio bloqueado."""
 		credor_enviado = self.cleaned_data.get('credor')
 		if self.instance and self.instance.pk and self.instance.status:
-			if self.instance.status.status_choice.upper() in getattr(self, 'status_bloqueados', []):
+			if self.instance.status.opcao_status.upper() in getattr(self, 'status_bloqueados', []):
 				return self.instance.credor
 		return credor_enviado
 
@@ -116,7 +116,7 @@ class ProcessoForm(forms.ModelForm):
 		"""Evita alteração de valor líquido em estágios bloqueados."""
 		valor_enviado = self.cleaned_data.get('valor_liquido')
 		if self.instance and self.instance.pk and self.instance.status:
-			if self.instance.status.status_choice.upper() in getattr(self, 'status_bloqueados', []):
+			if self.instance.status.opcao_status.upper() in getattr(self, 'status_bloqueados', []):
 				return self.instance.valor_liquido
 		return valor_enviado
 
@@ -124,7 +124,7 @@ class ProcessoForm(forms.ModelForm):
 		"""Evita alteração de valor bruto em estágios bloqueados."""
 		valor_enviado = self.cleaned_data.get('valor_bruto')
 		if self.instance and self.instance.pk and self.instance.status:
-			if self.instance.status.status_choice.upper() in getattr(self, 'status_bloqueados', []):
+			if self.instance.status.opcao_status.upper() in getattr(self, 'status_bloqueados', []):
 				return self.instance.valor_bruto
 		return valor_enviado
 
@@ -222,8 +222,8 @@ class PendenciaForm(forms.ModelForm):
 
 		if not pendencia.status:
 			status_obj, _ = StatusChoicesPendencias.objects.get_or_create(
-				status_choice__iexact='A RESOLVER',
-				defaults={'status_choice': 'A RESOLVER'}
+				opcao_status__iexact='A RESOLVER',
+				defaults={'opcao_status': 'A RESOLVER'}
 			)
 			pendencia.status = status_obj
 
