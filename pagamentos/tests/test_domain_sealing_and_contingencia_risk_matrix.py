@@ -3,13 +3,13 @@ from decimal import Decimal
 import pytest
 from django.core.exceptions import ValidationError
 
-from fluxo.domain_models import Contingencia, ProcessoStatus
-from fluxo.validators import verificar_turnpike
-from fluxo.views.helpers.contingencias import (
+from pagamentos.domain_models import Contingencia, ProcessoStatus
+from pagamentos.validators import verificar_turnpike
+from pagamentos.views.helpers.contingencias import (
     aplicar_aprovacao_contingencia,
     normalizar_dados_propostos_contingencia,
 )
-from fluxo.views.pre_payment.cadastro.actions import _status_bloqueia_gestao_fiscal
+from pagamentos.views.pre_payment.cadastro.actions import _status_bloqueia_gestao_fiscal
 
 
 @pytest.mark.django_db

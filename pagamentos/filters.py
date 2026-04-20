@@ -114,7 +114,7 @@ class AEmpenharFilter(ProcessoFilter):
 	"""Filtro enxuto da fila `A EMPENHAR`, reaproveitando `ProcessoFilter`."""
 
 	tipo_pagamento = django_filters.ModelChoiceFilter(
-		queryset=TiposDePagamento.objects.filter(is_active=True),
+		queryset=TiposDePagamento.objects.filter(ativo=True),
 		label='Tipo de Pagamento',
 		empty_label='Todos',
 	)

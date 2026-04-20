@@ -9,7 +9,7 @@ from django.views.decorators.http import require_POST
 from fiscal.services import gerar_lotes_reinf
 
 from .shared import build_zip_response
-from .validators import ValidationError
+from django.core.exceptions import ValidationError
 
 import logging
 logger = logging.getLogger(__name__)

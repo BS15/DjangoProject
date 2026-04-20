@@ -1,0 +1,68 @@
+{% extends "layouts/base_form.html" %}
+{% load static %}
+
+{% block title %}Prestação da Diária #{{ diaria.id }}{% endblock %}
+{% block page_heading %}<i class="bi bi-receipt-cutoff text-primary"></i> Prestação da Diária #{{ diaria.id }}{% endblock %}
+{% block page_subtitle %}
+Beneficiário: <strong>{{ diaria.beneficiario.nome|upper }}</strong> ·
+Prestação: <span class="badge {% if prestacao.status == 'ENCERRADA' %}bg-success{% else %}bg-warning text-dark{% endif %}">{{ prestacao.status }}</span>
+{% endblock %}
+{% block form_enctype %}multipart/form-data{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'minha_prestacao_list' %}" class="btn btn-outline-secondary">Voltar</a>
+{% endblock %}
+
+{% block form_action %}{% url 'registrar_comprovante_action' diaria.id %}{% endblock %}
+
+{% block form_fields %}
+<input type="hidden" name="next" value="{{ request.get_full_path }}">
+{{ comprovante_formset.management_form }}
+
+<div class="card shadow-sm border-0 mb-3">
+    <div class="card-header bg-light">
+        <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-geo-alt"></i> Dados da Viagem</h6>
+    </div>
+    <div class="card-body small">
+        <p class="mb-1"><strong>Número SISCAC:</strong> {{ diaria.numero_siscac|default:"Não informado" }}</p>
+        <p class="mb-1"><strong>Destino:</strong> {{ diaria.cidade_destino }}</p>
+        <p class="mb-1"><strong>Período:</strong> {{ diaria.data_saida|date:"d/m/Y" }} a {{ diaria.data_retorno|date:"d/m/Y" }}</p>
+        <p class="mb-2"><strong>Motivo:</strong> {{ diaria.objetivo }}</p>
+        <div class="fw-bold text-primary">Valor: R$ {{ diaria.valor_total|floatformat:2 }}</div>
+    </div>
+</div>
+
+<div class="alert alert-light border small">
+    Use o padrão spoke para anexar comprovantes e salvar ao final.
+</div>
+
+{% with formset=comprovante_formset form_prefix="comprovante" tipos_documento=tipos_documento add_btn_class="btn-outline-info" entity_label="Prestação da Diária" pode_interagir=pode_editar show_order_field=True show_immutable_badge=True download_tipo_documento="verba_diaria_comprov" %}
+  {% include "commons/partials/_documento_formset_generic.html" %}
+{% endwith %}
+{% endblock %}
+
+{% block form_actions %}
+{% if pode_editar %}
+<button type="submit" class="btn btn-info text-white">
+    <i class="bi bi-upload"></i> Salvar Comprovantes
+</button>
+{% endif %}
+<a href="{% url 'gerar_termo_prestacao_contas' diaria.pk %}" target="_blank" class="btn btn-outline-dark">
+    <i class="bi bi-file-earmark-text"></i> Termo de Prestação de Contas
+</a>
+{% if pode_editar %}
+<button type="submit" formaction="{% url 'encerrar_prestacao_action' diaria.id %}" formmethod="post" class="btn btn-outline-danger" onclick="return confirm('Deseja encerrar a prestação de contas desta diária?');">
+    <i class="bi bi-lock"></i> Encerrar Prestação
+</button>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'js/documento_formset_manager.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    new DocumentoFormsetManager('comprovante');
+  });
+</script>
+{% endblock %}

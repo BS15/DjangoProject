@@ -9,9 +9,9 @@ from django.views.decorators.http import require_GET
 
 from credores.models import Credor
 from fiscal.models import CodigosImposto, DocumentoFiscal, RetencaoImposto
-from fluxo.domain_models import Processo, ProcessoStatus
+from pagamentos.domain_models import Processo, ProcessoStatus
 
-from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoForm
+from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoCapaEdicaoForm, ProcessoForm
 from ..helpers import _validar_regras_edicao_processo
 
 from .actions import _status_bloqueia_gestao_fiscal
@@ -27,7 +27,7 @@ def _get_next_url(request, *, allow_referer=False):
 
 def _get_status_inicial(processo):
     """Normaliza o status textual do processo para uso nas guards da UI."""
-    return processo.status.status_choice.upper() if processo.status else ""
+    return processo.status.opcao_status.upper() if processo.status else ""
 
 
 def _obter_contexto_edicao(request, pk):
@@ -49,7 +49,7 @@ def _montar_contexto_hub(processo, status_inicial, somente_documentos):
         "total_notas": processo.notas_fiscais.count(),
         "notas_nao_atestadas": processo.notas_fiscais.filter(atestada=False).count(),
         "total_pendencias": processo.pendencias.count(),
-        "pendencias_abertas": processo.pendencias.filter(status__status_choice__iexact="A RESOLVER").count(),
+        "pendencias_abertas": processo.pendencias.filter(status__opcao_status__iexact="A RESOLVER").count(),
     }
 
 
@@ -76,7 +76,7 @@ def _montar_peek_tables_hub(request, processo):
 
 
 @require_GET
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def add_process_view(request):
     """Renderiza a tela de criação da capa inicial do processo."""
     processo_form = ProcessoForm(prefix="processo")
@@ -84,7 +84,7 @@ def add_process_view(request):
 
     return render(
         request,
-        "fluxo/add_process.html",
+        "pagamentos/add_process.html",
         {
             "processo_form": processo_form,
             "next_url": next_url,
@@ -94,7 +94,7 @@ def add_process_view(request):
 
 
 @require_GET
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def editar_processo(request, pk):
     """Hub de edição modular do processo."""
     processo, status_inicial, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
@@ -103,11 +103,11 @@ def editar_processo(request, pk):
 
     context = _montar_contexto_hub(processo, status_inicial, somente_documentos)
     context.update(_montar_peek_tables_hub(request, processo))
-    return render(request, "fluxo/editar_processo_hub.html", context)
+    return render(request, "pagamentos/editar_processo_hub.html", context)
 
 
 @require_GET
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def editar_processo_capa_view(request, pk):
     """Spoke GET de edição da capa do processo."""
     processo, status_inicial, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
@@ -123,10 +123,10 @@ def editar_processo_capa_view(request, pk):
 
     return render(
         request,
-        "fluxo/editar_processo_capa.html",
+        "pagamentos/editar_processo_capa.html",
         {
             "processo": processo,
-            "processo_form": ProcessoForm(instance=processo, prefix="processo"),
+            "processo_form": ProcessoCapaEdicaoForm(instance=processo, prefix="processo"),
             "status_inicial": status_inicial,
             "next_url": _get_next_url(request),
         },
@@ -134,16 +134,16 @@ def editar_processo_capa_view(request, pk):
 
 
 @require_GET
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def editar_processo_documentos_view(request, pk):
     """Spoke GET de edição de anexos do processo."""
-    from fluxo.domain_models import TiposDeDocumento
+    from pagamentos.domain_models import TiposDeDocumento
 
     processo, status_inicial, redirecionamento, _ = _obter_contexto_edicao(request, pk)
     if redirecionamento:
         return redirecionamento
 
-    from fluxo.domain_models import ProcessoStatus
+    from pagamentos.domain_models import ProcessoStatus
 
     precisa_documento_orcamentario = (
         not processo.extraorcamentario
@@ -153,11 +153,11 @@ def editar_processo_documentos_view(request, pk):
 
     return render(
         request,
-        "fluxo/editar_processo_documentos.html",
+        "pagamentos/editar_processo_documentos.html",
         {
             "processo": processo,
             "documento_formset": DocumentoFormSet(instance=processo, prefix="documento"),
-            "tipos_documento": TiposDeDocumento.objects.filter(is_active=True),
+            "tipos_documento": TiposDeDocumento.objects.filter(ativo=True),
             "entity_label": f"Processo {processo.id}",
             "pode_interagir": True,  # Users can always interact with docs; guards live at action level
             "status_inicial": status_inicial,
@@ -168,7 +168,7 @@ def editar_processo_documentos_view(request, pk):
 
 
 @require_GET
-@permission_required("fluxo.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def editar_processo_pendencias_view(request, pk):
     """Spoke GET de edição de pendências do processo."""
     processo, status_inicial, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
@@ -181,7 +181,7 @@ def editar_processo_pendencias_view(request, pk):
 
     return render(
         request,
-        "fluxo/editar_processo_pendencias.html",
+        "pagamentos/editar_processo_pendencias.html",
         {
             "processo": processo,
             "pendencia_formset": PendenciaFormSet(instance=processo, prefix="pendencia"),
@@ -191,7 +191,7 @@ def editar_processo_pendencias_view(request, pk):
     )
 
 
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 def documentos_fiscais_view(request, pk):
     """Renderiza a tela de gestão de documentos fiscais de um processo."""
     processo = get_object_or_404(Processo, id=pk)

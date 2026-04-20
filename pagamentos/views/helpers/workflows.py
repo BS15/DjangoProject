@@ -6,8 +6,8 @@ from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from fluxo.forms import DocumentoFormSet, PendenciaForm, PendenciaFormSet
-from fluxo.domain_models import (
+from pagamentos.forms import DocumentoFormSet, PendenciaForm, PendenciaFormSet
+from pagamentos.domain_models import (
     Contingencia,
     Processo,
     StatusChoicesPendencias,
@@ -27,7 +27,7 @@ def _registrar_recusa(request, processo, form, status_devolucao):
         pendencia = form.save(commit=False)
         pendencia.processo = processo_lock
         status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
-            status_choice__iexact="A RESOLVER", defaults={"status_choice": "A RESOLVER"}
+            opcao_status__iexact="A RESOLVER", defaults={"opcao_status": "A RESOLVER"}
         )
         pendencia.status = status_pendencia
         pendencia.save()

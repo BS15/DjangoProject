@@ -19,9 +19,9 @@ from commons.shared.storage_utils import _delete_file, caminho_documento
 
 
 
-class DocumentoProcessual(DocumentoBase):
+class DocumentoProcesso(DocumentoBase):
     """Documento genérico anexado ao processo com controle de imutabilidade."""
-    processo = models.ForeignKey("fluxo.Processo", on_delete=models.CASCADE, related_name="documentos")
+    processo = models.ForeignKey("pagamentos.Processo", on_delete=models.CASCADE, related_name="documentos")
     imutavel = models.BooleanField(
         "Imutável",
         default=False,
@@ -34,7 +34,7 @@ class DocumentoProcessual(DocumentoBase):
 
 
 
-class BoletoBancario(DocumentoProcessual):
+class BoletoBancario(DocumentoProcesso):
     """Especialização documental para anexos com metadados bancários."""
     codigo_barras = models.CharField("Código de Barras", max_length=60, null=True, blank=True)
     nota_referente = GenericRelation(
@@ -50,7 +50,7 @@ class BoletoBancario(DocumentoProcessual):
 
 class DocumentoOrcamentarioProcessual(DocumentoBase):
     """Documento orçamentário vinculado ao processo."""
-    processo = models.ForeignKey("fluxo.Processo", on_delete=models.CASCADE, related_name="documentos_orcamentarios")
+    processo = models.ForeignKey("pagamentos.Processo", on_delete=models.CASCADE, related_name="documentos_orcamentarios")
     numero_nota_empenho = models.CharField(max_length=50, blank=True, null=True)
     data_empenho = models.DateField(blank=True, null=True)
     ano_exercicio = models.IntegerField(
@@ -71,7 +71,7 @@ class DocumentoOrcamentarioProcessual(DocumentoBase):
 class ComprovantePagamento(DocumentoBase):
     """Comprovante bancário anexado para lastrear pagamento do processo."""
     processo = models.ForeignKey(
-        "fluxo.Processo",
+        "pagamentos.Processo",
         on_delete=models.CASCADE,
         related_name="comprovantes_pagamento",
         verbose_name="Processo",
@@ -93,6 +93,12 @@ class ComprovantePagamento(DocumentoBase):
         verbose_name_plural = "Comprovantes de Pagamento"
     def __str__(self):
         return f"Comprovante - {self.processo} - {self.credor_nome} - R$ {self.valor_pago}"
+
+
+# Alias legado para imports antigos.
+ComprovanteDePagamento = ComprovantePagamento
+DocumentoOrcamentario = DocumentoOrcamentarioProcessual
+Boleto_Bancario = BoletoBancario
 
 
 @receiver(post_delete, sender=DocumentoProcesso)

@@ -1,0 +1,77 @@
+{% extends "layouts/base_list.html" %}
+
+{% block page_title %}Painel de Pendências{% endblock %}
+{% block page_heading %}Pendências{% endblock %}
+{% block page_subtitle %}Pendências abertas em todos os processos{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'home_page' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+{% endblock %}
+
+{% block filter_form %}
+{% for field in filter.form %}
+<div class="col-md-3">
+	<label class="small fw-bold text-secondary mb-1">{{ field.label }}</label>
+	{{ field }}
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block table_headers %}
+<th>#</th>
+<th>Processo</th>
+<th>Descrição</th>
+<th>Responsável</th>
+<th>Status</th>
+<th class="text-center">Ações</th>
+{% endblock %}
+
+{% block table_rows %}
+{% for pendencia in pendencias %}
+<tr>
+	<td class="fw-bold text-muted">#{{ pendencia.id }}</td>
+	<td><a href="{% url 'process_detail' pk=pendencia.processo.id %}">#{{ pendencia.processo.id }}</a></td>
+	<td>{{ pendencia.descricao|default:"-"|truncatechars:80 }}</td>
+	<td>{{ pendencia.responsavel.get_full_name|default:"-" }}</td>
+	<td>
+		{% if pendencia.status %}
+			<span class="badge bg-warning text-dark">{{ pendencia.status.opcao_status }}</span>
+		{% else %}
+			<span class="badge bg-secondary">Sem status</span>
+		{% endif %}
+	</td>
+	<td class="text-center">
+		<div class="d-flex gap-1 justify-content-center flex-wrap">
+			<form method="post" action="{% url 'painel_pendencias_action' %}" class="d-inline">
+				{% csrf_token %}
+				<input type="hidden" name="pendencia_id" value="{{ pendencia.id }}">
+				<input type="hidden" name="acao_lote" value="resolver">
+				<button type="submit" class="btn btn-sm btn-outline-success pendencia-confirm-action" data-confirm-msg="Deseja resolver esta pendência?" aria-label="Resolver pendência #{{ pendencia.id }}">Resolver Pendência</button>
+			</form>
+			<form method="post" action="{% url 'painel_pendencias_action' %}" class="d-inline">
+				{% csrf_token %}
+				<input type="hidden" name="pendencia_id" value="{{ pendencia.id }}">
+				<input type="hidden" name="acao_lote" value="excluir">
+				<button type="submit" class="btn btn-sm btn-outline-danger pendencia-confirm-action" data-confirm-msg="Deseja excluir esta pendência?" aria-label="Excluir pendência #{{ pendencia.id }}">Excluir Pendência</button>
+			</form>
+		</div>
+	</td>
+</tr>
+{% empty %}
+<tr><td colspan="6" class="text-center py-4 text-muted">Nenhuma pendência encontrada.</td></tr>
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.querySelectorAll(".pendencia-confirm-action").forEach((button) => {
+	button.addEventListener("click", (event) => {
+		const mensagem = button.getAttribute("data-confirm-msg") || "Confirmar ação?";
+		if (!window.confirm(mensagem)) {
+			event.preventDefault();
+		}
+	});
+});
+</script>
+{% endblock %}

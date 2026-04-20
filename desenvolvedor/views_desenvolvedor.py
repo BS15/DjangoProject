@@ -33,7 +33,7 @@ from pagamentos.domain_models import (
 from pagamentos.views.support.contas_fixas.imports import download_template_csv_contas
 from commons.shared.text_tools import format_brl_currency
 from commons.shared.pdf_tools import gerar_documento_pdf
-from pagamentos.pdf_generators import PAGAMENTOS_DOCUMENT_REGISTRY
+from pagamentos.pdf_generators import FLUXO_DOCUMENT_REGISTRY
 from suprimentos.pdf_generators import SUPRIMENTOS_DOCUMENT_REGISTRY
 from verbas_indenizatorias.models import Diaria, MeiosDeTransporte, StatusChoicesVerbasIndenizatorias
 from verbas_indenizatorias.pdf_generators import VERBAS_DOCUMENT_REGISTRY
@@ -69,13 +69,16 @@ def _ensure_fake_lookup_tables():
         "ARQUIVADO",
         "CANCELADO / ANULADO",
     ]:
-        StatusChoicesProcesso.objects.get_or_create(status_choice=s)
+        StatusChoicesProcesso.objects.get_or_create(
+            opcao_status__iexact=s,
+            defaults={"opcao_status": s},
+        )
 
     for t in ["Serviços", "Material", "Contrato", "Diárias"]:
-        TagChoices.objects.get_or_create(tag_choice=t)
+        TagChoices.objects.get_or_create(opcao_etiqueta=t)
 
     for f in ["PIX", "TRANSFERÊNCIA (TED)", "REMESSA BANCÁRIA"]:
-        FormasDePagamento.objects.get_or_create(forma_de_pagamento=f)
+        FormasDePagamento.objects.get_or_create(forma_pagamento=f)
 
     for t in ["CONTAS FIXAS", "VERBAS INDENIZATÓRIAS", "IMPOSTOS"]:
         TiposDePagamento.objects.get_or_create(tipo_de_pagamento=t)
@@ -531,17 +534,12 @@ def gerar_pdf_fake_view(request, doc_type):
     elif doc_type == "recibo_suprimento":
         registry = SUPRIMENTOS_DOCUMENT_REGISTRY
     else:
-        registry = PAGAMENTOS_DOCUMENT_REGISTRY
+        registry = FLUXO_DOCUMENT_REGISTRY
 
     pdf_bytes = gerar_documento_pdf(doc_type, obj, registry, **kwargs)
     response = HttpResponse(pdf_bytes, content_type="application/pdf")
     response["Content-Disposition"] = f'inline; filename="teste_{doc_type}.pdf"'
     return response
-
-
-def chaos_testing_view(request):
-    """Ferramenta de caos para desenvolvimento baseada em gremlins.js."""
-    return render(request, "ferramentas/chaos_testing.html")
 
 
 __all__ = [
@@ -552,5 +550,4 @@ __all__ = [
     "gerar_dummy_pdf_view",
     "painel_teste_pdfs",
     "gerar_pdf_fake_view",
-    "chaos_testing_view",
 ]

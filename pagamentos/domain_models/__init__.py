@@ -13,7 +13,7 @@ from .catalogos import (
     TiposPagamento,
     TiposPendencia,
 )
-from .documentos import BoletoBancario, ComprovantePagamento, DocumentoOrcamentarioProcessual, DocumentoProcessual
+from .documentos import BoletoBancario, ComprovantePagamento, DocumentoOrcamentarioProcessual, DocumentoProcesso
 from .processos import (
     STATUS_PROCESSO_BLOQUEADOS_FORM,
     STATUS_PROCESSO_BLOQUEADOS_TOTAL,
@@ -37,6 +37,33 @@ from .suporte import (
     STATUS_CONTINGENCIA,
 )
 
+# Aliases legados para transição incremental dos módulos de views/serviços.
+ProcessoStatus = StatusProcesso
+PROCESSO_STATUS_BLOQUEADOS_FORM = STATUS_PROCESSO_BLOQUEADOS_FORM
+PROCESSO_STATUS_BLOQUEADOS_TOTAL = STATUS_PROCESSO_BLOQUEADOS_TOTAL
+PROCESSO_STATUS_CONTAS_A_PAGAR = STATUS_PROCESSO_CONTAS_A_PAGAR
+PROCESSO_STATUS_PAGOS = STATUS_PROCESSO_PAGOS
+PROCESSO_STATUS_PAGOS_E_POSTERIORES = STATUS_PROCESSO_PAGOS_E_POSTERIORES
+PROCESSO_STATUS_PRE_AUTORIZACAO = STATUS_PROCESSO_PRE_AUTORIZACAO
+PROCESSO_STATUS_SOMENTE_DOCUMENTOS = STATUS_PROCESSO_SOMENTE_DOCUMENTOS
+AssinaturaAutentique = AssinaturaEletronica
+Contingencia = ContingenciaProcessual
+Devolucao = DevolucaoProcessual
+Pendencia = PendenciaProcessual
+RegistroAcessoArquivo = RegistroAcessoArquivoProcessual
+ReuniaoConselho = ReuniaoConselhoFiscal
+ReuniaoConselhoStatus = StatusReuniaoConselho
+StatusChoicesProcesso = StatusOpcoesProcesso
+StatusChoicesPendencias = StatusOpcoesPendencia
+TagChoices = OpcoesEtiqueta
+FormasDePagamento = FormasPagamento
+TiposDePagamento = TiposPagamento
+TiposDeDocumento = TiposDocumento
+TiposDePendencias = TiposPendencia
+Boleto_Bancario = BoletoBancario
+DocumentoOrcamentario = DocumentoOrcamentarioProcessual
+ComprovanteDePagamento = ComprovantePagamento
+
 
 __all__ = [
     "AssinaturaEletronica",
@@ -45,7 +72,7 @@ __all__ = [
     "DevolucaoProcessual",
     "BoletoBancario",
     "DocumentoOrcamentarioProcessual",
-    "DocumentoProcessual",
+    "DocumentoProcesso",
     "FormasPagamento",
     "PendenciaProcessual",
     "STATUS_PROCESSO_BLOQUEADOS_FORM",
@@ -55,6 +82,14 @@ __all__ = [
     "STATUS_PROCESSO_PAGOS_E_POSTERIORES",
     "STATUS_PROCESSO_PRE_AUTORIZACAO",
     "STATUS_PROCESSO_SOMENTE_DOCUMENTOS",
+    "ProcessoStatus",
+    "PROCESSO_STATUS_BLOQUEADOS_FORM",
+    "PROCESSO_STATUS_BLOQUEADOS_TOTAL",
+    "PROCESSO_STATUS_CONTAS_A_PAGAR",
+    "PROCESSO_STATUS_PAGOS",
+    "PROCESSO_STATUS_PAGOS_E_POSTERIORES",
+    "PROCESSO_STATUS_PRE_AUTORIZACAO",
+    "PROCESSO_STATUS_SOMENTE_DOCUMENTOS",
     "Processo",
     "GerenciadorProcesso",
     "StatusProcesso",
@@ -68,4 +103,21 @@ __all__ = [
     "TiposDocumento",
     "TiposPagamento",
     "TiposPendencia",
+    "AssinaturaAutentique",
+    "Contingencia",
+    "Devolucao",
+    "Pendencia",
+    "RegistroAcessoArquivo",
+    "ReuniaoConselho",
+    "ReuniaoConselhoStatus",
+    "StatusChoicesProcesso",
+    "StatusChoicesPendencias",
+    "TagChoices",
+    "FormasDePagamento",
+    "TiposDePagamento",
+    "TiposDeDocumento",
+    "TiposDePendencias",
+    "Boleto_Bancario",
+    "DocumentoOrcamentario",
+    "ComprovanteDePagamento",
 ]

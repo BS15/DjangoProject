@@ -1,56 +1,38 @@
 """Painel de auditoria consolidada."""
 
+from functools import lru_cache
 from urllib.parse import urlencode
 
+from django.apps import apps
 from django.contrib.auth.decorators import permission_required
 from django.db import OperationalError, ProgrammingError
 from django.shortcuts import render
 
-from credores.models import CargosFuncoes, ContaFixa, ContasBancarias, FaturaMensal
-from fiscal.models import DadosContribuinte
-from fiscal.models import DocumentoFiscal, RetencaoImposto
 from commons.shared.text_tools import normalize_choice
-from fluxo.domain_models import (
-    AssinaturaAutentique,
-    ComprovanteDePagamento,
-    Devolucao,
-    DocumentoProcesso,
-    Processo,
-    RegistroAcessoArquivo,
-)
-from verbas_indenizatorias.models import DocumentoAuxilio, DocumentoDiaria, DocumentoJeton, DocumentoReembolso
-from suprimentos.models import DocumentoSuprimentoDeFundos, SuprimentoDeFundos
 from ..helpers import _aplicar_filtros_historico
 
 
-@permission_required("fluxo.pode_auditar_conselho", raise_exception=True)
+@lru_cache(maxsize=1)
+def _get_history_model_configs():
+    """Retorna lista ordenada de tuplas (history_model_class, verbose_name) com histórico habilitado."""
+    model_configs = []
+    for model in apps.get_models():
+        history_manager = getattr(model, "history", None)
+        history_model = getattr(history_manager, "model", None)
+        if not history_model:
+            continue
+        model_configs.append((history_model, model._meta.verbose_name))
+    model_configs.sort(key=lambda item: str(item[1]).lower())
+    return model_configs
+
+
+@permission_required("pagamentos.pode_auditar_conselho", raise_exception=True)
 def auditoria_view(request):
     """Renderiza a trilha de auditoria consolidada de modelos financeiros."""
     history_type_labels = {"+": "Criação", "~": "Alteração", "-": "Exclusão"}
+    model_configs = _get_history_model_configs()
 
-    model_configs = [
-        (Processo.history.model, "Processo"),
-        (ContasBancarias.history.model, "Conta Bancária"),
-        (CargosFuncoes.history.model, "Cargo/Função"),
-        (DadosContribuinte.history.model, "Dados do Contribuinte"),
-        (ContaFixa.history.model, "Conta Fixa"),
-        (FaturaMensal.history.model, "Fatura Mensal"),
-        (DocumentoProcesso.history.model, "Documento de Pagamento"),
-        (DocumentoFiscal.history.model, "Documento Fiscal"),
-        (RetencaoImposto.history.model, "Retenção de Imposto"),
-        (ComprovanteDePagamento.history.model, "Comprovante de Pagamento"),
-        (Devolucao.history.model, "Devolução"),
-        (SuprimentoDeFundos.history.model, "Suprimento de Fundos"),
-        (DocumentoDiaria.history.model, "Documento de Diária"),
-        (DocumentoReembolso.history.model, "Documento de Reembolso"),
-        (DocumentoJeton.history.model, "Documento de Jeton"),
-        (DocumentoAuxilio.history.model, "Documento de Auxílio"),
-        (DocumentoSuprimentoDeFundos.history.model, "Documento de Suprimento"),
-        (RegistroAcessoArquivo.history.model, "Registro de Acesso a Arquivo"),
-        (AssinaturaAutentique.history.model, "Assinatura Autentique"),
-    ]
-
-    modelos_disponiveis = [label for _, label in model_configs]
+    modelos_disponiveis = [str(label) for _, label in model_configs]
     modelo_filter = normalize_choice(
         request.GET.get("modelo", "").strip(),
         {*modelos_disponiveis, ""},
@@ -87,7 +69,8 @@ def auditoria_view(request):
     reverse_sort = direcao == "desc"
 
     all_records = []
-    for history_model, label in model_configs:
+    for history_model, raw_label in model_configs:
+        label = str(raw_label)
         if modelo_filter and modelo_filter != label:
             continue
         try:
@@ -162,7 +145,7 @@ def auditoria_view(request):
             "usuario": usuario_filter,
         },
     }
-    return render(request, "fluxo/auditoria.html", context)
+    return render(request, "pagamentos/auditoria.html", context)
 
 
 __all__ = ["auditoria_view"]

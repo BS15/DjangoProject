@@ -1,0 +1,30 @@
+{% extends "layouts/base_form.html" %}
+
+{% block page_heading %}Registrar Devolução da Diária #{{ diaria.id }}{% endblock %}
+{% block page_subtitle %}Formalize devoluções para manter o trilho de auditoria da diária.{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'gerenciar_diaria' pk=diaria.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
+{% endblock %}
+
+{% block form_action %}{% url 'registrar_devolucao_diaria_action' pk=diaria.id %}{% endblock %}
+
+{% block form_fields %}
+<div class="mb-3">
+    <label class="form-label">Valor devolvido</label>
+    <input type="number" name="valor_devolvido" class="form-control" min="0.01" step="0.01" required>
+</div>
+<div class="mb-3">
+    <label class="form-label">Data da devolução</label>
+    <input type="date" name="data_devolucao" class="form-control" required>
+</div>
+<div class="mb-3">
+    <label class="form-label">Motivo</label>
+    <textarea name="motivo" class="form-control" rows="3" required></textarea>
+</div>
+{% endblock %}
+
+{% block form_actions %}
+<a href="{% url 'gerenciar_diaria' pk=diaria.id %}" class="btn btn-secondary px-4">Cancelar</a>
+<button type="submit" class="btn btn-warning px-4 fw-bold"><i class="bi bi-arrow-counterclockwise"></i> Registrar Devolução</button>
+{% endblock %}

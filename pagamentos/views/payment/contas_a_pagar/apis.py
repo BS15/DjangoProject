@@ -6,11 +6,11 @@ from django.contrib.auth.decorators import permission_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 
-from fluxo.domain_models import Processo
+from pagamentos.domain_models import Processo
 logger = logging.getLogger(__name__)
 
 
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 def api_extrair_codigos_barras_processo(request, pk):
     """Retorna códigos de barras já persistidos nos documentos de um processo."""
     processo = get_object_or_404(Processo, id=pk)

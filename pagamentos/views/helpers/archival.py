@@ -5,8 +5,8 @@ import logging
 from django.core.files.base import ContentFile
 from django.db import transaction
 
-from fluxo.domain_models import ProcessoStatus
-from fluxo.services.processo_documentos import gerar_pdf_consolidado_processo
+from pagamentos.domain_models import ProcessoStatus
+from pagamentos.services.processo_documentos import gerar_pdf_consolidado_processo
 from .errors import ArquivamentoDefinitivoError, ArquivamentoSemDocumentosError
 
 

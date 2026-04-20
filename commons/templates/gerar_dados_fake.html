@@ -1,0 +1,48 @@
+{% extends "layouts/base_form.html" %}
+
+{% block page_title %}Gerador de Dados Fake{% endblock %}
+{% block page_heading %}<i class="bi bi-database-fill-gear me-2"></i>Gerador de Dados Fake{% endblock %}
+{% block page_subtitle %}Gere lotes de dados fictícios para testes internos de fluxo.{% endblock %}
+
+{% block form_action %}{% url 'gerar_dados_fake' %}{% endblock %}
+
+{% block form_fields %}
+<div class="row g-3">
+    <div class="col-md-3">
+        <label for="n_processos" class="form-label fw-bold">Processos</label>
+        <input type="number" min="0" step="1" class="form-control" id="n_processos" name="n_processos" value="0">
+    </div>
+    <div class="col-md-3">
+        <label for="n_documentos" class="form-label fw-bold">Documentos Fiscais</label>
+        <input type="number" min="0" step="1" class="form-control" id="n_documentos" name="n_documentos" value="0">
+    </div>
+    <div class="col-md-3">
+        <label for="n_retencoes" class="form-label fw-bold">Retenções</label>
+        <input type="number" min="0" step="1" class="form-control" id="n_retencoes" name="n_retencoes" value="0">
+    </div>
+    <div class="col-md-3">
+        <label for="n_diarias" class="form-label fw-bold">Diárias</label>
+        <input type="number" min="0" step="1" class="form-control" id="n_diarias" name="n_diarias" value="0">
+    </div>
+</div>
+
+{% if resultados %}
+<hr class="mt-4">
+<h6 class="fw-bold mb-3">Resumo da geração</h6>
+<ul class="list-group">
+    {% for nome, total in resultados.items %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        {{ nome|capfirst }}
+        <span class="badge text-bg-primary rounded-pill">{{ total }}</span>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}
+
+{% block form_actions %}
+<a href="{% url 'home_page' %}" class="btn btn-secondary px-4">Cancelar</a>
+<button type="submit" class="btn btn-primary px-4 fw-bold">
+    <i class="bi bi-play-circle"></i> Gerar Dados
+</button>
+{% endblock %}

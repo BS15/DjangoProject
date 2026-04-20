@@ -5,6 +5,7 @@ from simple_history.admin import SimpleHistoryAdmin
 
 from .models import (
     AuxilioRepresentacao,
+    ContingenciaDiaria,
     Diaria,
     DocumentoAuxilio,
     DocumentoComprovacao,
@@ -42,3 +43,4 @@ admin.site.register(Jeton, SimpleHistoryAdmin)
 admin.site.register(DocumentoJeton, SimpleHistoryAdmin)
 admin.site.register(AuxilioRepresentacao, SimpleHistoryAdmin)
 admin.site.register(DocumentoAuxilio, SimpleHistoryAdmin)
+admin.site.register(ContingenciaDiaria, SimpleHistoryAdmin)

@@ -25,9 +25,9 @@ STATUS_CONTINGENCIA = [
 
 class PendenciaProcessual(models.Model):
     """Pendência operacional ou documental atrelada ao processo."""
-    processo = models.ForeignKey("fluxo.Processo", on_delete=models.CASCADE, related_name="pendencias")
-    status = models.ForeignKey("fluxo.StatusOpcoesPendencia", on_delete=models.PROTECT, blank=True, null=True)
-    tipo = models.ForeignKey("fluxo.TiposPendencia", on_delete=models.PROTECT)
+    processo = models.ForeignKey("pagamentos.Processo", on_delete=models.CASCADE, related_name="pendencias")
+    status = models.ForeignKey("pagamentos.StatusOpcoesPendencia", on_delete=models.PROTECT, blank=True, null=True)
+    tipo = models.ForeignKey("pagamentos.TiposPendencia", on_delete=models.PROTECT)
     descricao = models.CharField(max_length=200, blank=True, null=True)
     history = HistoricalRecords()
     def __str__(self):
@@ -37,7 +37,7 @@ class PendenciaProcessual(models.Model):
 
 class ContingenciaProcessual(models.Model):
     """Solicitação formal de retificação com trilha de aprovação multi-etapa."""
-    processo = models.ForeignKey("fluxo.Processo", on_delete=models.CASCADE, related_name="contingencias")
+    processo = models.ForeignKey("pagamentos.Processo", on_delete=models.CASCADE, related_name="contingencias")
     solicitante = models.ForeignKey(User, on_delete=models.PROTECT, related_name="contingencias_solicitadas")
     data_solicitacao = models.DateTimeField(auto_now_add=True)
     justificativa = models.TextField(help_text="Motivo detalhado para a quebra de fluxo/retificação.")
@@ -113,7 +113,7 @@ class RegistroAcessoArquivoProcessual(models.Model):
 
 class DevolucaoProcessual(models.Model):
     """Registro de devolução de valores relacionados ao processo."""
-    processo = models.ForeignKey("fluxo.Processo", on_delete=models.CASCADE, related_name="devolucoes")
+    processo = models.ForeignKey("pagamentos.Processo", on_delete=models.CASCADE, related_name="devolucoes")
     valor_devolvido = models.DecimalField(max_digits=15, decimal_places=2, validators=[MinValueValidator(0.01)])
     data_devolucao = models.DateField()
     motivo = models.TextField()

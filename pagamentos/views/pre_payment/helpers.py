@@ -9,8 +9,8 @@ from django.db.models import F
 from django.shortcuts import redirect
 from django.utils.http import url_has_allowed_host_and_scheme
 
-from fluxo.domain_models import DocumentoProcesso, Processo, TiposDeDocumento
-from fluxo.validators import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
+from pagamentos.domain_models import DocumentoProcesso, Processo, TiposDeDocumento
+from pagamentos.validators import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
 
 
 def _salvar_processo_completo(processo_form, mutator_func=None, **formsets):
@@ -86,7 +86,7 @@ def _validar_regras_edicao_processo(request, processo, status_inicial):
     if (
         getattr(processo, "tipo_pagamento_id", None)
         and processo.tipo_pagamento
-        and (processo.tipo_pagamento.tipo_de_pagamento or "").upper() == "VERBAS INDENIZATÓRIAS"
+        and (processo.tipo_pagamento.tipo_pagamento or "").upper() == "VERBAS INDENIZATÓRIAS"
     ):
         return redirect("editar_processo_verbas", pk=processo.id), False
 

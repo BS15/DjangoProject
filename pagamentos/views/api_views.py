@@ -14,14 +14,14 @@ from django.contrib.auth.decorators import permission_required
 from django.http import JsonResponse
 
 from commons.shared.text_tools import format_brl_amount
-from fluxo.domain_models import Processo
-from fluxo.views.helpers.audit_builders import get_detalhes_pagamento
+from pagamentos.domain_models import Processo
+from pagamentos.views.helpers.audit_builders import get_detalhes_pagamento
 
 
 logger = logging.getLogger(__name__)
 
 
-@permission_required("fluxo.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 def api_detalhes_pagamento(request):
     """Monta resumo de detalhes de pagamento para uma lista de processos.
 
@@ -65,7 +65,7 @@ def api_detalhes_pagamento(request):
                         "empenho": p.n_nota_empenho or "S/N",
                         "credor": p.credor.nome if p.credor else "Sem Credor",
                         "valor": valor_formatado,
-                        "forma": p.forma_pagamento.forma_de_pagamento if p.forma_pagamento else "N/A",
+                        "forma": p.forma_pagamento.forma_pagamento if p.forma_pagamento else "N/A",
                         "detalhe_tipo": pagamento["tipo_formatado"],
                         "detalhe_valor": pagamento["valor_formatado"],
                         "codigos_barras": pagamento["codigos_barras"],

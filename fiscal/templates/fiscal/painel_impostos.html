@@ -50,6 +50,41 @@
             </button>
         </div>
     </div>
+
+    {# ── Spoke: Registrar DocumentoPagamentoImposto ── #}
+    <div class="card border-secondary mb-3">
+        <div class="card-header bg-secondary text-white py-2">
+            <strong><i class="bi bi-file-earmark-check"></i> Registrar Documentação de Pagamento de Imposto</strong>
+        </div>
+        <div class="card-body">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-2">
+                    <label class="form-label small text-muted mb-1">Competência (AAAA-MM)</label>
+                    <input type="month" class="form-control form-control-sm" name="competencia" placeholder="AAAA-MM">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted mb-1">Relatório de Retenções</label>
+                    <input type="file" class="form-control form-control-sm" name="relatorio_retencoes" accept=".pdf,.png,.jpg,.jpeg">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted mb-1">Guia de Recolhimento</label>
+                    <input type="file" class="form-control form-control-sm" name="guia_recolhimento" accept=".pdf,.png,.jpg,.jpeg">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted mb-1">Comprovante de Pagamento</label>
+                    <input type="file" class="form-control form-control-sm" name="comprovante_pagamento" accept=".pdf,.png,.jpg,.jpeg">
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-secondary btn-sm w-100"
+                        formaction="{% url 'registrar_documentos_pagamento_action' %}"
+                        onclick="return confirm('Registrar documentação de pagamento para as retenções selecionadas?');">
+                        <i class="bi bi-upload"></i> Registrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
 
 {% block table_headers %}
@@ -60,6 +95,7 @@
 <th>Base de Cálculo</th>
 <th>Valor Retido</th>
 <th>Status Reinf</th>
+<th>Documentação</th>
 {% endblock %}
 
 {% block table_rows %}
@@ -87,10 +123,17 @@
         <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Pendente</span>
         {% endif %}
     </td>
+    <td>
+        {% if retencao.documentacao_completa %}
+        <span class="badge bg-success"><i class="bi bi-file-earmark-check"></i> Documentado</span>
+        {% else %}
+        <span class="badge bg-danger"><i class="bi bi-file-earmark-x"></i> Pendente</span>
+        {% endif %}
+    </td>
 </tr>
 {% empty %}
 <tr>
-    <td colspan="7" class="text-center text-muted py-4">Nenhuma retenção fiscal encontrada para os filtros aplicados.</td>
+    <td colspan="8" class="text-center text-muted py-4">Nenhuma retenção fiscal encontrada para os filtros aplicados.</td>
 </tr>
 {% endfor %}
 {% endblock %}

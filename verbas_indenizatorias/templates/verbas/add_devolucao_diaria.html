@@ -1,0 +1,61 @@
+{% extends "layouts/base_form.html" %}
+
+{% block title %}Registrar Devolução — Diária #{{ diaria.pk }}{% endblock %}
+
+{% block page_heading %}
+<i class="bi bi-arrow-return-left text-danger"></i> Registrar Devolução
+{% endblock %}
+
+{% block page_subtitle %}
+Registre a devolução de valores da Diária #{{ diaria.pk }} — {{ diaria.beneficiario.nome|upper }}.
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'gerenciar_diaria' pk=diaria.pk %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Voltar
+</a>
+{% endblock %}
+
+{% block form_action %}{% url 'registrar_devolucao_diaria_action' pk=diaria.pk %}{% endblock %}
+
+{% block form_fields %}
+{% if form.non_field_errors %}
+<div class="alert alert-danger">{{ form.non_field_errors }}</div>
+{% endif %}
+
+<div class="card shadow-sm mb-3">
+    <div class="card-header bg-light">
+        <h6 class="mb-0">Dados da Diária</h6>
+    </div>
+    <div class="card-body">
+        <p class="mb-1"><strong>Beneficiário:</strong> {{ diaria.beneficiario.nome }}</p>
+        <p class="mb-1"><strong>Destino:</strong> {{ diaria.cidade_destino }}</p>
+        <p class="mb-0"><strong>Valor total:</strong> R$ {{ diaria.valor_total|floatformat:2 }}</p>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <label class="form-label">{{ form.valor_devolvido.label }}</label>
+        {{ form.valor_devolvido }}
+        <div class="text-danger small">{{ form.valor_devolvido.errors }}</div>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">{{ form.data_devolucao.label }}</label>
+        {{ form.data_devolucao }}
+        <div class="text-danger small">{{ form.data_devolucao.errors }}</div>
+    </div>
+    <div class="col-12">
+        <label class="form-label">{{ form.motivo.label }}</label>
+        {{ form.motivo }}
+        <div class="text-danger small">{{ form.motivo.errors }}</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block form_actions %}
+<a href="{% url 'gerenciar_diaria' pk=diaria.pk %}" class="btn btn-outline-secondary me-2">Cancelar</a>
+<button type="submit" class="btn btn-danger">
+    <i class="bi bi-save"></i> Registrar Devolução
+</button>
+{% endblock %}
