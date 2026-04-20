@@ -16,6 +16,9 @@ from .prestacao import (  # noqa: F401
 	registrar_comprovante,
 )
 from .processo_integration import criar_processo_e_vincular_verbas  # noqa: F401
-
+from .vinculos_diaria import (  # noqa: F401
+	vincular_diaria_em_processo_existente,
+	desvincular_diaria_do_processo,
+)
 
 
