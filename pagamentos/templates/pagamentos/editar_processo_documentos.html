@@ -42,9 +42,25 @@
 <script src="{% static 'js/documento_formset_manager.js' %}"></script>
 <script src="{% static 'js/documento_preview_widget.js' %}"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    new DocumentoFormsetManager('documento');
-    new DocumentoPreviewWidget('documento');
-  });
+  (function initDocumentoWidgets() {
+    const setup = function () {
+      if (!window.documentoWidgetRegistry) {
+        window.documentoWidgetRegistry = {};
+      }
+      if (window.documentoWidgetRegistry.documento) {
+        return;
+      }
+      window.documentoWidgetRegistry.documento = true;
+
+      new DocumentoFormsetManager('documento');
+      new DocumentoPreviewWidget('documento');
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setup, { once: true });
+      return;
+    }
+    setup();
+  }());
 </script>
 {% endblock %}

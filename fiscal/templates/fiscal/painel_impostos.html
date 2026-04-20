@@ -12,6 +12,14 @@
 {% endblock %}
 
 {% block filter_form %}
+<div class="col-md-3">
+    <label class="form-label text-muted small">Visão</label>
+    <select name="visao" class="form-select form-select-sm">
+        <option value="individual" {% if visao == "individual" %}selected{% endif %}>Individual</option>
+        <option value="nf" {% if visao == "nf" %}selected{% endif %}>Nota Fiscal</option>
+        <option value="processo" {% if visao == "processo" %}selected{% endif %}>Processo</option>
+    </select>
+</div>
 {% for field in filter.form %}
 <div class="col-md-3">
     <label class="form-label text-muted small">{{ field.label }}</label>
@@ -21,6 +29,7 @@
 {% endblock %}
 
 {% block batch_form_open %}
+{% if visao == "individual" %}
 <form method="post" action="{% url 'agrupar_retencoes_action' %}" id="formAgruparRetencoes">
     {% csrf_token %}
     <div class="d-flex justify-content-between align-items-end mb-3 flex-wrap gap-2">
@@ -32,9 +41,11 @@
         </div>
     </div>
 
+{% endif %}
 {% endblock %}
 
 {% block table_headers %}
+{% if visao == "individual" %}
 <th style="width: 40px;"><input class="form-check-input" type="checkbox" id="selectAll"></th>
 <th>Competência</th>
 <th>Credor / Fonte Retentora</th>
@@ -43,9 +54,24 @@
 <th>Valor Retido</th>
 <th>Status Reinf</th>
 <th>Documentação</th>
+{% elif visao == "nf" %}
+<th>NF</th>
+<th>Processo</th>
+<th>Emitente</th>
+<th>Emissão</th>
+<th>Qtd. Retenções</th>
+<th>Total Retido</th>
+{% else %}
+<th>Processo</th>
+<th>Credor</th>
+<th>Qtd. NFs</th>
+<th>Qtd. Retenções</th>
+<th>Total Retido</th>
+{% endif %}
 {% endblock %}
 
 {% block table_rows %}
+{% if visao == "individual" %}
 {% for retencao in retencoes %}
 <tr>
     <td>
@@ -79,17 +105,94 @@
     <td colspan="8" class="text-center text-muted py-4">Nenhuma retenção fiscal encontrada para os filtros aplicados.</td>
 </tr>
 {% endfor %}
+{% elif visao == "nf" %}
+{% for nota in notas_fiscais %}
+<tr>
+    <td>{{ nota.numero_nota_fiscal|default:"-" }}</td>
+    <td>
+        {% if nota.processo_id %}
+        <a href="{% url 'editar_processo' pk=nota.processo_id %}">#{{ nota.processo_id }}</a>
+        {% else %}
+        -
+        {% endif %}
+    </td>
+    <td>{{ nota.nome_emitente.nome|default:"-" }}</td>
+    <td>{{ nota.data_emissao|date:"d/m/Y"|default:"-" }}</td>
+    <td>{{ nota.qtd_retencoes }}</td>
+    <td class="text-danger fw-bold">R$ {{ nota.total_retido|default_if_none:0|floatformat:2 }}</td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="6" class="text-center text-muted py-4">Nenhuma nota fiscal com retenção para os filtros aplicados.</td>
+</tr>
+{% endfor %}
+{% else %}
+{% for processo in processos %}
+<tr>
+    <td><a href="{% url 'editar_processo' pk=processo.id %}">#{{ processo.id }}</a></td>
+    <td>{{ processo.credor.nome|default:"-" }}</td>
+    <td>{{ processo.qtd_notas }}</td>
+    <td>{{ processo.qtd_retencoes }}</td>
+    <td class="text-danger fw-bold">R$ {{ processo.total_retido|default_if_none:0|floatformat:2 }}</td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="5" class="text-center text-muted py-4">Nenhum processo com retenções para os filtros aplicados.</td>
+</tr>
+{% endfor %}
+{% endif %}
 {% endblock %}
 
 {% block batch_form_close %}
+{% if visao == "individual" %}
+<div class="card shadow-sm border-0 mt-3">
+    <div class="card-header bg-light fw-bold text-secondary py-2">
+        <i class="bi bi-file-earmark-arrow-up"></i> Registrar documentos de pagamento da retenção
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small text-muted">Competência</label>
+                <input type="month" name="competencia" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted">Relatório de Retenções</label>
+                <input type="file" name="relatorio_retencoes" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted">Guia de Recolhimento</label>
+                <input type="file" name="guia_recolhimento" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted">Comprovante de Pagamento</label>
+                <input type="file" name="comprovante_pagamento" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+        </div>
+        <div class="mt-3">
+            <button type="submit"
+                    class="btn btn-outline-primary"
+                    formaction="{% url 'registrar_documentos_pagamento_action' %}"
+                    formenctype="multipart/form-data"
+                    onclick="return confirm('Registrar documentação para as retenções selecionadas?');">
+                <i class="bi bi-folder-check"></i> Registrar Documentos de Pagamento
+            </button>
+        </div>
+    </div>
+</div>
 </form>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
+{% if visao == "individual" %}
 <script>
-document.getElementById('selectAll').addEventListener('change', function(e) {
-    const checkboxes = document.querySelectorAll('.retencao-check');
-    checkboxes.forEach(cb => cb.checked = e.target.checked);
-});
+const selectAll = document.getElementById('selectAll');
+if (selectAll) {
+    selectAll.addEventListener('change', function(e) {
+        const checkboxes = document.querySelectorAll('.retencao-check');
+        checkboxes.forEach(cb => cb.checked = e.target.checked);
+    });
+}
 </script>
+{% endif %}
 {% endblock %}
