@@ -2,6 +2,7 @@
 
 from django.http import FileResponse, Http404, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from commons.shared.access_utils import user_is_entity_owner
 from pagamentos.models import (
@@ -80,6 +81,7 @@ def _has_access(user, tipo_documento, objeto_pai):
     return user_is_entity_owner(user, objeto_pai)
 
 
+@xframe_options_sameorigin
 def download_arquivo_seguro(request, tipo_documento, documento_id):
     """Faz download do arquivo quando usuário possui autorização contextual."""
     documento, objeto_pai = _resolve_documento(tipo_documento, documento_id)

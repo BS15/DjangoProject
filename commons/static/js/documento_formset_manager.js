@@ -11,66 +11,128 @@
 class DocumentoFormsetManager {
   constructor(prefix) {
     this.prefix = prefix;
-    this.formPrefix = `${prefix}-`;
     this.containerSelector = `#document-list-${prefix}`;
     this.emptyFormSelector = `#empty-doc-form-${prefix}`;
     this.addBtnSelector = `#add-doc-btn-${prefix}`;
     this.managementForm = `#id_${prefix}-TOTAL_FORMS`;
+    this.badgeSelector = `#doc-count-badge-${prefix}`;
+    this.dropzoneSelector = `#doc-dropzone-${prefix}`;
+    this.dropInputSelector = `#drop-upload-input-${prefix}`;
+    this.selectDropFilesBtnSelector = `#select-drop-files-${prefix}`;
+    this.draggedRow = null;
     
     this.init();
   }
 
   init() {
+    if (!$(this.containerSelector).length) {
+      return;
+    }
     this.attachEventHandlers();
+    this.bindDropzone();
     this.makeFormsetDraggable();
+    this.syncOrderFields();
+    this.updateDocumentCount();
   }
 
   attachEventHandlers() {
-    // Handle "Add Document" button
     $(this.addBtnSelector).on('click', (e) => {
       e.preventDefault();
       this.addDocument();
     });
 
-    // Handle remove buttons (delegated event)
-    $(document).on('click', '.remove-doc-btn', (e) => {
+    $(this.containerSelector).on('click', '.remove-doc-btn', (e) => {
       e.preventDefault();
       const row = $(e.target).closest('.document-row');
       this.removeDocument(row);
     });
   }
 
-  addDocument() {
+  bindDropzone() {
+    const dropzone = $(this.dropzoneSelector);
+    const input = $(this.dropInputSelector);
+    const selectBtn = $(this.selectDropFilesBtnSelector);
+
+    if (!dropzone.length || !input.length || !selectBtn.length) {
+      return;
+    }
+
+    selectBtn.on('click', (e) => {
+      e.preventDefault();
+      input.trigger('click');
+    });
+
+    input.on('change', (e) => {
+      this.addFiles(e.target.files);
+      e.target.value = '';
+    });
+
+    dropzone.on('dragenter dragover', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.addClass('border-primary');
+    });
+
+    dropzone.on('dragleave', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.removeClass('border-primary');
+    });
+
+    dropzone.on('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.removeClass('border-primary');
+      const files = e.originalEvent?.dataTransfer?.files;
+      this.addFiles(files);
+    });
+  }
+
+  addFiles(fileList) {
+    if (!fileList || !fileList.length) {
+      return;
+    }
+    Array.from(fileList).forEach((file) => this.addDocument({ file }));
+  }
+
+  addDocument({ file = null } = {}) {
     const container = $(this.containerSelector);
     const emptyForm = $(this.emptyFormSelector);
-    const totalForms = parseInt($(this.managementForm).val());
+    const totalForms = parseInt($(this.managementForm).val(), 10);
 
-    // Clone empty form template
+    if (!emptyForm.length || Number.isNaN(totalForms)) {
+      return;
+    }
+
     const newForm = emptyForm.clone();
-    
-    // Replace __prefix__ with the actual form index
-    newForm.find('input, select').each(function() {
-      const name = $(this).attr('name');
-      if (name) {
-        $(this).attr('name', name.replace('__prefix__', totalForms));
-        $(this).attr('id', `id_${newForm.find('input, select').attr('name')}`);
-      }
+    newForm.removeAttr('id');
+
+    newForm.find('*').each(function () {
+      const el = $(this);
+      ['name', 'id', 'for'].forEach((attr) => {
+        const value = el.attr(attr);
+        if (value && value.includes('__prefix__')) {
+          el.attr(attr, value.replace(/__prefix__/g, totalForms));
+        }
+      });
     });
 
     newForm.attr('data-form-index', totalForms);
     newForm.show();
-
-    // Append to container
     container.append(newForm);
 
-    // Update form count in Django management form
     $(this.managementForm).val(totalForms + 1);
-
-    // Update badge
-    this.updateDocumentCount();
-
-    // Re-attach drag handles
+    if (file) {
+      const fileInput = newForm.find(`input[type="file"][name="${this.prefix}-${totalForms}-arquivo"]`);
+      if (fileInput.length && typeof DataTransfer !== 'undefined') {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        fileInput[0].files = dt.files;
+      }
+    }
     this.makeFormsetDraggable();
+    this.syncOrderFields();
+    this.updateDocumentCount();
   }
 
   removeDocument(row) {
@@ -81,27 +143,83 @@ class DocumentoFormsetManager {
       deleteCheckbox.prop('checked', true);
       row.hide();
     } else {
-      // Brand new form not yet in DB — just remove
       row.remove();
     }
 
+    this.syncOrderFields();
     this.updateDocumentCount();
   }
 
   makeFormsetDraggable() {
     const container = $(this.containerSelector);
-    const rows = container.find('.document-row:visible');
+    const rows = container.find('.document-row');
 
-    if (rows.length > 1) {
-      // Simple jQuery-based drag via mouseover reordering
-      // (could upgrade to Sortable.js for better UX)
-      rows.find('.drag-handle').css('cursor', 'move');
+    rows.each((_, rowEl) => {
+      const row = $(rowEl);
+      const handle = row.find('.drag-handle').first();
+      if (!handle.length) {
+        return;
+      }
+      handle.css('cursor', 'grab');
+      if (!row.data('drag-bound')) {
+        row.attr('draggable', true);
+        row.data('drag-bound', true);
+      }
+    });
+
+    if (container.data('drag-container-bound')) {
+      return;
     }
+
+    container.data('drag-container-bound', true);
+
+    container.on('dragstart', '.document-row', (e) => {
+      const isHandle = $(e.target).closest('.drag-handle').length > 0;
+      if (!isHandle) {
+        e.preventDefault();
+        return;
+      }
+      this.draggedRow = e.currentTarget;
+      $(this.draggedRow).addClass('opacity-50');
+    });
+
+    container.on('dragend', '.document-row', () => {
+      if (this.draggedRow) {
+        $(this.draggedRow).removeClass('opacity-50');
+      }
+      this.draggedRow = null;
+      this.syncOrderFields();
+    });
+
+    container.on('dragover', '.document-row', (e) => {
+      e.preventDefault();
+      if (!this.draggedRow || this.draggedRow === e.currentTarget) {
+        return;
+      }
+      const target = e.currentTarget;
+      const targetRect = target.getBoundingClientRect();
+      const shouldInsertAfter = e.originalEvent.clientY > targetRect.top + targetRect.height / 2;
+
+      if (shouldInsertAfter) {
+        target.parentNode.insertBefore(this.draggedRow, target.nextSibling);
+      } else {
+        target.parentNode.insertBefore(this.draggedRow, target);
+      }
+    });
+  }
+
+  syncOrderFields() {
+    $(this.containerSelector).find('.document-row:visible').each((index, rowEl) => {
+      const orderInput = $(rowEl).find('input[name$="-ordem"]').first();
+      if (orderInput.length) {
+        orderInput.val(index + 1);
+      }
+    });
   }
 
   updateDocumentCount() {
     const count = $(this.containerSelector).find('.document-row:visible').length;
-    $(`#doc-count-badge`).text(`${count} doc(s)`);
+    $(this.badgeSelector).text(`${count} doc(s)`);
   }
 }
 

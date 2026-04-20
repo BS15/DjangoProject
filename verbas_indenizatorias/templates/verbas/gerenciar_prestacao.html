@@ -17,7 +17,6 @@ Prestação: <span class="badge {% if prestacao.status == 'ENCERRADA' %}bg-succe
 
 {% block form_fields %}
 <input type="hidden" name="next" value="{{ request.get_full_path }}">
-{{ comprovante_formset.management_form }}
 
 <div class="card shadow-sm border-0 mb-3">
     <div class="card-header bg-light">
