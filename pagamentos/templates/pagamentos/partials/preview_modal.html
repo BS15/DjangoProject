@@ -1,7 +1,8 @@
 {% comment %}Modal + JS reutilizável de preview de documentos de processo.{% endcomment %}
 <div class="modal fade" id="modalPreview" tabindex="-1" aria-labelledby="modalPreviewLabel" aria-hidden="true"
 	data-api-documentos-template="{% url 'api_documentos_processo' processo_id=999999 %}"
-	data-pdf-template="{% url 'visualizar_pdf_processo' pk=999999 %}">
+	data-pdf-template="{% url 'visualizar_pdf_processo' pk=999999 %}"
+	data-preview-placeholder-id="999999">
 	<div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 95vw;">
 		<div class="modal-content border-0 shadow-lg" style="height: 90vh;">
 			<div class="modal-header bg-dark text-white py-2">
@@ -128,10 +129,10 @@ document.addEventListener('DOMContentLoaded', function() {
 	const VIEWABLE_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg'];
 	const apiDocumentosTemplate = modalElement.dataset.apiDocumentosTemplate;
 	const pdfTemplate = modalElement.dataset.pdfTemplate;
-	const placeholderId = '999999';
+	const PLACEHOLDER_PROCESSO_ID = modalElement.dataset.previewPlaceholderId;
 
 	function withProcessoId(url, processoId) {
-		return url.replace(placeholderId, String(processoId));
+		return url.replace(PLACEHOLDER_PROCESSO_ID, String(processoId));
 	}
 
 	function resetInfoHeader() {
