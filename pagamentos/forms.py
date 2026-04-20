@@ -36,7 +36,7 @@ class ProcessoForm(forms.ModelForm):
 
 	class Meta:
 		model = Processo
-		exclude = ['status']
+		exclude = ['status', 'reuniao_conselho']
 		widgets = {
 			'extraorcamentario': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
 			'credor': forms.Select(attrs={'class': 'form-select'}),
