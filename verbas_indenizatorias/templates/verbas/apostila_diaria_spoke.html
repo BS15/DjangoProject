@@ -1,0 +1,34 @@
+{% extends "layouts/base_form.html" %}
+
+{% block page_heading %}Registrar Apostila da Diária #{{ diaria.id }}{% endblock %}
+{% block page_subtitle %}Registre correções formais da diária com rastreabilidade completa.{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'gerenciar_diaria' pk=diaria.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
+{% endblock %}
+
+{% block form_action %}{% url 'registrar_apostila_diaria_action' pk=diaria.id %}{% endblock %}
+
+{% block form_fields %}
+<div class="mb-3">
+    <label class="form-label">Campo corrigido</label>
+    <input type="text" name="campo_corrigido" class="form-control" maxlength="100" required>
+</div>
+<div class="mb-3">
+    <label class="form-label">Valor anterior (opcional)</label>
+    <input type="text" name="valor_anterior" class="form-control">
+</div>
+<div class="mb-3">
+    <label class="form-label">Valor novo (opcional)</label>
+    <input type="text" name="valor_novo" class="form-control">
+</div>
+<div class="mb-3">
+    <label class="form-label">Texto da apostila</label>
+    <textarea name="texto_correcao" class="form-control" rows="4" required></textarea>
+</div>
+{% endblock %}
+
+{% block form_actions %}
+<a href="{% url 'gerenciar_diaria' pk=diaria.id %}" class="btn btn-secondary px-4">Cancelar</a>
+<button type="submit" class="btn btn-secondary px-4 fw-bold"><i class="bi bi-journal-text"></i> Registrar Apostila</button>
+{% endblock %}

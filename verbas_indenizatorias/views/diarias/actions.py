@@ -167,14 +167,14 @@ def vincular_diaria_processo_action(request, pk):
     processo_id = request.POST.get('processo_id')
     if not processo_id:
         messages.error(request, 'Informe o processo para vincular a diária.')
-        return redirect('gerenciar_diaria', pk=pk)
+        return redirect('vinculo_diaria_spoke', pk=pk)
 
     with transaction.atomic():
         diaria = get_object_or_404(Diaria.objects.select_for_update().select_related('processo__status'), id=pk)
         processo = get_object_or_404(Processo.objects.select_for_update().select_related('status'), id=processo_id)
         if not processo_em_pre_autorizacao(processo):
             messages.error(request, 'O processo selecionado já passou da etapa de autorização.')
-            return redirect('gerenciar_diaria', pk=pk)
+            return redirect('vinculo_diaria_spoke', pk=pk)
         try:
             vincular_diaria_em_processo_existente(diaria, processo)
             logger.info(
@@ -199,7 +199,7 @@ def desvincular_diaria_processo_action(request, pk):
         diaria = get_object_or_404(Diaria.objects.select_for_update().select_related('processo__status'), id=pk)
         if not diaria.processo_id:
             messages.info(request, 'A diária já está sem processo vinculado.')
-            return redirect('gerenciar_diaria', pk=pk)
+            return redirect('vinculo_diaria_spoke', pk=pk)
         try:
             processo_id = diaria.processo_id
             desvincular_diaria_do_processo(diaria)
@@ -272,7 +272,7 @@ def liberar_para_assinatura_action(request, pk):
 
         if not diaria.proponente or not diaria.proponente.email:
             messages.error(request, 'A diária não possui proponente com e-mail para assinatura.')
-            return redirect('gerenciar_diaria', pk=diaria.id)
+            return redirect('liberar_assinatura_diaria_spoke', pk=diaria.id)
 
         assinatura = (
             diaria.assinaturas_autentique.select_for_update()
@@ -334,13 +334,13 @@ def registrar_devolucao_diaria_action(request, pk):
 
     if not valor_devolvido_raw or not data_devolucao or not motivo:
         messages.error(request, 'Informe valor devolvido, data da devolução e motivo.')
-        return redirect('gerenciar_diaria', pk=pk)
+        return redirect('devolucao_diaria_spoke', pk=pk)
 
     try:
         valor_devolvido = Decimal(valor_devolvido_raw)
     except InvalidOperation:
         messages.error(request, 'Valor devolvido inválido.')
-        return redirect('gerenciar_diaria', pk=pk)
+        return redirect('devolucao_diaria_spoke', pk=pk)
 
     with transaction.atomic():
         diaria = get_object_or_404(Diaria.objects.select_for_update(), pk=pk)
@@ -375,7 +375,7 @@ def registrar_apostila_diaria_action(request, pk):
 
     if not texto_correcao or not campo_corrigido:
         messages.error(request, 'Informe o texto da apostila e o campo corrigido.')
-        return redirect('gerenciar_diaria', pk=pk)
+        return redirect('apostila_diaria_spoke', pk=pk)
 
     with transaction.atomic():
         diaria = get_object_or_404(Diaria.objects.select_for_update(), pk=pk)

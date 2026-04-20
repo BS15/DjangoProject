@@ -54,19 +54,63 @@ def gerenciar_diaria_view(request, pk):
     prestacao = obter_ou_criar_prestacao(diaria)
     comprovantes = prestacao.documentos.select_related('tipo').all()
 
-    processos_vinculaveis = Processo.objects.none()
-    if _pode_gerenciar_vinculo_diaria(request.user):
-        processos_vinculaveis = _processos_vinculaveis_queryset()
-
     context = {
         'diaria': diaria,
         'prestacao': prestacao,
         'comprovantes': comprovantes,
         'tipos_documento': _get_tipos_documento_verbas(),
         'pode_gerenciar_vinculo_diaria': _pode_gerenciar_vinculo_diaria(request.user),
-        'processos_vinculaveis': processos_vinculaveis,
     }
     return render(request, 'verbas/gerenciar_diaria.html', context)
+
+
+@require_GET
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
+def vinculo_diaria_spoke_view(request, pk):
+    diaria = get_object_or_404(
+        Diaria.objects.select_related('beneficiario', 'status', 'processo', 'prestacao_contas'),
+        id=pk,
+    )
+    if not _pode_gerenciar_vinculo_diaria(request.user):
+        return HttpResponseForbidden("Acesso negado para vinculação de diárias.")
+
+    context = {
+        'diaria': diaria,
+        'processos_vinculaveis': _processos_vinculaveis_queryset(),
+    }
+    return render(request, 'verbas/vinculo_diaria_spoke.html', context)
+
+
+@require_GET
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
+def devolucao_diaria_spoke_view(request, pk):
+    diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status'), id=pk)
+    context = {'diaria': diaria}
+    return render(request, 'verbas/devolucao_diaria_spoke.html', context)
+
+
+@require_GET
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
+def apostila_diaria_spoke_view(request, pk):
+    diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status'), id=pk)
+    context = {'diaria': diaria}
+    return render(request, 'verbas/apostila_diaria_spoke.html', context)
+
+
+@require_GET
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
+def liberar_assinatura_diaria_spoke_view(request, pk):
+    diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status'), id=pk)
+    context = {'diaria': diaria}
+    return render(request, 'verbas/liberar_assinatura_diaria_spoke.html', context)
+
+
+@require_GET
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
+def cancelar_diaria_spoke_view(request, pk):
+    diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status'), id=pk)
+    context = {'diaria': diaria}
+    return render(request, 'verbas/cancelar_diaria_spoke.html', context)
 
 
 @require_GET
@@ -183,6 +227,11 @@ __all__ = [
     'diarias_list_view',
     'add_diaria_view',
     'gerenciar_diaria_view',
+    'vinculo_diaria_spoke_view',
+    'devolucao_diaria_spoke_view',
+    'apostila_diaria_spoke_view',
+    'liberar_assinatura_diaria_spoke_view',
+    'cancelar_diaria_spoke_view',
     'minha_prestacao_list_view',
     'gerenciar_prestacao_view',
     'painel_revisar_prestacoes_view',
