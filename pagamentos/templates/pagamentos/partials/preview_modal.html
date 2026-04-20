@@ -1,8 +1,9 @@
 {% comment %}Modal + JS reutilizável de preview de documentos de processo.{% endcomment %}
+{% with preview_placeholder_id='999999' %}
 <div class="modal fade" id="modalPreview" tabindex="-1" aria-labelledby="modalPreviewLabel" aria-hidden="true"
-	data-api-documentos-template="{% url 'api_documentos_processo' processo_id=999999 %}"
-	data-pdf-template="{% url 'visualizar_pdf_processo' pk=999999 %}"
-	data-preview-placeholder-id="999999">
+	data-api-documentos-template="{% url 'api_documentos_processo' processo_id=preview_placeholder_id %}"
+	data-pdf-template="{% url 'visualizar_pdf_processo' pk=preview_placeholder_id %}"
+	data-preview-placeholder-id="{{ preview_placeholder_id }}">
 	<div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 95vw;">
 		<div class="modal-content border-0 shadow-lg" style="height: 90vh;">
 			<div class="modal-header bg-dark text-white py-2">
@@ -286,3 +287,4 @@ document.addEventListener('DOMContentLoaded', function() {
 	});
 });
 </script>
+{% endwith %}
