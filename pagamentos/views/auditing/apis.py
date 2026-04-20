@@ -1,4 +1,4 @@
-"""Endpoints GET/API da trilha de auditoria."""
+"""Endpoints GET/API de suporte a auditoria e filas operacionais."""
 
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
