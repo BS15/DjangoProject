@@ -31,7 +31,7 @@
 <tr>
 	<td class="fw-bold text-muted">#{{ pendencia.id }}</td>
 	<td><a href="{% url 'process_detail' pk=pendencia.processo.id %}">#{{ pendencia.processo.id }}</a></td>
-	<td>{{ pendencia.descricao|truncatechars:80 }}</td>
+	<td>{{ pendencia.descricao|default:"-"|truncatechars:80 }}</td>
 	<td>{{ pendencia.responsavel.get_full_name|default:"-" }}</td>
 	<td>
 		{% if pendencia.status %}
@@ -41,9 +41,20 @@
 		{% endif %}
 	</td>
 	<td class="text-center">
-		<a href="{% url 'process_detail' pk=pendencia.processo.id %}" class="btn btn-sm btn-outline-primary">
-			<i class="bi bi-arrow-right-circle"></i> Ver Processo
-		</a>
+		<div class="d-flex gap-1 justify-content-center flex-wrap">
+			<form method="post" action="{% url 'painel_pendencias_action' %}" class="d-inline">
+				{% csrf_token %}
+				<input type="hidden" name="pendencia_id" value="{{ pendencia.id }}">
+				<input type="hidden" name="acao_lote" value="resolver">
+				<button type="submit" class="btn btn-sm btn-outline-success">Resolver Pendência</button>
+			</form>
+			<form method="post" action="{% url 'painel_pendencias_action' %}" class="d-inline">
+				{% csrf_token %}
+				<input type="hidden" name="pendencia_id" value="{{ pendencia.id }}">
+				<input type="hidden" name="acao_lote" value="excluir">
+				<button type="submit" class="btn btn-sm btn-outline-danger">Excluir Pendência</button>
+			</form>
+		</div>
 	</td>
 </tr>
 {% empty %}
