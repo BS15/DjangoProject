@@ -1,8 +1,10 @@
 """Panel views for tax retention management."""
 
 from django.contrib.auth.decorators import permission_required
+from django.contrib import messages
 from django.db.models import Count, Sum
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.views.decorators.http import require_GET
 
 from fiscal.filters import RetencaoIndividualFilter, RetencaoNotaFilter, RetencaoProcessoFilter
 from fiscal.models import DocumentoFiscal, DocumentoPagamentoImposto, RetencaoImposto
@@ -11,6 +13,7 @@ from pagamentos.views.shared import apply_filterset
 
 DEFAULT_VIEW = "individual"
 VALID_VIEWS = {"individual", "nf", "processo"}
+SESSION_RETENCOES_DOCS_KEY = "retencoes_documentos_pagamento"
 
 
 def _resolve_fonte_retentora_nome(retencao: RetencaoImposto) -> str:
@@ -86,3 +89,40 @@ def painel_impostos_view(request):
             retencao.documentacao_completa = retencao.id in docs_completos
         context.update({"filter": filtro, "retencoes": retencoes})
     return render(request, "fiscal/painel_impostos.html", context)
+
+
+@require_GET
+@permission_required("fiscal.acesso_backoffice", raise_exception=True)
+def registrar_documentos_pagamento_view(request):
+    """Spoke de registro de documentos para retenções previamente selecionadas."""
+    retencao_ids = request.session.get(SESSION_RETENCOES_DOCS_KEY, [])
+    if not retencao_ids:
+        messages.warning(request, "Nenhuma retenção foi selecionada para registro de documentos.")
+        return redirect("painel_impostos_view")
+
+    retencoes = list(
+        RetencaoImposto.objects.select_related(
+            "codigo",
+            "status",
+            "nota_fiscal",
+            "nota_fiscal__nome_emitente",
+            "beneficiario",
+        )
+        .filter(id__in=retencao_ids)
+        .order_by("-id")
+    )
+    if not retencoes:
+        request.session.pop(SESSION_RETENCOES_DOCS_KEY, None)
+        messages.warning(request, "As retenções selecionadas não estão mais disponíveis.")
+        return redirect("painel_impostos_view")
+
+    for retencao in retencoes:
+        retencao.fonte_retentora_nome = _resolve_fonte_retentora_nome(retencao)
+
+    total_retido = sum((retencao.valor or 0) for retencao in retencoes)
+    context = {
+        "retencoes": retencoes,
+        "qtd_retencoes": len(retencoes),
+        "total_retido": total_retido,
+    }
+    return render(request, "fiscal/registrar_documentos_pagamento_retencoes.html", context)

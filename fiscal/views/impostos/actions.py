@@ -17,6 +17,7 @@ from pagamentos.domain_models import Processo, StatusChoicesProcesso, TiposDePag
 import logging
 
 logger = logging.getLogger(__name__)
+SESSION_RETENCOES_DOCS_KEY = "retencoes_documentos_pagamento"
 
 
 @require_POST
@@ -139,8 +140,44 @@ def anexar_documentos_retencoes_action(request: HttpRequest) -> HttpResponse:
         f"Guia, comprovante e relatório mensal anexados com sucesso em {total_processos} processo(s) de recolhimento.",
     )
     return redirect("painel_impostos_view")
+@require_POST
+@permission_required("fiscal.acesso_backoffice", raise_exception=True)
+def selecionar_retencoes_documentacao_action(request: HttpRequest) -> HttpResponse:
+    """Armazena retenções selecionadas em sessão e redireciona para o spoke de documentação."""
+    selecionados = request.POST.getlist("retencao_ids")
+    if not selecionados:
+        messages.warning(request, "Selecione ao menos uma retenção para registrar documentos de pagamento.")
+        return redirect("painel_impostos_view")
+
+    retencoes_existentes = list(RetencaoImposto.objects.filter(id__in=selecionados).values_list("id", flat=True))
+    if not retencoes_existentes:
+        messages.warning(request, "Nenhuma retenção válida foi encontrada para os IDs selecionados.")
+        return redirect("painel_impostos_view")
+
+    request.session[SESSION_RETENCOES_DOCS_KEY] = retencoes_existentes
+    return redirect("registrar_documentos_pagamento_view")
 
 
+@require_POST
+@permission_required("fiscal.acesso_backoffice", raise_exception=True)
+def remover_retencao_documentacao_action(request: HttpRequest) -> HttpResponse:
+    """Remove uma retenção da lista de documentação em sessão."""
+    retencao_id = request.POST.get("retencao_id")
+    ids_em_sessao = request.session.get(SESSION_RETENCOES_DOCS_KEY, [])
+
+    if not retencao_id or not ids_em_sessao:
+        messages.warning(request, "Nenhuma retenção disponível para remoção.")
+        return redirect("registrar_documentos_pagamento_view")
+
+    ids_atualizados = [rid for rid in ids_em_sessao if str(rid) != str(retencao_id)]
+    if ids_atualizados:
+        request.session[SESSION_RETENCOES_DOCS_KEY] = ids_atualizados
+        messages.success(request, "Retenção removida da lista.")
+        return redirect("registrar_documentos_pagamento_view")
+
+    request.session.pop(SESSION_RETENCOES_DOCS_KEY, None)
+    messages.warning(request, "Todas as retenções foram removidas da lista.")
+    return redirect("painel_impostos_view")
 
 
 @require_POST
@@ -148,6 +185,8 @@ def anexar_documentos_retencoes_action(request: HttpRequest) -> HttpResponse:
 def registrar_documentos_pagamento_action(request: HttpRequest) -> HttpResponse:
     """Cria DocumentoPagamentoImposto para cada retenção selecionada (spoke de documentação)."""
     selecionados = request.POST.getlist("retencao_ids")
+    if not selecionados:
+        selecionados = [str(retencao_id) for retencao_id in request.session.get(SESSION_RETENCOES_DOCS_KEY, [])]
     relatorio_arquivo = request.FILES.get("relatorio_retencoes")
     guia_arquivo = request.FILES.get("guia_recolhimento")
     comprovante_arquivo = request.FILES.get("comprovante_pagamento")
@@ -155,11 +194,11 @@ def registrar_documentos_pagamento_action(request: HttpRequest) -> HttpResponse:
 
     if not selecionados:
         messages.warning(request, "Selecione ao menos uma retenção para registrar a documentação.")
-        return redirect("painel_impostos_view")
+        return redirect("registrar_documentos_pagamento_view")
 
     if not relatorio_arquivo or not guia_arquivo or not comprovante_arquivo:
         messages.error(request, "É obrigatório anexar os três documentos: relatório, guia e comprovante.")
-        return redirect("painel_impostos_view")
+        return redirect("registrar_documentos_pagamento_view")
 
     try:
         from datetime import date
@@ -169,7 +208,7 @@ def registrar_documentos_pagamento_action(request: HttpRequest) -> HttpResponse:
         competencia = date(int(parts[0]), int(parts[1]), 1)
     except (ValueError, IndexError):
         messages.error(request, "Informe a competência no formato YYYY-MM.")
-        return redirect("painel_impostos_view")
+        return redirect("registrar_documentos_pagamento_view")
 
     retencoes = list(
         RetencaoImposto.objects.select_related("codigo")
@@ -177,7 +216,7 @@ def registrar_documentos_pagamento_action(request: HttpRequest) -> HttpResponse:
     )
     if not retencoes:
         messages.warning(request, "Nenhuma retenção encontrada para os IDs informados.")
-        return redirect("painel_impostos_view")
+        return redirect("registrar_documentos_pagamento_view")
 
     criados = criar_documentos_pagamento_impostos(
         retencoes=retencoes,
@@ -198,9 +237,14 @@ def registrar_documentos_pagamento_action(request: HttpRequest) -> HttpResponse:
         f"Documentação registrada para {len(criados)} retenção(ões). "
         f"{len(retencoes) - len(criados)} já possuíam documentação e foram ignoradas.",
     )
+    request.session.pop(SESSION_RETENCOES_DOCS_KEY, None)
     return redirect("painel_impostos_view")
 
 
-__all__ = ["agrupar_retencoes_action", "anexar_documentos_retencoes_action", "registrar_documentos_pagamento_action"]
-
-
+__all__ = [
+    "agrupar_retencoes_action",
+    "anexar_documentos_retencoes_action",
+    "selecionar_retencoes_documentacao_action",
+    "remover_retencao_documentacao_action",
+    "registrar_documentos_pagamento_action",
+]
