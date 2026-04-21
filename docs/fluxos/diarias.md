@@ -4,6 +4,23 @@ Este documento descreve o ciclo operacional completo de uma diária no PaGé —
 
 ---
 
+## Diagrama de workflow (visão macro)
+
+```mermaid
+stateDiagram-v2
+    [*] --> APROVADA : add_diaria_action (_preparar_nova_diaria)
+    APROVADA --> VINCULADA_A_PROCESSO : vincular_diaria_processo_action
+    APROVADA --> CANCELADA_ANULADA : cancelar_diaria_action
+    VINCULADA_A_PROCESSO --> PRESTACAO_ABERTA : obter_ou_criar_prestacao
+    PRESTACAO_ABERTA --> PRESTACAO_ENCERRADA : encerrar_prestacao_action
+    PRESTACAO_ENCERRADA --> PRESTACAO_ACEITA : aceitar_prestacao_action
+    PRESTACAO_ACEITA --> PROCESSO_PAGO_ESTEIRA_POSTERIOR : segue esteira de pagamentos
+    PROCESSO_PAGO_ESTEIRA_POSTERIOR --> [*]
+    CANCELADA_ANULADA --> [*]
+```
+
+---
+
 ## 1. Modelo de domínio
 
 `Diaria` (`verbas_indenizatorias/models.py`) é a entidade central. Ao ser salva, o modelo:
