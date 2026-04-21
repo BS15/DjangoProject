@@ -4,6 +4,21 @@ Este documento descreve o ciclo completo de vida de uma `RetencaoImposto` — de
 
 ---
 
+## Diagrama de workflow (visão macro)
+
+```mermaid
+stateDiagram-v2
+    [*] --> A_RETER : Retenção criada na NF
+    A_RETER --> AGRUPADA_EM_PROCESSO : agrupar_retencoes_action
+    AGRUPADA_EM_PROCESSO --> DOCUMENTADA_POR_RETENCAO : registrar_documentos_pagamento_action
+    AGRUPADA_EM_PROCESSO --> DOCUMENTADA_POR_PROCESSO : anexar_documentos_retencoes_action
+    DOCUMENTADA_POR_RETENCAO --> RECOLHIMENTO_APTO_A_PAGAMENTO : turnpike de impostos atendido
+    DOCUMENTADA_POR_PROCESSO --> RECOLHIMENTO_APTO_A_PAGAMENTO : guia/comprovante/relatório anexados
+    RECOLHIMENTO_APTO_A_PAGAMENTO --> [*]
+```
+
+---
+
 ## 1. Origem da retenção
 
 Uma retenção nasce a partir da gestão de documentos fiscais de um processo de pagamento:

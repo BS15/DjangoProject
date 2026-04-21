@@ -4,6 +4,21 @@ Este documento descreve o ciclo completo de um suprimento de fundos no PaGé —
 
 ---
 
+## Diagrama de workflow (visão macro)
+
+```mermaid
+stateDiagram-v2
+    [*] --> ABERTO : add_suprimento_action
+    ABERTO --> PROCESSO_A_EMPENHAR : criar_processo_para_suprimento
+    PROCESSO_A_EMPENHAR --> ESTEIRA_PAGAMENTOS_PRE_PAGO : empenho/liquidação/autorização
+    ESTEIRA_PAGAMENTOS_PRE_PAGO --> ENCERRADO : fechar_suprimento_action
+    ENCERRADO --> PROCESSO_PAGO_EM_CONFERENCIA : _atualizar_status_apos_fechamento
+    PROCESSO_PAGO_EM_CONFERENCIA --> ESTEIRA_POS_PAGAMENTO : contabilização/conselho/arquivamento
+    ESTEIRA_POS_PAGAMENTO --> [*]
+```
+
+---
+
 ## 1. Modelo de domínio
 
 `SuprimentoDeFundos` (`suprimentos/models.py`) representa o adiantamento concedido a um servidor (suprido) para pagamento de despesas miúdas ou urgentes.
