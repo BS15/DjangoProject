@@ -1001,17 +1001,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#ja-existe-documentacao-sobre-isso" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Já existe documentação sobre isso?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#1-gestao-de-documentos" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1596,17 +1585,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#fechamento" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Fechamento
-      
-    </span>
-  </a>
   
 </li>
       
@@ -1709,17 +1687,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#ja-existe-documentacao-sobre-isso" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Já existe documentação sobre isso?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#1-gestao-de-documentos" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2307,17 +2274,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#fechamento" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Fechamento
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -2347,22 +2303,6 @@
 <li>assinaturas via Autentique</li>
 <li>auditoria e logging</li>
 </ul>
-<h2 id="ja-existe-documentacao-sobre-isso">Já existe documentação sobre isso?<a class="headerlink" href="#ja-existe-documentacao-sobre-isso" title="Permanent link">&para;</a></h2>
-<p>Existe documentação parcial, mas não um guia único com este recorte.</p>
-<p>Material já existente no repositório:</p>
-<ul>
-<li><code>docs/desenvolvedor/dicionarios_operacionais.md</code>: catálogo operacional de actions e workers, incluindo fluxos fiscais, uploads documentais e ações em lote.</li>
-<li><code>docs/modulos/modulo_fiscal.md</code>: visão funcional do módulo fiscal, com foco em retenções e EFD-Reinf.</li>
-<li><code>docs/governanca/trilha_auditoria.md</code>: princípios de trilha de auditoria e compliance.</li>
-<li><code>docs/desenvolvedor/padroes_codigo.md</code>: padrões arquiteturais para views, services e documentação operacional.</li>
-</ul>
-<p>Este arquivo complementa esse material ao responder, para cada feature, quatro perguntas:</p>
-<ol>
-<li>o que é</li>
-<li>o que faz e para que serve</li>
-<li>como funciona na prática</li>
-<li>como se reflete no código</li>
-</ol>
 <h2 id="1-gestao-de-documentos">1. Gestão de Documentos<a class="headerlink" href="#1-gestao-de-documentos" title="Permanent link">&para;</a></h2>
 <h3 id="o-que-e">O que é<a class="headerlink" href="#o-que-e" title="Permanent link">&para;</a></h3>
 <p>A gestão de documentos é a infraestrutura que recebe, valida, organiza, armazena e vincula arquivos aos objetos de negócio do sistema, como processos, diárias, reembolsos, jetons, auxílios, suprimentos e retenções.</p>
@@ -2954,15 +2894,6 @@
 <li>O logging técnico aparece como apoio à operação, mas a trilha principal de governança está no histórico persistente de modelos e nos registros de acesso.</li>
 <li>A decisão de chamar <code>avancar_status(..., usuario=...)</code> em vez de atualizar tudo diretamente reforça esse compromisso com rastreabilidade.</li>
 </ul>
-<h2 id="fechamento">Fechamento<a class="headerlink" href="#fechamento" title="Permanent link">&para;</a></h2>
-<p>Hoje o repositório já contém essas features em produção de desenvolvimento, mas a documentação estava fragmentada.</p>
-<p>Em resumo:</p>
-<ul>
-<li>já existia documentação parcial para auditoria, fiscal e contratos operacionais</li>
-<li>não existia um arquivo único explicando essas funcionalidades de ponta a ponta</li>
-<li>a base técnica já está espalhada de forma coerente entre <code>commons</code>, <code>pagamentos</code>, <code>fiscal</code>, <code>verbas_indenizatorias</code> e <code>suprimentos</code></li>
-</ul>
-<p>Este documento foi criado para servir como ponte entre visão funcional e implementação real do sistema.</p>
 
 
 
