@@ -10,9 +10,7 @@ Este documento descreve o ciclo completo de vida de uma `RetencaoImposto` — de
 stateDiagram-v2
     [*] --> A_RETER : Retenção criada na NF
     A_RETER --> AGRUPADA_EM_PROCESSO : agrupar_retencoes_action
-    AGRUPADA_EM_PROCESSO --> DOCUMENTADA_POR_RETENCAO : registrar_documentos_pagamento_action
     AGRUPADA_EM_PROCESSO --> DOCUMENTADA_POR_PROCESSO : anexar_documentos_retencoes_action
-    DOCUMENTADA_POR_RETENCAO --> RECOLHIMENTO_APTO_A_PAGAMENTO : turnpike de impostos atendido
     DOCUMENTADA_POR_PROCESSO --> RECOLHIMENTO_APTO_A_PAGAMENTO : guia/comprovante/relatório anexados
     RECOLHIMENTO_APTO_A_PAGAMENTO --> [*]
 ```
@@ -76,24 +74,9 @@ A partir desse ponto, o processo de recolhimento segue a esteira normal de pagam
 
 ---
 
-## 4. Documentação de recolhimento — dois trilhos
+## 4. Documentação de recolhimento
 
-### Trilho A: Documentação por retenção (`DocumentoPagamentoImposto`)
-
-Usado para registrar comprovante individual por retenção (relatório + guia + comprovante).
-
-1. Operador seleciona retenções → `selecionar_retencoes_documentacao_action` valida IDs e redireciona para a spoke com `?ids=1,2,3`.
-2. A spoke `registrar_documentos_pagamento_view` (GET) renderiza a lista de retenções para revisão.
-3. Operador pode remover retenções da lista (`remover_retencao_documentacao_action`) sem alterar banco — apenas ajusta a query string.
-4. Ao submeter, `registrar_documentos_pagamento_action` (POST) chama `criar_documentos_pagamento_impostos`:
-   - idempotente via `get_or_create(retencao, codigo_imposto, competencia)`;
-   - cria um `DocumentoPagamentoImposto` por retenção elegível;
-   - retenções que já possuem documento são ignoradas (reportadas ao operador).
-
-!!! note "Fluxo stateless"
-    Os IDs das retenções trafegam via query param `?ids=` (GET) e `<input type="hidden" name="retencao_ids">` (POST). Não há dependência de sessão.
-
-### Trilho B: Anexação de guia/comprovante ao processo de recolhimento
+### Anexação de guia/comprovante ao processo de recolhimento
 
 Usado para anexar os documentos de competência mensal diretamente ao processo DARF.
 

@@ -1,10 +1,8 @@
 """Panel views for tax retention management."""
 
 from django.contrib.auth.decorators import permission_required
-from django.contrib import messages
 from django.db.models import Count, Sum
-from django.shortcuts import redirect, render
-from django.views.decorators.http import require_GET
+from django.shortcuts import render
 
 from fiscal.filters import RetencaoIndividualFilter, RetencaoNotaFilter, RetencaoProcessoFilter
 from fiscal.models import DocumentoFiscal, DocumentoPagamentoImposto, RetencaoImposto
@@ -89,41 +87,3 @@ def painel_impostos_view(request):
         context.update({"filter": filtro, "retencoes": retencoes})
     return render(request, "fiscal/painel_impostos.html", context)
 
-
-@require_GET
-@permission_required("fiscal.acesso_backoffice", raise_exception=True)
-def registrar_documentos_pagamento_view(request):
-    """Spoke de registro de documentos para retenções passadas via query param ?ids=1,2,3."""
-    ids_raw = request.GET.get("ids", "")
-    retencao_ids = [int(x) for x in ids_raw.split(",") if x.strip().isdigit()]
-
-    if not retencao_ids:
-        messages.warning(request, "Nenhuma retenção foi selecionada para registro de documentos.")
-        return redirect("painel_impostos_view")
-
-    retencoes = list(
-        RetencaoImposto.objects.select_related(
-            "codigo",
-            "status",
-            "nota_fiscal",
-            "nota_fiscal__nome_emitente",
-            "beneficiario",
-        )
-        .filter(id__in=retencao_ids)
-        .order_by("-id")
-    )
-    if not retencoes:
-        messages.warning(request, "As retenções selecionadas não estão mais disponíveis.")
-        return redirect("painel_impostos_view")
-
-    for retencao in retencoes:
-        retencao.fonte_retentora_nome = _resolve_fonte_retentora_nome(retencao)
-
-    total_retido = sum((retencao.valor or 0) for retencao in retencoes)
-    context = {
-        "retencoes": retencoes,
-        "retencao_ids": [r.id for r in retencoes],
-        "qtd_retencoes": len(retencoes),
-        "total_retido": total_retido,
-    }
-    return render(request, "fiscal/registrar_documentos_pagamento_retencoes.html", context)
