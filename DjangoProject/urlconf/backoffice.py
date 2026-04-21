@@ -13,6 +13,7 @@ from suprimentos.views.cadastro import actions as suprimento_cadastro_actions
 from suprimentos.views.cadastro import panels as suprimento_cadastro_panels
 from suprimentos.views.prestacao_contas import actions as suprimento_actions
 from suprimentos.views.prestacao_contas import panels as suprimento_panels
+from suprimentos.views.prestacao_contas import pdf as suprimento_pdf
 
 urlpatterns = [
     path('adicionar-credor/', credor_panels.add_credor_view, name='add_credor_view'),
@@ -29,6 +30,11 @@ urlpatterns = [
     path('suprimentos/<int:pk>/despesas/nova/', suprimento_panels.adicionar_despesa_view, name='adicionar_despesa_view'),
     path('suprimentos/<int:pk>/despesas/adicionar/', suprimento_actions.adicionar_despesa_action, name='registrar_despesa_action'),
     path('suprimentos/<int:pk>/fechar/', suprimento_actions.fechar_suprimento_action, name='concluir_prestacao_action'),
+    path('suprimentos/<int:pk>/prestacao/enviar/', suprimento_actions.enviar_prestacao_suprimento_action, name='enviar_prestacao_suprimento_action'),
+    path('suprimentos/<int:pk>/prestacao/relatorio/', suprimento_pdf.gerar_relatorio_prestacao_contas_view, name='gerar_relatorio_prestacao_contas'),
+    path('suprimentos/prestacoes/revisar/', suprimento_panels.revisar_prestacoes_suprimento_view, name='revisar_prestacoes_suprimento'),
+    path('suprimentos/prestacoes/<int:pk>/revisar/', suprimento_panels.revisar_prestacao_suprimento_view, name='revisar_prestacao_suprimento'),
+    path('suprimentos/prestacoes/<int:pk>/aprovar/', suprimento_actions.aprovar_prestacao_suprimento_action, name='aprovar_prestacao_suprimento_action'),
     path('suprimentos/novo/', suprimento_cadastro_panels.add_suprimento_view, name='add_suprimento_view'),
     path('suprimentos/novo/action/', suprimento_cadastro_actions.add_suprimento_action, name='add_suprimento_action'),
     path('importar-siscac/', credores_import_views.painel_importacao_view, name='painel_importacao'),

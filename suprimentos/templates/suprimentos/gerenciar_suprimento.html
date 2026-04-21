@@ -95,20 +95,134 @@
             <h4 class="text-success mb-0">R$ {{ suprimento.saldo_remanescente|floatformat:2 }}</h4>
         </div>
     </div>
+
+    {# --- Prestação de Contas Status Card --- #}
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light fw-bold small">
+            <i class="bi bi-clipboard-check"></i> Prestação de Contas
+        </div>
+        <div class="card-body py-2 small">
+            {% if prestacao.status == STATUS_ENCERRADA %}
+                <span class="badge bg-success">Encerrada</span>
+                {% if prestacao.encerrado_em %}
+                <div class="text-muted mt-1">{{ prestacao.encerrado_em|date:"d/m/Y H:i" }}</div>
+                {% endif %}
+            {% elif prestacao.status == STATUS_ENVIADA %}
+                <span class="badge bg-warning text-dark">Aguardando Revisão</span>
+                {% if prestacao.submetido_em %}
+                <div class="text-muted mt-1">Enviada em {{ prestacao.submetido_em|date:"d/m/Y H:i" }}</div>
+                {% endif %}
+            {% else %}
+                <span class="badge bg-secondary">Em Aberto</span>
+            {% endif %}
+        </div>
+    </div>
+
     {% if suprimento.processo %}
-        <a href="{% url 'registrar_devolucao' suprimento.processo.id %}" class="btn btn-success fw-bold w-100 mb-2">
-            <i class="bi bi-arrow-return-left"></i> Registrar Devolução
+        <a href="{% url 'registrar_devolucao' suprimento.processo.id %}" class="btn btn-outline-success btn-sm fw-bold w-100 mb-2">
+            <i class="bi bi-arrow-return-left"></i> Registrar Devolução Manual
         </a>
     {% endif %}
+
     {% if pode_editar %}
-    <form method="post" action="{% url 'concluir_prestacao_action' suprimento.id %}"
-          onsubmit="return confirm('Confirma o encerramento da prestação de contas?');">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-warning fw-bold w-100">
-            <i class="bi bi-lock-fill"></i> Concluir Prestação
+        {# Trigger button for the Enviar Prestação modal #}
+        <button type="button" class="btn btn-warning fw-bold w-100" data-bs-toggle="modal" data-bs-target="#modalEnviarPrestacao">
+            <i class="bi bi-send-check"></i> Enviar Prestação
         </button>
-    </form>
+    {% elif prestacao.status == STATUS_ENVIADA %}
+        <span class="d-block text-center text-warning fw-semibold small">
+            <i class="bi bi-hourglass-split"></i> Aguardando revisão do operador
+        </span>
     {% else %}
-    <span class="text-success d-block text-center"><i class="bi bi-lock-fill"></i> Prestação Encerrada</span>
+        <span class="text-success d-block text-center"><i class="bi bi-lock-fill"></i> Prestação Encerrada</span>
     {% endif %}
+{% endblock %}
+
+{% block extra_modals %}
+{# ============================================================ #}
+{# Modal: Enviar Prestação de Contas                            #}
+{# ============================================================ #}
+<div class="modal fade" id="modalEnviarPrestacao" tabindex="-1" aria-labelledby="modalEnviarPrestacaoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" enctype="multipart/form-data"
+                  action="{% url 'enviar_prestacao_suprimento_action' suprimento.id %}">
+                {% csrf_token %}
+                <div class="modal-header bg-warning bg-opacity-25">
+                    <h5 class="modal-title fw-bold" id="modalEnviarPrestacaoLabel">
+                        <i class="bi bi-send-check text-warning"></i> Enviar Prestação de Contas
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    {% if suprimento.saldo_remanescente > 0 %}
+                    <div class="alert alert-info small mb-3">
+                        <i class="bi bi-info-circle"></i>
+                        Há um <strong>saldo remanescente de R$ {{ suprimento.saldo_remanescente|floatformat:2 }}</strong>
+                        que não foi utilizado. Ao enviar a prestação, esse valor será
+                        registrado automaticamente como devolução. Anexe o comprovante bancário abaixo.
+                    </div>
+                    {% else %}
+                    <div class="alert alert-success small mb-3">
+                        <i class="bi bi-check-circle"></i>
+                        Todo o numerário liberado foi utilizado. Nenhuma devolução de saldo será necessária.
+                    </div>
+                    {% endif %}
+
+                    {# Comprovante de devolução #}
+                    <div class="mb-3">
+                        <label for="id_comprovante_devolucao" class="form-label fw-semibold">
+                            {{ form_enviar_prestacao.comprovante_devolucao.label }}
+                            {% if suprimento.saldo_remanescente > 0 %}<span class="text-danger">*</span>{% endif %}
+                        </label>
+                        {{ form_enviar_prestacao.comprovante_devolucao }}
+                        <div class="form-text text-muted">{{ form_enviar_prestacao.comprovante_devolucao.help_text }}</div>
+                    </div>
+
+                    {# Data da devolução #}
+                    {% if suprimento.saldo_remanescente > 0 %}
+                    <div class="mb-3">
+                        <label for="id_data_devolucao" class="form-label fw-semibold">
+                            {{ form_enviar_prestacao.data_devolucao.label }}
+                        </label>
+                        {{ form_enviar_prestacao.data_devolucao }}
+                    </div>
+                    {% endif %}
+
+                    {# Relatório de despesas + termo de fidedignidade #}
+                    <div class="mb-3 p-3 border rounded bg-light">
+                        <p class="fw-semibold small mb-2">
+                            <i class="bi bi-file-earmark-text text-primary"></i>
+                            Relatório de Prestação de Contas
+                        </p>
+                        <p class="small text-muted mb-2">
+                            Gere e verifique o relatório completo das despesas antes de enviar.
+                            O documento inclui a declaração de responsabilidade legal que deverá ser impressa e assinada.
+                        </p>
+                        <a href="{% url 'gerar_relatorio_prestacao_contas' suprimento.id %}"
+                           target="_blank"
+                           class="btn btn-outline-primary btn-sm fw-bold mb-3">
+                            <i class="bi bi-filetype-pdf"></i> Gerar e Visualizar Relatório
+                        </a>
+                        <div class="form-check">
+                            {{ form_enviar_prestacao.confirma_fidedignidade }}
+                            <label class="form-check-label small" for="id_confirma_fidedignidade">
+                                Li, conferi e aceito o conteúdo do relatório de prestação de contas.
+                                Declaro, <strong>sob responsabilidade pessoal e penas da lei</strong>,
+                                que todas as despesas são legítimas, devidamente comprovadas e que o
+                                saldo remanescente, quando existente, será devolvido ao erário.
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning fw-bold">
+                        <i class="bi bi-send-check"></i> Confirmar Envio
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
