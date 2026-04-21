@@ -39,7 +39,6 @@ def agrupar_retencoes_action(request: HttpRequest) -> HttpResponse:
                 "status",
                 "beneficiario",
                 "nota_fiscal",
-                "nota_fiscal__processo",
             )
             .filter(id__in=selecionados, processo_pagamento__isnull=True)
         )

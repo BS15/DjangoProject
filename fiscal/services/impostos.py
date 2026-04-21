@@ -4,6 +4,7 @@ import csv
 import io
 from collections import defaultdict
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from django.apps import apps
 from django.core.files.base import ContentFile
@@ -13,6 +14,10 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from pagamentos.domain_models import TiposDeDocumento, TiposDePagamento
+
+if TYPE_CHECKING:
+    from fiscal.models import RetencaoImposto
+    from pagamentos.domain_models import Processo
 
 DOC_GUIA = "GUIA DE RECOLHIMENTO DE IMPOSTOS"
 DOC_COMPROVANTE = "COMPROVANTE DE RECOLHIMENTO DE IMPOSTOS"
@@ -96,7 +101,7 @@ def _format_decimal(value) -> str:
     return f"{valor:.2f}"
 
 
-def gerar_relatorio_retencoes_agrupamento_pdf(retencoes: list, processo_id: int) -> bytes:
+def gerar_relatorio_retencoes_agrupamento_pdf(retencoes: list["RetencaoImposto"], processo_id: int) -> bytes:
     """Gera PDF com todas as colunas canônicas das retenções agrupadas."""
     buffer = io.BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=A4)
@@ -116,7 +121,11 @@ def gerar_relatorio_retencoes_agrupamento_pdf(retencoes: list, processo_id: int)
         nonlocal linha
         _nova_pagina_se_necessario()
         pdf.setFont("Helvetica-Bold" if negrito else "Helvetica", 9)
-        pdf.drawString(margem_esquerda, linha, texto)
+        texto_normalizado = str(texto)
+        try:
+            pdf.drawString(margem_esquerda, linha, texto_normalizado)
+        except Exception as exc:
+            raise ValueError("Falha ao renderizar conteúdo textual no relatório PDF de retenções.") from exc
         linha -= passo
 
     _escrever(f"RELATÓRIO DE RETENÇÕES AGRUPADAS - PROCESSO #{processo_id}", negrito=True)
@@ -155,7 +164,10 @@ def gerar_relatorio_retencoes_agrupamento_pdf(retencoes: list, processo_id: int)
     return buffer.getvalue()
 
 
-def anexar_relatorio_agrupamento_retencoes_no_processo(processo, retencoes: list):
+def anexar_relatorio_agrupamento_retencoes_no_processo(
+    processo: "Processo",
+    retencoes: list["RetencaoImposto"],
+):
     """Anexa relatório PDF do agrupamento na ordem 1 do processo informado."""
     if not retencoes:
         return None

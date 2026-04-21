@@ -117,6 +117,9 @@ def test_gerar_relatorio_retencoes_agrupamento_pdf_contem_campos_canonicos(proce
     texto = "\n".join(page.extract_text() or "" for page in PdfReader(io.BytesIO(pdf_bytes)).pages)
 
     assert "id, nota_fiscal, beneficiario, rendimento_tributavel, data_pagamento, codigo, valor, status, processo_pagamento, competencia" in texto
+    assert f"id: {retencao.id}" in texto
+    assert "codigo.codigo: 5952" in texto
+    assert "valor: 15.00" in texto
     assert f"processo_pagamento: {processo.id}" in texto
 
 
