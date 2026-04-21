@@ -16,8 +16,13 @@
 
 {% block document_viewer %}
 <div class="card shadow-sm h-100">
-    <div class="card-header bg-light fw-bold small">
-        <i class="bi bi-file-earmark-pdf text-danger"></i> Comprovante de Devolução
+    <div class="card-header bg-light fw-bold small d-flex align-items-center justify-content-between">
+        <span><i class="bi bi-file-earmark-pdf text-danger"></i> Comprovante de Devolução</span>
+        <a href="{% url 'gerar_relatorio_prestacao_contas' suprimento.id %}"
+           target="_blank"
+           class="btn btn-outline-primary btn-sm py-0">
+            <i class="bi bi-filetype-pdf"></i> Relatório de Despesas
+        </a>
     </div>
     <div class="card-body p-2">
         {% if prestacao.comprovante_devolucao %}
