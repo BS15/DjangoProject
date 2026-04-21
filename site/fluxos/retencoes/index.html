@@ -11,10 +11,10 @@
       
       
       
-        <link rel="prev" href="../../fluxos/suprimento_fundos/">
+        <link rel="prev" href="../pagamentos/">
       
       
-        <link rel="next" href="../matriz_permissoes/">
+        <link rel="next" href="../diarias/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Trilha de Auditoria - Wiki PaGé</title>
+        <title>Retenções - Wiki PaGé</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#trilha-de-auditoria" class="md-skip">
+        <a href="#fluxo-retencoes-de-impostos" class="md-skip">
           Pular para conteúdo
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Trilha de Auditoria
+              Retenções
             
           </span>
         </div>
@@ -683,8 +683,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -695,13 +697,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
@@ -722,7 +722,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -740,7 +740,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../fluxos/pagamentos/" class="md-nav__link">
+      <a href="../pagamentos/" class="md-nav__link">
         
   
   
@@ -765,10 +765,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../fluxos/retencoes/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retenções
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -784,6 +811,137 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-origem-da-retencao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Origem da retenção
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Origem da retenção">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#regras-de-_salvar_retencoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regras de _salvar_retencoes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-painel-operacional-de-retencoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Painel operacional de retenções
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-agrupamento-para-recolhimento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Agrupamento para recolhimento
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-documentacao-de-recolhimento-dois-trilhos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Documentação de recolhimento — dois trilhos
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Documentação de recolhimento — dois trilhos">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#trilho-a-documentacao-por-retencao-documentopagamentoimposto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trilho A: Documentação por retenção (DocumentoPagamentoImposto)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trilho-b-anexacao-de-guiacomprovante-ao-processo-de-recolhimento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trilho B: Anexação de guia/comprovante ao processo de recolhimento
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-guard-na-transicao-para-pago" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Guard na transição para PAGO
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#referencias-de-codigo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Referências de código
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -796,7 +954,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../fluxos/diarias/" class="md-nav__link">
+      <a href="../diarias/" class="md-nav__link">
         
   
   
@@ -824,7 +982,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../fluxos/suprimento_fundos/" class="md-nav__link">
+      <a href="../suprimento_fundos/" class="md-nav__link">
         
   
   
@@ -856,8 +1014,6 @@
       
   
   
-    
-  
   
   
     
@@ -870,11 +1026,13 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
         
           
           <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
@@ -895,7 +1053,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
@@ -910,37 +1068,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Trilha de Auditoria
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../governanca/trilha_auditoria/" class="md-nav__link">
         
   
   
@@ -956,59 +1087,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Índice">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Índice
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#principios" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Princípios
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#uso-de-historico" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Uso de histórico
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#valor-para-compliance" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Valor para compliance
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1021,7 +1099,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../matriz_permissoes/" class="md-nav__link">
+      <a href="../../governanca/matriz_permissoes/" class="md-nav__link">
         
   
   
@@ -1305,10 +1383,38 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#principios" class="md-nav__link">
+  <a href="#1-origem-da-retencao" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Princípios
+        1. Origem da retenção
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Origem da retenção">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#regras-de-_salvar_retencoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regras de _salvar_retencoes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-painel-operacional-de-retencoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Painel operacional de retenções
       
     </span>
   </a>
@@ -1316,10 +1422,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#uso-de-historico" class="md-nav__link">
+  <a href="#3-agrupamento-para-recolhimento" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Uso de histórico
+        3. Agrupamento para recolhimento
       
     </span>
   </a>
@@ -1327,10 +1433,60 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#valor-para-compliance" class="md-nav__link">
+  <a href="#4-documentacao-de-recolhimento-dois-trilhos" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Valor para compliance
+        4. Documentação de recolhimento — dois trilhos
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Documentação de recolhimento — dois trilhos">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#trilho-a-documentacao-por-retencao-documentopagamentoimposto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trilho A: Documentação por retenção (DocumentoPagamentoImposto)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trilho-b-anexacao-de-guiacomprovante-ao-processo-de-recolhimento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trilho B: Anexação de guia/comprovante ao processo de recolhimento
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-guard-na-transicao-para-pago" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Guard na transição para PAGO
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#referencias-de-codigo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Referências de código
       
     </span>
   </a>
@@ -1354,22 +1510,136 @@
 
 
 
-<h1 id="trilha-de-auditoria">Trilha de Auditoria<a class="headerlink" href="#trilha-de-auditoria" title="Permanent link">&para;</a></h1>
-<p>No contexto de administração pública, o PaGé prioriza integridade histórica e prestação de contas.</p>
-<h2 id="principios">Princípios<a class="headerlink" href="#principios" title="Permanent link">&para;</a></h2>
+<h1 id="fluxo-retencoes-de-impostos">Fluxo: Retenções de Impostos<a class="headerlink" href="#fluxo-retencoes-de-impostos" title="Permanent link">&para;</a></h1>
+<p>Este documento descreve o ciclo completo de vida de uma <code>RetencaoImposto</code> — desde o registro na nota fiscal até a documentação de recolhimento junto à Receita Federal.</p>
+<hr />
+<h2 id="1-origem-da-retencao">1. Origem da retenção<a class="headerlink" href="#1-origem-da-retencao" title="Permanent link">&para;</a></h2>
+<p>Uma retenção nasce a partir da gestão de documentos fiscais de um processo de pagamento:</p>
+<ol>
+<li>O operador acessa a spoke <strong>"Liquidações e retenções"</strong> no hub do processo (<code>documentos_fiscais</code>).</li>
+<li>Um documento é marcado como fiscal (<code>toggle_documento_fiscal_action</code>), gerando um <code>DocumentoFiscal</code> vinculado.</li>
+<li>Na tela de gestão da nota (<code>documentos_fiscais.html</code>), o operador informa os dados da NF e adiciona linhas de retenção via payload JSON.</li>
+<li>O endpoint <code>salvar_nota_fiscal_action</code> (POST) persiste a nota e chama <code>_salvar_retencoes</code>.</li>
+</ol>
+<h3 id="regras-de-_salvar_retencoes">Regras de <code>_salvar_retencoes</code><a class="headerlink" href="#regras-de-_salvar_retencoes" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Não exclusão de registros de negócio críticos.</li>
-<li>Registro de histórico de alterações em entidades sensíveis.</li>
-<li>Tratamento de exceções por modelos formais (ex.: contingência, devolução).</li>
+<li><strong>Atualização in-place</strong> dos registros existentes, ordenados por <code>id</code>, sem recriar do zero (preserva histórico via <code>simple_history</code>).</li>
+<li><strong>Criação</strong> de novas linhas além da quantidade existente — status <code>"A RETER"</code> atribuído somente nas criações.</li>
+<li><strong>Exclusão</strong> das linhas que excedem o payload enviado.</li>
+<li>Após persistência, recalcula <code>nota.valor_liquido</code> e os totais do processo (<code>_sincronizar_totais_processo_fiscal</code>).</li>
 </ul>
-<h2 id="uso-de-historico">Uso de histórico<a class="headerlink" href="#uso-de-historico" title="Permanent link">&para;</a></h2>
-<p><code>django-simple-history</code> sustenta rastreabilidade de mudanças relevantes, apoiando auditorias internas e externas.</p>
-<h2 id="valor-para-compliance">Valor para compliance<a class="headerlink" href="#valor-para-compliance" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Evidência temporal de decisão e execução.</li>
-<li>Transparência em divergências e correções.</li>
-<li>Redução de risco regulatório e operacional.</li>
-</ul>
+<div class="admonition warning">
+<p class="admonition-title">Guard de pós-pagamento</p>
+<p><code>_status_bloqueia_gestao_fiscal</code> impede qualquer mutação fiscal quando o processo já atingiu o estágio <code>PAGO - EM CONFERÊNCIA</code> ou posterior, exceto se uma contingência estiver ativa.</p>
+</div>
+<hr />
+<h2 id="2-painel-operacional-de-retencoes">2. Painel operacional de retenções<a class="headerlink" href="#2-painel-operacional-de-retencoes" title="Permanent link">&para;</a></h2>
+<p><strong>URL name:</strong> <code>painel_impostos_view</code><br />
+<strong>Permissão:</strong> <code>fiscal.acesso_backoffice</code></p>
+<p>O painel suporta três visões selecionáveis via <code>?visao=</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Visão</th>
+<th>Dataset</th>
+<th>Filtro</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>individual</code></td>
+<td><code>RetencaoImposto</code></td>
+<td><code>RetencaoIndividualFilter</code></td>
+</tr>
+<tr>
+<td><code>nf</code></td>
+<td><code>DocumentoFiscal</code> c/ anotações</td>
+<td><code>RetencaoNotaFilter</code></td>
+</tr>
+<tr>
+<td><code>processo</code></td>
+<td><code>Processo</code> c/ anotações</td>
+<td><code>RetencaoProcessoFilter</code></td>
+</tr>
+</tbody>
+</table>
+<p>Na visão <code>individual</code>, para cada retenção é calculado se possui <code>DocumentoPagamentoImposto</code> completo (relatório + guia + comprovante todos preenchidos).</p>
+<hr />
+<h2 id="3-agrupamento-para-recolhimento">3. Agrupamento para recolhimento<a class="headerlink" href="#3-agrupamento-para-recolhimento" title="Permanent link">&para;</a></h2>
+<p><strong>Action:</strong> <code>agrupar_retencoes_action</code> (POST)</p>
+<p>Fluxo:</p>
+<ol>
+<li>Operador seleciona retenções sem <code>processo_pagamento</code> (flag "Pendente" no painel).</li>
+<li>O sistema cria um novo <code>Processo</code> com:</li>
+<li>credor <strong>"Órgão Arrecadador (A Definir)"</strong>,</li>
+<li>tipo pagamento <strong>IMPOSTOS</strong>,</li>
+<li>status inicial <strong>A PAGAR - PENDENTE AUTORIZAÇÃO</strong>,</li>
+<li>valor = soma dos valores das retenções selecionadas.</li>
+<li>Cada retenção recebe <code>processo_pagamento = novo_processo</code>.</li>
+<li>O operador é redirecionado para o hub do novo processo.</li>
+</ol>
+<p>A partir desse ponto, o processo de recolhimento segue a esteira normal de pagamentos.</p>
+<hr />
+<h2 id="4-documentacao-de-recolhimento-dois-trilhos">4. Documentação de recolhimento — dois trilhos<a class="headerlink" href="#4-documentacao-de-recolhimento-dois-trilhos" title="Permanent link">&para;</a></h2>
+<h3 id="trilho-a-documentacao-por-retencao-documentopagamentoimposto">Trilho A: Documentação por retenção (<code>DocumentoPagamentoImposto</code>)<a class="headerlink" href="#trilho-a-documentacao-por-retencao-documentopagamentoimposto" title="Permanent link">&para;</a></h3>
+<p>Usado para registrar comprovante individual por retenção (relatório + guia + comprovante).</p>
+<ol>
+<li>Operador seleciona retenções → <code>selecionar_retencoes_documentacao_action</code> valida IDs e redireciona para a spoke com <code>?ids=1,2,3</code>.</li>
+<li>A spoke <code>registrar_documentos_pagamento_view</code> (GET) renderiza a lista de retenções para revisão.</li>
+<li>Operador pode remover retenções da lista (<code>remover_retencao_documentacao_action</code>) sem alterar banco — apenas ajusta a query string.</li>
+<li>Ao submeter, <code>registrar_documentos_pagamento_action</code> (POST) chama <code>criar_documentos_pagamento_impostos</code>:</li>
+<li>idempotente via <code>get_or_create(retencao, codigo_imposto, competencia)</code>;</li>
+<li>cria um <code>DocumentoPagamentoImposto</code> por retenção elegível;</li>
+<li>retenções que já possuem documento são ignoradas (reportadas ao operador).</li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Fluxo stateless</p>
+<p>Os IDs das retenções trafegam via query param <code>?ids=</code> (GET) e <code>&lt;input type="hidden" name="retencao_ids"&gt;</code> (POST). Não há dependência de sessão.</p>
+</div>
+<h3 id="trilho-b-anexacao-de-guiacomprovante-ao-processo-de-recolhimento">Trilho B: Anexação de guia/comprovante ao processo de recolhimento<a class="headerlink" href="#trilho-b-anexacao-de-guiacomprovante-ao-processo-de-recolhimento" title="Permanent link">&para;</a></h3>
+<p>Usado para anexar os documentos de competência mensal diretamente ao processo DARF.</p>
+<ol>
+<li><code>anexar_documentos_retencoes_action</code> (POST) recebe arquivos de guia e comprovante + mês/ano de referência.</li>
+<li>Filtra retenções pelo mês/ano (<code>competencia__month</code>, <code>competencia__year</code>) já agrupadas.</li>
+<li>Para cada processo de recolhimento distinto envolvido, chama <code>anexar_guia_comprovante_relatorio_em_processos</code>:</li>
+<li>Gera relatório CSV consolidado por código de imposto (<code>gerar_relatorio_retencoes_mensal_csv</code>).</li>
+<li>Cria três <code>DocumentoProcesso</code> (guia, comprovante, relatório) com ordens 97–99.</li>
+</ol>
+<hr />
+<h2 id="5-guard-na-transicao-para-pago">5. Guard na transição para PAGO<a class="headerlink" href="#5-guard-na-transicao-para-pago" title="Permanent link">&para;</a></h2>
+<p>Na etapa de comprovantes (<code>vincular_comprovantes_action</code>), ao avançar o processo para <code>PAGO - EM CONFERÊNCIA</code>, processos do tipo IMPOSTOS passam por <code>verificar_completude_documentos_impostos</code>, que retorna os IDs de retenções que ainda não possuem <code>DocumentoPagamentoImposto</code> completo. Essa verificação funciona como turnpike para o recolhimento.</p>
+<hr />
+<h2 id="referencias-de-codigo">Referências de código<a class="headerlink" href="#referencias-de-codigo" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>Localização</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Criação/edição de retenção</td>
+<td><code>pagamentos/views/pre_payment/cadastro/actions.py</code></td>
+</tr>
+<tr>
+<td>Painel operacional (GET)</td>
+<td><code>fiscal/views/impostos/panels.py</code></td>
+</tr>
+<tr>
+<td>Ações de agrupamento/documentação</td>
+<td><code>fiscal/views/impostos/actions.py</code></td>
+</tr>
+<tr>
+<td>Serviços de documentação fiscal</td>
+<td><code>fiscal/services/impostos.py</code></td>
+</tr>
+<tr>
+<td>Modelo <code>RetencaoImposto</code></td>
+<td><code>fiscal/models.py</code></td>
+</tr>
+</tbody>
+</table>
 
 
 

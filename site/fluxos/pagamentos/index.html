@@ -11,10 +11,10 @@
       
       
       
-        <link rel="prev" href="../../fluxos/suprimento_fundos/">
+        <link rel="prev" href="../../modulos/modulo_fiscal/">
       
       
-        <link rel="next" href="../matriz_permissoes/">
+        <link rel="next" href="../retencoes/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Trilha de Auditoria - Wiki PaGé</title>
+        <title>Pagamentos - Wiki PaGé</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#trilha-de-auditoria" class="md-skip">
+        <a href="#fluxo-pagamentos" class="md-skip">
           Pular para conteúdo
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Trilha de Auditoria
+              Pagamentos
             
           </span>
         </div>
@@ -683,8 +683,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -695,13 +697,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
@@ -722,7 +722,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -737,10 +737,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../fluxos/pagamentos/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pagamentos
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -756,6 +783,197 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-maquina-de-estados-canonica" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Máquina de estados canônica
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Máquina de estados canônica">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#caminhos-de-excecao-desvios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caminhos de exceção (desvios)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-criacao-do-processo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Criação do processo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-hub-de-edicao-modular" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Hub de edição modular
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-etapa-de-empenho" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Etapa de empenho
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-liquidacao-e-ateste" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Liquidação e ateste
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-contas-a-pagar-e-envio-para-autorizacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Contas a pagar e envio para autorização
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-autorizacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Autorização
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-lancamento-bancario" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Lançamento bancário
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-upload-de-comprovantes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Upload de comprovantes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-conferencia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Conferência
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-contabilizacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Contabilização
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-conselho-fiscal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Conselho fiscal
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-arquivamento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Arquivamento
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#referencias-de-codigo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Referências de código
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -768,7 +986,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../fluxos/retencoes/" class="md-nav__link">
+      <a href="../retencoes/" class="md-nav__link">
         
   
   
@@ -796,7 +1014,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../fluxos/diarias/" class="md-nav__link">
+      <a href="../diarias/" class="md-nav__link">
         
   
   
@@ -824,7 +1042,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../fluxos/suprimento_fundos/" class="md-nav__link">
+      <a href="../suprimento_fundos/" class="md-nav__link">
         
   
   
@@ -856,8 +1074,6 @@
       
   
   
-    
-  
   
   
     
@@ -870,11 +1086,13 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
         
           
           <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
@@ -895,7 +1113,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
@@ -910,37 +1128,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Trilha de Auditoria
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../governanca/trilha_auditoria/" class="md-nav__link">
         
   
   
@@ -956,59 +1147,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Índice">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Índice
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#principios" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Princípios
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#uso-de-historico" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Uso de histórico
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#valor-para-compliance" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Valor para compliance
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1021,7 +1159,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../matriz_permissoes/" class="md-nav__link">
+      <a href="../../governanca/matriz_permissoes/" class="md-nav__link">
         
   
   
@@ -1305,10 +1443,38 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#principios" class="md-nav__link">
+  <a href="#1-maquina-de-estados-canonica" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Princípios
+        1. Máquina de estados canônica
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Máquina de estados canônica">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#caminhos-de-excecao-desvios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caminhos de exceção (desvios)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-criacao-do-processo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Criação do processo
       
     </span>
   </a>
@@ -1316,10 +1482,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#uso-de-historico" class="md-nav__link">
+  <a href="#3-hub-de-edicao-modular" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Uso de histórico
+        3. Hub de edição modular
       
     </span>
   </a>
@@ -1327,10 +1493,120 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#valor-para-compliance" class="md-nav__link">
+  <a href="#4-etapa-de-empenho" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Valor para compliance
+        4. Etapa de empenho
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-liquidacao-e-ateste" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Liquidação e ateste
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-contas-a-pagar-e-envio-para-autorizacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Contas a pagar e envio para autorização
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-autorizacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Autorização
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-lancamento-bancario" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Lançamento bancário
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-upload-de-comprovantes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Upload de comprovantes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-conferencia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Conferência
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-contabilizacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Contabilização
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-conselho-fiscal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Conselho fiscal
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-arquivamento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Arquivamento
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#referencias-de-codigo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Referências de código
       
     </span>
   </a>
@@ -1354,22 +1630,240 @@
 
 
 
-<h1 id="trilha-de-auditoria">Trilha de Auditoria<a class="headerlink" href="#trilha-de-auditoria" title="Permanent link">&para;</a></h1>
-<p>No contexto de administração pública, o PaGé prioriza integridade histórica e prestação de contas.</p>
-<h2 id="principios">Princípios<a class="headerlink" href="#principios" title="Permanent link">&para;</a></h2>
+<h1 id="fluxo-pagamentos">Fluxo: Pagamentos<a class="headerlink" href="#fluxo-pagamentos" title="Permanent link">&para;</a></h1>
+<p>Este documento descreve a esteira completa de um processo de pagamento no PaGé — da criação até o arquivamento — incluindo as filas operacionais, transitions de status e pontos de controle (turnpikes).</p>
+<hr />
+<h2 id="1-maquina-de-estados-canonica">1. Máquina de estados canônica<a class="headerlink" href="#1-maquina-de-estados-canonica" title="Permanent link">&para;</a></h2>
+<p>Os status são constantes definidas em <code>ProcessoStatus</code> (<code>pagamentos/domain_models/processos.py</code>).</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; A_EMPENHAR : Processo criado (com trigger)
+    [*] --&gt; A_PAGAR_PENDENTE_AUTORIZACAO : Processo criado (sem trigger)
+
+    A_EMPENHAR --&gt; AGUARDANDO_LIQUIDACAO : Registro do empenho SISCAC
+    AGUARDANDO_LIQUIDACAO --&gt; A_PAGAR_PENDENTE_AUTORIZACAO : Todas NFs atestadas
+    A_PAGAR_PENDENTE_AUTORIZACAO --&gt; A_PAGAR_ENVIADO_PARA_AUTORIZACAO : Envio para autorização
+    A_PAGAR_ENVIADO_PARA_AUTORIZACAO --&gt; A_PAGAR_AUTORIZADO : Aprovação do ordenador
+    A_PAGAR_AUTORIZADO --&gt; LANCADO_AGUARDANDO_COMPROVANTE : Marcação como lançado
+    LANCADO_AGUARDANDO_COMPROVANTE --&gt; PAGO_EM_CONFERENCIA : Upload do comprovante bancário
+    PAGO_EM_CONFERENCIA --&gt; PAGO_A_CONTABILIZAR : Revisão pelo operador
+    PAGO_A_CONTABILIZAR --&gt; CONTABILIZADO_PARA_CONSELHO_FISCAL : Aprovação pela Contabilidade
+    CONTABILIZADO_PARA_CONSELHO_FISCAL --&gt; APROVADO_PENDENTE_ARQUIVAMENTO : Aprovação em reunião do Conselho
+    APROVADO_PENDENTE_ARQUIVAMENTO --&gt; ARQUIVADO : Arquivamento definitivo
+    ARQUIVADO --&gt; [*]
+
+    A_PAGAR_ENVIADO_PARA_AUTORIZACAO --&gt; AGUARDANDO_LIQUIDACAO : Autorização recusada
+    PAGO_A_CONTABILIZAR --&gt; PAGO_EM_CONFERENCIA : Contabilização recusada
+    CONTABILIZADO_PARA_CONSELHO_FISCAL --&gt; PAGO_A_CONTABILIZAR : Conselho recusado
+    LANCADO_AGUARDANDO_COMPROVANTE --&gt; A_PAGAR_AUTORIZADO : Desfazer lançamento</code></pre>
+<h3 id="caminhos-de-excecao-desvios">Caminhos de exceção (desvios)<a class="headerlink" href="#caminhos-de-excecao-desvios" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Etapa de recusa</th>
+<th>Status de devolução</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Autorização recusada</td>
+<td><code>AGUARDANDO LIQUIDAÇÃO</code></td>
+</tr>
+<tr>
+<td>Contabilização recusada</td>
+<td><code>PAGO - EM CONFERÊNCIA</code></td>
+</tr>
+<tr>
+<td>Conselho recusado</td>
+<td><code>PAGO - A CONTABILIZAR</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-criacao-do-processo">2. Criação do processo<a class="headerlink" href="#2-criacao-do-processo" title="Permanent link">&para;</a></h2>
+<p><strong>View:</strong> <code>add_process_view</code> / <strong>Action:</strong> <code>add_process_action</code><br />
+<strong>Permissão:</strong> <code>pagamentos.acesso_backoffice</code></p>
 <ul>
-<li>Não exclusão de registros de negócio críticos.</li>
-<li>Registro de histórico de alterações em entidades sensíveis.</li>
-<li>Tratamento de exceções por modelos formais (ex.: contingência, devolução).</li>
+<li>O operador preenche a capa: credor, tipo de pagamento, valores, datas.</li>
+<li>O campo <code>trigger_a_empenhar</code> define o status inicial:</li>
+<li>Com trigger ✓ → <code>A EMPENHAR</code></li>
+<li>Sem trigger → <code>A PAGAR - PENDENTE AUTORIZAÇÃO</code></li>
+<li>Processo criado via <code>_salvar_processo_completo</code> dentro de transação atômica.</li>
 </ul>
-<h2 id="uso-de-historico">Uso de histórico<a class="headerlink" href="#uso-de-historico" title="Permanent link">&para;</a></h2>
-<p><code>django-simple-history</code> sustenta rastreabilidade de mudanças relevantes, apoiando auditorias internas e externas.</p>
-<h2 id="valor-para-compliance">Valor para compliance<a class="headerlink" href="#valor-para-compliance" title="Permanent link">&para;</a></h2>
+<hr />
+<h2 id="3-hub-de-edicao-modular">3. Hub de edição modular<a class="headerlink" href="#3-hub-de-edicao-modular" title="Permanent link">&para;</a></h2>
+<p><strong>View:</strong> <code>editar_processo</code> (GET)<br />
+<strong>Template:</strong> <code>pagamentos/editar_processo_hub.html</code></p>
+<p>O hub é um <strong>Command Center somente-leitura</strong> com cartões de acesso às spokes:</p>
 <ul>
-<li>Evidência temporal de decisão e execução.</li>
-<li>Transparência em divergências e correções.</li>
-<li>Redução de risco regulatório e operacional.</li>
+<li><strong>Capa</strong> — dados principais do processo.</li>
+<li><strong>Documentos</strong> — anexos e documentos orçamentários.</li>
+<li><strong>Pendências</strong> — pendências administrativas.</li>
+<li><strong>Liquidações e retenções</strong> — notas fiscais, ateste e dados fiscais.</li>
 </ul>
+<p>Exibe peek tables paginadas de documentos recentes, liquidações e pendências.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Retenções não possuem card/tabela própria no hub; estão consolidadas sob "Liquidações e retenções" conforme a spoke <code>documentos_fiscais</code>.</p>
+</div>
+<hr />
+<h2 id="4-etapa-de-empenho">4. Etapa de empenho<a class="headerlink" href="#4-etapa-de-empenho" title="Permanent link">&para;</a></h2>
+<p><strong>View:</strong> <code>a_empenhar_view</code><br />
+<strong>Permissão:</strong> <code>pagamentos.pode_operar_contas_pagar</code></p>
+<ul>
+<li>Lista processos no status <code>A EMPENHAR</code> com filtros e ordenação.</li>
+<li>O operador registra o empenho (número, data, valor) via importação de PDF SISCAC ou manualmente.</li>
+<li>Turnpike de saída: exige <strong>Documento Orçamentário</strong> (exceto extra-orçamentários).</li>
+<li>Transição: <code>A EMPENHAR → AGUARDANDO LIQUIDAÇÃO</code>.</li>
+</ul>
+<hr />
+<h2 id="5-liquidacao-e-ateste">5. Liquidação e ateste<a class="headerlink" href="#5-liquidacao-e-ateste" title="Permanent link">&para;</a></h2>
+<p><strong>View:</strong> <code>painel_liquidacoes_view</code><br />
+<strong>Permissão:</strong> <code>pagamentos.acesso_backoffice</code></p>
+<ul>
+<li>O Fiscal de Contrato visualiza somente suas NFs; gestores/ordenadores veem todas.</li>
+<li>Spoke <code>documentos_fiscais_view</code>: associa documento à nota fiscal, informa dados da NF e registra retenções.</li>
+<li><code>alternar_ateste_nota_action</code>: alterna <code>nota.atestada</code>; cria/remove pendência de ateste de liquidação.</li>
+<li>Transição: <code>AGUARDANDO LIQUIDAÇÃO → A PAGAR - PENDENTE AUTORIZAÇÃO</code> (via <code>avancar_para_pagamento_action</code>).</li>
+<li>Turnpike: todas as NFs do processo devem estar atestadas e valores devem ser consistentes.</li>
+</ul>
+<hr />
+<h2 id="6-contas-a-pagar-e-envio-para-autorizacao">6. Contas a pagar e envio para autorização<a class="headerlink" href="#6-contas-a-pagar-e-envio-para-autorizacao" title="Permanent link">&para;</a></h2>
+<p><strong>View:</strong> <code>contas_a_pagar</code><br />
+<strong>Permissão:</strong> <code>pagamentos.pode_operar_contas_pagar</code></p>
+<ul>
+<li>Fila com filtros facetados (data, forma de pagamento, status, conta).</li>
+<li>Colunas anotadas: <code>has_pendencias</code>, <code>has_retencoes</code>.</li>
+<li>Ação de envio em lote: <code>A PAGAR - PENDENTE AUTORIZAÇÃO → A PAGAR - ENVIADO PARA AUTORIZAÇÃO</code>.</li>
+</ul>
+<hr />
+<h2 id="7-autorizacao">7. Autorização<a class="headerlink" href="#7-autorizacao" title="Permanent link">&para;</a></h2>
+<p><strong>View:</strong> <code>painel_autorizacao_view</code><br />
+<strong>Permissão:</strong> <code>pagamentos.pode_autorizar_pagamento</code></p>
+<p>Duas filas simultâneas: pendentes de autorização e já autorizados.</p>
+<ul>
+<li><strong>Autorizar em lote:</strong> <code>A PAGAR - ENVIADO PARA AUTORIZAÇÃO → A PAGAR - AUTORIZADO</code>.</li>
+<li><strong>Recusar</strong> (por processo): devolve para <code>AGUARDANDO LIQUIDAÇÃO</code> com pendência registrada.</li>
+</ul>
+<hr />
+<h2 id="8-lancamento-bancario">8. Lançamento bancário<a class="headerlink" href="#8-lancamento-bancario" title="Permanent link">&para;</a></h2>
+<p><strong>Views:</strong> <code>lancamento_bancario</code> / <code>marcar_como_lancado_action</code><br />
+<strong>Permissão:</strong> <code>pagamentos.pode_operar_contas_pagar</code></p>
+<ol>
+<li>Operador seleciona processos autorizados → IDs armazenados em <strong>sessão</strong> (<code>processos_lancamento</code>).</li>
+<li>Painel exibe dois grupos: <em>a pagar</em> e <em>já lançados</em>, com totais consolidados por forma de pagamento.</li>
+<li>Cada processo exibe instruções de pagamento conforme forma (código de barras, PIX, TED, remessa).</li>
+<li>Marcar como lançado: <code>A PAGAR - AUTORIZADO → LANÇADO - AGUARDANDO COMPROVANTE</code>.</li>
+<li>Desfazer lançamento retorna para <code>A PAGAR - AUTORIZADO</code>.</li>
+</ol>
+<hr />
+<h2 id="9-upload-de-comprovantes">9. Upload de comprovantes<a class="headerlink" href="#9-upload-de-comprovantes" title="Permanent link">&para;</a></h2>
+<p><strong>View:</strong> <code>painel_comprovantes_view</code> / <strong>Action:</strong> <code>vincular_comprovantes_action</code> (JSON API)<br />
+<strong>Permissão:</strong> <code>pagamentos.pode_operar_contas_pagar</code></p>
+<ol>
+<li>Operador faz upload dos arquivos de comprovante (via interface interativa).</li>
+<li>Para cada comprovante, sistema cria:</li>
+<li><code>DocumentoProcesso</code> (tipo "Comprovante de Pagamento", ordem 99).</li>
+<li><code>ComprovanteDePagamento</code> com metadados (credor, valor pago, data, número).</li>
+<li>Processo avança para <code>PAGO - EM CONFERÊNCIA</code>.</li>
+<li><code>data_pagamento</code> do processo é atualizado.</li>
+<li>Retenções com <code>codigo.regra_competencia == "pagamento"</code> têm sua competência recalculada.</li>
+</ol>
+<hr />
+<h2 id="10-conferencia">10. Conferência<a class="headerlink" href="#10-conferencia" title="Permanent link">&para;</a></h2>
+<p><strong>Views:</strong> <code>painel_conferencia_view</code> / <code>conferencia_processo_view</code><br />
+<strong>Permissão:</strong> <code>pagamentos.pode_operar_contas_pagar</code></p>
+<ul>
+<li>Fila de processos <code>PAGO - EM CONFERÊNCIA</code> com filtros: com pendência, com retenção, ambos, sem pendências.</li>
+<li>Revisão detalhada em fila de sessão (<code>conferencia_queue</code>).</li>
+<li>Aprovação: <code>PAGO - EM CONFERÊNCIA → PAGO - A CONTABILIZAR</code>.</li>
+<li>Permite salvar ajustes durante a revisão.</li>
+</ul>
+<hr />
+<h2 id="11-contabilizacao">11. Contabilização<a class="headerlink" href="#11-contabilizacao" title="Permanent link">&para;</a></h2>
+<p><strong>Views:</strong> <code>painel_contabilizacao_view</code> / <code>contabilizacao_processo_view</code><br />
+<strong>Permissão:</strong> <code>pagamentos.pode_contabilizar</code></p>
+<ul>
+<li>Revisão em fila de sessão (<code>contabilizacao_queue</code>).</li>
+<li>Aprovação: <code>PAGO - A CONTABILIZAR → CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL</code>.</li>
+<li>Recusa: devolve para <code>PAGO - EM CONFERÊNCIA</code>.</li>
+</ul>
+<hr />
+<h2 id="12-conselho-fiscal">12. Conselho fiscal<a class="headerlink" href="#12-conselho-fiscal" title="Permanent link">&para;</a></h2>
+<p><strong>Views:</strong> <code>painel_conselho_view</code> / <code>analise_reuniao_view</code> / <code>conselho_processo_view</code><br />
+<strong>Permissão:</strong> <code>pagamentos.pode_auditar_conselho</code></p>
+<ol>
+<li>Criação de <code>ReuniaoConselho</code> (número, trimestre, data).</li>
+<li>Montagem de pauta: associar processos <code>CONTABILIZADO...</code> à reunião.</li>
+<li>Iniciar análise coloca reunião em status <code>EM_ANALISE</code> e abre fila de sessão (<code>conselho_queue</code>).</li>
+<li>Aprovação: <code>CONTABILIZADO... → APROVADO - PENDENTE ARQUIVAMENTO</code>.</li>
+<li>Recusa: devolve para <code>PAGO - A CONTABILIZAR</code>.</li>
+<li>Processo somente aceito se vinculado a reunião ativa.</li>
+</ol>
+<hr />
+<h2 id="13-arquivamento">13. Arquivamento<a class="headerlink" href="#13-arquivamento" title="Permanent link">&para;</a></h2>
+<p><strong>Views:</strong> <code>painel_arquivamento_view</code> / <code>arquivar_processo_action</code><br />
+<strong>Permissão:</strong> <code>pagamentos.pode_arquivar</code></p>
+<ul>
+<li>Exibe pendentes (<code>APROVADO - PENDENTE ARQUIVAMENTO</code>) e histórico com filtro.</li>
+<li>Arquivamento definitivo: <code>_executar_arquivamento_definitivo</code> → <code>ARQUIVADO</code>.</li>
+<li>Guard: processo sem documentos gera <code>ArquivamentoSemDocumentosError</code>.</li>
+</ul>
+<hr />
+<h2 id="referencias-de-codigo">Referências de código<a class="headerlink" href="#referencias-de-codigo" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Etapa</th>
+<th>Localização</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Criação / hub</td>
+<td><code>pagamentos/views/pre_payment/cadastro/</code></td>
+</tr>
+<tr>
+<td>Empenho</td>
+<td><code>pagamentos/views/pre_payment/empenho/</code></td>
+</tr>
+<tr>
+<td>Liquidação</td>
+<td><code>pagamentos/views/pre_payment/liquidacoes/</code></td>
+</tr>
+<tr>
+<td>Contas a pagar / autorização</td>
+<td><code>pagamentos/views/payment/</code></td>
+</tr>
+<tr>
+<td>Comprovantes</td>
+<td><code>pagamentos/views/payment/comprovantes/</code></td>
+</tr>
+<tr>
+<td>Conferência</td>
+<td><code>pagamentos/views/post_payment/conferencia/</code></td>
+</tr>
+<tr>
+<td>Contabilização</td>
+<td><code>pagamentos/views/post_payment/contabilizacao/</code></td>
+</tr>
+<tr>
+<td>Conselho</td>
+<td><code>pagamentos/views/post_payment/conselho/</code> e <code>reunioes/</code></td>
+</tr>
+<tr>
+<td>Arquivamento</td>
+<td><code>pagamentos/views/post_payment/arquivamento/</code></td>
+</tr>
+<tr>
+<td>Helpers de lote / fila</td>
+<td><code>pagamentos/views/helpers/payment_builders.py</code></td>
+</tr>
+<tr>
+<td>Domínio / status</td>
+<td><code>pagamentos/domain_models/processos.py</code></td>
+</tr>
+</tbody>
+</table>
 
 
 

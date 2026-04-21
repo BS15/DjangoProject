@@ -711,7 +711,7 @@
   <span class="md-ellipsis">
     
   
-    Segurança e Governança
+    Fluxos Operacionais
   
 
     
@@ -724,6 +724,179 @@
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Fluxos Operacionais
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/pagamentos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pagamentos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/retencoes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retenções
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/diarias/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diárias
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/suprimento_fundos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Suprimento de Fundos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segurança e Governança
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -818,10 +991,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
             
   
   
@@ -839,8 +1012,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_6">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3586,7 +3759,7 @@
 <td><code>add_diaria_action</code></td>
 <td><code>verbas_indenizatorias/views/diarias/actions.py</code></td>
 <td><code>add_diaria_action</code> (<code>/verbas/diarias/nova/action/</code>)</td>
-<td><code>fluxo.pode_criar_diarias</code></td>
+<td><code>verbas_indenizatorias.pode_criar_diarias</code></td>
 <td><code>POST</code></td>
 <td>dados de diária</td>
 <td>validações de beneficiário e período</td>
@@ -3599,7 +3772,7 @@
 <td><code>registrar_comprovante_action</code></td>
 <td><code>verbas_indenizatorias/views/diarias/actions.py</code></td>
 <td><code>registrar_comprovante_action</code> (<code>/verbas/diarias/&lt;int:pk&gt;/comprovantes/registrar/</code>)</td>
-<td><code>fluxo.pode_gerenciar_diarias</code></td>
+<td><code>verbas_indenizatorias.pode_gerenciar_diarias</code></td>
 <td><code>POST</code></td>
 <td>comprovante e diária alvo</td>
 <td>validação de arquivo e estado</td>
@@ -3612,7 +3785,7 @@
 <td><code>cancelar_diaria_action</code></td>
 <td><code>verbas_indenizatorias/views/diarias/actions.py</code></td>
 <td><code>cancelar_diaria_action</code> (<code>/verbas/diarias/&lt;int:pk&gt;/cancelar/</code>)</td>
-<td><code>fluxo.pode_gerenciar_diarias</code></td>
+<td><code>verbas_indenizatorias.pode_gerenciar_diarias</code></td>
 <td><code>POST</code></td>
 <td>diária alvo</td>
 <td>validação de cancelamento permitido</td>
@@ -3625,7 +3798,7 @@
 <td><code>add_reembolso_action</code></td>
 <td><code>verbas_indenizatorias/views/reembolsos/actions.py</code></td>
 <td><code>add_reembolso_action</code> (<code>/verbas/reembolsos/novo/action/</code>)</td>
-<td><code>fluxo.pode_gerenciar_reembolsos</code></td>
+<td><code>verbas_indenizatorias.pode_gerenciar_reembolsos</code></td>
 <td><code>POST</code></td>
 <td>dados de reembolso</td>
 <td>validações de campos e valores</td>
@@ -3638,7 +3811,7 @@
 <td><code>solicitar_autorizacao_reembolso_action</code></td>
 <td><code>verbas_indenizatorias/views/reembolsos/actions.py</code></td>
 <td><code>solicitar_autorizacao_reembolso_action</code> (<code>/verbas/reembolsos/&lt;int:pk&gt;/solicitar-autorizacao/</code>)</td>
-<td><code>fluxo.pode_gerenciar_reembolsos</code></td>
+<td><code>verbas_indenizatorias.pode_gerenciar_reembolsos</code></td>
 <td><code>POST</code></td>
 <td>reembolso alvo</td>
 <td>validações de elegibilidade</td>
@@ -3651,7 +3824,7 @@
 <td><code>autorizar_reembolso_action</code></td>
 <td><code>verbas_indenizatorias/views/reembolsos/actions.py</code></td>
 <td><code>autorizar_reembolso_action</code> (<code>/verbas/reembolsos/&lt;int:pk&gt;/autorizar/</code>)</td>
-<td><code>fluxo.pode_gerenciar_reembolsos</code></td>
+<td><code>verbas_indenizatorias.pode_gerenciar_reembolsos</code></td>
 <td><code>POST</code></td>
 <td>reembolso alvo</td>
 <td>validações de autorização</td>
@@ -3664,7 +3837,7 @@
 <td><code>cancelar_reembolso_action</code></td>
 <td><code>verbas_indenizatorias/views/reembolsos/actions.py</code></td>
 <td><code>cancelar_reembolso_action</code> (<code>/verbas/reembolsos/&lt;int:pk&gt;/cancelar/</code>)</td>
-<td><code>fluxo.pode_gerenciar_reembolsos</code></td>
+<td><code>verbas_indenizatorias.pode_gerenciar_reembolsos</code></td>
 <td><code>POST</code></td>
 <td>reembolso alvo</td>
 <td>validações de cancelamento</td>
@@ -3677,7 +3850,7 @@
 <td><code>registrar_comprovante_reembolso_action</code></td>
 <td><code>verbas_indenizatorias/views/reembolsos/actions.py</code></td>
 <td><code>registrar_comprovante_reembolso_action</code> (<code>/verbas/reembolsos/&lt;int:pk&gt;/comprovantes/registrar/</code>)</td>
-<td><code>fluxo.pode_gerenciar_reembolsos</code></td>
+<td><code>verbas_indenizatorias.pode_gerenciar_reembolsos</code></td>
 <td><code>POST</code></td>
 <td>comprovante e reembolso alvo</td>
 <td>validação de arquivo e elegibilidade</td>
@@ -3742,7 +3915,7 @@
 <td><code>add_auxilio_action</code></td>
 <td><code>verbas_indenizatorias/views/auxilios/actions.py</code></td>
 <td><code>add_auxilio_action</code> (<code>/verbas/auxilios/novo/action/</code>)</td>
-<td><code>fluxo.pode_gerenciar_auxilios</code></td>
+<td><code>verbas_indenizatorias.pode_gerenciar_auxilios</code></td>
 <td><code>POST</code></td>
 <td>dados de auxílio</td>
 <td>validações de elegibilidade</td>
@@ -3755,7 +3928,7 @@
 <td><code>solicitar_autorizacao_auxilio_action</code></td>
 <td><code>verbas_indenizatorias/views/auxilios/actions.py</code></td>
 <td><code>solicitar_autorizacao_auxilio_action</code> (<code>/verbas/auxilios/&lt;int:pk&gt;/solicitar-autorizacao/</code>)</td>
-<td><code>fluxo.pode_gerenciar_auxilios</code></td>
+<td><code>verbas_indenizatorias.pode_gerenciar_auxilios</code></td>
 <td><code>POST</code></td>
 <td>auxílio alvo</td>
 <td>validações de elegibilidade</td>
@@ -3768,7 +3941,7 @@
 <td><code>autorizar_auxilio_action</code></td>
 <td><code>verbas_indenizatorias/views/auxilios/actions.py</code></td>
 <td><code>autorizar_auxilio_action</code> (<code>/verbas/auxilios/&lt;int:pk&gt;/autorizar/</code>)</td>
-<td><code>fluxo.pode_gerenciar_auxilios</code></td>
+<td><code>verbas_indenizatorias.pode_gerenciar_auxilios</code></td>
 <td><code>POST</code></td>
 <td>auxílio alvo</td>
 <td>validações de autorização</td>
@@ -3781,7 +3954,7 @@
 <td><code>cancelar_auxilio_action</code></td>
 <td><code>verbas_indenizatorias/views/auxilios/actions.py</code></td>
 <td><code>cancelar_auxilio_action</code> (<code>/verbas/auxilios/&lt;int:pk&gt;/cancelar/</code>)</td>
-<td><code>fluxo.pode_gerenciar_auxilios</code></td>
+<td><code>verbas_indenizatorias.pode_gerenciar_auxilios</code></td>
 <td><code>POST</code></td>
 <td>auxílio alvo</td>
 <td>validações de cancelamento</td>
@@ -4944,6 +5117,10 @@
     
     
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
+      
+        <script src="../../javascripts/mermaid-init.js"></script>
       
     
   </body>

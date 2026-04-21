@@ -683,6 +683,179 @@
       
   
   
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fluxos Operacionais
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Fluxos Operacionais
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/pagamentos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pagamentos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/retencoes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retenções
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/diarias/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diárias
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/suprimento_fundos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Suprimento de Fundos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -701,10 +874,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
             
   
   
@@ -722,8 +895,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -970,10 +1143,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
             
   
   
@@ -991,8 +1164,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1441,6 +1614,7 @@
 </tbody>
 </table>
 <h3 id="dominio-pagamentos">Domínio Pagamentos<a class="headerlink" href="#dominio-pagamentos" title="Permanent link">&para;</a></h3>
+<p>Observação técnica: o workflow financeiro principal usa codenames <code>fluxo.*</code> porque as permissões canônicas do processo estão declaradas no modelo de domínio financeiro com <code>app_label</code> <code>fluxo</code>, embora o código-fonte resida no pacote <code>pagamentos/</code>. O subdomínio de credores continua usando <code>pagamentos.acesso_backoffice</code>.</p>
 <table>
 <thead>
 <tr>
@@ -1452,13 +1626,56 @@
 </thead>
 <tbody>
 <tr>
-<td>Gestão operacional de processos financeiros, ciclo de pagamento e documentos processuais</td>
-<td><code>pagamentos.acesso_backoffice</code></td>
-<td>Operador de Pagamentos</td>
-<td>Alteração indevida de processos financeiros, status de pagamento e anexos críticos sem competência; retorna 403 (não redireciona para login).</td>
+<td>Cadastro e edição geral de processos, documentos, pendências, devoluções e abertura de contingências</td>
+<td><code>fluxo.acesso_backoffice</code></td>
+<td>Operador Financeiro Backoffice</td>
+<td>Alteração indevida de dados processuais, anexos e exceções do fluxo sem competência operacional; retorna 403 (não redireciona para login).</td>
+</tr>
+<tr>
+<td>Empenho, avanço para pagamento, contas a pagar, lançamento bancário, conferência, sync SISCAC e APIs operacionais de comprovantes</td>
+<td><code>fluxo.pode_operar_contas_pagar</code></td>
+<td>Funcionário(a) Contas a Pagar</td>
+<td>Movimentação indevida do processo entre etapas críticas de pagamento, conciliação externa ou tratamento de comprovantes sem segregação de função; retorna 403 (não redireciona para login).</td>
+</tr>
+<tr>
+<td>Ateste de notas fiscais na etapa de liquidação</td>
+<td><code>fluxo.pode_atestar_liquidacao</code></td>
+<td>Fiscal de Contrato</td>
+<td>Liquidação documental sem validação do fiscal responsável, com risco de pagamento indevido; retorna 403 (não redireciona para login).</td>
+</tr>
+<tr>
+<td>Autorização e recusa de pagamentos</td>
+<td><code>fluxo.pode_autorizar_pagamento</code></td>
+<td>Ordenador(a) de Despesa</td>
+<td>Liberação ou bloqueio indevido de despesa sem autoridade formal de ordenação; retorna 403 (não redireciona para login).</td>
+</tr>
+<tr>
+<td>Aprovação de contingências na etapa de supervisão/gerência</td>
+<td><code>fluxo.pode_aprovar_contingencia_supervisor</code></td>
+<td>Supervisor/Gerência de Contas a Pagar</td>
+<td>Aprovação excepcional de alteração processual sem revisão hierárquica adequada; retorna 403 (não redireciona para login).</td>
+</tr>
+<tr>
+<td>Contabilização e recusa contábil de processos pagos</td>
+<td><code>fluxo.pode_contabilizar</code></td>
+<td>Contador(a)</td>
+<td>Registro contábil indevido ou devolução incorreta à conferência sem competência técnica; retorna 403 (não redireciona para login).</td>
+</tr>
+<tr>
+<td>Deliberação do Conselho Fiscal, gestão de reuniões e painel consolidado de auditoria</td>
+<td><code>fluxo.pode_auditar_conselho</code></td>
+<td>Conselheiro(a) Fiscal</td>
+<td>Aprovação final, recusa em conselho ou acesso ampliado à trilha de auditoria sem competência institucional; retorna 403 (não redireciona para login).</td>
+</tr>
+<tr>
+<td>Arquivamento definitivo do processo</td>
+<td><code>fluxo.pode_arquivar</code></td>
+<td>Operador de Arquivamento Financeiro</td>
+<td>Encerramento e consolidação definitiva do processo sem verificação formal de completude documental; retorna 403 (não redireciona para login).</td>
 </tr>
 </tbody>
 </table>
+<p>Observação de revisão: o endpoint auxiliar de upload em <a href="pagamentos/views/pre_payment/cadastro/apis.py">pagamentos/views/pre_payment/cadastro/apis.py</a> foi alinhado para <code>fluxo.pode_operar_contas_pagar</code>, eliminando a referência ao codename não canônico <code>fluxo.pode_editar_processos</code>.</p>
 <h3 id="dominio-credores">Domínio Credores<a class="headerlink" href="#dominio-credores" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -1473,7 +1690,7 @@
 <tr>
 <td>Cadastro, atualização e gestão cadastral de credores</td>
 <td><code>pagamentos.acesso_backoffice</code></td>
-<td>Operador de Cadastro Financeiro</td>
+<td>Operador Financeiro Backoffice</td>
 <td>Alteração indevida de favorecidos e dados bancários; retorna 403 (não redireciona para login).</td>
 </tr>
 </tbody>
@@ -1531,6 +1748,10 @@
     
     
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
+      
+        <script src="../../javascripts/mermaid-init.js"></script>
       
     
   </body>
