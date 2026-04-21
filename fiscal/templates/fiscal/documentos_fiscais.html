@@ -197,7 +197,7 @@
                     {% if nota %}bg-success bg-opacity-10 border-success{% else %}bg-white{% endif %}">
                     <div class="d-flex align-items-center gap-2">
                         <span class="badge bg-secondary">{{ doc.ordem }}</span>
-                        <span class="fw-bold text-dark small">{{ doc.tipo.tipo_de_documento }}</span>
+                        <span class="fw-bold text-dark small">{{ doc.tipo.tipo_documento }}</span>
                         {% if nota %}
                             <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Documento Fiscal</span>
                         {% endif %}
@@ -205,7 +205,7 @@
                     <div class="d-flex align-items-center gap-2">
                         {% if doc.arquivo %}
                             <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2"
-                                    onclick="showPdf('{% url 'download_arquivo_seguro' 'processo' doc.id %}', '{{ doc.tipo.tipo_de_documento }} #{{ doc.ordem }}')">
+                                    onclick="showPdf('{% url 'download_arquivo_seguro' 'processo' doc.id %}', '{{ doc.tipo.tipo_documento }} #{{ doc.ordem }}')">
                                 <i class="bi bi-eye"></i>
                             </button>
                         {% endif %}

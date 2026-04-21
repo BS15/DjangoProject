@@ -2,6 +2,7 @@
 
 import logging
 from typing import Optional
+from datetime import date
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
@@ -21,6 +22,7 @@ from pagamentos.domain_models import (
     StatusChoicesPendencias,
     Pendencia,
     Processo,
+    ProcessoStatus,
 )
 from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoCapaEdicaoForm, ProcessoForm
 from ..helpers import (
@@ -385,14 +387,14 @@ def _sincronizar_totais_processo_fiscal(processo):
 def _atualizar_pendencia_ateste(processo, nota):
     """Cria ou remove a pendência de ateste de liquidação conforme o estado da nota."""
     tipo_pendencia, _ = TiposDePendencias.objects.get_or_create(
-        tipo_de_pendencia__iexact="ATESTE DE LIQUIDAÇÃO",
-        defaults={"tipo_de_pendencia": "ATESTE DE LIQUIDAÇÃO"},
+        tipo_pendencia__iexact="ATESTE DE LIQUIDAÇÃO",
+        defaults={"tipo_pendencia": "ATESTE DE LIQUIDAÇÃO"},
     )
 
     if not nota.atestada:
         status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
-            status_choice__iexact="A RESOLVER",
-            defaults={"status_choice": "A RESOLVER"},
+            opcao_status__iexact="A RESOLVER",
+            defaults={"opcao_status": "A RESOLVER"},
         )
         if not processo.pendencias.filter(tipo=tipo_pendencia).exists():
             Pendencia.objects.create(
