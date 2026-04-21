@@ -11,6 +11,7 @@ from django.views.decorators.http import require_POST
 from credores.models import Credor
 from fiscal.models import RetencaoImposto
 from fiscal.services.impostos import (
+    anexar_relatorio_agrupamento_retencoes_no_processo,
     anexar_guia_comprovante_relatorio_em_processos,
     criar_documentos_pagamento_impostos,
 )
@@ -33,6 +34,13 @@ def agrupar_retencoes_action(request: HttpRequest) -> HttpResponse:
     with transaction.atomic():
         retencoes = list(
             RetencaoImposto.objects.select_for_update()
+            .select_related(
+                "codigo",
+                "status",
+                "beneficiario",
+                "nota_fiscal",
+                "nota_fiscal__processo",
+            )
             .filter(id__in=selecionados, processo_pagamento__isnull=True)
         )
 
@@ -73,6 +81,11 @@ def agrupar_retencoes_action(request: HttpRequest) -> HttpResponse:
         for retencao in retencoes:
             retencao.processo_pagamento = novo_processo
             retencao.save(update_fields=["processo_pagamento"])
+
+        anexar_relatorio_agrupamento_retencoes_no_processo(
+            processo=novo_processo,
+            retencoes=retencoes,
+        )
 
     messages.success(request, f"Processo #{novo_processo.id} para recolhimento gerado com sucesso!")
     return redirect("editar_processo", pk=novo_processo.id)
