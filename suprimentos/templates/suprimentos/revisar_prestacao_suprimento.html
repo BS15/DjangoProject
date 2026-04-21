@@ -1,0 +1,178 @@
+{% extends "layouts/base_review.html" %}
+
+{% block review_topbar %}
+<div class="bg-light border-bottom px-3 py-2 d-flex align-items-center justify-content-between">
+    <div>
+        <a href="{% url 'revisar_prestacoes_suprimento' %}" class="btn btn-sm btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left"></i> Voltar à Fila
+        </a>
+        <span class="fw-bold">Revisão de Prestação — Suprimento #{{ suprimento.id }}</span>
+    </div>
+    <span class="badge {% if prestacao.status == STATUS_ENVIADA %}bg-warning text-dark{% else %}bg-success{% endif %}">
+        {{ prestacao.get_status_display }}
+    </span>
+</div>
+{% endblock %}
+
+{% block document_viewer %}
+<div class="card shadow-sm h-100">
+    <div class="card-header bg-light fw-bold small">
+        <i class="bi bi-file-earmark-pdf text-danger"></i> Comprovante de Devolução
+    </div>
+    <div class="card-body p-2">
+        {% if prestacao.comprovante_devolucao %}
+            <iframe
+                src="{% url 'download_arquivo_seguro' 'suprimento_prestacao' prestacao.id %}"
+                class="w-100 border-0"
+                style="height: 70vh;"
+                title="Comprovante de Devolução">
+            </iframe>
+        {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-check2-circle text-success fs-1"></i>
+                <p class="mt-2">Nenhum comprovante de devolução (saldo zerado).</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block review_panel %}
+<div class="review-sticky-panel">
+
+    {# Suprimento summary #}
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-primary text-white fw-bold small">
+            <i class="bi bi-wallet2"></i> Suprimento de Fundos
+        </div>
+        <div class="card-body small">
+            <p class="mb-1"><strong>Suprido(a):</strong> {{ suprimento.suprido.nome }}</p>
+            <p class="mb-1"><strong>Lotação:</strong> {{ suprimento.lotacao|default:"-" }}</p>
+            <p class="mb-1"><strong>Período:</strong> {{ suprimento.inicio_periodo|date:"d/m/Y" }} a {{ suprimento.fim_periodo|date:"d/m/Y" }}</p>
+            <hr class="my-2">
+            <div class="d-flex justify-content-between">
+                <span>Numerário Liberado:</span>
+                <span class="fw-bold text-primary">R$ {{ suprimento.valor_liquido|floatformat:2 }}</span>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span>Total de Despesas:</span>
+                <span class="fw-bold text-danger">R$ {{ suprimento.valor_gasto|floatformat:2 }}</span>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span>Saldo a Devolver:</span>
+                <span class="fw-bold text-success">R$ {{ suprimento.saldo_remanescente|floatformat:2 }}</span>
+            </div>
+        </div>
+    </div>
+
+    {# Prestação details #}
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light fw-bold small">
+            <i class="bi bi-clipboard-check"></i> Dados da Prestação
+        </div>
+        <div class="card-body small">
+            <p class="mb-1"><strong>Status:</strong>
+                <span class="badge {% if prestacao.status == STATUS_ENVIADA %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                    {{ prestacao.get_status_display }}
+                </span>
+            </p>
+            {% if prestacao.submetido_por %}
+            <p class="mb-1"><strong>Enviada por:</strong>
+                {{ prestacao.submetido_por.get_full_name|default:prestacao.submetido_por.username }}
+            </p>
+            {% endif %}
+            {% if prestacao.submetido_em %}
+            <p class="mb-1"><strong>Enviada em:</strong> {{ prestacao.submetido_em|date:"d/m/Y H:i" }}</p>
+            {% endif %}
+            {% if prestacao.data_devolucao %}
+            <p class="mb-1"><strong>Data de Devolução:</strong> {{ prestacao.data_devolucao|date:"d/m/Y" }}</p>
+            {% endif %}
+            <p class="mb-1">
+                <strong>Termo de Fidedignidade:</strong>
+                {% if prestacao.termo_fidedignidade_assinado %}
+                    <span class="text-success"><i class="bi bi-check-circle-fill"></i> Assinado</span>
+                {% else %}
+                    <span class="text-danger"><i class="bi bi-x-circle-fill"></i> Não assinado</span>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    {# Expense summary table #}
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light fw-bold small">
+            <i class="bi bi-list-columns"></i> Extrato de Despesas ({{ despesas|length }})
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-sm table-hover mb-0 small">
+                <thead class="table-light">
+                    <tr>
+                        <th>Data</th>
+                        <th>NF</th>
+                        <th>Detalhe</th>
+                        <th class="text-end pe-2">Valor</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for despesa in despesas %}
+                    <tr>
+                        <td>{{ despesa.data|date:"d/m/Y" }}</td>
+                        <td>{{ despesa.nota_fiscal }}</td>
+                        <td>{{ despesa.detalhamento|truncatechars:25 }}</td>
+                        <td class="text-end pe-2 fw-bold">R$ {{ despesa.valor|floatformat:2 }}</td>
+                        <td>
+                            {% if despesa.arquivo %}
+                            <a href="{% url 'download_arquivo_seguro' 'suprimento' despesa.id %}" target="_blank" class="btn btn-xs btn-danger py-0 px-1" title="Ver NF">
+                                <i class="bi bi-file-pdf"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center text-muted py-2">Nenhuma despesa.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {# Approval form #}
+    {% if pode_aprovar %}
+    <div class="card shadow-sm border-warning">
+        <div class="card-header bg-warning bg-opacity-25 fw-bold small">
+            <i class="bi bi-person-check"></i> Aprovação do Operador
+        </div>
+        <div class="card-body small">
+            {% if suprimento.saldo_remanescente > 0 %}
+            <div class="alert alert-info py-2 small mb-3">
+                <i class="bi bi-info-circle"></i>
+                Ao aprovar, será registrada automaticamente uma <strong>devolução de
+                R$ {{ suprimento.saldo_remanescente|floatformat:2 }}</strong> vinculada ao processo
+                e o suprimento será encerrado.
+            </div>
+            {% else %}
+            <div class="alert alert-success py-2 small mb-3">
+                <i class="bi bi-check-circle"></i>
+                Saldo zerado. Ao aprovar, o suprimento será encerrado sem devolução automática.
+            </div>
+            {% endif %}
+            <form method="post" action="{% url 'aprovar_prestacao_suprimento_action' prestacao.id %}"
+                  onsubmit="return confirm('Confirma a aprovação desta prestação? A ação não poderá ser desfeita.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success fw-bold w-100">
+                    <i class="bi bi-check2-circle"></i> Aprovar e Encerrar
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block queue_navigation %}
+<a href="{% url 'revisar_prestacoes_suprimento' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i> Voltar à Fila
+</a>
+{% endblock %}

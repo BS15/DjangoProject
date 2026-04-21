@@ -12,7 +12,7 @@ from pagamentos.models import (
     DocumentoProcesso,
     RegistroAcessoArquivoProcessual,
 )
-from suprimentos.models import DespesaSuprimento
+from suprimentos.models import DespesaSuprimento, PrestacaoContasSuprimento
 from verbas_indenizatorias.models import (
     DocumentoAuxilio,
     DocumentoComprovacao,
@@ -47,6 +47,9 @@ def _resolve_documento(tipo_documento, documento_id):
     if tipo_documento == "suprimento":
         documento = get_object_or_404(DespesaSuprimento, id=documento_id)
         return documento, documento.suprimento
+    if tipo_documento == "suprimento_prestacao":
+        prestacao = get_object_or_404(PrestacaoContasSuprimento, id=documento_id)
+        return prestacao, prestacao.suprimento
     if tipo_documento == "verba_diaria_doc":
         documento = get_object_or_404(DocumentoDiaria, id=documento_id)
         return documento, documento.diaria
@@ -89,7 +92,7 @@ def download_arquivo_seguro(request, tipo_documento, documento_id):
     if not _has_access(request.user, tipo_documento, objeto_pai):
         return HttpResponseForbidden("Acesso negado a este arquivo.")
 
-    arquivo = getattr(documento, "arquivo", None) or getattr(documento, "comprovante", None)
+    arquivo = getattr(documento, "arquivo", None) or getattr(documento, "comprovante", None) or getattr(documento, "comprovante_devolucao", None)
     if not arquivo:
         raise Http404("Arquivo não encontrado.")
 

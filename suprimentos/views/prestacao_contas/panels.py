@@ -7,9 +7,10 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
-from suprimentos.models import SuprimentoDeFundos
+from suprimentos.models import PrestacaoContasSuprimento, SuprimentoDeFundos
+from suprimentos.services.prestacao import obter_ou_criar_prestacao_suprimento
 from ..helpers import _suprimento_encerrado
-from suprimentos.forms import DespesaSuprimentoForm
+from suprimentos.forms import DespesaSuprimentoForm, EnviarPrestacaoSuprimentoForm
 
 
 @require_GET
@@ -26,11 +27,22 @@ def gerenciar_suprimento_view(request: HttpRequest, pk: int) -> HttpResponse:
     """Exibe detalhes operacionais read-only de um suprimento e suas despesas."""
     suprimento: Any = get_object_or_404(SuprimentoDeFundos, id=pk)
     despesas = suprimento.despesas.all().order_by("data", "id")
+    prestacao = obter_ou_criar_prestacao_suprimento(suprimento)
+
+    pode_editar = (
+        not _suprimento_encerrado(suprimento)
+        and prestacao.status == PrestacaoContasSuprimento.STATUS_ABERTA
+    )
 
     context: dict[str, Any] = {
         "suprimento": suprimento,
         "despesas": despesas,
-        "pode_editar": not _suprimento_encerrado(suprimento),
+        "pode_editar": pode_editar,
+        "prestacao": prestacao,
+        "form_enviar_prestacao": EnviarPrestacaoSuprimentoForm(),
+        "STATUS_ABERTA": PrestacaoContasSuprimento.STATUS_ABERTA,
+        "STATUS_ENVIADA": PrestacaoContasSuprimento.STATUS_ENVIADA,
+        "STATUS_ENCERRADA": PrestacaoContasSuprimento.STATUS_ENCERRADA,
     }
     return render(request, "suprimentos/gerenciar_suprimento.html", context)
 
@@ -62,4 +74,51 @@ def adicionar_despesa_view(request: HttpRequest, pk: int) -> HttpResponse:
     )
 
 
-__all__ = ["painel_suprimentos_view", "gerenciar_suprimento_view", "adicionar_despesa_view"]
+@require_GET
+@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
+def revisar_prestacoes_suprimento_view(request: HttpRequest) -> HttpResponse:
+    """Painel do operador listando prestações de suprimento aguardando revisão."""
+    prestacoes = (
+        PrestacaoContasSuprimento.objects.select_related("suprimento__suprido", "submetido_por")
+        .filter(status=PrestacaoContasSuprimento.STATUS_ENVIADA)
+        .order_by("submetido_em")
+    )
+    context: dict[str, Any] = {
+        "prestacoes": prestacoes,
+        "STATUS_ENVIADA": PrestacaoContasSuprimento.STATUS_ENVIADA,
+    }
+    return render(request, "suprimentos/revisar_prestacoes_suprimento.html", context)
+
+
+@require_GET
+@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
+def revisar_prestacao_suprimento_view(request: HttpRequest, pk: int) -> HttpResponse:
+    """Exibe detalhes de uma prestação de suprimento para revisão do operador."""
+    prestacao: Any = get_object_or_404(
+        PrestacaoContasSuprimento.objects.select_related(
+            "suprimento__suprido",
+            "suprimento__processo",
+            "submetido_por",
+        ),
+        pk=pk,
+    )
+    suprimento = prestacao.suprimento
+    despesas = suprimento.despesas.all().order_by("data", "id")
+
+    context: dict[str, Any] = {
+        "prestacao": prestacao,
+        "suprimento": suprimento,
+        "despesas": despesas,
+        "pode_aprovar": prestacao.status == PrestacaoContasSuprimento.STATUS_ENVIADA,
+        "STATUS_ENVIADA": PrestacaoContasSuprimento.STATUS_ENVIADA,
+    }
+    return render(request, "suprimentos/revisar_prestacao_suprimento.html", context)
+
+
+__all__ = [
+    "painel_suprimentos_view",
+    "gerenciar_suprimento_view",
+    "adicionar_despesa_view",
+    "revisar_prestacoes_suprimento_view",
+    "revisar_prestacao_suprimento_view",
+]

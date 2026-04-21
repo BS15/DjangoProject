@@ -1,0 +1,62 @@
+{% extends "layouts/base_list.html" %}
+
+{% block page_heading %}
+    <i class="bi bi-clipboard2-check text-warning"></i> Revisão de Prestações de Suprimento
+{% endblock %}
+
+{% block page_subtitle %}
+    Prestações de contas de suprimentos de fundos aguardando aprovação operacional
+{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'suprimentos_list' %}" class="btn btn-outline-secondary">Voltar para Suprimentos</a>
+{% endblock %}
+
+{% block table_headers %}
+    <th># Suprimento</th>
+    <th>Suprido(a)</th>
+    <th>Lotação</th>
+    <th class="text-end pe-3">Liberado (R$)</th>
+    <th class="text-end pe-3">Gasto (R$)</th>
+    <th class="text-end pe-3">Saldo (R$)</th>
+    <th>Enviada em</th>
+    <th>Enviada por</th>
+    <th class="text-center">Ações</th>
+{% endblock %}
+
+{% block table_rows %}
+    {% for prestacao in prestacoes %}
+    <tr>
+        <td class="fw-bold text-muted">#{{ prestacao.suprimento.id }}</td>
+        <td class="fw-medium">{{ prestacao.suprimento.suprido.nome|truncatechars:30 }}</td>
+        <td>{{ prestacao.suprimento.lotacao|default:"-"|truncatechars:20 }}</td>
+        <td class="text-end pe-3 fw-bold text-primary">
+            {{ prestacao.suprimento.valor_liquido|floatformat:2 }}
+        </td>
+        <td class="text-end pe-3 fw-bold text-danger">
+            {{ prestacao.suprimento.valor_gasto|floatformat:2 }}
+        </td>
+        <td class="text-end pe-3 fw-bold text-success">
+            {{ prestacao.suprimento.saldo_remanescente|floatformat:2 }}
+        </td>
+        <td class="small text-muted">
+            {{ prestacao.submetido_em|date:"d/m/Y H:i"|default:"-" }}
+        </td>
+        <td class="small">
+            {{ prestacao.submetido_por.get_full_name|default:prestacao.submetido_por.username|default:"-" }}
+        </td>
+        <td class="text-center">
+            <a href="{% url 'revisar_prestacao_suprimento' prestacao.id %}" class="btn btn-sm btn-warning fw-bold">
+                <i class="bi bi-eye"></i> Revisar
+            </a>
+        </td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="9" class="text-center text-muted py-4">
+            <i class="bi bi-check2-all text-success fs-4"></i>
+            <div>Nenhuma prestação aguardando revisão no momento.</div>
+        </td>
+    </tr>
+    {% endfor %}
+{% endblock %}

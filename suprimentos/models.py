@@ -3,12 +3,14 @@
 Este módulo define modelos para controle de suprimentos de fundos, despesas, documentos e ciclo de prestação de contas.
 """
 
+from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from simple_history.models import HistoricalRecords
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.utils import timezone
 
 from commons.shared.file_validators import validar_arquivo_seguro
 from commons.shared.models import DocumentoBase
@@ -308,3 +310,87 @@ def cleanup_old_file_on_save_docsuprimento(sender, instance, **kwargs):
         return
     if old.arquivo and old.arquivo.name and old.arquivo.name != instance.arquivo.name:
         _delete_file(old.arquivo)
+
+
+class PrestacaoContasSuprimento(models.Model):
+    """Prestação de contas do suprimento de fundos com ciclo de submissão e revisão operacional."""
+
+    STATUS_ABERTA = "ABERTA"
+    STATUS_ENVIADA = "ENVIADA"
+    STATUS_ENCERRADA = "ENCERRADA"
+    STATUS_CHOICES = [
+        (STATUS_ABERTA, "Aberta"),
+        (STATUS_ENVIADA, "Aguardando Revisão"),
+        (STATUS_ENCERRADA, "Encerrada"),
+    ]
+
+    suprimento = models.OneToOneField(
+        'SuprimentoDeFundos',
+        on_delete=models.PROTECT,
+        related_name='prestacao_contas',
+    )
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_ABERTA)
+
+    # Campos preenchidos ao enviar a prestação
+    comprovante_devolucao = models.FileField(
+        "Comprovante de Devolução de Saldo",
+        upload_to=caminho_documento,
+        blank=True,
+        null=True,
+        validators=[validar_arquivo_seguro],
+        help_text="Comprovante de depósito/GRU do saldo remanescente devolvido.",
+    )
+    data_devolucao = models.DateField("Data de Devolução do Saldo", blank=True, null=True)
+    termo_fidedignidade_assinado = models.BooleanField(
+        "Termo de fidedignidade assinado",
+        default=False,
+    )
+
+    submetido_em = models.DateTimeField(null=True, blank=True)
+    submetido_por = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='prestacoes_suprimento_submetidas',
+    )
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+    encerrado_em = models.DateTimeField(null=True, blank=True)
+    encerrado_por = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='prestacoes_suprimento_encerradas',
+    )
+
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return f"Prestação #{self.pk} - Suprimento #{self.suprimento_id} [{self.get_status_display()}]"
+
+
+# ==============================================================================
+# FILE LIFECYCLE SIGNALS – prestacao de contas suprimento
+# ==============================================================================
+
+@receiver(post_delete, sender=PrestacaoContasSuprimento)
+def auto_delete_file_on_delete_prestacao_suprimento(sender, instance, **kwargs):
+    """Remove comprovante físico ao excluir prestação de contas de suprimento."""
+    _delete_file(instance.comprovante_devolucao)
+
+
+@receiver(pre_save, sender=PrestacaoContasSuprimento)
+def cleanup_old_file_on_save_prestacao_suprimento(sender, instance, **kwargs):
+    """Apaga comprovante antigo ao substituir o arquivo da prestação."""
+    if not instance.pk:
+        return
+    try:
+        old = sender.objects.get(pk=instance.pk)
+    except sender.DoesNotExist:
+        return
+    old_file = old.comprovante_devolucao
+    new_file = instance.comprovante_devolucao
+    if old_file and old_file.name and old_file.name != (new_file.name if new_file else None):
+        _delete_file(old_file)

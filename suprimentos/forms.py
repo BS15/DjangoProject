@@ -4,7 +4,7 @@ Este módulo define formulários para cadastro, edição e validação de suprim
 """
 
 from django import forms
-from suprimentos.models import SuprimentoDeFundos
+from suprimentos.models import SuprimentoDeFundos, PrestacaoContasSuprimento
 from pagamentos.validators import validar_regras_suprimento
 from suprimentos.models import DespesaSuprimento
 
@@ -51,3 +51,32 @@ class DespesaSuprimentoForm(forms.ModelForm):
             'valor': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control form-control-sm'}),
             'arquivo': forms.ClearableFileInput(attrs={'class': 'form-control form-control-sm', 'accept': '.pdf'}),
         }
+
+
+class EnviarPrestacaoSuprimentoForm(forms.Form):
+    """Formulário de envio da prestação de contas do suprimento de fundos.
+
+    Coleta o comprovante de devolução de saldo, a data e o aceite do termo de fidedignidade.
+    """
+
+    comprovante_devolucao = forms.FileField(
+        label="Comprovante de Devolução de Saldo (GRU/Depósito)",
+        required=False,
+        widget=forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': '.pdf'}),
+        help_text="Obrigatório quando houver saldo remanescente. Anexe o comprovante bancário da devolução.",
+    )
+    data_devolucao = forms.DateField(
+        label="Data da Devolução do Saldo",
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+    )
+    confirma_fidedignidade = forms.BooleanField(
+        label=(
+            "Declaro, sob responsabilidade pessoal, que todas as despesas registradas "
+            "neste suprimento de fundos são legítimas, comprovadas e estão de acordo "
+            "com a legislação vigente."
+        ),
+        required=True,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        error_messages={'required': 'Você deve confirmar a fidedignidade dos dados para enviar a prestação.'},
+    )
