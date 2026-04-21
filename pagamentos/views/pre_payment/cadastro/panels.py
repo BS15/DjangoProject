@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET
 
 from credores.models import Credor
-from fiscal.models import CodigosImposto, DocumentoFiscal, RetencaoImposto
+from fiscal.models import CodigosImposto, DocumentoFiscal
 from pagamentos.domain_models import Processo, ProcessoStatus
 
 from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoCapaEdicaoForm, ProcessoForm
@@ -60,18 +60,10 @@ def _montar_peek_tables_hub(request, processo):
     liquidacoes_qs = DocumentoFiscal.objects.select_related("nome_emitente", "fiscal_contrato").filter(
         processo=processo
     ).order_by("-data_emissao", "-id")
-    retencoes_qs = RetencaoImposto.objects.select_related(
-        "nota_fiscal",
-        "codigo",
-        "status",
-        "beneficiario",
-    ).filter(nota_fiscal__processo=processo).order_by("-data_pagamento", "-id")
-
     return {
         "documentos_page": Paginator(documentos_qs, 6).get_page(request.GET.get("docs_page")),
         "pendencias_page": Paginator(pendencias_qs, 6).get_page(request.GET.get("pend_page")),
         "liquidacoes_page": Paginator(liquidacoes_qs, 6).get_page(request.GET.get("liq_page")),
-        "retencoes_page": Paginator(retencoes_qs, 6).get_page(request.GET.get("ret_page")),
     }
 
 
