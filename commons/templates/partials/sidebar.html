@@ -4,37 +4,46 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body p-4">
+        
+        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Módulo de Cadastros</h6>
+        <a href="{% url 'credores_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-people text-info"></i> Lista de Credores</a>
+        <a href="{% url 'painel_assinaturas' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-vector-pen text-primary"></i> Painel de Assinaturas</a>
+        <a href="{% url 'painel_relatorios' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-file-earmark-spreadsheet text-success"></i> Relatórios</a>
+        <a href="{% url 'painel_importacao' %}" class="btn btn-warning w-100 fw-bold shadow-sm mt-2"><i class="bi bi-cloud-upload"></i> Importar Dados SISCAC</a>
 
-        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Namespace: pagamentos</h6>
+        <hr class="my-4 text-muted">
+
+        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Módulo de Pagamentos</h6>
         <div class="text-muted fw-bold small text-uppercase mb-2">Pré-pagamento</div>
         <a href="{% url 'a_empenhar' %}" class="btn btn-warning w-100 fw-bold shadow-sm"><i class="bi bi-hourglass-split"></i> Fila: A Empenhar</a>
-        <a href="{% url 'painel_pendencias' %}" class="btn btn-danger text-white w-100 fw-bold shadow-sm mt-2"><i class="bi bi-exclamation-triangle"></i> Painel de Pendências</a>
         <a href="{% url 'painel_liquidacoes' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-pen text-primary"></i> Liquidações / Atestes</a>
 
         <div class="text-muted fw-bold small text-uppercase mt-3 mb-2">Pagamento</div>
         <a href="{% url 'contas_a_pagar' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-cash-coin text-success"></i> Contas a Pagar</a>
 
-        <div class="text-muted fw-bold small text-uppercase mt-3 mb-2">Controle (post payment)</div>
+        <div class="text-muted fw-bold small text-uppercase mt-3 mb-2">Controle</div>
+        <a href="{% url 'painel_pendencias' %}" class="btn btn-danger text-white w-100 fw-bold shadow-sm mt-2"><i class="bi bi-exclamation-triangle"></i> Painel de Pendências</a>
         <a href="{% url 'painel_conferencia' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-clipboard-check text-info"></i> Painel de Conferência</a>
         <a href="{% url 'painel_contabilizacao' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-calculator text-secondary"></i> Painel de Contabilização</a>
         <a href="{% url 'painel_conselho' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-bank text-secondary"></i> Conselho Fiscal</a>
         <a href="{% url 'painel_arquivamento' %}" class="btn btn-dark w-100 fw-bold shadow-sm text-white mt-2"><i class="bi bi-archive-fill"></i> Arquivo Morto / Digital</a>
+        <a href="{% url 'auditoria' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-clock-history text-primary"></i> Auditoria / Histórico</a>
 
         <div class="text-muted fw-bold small text-uppercase mt-3 mb-2">Suporte</div>
+        <a href="{% url 'painel_contas_fixas' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-calendar-check text-primary"></i> Contas Fixas</a>
         <a href="{% url 'painel_devolucoes' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-arrow-return-left text-danger"></i> Devoluções ao Erário</a>
         <a href="{% url 'painel_contingencias' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-shield-exclamation text-danger"></i> Contingências</a>
-        <a href="{% url 'auditoria' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-clock-history text-primary"></i> Auditoria / Histórico</a>
+        
         <a href="{% url 'sincronizar_siscac' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-arrow-repeat text-primary"></i> Sincronizar SISCAC</a>
 
         <hr class="my-4 text-muted">
 
-        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Namespace: fiscal</h6>
+        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Módulo de Retenções</h6>
         <a href="{% url 'painel_impostos_view' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-receipt text-warning"></i> Retenção de Impostos</a>
-        <a href="{% url 'painel_comprovantes' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-file-earmark-check text-primary"></i> Painel de Comprovantes</a>
 
         <hr class="my-4 text-muted">
 
-        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Namespace: verbas</h6>
+        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Módulo de Verbas Indenizatórias</h6>
         <a href="{% url 'diarias_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-airplane text-primary"></i> Diárias</a>
         <a href="{% url 'reembolsos_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-cash-stack text-success"></i> Reembolsos</a>
         <a href="{% url 'jetons_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-person-badge text-info"></i> Jetons</a>
@@ -42,18 +51,12 @@
 
         <hr class="my-4 text-muted">
 
-        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Namespace: backoffice</h6>
-        <a href="{% url 'credores_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-people text-info"></i> Lista de Credores</a>
-        <a href="{% url 'add_credor' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-person-plus text-success"></i> Novo Credor</a>
+        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Módulo de Suprimento de Fundos</h6>
         <a href="{% url 'suprimentos_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-wallet2 text-primary"></i> Suprimentos de Fundos</a>
-        <a href="{% url 'painel_contas_fixas' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-calendar-check text-primary"></i> Contas Fixas</a>
-        <a href="{% url 'painel_assinaturas' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-vector-pen text-primary"></i> Painel de Assinaturas</a>
-        <a href="{% url 'painel_relatorios' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-file-earmark-spreadsheet text-success"></i> Relatórios</a>
-        <a href="{% url 'painel_importacao' %}" class="btn btn-warning w-100 fw-bold shadow-sm mt-2"><i class="bi bi-cloud-upload"></i> Importar Dados SISCAC</a>
 
         <hr class="my-4 text-muted">
 
-        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Namespace: debug</h6>
+        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Ferramentas de Desenvolvedor</h6>
         {% url 'gerar_dados_fake' as gerar_dados_fake_url %}
         {% if gerar_dados_fake_url %}
         <a href="{{ gerar_dados_fake_url }}" class="btn btn-warning w-100 fw-bold shadow-sm"><i class="bi bi-database-fill-gear"></i> Gerador de Dados de Teste</a>
