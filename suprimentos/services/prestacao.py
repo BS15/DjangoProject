@@ -105,7 +105,10 @@ def encerrar_prestacao_suprimento(prestacao, user):
                     try:
                         prestacao.comprovante_devolucao.close()
                     except Exception:
-                        pass
+                        logger.warning(
+                            "Falha ao fechar comprovante_devolucao da prestacao %s após leitura.",
+                            prestacao.pk,
+                        )
                 nome = (
                     prestacao.comprovante_devolucao.name.rsplit("/", 1)[-1]
                     or f"comprovante_saldo_suprimento_{suprimento.pk}.pdf"
