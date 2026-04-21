@@ -25,7 +25,7 @@ stateDiagram-v2
     APROVADO_PENDENTE_ARQUIVAMENTO --> ARQUIVADO : Arquivamento definitivo
     ARQUIVADO --> [*]
 
-    A_PAGAR_ENVIADO_PARA_AUTORIZACAO --> AGUARDANDO_LIQUIDACAO : Autorização recusada
+    A_PAGAR_ENVIADO_PARA_AUTORIZACAO --> A_PAGAR_PENDENTE_AUTORIZACAO : Autorização recusada
     PAGO_A_CONTABILIZAR --> PAGO_EM_CONFERENCIA : Contabilização recusada
     CONTABILIZADO_PARA_CONSELHO_FISCAL --> PAGO_A_CONTABILIZAR : Conselho recusado
     LANCADO_AGUARDANDO_COMPROVANTE --> A_PAGAR_AUTORIZADO : Desfazer lançamento
@@ -35,7 +35,7 @@ stateDiagram-v2
 
 | Etapa de recusa | Status de devolução |
 |-----------------|---------------------|
-| Autorização recusada | `AGUARDANDO LIQUIDAÇÃO` |
+| Autorização recusada | `A PAGAR - PENDENTE AUTORIZAÇÃO` |
 | Contabilização recusada | `PAGO - EM CONFERÊNCIA` |
 | Conselho recusado | `PAGO - A CONTABILIZAR` |
 
@@ -117,7 +117,7 @@ Exibe peek tables paginadas de documentos recentes, liquidações e pendências.
 Duas filas simultâneas: pendentes de autorização e já autorizados.
 
 - **Autorizar em lote:** `A PAGAR - ENVIADO PARA AUTORIZAÇÃO → A PAGAR - AUTORIZADO`.
-- **Recusar** (por processo): devolve para `AGUARDANDO LIQUIDAÇÃO` com pendência registrada.
+- **Recusar** (por processo): devolve para `A PAGAR - PENDENTE AUTORIZAÇÃO` com pendência registrada.
 
 ---
 
