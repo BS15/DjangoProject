@@ -13,11 +13,11 @@ from fiscal.services.impostos import (
     anexar_guia_comprovante_relatorio_em_processos,
     criar_documentos_pagamento_impostos,
 )
+from fiscal.views.impostos.constants import SESSION_RETENCOES_DOCS_KEY
 from pagamentos.domain_models import Processo, StatusChoicesProcesso, TiposDePagamento
 import logging
 
 logger = logging.getLogger(__name__)
-SESSION_RETENCOES_DOCS_KEY = "retencoes_documentos_pagamento"
 
 
 @require_POST
@@ -143,7 +143,7 @@ def anexar_documentos_retencoes_action(request: HttpRequest) -> HttpResponse:
 @require_POST
 @permission_required("fiscal.acesso_backoffice", raise_exception=True)
 def selecionar_retencoes_documentacao_action(request: HttpRequest) -> HttpResponse:
-    """Armazena retenções selecionadas em sessão e redireciona para o spoke de documentação."""
+    """Armazena retenções selecionadas em sessão e redireciona para a página de registro de documentos."""
     selecionados = request.POST.getlist("retencao_ids")
     if not selecionados:
         messages.warning(request, "Selecione ao menos uma retenção para registrar documentos de pagamento.")
@@ -169,7 +169,13 @@ def remover_retencao_documentacao_action(request: HttpRequest) -> HttpResponse:
         messages.warning(request, "Nenhuma retenção disponível para remoção.")
         return redirect("registrar_documentos_pagamento_view")
 
-    ids_atualizados = [rid for rid in ids_em_sessao if str(rid) != str(retencao_id)]
+    try:
+        retencao_id_int = int(retencao_id)
+    except (TypeError, ValueError):
+        messages.warning(request, "ID de retenção inválido para remoção.")
+        return redirect("registrar_documentos_pagamento_view")
+
+    ids_atualizados = [rid for rid in ids_em_sessao if rid != retencao_id_int]
     if ids_atualizados:
         request.session[SESSION_RETENCOES_DOCS_KEY] = ids_atualizados
         messages.success(request, "Retenção removida da lista.")
@@ -184,9 +190,7 @@ def remover_retencao_documentacao_action(request: HttpRequest) -> HttpResponse:
 @permission_required("fiscal.acesso_backoffice", raise_exception=True)
 def registrar_documentos_pagamento_action(request: HttpRequest) -> HttpResponse:
     """Cria DocumentoPagamentoImposto para cada retenção selecionada (spoke de documentação)."""
-    selecionados = request.POST.getlist("retencao_ids")
-    if not selecionados:
-        selecionados = [str(retencao_id) for retencao_id in request.session.get(SESSION_RETENCOES_DOCS_KEY, [])]
+    selecionados = request.session.get(SESSION_RETENCOES_DOCS_KEY, [])
     relatorio_arquivo = request.FILES.get("relatorio_retencoes")
     guia_arquivo = request.FILES.get("guia_recolhimento")
     comprovante_arquivo = request.FILES.get("comprovante_pagamento")

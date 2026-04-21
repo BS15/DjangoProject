@@ -13,15 +13,11 @@
 </a>
 {% endblock %}
 
-{% block form_action %}{% url 'registrar_documentos_pagamento_action' %}{% endblock %}
+{% block form_action %}{% url 'salvar_documentos_pagamento_action' %}{% endblock %}
 {% block form_enctype %}multipart/form-data{% endblock %}
 
 {% block form_fields %}
 {% if retencoes %}
-    {% for retencao in retencoes %}
-    <input type="hidden" name="retencao_ids" value="{{ retencao.id }}">
-    {% endfor %}
-
     <div class="row g-3 mb-3">
         <div class="col-md-6">
             <div class="border rounded p-3 bg-light">
@@ -74,19 +70,19 @@
     <div class="row g-3">
         <div class="col-md-4">
             <label class="form-label small text-muted">Competência</label>
-            <input type="month" name="competencia" class="form-control form-control-sm">
+            <input type="month" name="competencia" class="form-control form-control-sm" required>
         </div>
         <div class="col-md-4">
             <label class="form-label small text-muted">Relatório de Retenções</label>
-            <input type="file" name="relatorio_retencoes" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png">
+            <input type="file" name="relatorio_retencoes" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png" required>
         </div>
         <div class="col-md-4">
             <label class="form-label small text-muted">Guia de Recolhimento</label>
-            <input type="file" name="guia_recolhimento" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png">
+            <input type="file" name="guia_recolhimento" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png" required>
         </div>
         <div class="col-md-4">
             <label class="form-label small text-muted">Comprovante de Pagamento</label>
-            <input type="file" name="comprovante_pagamento" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png">
+            <input type="file" name="comprovante_pagamento" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png" required>
         </div>
     </div>
 {% else %}

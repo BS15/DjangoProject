@@ -8,12 +8,12 @@ from django.views.decorators.http import require_GET
 
 from fiscal.filters import RetencaoIndividualFilter, RetencaoNotaFilter, RetencaoProcessoFilter
 from fiscal.models import DocumentoFiscal, DocumentoPagamentoImposto, RetencaoImposto
+from fiscal.views.impostos.constants import SESSION_RETENCOES_DOCS_KEY
 from pagamentos.domain_models import Processo
 from pagamentos.views.shared import apply_filterset
 
 DEFAULT_VIEW = "individual"
 VALID_VIEWS = {"individual", "nf", "processo"}
-SESSION_RETENCOES_DOCS_KEY = "retencoes_documentos_pagamento"
 
 
 def _resolve_fonte_retentora_nome(retencao: RetencaoImposto) -> str:
