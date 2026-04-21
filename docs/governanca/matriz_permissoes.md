@@ -59,7 +59,7 @@ Observação técnica: o workflow financeiro principal usa codenames `fluxo.*` p
 | Deliberação do Conselho Fiscal, gestão de reuniões e painel consolidado de auditoria | `fluxo.pode_auditar_conselho` | Conselheiro(a) Fiscal | Aprovação final, recusa em conselho ou acesso ampliado à trilha de auditoria sem competência institucional; retorna 403 (não redireciona para login). |
 | Arquivamento definitivo do processo | `fluxo.pode_arquivar` | Operador de Arquivamento Financeiro | Encerramento e consolidação definitiva do processo sem verificação formal de completude documental; retorna 403 (não redireciona para login). |
 
-Observação de revisão: o endpoint auxiliar de upload em [pagamentos/views/pre_payment/cadastro/apis.py](pagamentos/views/pre_payment/cadastro/apis.py) foi alinhado para `fluxo.pode_operar_contas_pagar`, eliminando a referência ao codename não canônico `fluxo.pode_editar_processos`.
+Observação de revisão: o endpoint auxiliar de upload em [pagamentos/views/pre_payment/cadastro/apis.py](https://github.com/BS15/DjangoProject/blob/main/pagamentos/views/pre_payment/cadastro/apis.py) foi alinhado para `fluxo.pode_operar_contas_pagar`, eliminando a referência ao codename não canônico `fluxo.pode_editar_processos`.
 
 ### Domínio Credores
 
