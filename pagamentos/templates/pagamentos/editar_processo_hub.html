@@ -158,7 +158,7 @@
 				{% for nf in liquidacoes_page %}
 				<tr>
 					<td>{{ nf.numero_nota_fiscal|default:"-" }}</td>
-					<td>{{ nf.data_emissao|date:"d/m/Y"|default:"-" }}</td>
+					<td>{% if nf.data_emissao %}{{ nf.data_emissao|date:"d/m/Y" }}{% else %}-{% endif %}</td>
 					<td>{% if nf.atestada %}<span class="badge bg-success">Sim</span>{% else %}<span class="badge bg-secondary">Não</span>{% endif %}</td>
 				</tr>
 				{% empty %}
@@ -183,8 +183,8 @@
 				{% for ret in retencoes_page %}
 				<tr>
 					<td>{{ ret.codigo.codigo|default:"-" }}</td>
-					<td>{{ ret.competencia|date:"m/Y"|default:"-" }}</td>
-					<td class="text-danger">R$ {{ ret.valor|default:"0,00" }}</td>
+					<td>{% if ret.competencia %}{{ ret.competencia|date:"m/Y" }}{% else %}-{% endif %}</td>
+					<td class="text-danger">R$ {{ ret.valor|default_if_none:0|floatformat:2 }}</td>
 				</tr>
 				{% empty %}
 				<tr><td colspan="3" class="text-muted text-center py-2">Nenhuma retenção.</td></tr>
