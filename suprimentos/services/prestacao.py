@@ -98,17 +98,8 @@ def encerrar_prestacao_suprimento(prestacao, user):
 
             comprovante_content = None
             if prestacao.comprovante_devolucao and prestacao.comprovante_devolucao.name:
-                prestacao.comprovante_devolucao.open("rb")
-                try:
-                    raw = prestacao.comprovante_devolucao.read()
-                finally:
-                    try:
-                        prestacao.comprovante_devolucao.close()
-                    except Exception:
-                        logger.warning(
-                            "Falha ao fechar comprovante_devolucao da prestacao %s após leitura.",
-                            prestacao.pk,
-                        )
+                with prestacao.comprovante_devolucao.open("rb") as _f:
+                    raw = _f.read()
                 nome = (
                     prestacao.comprovante_devolucao.name.rsplit("/", 1)[-1]
                     or f"comprovante_saldo_suprimento_{suprimento.pk}.pdf"

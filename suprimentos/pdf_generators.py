@@ -4,6 +4,8 @@ from commons.shared.pdf_tools import BasePDFDocument, _draw_wrapped_text
 from commons.shared.text_tools import format_brl_currency
 
 _SIG_HALF_WIDTH = 130
+_TABLE_MIN_Y = 160     # minimum Y before triggering a new page
+_TABLE_NEW_PAGE_Y = 80  # starting Y position on a continuation page
 
 
 def _safe_text(value, fallback="Não informado"):
@@ -172,9 +174,9 @@ class RelatorioPrestacaoContasSuprimentoDocument(BasePDFDocument):
 
         c.setFont("Helvetica", 9)
         for despesa in despesas:
-            if y < 160:
+            if y < _TABLE_MIN_Y:
                 c.showPage()
-                y = height - 80
+                y = height - _TABLE_NEW_PAGE_Y
                 c.setFont("Helvetica", 9)
 
             data_str = _format_date(despesa.data, "-")
