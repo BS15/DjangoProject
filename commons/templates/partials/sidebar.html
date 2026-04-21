@@ -5,19 +5,23 @@
     </div>
     <div class="offcanvas-body p-4">
 
-        <a href="{% url 'home_page' %}" class="btn btn-primary w-100 fw-bold shadow-sm mb-3"><i class="bi bi-house-door-fill me-1"></i> Página Inicial</a>
-
-        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Namespace: core</h6>
+        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Namespace: pagamento</h6>
+        <div class="text-muted fw-bold small text-uppercase mb-2">Pré-pagamento</div>
         <a href="{% url 'a_empenhar' %}" class="btn btn-warning w-100 fw-bold shadow-sm"><i class="bi bi-hourglass-split"></i> Fila: A Empenhar</a>
+        <a href="{% url 'painel_pendencias' %}" class="btn btn-danger text-white w-100 fw-bold shadow-sm mt-2"><i class="bi bi-exclamation-triangle"></i> Painel de Pendências</a>
+        <a href="{% url 'painel_liquidacoes' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-pen text-primary"></i> Liquidações / Atestes</a>
+
+        <div class="text-muted fw-bold small text-uppercase mt-3 mb-2">Pagamento</div>
         <a href="{% url 'contas_a_pagar' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-cash-coin text-success"></i> Contas a Pagar</a>
-        <a href="{% url 'painel_pendencias' %}" class="btn btn-danger text-white w-100 fw-bold shadow-sm"><i class="bi bi-exclamation-triangle"></i> Painel de Pendências</a>
-        <a href="{% url 'painel_liquidacoes' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-pen text-primary"></i> Liquidações / Atestes</a>
-        <a href="{% url 'painel_autorizacao' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-check2-square text-success"></i> Autorização de Pagamento</a>
+
+        <div class="text-muted fw-bold small text-uppercase mt-3 mb-2">Controle (post payment)</div>
         <a href="{% url 'painel_conferencia' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-clipboard-check text-info"></i> Painel de Conferência</a>
-        <a href="{% url 'painel_contabilizacao' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-calculator text-secondary"></i> Painel de Contabilização</a>
-        <a href="{% url 'painel_conselho' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-bank text-secondary"></i> Conselho Fiscal</a>
+        <a href="{% url 'painel_contabilizacao' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-calculator text-secondary"></i> Painel de Contabilização</a>
+        <a href="{% url 'painel_conselho' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-bank text-secondary"></i> Conselho Fiscal</a>
         <a href="{% url 'painel_arquivamento' %}" class="btn btn-dark w-100 fw-bold shadow-sm text-white mt-2"><i class="bi bi-archive-fill"></i> Arquivo Morto / Digital</a>
-        <a href="{% url 'painel_devolucoes' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-arrow-return-left text-danger"></i> Devoluções ao Erário</a>
+
+        <div class="text-muted fw-bold small text-uppercase mt-3 mb-2">Suporte</div>
+        <a href="{% url 'painel_devolucoes' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-arrow-return-left text-danger"></i> Devoluções ao Erário</a>
         <a href="{% url 'painel_contingencias' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-shield-exclamation text-danger"></i> Contingências</a>
         <a href="{% url 'auditoria' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-clock-history text-primary"></i> Auditoria / Histórico</a>
         <a href="{% url 'sincronizar_siscac' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-arrow-repeat text-primary"></i> Sincronizar SISCAC</a>
@@ -31,7 +35,6 @@
         <hr class="my-4 text-muted">
 
         <h6 class="text-muted fw-bold mb-3 small text-uppercase">Namespace: verbas</h6>
-        <a href="{% url 'verbas_panel' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-briefcase text-secondary"></i> Verbas Indenizatórias</a>
         <a href="{% url 'diarias_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-airplane text-primary"></i> Diárias</a>
         <a href="{% url 'reembolsos_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-cash-stack text-success"></i> Reembolsos</a>
         <a href="{% url 'jetons_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-person-badge text-info"></i> Jetons</a>
