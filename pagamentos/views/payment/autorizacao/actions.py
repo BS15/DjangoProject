@@ -33,7 +33,7 @@ def recusar_autorizacao_action(request: HttpRequest, pk: int) -> HttpResponse:
         request,
         pk,
         permission="pagamentos.pode_autorizar_pagamento",
-        status_devolucao=ProcessoStatus.AGUARDANDO_LIQUIDACAO,
+        status_devolucao=ProcessoStatus.A_PAGAR_PENDENTE_AUTORIZACAO,
         error_message="Processo #{processo_id} não autorizado e devolvido com pendência!",
         redirect_to="painel_autorizacao",
     )
