@@ -46,10 +46,18 @@ markdown_extensions:
       permalink: true
   - pymdownx.highlight
   - pymdownx.inlinehilite
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.details
+
+extra_javascript:
+  - https://unpkg.com/mermaid@10/dist/mermaid.min.js
+  - javascripts/mermaid-init.js
 
 nav:
   - Início: index.md
@@ -65,6 +73,11 @@ nav:
       - Verbas Indenizatórias: modulos/verbas_indenizatorias.md
       - Suprimento de Fundos: modulos/suprimento_fundos.md
       - Módulo Fiscal: modulos/modulo_fiscal.md
+  - Fluxos Operacionais:
+      - Pagamentos: fluxos/pagamentos.md
+      - Retenções: fluxos/retencoes.md
+      - Diárias: fluxos/diarias.md
+      - Suprimento de Fundos: fluxos/suprimento_fundos.md
   - Segurança e Governança:
       - Trilha de Auditoria: governanca/trilha_auditoria.md
       - Matriz de Permissões: governanca/matriz_permissoes.md

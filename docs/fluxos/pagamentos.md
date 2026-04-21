@@ -6,30 +6,29 @@ Este documento descreve a esteira completa de um processo de pagamento no PaGé 
 
 ## 1. Máquina de estados canônica
 
-Os status são constantes definidas em `ProcessoStatus` (`pagamentos/domain_models/processos.py`). A trilha feliz é:
+Os status são constantes definidas em `ProcessoStatus` (`pagamentos/domain_models/processos.py`).
 
-```
-A EMPENHAR
-    ↓  (registro do empenho SISCAC)
-AGUARDANDO LIQUIDAÇÃO
-    ↓  (todas NFs atestadas, valores consistentes)
-A PAGAR - PENDENTE AUTORIZAÇÃO
-    ↓  (envio para autorização)
-A PAGAR - ENVIADO PARA AUTORIZAÇÃO
-    ↓  (aprovação do ordenador)
-A PAGAR - AUTORIZADO
-    ↓  (separação para lançamento)
-LANÇADO - AGUARDANDO COMPROVANTE
-    ↓  (upload do comprovante bancário)
-PAGO - EM CONFERÊNCIA
-    ↓  (revisão pelo operador de contas)
-PAGO - A CONTABILIZAR
-    ↓  (aprovação pela Contabilidade)
-CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL
-    ↓  (aprovação em reunião do Conselho)
-APROVADO - PENDENTE ARQUIVAMENTO
-    ↓  (arquivamento definitivo)
-ARQUIVADO
+```mermaid
+stateDiagram-v2
+    [*] --> A_EMPENHAR : Processo criado (com trigger)
+    [*] --> A_PAGAR_PENDENTE_AUTORIZACAO : Processo criado (sem trigger)
+
+    A_EMPENHAR --> AGUARDANDO_LIQUIDACAO : Registro do empenho SISCAC
+    AGUARDANDO_LIQUIDACAO --> A_PAGAR_PENDENTE_AUTORIZACAO : Todas NFs atestadas
+    A_PAGAR_PENDENTE_AUTORIZACAO --> A_PAGAR_ENVIADO_PARA_AUTORIZACAO : Envio para autorização
+    A_PAGAR_ENVIADO_PARA_AUTORIZACAO --> A_PAGAR_AUTORIZADO : Aprovação do ordenador
+    A_PAGAR_AUTORIZADO --> LANCADO_AGUARDANDO_COMPROVANTE : Marcação como lançado
+    LANCADO_AGUARDANDO_COMPROVANTE --> PAGO_EM_CONFERENCIA : Upload do comprovante bancário
+    PAGO_EM_CONFERENCIA --> PAGO_A_CONTABILIZAR : Revisão pelo operador
+    PAGO_A_CONTABILIZAR --> CONTABILIZADO_PARA_CONSELHO_FISCAL : Aprovação pela Contabilidade
+    CONTABILIZADO_PARA_CONSELHO_FISCAL --> APROVADO_PENDENTE_ARQUIVAMENTO : Aprovação em reunião do Conselho
+    APROVADO_PENDENTE_ARQUIVAMENTO --> ARQUIVADO : Arquivamento definitivo
+    ARQUIVADO --> [*]
+
+    A_PAGAR_ENVIADO_PARA_AUTORIZACAO --> AGUARDANDO_LIQUIDACAO : Autorização recusada
+    PAGO_A_CONTABILIZAR --> PAGO_EM_CONFERENCIA : Contabilização recusada
+    CONTABILIZADO_PARA_CONSELHO_FISCAL --> PAGO_A_CONTABILIZAR : Conselho recusado
+    LANCADO_AGUARDANDO_COMPROVANTE --> A_PAGAR_AUTORIZADO : Desfazer lançamento
 ```
 
 ### Caminhos de exceção (desvios)
