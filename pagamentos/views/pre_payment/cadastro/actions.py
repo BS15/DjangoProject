@@ -2,6 +2,7 @@
 
 import logging
 from typing import Optional
+from datetime import date
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
@@ -14,13 +15,14 @@ from decimal import Decimal, InvalidOperation
 import json
 from django.db.models import Sum
 from django.contrib.contenttypes.models import ContentType
-from fiscal.models import DocumentoFiscal, RetencaoImposto
+from fiscal.models import DocumentoFiscal, RetencaoImposto, StatusChoicesRetencoes
 from pagamentos.domain_models import (
     Boleto_Bancario,
     TiposDePendencias,
     StatusChoicesPendencias,
     Pendencia,
     Processo,
+    ProcessoStatus,
 )
 from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoCapaEdicaoForm, ProcessoForm
 from ..helpers import (
@@ -331,32 +333,23 @@ def salvar_nota_fiscal_action(request, processo_pk, nota_pk):
 
 
 def _salvar_retencoes(nota, body):
-    """Recria as retenções de impostos da nota e recalcula o valor líquido."""
-    nota.retencoes.all().delete()
+    """Altera retenções existentes em-place e cria/remove conforme o payload recebido."""
     codigos = body.get("imposto_codes", [])
     valores = body.get("imposto_values", [])
     rendimentos = body.get("imposto_rendimentos", [])
     beneficiarios = body.get("imposto_beneficiarios", [])
 
+    # Parse all incoming rows first to catch validation errors early.
+    incoming = []
     for codigo_id, rendimento, valor, beneficiario in zip(codigos, rendimentos, valores, beneficiarios):
         if not (codigo_id and valor):
             continue
         try:
             beneficiario_id = int(beneficiario) if beneficiario and str(beneficiario).strip() else None
-        except (ValueError, TypeError):
-            beneficiario_id = None
-        try:
             rendimento_valor = (
                 Decimal(str(rendimento).replace(",", ".")) if rendimento and str(rendimento).strip() else None
             )
             imposto_valor = Decimal(str(valor).replace(",", "."))
-            RetencaoImposto.objects.create(
-                nota_fiscal=nota,
-                codigo_id=codigo_id,
-                rendimento_tributavel=rendimento_valor,
-                valor=imposto_valor,
-                beneficiario_id=beneficiario_id,
-            )
         except (ValueError, TypeError, InvalidOperation):
             return JsonResponse(
                 {
@@ -365,6 +358,40 @@ def _salvar_retencoes(nota, body):
                 },
                 status=400,
             )
+        incoming.append((codigo_id, rendimento_valor, imposto_valor, beneficiario_id))
+
+    existing = list(nota.retencoes.all().order_by("id"))
+
+    # Resolve the "A RETER" status once, only if new records will be created.
+    status_a_reter = None
+    if len(incoming) > len(existing):
+        status_a_reter, _ = StatusChoicesRetencoes.objects.get_or_create(
+            status_choice__iexact="A RETER",
+            defaults={"status_choice": "A RETER"},
+        )
+
+    # Update in-place — preserves IDs and HistoricalRecords.
+    for ret, (codigo_id, rendimento_valor, imposto_valor, beneficiario_id) in zip(existing, incoming):
+        ret.codigo_id = codigo_id
+        ret.rendimento_tributavel = rendimento_valor
+        ret.valor = imposto_valor
+        ret.beneficiario_id = beneficiario_id
+        ret.save(update_fields=["codigo_id", "rendimento_tributavel", "valor", "beneficiario_id"])
+
+    # Create new rows beyond the existing count.
+    for codigo_id, rendimento_valor, imposto_valor, beneficiario_id in incoming[len(existing):]:
+        RetencaoImposto.objects.create(
+            nota_fiscal=nota,
+            codigo_id=codigo_id,
+            rendimento_tributavel=rendimento_valor,
+            valor=imposto_valor,
+            beneficiario_id=beneficiario_id,
+            status=status_a_reter,
+        )
+
+    # Delete rows that were removed on the frontend.
+    for ret in existing[len(incoming):]:
+        ret.delete()
 
     total_retencoes = nota.retencoes.aggregate(total=Sum("valor"))["total"] or 0
     nota.valor_liquido = (nota.valor_bruto or 0) - total_retencoes
@@ -385,14 +412,14 @@ def _sincronizar_totais_processo_fiscal(processo):
 def _atualizar_pendencia_ateste(processo, nota):
     """Cria ou remove a pendência de ateste de liquidação conforme o estado da nota."""
     tipo_pendencia, _ = TiposDePendencias.objects.get_or_create(
-        tipo_de_pendencia__iexact="ATESTE DE LIQUIDAÇÃO",
-        defaults={"tipo_de_pendencia": "ATESTE DE LIQUIDAÇÃO"},
+        tipo_pendencia__iexact="ATESTE DE LIQUIDAÇÃO",
+        defaults={"tipo_pendencia": "ATESTE DE LIQUIDAÇÃO"},
     )
 
     if not nota.atestada:
         status_pendencia, _ = StatusChoicesPendencias.objects.get_or_create(
-            status_choice__iexact="A RESOLVER",
-            defaults={"status_choice": "A RESOLVER"},
+            opcao_status__iexact="A RESOLVER",
+            defaults={"opcao_status": "A RESOLVER"},
         )
         if not processo.pendencias.filter(tipo=tipo_pendencia).exists():
             Pendencia.objects.create(

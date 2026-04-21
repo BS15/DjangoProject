@@ -8,7 +8,6 @@ from django.views.decorators.http import require_GET
 
 from fiscal.filters import RetencaoIndividualFilter, RetencaoNotaFilter, RetencaoProcessoFilter
 from fiscal.models import DocumentoFiscal, DocumentoPagamentoImposto, RetencaoImposto
-from fiscal.views.impostos.constants import SESSION_RETENCOES_DOCS_KEY
 from pagamentos.domain_models import Processo
 from pagamentos.views.shared import apply_filterset
 
@@ -94,8 +93,10 @@ def painel_impostos_view(request):
 @require_GET
 @permission_required("fiscal.acesso_backoffice", raise_exception=True)
 def registrar_documentos_pagamento_view(request):
-    """Spoke de registro de documentos para retenções previamente selecionadas."""
-    retencao_ids = request.session.get(SESSION_RETENCOES_DOCS_KEY, [])
+    """Spoke de registro de documentos para retenções passadas via query param ?ids=1,2,3."""
+    ids_raw = request.GET.get("ids", "")
+    retencao_ids = [int(x) for x in ids_raw.split(",") if x.strip().isdigit()]
+
     if not retencao_ids:
         messages.warning(request, "Nenhuma retenção foi selecionada para registro de documentos.")
         return redirect("painel_impostos_view")
@@ -112,7 +113,6 @@ def registrar_documentos_pagamento_view(request):
         .order_by("-id")
     )
     if not retencoes:
-        request.session.pop(SESSION_RETENCOES_DOCS_KEY, None)
         messages.warning(request, "As retenções selecionadas não estão mais disponíveis.")
         return redirect("painel_impostos_view")
 
@@ -122,6 +122,7 @@ def registrar_documentos_pagamento_view(request):
     total_retido = sum((retencao.valor or 0) for retencao in retencoes)
     context = {
         "retencoes": retencoes,
+        "retencao_ids": [r.id for r in retencoes],
         "qtd_retencoes": len(retencoes),
         "total_retido": total_retido,
     }

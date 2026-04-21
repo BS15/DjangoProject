@@ -148,7 +148,7 @@ def editar_processo_documentos_view(request, pk):
     precisa_documento_orcamentario = (
         not processo.extraorcamentario
         and status_inicial != ProcessoStatus.A_EMPENHAR
-        and not processo.documentos.filter(tipo__tipo_de_documento__iexact="DOCUMENTOS ORÇAMENTÁRIOS").exists()
+        and not processo.documentos.filter(tipo__tipo_documento__iexact="DOCUMENTOS ORÇAMENTÁRIOS").exists()
     )
 
     return render(
