@@ -160,7 +160,8 @@ class DocumentoFormsetManager {
     const container = $(this.containerSelector);
     const emptyForm = $(this.emptyFormSelector);
     const totalForms = parseInt($(this.managementForm).val(), 10);
-    const nextFormIndex = this.getNextFormIndex(totalForms);
+    const startSearchIndex = Math.max(totalForms - 1, 0);
+    const nextFormIndex = this.getNextFormIndex(startSearchIndex);
 
     if (!emptyForm.length || isNaN(totalForms) || nextFormIndex < 0) {
       return;
