@@ -6,12 +6,15 @@ from django.contrib.auth.decorators import permission_required
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
+from requests.exceptions import RequestException
 
 from pagamentos.domain_models import Processo
 from pagamentos.forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoForm
 from pagamentos.models import TiposDePagamento
+from commons.shared.integracoes.autentique import enviar_documento_para_assinatura
 from verbas_indenizatorias.constants import STATUS_VERBA_APROVADA, STATUS_VERBA_REVISADA
 from verbas_indenizatorias.models import StatusChoicesVerbasIndenizatorias
+from verbas_indenizatorias.services.documentos import gerar_e_anexar_pcd_diaria
 from verbas_indenizatorias.services.processo_integration import criar_processo_e_vincular_verbas
 from .helpers import _forcar_campos_canonicos_processo_verbas
 from ..shared.registry import (
@@ -29,6 +32,55 @@ def _set_or_create_status(verba, status_str):
     )
     verba.status = status
     verba.save(update_fields=["status"])
+
+
+def _emitir_pcd_e_enviar_para_assinatura_beneficiario(diaria, criador):
+    if not diaria.proponente or not diaria.proponente.email:
+        raise RuntimeError("A diária não possui proponente com e-mail para assinatura.")
+
+    assinatura = (
+        diaria.assinaturas_autentique.select_for_update()
+        .filter(tipo_documento="PCD")
+        .order_by("-criado_em")
+        .first()
+    )
+
+    if assinatura and assinatura.arquivo:
+        assinatura.arquivo.open("rb")
+        try:
+            pdf_bytes = assinatura.arquivo.read()
+        finally:
+            try:
+                assinatura.arquivo.close()
+            except Exception:
+                pass
+    else:
+        assinatura = gerar_e_anexar_pcd_diaria(diaria, criador=criador)
+        assinatura.arquivo.open("rb")
+        try:
+            pdf_bytes = assinatura.arquivo.read()
+        finally:
+            try:
+                assinatura.arquivo.close()
+            except Exception:
+                pass
+
+    payload = enviar_documento_para_assinatura(
+        pdf_bytes,
+        f"PCD_Diaria_{diaria.id}",
+        signatarios=[{"email": diaria.proponente.email, "action": "SIGN"}],
+    )
+    autentique_id = payload.get("id")
+    if not autentique_id:
+        raise RuntimeError("A Autentique não retornou o identificador do documento enviado.")
+
+    assinatura.autentique_id = autentique_id
+    assinatura.autentique_url = payload.get("url") or ""
+    assinatura.dados_signatarios = payload.get("signers_data") or {}
+    assinatura.status = "PENDENTE"
+    assinatura.save(update_fields=["autentique_id", "autentique_url", "dados_signatarios", "status"])
+
+    return assinatura
 
 
 @require_POST
@@ -116,6 +168,26 @@ def aprovar_revisao_solicitacao_action(request, tipo_verba, pk):
             messages.warning(request, "A solicitação precisa estar APROVADA para revisão operacional.")
             return redirect("revisar_solicitacao_verba", tipo_verba=tipo_verba, pk=pk)
 
+        if tipo_verba == "diaria":
+            try:
+                assinatura = _emitir_pcd_e_enviar_para_assinatura_beneficiario(
+                    solicitacao,
+                    criador=request.user,
+                )
+                logger.info(
+                    "mutation=emitir_pcd_e_liberar_assinatura_diaria_na_revisao diaria_id=%s user_id=%s assinatura_id=%s autentique_id=%s",
+                    solicitacao.id,
+                    request.user.pk,
+                    assinatura.id,
+                    assinatura.autentique_id,
+                )
+            except RequestException:
+                messages.error(request, "Falha de conexão ao enviar para a Autentique. Tente novamente.")
+                return redirect("revisar_solicitacao_verba", tipo_verba=tipo_verba, pk=pk)
+            except RuntimeError as exc:
+                messages.error(request, str(exc))
+                return redirect("revisar_solicitacao_verba", tipo_verba=tipo_verba, pk=pk)
+
         _set_or_create_status(solicitacao, STATUS_VERBA_REVISADA)
         logger.info(
             "mutation=aprovar_revisao_solicitacao tipo_verba=%s solicitacao_id=%s user_id=%s",
@@ -123,7 +195,10 @@ def aprovar_revisao_solicitacao_action(request, tipo_verba, pk):
             solicitacao.id,
             request.user.pk,
         )
-        messages.success(request, "Solicitação revisada e liberada para agrupamento.")
+        if tipo_verba == "diaria":
+            messages.success(request, "Solicitação revisada. PCD emitido e enviado para assinatura do beneficiário.")
+        else:
+            messages.success(request, "Solicitação revisada e liberada para agrupamento.")
     return redirect("revisar_solicitacao_verba", tipo_verba=tipo_verba, pk=pk)
 
 

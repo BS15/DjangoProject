@@ -69,7 +69,6 @@ Exibe:
 | `vinculo_diaria_spoke` | Vincular/desvincular do processo de pagamento |
 | `devolucao_diaria_spoke` | Registrar devolução parcial de valor |
 | `apostila_diaria_spoke` | Apostilar correções formais |
-| `liberar_assinatura_diaria_spoke` | Enviar PCD para assinatura eletrônica (Autentique) |
 | `cancelar_diaria_spoke` | Cancelar/anular a diária |
 
 ---
@@ -110,12 +109,13 @@ Regras:
 
 ## 6. Assinatura eletrônica (Autentique)
 
-**Action:** `liberar_para_assinatura_action`  
-**Permissão:** `verbas_indenizatorias.pode_gerenciar_diarias`
+**Action:** `aprovar_revisao_solicitacao_action` (quando `tipo_verba=diaria`)  
+**Permissão:** `pagamentos.pode_operar_contas_pagar`
 
-1. Verifica se já existe um `AssinaturaEletronica` do tipo PCD; se não, gera e anexa o PDF.
+1. Na aprovação da revisão operacional da diária (`APROVADA -> REVISADA`), o sistema emite/recupera o PCD.
 2. Envia o PDF para a Autentique via `enviar_documento_para_assinatura`.
 3. Grava `autentique_id`, `autentique_url` e status `PENDENTE` na assinatura.
+4. O fluxo não é mais disparado no hub `gerenciar_diaria`.
 
 **Sincronização:** `sincronizar_assinatura_view` verifica o status na Autentique e baixa o PDF assinado quando disponível.  
 **Reenvio:** `reenviar_assinatura_view` reenvia o rascunho SCD para nova rodada de assinaturas.

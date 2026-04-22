@@ -9,7 +9,6 @@ from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from django.core.exceptions import ValidationError
 from django.utils.http import url_has_allowed_host_and_scheme
-from requests.exceptions import RequestException
 
 from pagamentos.domain_models import Processo
 from verbas_indenizatorias.constants import (
@@ -32,7 +31,6 @@ from verbas_indenizatorias.services.vinculos_diaria import (
 )
 from ..shared.documents import _validar_upload_documento
 from .access import _pode_acessar_prestacao, _pode_gerenciar_vinculo_diaria
-from commons.shared.integracoes.autentique import enviar_documento_para_assinatura
 
 def _redirect_com_next(request, fallback_name, **kwargs):
     next_url = request.POST.get('next') or request.GET.get('next')
@@ -301,88 +299,3 @@ def cancelar_diaria_action(request, pk):
     return redirect('gerenciar_diaria', pk=diaria.id)
 
 
-@require_POST
-@permission_required('verbas_indenizatorias.pode_gerenciar_diarias', raise_exception=True)
-def liberar_para_assinatura_action(request, pk):
-    with transaction.atomic():
-        diaria = get_object_or_404(Diaria.objects.select_for_update(), pk=pk)
-
-        if not diaria.proponente or not diaria.proponente.email:
-            messages.error(request, 'A diária não possui proponente com e-mail para assinatura.')
-            return redirect('liberar_assinatura_diaria_spoke', pk=diaria.id)
-
-        assinatura = (
-            diaria.assinaturas_autentique.select_for_update()
-            .filter(tipo_documento='PCD')
-            .order_by('-criado_em')
-            .first()
-        )
-
-        if assinatura and assinatura.arquivo:
-            assinatura.arquivo.open('rb')
-            try:
-                pdf_bytes = assinatura.arquivo.read()
-            finally:
-                try:
-                    assinatura.arquivo.close()
-                except Exception:
-                    pass
-        else:
-            assinatura = gerar_e_anexar_pcd_diaria(diaria, criador=request.user)
-            assinatura.arquivo.open('rb')
-            try:
-                pdf_bytes = assinatura.arquivo.read()
-            finally:
-                try:
-                    assinatura.arquivo.close()
-                except Exception:
-                    pass
-
-        try:
-            payload = enviar_documento_para_assinatura(
-                pdf_bytes,
-                f"PCD_Diaria_{diaria.id}",
-                signatarios=[{'email': diaria.proponente.email, 'action': 'SIGN'}],
-            )
-            autentique_id = payload.get('id')
-            if not autentique_id:
-                raise RuntimeError('A Autentique não retornou o identificador do documento enviado.')
-
-            assinatura.autentique_id = autentique_id
-            assinatura.autentique_url = payload.get('url') or ''
-            assinatura.dados_signatarios = payload.get('signers_data') or {}
-            assinatura.status = 'PENDENTE'
-            assinatura.save(update_fields=['autentique_id', 'autentique_url', 'dados_signatarios', 'status'])
-
-            logger.info(
-                "mutation=liberar_para_assinatura_diaria diaria_id=%s user_id=%s assinatura_id=%s autentique_id=%s",
-                diaria.id,
-                request.user.pk,
-                assinatura.id,
-                assinatura.autentique_id,
-            )
-        except RequestException:
-            logger.warning(
-                "mutation_error=liberar_para_assinatura_diaria diaria_id=%s user_id=%s assinatura_id=%s erro=request",
-                diaria.id,
-                request.user.pk,
-                assinatura.id,
-            )
-            assinatura.status = 'ERRO'
-            assinatura.save(update_fields=['status'])
-            messages.error(request, 'Falha de conexão ao enviar para a Autentique. Tente novamente.')
-            return redirect('liberar_assinatura_diaria_spoke', pk=diaria.id)
-        except RuntimeError:
-            logger.exception(
-                "mutation_error=liberar_para_assinatura_diaria diaria_id=%s user_id=%s assinatura_id=%s erro=runtime",
-                diaria.id,
-                request.user.pk,
-                assinatura.id,
-            )
-            assinatura.status = 'ERRO'
-            assinatura.save(update_fields=['status'])
-            messages.error(request, 'Falha no retorno da Autentique ao enviar o documento. Se persistir, acione o suporte.')
-            return redirect('liberar_assinatura_diaria_spoke', pk=diaria.id)
-
-    messages.success(request, 'Documento liberado para assinatura com sucesso.')
-    return redirect('gerenciar_diaria', pk=pk)

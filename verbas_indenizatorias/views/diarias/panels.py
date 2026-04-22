@@ -100,14 +100,6 @@ def apostila_diaria_spoke_view(request, pk):
 
 @require_GET
 @permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
-def liberar_assinatura_diaria_spoke_view(request, pk):
-    diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status'), id=pk)
-    context = {'diaria': diaria}
-    return render(request, 'verbas/liberar_assinatura_diaria_spoke.html', context)
-
-
-@require_GET
-@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
 def cancelar_diaria_spoke_view(request, pk):
     diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status'), id=pk)
     context = {'diaria': diaria}
@@ -231,7 +223,6 @@ __all__ = [
     'vinculo_diaria_spoke_view',
     'devolucao_diaria_spoke_view',
     'apostila_diaria_spoke_view',
-    'liberar_assinatura_diaria_spoke_view',
     'cancelar_diaria_spoke_view',
     'minha_prestacao_list_view',
     'gerenciar_prestacao_view',

@@ -42,7 +42,6 @@ urlpatterns = [
     path('verbas/diarias/<int:pk>/gerenciar/vinculo/', verbas_diarias_panels.vinculo_diaria_spoke_view, name='vinculo_diaria_spoke'),
     path('verbas/diarias/<int:pk>/gerenciar/devolucao/', verbas_diarias_panels.devolucao_diaria_spoke_view, name='devolucao_diaria_spoke'),
     path('verbas/diarias/<int:pk>/gerenciar/apostila/', verbas_diarias_panels.apostila_diaria_spoke_view, name='apostila_diaria_spoke'),
-    path('verbas/diarias/<int:pk>/gerenciar/liberar-assinatura/', verbas_diarias_panels.liberar_assinatura_diaria_spoke_view, name='liberar_assinatura_diaria_spoke'),
     path('verbas/diarias/<int:pk>/gerenciar/cancelar/', verbas_diarias_panels.cancelar_diaria_spoke_view, name='cancelar_diaria_spoke'),
     path('verbas/diarias/<int:pk>/prestacao/gerenciar/', verbas_diarias_panels.gerenciar_prestacao_view, name='gerenciar_prestacao'),
 
@@ -55,7 +54,6 @@ urlpatterns = [
     path('verbas/prestacoes/revisar/', verbas_diarias_panels.painel_revisar_prestacoes_view, name='painel_revisar_prestacoes'),
     path('verbas/prestacoes/<int:pk>/revisar/', verbas_diarias_panels.revisar_prestacao_view, name='revisar_prestacao'),
     path('verbas/prestacoes/<int:pk>/aceitar/', verbas_diarias_actions.aceitar_prestacao_action, name='aceitar_prestacao_action'),
-    path('verbas/diarias/<int:pk>/liberar-assinatura/action/', verbas_diarias_actions.liberar_para_assinatura_action, name='liberar_para_assinatura_action'),
     path('verbas/diarias/<int:pk>/cancelar/action/', verbas_diarias_actions.cancelar_diaria_action, name='cancelar_diaria_action'),
     path('verbas/solicitacoes/revisar/', verbas_panels.painel_revisar_solicitacoes_view, name='painel_revisar_solicitacoes'),
     path('verbas/solicitacoes/<str:tipo_verba>/<int:pk>/revisar/', verbas_panels.revisar_solicitacao_verba_view, name='revisar_solicitacao_verba'),
