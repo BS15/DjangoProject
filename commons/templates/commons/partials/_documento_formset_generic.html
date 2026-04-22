@@ -101,7 +101,7 @@
 
                     <div class="col-auto d-flex gap-1">
                         {% if doc_f.instance.arquivo %}
-                        {% if form_prefix == "documento" and download_tipo_documento|default:'processo' == 'processo' and doc_f.instance.pk %}
+                        {% if download_tipo_documento|default:'processo' == 'processo' and doc_f.instance.pk and doc_f.instance.processo_id %}
                         <button
                             type="submit"
                             class="btn btn-sm btn-outline-primary"
