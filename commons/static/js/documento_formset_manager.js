@@ -187,7 +187,8 @@ class DocumentoFormsetManager {
           const dt = new DataTransfer();
           dt.items.add(file);
           fileInput[0].files = dt.files;
-          // Reusa o fluxo padrão de change para manter preview/tipo/handlers consistentes.
+          // Reusa o handler de `change` para centralizar `ensureTipoSelection` e
+          // `updateLocalPreviewButton` no mesmo fluxo, evitando lógica duplicada.
           fileInput.trigger('change');
         } catch (error) {
           console.warn('Não foi possível vincular automaticamente o arquivo ao formulário.', error);
@@ -205,7 +206,7 @@ class DocumentoFormsetManager {
   getNextFormIndex(preferredIndex = 0) {
     const usedIndexes = new Set();
     const pattern = new RegExp(`^${this.prefix}-(\\d+)-`);
-    $(this.containerSelector).find('[name]').each((_unusedIndex, field) => {
+    $(this.containerSelector).find('[name]').each((_index, field) => {
       const fieldName = field.name || '';
       const match = fieldName.match(pattern);
       if (match) {
