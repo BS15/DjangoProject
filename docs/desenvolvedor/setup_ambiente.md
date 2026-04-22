@@ -53,3 +53,24 @@ pytest pagamentos/
 
 ## Seed e dados de apoio
 Para viabilizar cenários de teste funcional, execute os scripts de carga após preparar o banco. Verifique se existem scripts de seed disponíveis na raiz do projeto ou em `desenvolvedor/` e execute-os conforme documentado nos próprios scripts.
+
+## Opção local (sem Docker)
+
+1. Instale dependências:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. Prepare o banco:
+   ```bash
+   python manage.py migrate
+   ```
+3. Inicie o servidor:
+   ```bash
+   python manage.py runserver
+   ```
+
+## Documentação local
+
+```bash
+mkdocs serve
+```
