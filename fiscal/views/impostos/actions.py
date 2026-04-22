@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import permission_required
 from django.db import transaction
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from credores.models import Credor
@@ -17,6 +18,21 @@ from pagamentos.domain_models import Processo, StatusChoicesProcesso, TiposDePag
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+@require_POST
+@permission_required("fiscal.acesso_backoffice", raise_exception=True)
+def preparar_revisao_agrupamento_action(request: HttpRequest) -> HttpResponse:
+    """Recebe a seleção de retenções e redireciona para a página de revisão do agrupamento."""
+    selecionados = request.POST.getlist("retencao_ids") or request.POST.getlist("itens_selecionados")
+
+    if not selecionados:
+        messages.warning(request, "Nenhum item selecionado para agrupar.")
+        return redirect("painel_impostos_view")
+
+    ids_param = ",".join(str(i) for i in selecionados)
+    url = reverse("revisar_agrupamento_retencoes_view") + f"?ids={ids_param}"
+    return redirect(url)
 
 
 @require_POST
@@ -153,6 +169,7 @@ def anexar_documentos_retencoes_action(request: HttpRequest) -> HttpResponse:
 
 
 __all__ = [
+    "preparar_revisao_agrupamento_action",
     "agrupar_retencoes_action",
     "anexar_documentos_retencoes_action",
 ]

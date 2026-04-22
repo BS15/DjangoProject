@@ -1,8 +1,11 @@
 """Panel views for tax retention management."""
 
+from decimal import Decimal
+
+from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.db.models import Count, Sum
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
 from fiscal.filters import RetencaoIndividualFilter, RetencaoNotaFilter, RetencaoProcessoFilter
 from fiscal.models import DocumentoFiscal, DocumentoPagamentoImposto, RetencaoImposto
@@ -86,4 +89,64 @@ def painel_impostos_view(request):
             retencao.documentacao_completa = retencao.id in docs_completos
         context.update({"filter": filtro, "retencoes": retencoes})
     return render(request, "fiscal/painel_impostos.html", context)
+
+
+@permission_required("fiscal.acesso_backoffice", raise_exception=True)
+def revisar_agrupamento_retencoes_view(request):
+    """Exibe a página de revisão antes de confirmar o agrupamento de retenções."""
+    ids_raw = (request.GET.get("ids") or "").strip()
+    if not ids_raw:
+        messages.warning(request, "Nenhum item selecionado para revisão.")
+        return redirect("painel_impostos_view")
+
+    try:
+        ids = [int(i) for i in ids_raw.split(",") if i.strip().isdigit()]
+    except ValueError:
+        messages.warning(request, "Parâmetros de seleção inválidos.")
+        return redirect("painel_impostos_view")
+
+    if not ids:
+        messages.warning(request, "Nenhum item selecionado para revisão.")
+        return redirect("painel_impostos_view")
+
+    retencoes = list(
+        RetencaoImposto.objects.select_related(
+            "codigo",
+            "status",
+            "nota_fiscal",
+            "nota_fiscal__nome_emitente",
+            "beneficiario",
+        )
+        .filter(id__in=ids, processo_pagamento__isnull=True)
+        .order_by("competencia", "id")
+    )
+
+    for retencao in retencoes:
+        retencao.fonte_retentora_nome = _resolve_fonte_retentora_nome(retencao)
+
+    total_valor = sum((r.valor or Decimal("0")) for r in retencoes)
+    total_base = sum((r.rendimento_tributavel or Decimal("0")) for r in retencoes)
+    qtd = len(retencoes)
+
+    ids_inacessiveis = len(ids) - qtd
+    if ids_inacessiveis:
+        messages.warning(
+            request,
+            f"{ids_inacessiveis} retenção(ões) ignorada(s) por já estarem agrupadas ou não existirem.",
+        )
+
+    if not retencoes:
+        messages.warning(request, "Nenhuma retenção elegível encontrada para agrupamento.")
+        return redirect("painel_impostos_view")
+
+    return render(
+        request,
+        "fiscal/revisar_agrupamento_retencoes.html",
+        {
+            "retencoes": retencoes,
+            "total_valor": total_valor,
+            "total_base": total_base,
+            "qtd": qtd,
+        },
+    )
 

@@ -14,6 +14,8 @@ from pagamentos.views.pre_payment.cadastro import apis as documentos_fiscais_api
 
 urlpatterns = [
     path('retencao-impostos/', impostos_panels.painel_impostos_view, name='painel_impostos_view'),
+    path('impostos/revisar-agrupamento/', impostos_panels.revisar_agrupamento_retencoes_view, name='revisar_agrupamento_retencoes_view'),
+    path('impostos/preparar-revisao/', impostos_actions.preparar_revisao_agrupamento_action, name='preparar_revisao_agrupamento_action'),
     path('impostos/agrupar/', impostos_actions.agrupar_retencoes_action, name='agrupar_retencoes_action'),
     path('impostos/anexar-documentos/', impostos_actions.anexar_documentos_retencoes_action, name='anexar_documentos_retencoes_action'),
     path('processos/comprovantes/', comprovantes_panels.painel_comprovantes_view, name='painel_comprovantes'),
