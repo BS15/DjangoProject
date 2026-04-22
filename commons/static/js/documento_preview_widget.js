@@ -25,14 +25,15 @@ class DocumentoPreviewWidget {
         return;
       }
       event.preventDefault();
-      this.preview(btn.dataset.docUrl || "", btn.dataset.docName || "", btn);
+      this.preview(btn.dataset.docUrl || btn.dataset.docLocalUrl || "", btn.dataset.docName || "", btn);
     });
   }
 
   selectFirstAvailable() {
-    const firstBtn = document.querySelector(`.doc-preview-btn[data-doc-prefix="${this.prefix}"]`);
+    const firstBtn = Array.from(document.querySelectorAll(`.doc-preview-btn[data-doc-prefix="${this.prefix}"]`))
+      .find((btn) => !!(btn.dataset.docUrl || btn.dataset.docLocalUrl));
     if (firstBtn) {
-      this.preview(firstBtn.dataset.docUrl || "", firstBtn.dataset.docName || "", firstBtn);
+      this.preview(firstBtn.dataset.docUrl || firstBtn.dataset.docLocalUrl || "", firstBtn.dataset.docName || "", firstBtn);
     }
   }
 

@@ -10,6 +10,9 @@
 
 class DocumentoFormsetManager {
   static DRAG_MIDPOINT_DIVISOR = 2;
+  static ORCAMENTO_FILENAME_HINTS = ['empenho', 'orcament'];
+  static ORCAMENTO_LABEL_HINT = 'orcament';
+  static DEFAULT_LABEL_HINT = 'outro';
 
   constructor(prefix) {
     this.prefix = prefix;
@@ -41,6 +44,13 @@ class DocumentoFormsetManager {
       e.preventDefault();
       const row = $(e.target).closest('.document-row');
       this.removeDocument(row);
+    });
+
+    $(this.containerSelector).on('change', 'input[type="file"][name$="-arquivo"]', (e) => {
+      const row = $(e.target).closest('.document-row');
+      const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+      this.ensureTipoSelection(row, file?.name || '');
+      this.updateLocalPreviewButton(row, file);
     });
   }
 
@@ -118,6 +128,8 @@ class DocumentoFormsetManager {
     container.append(newForm);
 
     $(this.managementForm).val(totalForms + 1);
+    this.ensureTipoSelection(newForm, file?.name || '');
+
     if (file) {
       const fileInput = newForm.find(`input[type="file"][name="${this.prefix}-${totalForms}-arquivo"]`);
       if (fileInput.length && typeof DataTransfer !== 'undefined') {
@@ -125,6 +137,7 @@ class DocumentoFormsetManager {
           const dt = new DataTransfer();
           dt.items.add(file);
           fileInput[0].files = dt.files;
+          this.updateLocalPreviewButton(newForm, file);
         } catch (error) {
           console.warn('Não foi possível vincular automaticamente o arquivo ao formulário.', error);
         }
@@ -136,6 +149,7 @@ class DocumentoFormsetManager {
   }
 
   removeDocument(row) {
+    this.clearLocalPreviewButton(row);
     const deleteCheckbox = row.find('.django-delete-checkbox input[type="checkbox"]');
     
     if (deleteCheckbox.length) {
@@ -229,6 +243,83 @@ class DocumentoFormsetManager {
   updateDocumentCount() {
     const count = $(this.containerSelector).find('.document-row:visible').length;
     $(this.badgeSelector).text(`${count} doc(s)`);
+  }
+
+  ensureTipoSelection(row, fileName = '') {
+    const selectTipo = row.find('select[name$="-tipo"]').first();
+    if (!selectTipo.length || selectTipo.val()) {
+      return;
+    }
+
+    const normalizedFileName = this.normalizeText(fileName || '');
+    const preferredOption = selectTipo.find('option').filter((_, option) => {
+      const value = (option.value || '').trim();
+      if (!value) {
+        return false;
+      }
+      const label = this.normalizeText(option.text || '');
+      const hasOrcamentoHint = DocumentoFormsetManager.ORCAMENTO_FILENAME_HINTS
+        .some((hint) => normalizedFileName.includes(hint));
+      if (hasOrcamentoHint) {
+        return label.includes(DocumentoFormsetManager.ORCAMENTO_LABEL_HINT);
+      }
+      return label.includes(DocumentoFormsetManager.DEFAULT_LABEL_HINT);
+    }).first();
+
+    if (preferredOption.length) {
+      selectTipo.val(preferredOption.val());
+      return;
+    }
+
+    const firstValidOption = selectTipo.find('option').filter((_, option) => (option.value || '').trim()).first();
+    if (firstValidOption.length) {
+      selectTipo.val(firstValidOption.val());
+    }
+  }
+
+  updateLocalPreviewButton(row, file) {
+    const previewBtn = row.find(`.doc-preview-btn[data-doc-prefix="${this.prefix}"]`).first();
+    if (!previewBtn.length) {
+      return;
+    }
+
+    this.revokePreviewBlobUrl(previewBtn);
+
+    if (!file) {
+      previewBtn.attr('data-doc-local-url', '');
+      previewBtn.attr('data-doc-name', '');
+      previewBtn.addClass('d-none');
+      return;
+    }
+
+    const localUrl = URL.createObjectURL(file);
+    previewBtn.attr('data-doc-local-url', localUrl);
+    previewBtn.attr('data-doc-name', file.name || '');
+    previewBtn.removeClass('d-none');
+  }
+
+  clearLocalPreviewButton(row) {
+    const previewBtn = row.find(`.doc-preview-btn[data-doc-prefix="${this.prefix}"]`).first();
+    if (!previewBtn.length) {
+      return;
+    }
+    this.revokePreviewBlobUrl(previewBtn);
+  }
+
+  revokePreviewBlobUrl(previewBtn) {
+    const localUrl = previewBtn.attr('data-doc-local-url');
+    if (localUrl && localUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(localUrl);
+      previewBtn.attr('data-doc-local-url', '');
+    }
+  }
+
+  normalizeText(value) {
+    return (value || '')
+      .toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
   }
 }
 
