@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from django.core.exceptions import ValidationError
 from django.utils.http import url_has_allowed_host_and_scheme
+from requests.exceptions import RequestException
 
 from pagamentos.domain_models import Processo
 from verbas_indenizatorias.constants import (
@@ -360,10 +361,27 @@ def liberar_para_assinatura_action(request, pk):
                 assinatura.id,
                 assinatura.autentique_id,
             )
-        except Exception as exc:
+        except RequestException:
+            logger.warning(
+                "mutation_error=liberar_para_assinatura_diaria diaria_id=%s user_id=%s assinatura_id=%s erro=request",
+                diaria.id,
+                request.user.pk,
+                assinatura.id,
+            )
             assinatura.status = 'ERRO'
             assinatura.save(update_fields=['status'])
-            messages.error(request, f'Falha ao enviar documento para a Autentique: {exc}')
+            messages.error(request, 'Falha de conexão ao enviar para a Autentique. Tente novamente.')
+            return redirect('liberar_assinatura_diaria_spoke', pk=diaria.id)
+        except RuntimeError:
+            logger.exception(
+                "mutation_error=liberar_para_assinatura_diaria diaria_id=%s user_id=%s assinatura_id=%s erro=runtime",
+                diaria.id,
+                request.user.pk,
+                assinatura.id,
+            )
+            assinatura.status = 'ERRO'
+            assinatura.save(update_fields=['status'])
+            messages.error(request, 'Falha no retorno da Autentique ao enviar o documento. Se persistir, acione o suporte.')
             return redirect('liberar_assinatura_diaria_spoke', pk=diaria.id)
 
     messages.success(request, 'Documento liberado para assinatura com sucesso.')

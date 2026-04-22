@@ -66,7 +66,7 @@ def enviar_documento_para_assinatura(pdf_bytes, nome_doc, signatarios, folder_id
     data = response.json()
 
     if "errors" in data:
-        raise Exception(f"Autentique API error: {data['errors']}")
+        raise RuntimeError(f"Autentique API error: {data['errors']}")
 
     doc = data["data"]["createDocument"]
     doc_id = doc["id"]
@@ -122,7 +122,7 @@ def verificar_e_baixar_documento(autentique_id):
 
     data = response.json()
     if "errors" in data:
-        raise Exception(f"Autentique API error: {data['errors']}")
+        raise RuntimeError(f"Autentique API error: {data['errors']}")
 
     doc = data["data"]["document"]
     signatures = doc.get("signatures", [])
