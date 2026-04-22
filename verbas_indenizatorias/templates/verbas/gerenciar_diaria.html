@@ -104,11 +104,11 @@
 {% endif %}
 
 {% if perms.verbas_indenizatorias.pode_gerenciar_diarias %}
-{% if not diaria.status %}
-<a href="{% url 'cancelar_diaria_spoke' diaria.id %}" class="btn btn-outline-danger w-100 btn-sm mt-2"><i class="bi bi-x-circle"></i> Cancelar Diária</a>
-{% elif diaria.status.status_choice != 'PAGA' and diaria.status.status_choice != 'REJEITADA' and diaria.status.status_choice != 'CANCELADO / ANULADO' %}
+{% with status_choice=diaria.status.status_choice|default:'' %}
+{% if status_choice != 'PAGA' and status_choice != 'REJEITADA' and status_choice != 'CANCELADO / ANULADO' %}
 <a href="{% url 'cancelar_diaria_spoke' diaria.id %}" class="btn btn-outline-danger w-100 btn-sm mt-2"><i class="bi bi-x-circle"></i> Cancelar Diária</a>
 {% endif %}
+{% endwith %}
 {% endif %}
 
 <a href="{% url 'gerar_pcd' diaria.pk %}" target="_blank" class="btn btn-outline-primary w-100 mt-2">

@@ -6,9 +6,8 @@ from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
 from credores.models import Credor
+from verbas_indenizatorias.constants import STATUS_VERBA_SOLICITADA
 from verbas_indenizatorias.models import Diaria, StatusChoicesVerbasIndenizatorias
-
-STATUS_SOLICITADA = "SOLICITADA"
 
 
 class DiariaCsvValidationError(Exception):
@@ -87,8 +86,8 @@ def confirmar_diarias_lote(preview_items, usuario):
 
     resultados = []
     status_obj, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-        status_choice__iexact=STATUS_SOLICITADA,
-        defaults={"status_choice": STATUS_SOLICITADA},
+        status_choice__iexact=STATUS_VERBA_SOLICITADA,
+        defaults={"status_choice": STATUS_VERBA_SOLICITADA},
     )
     for item in preview_items:
         try:
