@@ -182,8 +182,11 @@ class DocumentoProcessoInlineForm(forms.ModelForm):
 		fields = ['tipo', 'ordem', 'arquivo']
 
 	def __init__(self, *args, **kwargs):
+		tipo_queryset = kwargs.pop('tipo_queryset', None)
 		super().__init__(*args, **kwargs)
 		self.fields['ordem'].required = False
+		if tipo_queryset is not None:
+			self.fields['tipo'].queryset = tipo_queryset
 
 	def clean(self):
 		cleaned_data = super().clean()

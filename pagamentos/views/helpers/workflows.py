@@ -3,6 +3,7 @@
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -14,6 +15,17 @@ from pagamentos.domain_models import (
     TiposDeDocumento,
 )
 from .audit_builders import _get_unified_history
+
+
+def _get_tipos_documento_para_processo(processo):
+    """Retorna os TiposDocumento ativos válidos para o processo informado.
+
+    Inclui tipos vinculados ao tipo de pagamento do processo e tipos gerais
+    (sem tipo_pagamento definido), excluindo tipos de outros contextos de pagamento.
+    """
+    return TiposDeDocumento.objects.filter(ativo=True).filter(
+        Q(tipo_pagamento=processo.tipo_pagamento) | Q(tipo_pagamento__isnull=True)
+    )
 
 
 def _registrar_recusa(request, processo, form, status_devolucao):
@@ -269,8 +281,13 @@ def _processo_fila_detalhe_view(
         )
 
     if editable:
+        tipos_documento = _get_tipos_documento_para_processo(processo)
         if doc_formset is None:
-            doc_formset = DocumentoFormSet(instance=processo, prefix="documentos")
+            doc_formset = DocumentoFormSet(
+                instance=processo,
+                prefix="documentos",
+                form_kwargs={"tipo_queryset": tipos_documento},
+            )
         if pendencia_formset is None:
             pendencia_formset = PendenciaFormSet(instance=processo, prefix="pendencias")
 
@@ -299,7 +316,7 @@ def _processo_fila_detalhe_view(
             {
                 "doc_formset": doc_formset,
                 "pendencia_formset": pendencia_formset,
-                "tipos_documento": TiposDeDocumento.objects.all(),
+                "tipos_documento": tipos_documento,
             }
         )
 
