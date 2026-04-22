@@ -20,9 +20,17 @@ A Action não contém regras de negócio. Ela sabe *quem* deve executar a opera�
 
 ### Service/Helper — o Worker
 
-O diretório `services/` concentra toda a lógica que muta estado. É aqui que vivem as transições de status, os cálculos financeiros, as validações de elegibilidade e as integrações com sistemas externos. Cada operação que altera dados financeiros ou de status opera dentro de um `transaction.atomic()` com `select_for_update()`, garantindo consistência em acesso concorrente.
+O diretório `services/` de cada módulo concentra toda a lógica que muta estado: transições de status na máquina de processos, cálculos financeiros usando exclusivamente `decimal.Decimal`, validações de elegibilidade, turnpikes (validações de pré-condição que bloqueiam avanço de etapa) e integrações com sistemas externos como EFD-Reinf, isolando os pontos de falha.
 
-Erros de domínio (dados fiscais inválidos, processo em estado incompatível, valor inconsistente) são levantados imediatamente como exceções — nunca silenciados ou compensados parcialmente.
+A camada de services é chamada pelas Actions após validação de formulário, nunca diretamente por templates ou models. Ela não conhece HTTP, não retorna `HttpResponse` e não tem acesso a `request`. Essa independência permite testá-la de forma isolada sem precisar simular uma requisição web.
+
+#### Garantias de consistência
+
+**`transaction.atomic()`** garante que um conjunto de operações relacionadas (ex.: avançar status + registrar documento + emitir evento de auditoria) seja tratado como uma unidade indivisível. Se qualquer etapa falhar, o banco retorna ao estado anterior.
+
+**`select_for_update()`** adquire um lock pessimista sobre os registros alvos antes de qualquer leitura que preceda uma escrita. Isso elimina race conditions em cenários onde múltiplos usuários operam sobre o mesmo processo simultaneamente.
+
+Erros de domínio são levantados imediatamente como exceções — nunca absorvidos silenciosamente. Um dado fiscal inválido, um processo em estado incompatível ou um valor inconsistente interrompem a operação antes que qualquer dado seja persistido.
 
 ## Fluxo de uma requisição típica
 

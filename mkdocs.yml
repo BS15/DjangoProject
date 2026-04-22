@@ -66,7 +66,6 @@ nav:
       - Glossário do Conselho: negocio/glossario_conselho.md
   - Arquitetura de Software:
       - Padrão Manager-Worker: arquitetura/manager_worker.md
-      - Camada de Services: arquitetura/camada_services.md
       - Hub-and-Spoke: arquitetura/hub_spoke.md
   - Manual de Módulos:
       - Pagamentos Core: modulos/pagamentos_core.md
@@ -86,5 +85,4 @@ nav:
       - Padrões de Código: desenvolvedor/padroes_codigo.md
       - Dicionários Operacionais: desenvolvedor/dicionarios_operacionais.md
       - Funcionalidades Transversais: desenvolvedor/funcionalidades_transversais.md
-      - Guia de Instalação: instalacao.md
       - Referência de API: api.md
