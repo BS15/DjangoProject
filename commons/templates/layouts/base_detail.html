@@ -3,14 +3,7 @@
 {% block content %}
 <div class="container mt-5 mb-5">
 
-    {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-3" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        {% endfor %}
-    {% endif %}
+    {% include "layouts/_messages.html" %}
 
     {# Optional breadcrumb navigation #}
     {% block detail_breadcrumb %}{% endblock %}
