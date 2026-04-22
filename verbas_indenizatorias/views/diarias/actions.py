@@ -337,25 +337,34 @@ def liberar_para_assinatura_action(request, pk):
                 except Exception:
                     pass
 
-        payload = enviar_documento_para_assinatura(
-            pdf_bytes,
-            f"PCD_Diaria_{diaria.id}",
-            signatarios=[{'email': diaria.proponente.email}],
-        )
+        try:
+            payload = enviar_documento_para_assinatura(
+                pdf_bytes,
+                f"PCD_Diaria_{diaria.id}",
+                signatarios=[{'email': diaria.proponente.email, 'action': 'SIGN'}],
+            )
+            autentique_id = payload.get('id')
+            if not autentique_id:
+                raise RuntimeError('A Autentique não retornou o identificador do documento enviado.')
 
-        assinatura.autentique_id = payload.get('id')
-        assinatura.autentique_url = payload.get('url') or ''
-        assinatura.dados_signatarios = payload.get('signers_data') or {}
-        assinatura.status = 'PENDENTE'
-        assinatura.save(update_fields=['autentique_id', 'autentique_url', 'dados_signatarios', 'status'])
+            assinatura.autentique_id = autentique_id
+            assinatura.autentique_url = payload.get('url') or ''
+            assinatura.dados_signatarios = payload.get('signers_data') or {}
+            assinatura.status = 'PENDENTE'
+            assinatura.save(update_fields=['autentique_id', 'autentique_url', 'dados_signatarios', 'status'])
 
-        logger.info(
-            "mutation=liberar_para_assinatura_diaria diaria_id=%s user_id=%s assinatura_id=%s autentique_id=%s",
-            diaria.id,
-            request.user.pk,
-            assinatura.id,
-            assinatura.autentique_id,
-        )
+            logger.info(
+                "mutation=liberar_para_assinatura_diaria diaria_id=%s user_id=%s assinatura_id=%s autentique_id=%s",
+                diaria.id,
+                request.user.pk,
+                assinatura.id,
+                assinatura.autentique_id,
+            )
+        except Exception as exc:
+            assinatura.status = 'ERRO'
+            assinatura.save(update_fields=['status'])
+            messages.error(request, f'Falha ao enviar documento para a Autentique: {exc}')
+            return redirect('liberar_assinatura_diaria_spoke', pk=diaria.id)
 
     messages.success(request, 'Documento liberado para assinatura com sucesso.')
     return redirect('gerenciar_diaria', pk=pk)
