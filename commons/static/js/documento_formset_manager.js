@@ -9,11 +9,6 @@
 ───────────────────────────────────────────────────────────────────────────── */
 
 class DocumentoFormsetManager {
-  static DRAG_MIDPOINT_DIVISOR = 2;
-  static ORCAMENTO_FILENAME_HINTS = ['empenho', 'orcament'];
-  static ORCAMENTO_LABEL_HINT = 'orcament';
-  static DEFAULT_LABEL_HINT = 'outro';
-
   constructor(prefix) {
     this.prefix = prefix;
     this.containerSelector = `#document-list-${prefix}`;
@@ -56,7 +51,7 @@ class DocumentoFormsetManager {
     $(this.containerSelector).on('change', 'input[type="file"][name$="-arquivo"]', (e) => {
       const row = $(e.target).closest('.document-row');
       const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
-      this.ensureTipoSelection(row, file?.name || '');
+      this.ensureTipoSelection(row, file ? file.name : '');
       this.updateLocalPreviewButton(row, file);
     });
   }
@@ -141,7 +136,9 @@ class DocumentoFormsetManager {
       e.preventDefault();
       e.stopPropagation();
       dropzone.removeClass('border-primary');
-      const files = e.originalEvent?.dataTransfer?.files;
+      const originalEvent = e.originalEvent || {};
+      const dataTransfer = originalEvent.dataTransfer || null;
+      const files = dataTransfer ? dataTransfer.files : null;
       this.addFiles(files);
     });
   }
@@ -157,8 +154,9 @@ class DocumentoFormsetManager {
     const container = $(this.containerSelector);
     const emptyForm = $(this.emptyFormSelector);
     const totalForms = parseInt($(this.managementForm).val(), 10);
+    const nextFormIndex = this.getNextFormIndex();
 
-    if (!emptyForm.length || isNaN(totalForms)) {
+    if (!emptyForm.length || isNaN(totalForms) || nextFormIndex < 0) {
       return;
     }
 
@@ -170,34 +168,55 @@ class DocumentoFormsetManager {
       ['name', 'id', 'for'].forEach((attr) => {
         const value = el.attr(attr);
         if (value && value.includes('__prefix__')) {
-          el.attr(attr, value.replace(/__prefix__/g, totalForms));
+          el.attr(attr, value.replace(/__prefix__/g, nextFormIndex));
         }
       });
     });
 
-    newForm.attr('data-form-index', totalForms);
+    newForm.attr('data-form-index', nextFormIndex);
     newForm.show();
     container.append(newForm);
 
-    $(this.managementForm).val(totalForms + 1);
-    this.ensureTipoSelection(newForm, file?.name || '');
+    $(this.managementForm).val(Math.max(totalForms, nextFormIndex + 1));
+    this.ensureTipoSelection(newForm, file ? file.name : '');
 
     if (file) {
-      const fileInput = newForm.find(`input[type="file"][name="${this.prefix}-${totalForms}-arquivo"]`);
+      const fileInput = newForm.find(`input[type="file"][name="${this.prefix}-${nextFormIndex}-arquivo"]`);
       if (fileInput.length && typeof DataTransfer !== 'undefined') {
         try {
           const dt = new DataTransfer();
           dt.items.add(file);
           fileInput[0].files = dt.files;
-          this.updateLocalPreviewButton(newForm, file);
+          fileInput.trigger('change');
         } catch (error) {
           console.warn('Não foi possível vincular automaticamente o arquivo ao formulário.', error);
+          this.updateLocalPreviewButton(newForm, file);
         }
+      } else {
+        this.updateLocalPreviewButton(newForm, file);
       }
     }
     this.makeFormsetDraggable();
     this.syncOrderFields();
     this.updateDocumentCount();
+  }
+
+  getNextFormIndex() {
+    const usedIndexes = new Set();
+    const pattern = new RegExp(`^${this.prefix}-(\\d+)-`);
+    $(this.containerSelector).find('[name]').each((_index, field) => {
+      const fieldName = field.name || '';
+      const match = fieldName.match(pattern);
+      if (match) {
+        usedIndexes.add(parseInt(match[1], 10));
+      }
+    });
+
+    let candidate = 0;
+    while (usedIndexes.has(candidate)) {
+      candidate += 1;
+    }
+    return candidate;
   }
 
   removeDocument(row) {
@@ -246,7 +265,7 @@ class DocumentoFormsetManager {
         return;
       }
       this.draggedRow = e.currentTarget;
-      if (e.originalEvent?.dataTransfer) {
+      if (e.originalEvent && e.originalEvent.dataTransfer) {
         e.originalEvent.dataTransfer.effectAllowed = 'move';
         // Browser DnD APIs require non-empty drag data in some engines.
         const dragToken = this.draggedRow.dataset.docId
@@ -272,7 +291,7 @@ class DocumentoFormsetManager {
       }
       const target = e.currentTarget;
       const targetRect = target.getBoundingClientRect();
-      const halfHeight = targetRect.height / DocumentoFormsetManager.DRAG_MIDPOINT_DIVISOR;
+      const halfHeight = targetRect.height / DOC_DRAG_MIDPOINT_DIVISOR;
       const shouldInsertAfter = e.originalEvent.clientY > targetRect.top + halfHeight;
 
       if (shouldInsertAfter) {
@@ -321,12 +340,12 @@ class DocumentoFormsetManager {
         return false;
       }
       const label = this.normalizeText(option.text || '');
-      const hasOrcamentoHint = DocumentoFormsetManager.ORCAMENTO_FILENAME_HINTS
+      const hasOrcamentoHint = DOC_ORCAMENTO_FILENAME_HINTS
         .some((hint) => normalizedFileName.includes(hint));
       if (hasOrcamentoHint) {
-        return label.includes(DocumentoFormsetManager.ORCAMENTO_LABEL_HINT);
+        return label.includes(DOC_ORCAMENTO_LABEL_HINT);
       }
-      return label.includes(DocumentoFormsetManager.DEFAULT_LABEL_HINT);
+      return label.includes(DOC_DEFAULT_LABEL_HINT);
     }).first();
 
     if (preferredOption.length) {
@@ -385,6 +404,11 @@ class DocumentoFormsetManager {
       .replace(/[\u0300-\u036f]/g, '');
   }
 }
+
+const DOC_DRAG_MIDPOINT_DIVISOR = 2;
+const DOC_ORCAMENTO_FILENAME_HINTS = ['empenho', 'orcament'];
+const DOC_ORCAMENTO_LABEL_HINT = 'orcament';
+const DOC_DEFAULT_LABEL_HINT = 'outro';
 
 // Auto-initialize for common prefixes (optional convenience)
 document.addEventListener('DOMContentLoaded', function() {
