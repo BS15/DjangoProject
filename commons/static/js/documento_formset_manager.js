@@ -52,48 +52,48 @@ class DocumentoFormsetManager {
   }
 
   bindBatchTypeControls() {
-    const setFeedback = (message, isError = false) => {
-      const feedback = $(this.batchFeedbackSelector);
-      if (!feedback.length) {
-        return;
-      }
-      feedback.text(message || '');
-      feedback.toggleClass('text-danger', Boolean(isError));
-      feedback.toggleClass('text-muted', !isError);
-    };
-
     $(document).on('click', this.batchSelectAllSelector, (e) => {
       e.preventDefault();
       this.getVisibleRows().find('.doc-batch-check').prop('checked', true);
-      setFeedback('');
+      this.setBatchFeedback('');
     });
 
     $(document).on('click', this.batchClearSelectionSelector, (e) => {
       e.preventDefault();
       this.getVisibleRows().find('.doc-batch-check').prop('checked', false);
-      setFeedback('');
+      this.setBatchFeedback('');
     });
 
     $(document).on('click', this.batchApplyTypeSelector, (e) => {
       e.preventDefault();
       const selectedType = $(this.batchTypeSelectSelector).val();
       if (!selectedType) {
-        setFeedback('Selecione um tipo de documento para aplicar em lote.', true);
+        this.setBatchFeedback('Selecione um tipo de documento para aplicar em lote.', true);
         return;
       }
       const selectedRows = this.getSelectedRows();
       if (!selectedRows.length) {
-        setFeedback('Selecione ao menos um documento para aplicar o tipo em lote.', true);
+        this.setBatchFeedback('Selecione ao menos um documento para aplicar o tipo em lote.', true);
         return;
       }
-      selectedRows.each((_, rowEl) => {
+      selectedRows.each((_index, rowEl) => {
         const typeField = $(rowEl).find(this.typeFieldSelector).first();
         if (typeField.length) {
           typeField.val(selectedType).trigger('change');
         }
       });
-      setFeedback(`Tipo aplicado em ${selectedRows.length} documento(s).`);
+      this.setBatchFeedback(`Tipo aplicado em ${selectedRows.length} documento(s).`);
     });
+  }
+
+  setBatchFeedback(message, isError = false) {
+    const feedback = $(this.batchFeedbackSelector);
+    if (!feedback.length) {
+      return;
+    }
+    feedback.text(message || '');
+    feedback.toggleClass('text-danger', Boolean(isError));
+    feedback.toggleClass('text-muted', !isError);
   }
 
   bindDropzone() {
