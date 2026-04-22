@@ -237,19 +237,30 @@ def extrair_codigo_barras_documento_action(request: HttpRequest, pk: int, docume
         return redirect("editar_processo_documentos", pk=pk)
 
     try:
-        dados = processar_pdf_boleto(documento.arquivo) or {}
+        with documento.arquivo.open("rb") as arquivo_pdf:
+            dados = processar_pdf_boleto(arquivo_pdf) or {}
         codigo_barras = (dados.get("codigo_barras") or "").strip()
         if not codigo_barras:
             messages.warning(request, "Não foi possível localizar linha digitável válida neste documento.")
             return redirect("editar_processo_documentos", pk=pk)
 
-        boleto, criado = Boleto_Bancario.objects.get_or_create(
-            documentoprocesso_ptr=documento,
-            defaults={"codigo_barras": codigo_barras},
-        )
-        if not criado:
-            boleto.codigo_barras = codigo_barras
-            boleto.save(update_fields=["codigo_barras"])
+        with transaction.atomic():
+            boleto = Boleto_Bancario.objects.filter(pk=documento.pk).first()
+            if boleto is None:
+                boleto = Boleto_Bancario(
+                    pk=documento.pk,
+                    documentoprocesso_ptr=documento,
+                    processo=documento.processo,
+                    tipo=documento.tipo,
+                    ordem=documento.ordem,
+                    arquivo=documento.arquivo,
+                    imutavel=documento.imutavel,
+                    codigo_barras=codigo_barras,
+                )
+                boleto.save(force_insert=True)
+            else:
+                boleto.codigo_barras = codigo_barras
+                boleto.save(update_fields=["codigo_barras"])
 
         messages.success(request, "Código de barras extraído com sucesso.")
     except (PyPDF2.errors.PdfReadError, OSError, TypeError, ValueError):

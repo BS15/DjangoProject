@@ -18,6 +18,7 @@ class DocumentoFormsetManager {
     this.dropzoneSelector = `#doc-dropzone-${prefix}`;
     this.dropInputSelector = `#drop-upload-input-${prefix}`;
     this.selectDropFilesBtnSelector = `#select-drop-files-${prefix}`;
+    this.addDocRowBtnSelector = `.add-doc-row-btn[data-doc-prefix="${prefix}"]`;
     this.batchTypeSelectSelector = `#batch-doc-type-${prefix}`;
     this.batchFeedbackSelector = `#batch-doc-feedback-${prefix}`;
     this.batchApplyTypeSelector = `.batch-apply-type-btn[data-doc-prefix="${prefix}"]`;
@@ -53,6 +54,11 @@ class DocumentoFormsetManager {
       const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
       this.ensureTipoSelection(row, file ? file.name : '');
       this.updateLocalPreviewButton(row, file);
+    });
+
+    $(document).on('click', this.addDocRowBtnSelector, (e) => {
+      e.preventDefault();
+      this.addDocument();
     });
   }
 
@@ -192,9 +198,17 @@ class DocumentoFormsetManager {
           fileInput.trigger('change');
         } catch (error) {
           console.warn('Não foi possível vincular automaticamente o arquivo ao formulário.', error);
+          this.setBatchFeedback(
+            `Não foi possível anexar automaticamente "${file.name || 'arquivo'}". Selecione-o manualmente na linha criada.`,
+            true,
+          );
           this.updateLocalPreviewButton(newForm, file);
         }
       } else {
+        this.setBatchFeedback(
+          `Seu navegador não permitiu anexar automaticamente "${file.name || 'arquivo'}". Selecione-o manualmente na linha criada.`,
+          true,
+        );
         this.updateLocalPreviewButton(newForm, file);
       }
     }

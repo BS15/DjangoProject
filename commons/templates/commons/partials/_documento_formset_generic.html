@@ -43,6 +43,9 @@
                     Arraste arquivos aqui para anexar ou selecione no botão ao lado.
                 </div>
                 <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm {{ add_btn_class|default:'btn-outline-primary' }} add-doc-row-btn" data-doc-prefix="{{ form_prefix }}">
+                        <i class="bi bi-plus-lg"></i> Adicionar Documento
+                    </button>
                     <button type="button" class="btn btn-sm btn-outline-secondary" id="select-drop-files-{{ form_prefix }}">
                         <i class="bi bi-folder2-open"></i> Selecionar Arquivos
                     </button>
@@ -102,7 +105,9 @@
 
                     {% if show_order_field %}
                     <div class="col-auto drag-handle ps-1" title="Arrastar para reordenar">
-                        <i class="bi bi-grip-vertical text-secondary"></i>
+                        <button type="button" class="btn btn-sm btn-link p-0 text-secondary text-decoration-none drag-handle-btn" tabindex="-1" aria-label="Arrastar para reordenar">
+                            <i class="bi bi-grip-vertical"></i>
+                        </button>
                     </div>
 
                     <div class="col-1">
@@ -210,7 +215,9 @@
             {% endif %}
             {% if show_order_field %}
             <div class="col-auto drag-handle ps-1">
-                <i class="bi bi-grip-vertical text-secondary"></i>
+                <button type="button" class="btn btn-sm btn-link p-0 text-secondary text-decoration-none drag-handle-btn" tabindex="-1" aria-label="Arrastar para reordenar">
+                    <i class="bi bi-grip-vertical"></i>
+                </button>
             </div>
             <div class="col-1">
                 <label class="small text-muted d-block">Ord.</label>
