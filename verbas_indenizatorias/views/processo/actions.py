@@ -3,7 +3,7 @@ logger = logging.getLogger(__name__)
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
-from django.http import HttpResponseForbidden
+from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
@@ -21,11 +21,8 @@ from ..shared.registry import (
 )
 
 
-def _usuario_pode_revisar_solicitacoes(user):
-    return user.has_perm("pagamentos.pode_operar_contas_pagar") or user.has_perm("pagamentos.acesso_backoffice")
-
-
-def _set_status_case_insensitive(verba, status_str):
+def _set_or_create_status(verba, status_str):
+    status_str = (status_str or "").upper()
     status, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
         status_choice__iexact=status_str,
         defaults={"status_choice": status_str},
@@ -50,7 +47,7 @@ def agrupar_verbas_view(request, tipo_verba):
         messages.warning(request, 'Nenhum item selecionado para agrupar.')
         return redirect(url_retorno)
 
-    # Todas as verbas devem estar aprovadas e sem processo para agrupamento.
+    # Todas as verbas devem estar revisadas e sem processo para agrupamento.
     itens_query = modelo_verba.objects.select_related('beneficiario').filter(
         id__in=selecionados,
         processo__isnull=True,
@@ -98,37 +95,35 @@ def agrupar_verbas_view(request, tipo_verba):
 
 
 @require_POST
-@permission_required("verbas_indenizatorias.pode_visualizar_verbas", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 def aprovar_revisao_solicitacao_action(request, tipo_verba, pk):
-    if not _usuario_pode_revisar_solicitacoes(request.user):
-        return HttpResponseForbidden("Acesso negado para revisão operacional de solicitações.")
-
     config = _VERBA_CONFIG.get(tipo_verba)
     if not config:
         messages.error(request, "Tipo de solicitação inválido para revisão.")
         return redirect("painel_revisar_solicitacoes")
 
-    solicitacao = get_object_or_404(
-        config["model"].objects.select_related("status", "processo"),
-        id=pk,
-    )
-    if solicitacao.processo_id:
-        messages.warning(request, "Solicitação já está vinculada a processo.")
-        return redirect("revisar_solicitacao_verba", tipo_verba=tipo_verba, pk=pk)
+    with transaction.atomic():
+        solicitacao = get_object_or_404(
+            config["model"].objects.select_for_update().select_related("status"),
+            id=pk,
+        )
+        if solicitacao.processo_id:
+            messages.warning(request, "Solicitação já está vinculada a processo.")
+            return redirect("revisar_solicitacao_verba", tipo_verba=tipo_verba, pk=pk)
 
-    status_atual = (solicitacao.status.status_choice if solicitacao.status else "").upper()
-    if status_atual != STATUS_VERBA_APROVADA:
-        messages.warning(request, "A solicitação precisa estar APROVADA para revisão operacional.")
-        return redirect("revisar_solicitacao_verba", tipo_verba=tipo_verba, pk=pk)
+        status_atual = (solicitacao.status.status_choice if solicitacao.status else "").upper()
+        if status_atual != STATUS_VERBA_APROVADA:
+            messages.warning(request, "A solicitação precisa estar APROVADA para revisão operacional.")
+            return redirect("revisar_solicitacao_verba", tipo_verba=tipo_verba, pk=pk)
 
-    _set_status_case_insensitive(solicitacao, STATUS_VERBA_REVISADA)
-    logger.info(
-        "mutation=aprovar_revisao_solicitacao tipo_verba=%s solicitacao_id=%s user_id=%s",
-        tipo_verba,
-        solicitacao.id,
-        request.user.pk,
-    )
-    messages.success(request, "Solicitação revisada e liberada para agrupamento.")
+        _set_or_create_status(solicitacao, STATUS_VERBA_REVISADA)
+        logger.info(
+            "mutation=aprovar_revisao_solicitacao tipo_verba=%s solicitacao_id=%s user_id=%s",
+            tipo_verba,
+            solicitacao.id,
+            request.user.pk,
+        )
+        messages.success(request, "Solicitação revisada e liberada para agrupamento.")
     return redirect("revisar_solicitacao_verba", tipo_verba=tipo_verba, pk=pk)
 
 

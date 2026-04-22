@@ -1,5 +1,4 @@
 from django.contrib.auth.decorators import permission_required
-from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
@@ -16,13 +15,8 @@ _SOLICITACAO_LABELS = {
     "jeton": "Jeton",
     "auxilio": "Auxílio",
 }
-
-
-def _usuario_pode_revisar_solicitacoes(user):
-    return user.has_perm("pagamentos.pode_operar_contas_pagar") or user.has_perm("pagamentos.acesso_backoffice")
-
-
 def _resumo_solicitacao(tipo_verba, solicitacao):
+    """Normaliza dados de exibição da solicitação para fila e tela de revisão."""
     if tipo_verba == "diaria":
         data_saida = solicitacao.data_saida.strftime("%d/%m/%Y") if solicitacao.data_saida else "-"
         data_retorno = solicitacao.data_retorno.strftime("%d/%m/%Y") if solicitacao.data_retorno else "-"
@@ -122,17 +116,14 @@ def editar_processo_verbas_documentos_view(request, pk):
 
 
 @require_GET
-@permission_required("verbas_indenizatorias.pode_visualizar_verbas", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 def painel_revisar_solicitacoes_view(request):
-    if not _usuario_pode_revisar_solicitacoes(request.user):
-        return HttpResponseForbidden("Acesso negado para revisão operacional de solicitações.")
-
     solicitacoes = []
     for tipo_verba in ("diaria", "reembolso", "jeton", "auxilio"):
         config = _VERBA_CONFIG[tipo_verba]
         itens = (
             config["model"]
-            .objects.select_related("beneficiario", "status", "processo")
+            .objects.select_related("beneficiario", "status")
             .filter(
                 processo__isnull=True,
                 status__status_choice__iexact=STATUS_VERBA_APROVADA,
@@ -146,17 +137,15 @@ def painel_revisar_solicitacoes_view(request):
 
 
 @require_GET
-@permission_required("verbas_indenizatorias.pode_visualizar_verbas", raise_exception=True)
+@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
 def revisar_solicitacao_verba_view(request, tipo_verba, pk):
-    if not _usuario_pode_revisar_solicitacoes(request.user):
-        return HttpResponseForbidden("Acesso negado para revisão operacional de solicitações.")
-
     config = _VERBA_CONFIG.get(tipo_verba)
     if not config:
-        return HttpResponseForbidden("Tipo de solicitação inválido para revisão.")
+        from django.http import Http404
+        raise Http404("Tipo de solicitação inválido para revisão.")
 
     solicitacao = get_object_or_404(
-        config["model"].objects.select_related("beneficiario", "status", "processo"),
+        config["model"].objects.select_related("beneficiario", "status"),
         id=pk,
     )
     documentos = solicitacao.documentos.select_related("tipo").all()
