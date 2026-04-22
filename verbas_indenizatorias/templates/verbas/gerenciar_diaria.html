@@ -85,7 +85,7 @@
 {% block detail_actions %}
 {% if perms.verbas_indenizatorias.pode_gerenciar_diarias %}
 {% if not diaria.status or diaria.status.status_choice == 'RASCUNHO' %}
-<form method="post" action="{% url 'solicitar_autorizacao_diaria_action' diaria.id %}">
+<form method="post" action="{% url 'solicitar_autorizacao_diaria_action' diaria.id %}" data-csrf-sync="true">
     {% csrf_token %}
     <button type="submit" class="btn btn-primary w-100"><i class="bi bi-send"></i> Solicitar Autorização</button>
 </form>
@@ -93,7 +93,7 @@
 {% endif %}
 
 {% if diaria.status and diaria.status.status_choice == 'SOLICITADA' and pode_autorizar %}
-<form method="post" action="{% url 'autorizar_diaria_action' diaria.id %}">
+<form method="post" action="{% url 'autorizar_diaria_action' diaria.id %}" data-csrf-sync="true">
     {% csrf_token %}
     <button type="submit" class="btn btn-success w-100 mt-2"><i class="bi bi-check-circle"></i> Autorizar Diária</button>
 </form>
@@ -114,4 +114,31 @@
 <a href="{% url 'gerar_pcd' diaria.pk %}" target="_blank" class="btn btn-outline-primary w-100 mt-2">
     <i class="bi bi-file-earmark-pdf"></i> Emitir PCD
 </a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(() => {
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+            return parts.pop().split(';').shift();
+        }
+        return '';
+    }
+
+    const csrfToken = getCookie('csrftoken');
+    if (!csrfToken) return;
+
+    document.querySelectorAll('form[data-csrf-sync="true"]').forEach((form) => {
+        form.addEventListener('submit', () => {
+            const input = form.querySelector('input[name="csrfmiddlewaretoken"]');
+            if (input) {
+                input.value = decodeURIComponent(csrfToken);
+            }
+        });
+    });
+})();
+</script>
 {% endblock %}
