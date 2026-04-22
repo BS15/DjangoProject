@@ -26,5 +26,6 @@ __all__ = [
     "api_toggle_documento_fiscal",
     "api_salvar_nota_fiscal",
     "processar_pdf_boleto",
+    "extrair_codigos_barras_lote_action",
 ]
 

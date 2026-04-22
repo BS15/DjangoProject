@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 TIPO_PAGAMENTO_GERENCIADOR_BOLETO = "GERENCIADOR/BOLETO BANCARIO"
 
 
-def _processo_usa_fluxo_boleto(processo):
+def _processo_usa_fluxo_boleto(processo) -> bool:
     """Identifica processos cuja operação de pagamento depende de código de barras."""
     tipo_pagamento_normalizado = normalize_text(processo.tipo_pagamento.tipo_pagamento) if processo.tipo_pagamento else ""
     forma_normalizada = normalize_text(processo.forma_pagamento.forma_pagamento) if processo.forma_pagamento else ""

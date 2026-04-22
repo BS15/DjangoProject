@@ -6,9 +6,19 @@
 {% block form_enctype %}multipart/form-data{% endblock %}
 
 {% block page_actions %}
+<div class="d-flex gap-2">
+{% if pode_interagir %}
+<form method="post" action="{% url 'extrair_codigos_barras_lote_action' pk=processo.id %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-upc-scan"></i> Extrair todos os boletos
+    </button>
+</form>
+{% endif %}
 <a href="{% url 'editar_processo' pk=processo.id %}" class="btn btn-outline-secondary btn-sm">
     <i class="bi bi-arrow-left"></i> Voltar ao Hub
 </a>
+</div>
 {% endblock %}
 
 {% block form_action %}{% url 'editar_processo_documentos_action' pk=processo.id %}{% endblock %}
