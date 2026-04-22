@@ -24,6 +24,7 @@ class DocumentoFormsetManager {
     this.batchApplyTypeSelector = `.batch-apply-type-btn[data-doc-prefix="${prefix}"]`;
     this.batchSelectAllSelector = `.batch-select-all-docs-btn[data-doc-prefix="${prefix}"]`;
     this.batchClearSelectionSelector = `.batch-clear-docs-btn[data-doc-prefix="${prefix}"]`;
+    this.typeFieldSelector = 'select[name$="-tipo"]';
     this.draggedRow = null;
     
     this.init();
@@ -64,14 +65,16 @@ class DocumentoFormsetManager {
       e.preventDefault();
       const selectedType = $(this.batchTypeSelectSelector).val();
       if (!selectedType) {
+        alert('Selecione um tipo de documento para aplicar em lote.');
         return;
       }
       const selectedRows = this.getSelectedRows();
       if (!selectedRows.length) {
+        alert('Selecione ao menos um documento para aplicar o tipo em lote.');
         return;
       }
       selectedRows.each((_, rowEl) => {
-        const typeField = $(rowEl).find('select[name$="-tipo"]').first();
+        const typeField = $(rowEl).find(this.typeFieldSelector).first();
         if (typeField.length) {
           typeField.val(String(selectedType)).trigger('change');
         }

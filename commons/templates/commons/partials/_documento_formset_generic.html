@@ -66,7 +66,7 @@
                 <select id="batch-doc-type-{{ form_prefix }}" class="form-select form-select-sm" style="min-width: 280px;">
                     <option value="">Selecione um tipo...</option>
                     {% for tipo in tipos_documento %}
-                        <option value="{{ tipo.id }}">{{ tipo.tipo_documento|default:tipo.tipo_de_documento }}</option>
+                        <option value="{{ tipo.id }}">{{ tipo }}</option>
                     {% endfor %}
                 </select>
                 <button type="button" class="btn btn-sm btn-outline-primary batch-apply-type-btn" data-doc-prefix="{{ form_prefix }}">
