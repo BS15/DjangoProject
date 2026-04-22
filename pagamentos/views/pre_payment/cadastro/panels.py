@@ -129,7 +129,7 @@ def editar_processo_capa_view(request, pk):
 @permission_required("pagamentos.acesso_backoffice", raise_exception=True)
 def editar_processo_documentos_view(request, pk):
     """Spoke GET de edição de anexos do processo."""
-    from pagamentos.domain_models import TiposDeDocumento
+    from pagamentos.views.helpers import _get_tipos_documento_para_processo
 
     processo, status_inicial, redirecionamento, _ = _obter_contexto_edicao(request, pk)
     if redirecionamento:
@@ -143,13 +143,19 @@ def editar_processo_documentos_view(request, pk):
         and not processo.documentos.filter(tipo__tipo_documento__iexact="DOCUMENTOS ORÇAMENTÁRIOS").exists()
     )
 
+    tipos_documento = _get_tipos_documento_para_processo(processo)
+
     return render(
         request,
         "pagamentos/editar_processo_documentos.html",
         {
             "processo": processo,
-            "documento_formset": DocumentoFormSet(instance=processo, prefix="documento"),
-            "tipos_documento": TiposDeDocumento.objects.filter(ativo=True),
+            "documento_formset": DocumentoFormSet(
+                instance=processo,
+                prefix="documento",
+                form_kwargs={"tipo_queryset": tipos_documento},
+            ),
+            "tipos_documento": tipos_documento,
             "entity_label": f"Processo {processo.id}",
             "pode_interagir": True,  # Users can always interact with docs; guards live at action level
             "status_inicial": status_inicial,

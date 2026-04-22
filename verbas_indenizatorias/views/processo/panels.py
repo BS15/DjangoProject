@@ -110,7 +110,11 @@ def editar_processo_verbas_documentos_view(request, pk):
         return HttpResponse("Acesso negado: você não é o responsável por este processo.", status=403)
     context = _montar_contexto_processo_verbas(processo)
     context.update({
-        "documento_formset": DocumentoFormSet(instance=processo, prefix="documento"),
+        "documento_formset": DocumentoFormSet(
+            instance=processo,
+            prefix="documento",
+            form_kwargs={"tipo_queryset": context.get("tipos_documento")},
+        ),
     })
     return render(request, "verbas/editar_processo_verbas_documentos.html", context)
 

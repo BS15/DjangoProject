@@ -57,6 +57,7 @@ from .workflows import (
     _processo_fila_detalhe_view,
     _aprovar_processo_view,
     _recusar_processo_view,
+    _get_tipos_documento_para_processo,
 )
 
 __all__ = [
@@ -100,4 +101,5 @@ __all__ = [
     "_processo_fila_detalhe_view",
     "_aprovar_processo_view",
     "_recusar_processo_view",
+    "_get_tipos_documento_para_processo",
 ]

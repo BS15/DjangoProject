@@ -102,7 +102,7 @@ def _serializar_documentos_processo_auditoria(processo):
             {
                 "id": doc.id,
                 "ordem": doc.ordem,
-                "tipo": doc.tipo.tipo_de_documento if doc.tipo else "Documento",
+                "tipo": doc.tipo.tipo_documento if doc.tipo else "Documento",
                 "nome": nome,
                 "url": reverse("download_arquivo_seguro", args=["processo", doc.id]),
             }
