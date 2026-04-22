@@ -47,6 +47,8 @@ urlpatterns = [
     path('verbas/diarias/<int:pk>/prestacao/gerenciar/', verbas_diarias_panels.gerenciar_prestacao_view, name='gerenciar_prestacao'),
 
     path('verbas/diarias/<int:pk>/comprovantes/registrar/', verbas_diarias_actions.registrar_comprovante_action, name='registrar_comprovante_action'),
+    path('verbas/diarias/<int:pk>/solicitar-autorizacao/', verbas_diarias_actions.solicitar_autorizacao_diaria_action, name='solicitar_autorizacao_diaria_action'),
+    path('verbas/diarias/<int:pk>/autorizar/', verbas_diarias_actions.autorizar_diaria_action, name='autorizar_diaria_action'),
     path('verbas/diarias/<int:pk>/processo/vincular/action/', verbas_diarias_actions.vincular_diaria_processo_action, name='vincular_diaria_processo_action'),
     path('verbas/diarias/<int:pk>/processo/desvincular/action/', verbas_diarias_actions.desvincular_diaria_processo_action, name='desvincular_diaria_processo_action'),
     path('verbas/diarias/<int:pk>/prestacao/encerrar/', verbas_diarias_actions.encerrar_prestacao_action, name='encerrar_prestacao_action'),
@@ -100,4 +102,3 @@ urlpatterns = [
     path('verbas/diarias/template-csv/', verbas_diarias_panels.download_template_diarias_csv, name='download_template_diarias_csv'),
 
 ]
-
