@@ -52,10 +52,10 @@
 {% for reg in jetons %}
 <tr>
     <td class="text-center">
-        {% if not reg.processo and reg.status and reg.status.status_choice|upper == 'APROVADA' %}
+        {% if not reg.processo and reg.status and reg.status.status_choice|upper == 'REVISADA' %}
         <input class="form-check-input check-item" type="checkbox" name="verbas_selecionadas" value="{{ reg.id }}">
         {% elif not reg.processo %}
-        <i class="bi bi-hourglass-split text-muted small" title="Aguardando aprovação"></i>
+        <i class="bi bi-hourglass-split text-muted small" title="Aguardando revisão de contas a pagar"></i>
         {% else %}
         <i class="bi bi-lock text-muted small" title="Já agrupado"></i>
         {% endif %}

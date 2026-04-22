@@ -8,6 +8,9 @@ from .panels import *
 __all__ = [
     "verbas_panel_view",
     "agrupar_verbas_view",
+    "painel_revisar_solicitacoes_view",
+    "revisar_solicitacao_verba_view",
+    "aprovar_revisao_solicitacao_action",
     "editar_processo_verbas_view",
     "editar_processo_verbas_capa_view",
     "editar_processo_verbas_pendencias_view",
