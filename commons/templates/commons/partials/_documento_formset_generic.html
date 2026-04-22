@@ -63,7 +63,7 @@
                 Edição em lote do tipo de documento
             </div>
             <div class="d-flex flex-wrap gap-2 align-items-center">
-                <select id="batch-doc-type-{{ form_prefix }}" class="form-select form-select-sm" style="min-width: 280px;">
+                <select id="batch-doc-type-{{ form_prefix }}" class="form-select form-select-sm">
                     <option value="">Selecione um tipo...</option>
                     {% for tipo in tipos_documento %}
                         <option value="{{ tipo.id }}">{{ tipo }}</option>
@@ -79,6 +79,7 @@
                     Limpar seleção
                 </button>
             </div>
+            <div id="batch-doc-feedback-{{ form_prefix }}" class="small text-muted"></div>
         </div>
         {% endif %}
 

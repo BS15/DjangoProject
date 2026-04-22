@@ -21,6 +21,7 @@ class DocumentoFormsetManager {
     this.dropInputSelector = `#drop-upload-input-${prefix}`;
     this.selectDropFilesBtnSelector = `#select-drop-files-${prefix}`;
     this.batchTypeSelectSelector = `#batch-doc-type-${prefix}`;
+    this.batchFeedbackSelector = `#batch-doc-feedback-${prefix}`;
     this.batchApplyTypeSelector = `.batch-apply-type-btn[data-doc-prefix="${prefix}"]`;
     this.batchSelectAllSelector = `.batch-select-all-docs-btn[data-doc-prefix="${prefix}"]`;
     this.batchClearSelectionSelector = `.batch-clear-docs-btn[data-doc-prefix="${prefix}"]`;
@@ -51,34 +52,47 @@ class DocumentoFormsetManager {
   }
 
   bindBatchTypeControls() {
+    const setFeedback = (message, isError = false) => {
+      const feedback = $(this.batchFeedbackSelector);
+      if (!feedback.length) {
+        return;
+      }
+      feedback.text(message || '');
+      feedback.toggleClass('text-danger', Boolean(isError));
+      feedback.toggleClass('text-muted', !isError);
+    };
+
     $(document).on('click', this.batchSelectAllSelector, (e) => {
       e.preventDefault();
       this.getVisibleRows().find('.doc-batch-check').prop('checked', true);
+      setFeedback('');
     });
 
     $(document).on('click', this.batchClearSelectionSelector, (e) => {
       e.preventDefault();
       this.getVisibleRows().find('.doc-batch-check').prop('checked', false);
+      setFeedback('');
     });
 
     $(document).on('click', this.batchApplyTypeSelector, (e) => {
       e.preventDefault();
       const selectedType = $(this.batchTypeSelectSelector).val();
       if (!selectedType) {
-        alert('Selecione um tipo de documento para aplicar em lote.');
+        setFeedback('Selecione um tipo de documento para aplicar em lote.', true);
         return;
       }
       const selectedRows = this.getSelectedRows();
       if (!selectedRows.length) {
-        alert('Selecione ao menos um documento para aplicar o tipo em lote.');
+        setFeedback('Selecione ao menos um documento para aplicar o tipo em lote.', true);
         return;
       }
       selectedRows.each((_, rowEl) => {
         const typeField = $(rowEl).find(this.typeFieldSelector).first();
         if (typeField.length) {
-          typeField.val(String(selectedType)).trigger('change');
+          typeField.val(selectedType).trigger('change');
         }
       });
+      setFeedback(`Tipo aplicado em ${selectedRows.length} documento(s).`);
     });
   }
 
