@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Revisar Agrupamento de Retenções{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5" style="padding-bottom: 80px;">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="mb-0 fw-bold"><i class="bi bi-collection-fill text-danger"></i> Revisar Agrupamento</h3>
+            <p class="text-muted mb-0">Confira as retenções selecionadas antes de gerar o processo de recolhimento.</p>
+        </div>
+        <a href="{% url 'painel_impostos_view' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar ao Painel
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-3" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Totalizer card -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center py-3">
+                <div class="card-body">
+                    <p class="text-muted small mb-1">Qtd. de Retenções</p>
+                    <h3 class="fw-bold mb-0 text-dark">{{ qtd }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center py-3">
+                <div class="card-body">
+                    <p class="text-muted small mb-1">Base de Cálculo Total</p>
+                    <h3 class="fw-bold mb-0 text-secondary">R$ {{ total_base|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center py-3 border-danger border-opacity-50">
+                <div class="card-body">
+                    <p class="text-muted small mb-1">Total a Recolher</p>
+                    <h3 class="fw-bold mb-0 text-danger">R$ {{ total_valor|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail table -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white border-bottom">
+            <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-list-ul"></i> Retenções Selecionadas</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Competência</th>
+                            <th>Credor / Fonte Retentora</th>
+                            <th>NF</th>
+                            <th>Cód. Receita</th>
+                            <th>Base de Cálculo</th>
+                            <th class="text-end">Valor Retido</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for retencao in retencoes %}
+                        <tr>
+                            <td>{{ retencao.competencia|date:"m/Y"|default:"-" }}</td>
+                            <td><strong>{{ retencao.fonte_retentora_nome|upper }}</strong></td>
+                            <td class="text-muted small">{{ retencao.nota_fiscal.numero_nota_fiscal|default:"-" }}</td>
+                            <td><span class="badge bg-dark">{{ retencao.codigo.codigo }}</span></td>
+                            <td>R$ {{ retencao.rendimento_tributavel|floatformat:2|default:"0,00" }}</td>
+                            <td class="text-end text-danger fw-bold">R$ {{ retencao.valor|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="4" class="text-end fw-bold text-muted">Total ({{ qtd }} retenções)</td>
+                            <td class="fw-bold text-secondary">R$ {{ total_base|floatformat:2 }}</td>
+                            <td class="text-end fw-bold text-danger">R$ {{ total_valor|floatformat:2 }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation form -->
+    <form method="post" action="{% url 'agrupar_retencoes_action' %}" id="formConfirmarAgrupamento">
+        {% csrf_token %}
+        {% for retencao in retencoes %}
+        <input type="hidden" name="retencao_ids" value="{{ retencao.id }}">
+        {% endfor %}
+
+        <!-- Sticky bottom action bar -->
+        <div style="position:sticky; bottom:0; z-index:100; background:#fff; border-top:2px solid #dee2e6; padding:0.75rem 1rem; box-shadow:0 -2px 8px rgba(0,0,0,.07);">
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="{% url 'painel_impostos_view' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar e reeditar seleção
+                </a>
+                <button type="submit" class="btn btn-danger fw-bold px-4">
+                    <i class="bi bi-check-circle-fill"></i> Confirmar e Gerar Processo de Recolhimento
+                </button>
+            </div>
+        </div>
+    </form>
+
+</div>
+{% endblock %}
