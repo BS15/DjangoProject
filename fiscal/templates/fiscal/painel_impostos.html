@@ -121,7 +121,9 @@
     <td>{{ nota.numero_nota_fiscal|default:"-" }}</td>
     <td>
         {% if nota.processo_id %}
-        <a href="{% url 'editar_processo' pk=nota.processo_id %}">#{{ nota.processo_id }}</a>
+        <a href="{% url 'editar_processo' pk=nota.processo_id %}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-box-arrow-up-right"></i> #{{ nota.processo_id }}
+        </a>
         {% else %}
         -
         {% endif %}
@@ -139,7 +141,11 @@
 {% else %}
 {% for processo in processos %}
 <tr>
-    <td><a href="{% url 'editar_processo' pk=processo.id %}">#{{ processo.id }}</a></td>
+    <td>
+        <a href="{% url 'editar_processo' pk=processo.id %}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-box-arrow-up-right"></i> #{{ processo.id }}
+        </a>
+    </td>
     <td>{{ processo.credor.nome|default:"-" }}</td>
     <td>{{ processo.qtd_notas }}</td>
     <td>{{ processo.qtd_retencoes }}</td>
