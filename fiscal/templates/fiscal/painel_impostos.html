@@ -49,6 +49,7 @@
 <th style="width: 40px;"><input class="form-check-input" type="checkbox" id="selectAll"></th>
 <th>Competência</th>
 <th>Credor / Fonte Retentora</th>
+<th>Processo</th>
 <th>Código Receita</th>
 <th>Base de Cálculo</th>
 <th>Valor Retido</th>
@@ -82,6 +83,15 @@
         <strong>{{ retencao.fonte_retentora_nome|upper }}</strong><br>
         <small class="text-muted">NF: {{ retencao.nota_fiscal.numero_nota_fiscal|default:"-" }}</small>
     </td>
+    <td>
+        {% if retencao.nota_fiscal.processo_id %}
+        <a href="{% url 'editar_processo' pk=retencao.nota_fiscal.processo_id %}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-box-arrow-up-right"></i> #{{ retencao.nota_fiscal.processo_id }}
+        </a>
+        {% else %}
+        -
+        {% endif %}
+    </td>
     <td><span class="badge bg-dark">{{ retencao.codigo.codigo }}</span></td>
     <td>R$ {{ retencao.rendimento_tributavel|floatformat:2|default:"0,00" }}</td>
     <td class="text-danger fw-bold">R$ {{ retencao.valor|floatformat:2 }}</td>
@@ -102,7 +112,7 @@
 </tr>
 {% empty %}
 <tr>
-    <td colspan="8" class="text-center text-muted py-4">Nenhuma retenção fiscal encontrada para os filtros aplicados.</td>
+    <td colspan="9" class="text-center text-muted py-4">Nenhuma retenção fiscal encontrada para os filtros aplicados.</td>
 </tr>
 {% endfor %}
 {% elif visao == "nf" %}
@@ -111,7 +121,9 @@
     <td>{{ nota.numero_nota_fiscal|default:"-" }}</td>
     <td>
         {% if nota.processo_id %}
-        <a href="{% url 'editar_processo' pk=nota.processo_id %}">#{{ nota.processo_id }}</a>
+        <a href="{% url 'editar_processo' pk=nota.processo_id %}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-box-arrow-up-right"></i> #{{ nota.processo_id }}
+        </a>
         {% else %}
         -
         {% endif %}
@@ -129,7 +141,11 @@
 {% else %}
 {% for processo in processos %}
 <tr>
-    <td><a href="{% url 'editar_processo' pk=processo.id %}">#{{ processo.id }}</a></td>
+    <td>
+        <a href="{% url 'editar_processo' pk=processo.id %}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-box-arrow-up-right"></i> #{{ processo.id }}
+        </a>
+    </td>
     <td>{{ processo.credor.nome|default:"-" }}</td>
     <td>{{ processo.qtd_notas }}</td>
     <td>{{ processo.qtd_retencoes }}</td>
