@@ -20,6 +20,10 @@ class DocumentoFormsetManager {
     this.dropzoneSelector = `#doc-dropzone-${prefix}`;
     this.dropInputSelector = `#drop-upload-input-${prefix}`;
     this.selectDropFilesBtnSelector = `#select-drop-files-${prefix}`;
+    this.batchTypeSelectSelector = `#batch-doc-type-${prefix}`;
+    this.batchApplyTypeSelector = `.batch-apply-type-btn[data-doc-prefix="${prefix}"]`;
+    this.batchSelectAllSelector = `.batch-select-all-docs-btn[data-doc-prefix="${prefix}"]`;
+    this.batchClearSelectionSelector = `.batch-clear-docs-btn[data-doc-prefix="${prefix}"]`;
     this.draggedRow = null;
     
     this.init();
@@ -31,6 +35,7 @@ class DocumentoFormsetManager {
     }
     this.attachEventHandlers();
     this.bindDropzone();
+    this.bindBatchTypeControls();
     this.makeFormsetDraggable();
     this.syncOrderFields();
     this.updateDocumentCount();
@@ -41,6 +46,36 @@ class DocumentoFormsetManager {
       e.preventDefault();
       const row = $(e.target).closest('.document-row');
       this.removeDocument(row);
+    });
+  }
+
+  bindBatchTypeControls() {
+    $(document).on('click', this.batchSelectAllSelector, (e) => {
+      e.preventDefault();
+      this.getVisibleRows().find('.doc-batch-check').prop('checked', true);
+    });
+
+    $(document).on('click', this.batchClearSelectionSelector, (e) => {
+      e.preventDefault();
+      this.getVisibleRows().find('.doc-batch-check').prop('checked', false);
+    });
+
+    $(document).on('click', this.batchApplyTypeSelector, (e) => {
+      e.preventDefault();
+      const selectedType = $(this.batchTypeSelectSelector).val();
+      if (!selectedType) {
+        return;
+      }
+      const selectedRows = this.getSelectedRows();
+      if (!selectedRows.length) {
+        return;
+      }
+      selectedRows.each((_, rowEl) => {
+        const typeField = $(rowEl).find('select[name$="-tipo"]').first();
+        if (typeField.length) {
+          typeField.val(String(selectedType)).trigger('change');
+        }
+      });
     });
   }
 
@@ -217,8 +252,19 @@ class DocumentoFormsetManager {
     });
   }
 
+  getVisibleRows() {
+    return $(this.containerSelector).find('.document-row:visible');
+  }
+
+  getSelectedRows() {
+    return this.getVisibleRows().filter((_, rowEl) => {
+      const row = $(rowEl);
+      return row.find('.doc-batch-check').is(':checked');
+    });
+  }
+
   syncOrderFields() {
-    $(this.containerSelector).find('.document-row:visible').each((index, rowEl) => {
+    this.getVisibleRows().each((index, rowEl) => {
       const orderInput = $(rowEl).find('input[name$="-ordem"]').first();
       if (orderInput.length) {
         orderInput.val(index + 1);
@@ -227,7 +273,7 @@ class DocumentoFormsetManager {
   }
 
   updateDocumentCount() {
-    const count = $(this.containerSelector).find('.document-row:visible').length;
+    const count = this.getVisibleRows().length;
     $(this.badgeSelector).text(`${count} doc(s)`);
   }
 }
