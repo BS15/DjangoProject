@@ -134,7 +134,7 @@
             const csrfToken = getCookie('csrftoken');
             if (!input || !csrfToken) {
                 event.preventDefault();
-                alert('Sua sessão foi atualizada. Recarregue a página e tente novamente.');
+                alert('Token de segurança expirado. Recarregue a página e tente novamente.');
                 return;
             }
             input.value = csrfToken;
