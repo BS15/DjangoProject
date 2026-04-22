@@ -66,6 +66,15 @@
         <a href="{{ painel_teste_pdfs_url }}" class="btn btn-warning w-100 fw-bold shadow-sm mt-2"><i class="bi bi-file-earmark-pdf"></i> Laboratório de PDFs</a>
         {% endif %}
 
+        <hr class="my-4 text-muted">
+
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger w-100 fw-bold shadow-sm">
+                <i class="bi bi-box-arrow-right"></i> Sair
+            </button>
+        </form>
+
     </div>
 </div>
 
