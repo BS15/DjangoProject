@@ -129,12 +129,15 @@
     }
 
     document.querySelectorAll('form[data-csrf-sync="true"]').forEach((form) => {
-        form.addEventListener('submit', () => {
+        form.addEventListener('submit', (event) => {
             const input = form.querySelector('input[name="csrfmiddlewaretoken"]');
             const csrfToken = getCookie('csrftoken');
-            if (input && csrfToken) {
-                input.value = csrfToken;
+            if (!input || !csrfToken) {
+                event.preventDefault();
+                alert('Sua sessão foi atualizada. Recarregue a página e tente novamente.');
+                return;
             }
+            input.value = csrfToken;
         });
     });
 })();
