@@ -23,6 +23,12 @@ class DocumentoFormsetManager {
     this.dropzoneSelector = `#doc-dropzone-${prefix}`;
     this.dropInputSelector = `#drop-upload-input-${prefix}`;
     this.selectDropFilesBtnSelector = `#select-drop-files-${prefix}`;
+    this.batchTypeSelectSelector = `#batch-doc-type-${prefix}`;
+    this.batchFeedbackSelector = `#batch-doc-feedback-${prefix}`;
+    this.batchApplyTypeSelector = `.batch-apply-type-btn[data-doc-prefix="${prefix}"]`;
+    this.batchSelectAllSelector = `.batch-select-all-docs-btn[data-doc-prefix="${prefix}"]`;
+    this.batchClearSelectionSelector = `.batch-clear-docs-btn[data-doc-prefix="${prefix}"]`;
+    this.typeFieldSelector = 'select[name$="-tipo"]';
     this.draggedRow = null;
     
     this.init();
@@ -34,6 +40,7 @@ class DocumentoFormsetManager {
     }
     this.attachEventHandlers();
     this.bindDropzone();
+    this.bindBatchTypeControls();
     this.makeFormsetDraggable();
     this.syncOrderFields();
     this.updateDocumentCount();
@@ -52,6 +59,51 @@ class DocumentoFormsetManager {
       this.ensureTipoSelection(row, file?.name || '');
       this.updateLocalPreviewButton(row, file);
     });
+  }
+
+  bindBatchTypeControls() {
+    $(document).on('click', this.batchSelectAllSelector, (e) => {
+      e.preventDefault();
+      this.getVisibleRows().find('.doc-batch-check').prop('checked', true);
+      this.setBatchFeedback('');
+    });
+
+    $(document).on('click', this.batchClearSelectionSelector, (e) => {
+      e.preventDefault();
+      this.getVisibleRows().find('.doc-batch-check').prop('checked', false);
+      this.setBatchFeedback('');
+    });
+
+    $(document).on('click', this.batchApplyTypeSelector, (e) => {
+      e.preventDefault();
+      const selectedType = $(this.batchTypeSelectSelector).val();
+      if (!selectedType) {
+        this.setBatchFeedback('Selecione um tipo de documento para aplicar em lote.', true);
+        return;
+      }
+      const selectedRows = this.getSelectedRows();
+      if (!selectedRows.length) {
+        this.setBatchFeedback('Selecione ao menos um documento para aplicar o tipo em lote.', true);
+        return;
+      }
+      selectedRows.each((_index, rowEl) => {
+        const typeField = $(rowEl).find(this.typeFieldSelector).first();
+        if (typeField.length) {
+          typeField.val(selectedType).trigger('change');
+        }
+      });
+      this.setBatchFeedback(`Tipo aplicado em ${selectedRows.length} documento(s).`);
+    });
+  }
+
+  setBatchFeedback(message, isError = false) {
+    const feedback = $(this.batchFeedbackSelector);
+    if (!feedback.length) {
+      return;
+    }
+    feedback.text(message || '');
+    feedback.toggleClass('text-danger', Boolean(isError));
+    feedback.toggleClass('text-muted', !isError);
   }
 
   bindDropzone() {
@@ -231,8 +283,19 @@ class DocumentoFormsetManager {
     });
   }
 
+  getVisibleRows() {
+    return $(this.containerSelector).find('.document-row:visible');
+  }
+
+  getSelectedRows() {
+    return this.getVisibleRows().filter((_, rowEl) => {
+      const row = $(rowEl);
+      return row.find('.doc-batch-check').is(':checked');
+    });
+  }
+
   syncOrderFields() {
-    $(this.containerSelector).find('.document-row:visible').each((index, rowEl) => {
+    this.getVisibleRows().each((index, rowEl) => {
       const orderInput = $(rowEl).find('input[name$="-ordem"]').first();
       if (orderInput.length) {
         orderInput.val(index + 1);
@@ -241,7 +304,7 @@ class DocumentoFormsetManager {
   }
 
   updateDocumentCount() {
-    const count = $(this.containerSelector).find('.document-row:visible').length;
+    const count = this.getVisibleRows().length;
     $(this.badgeSelector).text(`${count} doc(s)`);
   }
 

@@ -56,6 +56,34 @@
         </div>
         {% endif %}
 
+        {% if pode_interagir %}
+        <div class="border rounded-3 p-2 mb-3 bg-light-subtle d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+            <div class="small text-muted">
+                <i class="bi bi-ui-checks-grid me-1"></i>
+                Edição em lote do tipo de documento
+            </div>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <label class="visually-hidden" for="batch-doc-type-{{ form_prefix }}">Tipo de documento para edição em lote</label>
+                <select id="batch-doc-type-{{ form_prefix }}" class="form-select form-select-sm" aria-label="Tipo de documento para edição em lote">
+                    <option value="">Selecione um tipo...</option>
+                    {% for tipo in tipos_documento %}
+                        <option value="{{ tipo.id }}">{{ tipo }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" class="btn btn-sm btn-outline-primary batch-apply-type-btn" data-doc-prefix="{{ form_prefix }}">
+                    Aplicar nos selecionados
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary batch-select-all-docs-btn" data-doc-prefix="{{ form_prefix }}">
+                    Marcar todos
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary batch-clear-docs-btn" data-doc-prefix="{{ form_prefix }}">
+                    Limpar seleção
+                </button>
+            </div>
+            <div id="batch-doc-feedback-{{ form_prefix }}" class="small text-muted" role="status" aria-live="polite"></div>
+        </div>
+        {% endif %}
+
         <div id="document-list-{{ form_prefix }}">
             {% for doc_f in formset %}
                 {% with is_existing=doc_f.instance.pk is_imutavel=doc_f.instance.imutavel %}
@@ -63,6 +91,14 @@
                 {% if is_existing or doc_f.errors or doc_f.non_field_errors %}
                 <div class="row g-1 align-items-center mb-2 border-bottom pb-2 document-row" data-doc-id="{{ doc_f.instance.pk }}">
                     {% for hidden in doc_f.hidden_fields %}{{ hidden }}{% endfor %}
+
+                    {% if pode_interagir %}
+                    <div class="col-auto">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input doc-batch-check" data-doc-prefix="{{ form_prefix }}" aria-label="Selecionar documento para edição em lote">
+                        </div>
+                    </div>
+                    {% endif %}
 
                     {% if show_order_field %}
                     <div class="col-auto drag-handle ps-1" title="Arrastar para reordenar">
@@ -165,6 +201,13 @@
            <div id="empty-doc-form-{{ form_prefix }}" class="row g-1 align-items-center mb-2 border-bottom pb-2 document-row"
                style="display:none;" data-form-prefix="{{ form_prefix }}">
             {% for hidden in empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+            {% if pode_interagir %}
+            <div class="col-auto">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input doc-batch-check" data-doc-prefix="{{ form_prefix }}" aria-label="Selecionar documento para edição em lote">
+                </div>
+            </div>
+            {% endif %}
             {% if show_order_field %}
             <div class="col-auto drag-handle ps-1">
                 <i class="bi bi-grip-vertical text-secondary"></i>
