@@ -129,12 +129,14 @@
     }
 
     document.querySelectorAll('form[data-csrf-sync="true"]').forEach((form) => {
-        form.addEventListener('submit', () => {
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
             const input = form.querySelector('input[name="csrfmiddlewaretoken"]');
             const csrfToken = getCookie('csrftoken');
             if (input && csrfToken) {
-                input.value = decodeURIComponent(csrfToken);
+                input.value = csrfToken;
             }
+            form.submit();
         });
     });
 })();
