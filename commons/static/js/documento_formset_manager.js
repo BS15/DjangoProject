@@ -248,15 +248,15 @@ class DocumentoFormsetManager {
       return;
     }
 
-    const normalizedFileName = (fileName || '').toLowerCase();
+    const normalizedFileName = this.normalizeText(fileName || '');
     const preferredOption = selectTipo.find('option').filter((_, option) => {
       const value = (option.value || '').trim();
       if (!value) {
         return false;
       }
-      const label = (option.text || '').toLowerCase();
+      const label = this.normalizeText(option.text || '');
       if (normalizedFileName.includes('empenho') || normalizedFileName.includes('orcament')) {
-        return label.includes('orçament') || label.includes('orcament');
+        return label.includes('orcament');
       }
       return label.includes('outro');
     }).first();
@@ -278,10 +278,7 @@ class DocumentoFormsetManager {
       return;
     }
 
-    const previousUrl = previewBtn.attr('data-doc-local-url');
-    if (previousUrl && previousUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(previousUrl);
-    }
+    this.revokePreviewBlobUrl(previewBtn);
 
     if (!file) {
       previewBtn.attr('data-doc-local-url', '');
@@ -301,10 +298,22 @@ class DocumentoFormsetManager {
     if (!previewBtn.length) {
       return;
     }
+    this.revokePreviewBlobUrl(previewBtn);
+  }
+
+  revokePreviewBlobUrl(previewBtn) {
     const localUrl = previewBtn.attr('data-doc-local-url');
     if (localUrl && localUrl.startsWith('blob:')) {
       URL.revokeObjectURL(localUrl);
     }
+  }
+
+  normalizeText(value) {
+    return (value || '')
+      .toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
   }
 }
 
