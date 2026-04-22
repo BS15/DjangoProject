@@ -1,7 +1,6 @@
 """Acoes POST da etapa de documentos fiscais do cadastro."""
 
 import logging
-import unicodedata
 from typing import Optional
 from datetime import date
 import PyPDF2
@@ -18,6 +17,7 @@ import json
 from django.db.models import Sum
 from django.contrib.contenttypes.models import ContentType
 from fiscal.models import DocumentoFiscal, RetencaoImposto, StatusChoicesRetencoes
+from commons.shared.text_tools import normalize_text
 from pagamentos.domain_models import (
     Boleto_Bancario,
     DocumentoProcesso,
@@ -44,17 +44,11 @@ PENDENCIA_ACAO_STATUS = {
 }
 
 
-def _normalizar_texto(texto: str) -> str:
-    """Normaliza texto removendo acentos e diferenças de caixa."""
-    valor = unicodedata.normalize("NFKD", (texto or ""))
-    return "".join(char for char in valor if not unicodedata.combining(char)).upper().strip()
-
-
 def _documento_eh_boleto_bancario(documento: DocumentoProcesso) -> bool:
     """Indica se o tipo documental corresponde a BOLETO BANCÁRIO."""
     if not documento.tipo:
         return False
-    return _normalizar_texto(documento.tipo.tipo_documento) == "BOLETO BANCARIO"
+    return normalize_text(documento.tipo.tipo_documento) == "BOLETO BANCARIO"
 
 
 def _mensagens_validacao_formset_documentos(documento_formset: DocumentoFormSet) -> list[str]:

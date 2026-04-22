@@ -5,7 +5,7 @@ import logging
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
-from commons.shared.text_tools import format_br_date, format_brl_currency
+from commons.shared.text_tools import format_br_date, format_brl_currency, normalize_text
 from pagamentos.domain_models.documentos import ComprovanteDePagamento
 from fiscal.models import DocumentoFiscal, RetencaoImposto
 from pagamentos.domain_models import (
@@ -18,6 +18,18 @@ from pagamentos.domain_models import (
 
 
 logger = logging.getLogger(__name__)
+TIPO_PAGAMENTO_GERENCIADOR_BOLETO = "GERENCIADOR/BOLETO BANCARIO"
+
+
+def _processo_usa_fluxo_boleto(processo):
+    """Identifica processos cuja operação de pagamento depende de código de barras."""
+    tipo_pagamento_normalizado = normalize_text(processo.tipo_pagamento.tipo_pagamento) if processo.tipo_pagamento else ""
+    forma_normalizada = normalize_text(processo.forma_pagamento.forma_pagamento) if processo.forma_pagamento else ""
+    return (
+        tipo_pagamento_normalizado == TIPO_PAGAMENTO_GERENCIADOR_BOLETO
+        or "BOLETO" in forma_normalizada
+        or "GERENCIADOR" in forma_normalizada
+    )
 
 
 def get_detalhes_pagamento(processo):
@@ -28,12 +40,11 @@ def get_detalhes_pagamento(processo):
     para serialização em JSON.
     """
     forma = processo.forma_pagamento.forma_pagamento.lower() if processo.forma_pagamento else ""
-    tipo_pagamento = processo.tipo_pagamento.tipo_pagamento.upper() if processo.tipo_pagamento else ""
     detalhe_tipo = "Não Especificado"
     detalhe_valor = "Verifique o processo"
     codigos_barras = None
 
-    if tipo_pagamento == "GERENCIADOR/BOLETO BANCÁRIO" or "boleto" in forma or "gerenciador" in forma:
+    if _processo_usa_fluxo_boleto(processo):
         detalhe_tipo = "Código de Barras"
         codigos_barras = list(
             Boleto_Bancario.objects.filter(processo=processo, codigo_barras__isnull=False)

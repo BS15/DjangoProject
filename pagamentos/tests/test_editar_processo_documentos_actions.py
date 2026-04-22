@@ -158,11 +158,13 @@ def test_extrair_codigo_barras_documento_action_ignora_documento_nao_boleto(clie
             "extrair_codigo_barras_documento_action",
             kwargs={"pk": processo.id, "documento_id": documento.id},
         ),
+        follow=True,
         secure=True,
     )
 
-    assert response.status_code == 302
-    assert not Boleto_Bancario.objects.filter(pk=documento.id).exists()
+    assert response.status_code == 200
+    assert not Boleto_Bancario.objects.filter(processo=processo).exists()
+    assert "Extração permitida apenas para documentos do tipo BOLETO BANCÁRIO." in response.content.decode("utf-8")
 
 
 @pytest.mark.django_db
