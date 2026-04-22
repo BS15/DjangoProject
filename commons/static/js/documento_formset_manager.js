@@ -10,6 +10,9 @@
 
 class DocumentoFormsetManager {
   static DRAG_MIDPOINT_DIVISOR = 2;
+  static ORCAMENTO_FILENAME_HINTS = ['empenho', 'orcament'];
+  static ORCAMENTO_LABEL_HINT = 'orcament';
+  static DEFAULT_LABEL_HINT = 'outro';
 
   constructor(prefix) {
     this.prefix = prefix;
@@ -255,10 +258,12 @@ class DocumentoFormsetManager {
         return false;
       }
       const label = this.normalizeText(option.text || '');
-      if (normalizedFileName.includes('empenho') || normalizedFileName.includes('orcament')) {
-        return label.includes('orcament');
+      const hasOrcamentoHint = DocumentoFormsetManager.ORCAMENTO_FILENAME_HINTS
+        .some((hint) => normalizedFileName.includes(hint));
+      if (hasOrcamentoHint) {
+        return label.includes(DocumentoFormsetManager.ORCAMENTO_LABEL_HINT);
       }
-      return label.includes('outro');
+      return label.includes(DocumentoFormsetManager.DEFAULT_LABEL_HINT);
     }).first();
 
     if (preferredOption.length) {
@@ -305,6 +310,7 @@ class DocumentoFormsetManager {
     const localUrl = previewBtn.attr('data-doc-local-url');
     if (localUrl && localUrl.startsWith('blob:')) {
       URL.revokeObjectURL(localUrl);
+      previewBtn.attr('data-doc-local-url', '');
     }
   }
 
