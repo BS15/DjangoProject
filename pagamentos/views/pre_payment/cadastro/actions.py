@@ -3,6 +3,7 @@
 import logging
 from typing import Optional
 from datetime import date
+import PyPDF2
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
@@ -18,12 +19,14 @@ from django.contrib.contenttypes.models import ContentType
 from fiscal.models import DocumentoFiscal, RetencaoImposto, StatusChoicesRetencoes
 from pagamentos.domain_models import (
     Boleto_Bancario,
+    DocumentoProcesso,
     TiposDePendencias,
     StatusChoicesPendencias,
     Pendencia,
     Processo,
     ProcessoStatus,
 )
+from .helpers import processar_pdf_boleto
 from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoCapaEdicaoForm, ProcessoForm
 from ..helpers import (
     _redirect_seguro_ou_fallback,
@@ -38,6 +41,25 @@ PENDENCIA_ACAO_STATUS = {
     "resolver": "RESOLVIDO",
     "excluir": "EXCLUÍDO",
 }
+
+
+def _mensagens_validacao_formset_documentos(documento_formset: DocumentoFormSet) -> list[str]:
+    """Consolida erros do formset em mensagens amigáveis por linha/campo."""
+    mensagens = []
+
+    non_form_errors = [str(err) for err in documento_formset.non_form_errors()]
+    mensagens.extend(non_form_errors)
+
+    for idx, form in enumerate(documento_formset.forms, start=1):
+        if not form.errors:
+            continue
+
+        for campo, erros in form.errors.items():
+            rotulo_campo = "linha" if campo == "__all__" else campo
+            erros_linha = "; ".join(str(erro) for erro in erros)
+            mensagens.append(f"Documento {idx} - {rotulo_campo}: {erros_linha}")
+
+    return mensagens
 
 
 def _get_status_inicial(processo):
@@ -171,7 +193,23 @@ def editar_processo_documentos_action(request: HttpRequest, pk: int) -> HttpResp
     next_url = request.POST.get("next") or ""
 
     if not documento_formset.is_valid():
-        messages.error(request, "Verifique os erros nos documentos.")
+        erros_validacao = _mensagens_validacao_formset_documentos(documento_formset)
+        if erros_validacao:
+            for erro in erros_validacao[:5]:
+                messages.error(request, erro)
+            if len(erros_validacao) > 5:
+                messages.error(
+                    request,
+                    f"Existem mais {len(erros_validacao) - 5} erro(s) de validação nos documentos.",
+                )
+        else:
+            messages.error(request, "Verifique os erros nos documentos.")
+
+        logger.warning(
+            "Validação do formset de documentos falhou para processo_id=%s erros=%s",
+            pk,
+            documento_formset.errors,
+        )
         return redirect("editar_processo_documentos", pk=pk)
 
     try:
@@ -182,6 +220,47 @@ def editar_processo_documentos_action(request: HttpRequest, pk: int) -> HttpResp
         logger.exception("Erro ao atualizar documentos do processo %s", pk)
         messages.error(request, "Erro interno ao salvar os documentos.")
         return redirect("editar_processo_documentos", pk=pk)
+
+
+@require_POST
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+def extrair_codigo_barras_documento_action(request: HttpRequest, pk: int, documento_id: int) -> HttpResponse:
+    """Extrai e persiste o código de barras de um documento já anexado ao processo."""
+    processo, _, redirecionamento, _ = _obter_contexto_edicao(request, pk)
+    if redirecionamento:
+        return redirecionamento
+
+    documento = get_object_or_404(DocumentoProcesso, id=documento_id, processo=processo)
+
+    if not documento.arquivo:
+        messages.error(request, "Documento sem arquivo para extração de código de barras.")
+        return redirect("editar_processo_documentos", pk=pk)
+
+    try:
+        dados = processar_pdf_boleto(documento.arquivo) or {}
+        codigo_barras = (dados.get("codigo_barras") or "").strip()
+        if not codigo_barras:
+            messages.warning(request, "Não foi possível localizar linha digitável válida neste documento.")
+            return redirect("editar_processo_documentos", pk=pk)
+
+        boleto, criado = Boleto_Bancario.objects.get_or_create(
+            documentoprocesso_ptr=documento,
+            defaults={"codigo_barras": codigo_barras},
+        )
+        if not criado:
+            boleto.codigo_barras = codigo_barras
+            boleto.save(update_fields=["codigo_barras"])
+
+        messages.success(request, "Código de barras extraído com sucesso.")
+    except (PyPDF2.errors.PdfReadError, OSError, TypeError, ValueError):
+        logger.exception(
+            "Erro ao extrair código de barras do documento %s do processo %s",
+            documento_id,
+            pk,
+        )
+        messages.error(request, "Erro ao processar o PDF para extração do código de barras.")
+
+    return redirect("editar_processo_documentos", pk=pk)
 
 
 @require_POST

@@ -124,6 +124,7 @@ def autorizar_diaria_action(request, pk):
 
 
 @require_POST
+@permission_required('verbas_indenizatorias.pode_visualizar_verbas', raise_exception=True)
 def registrar_comprovante_action(request, pk):
     with transaction.atomic():
         diaria = get_object_or_404(Diaria.objects.select_for_update().select_related('beneficiario'), id=pk)
@@ -143,32 +144,32 @@ def registrar_comprovante_action(request, pk):
         )
 
         if not comprovante_formset.is_valid():
-            messages.error(request, 'Verifique os erros nos comprovantes.')
+            for form in comprovante_formset.forms:
+                if form.errors:
+                    for field, errors in form.errors.items():
+                        messages.error(request, f"Erro no formulário: {field} - {', '.join(errors)}")
             return _redirect_com_next(request, 'gerenciar_prestacao', pk=diaria.id)
 
         try:
+            # Validate file uploads before saving
             for form in comprovante_formset.forms:
-                cleaned_data = form.cleaned_data or {}
-                if cleaned_data.get('DELETE'):
-                    continue
-                if not cleaned_data:
-                    continue
-                arquivo = cleaned_data.get('arquivo')
-                tipo_id = cleaned_data.get('tipo').id if cleaned_data.get('tipo') else None
-                if arquivo:
-                    erro = _validar_upload_documento(arquivo, tipo_id, obrigatorio=True)
-                    if erro:
-                        messages.error(request, erro)
-                        return _redirect_com_next(request, 'gerenciar_prestacao', pk=diaria.id)
-                is_existing = bool(form.instance.pk)
-                if form.has_changed() or not is_existing:
-                    instance = form.save(commit=False)
-                    instance.prestacao = prestacao
-                    instance.save()
+                if form.cleaned_data and not form.cleaned_data.get('DELETE'):
+                    arquivo = form.cleaned_data.get('arquivo')
+                    tipo = form.cleaned_data.get('tipo')
+                    if arquivo and tipo:
+                        erro = _validar_upload_documento(arquivo, tipo.id, obrigatorio=True)
+                        if erro:
+                            messages.error(request, erro)
+                            return _redirect_com_next(request, 'gerenciar_prestacao', pk=diaria.id)
+
+            # Save all forms (including deletions, handled by formset)
+            comprovante_formset.save()
             logger.info("mutation=registrar_comprovante_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
             messages.success(request, 'Comprovantes atualizados com sucesso.')
-        except ValidationError as exc:
-            messages.error(request, ' '.join(exc.messages))
+        except (ValidationError, ValueError) as exc:
+            error_msg = ' '.join(exc.messages) if hasattr(exc, 'messages') else str(exc)
+            messages.error(request, f'Erro ao salvar comprovantes: {error_msg}')
+            return _redirect_com_next(request, 'gerenciar_prestacao', pk=diaria.id)
 
     return _redirect_com_next(request, 'gerenciar_prestacao', pk=diaria.id)
 

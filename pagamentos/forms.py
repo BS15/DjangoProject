@@ -174,9 +174,38 @@ class ProcessoCapaEdicaoForm(ProcessoForm):
 		]
 
 
+class DocumentoProcessoInlineForm(forms.ModelForm):
+	"""Form do inline de documentos com fallback de ordem para evitar falso obrigatório."""
+
+	class Meta:
+		model = DocumentoProcesso
+		fields = ['tipo', 'ordem', 'arquivo']
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.fields['ordem'].required = False
+
+	def clean(self):
+		cleaned_data = super().clean()
+
+		if cleaned_data.get('DELETE'):
+			return cleaned_data
+
+		tem_dados_documento = any(
+			cleaned_data.get(campo) is not None and cleaned_data.get(campo) != ''
+			for campo in ('tipo', 'arquivo')
+		)
+
+		if tem_dados_documento and not cleaned_data.get('ordem'):
+			cleaned_data['ordem'] = self.instance.ordem or 1
+
+		return cleaned_data
+
+
 DocumentoFormSet = inlineformset_factory(
 	Processo,
 	DocumentoProcesso,
+	form=DocumentoProcessoInlineForm,
 	fields=['tipo', 'ordem', 'arquivo'],
 	extra=1,
 	can_delete=True,

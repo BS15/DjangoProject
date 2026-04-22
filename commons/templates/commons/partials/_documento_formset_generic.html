@@ -101,6 +101,17 @@
 
                     <div class="col-auto d-flex gap-1">
                         {% if doc_f.instance.arquivo %}
+                        {% if form_prefix == "documento" and download_tipo_documento|default:'processo' == 'processo' and doc_f.instance.pk %}
+                        <button
+                            type="submit"
+                            class="btn btn-sm btn-outline-primary"
+                            formaction="{% url 'extrair_codigo_barras_documento_action' pk=doc_f.instance.processo_id documento_id=doc_f.instance.id %}"
+                            formnovalidate
+                            title="Extrair código de barras"
+                        >
+                            <i class="bi bi-upc-scan"></i><span class="ms-1 d-none d-md-inline">Extrair código de barras</span>
+                        </button>
+                        {% endif %}
                         {% if show_preview_widget %}
                         <button
                             type="button"
