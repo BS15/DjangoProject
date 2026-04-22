@@ -108,7 +108,7 @@ def add_diaria_action(request):
 @permission_required('verbas_indenizatorias.pode_gerenciar_diarias', raise_exception=True)
 def solicitar_autorizacao_diaria_action(request, pk):
     diaria = get_object_or_404(Diaria, id=pk)
-    _set_status_e_autorizacao(diaria, STATUS_SOLICITADA, False)
+    _set_status_e_autorizacao(diaria, STATUS_SOLICITADA, autorizada=False)
     logger.info("mutation=solicitar_autorizacao_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
     messages.success(request, 'Solicitação de diária enviada para autorização.')
     return redirect('gerenciar_diaria', pk=diaria.id)
@@ -118,7 +118,7 @@ def solicitar_autorizacao_diaria_action(request, pk):
 @permission_required('verbas_indenizatorias.pode_autorizar_diarias', raise_exception=True)
 def autorizar_diaria_action(request, pk):
     diaria = get_object_or_404(Diaria, id=pk)
-    _set_status_e_autorizacao(diaria, STATUS_APROVADA, True)
+    _set_status_e_autorizacao(diaria, STATUS_APROVADA, autorizada=True)
     logger.info("mutation=autorizar_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
     messages.success(request, 'Diária autorizada com sucesso.')
     return redirect('gerenciar_diaria', pk=diaria.id)
