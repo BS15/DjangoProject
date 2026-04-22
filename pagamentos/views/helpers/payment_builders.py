@@ -12,7 +12,7 @@ def _obter_estatisticas_boletos(processo):
     """Retorna estatísticas de boletos e códigos de barras de um processo."""
     boleto_docs_qs = Boleto_Bancario.objects.select_related("tipo").filter(
         processo=processo,
-        tipo__tipo_de_documento__icontains="boleto"
+        tipo__tipo_documento__icontains="boleto"
     )
     boleto_barcodes_list = [doc.codigo_barras for doc in boleto_docs_qs if doc.codigo_barras]
     return {
