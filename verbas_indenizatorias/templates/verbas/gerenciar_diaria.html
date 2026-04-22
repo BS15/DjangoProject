@@ -83,11 +83,13 @@
 {% endblock %}
 
 {% block detail_actions %}
-{% if perms.verbas_indenizatorias.pode_gerenciar_diarias and not diaria.status or perms.verbas_indenizatorias.pode_gerenciar_diarias and diaria.status.status_choice == 'RASCUNHO' %}
+{% if perms.verbas_indenizatorias.pode_gerenciar_diarias %}
+{% if not diaria.status or diaria.status.status_choice == 'RASCUNHO' %}
 <form method="post" action="{% url 'solicitar_autorizacao_diaria_action' diaria.id %}">
     {% csrf_token %}
     <button type="submit" class="btn btn-primary w-100"><i class="bi bi-send"></i> Solicitar Autorização</button>
 </form>
+{% endif %}
 {% endif %}
 
 {% if diaria.status and diaria.status.status_choice == 'SOLICITADA' and pode_autorizar %}
@@ -101,8 +103,10 @@
 <a href="{% url 'liberar_assinatura_diaria_spoke' diaria.id %}" class="btn btn-outline-success w-100 btn-sm mt-2"><i class="bi bi-pen"></i> Liberar Para Assinatura</a>
 {% endif %}
 
-{% if perms.verbas_indenizatorias.pode_gerenciar_diarias and diaria.status.status_choice != 'PAGA' and diaria.status.status_choice != 'REJEITADA' and diaria.status.status_choice != 'CANCELADO / ANULADO' %}
+{% if perms.verbas_indenizatorias.pode_gerenciar_diarias %}
+{% if not diaria.status or diaria.status.status_choice != 'PAGA' and diaria.status.status_choice != 'REJEITADA' and diaria.status.status_choice != 'CANCELADO / ANULADO' %}
 <a href="{% url 'cancelar_diaria_spoke' diaria.id %}" class="btn btn-outline-danger w-100 btn-sm mt-2"><i class="bi bi-x-circle"></i> Cancelar Diária</a>
+{% endif %}
 {% endif %}
 
 <a href="{% url 'gerar_pcd' diaria.pk %}" target="_blank" class="btn btn-outline-primary w-100 mt-2">

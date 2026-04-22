@@ -8,6 +8,8 @@ from decimal import Decimal, InvalidOperation
 from credores.models import Credor
 from verbas_indenizatorias.models import Diaria, StatusChoicesVerbasIndenizatorias
 
+STATUS_SOLICITADA = "SOLICITADA"
+
 
 class DiariaCsvValidationError(Exception):
     """Erro de validação de linha de diária em importação CSV."""
@@ -85,8 +87,8 @@ def confirmar_diarias_lote(preview_items, usuario):
 
     resultados = []
     status_obj, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-        status_choice__iexact="SOLICITADA",
-        defaults={"status_choice": "SOLICITADA"},
+        status_choice__iexact=STATUS_SOLICITADA,
+        defaults={"status_choice": STATUS_SOLICITADA},
     )
     for item in preview_items:
         try:

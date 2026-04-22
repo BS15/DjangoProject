@@ -28,6 +28,10 @@ from ..shared.documents import _validar_upload_documento
 from .access import _pode_acessar_prestacao, _pode_gerenciar_vinculo_diaria
 from commons.shared.integracoes.autentique import enviar_documento_para_assinatura
 
+STATUS_RASCUNHO = 'RASCUNHO'
+STATUS_SOLICITADA = 'SOLICITADA'
+STATUS_APROVADA = 'APROVADA'
+
 
 def _redirect_com_next(request, fallback_name, **kwargs):
     next_url = request.POST.get('next') or request.GET.get('next')
@@ -42,8 +46,8 @@ def _preparar_nova_diaria(diaria):
 
     diaria.autorizada = False
     status_rascunho, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-        status_choice__iexact='RASCUNHO',
-        defaults={'status_choice': 'RASCUNHO'},
+        status_choice__iexact=STATUS_RASCUNHO,
+        defaults={'status_choice': STATUS_RASCUNHO},
     )
     diaria.status = status_rascunho
 
@@ -70,6 +74,18 @@ def _set_status_case_insensitive(diaria, status_str):
     diaria.save(update_fields=['status'])
 
 
+def _set_status_e_autorizacao(diaria, status_str, autorizada):
+    from verbas_indenizatorias.models import StatusChoicesVerbasIndenizatorias
+
+    status, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
+        status_choice__iexact=status_str,
+        defaults={'status_choice': status_str},
+    )
+    diaria.status = status
+    diaria.autorizada = autorizada
+    diaria.save(update_fields=['status', 'autorizada'])
+
+
 @require_POST
 @permission_required('verbas_indenizatorias.pode_criar_diarias', raise_exception=True)
 def add_diaria_action(request):
@@ -92,9 +108,7 @@ def add_diaria_action(request):
 @permission_required('verbas_indenizatorias.pode_gerenciar_diarias', raise_exception=True)
 def solicitar_autorizacao_diaria_action(request, pk):
     diaria = get_object_or_404(Diaria, id=pk)
-    _set_status_case_insensitive(diaria, 'SOLICITADA')
-    diaria.autorizada = False
-    diaria.save(update_fields=['autorizada'])
+    _set_status_e_autorizacao(diaria, STATUS_SOLICITADA, False)
     logger.info("mutation=solicitar_autorizacao_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
     messages.success(request, 'Solicitação de diária enviada para autorização.')
     return redirect('gerenciar_diaria', pk=diaria.id)
@@ -104,9 +118,7 @@ def solicitar_autorizacao_diaria_action(request, pk):
 @permission_required('verbas_indenizatorias.pode_autorizar_diarias', raise_exception=True)
 def autorizar_diaria_action(request, pk):
     diaria = get_object_or_404(Diaria, id=pk)
-    _set_status_case_insensitive(diaria, 'APROVADA')
-    diaria.autorizada = True
-    diaria.save(update_fields=['autorizada'])
+    _set_status_e_autorizacao(diaria, STATUS_APROVADA, True)
     logger.info("mutation=autorizar_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
     messages.success(request, 'Diária autorizada com sucesso.')
     return redirect('gerenciar_diaria', pk=diaria.id)
