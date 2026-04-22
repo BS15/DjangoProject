@@ -85,8 +85,8 @@ def confirmar_diarias_lote(preview_items, usuario):
 
     resultados = []
     status_obj, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-        status_choice__iexact="APROVADA",
-        defaults={"status_choice": "APROVADA"},
+        status_choice__iexact="SOLICITADA",
+        defaults={"status_choice": "SOLICITADA"},
     )
     for item in preview_items:
         try:
@@ -102,7 +102,7 @@ def confirmar_diarias_lote(preview_items, usuario):
                 objetivo=item.get("objetivo", ""),
                 tipo_solicitacao=item.get("tipo_solicitacao", "INICIAL"),
                 status=status_obj,
-                autorizada=True,
+                autorizada=False,
             )
             resultados.append({"ok": True, "diaria_id": diaria.id, "nome": item["beneficiario_nome"]})
         except Exception as exc:

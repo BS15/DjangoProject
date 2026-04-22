@@ -60,6 +60,7 @@ def gerenciar_diaria_view(request, pk):
         'comprovantes': comprovantes,
         'tipos_documento': _get_tipos_documento_verbas(),
         'pode_gerenciar_vinculo_diaria': _pode_gerenciar_vinculo_diaria(request.user),
+        'pode_autorizar': request.user.has_perm('verbas_indenizatorias.pode_autorizar_diarias'),
     }
     return render(request, 'verbas/gerenciar_diaria.html', context)
 
