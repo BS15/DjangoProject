@@ -128,13 +128,11 @@
         return '';
     }
 
-    const csrfToken = getCookie('csrftoken');
-    if (!csrfToken) return;
-
     document.querySelectorAll('form[data-csrf-sync="true"]').forEach((form) => {
         form.addEventListener('submit', () => {
             const input = form.querySelector('input[name="csrfmiddlewaretoken"]');
-            if (input) {
+            const csrfToken = getCookie('csrftoken');
+            if (input && csrfToken) {
                 input.value = decodeURIComponent(csrfToken);
             }
         });
