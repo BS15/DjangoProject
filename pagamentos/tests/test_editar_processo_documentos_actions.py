@@ -77,6 +77,51 @@ def _add_documento(processo, tipo, ordem, nome_arquivo):
 
 
 @pytest.mark.django_db
+def test_editar_processo_documentos_action_ignora_linha_vazia_sem_arquivo(client):
+    """Alteração de tipo de doc existente não falha se JS deixou linha fantasma sem arquivo.
+
+    Quando o usuário clica em "Adicionar Documento" sem enviar um arquivo,
+    o JS preenche automaticamente os campos 'tipo' e 'ordem' via ensureTipoSelection/
+    syncOrderFields.  Isso faz o Django crer que há uma linha nova não-vazia e exige
+    'arquivo'.  O override de has_changed() deve descartar silenciosamente essa linha
+    para que a alteração de tipo dos documentos existentes seja salva normalmente.
+    """
+    processo = _create_processo()
+    tipo_a = _create_tipo_documento("TIPO A", processo.tipo_pagamento)
+    tipo_b = _create_tipo_documento("TIPO B", processo.tipo_pagamento)
+    doc = _add_documento(processo, tipo_a, 1, "doc.pdf")
+
+    user = _create_backoffice_user()
+    client.force_login(user)
+
+    # Simula o POST com TOTAL_FORMS=3 (N+1 do extra=1 + 1 adicionado pelo JS),
+    # uma linha fantasma (index 1) com tipo e ordem preenchidos pelo JS, mas sem arquivo.
+    response = client.post(
+        reverse("editar_processo_documentos_action", kwargs={"pk": processo.id}),
+        data={
+            "documento-TOTAL_FORMS": "3",
+            "documento-INITIAL_FORMS": "1",
+            "documento-MIN_NUM_FORMS": "0",
+            "documento-MAX_NUM_FORMS": "1000",
+            "documento-0-id": str(doc.id),
+            "documento-0-tipo": str(tipo_b.id),
+            "documento-0-ordem": "1",
+            # linha 1 = linha fantasma adicionada pelo JS sem arquivo
+            "documento-1-tipo": str(tipo_a.id),
+            "documento-1-ordem": "2",
+            # linha 2 = extra server-side sem dados
+            "next": "",
+        },
+        secure=True,
+    )
+
+    assert response.status_code == 302
+    doc.refresh_from_db()
+    assert doc.tipo_id == tipo_b.id
+    assert not DocumentoProcesso.objects.filter(processo=processo).exclude(pk=doc.pk).exists()
+
+
+@pytest.mark.django_db
 def test_editar_processo_documentos_action_salva_ordem_e_tipo_em_lote(client):
     processo = _create_processo()
     tipo_a = _create_tipo_documento("TIPO A", processo.tipo_pagamento)
