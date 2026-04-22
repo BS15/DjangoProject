@@ -80,6 +80,11 @@ nav:
   - Segurança e Governança:
       - Trilha de Auditoria: governanca/trilha_auditoria.md
       - Matriz de Permissões: governanca/matriz_permissoes.md
+  - Operações:
+      - Deploy: operacoes/deploy.md
+      - Backup e Restore: operacoes/backup_restore.md
+      - Monitoramento: operacoes/monitoramento.md
+      - Troubleshooting: operacoes/troubleshooting.md
   - Guia do Desenvolvedor:
       - Setup do Ambiente: desenvolvedor/setup_ambiente.md
       - Padrões de Código: desenvolvedor/padroes_codigo.md
