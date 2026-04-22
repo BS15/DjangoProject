@@ -188,6 +188,23 @@ class DocumentoProcessoInlineForm(forms.ModelForm):
 		if tipo_queryset is not None:
 			self.fields['tipo'].queryset = tipo_queryset
 
+	def has_changed(self):
+		"""Trata linhas novas sem arquivo como não alteradas.
+
+		O JS (ensureTipoSelection + syncOrderFields) preenche automaticamente os campos
+		'tipo' e 'ordem' de linhas adicionadas via "Adicionar Documento" sem arquivo.
+		Isso faria o Django tentar salvar uma linha incompleta ("documento fantasma"),
+		bloqueando a persistência de alterações legítimas em documentos já existentes.
+
+		Retornando False aqui, linhas novas sem arquivo são silenciosamente descartadas
+		sem exibir erros de validação.
+		"""
+		if not self.instance.pk:
+			arquivo_key = self.add_prefix('arquivo')
+			if not self.files.get(arquivo_key):
+				return False
+		return super().has_changed()
+
 	def clean(self):
 		cleaned_data = super().clean()
 
