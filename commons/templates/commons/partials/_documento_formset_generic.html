@@ -131,6 +131,18 @@
                             <i class="bi bi-box-arrow-up-right"></i>
                         </a>
                         {% endif %}
+                        {% if not is_existing and show_preview_widget %}
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-outline-secondary doc-preview-btn d-none"
+                            data-doc-prefix="{{ form_prefix }}"
+                            data-doc-local-url=""
+                            data-doc-name=""
+                            title="Pré-visualizar arquivo"
+                        >
+                            <i class="bi bi-eye"></i><span class="ms-1 d-none d-md-inline">Pré-visualizar</span>
+                        </button>
+                        {% endif %}
                         {% if not is_existing and pode_interagir %}
                         <button type="button"
                                 class="btn btn-sm btn-outline-danger remove-doc-btn"
@@ -171,6 +183,18 @@
                 {{ empty_form.arquivo }}
             </div>
             <div class="col-auto">
+                {% if show_preview_widget %}
+                <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary doc-preview-btn d-none"
+                    data-doc-prefix="{{ form_prefix }}"
+                    data-doc-local-url=""
+                    data-doc-name=""
+                    title="Pré-visualizar arquivo"
+                >
+                    <i class="bi bi-eye"></i><span class="ms-1 d-none d-md-inline">Pré-visualizar</span>
+                </button>
+                {% endif %}
                 <button type="button" class="btn btn-sm btn-outline-danger remove-doc-btn" title="Remover">
                     <i class="bi bi-trash"></i>
                 </button>

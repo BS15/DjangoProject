@@ -42,6 +42,13 @@ class DocumentoFormsetManager {
       const row = $(e.target).closest('.document-row');
       this.removeDocument(row);
     });
+
+    $(this.containerSelector).on('change', 'input[type="file"][name$="-arquivo"]', (e) => {
+      const row = $(e.target).closest('.document-row');
+      const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+      this.ensureTipoSelection(row, file?.name || '');
+      this.updateLocalPreviewButton(row, file);
+    });
   }
 
   bindDropzone() {
@@ -118,6 +125,8 @@ class DocumentoFormsetManager {
     container.append(newForm);
 
     $(this.managementForm).val(totalForms + 1);
+    this.ensureTipoSelection(newForm, file?.name || '');
+
     if (file) {
       const fileInput = newForm.find(`input[type="file"][name="${this.prefix}-${totalForms}-arquivo"]`);
       if (fileInput.length && typeof DataTransfer !== 'undefined') {
@@ -125,6 +134,7 @@ class DocumentoFormsetManager {
           const dt = new DataTransfer();
           dt.items.add(file);
           fileInput[0].files = dt.files;
+          this.updateLocalPreviewButton(newForm, file);
         } catch (error) {
           console.warn('Não foi possível vincular automaticamente o arquivo ao formulário.', error);
         }
@@ -136,6 +146,7 @@ class DocumentoFormsetManager {
   }
 
   removeDocument(row) {
+    this.clearLocalPreviewButton(row);
     const deleteCheckbox = row.find('.django-delete-checkbox input[type="checkbox"]');
     
     if (deleteCheckbox.length) {
@@ -229,6 +240,71 @@ class DocumentoFormsetManager {
   updateDocumentCount() {
     const count = $(this.containerSelector).find('.document-row:visible').length;
     $(this.badgeSelector).text(`${count} doc(s)`);
+  }
+
+  ensureTipoSelection(row, fileName = '') {
+    const selectTipo = row.find('select[name$="-tipo"]').first();
+    if (!selectTipo.length || selectTipo.val()) {
+      return;
+    }
+
+    const normalizedFileName = (fileName || '').toLowerCase();
+    const preferredOption = selectTipo.find('option').filter((_, option) => {
+      const value = (option.value || '').trim();
+      if (!value) {
+        return false;
+      }
+      const label = (option.text || '').toLowerCase();
+      if (normalizedFileName.includes('empenho') || normalizedFileName.includes('orcament')) {
+        return label.includes('orçament') || label.includes('orcament');
+      }
+      return label.includes('outro');
+    }).first();
+
+    if (preferredOption.length) {
+      selectTipo.val(preferredOption.val());
+      return;
+    }
+
+    const firstValidOption = selectTipo.find('option').filter((_, option) => (option.value || '').trim()).first();
+    if (firstValidOption.length) {
+      selectTipo.val(firstValidOption.val());
+    }
+  }
+
+  updateLocalPreviewButton(row, file) {
+    const previewBtn = row.find(`.doc-preview-btn[data-doc-prefix="${this.prefix}"]`).first();
+    if (!previewBtn.length) {
+      return;
+    }
+
+    const previousUrl = previewBtn.attr('data-doc-local-url');
+    if (previousUrl && previousUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(previousUrl);
+    }
+
+    if (!file) {
+      previewBtn.attr('data-doc-local-url', '');
+      previewBtn.attr('data-doc-name', '');
+      previewBtn.addClass('d-none');
+      return;
+    }
+
+    const localUrl = URL.createObjectURL(file);
+    previewBtn.attr('data-doc-local-url', localUrl);
+    previewBtn.attr('data-doc-name', file.name || '');
+    previewBtn.removeClass('d-none');
+  }
+
+  clearLocalPreviewButton(row) {
+    const previewBtn = row.find(`.doc-preview-btn[data-doc-prefix="${this.prefix}"]`).first();
+    if (!previewBtn.length) {
+      return;
+    }
+    const localUrl = previewBtn.attr('data-doc-local-url');
+    if (localUrl && localUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(localUrl);
+    }
   }
 }
 
