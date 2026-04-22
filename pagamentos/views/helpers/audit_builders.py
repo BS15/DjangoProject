@@ -28,11 +28,12 @@ def get_detalhes_pagamento(processo):
     para serialização em JSON.
     """
     forma = processo.forma_pagamento.forma_pagamento.lower() if processo.forma_pagamento else ""
+    tipo_pagamento = processo.tipo_pagamento.tipo_pagamento.upper() if processo.tipo_pagamento else ""
     detalhe_tipo = "Não Especificado"
     detalhe_valor = "Verifique o processo"
     codigos_barras = None
 
-    if "boleto" in forma or "gerenciador" in forma:
+    if tipo_pagamento == "GERENCIADOR/BOLETO BANCÁRIO" or "boleto" in forma or "gerenciador" in forma:
         detalhe_tipo = "Código de Barras"
         codigos_barras = list(
             Boleto_Bancario.objects.filter(processo=processo, codigo_barras__isnull=False)

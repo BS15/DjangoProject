@@ -141,6 +141,31 @@ def test_extrair_codigo_barras_documento_action_persiste_boleto(client, monkeypa
 
 
 @pytest.mark.django_db
+def test_extrair_codigo_barras_documento_action_ignora_documento_nao_boleto(client, monkeypatch):
+    processo = _create_processo()
+    tipo_outro = _create_tipo_documento("OUTRO", processo.tipo_pagamento)
+    documento = _add_documento(processo, tipo_outro, 1, "outro.pdf")
+    user = _create_backoffice_user()
+    client.force_login(user)
+
+    monkeypatch.setattr(
+        cadastro_actions,
+        "processar_pdf_boleto",
+        lambda _arquivo: {"codigo_barras": "34191790010104351004791020150008291070000010000"},
+    )
+    response = client.post(
+        reverse(
+            "extrair_codigo_barras_documento_action",
+            kwargs={"pk": processo.id, "documento_id": documento.id},
+        ),
+        secure=True,
+    )
+
+    assert response.status_code == 302
+    assert not Boleto_Bancario.objects.filter(pk=documento.id).exists()
+
+
+@pytest.mark.django_db
 def test_editar_processo_documentos_view_renderiza_widgets_padrao(client):
     processo = _create_processo()
     tipo_outro = _create_tipo_documento("OUTRO", processo.tipo_pagamento)
@@ -156,3 +181,19 @@ def test_editar_processo_documentos_view_renderiza_widgets_padrao(client):
     assert 'id="batch-doc-type-documento"' in html
     assert 'id="document-preview-widget-documento"' in html
     assert "drag-handle" in html
+    assert "Extrair código de barras" not in html
+
+
+@pytest.mark.django_db
+def test_editar_processo_documentos_view_mostra_botao_extracao_para_boleto(client):
+    processo = _create_processo()
+    tipo_boleto = _create_tipo_documento("BOLETO BANCÁRIO", processo.tipo_pagamento)
+    _add_documento(processo, tipo_boleto, 1, "boleto.pdf")
+    user = _create_backoffice_user()
+    client.force_login(user)
+
+    response = client.get(reverse("editar_processo_documentos", kwargs={"pk": processo.id}), secure=True)
+
+    html = response.content.decode("utf-8")
+    assert response.status_code == 200
+    assert "Extrair código de barras" in html

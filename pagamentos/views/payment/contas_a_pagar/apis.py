@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import permission_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 
-from pagamentos.domain_models import Processo
+from pagamentos.domain_models import Boleto_Bancario, Processo
 logger = logging.getLogger(__name__)
 
 
@@ -14,10 +14,13 @@ logger = logging.getLogger(__name__)
 def api_extrair_codigos_barras_processo(request, pk):
     """Retorna códigos de barras já persistidos nos documentos de um processo."""
     processo = get_object_or_404(Processo, id=pk)
-    boleto_docs_qs = processo.documentos.select_related("tipo").filter(
-        tipo__tipo_de_documento__icontains="boleto"
+    boleto_docs_qs = Boleto_Bancario.objects.select_related("tipo").filter(
+        processo=processo,
+        tipo__tipo_documento__icontains="boleto",
     )
-    barcodes = [doc.codigo_barras for doc in boleto_docs_qs if doc.codigo_barras]
+    barcodes = list(
+        boleto_docs_qs.exclude(codigo_barras__isnull=True).exclude(codigo_barras="").values_list("codigo_barras", flat=True)
+    )
     return JsonResponse(
         {
             "sucesso": True,

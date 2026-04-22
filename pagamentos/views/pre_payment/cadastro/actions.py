@@ -1,6 +1,7 @@
 """Acoes POST da etapa de documentos fiscais do cadastro."""
 
 import logging
+import unicodedata
 from typing import Optional
 from datetime import date
 import PyPDF2
@@ -41,6 +42,19 @@ PENDENCIA_ACAO_STATUS = {
     "resolver": "RESOLVIDO",
     "excluir": "EXCLUÍDO",
 }
+
+
+def _normalizar_texto(texto: str) -> str:
+    """Normaliza texto removendo acentos e diferenças de caixa."""
+    valor = unicodedata.normalize("NFKD", (texto or ""))
+    return "".join(char for char in valor if not unicodedata.combining(char)).upper().strip()
+
+
+def _documento_eh_boleto_bancario(documento: DocumentoProcesso) -> bool:
+    """Indica se o tipo documental corresponde a BOLETO BANCÁRIO."""
+    if not documento.tipo:
+        return False
+    return _normalizar_texto(documento.tipo.tipo_documento) == "BOLETO BANCARIO"
 
 
 def _mensagens_validacao_formset_documentos(documento_formset: DocumentoFormSet) -> list[str]:
@@ -231,6 +245,10 @@ def extrair_codigo_barras_documento_action(request: HttpRequest, pk: int, docume
         return redirecionamento
 
     documento = get_object_or_404(DocumentoProcesso, id=documento_id, processo=processo)
+
+    if not _documento_eh_boleto_bancario(documento):
+        messages.warning(request, "Extração permitida apenas para documentos do tipo BOLETO BANCÁRIO.")
+        return redirect("editar_processo_documentos", pk=pk)
 
     if not documento.arquivo:
         messages.error(request, "Documento sem arquivo para extração de código de barras.")

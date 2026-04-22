@@ -142,7 +142,8 @@
 
                     <div class="col-auto d-flex gap-1">
                         {% if doc_f.instance.arquivo %}
-                        {% if download_tipo_documento|default:'processo' == 'processo' and doc_f.instance.pk and doc_f.instance.processo_id|default:processo.id %}
+                        {% with tipo_documento_nome=doc_f.instance.tipo.tipo_documento|default:''|upper %}
+                        {% if download_tipo_documento|default:'processo' == 'processo' and doc_f.instance.pk and doc_f.instance.processo_id|default:processo.id and 'BOLETO BANC' in tipo_documento_nome %}
                         <button
                             type="submit"
                             class="btn btn-sm btn-outline-primary"
@@ -153,6 +154,7 @@
                             <i class="bi bi-upc-scan"></i><span class="ms-1 d-none d-md-inline">Extrair código de barras</span>
                         </button>
                         {% endif %}
+                        {% endwith %}
                         {% if show_preview_widget %}
                         <button
                             type="button"
