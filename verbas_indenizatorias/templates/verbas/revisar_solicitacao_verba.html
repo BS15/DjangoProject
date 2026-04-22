@@ -1,0 +1,79 @@
+{% extends "layouts/base_review.html" %}
+
+{% block title %}Revisão — {{ solicitacao.tipo_label }} #{{ solicitacao.id }}{% endblock %}
+
+{% block review_topbar %}
+<div class="container-fluid px-3 pt-3">
+    <div class="card shadow-sm border-0">
+        <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-0 fw-bold">
+                    <i class="bi bi-search text-success me-2"></i>
+                    Revisão de {{ solicitacao.tipo_label }} #{{ solicitacao.id }}
+                </h4>
+                <p class="text-muted mb-0">{{ solicitacao.beneficiario_nome }}</p>
+            </div>
+            <span class="badge bg-warning text-dark fs-6">{{ solicitacao.status|default:"SEM STATUS" }}</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block document_viewer %}
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white border-bottom py-3">
+        <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-paperclip"></i> Documentos</h6>
+    </div>
+    <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+            {% for doc in documentos %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="bi bi-file-earmark-pdf text-danger"></i>
+                    <a href="{% url 'download_arquivo_seguro' tipo_documento_seguro doc.id %}" target="_blank" class="text-decoration-none">
+                        {{ doc.arquivo.name }}
+                    </a>
+                    <br><small class="text-muted">Tipo: {{ doc.tipo }}</small>
+                </div>
+            </li>
+            {% empty %}
+            <li class="list-group-item text-center text-muted">Nenhum documento anexado.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block review_panel %}
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white border-bottom py-3">
+        <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-file-text"></i> Dados da Solicitação</h6>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-4">Tipo</dt><dd class="col-sm-8">{{ solicitacao.tipo_label }}</dd>
+            <dt class="col-sm-4">Referência</dt><dd class="col-sm-8">{{ solicitacao.referencia }}</dd>
+            <dt class="col-sm-4">Beneficiário</dt><dd class="col-sm-8">{{ solicitacao.beneficiario_nome }}</dd>
+            <dt class="col-sm-4">Valor</dt><dd class="col-sm-8">R$ {{ solicitacao.valor_total|floatformat:2 }}</dd>
+            <dt class="col-sm-4">Processo</dt>
+            <dd class="col-sm-8">{% if obj.processo_id %}#{{ obj.processo_id }}{% else %}<span class="text-muted">Não vinculado</span>{% endif %}</dd>
+        </dl>
+    </div>
+</div>
+{% endblock %}
+
+{% block queue_navigation %}
+<div class="container-fluid px-3 d-flex gap-2">
+    <a href="{% url 'painel_revisar_solicitacoes' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Voltar
+    </a>
+    {% if pode_revisar %}
+    <form method="post" action="{% url 'aprovar_revisao_solicitacao_action' solicitacao.tipo_verba solicitacao.id %}" onsubmit="return confirm('Confirmar revisão e liberar solicitação para agrupamento?');">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success fw-bold">
+            <i class="bi bi-check-circle"></i> Revisar e Liberar
+        </button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
