@@ -141,6 +141,33 @@ def test_extrair_codigo_barras_documento_action_persiste_boleto(client, monkeypa
 
 
 @pytest.mark.django_db
+def test_extrair_codigo_barras_documento_action_ignora_documento_nao_boleto(client, monkeypatch):
+    processo = _create_processo()
+    tipo_outro = _create_tipo_documento("OUTRO", processo.tipo_pagamento)
+    documento = _add_documento(processo, tipo_outro, 1, "outro.pdf")
+    user = _create_backoffice_user()
+    client.force_login(user)
+
+    monkeypatch.setattr(
+        cadastro_actions,
+        "processar_pdf_boleto",
+        lambda _arquivo: {"codigo_barras": "34191790010104351004791020150008291070000010000"},
+    )
+    response = client.post(
+        reverse(
+            "extrair_codigo_barras_documento_action",
+            kwargs={"pk": processo.id, "documento_id": documento.id},
+        ),
+        follow=True,
+        secure=True,
+    )
+
+    assert response.status_code == 200
+    assert not Boleto_Bancario.objects.filter(processo=processo).exists()
+    assert "Extração permitida apenas para documentos do tipo BOLETO BANCÁRIO." in response.content.decode("utf-8")
+
+
+@pytest.mark.django_db
 def test_editar_processo_documentos_view_renderiza_widgets_padrao(client):
     processo = _create_processo()
     tipo_outro = _create_tipo_documento("OUTRO", processo.tipo_pagamento)
@@ -156,3 +183,99 @@ def test_editar_processo_documentos_view_renderiza_widgets_padrao(client):
     assert 'id="batch-doc-type-documento"' in html
     assert 'id="document-preview-widget-documento"' in html
     assert "drag-handle" in html
+    assert "Extrair código de barras" not in html
+
+
+@pytest.mark.django_db
+def test_editar_processo_documentos_view_mostra_botao_extracao_para_boleto(client):
+    processo = _create_processo()
+    tipo_boleto = _create_tipo_documento("BOLETO BANCÁRIO", processo.tipo_pagamento)
+    _add_documento(processo, tipo_boleto, 1, "boleto.pdf")
+    user = _create_backoffice_user()
+    client.force_login(user)
+
+    response = client.get(reverse("editar_processo_documentos", kwargs={"pk": processo.id}), secure=True)
+
+    html = response.content.decode("utf-8")
+    assert response.status_code == 200
+    assert "Extrair código de barras" in html
+
+
+@pytest.mark.django_db
+def test_extrair_codigos_barras_lote_processa_todos_boletos(client, monkeypatch):
+    processo = _create_processo()
+    tipo_boleto = _create_tipo_documento("BOLETO BANCÁRIO", processo.tipo_pagamento)
+    tipo_outro = _create_tipo_documento("OUTRO", processo.tipo_pagamento)
+    _add_documento(processo, tipo_boleto, 1, "boleto1.pdf")
+    _add_documento(processo, tipo_boleto, 2, "boleto2.pdf")
+    _add_documento(processo, tipo_outro, 3, "contrato.pdf")
+    user = _create_backoffice_user()
+    client.force_login(user)
+
+    monkeypatch.setattr(
+        cadastro_actions,
+        "processar_pdf_boleto",
+        lambda _arquivo: {"codigo_barras": "34191790010104351004791020150008291070000010000"},
+    )
+    response = client.post(
+        reverse("extrair_codigos_barras_lote_action", kwargs={"pk": processo.id}),
+        follow=True,
+        secure=True,
+    )
+
+    assert response.status_code == 200
+    html = response.content.decode("utf-8")
+    assert "2 boleto(s) processado(s)" in html
+    assert "2 extraído(s) com sucesso" in html
+    assert "0 falha(s)" in html
+    assert Boleto_Bancario.objects.filter(processo=processo).count() == 2
+
+
+@pytest.mark.django_db
+def test_extrair_codigos_barras_lote_sem_boletos_emite_aviso(client):
+    processo = _create_processo()
+    tipo_outro = _create_tipo_documento("OUTRO", processo.tipo_pagamento)
+    _add_documento(processo, tipo_outro, 1, "contrato.pdf")
+    user = _create_backoffice_user()
+    client.force_login(user)
+
+    response = client.post(
+        reverse("extrair_codigos_barras_lote_action", kwargs={"pk": processo.id}),
+        follow=True,
+        secure=True,
+    )
+
+    assert response.status_code == 200
+    assert "Nenhum documento do tipo BOLETO BANCÁRIO" in response.content.decode("utf-8")
+
+
+@pytest.mark.django_db
+def test_extrair_codigos_barras_lote_contabiliza_falhas(client, monkeypatch):
+    processo = _create_processo()
+    tipo_boleto = _create_tipo_documento("BOLETO BANCÁRIO", processo.tipo_pagamento)
+    _add_documento(processo, tipo_boleto, 1, "boleto1.pdf")
+    _add_documento(processo, tipo_boleto, 2, "boleto2.pdf")
+    user = _create_backoffice_user()
+    client.force_login(user)
+
+    call_count = {"n": 0}
+
+    def extrator_parcial(_arquivo):
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            return {"codigo_barras": "34191790010104351004791020150008291070000010000"}
+        raise ValueError("PDF inválido")
+
+    monkeypatch.setattr(cadastro_actions, "processar_pdf_boleto", extrator_parcial)
+
+    response = client.post(
+        reverse("extrair_codigos_barras_lote_action", kwargs={"pk": processo.id}),
+        follow=True,
+        secure=True,
+    )
+
+    assert response.status_code == 200
+    html = response.content.decode("utf-8")
+    assert "2 boleto(s) processado(s)" in html
+    assert "1 extraído(s) com sucesso" in html
+    assert "1 falha(s)" in html

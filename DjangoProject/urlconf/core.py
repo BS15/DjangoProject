@@ -58,6 +58,11 @@ urlpatterns = [
         pre_payment_cadastro_actions.extrair_codigo_barras_documento_action,
         name='extrair_codigo_barras_documento_action',
     ),
+    path(
+        'processo/<int:pk>/editar/documentos/extrair-codigos-barras-lote/',
+        pre_payment_cadastro_actions.extrair_codigos_barras_lote_action,
+        name='extrair_codigos_barras_lote_action',
+    ),
     path('processo/<int:pk>/editar/pendencias/', pre_payment_cadastro_panels.editar_processo_pendencias_view, name='editar_processo_pendencias'),
     path('processo/<int:pk>/editar/pendencias/action/', pre_payment_cadastro_actions.editar_processo_pendencias_action, name='editar_processo_pendencias_action'),
     path('processo/<int:processo_id>/pdf/', pagamentos_pdf_views.visualizar_pdf_processo, name='visualizar_pdf_processo'),

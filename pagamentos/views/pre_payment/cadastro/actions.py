@@ -17,6 +17,7 @@ import json
 from django.db.models import Sum
 from django.contrib.contenttypes.models import ContentType
 from fiscal.models import DocumentoFiscal, RetencaoImposto, StatusChoicesRetencoes
+from commons.shared.text_tools import normalize_text
 from pagamentos.domain_models import (
     Boleto_Bancario,
     DocumentoProcesso,
@@ -41,6 +42,13 @@ PENDENCIA_ACAO_STATUS = {
     "resolver": "RESOLVIDO",
     "excluir": "EXCLUÍDO",
 }
+
+
+def _documento_eh_boleto_bancario(documento: DocumentoProcesso) -> bool:
+    """Indica se o tipo documental corresponde a BOLETO BANCÁRIO."""
+    if not documento.tipo:
+        return False
+    return normalize_text(documento.tipo.tipo_documento) == "BOLETO BANCARIO"
 
 
 def _mensagens_validacao_formset_documentos(documento_formset: DocumentoFormSet) -> list[str]:
@@ -232,6 +240,10 @@ def extrair_codigo_barras_documento_action(request: HttpRequest, pk: int, docume
 
     documento = get_object_or_404(DocumentoProcesso, id=documento_id, processo=processo)
 
+    if not _documento_eh_boleto_bancario(documento):
+        messages.warning(request, "Extração permitida apenas para documentos do tipo BOLETO BANCÁRIO.")
+        return redirect("editar_processo_documentos", pk=pk)
+
     if not documento.arquivo:
         messages.error(request, "Documento sem arquivo para extração de código de barras.")
         return redirect("editar_processo_documentos", pk=pk)
@@ -270,6 +282,85 @@ def extrair_codigo_barras_documento_action(request: HttpRequest, pk: int, docume
             pk,
         )
         messages.error(request, "Erro ao processar o PDF para extração do código de barras.")
+
+    return redirect("editar_processo_documentos", pk=pk)
+
+
+def _extrair_e_persistir_barcode(documento: DocumentoProcesso) -> bool:
+    """Extrai e persiste código de barras de um único DocumentoProcesso do tipo boleto.
+
+    Retorna True em caso de sucesso, False se não foi possível extrair ou salvar.
+    Não propaga exceções — o chamador decide como contabilizar.
+    """
+    if not documento.arquivo:
+        return False
+    try:
+        with documento.arquivo.open("rb") as arquivo_pdf:
+            dados = processar_pdf_boleto(arquivo_pdf) or {}
+        codigo_barras = (dados.get("codigo_barras") or "").strip()
+        if not codigo_barras:
+            return False
+        with transaction.atomic():
+            boleto = Boleto_Bancario.objects.filter(pk=documento.pk).first()
+            if boleto is None:
+                boleto = Boleto_Bancario(
+                    pk=documento.pk,
+                    documentoprocesso_ptr=documento,
+                    processo=documento.processo,
+                    tipo=documento.tipo,
+                    ordem=documento.ordem,
+                    arquivo=documento.arquivo,
+                    imutavel=documento.imutavel,
+                    codigo_barras=codigo_barras,
+                )
+                boleto.save(force_insert=True)
+            else:
+                boleto.codigo_barras = codigo_barras
+                boleto.save(update_fields=["codigo_barras"])
+        return True
+    except (PyPDF2.errors.PdfReadError, OSError, TypeError, ValueError):
+        logger.exception("Falha ao extrair código de barras do documento %s", documento.pk)
+        return False
+
+
+@require_POST
+@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+def extrair_codigos_barras_lote_action(request: HttpRequest, pk: int) -> HttpResponse:
+    """Extrai e persiste códigos de barras de todos os documentos BOLETO BANCÁRIO do processo."""
+    processo, _, redirecionamento, _ = _obter_contexto_edicao(request, pk)
+    if redirecionamento:
+        return redirecionamento
+
+    boletos = (
+        processo.documentos.select_related("tipo")
+        .filter(arquivo__isnull=False)
+        .exclude(arquivo="")
+    )
+    boletos = [doc for doc in boletos if _documento_eh_boleto_bancario(doc)]
+
+    total = len(boletos)
+    if total == 0:
+        messages.warning(request, "Nenhum documento do tipo BOLETO BANCÁRIO com arquivo encontrado neste processo.")
+        return redirect("editar_processo_documentos", pk=pk)
+
+    sucessos = sum(1 for doc in boletos if _extrair_e_persistir_barcode(doc))
+    falhas = total - sucessos
+
+    if falhas == 0:
+        messages.success(
+            request,
+            f"{total} boleto(s) processado(s): {sucessos} extraído(s) com sucesso, {falhas} falha(s).",
+        )
+    elif sucessos == 0:
+        messages.error(
+            request,
+            f"{total} boleto(s) processado(s): {sucessos} extraído(s) com sucesso, {falhas} falha(s).",
+        )
+    else:
+        messages.warning(
+            request,
+            f"{total} boleto(s) processado(s): {sucessos} extraído(s) com sucesso, {falhas} falha(s).",
+        )
 
     return redirect("editar_processo_documentos", pk=pk)
 
