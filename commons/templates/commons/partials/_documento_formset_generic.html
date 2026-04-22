@@ -137,11 +137,11 @@
 
                     <div class="col-auto d-flex gap-1">
                         {% if doc_f.instance.arquivo %}
-                        {% if download_tipo_documento|default:'processo' == 'processo' and doc_f.instance.pk and doc_f.instance.processo_id %}
+                        {% if download_tipo_documento|default:'processo' == 'processo' and doc_f.instance.pk and doc_f.instance.processo_id|default:processo.id %}
                         <button
                             type="submit"
                             class="btn btn-sm btn-outline-primary"
-                            formaction="{% url 'extrair_codigo_barras_documento_action' pk=doc_f.instance.processo_id documento_id=doc_f.instance.id %}"
+                            formaction="{% url 'extrair_codigo_barras_documento_action' pk=doc_f.instance.processo_id|default:processo.id documento_id=doc_f.instance.id %}"
                             formnovalidate
                             title="Extrair código de barras"
                         >

@@ -1,13 +1,12 @@
 class DocumentoPreviewWidget {
-  static VIEWABLE_EXTENSIONS = ["pdf", "png", "jpg", "jpeg", "gif", "bmp", "webp", "svg"];
-
   constructor(prefix) {
     this.prefix = prefix;
     this.widget = document.getElementById(`document-preview-widget-${prefix}`);
     this.iframe = document.getElementById(`document-preview-iframe-${prefix}`);
     this.placeholder = document.getElementById(`document-preview-placeholder-${prefix}`);
     this.openLink = document.getElementById(`document-preview-open-${prefix}`);
-    this.unsupportedMessage = this.widget?.dataset?.unsupportedMessage || "Arquivo não suportado para pré-visualização.";
+    this.unsupportedMessage = (this.widget && this.widget.dataset && this.widget.dataset.unsupportedMessage)
+      || "Arquivo não suportado para pré-visualização.";
 
     if (!this.widget || !this.iframe || !this.placeholder || !this.openLink) {
       console.warn(`DocumentoPreviewWidget(${prefix}): elementos obrigatórios não encontrados.`);
@@ -65,7 +64,7 @@ class DocumentoPreviewWidget {
     this.openLink.classList.remove("disabled");
     this.openLink.setAttribute("aria-disabled", "false");
 
-    if (DocumentoPreviewWidget.VIEWABLE_EXTENSIONS.includes(ext)) {
+    if (DOC_VIEWABLE_EXTENSIONS.includes(ext)) {
       this.iframe.src = url;
       this.iframe.classList.remove("d-none");
       this.placeholder.classList.add("d-none");
@@ -78,3 +77,5 @@ class DocumentoPreviewWidget {
     this.placeholder.textContent = this.unsupportedMessage;
   }
 }
+
+const DOC_VIEWABLE_EXTENSIONS = ["pdf", "png", "jpg", "jpeg", "gif", "bmp", "webp", "svg"];
