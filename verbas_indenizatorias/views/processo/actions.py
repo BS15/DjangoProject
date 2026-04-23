@@ -35,9 +35,6 @@ def _set_or_create_status(verba, status_str):
 
 
 def _emitir_pcd_e_enviar_para_assinatura_beneficiario(diaria, criador):
-    if not diaria.proponente or not diaria.proponente.email:
-        raise RuntimeError("A diária não possui proponente com e-mail para assinatura.")
-
     assinatura = (
         diaria.assinaturas_autentique.select_for_update()
         .filter(tipo_documento="PCD")
@@ -65,10 +62,14 @@ def _emitir_pcd_e_enviar_para_assinatura_beneficiario(diaria, criador):
             except Exception:
                 pass
 
+    proponente_email = (getattr(diaria.proponente, "email", "") or "").strip()
+    if not proponente_email:
+        return assinatura, False
+
     payload = enviar_documento_para_assinatura(
         pdf_bytes,
         f"PCD_Diaria_{diaria.id}",
-        signatarios=[{"email": diaria.proponente.email, "action": "SIGN"}],
+        signatarios=[{"email": proponente_email, "action": "SIGN"}],
     )
     autentique_id = payload.get("id")
     if not autentique_id:
@@ -80,7 +81,7 @@ def _emitir_pcd_e_enviar_para_assinatura_beneficiario(diaria, criador):
     assinatura.status = "PENDENTE"
     assinatura.save(update_fields=["autentique_id", "autentique_url", "dados_signatarios", "status"])
 
-    return assinatura
+    return assinatura, True
 
 
 @require_POST
@@ -169,18 +170,27 @@ def aprovar_revisao_solicitacao_action(request, tipo_verba, pk):
             return redirect("revisar_solicitacao_verba", tipo_verba=tipo_verba, pk=pk)
 
         if tipo_verba == "diaria":
+            pcd_enviado_para_assinatura = False
             try:
-                assinatura = _emitir_pcd_e_enviar_para_assinatura_beneficiario(
+                assinatura, pcd_enviado_para_assinatura = _emitir_pcd_e_enviar_para_assinatura_beneficiario(
                     solicitacao,
                     criador=request.user,
                 )
-                logger.info(
-                    "mutation=emitir_pcd_e_liberar_assinatura_diaria_na_revisao diaria_id=%s user_id=%s assinatura_id=%s autentique_id=%s",
-                    solicitacao.id,
-                    request.user.pk,
-                    assinatura.id,
-                    assinatura.autentique_id,
-                )
+                if pcd_enviado_para_assinatura:
+                    logger.info(
+                        "mutation=emitir_pcd_e_liberar_assinatura_diaria_na_revisao diaria_id=%s user_id=%s assinatura_id=%s autentique_id=%s",
+                        solicitacao.id,
+                        request.user.pk,
+                        assinatura.id,
+                        assinatura.autentique_id,
+                    )
+                else:
+                    logger.info(
+                        "mutation=emitir_pcd_sem_envio_autentique_na_revisao diaria_id=%s user_id=%s assinatura_id=%s",
+                        solicitacao.id,
+                        request.user.pk,
+                        assinatura.id,
+                    )
             except RequestException:
                 messages.error(request, "Falha de conexão ao enviar para a Autentique. Tente novamente.")
                 return redirect("revisar_solicitacao_verba", tipo_verba=tipo_verba, pk=pk)
@@ -196,7 +206,13 @@ def aprovar_revisao_solicitacao_action(request, tipo_verba, pk):
             request.user.pk,
         )
         if tipo_verba == "diaria":
-            messages.success(request, "Solicitação revisada. PCD emitido e enviado para assinatura do beneficiário.")
+            if pcd_enviado_para_assinatura:
+                messages.success(request, "Solicitação revisada. PCD emitido e enviado para assinatura do beneficiário.")
+            else:
+                messages.warning(
+                    request,
+                    "Solicitação revisada. O PCD foi emitido, mas não foi enviado ao Autentique porque o proponente não possui e-mail.",
+                )
         else:
             messages.success(request, "Solicitação revisada e liberada para agrupamento.")
     return redirect("revisar_solicitacao_verba", tipo_verba=tipo_verba, pk=pk)
