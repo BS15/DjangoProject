@@ -12,6 +12,7 @@ from django.views.decorators.http import require_POST
 
 from suprimentos.forms import DespesaSuprimentoForm, EnviarPrestacaoSuprimentoForm
 from suprimentos.models import PrestacaoContasSuprimento, SuprimentoDeFundos
+from pagamentos.services.cancelamentos import cancelar_suprimento
 from suprimentos.services.prestacao import (
     encerrar_prestacao_suprimento,
     enviar_prestacao_suprimento,
@@ -153,9 +154,36 @@ def aprovar_prestacao_suprimento_action(request: HttpRequest, pk: int) -> HttpRe
     return redirect("revisar_prestacoes_suprimento")
 
 
+@require_POST
+@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
+def cancelar_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
+    """Cancela suprimento com justificativa e registra trilha formal de cancelamento."""
+    justificativa = (request.POST.get("justificativa") or "").strip()
+    if not justificativa:
+        messages.error(request, "A justificativa do cancelamento é obrigatória.")
+        return redirect("cancelar_suprimento_spoke_view", pk=pk)
+
+    suprimento: Any = get_object_or_404(
+        SuprimentoDeFundos.objects.select_related("processo__status"),
+        id=pk,
+    )
+
+    try:
+        cancelar_suprimento(suprimento, justificativa, request.user)
+    except ValidationError as exc:
+        for msg in exc.messages:
+            messages.error(request, msg)
+        return redirect("cancelar_suprimento_spoke_view", pk=pk)
+
+    logger.info("mutation=cancelar_suprimento suprimento_id=%s user_id=%s", suprimento.id, request.user.pk)
+    messages.warning(request, f"Suprimento #{suprimento.id} cancelado.")
+    return redirect("gerenciar_suprimento_view", pk=suprimento.id)
+
+
 __all__ = [
     "adicionar_despesa_action",
     "fechar_suprimento_action",
     "enviar_prestacao_suprimento_action",
     "aprovar_prestacao_suprimento_action",
+    "cancelar_suprimento_action",
 ]

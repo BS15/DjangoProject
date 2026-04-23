@@ -49,6 +49,14 @@ def gerenciar_suprimento_view(request: HttpRequest, pk: int) -> HttpResponse:
 
 @require_GET
 @permission_required("suprimentos.acesso_backoffice", raise_exception=True)
+def cancelar_suprimento_spoke_view(request: HttpRequest, pk: int) -> HttpResponse:
+    """Exibe spoke dedicada para cancelamento formal do suprimento."""
+    suprimento: Any = get_object_or_404(SuprimentoDeFundos.objects.select_related("processo__status"), id=pk)
+    return render(request, "suprimentos/cancelar_suprimento_spoke.html", {"suprimento": suprimento})
+
+
+@require_GET
+@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
 def adicionar_despesa_view(request: HttpRequest, pk: int) -> HttpResponse:
     """Exibe spoke dedicada para registro de nova despesa de suprimento."""
     suprimento: Any = get_object_or_404(SuprimentoDeFundos, id=pk)
@@ -118,6 +126,7 @@ def revisar_prestacao_suprimento_view(request: HttpRequest, pk: int) -> HttpResp
 __all__ = [
     "painel_suprimentos_view",
     "gerenciar_suprimento_view",
+    "cancelar_suprimento_spoke_view",
     "adicionar_despesa_view",
     "revisar_prestacoes_suprimento_view",
     "revisar_prestacao_suprimento_view",

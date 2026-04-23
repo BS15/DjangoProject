@@ -37,3 +37,9 @@ def gerenciar_reembolso_view(request, pk):
         "pode_autorizar": request.user.has_perm("verbas_indenizatorias.pode_gerenciar_reembolsos"),
     }
     return render(request, "verbas/edit_reembolso.html", context)
+
+
+@permission_required("verbas_indenizatorias.pode_gerenciar_reembolsos", raise_exception=True)
+def cancelar_reembolso_spoke_view(request, pk):
+    reembolso = get_object_or_404(ReembolsoCombustivel.objects.select_related("beneficiario", "status", "processo"), id=pk)
+    return render(request, "verbas/cancelar_reembolso_spoke.html", {"reembolso": reembolso})

@@ -3,9 +3,11 @@ logger = logging.getLogger(__name__)
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
+from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
+from pagamentos.services.cancelamentos import cancelar_verba
 from verbas_indenizatorias.forms import AuxilioForm
 from verbas_indenizatorias.models import AuxilioRepresentacao, StatusChoicesVerbasIndenizatorias
 
@@ -56,8 +58,18 @@ def autorizar_auxilio_action(request, pk):
 @require_POST
 @permission_required("verbas_indenizatorias.pode_gerenciar_auxilios", raise_exception=True)
 def cancelar_auxilio_action(request, pk):
-    auxilio = get_object_or_404(AuxilioRepresentacao, id=pk)
-    _set_status_case_insensitive(auxilio, "CANCELADO / ANULADO")
+    justificativa = (request.POST.get("justificativa") or "").strip()
+    if not justificativa:
+        messages.error(request, "A justificativa do cancelamento é obrigatória.")
+        return redirect("cancelar_auxilio_spoke", pk=pk)
+
+    auxilio = get_object_or_404(AuxilioRepresentacao.objects.select_related("processo__status"), id=pk)
+    try:
+        cancelar_verba(auxilio, justificativa, request.user)
+    except ValidationError as exc:
+        messages.error(request, " ".join(exc.messages))
+        return redirect("cancelar_auxilio_spoke", pk=pk)
+
     logger.info("mutation=cancelar_auxilio auxilio_id=%s user_id=%s", auxilio.id, request.user.pk)
     messages.warning(request, "Auxílio cancelado.")
     return redirect("gerenciar_auxilio", pk=auxilio.id)

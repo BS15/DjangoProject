@@ -47,9 +47,6 @@
 {% endif %}
 
 {% if not auxilio.status or auxilio.status.status_choice != 'PAGA' and auxilio.status.status_choice != 'CANCELADO / ANULADO' %}
-<form method="post" action="{% url 'cancelar_auxilio_action' auxilio.id %}" onsubmit="return confirm('Cancelar este auxílio?');">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-outline-danger w-100 btn-sm mt-2"><i class="bi bi-x-circle"></i> Cancelar</button>
-</form>
+<a href="{% url 'cancelar_auxilio_spoke' auxilio.id %}" class="btn btn-outline-danger w-100 btn-sm mt-2"><i class="bi bi-x-circle"></i> Cancelar</a>
 {% endif %}
 {% endblock %}

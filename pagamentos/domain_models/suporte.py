@@ -141,6 +141,98 @@ class DevolucaoProcessual(models.Model):
         return f"Devolução de R$ {self.valor_devolvido} - Processo {self.processo}"
 
 
+class CancelamentoProcessual(models.Model):
+    """Registro formal de cancelamentos de processo, verbas e suprimentos."""
+
+    TIPO_PROCESSO = "PROCESSO"
+    TIPO_DIARIA = "DIARIA"
+    TIPO_REEMBOLSO = "REEMBOLSO"
+    TIPO_JETON = "JETON"
+    TIPO_AUXILIO = "AUXILIO"
+    TIPO_SUPRIMENTO = "SUPRIMENTO"
+    TIPO_CHOICES = [
+        (TIPO_PROCESSO, "Processo"),
+        (TIPO_DIARIA, "Diária"),
+        (TIPO_REEMBOLSO, "Reembolso"),
+        (TIPO_JETON, "Jeton"),
+        (TIPO_AUXILIO, "Auxílio"),
+        (TIPO_SUPRIMENTO, "Suprimento de Fundos"),
+    ]
+
+    processo = models.ForeignKey("pagamentos.Processo", on_delete=models.PROTECT, related_name="cancelamentos")
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    justificativa = models.TextField("Justificativa")
+    registrado_por = models.ForeignKey(User, on_delete=models.PROTECT, related_name="cancelamentos_registrados")
+    diaria = models.ForeignKey(
+        "verbas_indenizatorias.Diaria",
+        on_delete=models.PROTECT,
+        related_name="cancelamentos",
+        null=True,
+        blank=True,
+    )
+    reembolso = models.ForeignKey(
+        "verbas_indenizatorias.ReembolsoCombustivel",
+        on_delete=models.PROTECT,
+        related_name="cancelamentos",
+        null=True,
+        blank=True,
+    )
+    jeton = models.ForeignKey(
+        "verbas_indenizatorias.Jeton",
+        on_delete=models.PROTECT,
+        related_name="cancelamentos",
+        null=True,
+        blank=True,
+    )
+    auxilio = models.ForeignKey(
+        "verbas_indenizatorias.AuxilioRepresentacao",
+        on_delete=models.PROTECT,
+        related_name="cancelamentos",
+        null=True,
+        blank=True,
+    )
+    suprimento = models.ForeignKey(
+        "suprimentos.SuprimentoDeFundos",
+        on_delete=models.PROTECT,
+        related_name="cancelamentos",
+        null=True,
+        blank=True,
+    )
+    criado_em = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = "Cancelamento"
+        verbose_name_plural = "Cancelamentos"
+        ordering = ["-criado_em"]
+
+    def clean(self):
+        alvo_por_tipo = {
+            self.TIPO_PROCESSO: None,
+            self.TIPO_DIARIA: self.diaria_id,
+            self.TIPO_REEMBOLSO: self.reembolso_id,
+            self.TIPO_JETON: self.jeton_id,
+            self.TIPO_AUXILIO: self.auxilio_id,
+            self.TIPO_SUPRIMENTO: self.suprimento_id,
+        }
+        alvo_esperado = alvo_por_tipo.get(self.tipo)
+        if self.tipo != self.TIPO_PROCESSO and not alvo_esperado:
+            raise ValidationError("Tipo de cancelamento exige vínculo com a entidade cancelada.")
+
+        alvos_preenchidos = [
+            bool(self.diaria_id),
+            bool(self.reembolso_id),
+            bool(self.jeton_id),
+            bool(self.auxilio_id),
+            bool(self.suprimento_id),
+        ]
+        if sum(alvos_preenchidos) > 1:
+            raise ValidationError("Informe apenas uma entidade cancelada por registro.")
+
+    def __str__(self):
+        return f"Cancelamento #{self.pk} - {self.get_tipo_display()} - Processo {self.processo_id}"
+
+
 
 class AssinaturaEletronica(models.Model):
     """Metadados de integração com assinatura eletrônica via Autentique."""

@@ -3,6 +3,7 @@
 
 from pagamentos.domain_models import (
     AssinaturaEletronica,
+    CancelamentoProcessual,
     ComprovantePagamento,
     ContingenciaProcessual,
     DevolucaoProcessual,
@@ -36,6 +37,7 @@ from pagamentos.domain_models import (
 # Aliases legados para módulos ainda não migrados.
 AssinaturaAutentique = AssinaturaEletronica
 Contingencia = ContingenciaProcessual
+Cancelamento = CancelamentoProcessual
 Devolucao = DevolucaoProcessual
 Pendencia = PendenciaProcessual
 RegistroAcessoArquivo = RegistroAcessoArquivoProcessual
@@ -63,6 +65,7 @@ PROCESSO_STATUS_SOMENTE_DOCUMENTOS = STATUS_PROCESSO_SOMENTE_DOCUMENTOS
 
 __all__ = [
     "AssinaturaEletronica",
+    "CancelamentoProcessual",
     "ComprovantePagamento",
     "ContingenciaProcessual",
     "DevolucaoProcessual",
@@ -93,6 +96,7 @@ __all__ = [
     "TiposPendencia",
     "AssinaturaAutentique",
     "Contingencia",
+    "Cancelamento",
     "Devolucao",
     "Pendencia",
     "RegistroAcessoArquivo",

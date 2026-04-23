@@ -124,6 +124,12 @@
         </a>
     {% endif %}
 
+    {% if not suprimento.status or suprimento.status.status_choice != 'CANCELADO / ANULADO' %}
+        <a href="{% url 'cancelar_suprimento_spoke_view' suprimento.id %}" class="btn btn-outline-danger btn-sm fw-bold w-100 mb-2">
+            <i class="bi bi-x-circle"></i> Cancelar Suprimento
+        </a>
+    {% endif %}
+
     {% if pode_editar %}
         {# Trigger button for the Enviar Prestação modal #}
         <button type="button" class="btn btn-warning fw-bold w-100" data-bs-toggle="modal" data-bs-target="#modalEnviarPrestacao">

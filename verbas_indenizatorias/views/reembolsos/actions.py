@@ -4,9 +4,11 @@ logger = logging.getLogger(__name__)
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
+from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
+from pagamentos.services.cancelamentos import cancelar_verba
 from verbas_indenizatorias.forms import ReembolsoForm
 from verbas_indenizatorias.models import (
     ReembolsoCombustivel,
@@ -62,8 +64,18 @@ def autorizar_reembolso_action(request, pk):
 @require_POST
 @permission_required("verbas_indenizatorias.pode_gerenciar_reembolsos", raise_exception=True)
 def cancelar_reembolso_action(request, pk):
-    reembolso = get_object_or_404(ReembolsoCombustivel, id=pk)
-    _set_status_case_insensitive(reembolso, "CANCELADO / ANULADO")
+    justificativa = (request.POST.get("justificativa") or "").strip()
+    if not justificativa:
+        messages.error(request, "A justificativa do cancelamento é obrigatória.")
+        return redirect("cancelar_reembolso_spoke", pk=pk)
+
+    reembolso = get_object_or_404(ReembolsoCombustivel.objects.select_related("processo__status", "diaria__processo__status"), id=pk)
+    try:
+        cancelar_verba(reembolso, justificativa, request.user)
+    except ValidationError as exc:
+        messages.error(request, " ".join(exc.messages))
+        return redirect("cancelar_reembolso_spoke", pk=pk)
+
     logger.info("mutation=cancelar_reembolso reembolso_id=%s user_id=%s", reembolso.id, request.user.pk)
     messages.warning(request, "Reembolso cancelado.")
     return redirect("gerenciar_reembolso", pk=reembolso.id)

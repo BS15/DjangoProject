@@ -30,6 +30,7 @@ from .processos import (
 )
 from .suporte import (
     AssinaturaEletronica,
+    CancelamentoProcessual,
     ContingenciaProcessual,
     DevolucaoProcessual,
     PendenciaProcessual,
@@ -48,6 +49,7 @@ PROCESSO_STATUS_PRE_AUTORIZACAO = STATUS_PROCESSO_PRE_AUTORIZACAO
 PROCESSO_STATUS_SOMENTE_DOCUMENTOS = STATUS_PROCESSO_SOMENTE_DOCUMENTOS
 AssinaturaAutentique = AssinaturaEletronica
 Contingencia = ContingenciaProcessual
+Cancelamento = CancelamentoProcessual
 Devolucao = DevolucaoProcessual
 Pendencia = PendenciaProcessual
 RegistroAcessoArquivo = RegistroAcessoArquivoProcessual
@@ -67,6 +69,7 @@ ComprovanteDePagamento = ComprovantePagamento
 
 __all__ = [
     "AssinaturaEletronica",
+    "CancelamentoProcessual",
     "ComprovantePagamento",
     "ContingenciaProcessual",
     "DevolucaoProcessual",
@@ -105,6 +108,7 @@ __all__ = [
     "TiposPendencia",
     "AssinaturaAutentique",
     "Contingencia",
+    "Cancelamento",
     "Devolucao",
     "Pendencia",
     "RegistroAcessoArquivo",
