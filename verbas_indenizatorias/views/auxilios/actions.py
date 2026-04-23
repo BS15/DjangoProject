@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
-from pagamentos.services.cancelamentos import cancelar_verba
+from pagamentos.services.cancelamentos import cancelar_verba, extrair_dados_devolucao_do_post
 from verbas_indenizatorias.forms import AuxilioForm
 from verbas_indenizatorias.models import AuxilioRepresentacao, StatusChoicesVerbasIndenizatorias
 
@@ -65,7 +65,7 @@ def cancelar_auxilio_action(request, pk):
 
     auxilio = get_object_or_404(AuxilioRepresentacao.objects.select_related("processo__status"), id=pk)
     try:
-        cancelar_verba(auxilio, justificativa, request.user)
+        cancelar_verba(auxilio, justificativa, request.user, dados_devolucao=extrair_dados_devolucao_do_post(request))
     except ValidationError as exc:
         messages.error(request, " ".join(exc.messages))
         return redirect("cancelar_auxilio_spoke", pk=pk)

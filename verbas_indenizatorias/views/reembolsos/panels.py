@@ -42,4 +42,8 @@ def gerenciar_reembolso_view(request, pk):
 @permission_required("verbas_indenizatorias.pode_gerenciar_reembolsos", raise_exception=True)
 def cancelar_reembolso_spoke_view(request, pk):
     reembolso = get_object_or_404(ReembolsoCombustivel.objects.select_related("beneficiario", "status", "processo"), id=pk)
-    return render(request, "verbas/cancelar_reembolso_spoke.html", {"reembolso": reembolso})
+    status_choice = (getattr(getattr(reembolso, "status", None), "status_choice", "") or "").upper()
+    return render(request, "verbas/cancelar_reembolso_spoke.html", {
+        "reembolso": reembolso,
+        "entidade_paga": status_choice == "PAGA",
+    })

@@ -12,7 +12,7 @@ from django.views.decorators.http import require_POST
 
 from suprimentos.forms import DespesaSuprimentoForm, EnviarPrestacaoSuprimentoForm
 from suprimentos.models import PrestacaoContasSuprimento, SuprimentoDeFundos
-from pagamentos.services.cancelamentos import cancelar_suprimento
+from pagamentos.services.cancelamentos import cancelar_suprimento, extrair_dados_devolucao_do_post
 from suprimentos.services.prestacao import (
     encerrar_prestacao_suprimento,
     enviar_prestacao_suprimento,
@@ -169,7 +169,7 @@ def cancelar_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
     )
 
     try:
-        cancelar_suprimento(suprimento, justificativa, request.user)
+        cancelar_suprimento(suprimento, justificativa, request.user, dados_devolucao=extrair_dados_devolucao_do_post(request))
     except ValidationError as exc:
         for msg in exc.messages:
             messages.error(request, msg)

@@ -1,0 +1,30 @@
+{# Partial: devolution fields shown inside cancellation spoke forms when the entity is paid. #}
+{# Requires context variable `entidade_paga` (bool). Parent form must use enctype="multipart/form-data". #}
+{% if entidade_paga %}
+<div class="card border-warning mt-4">
+    <div class="card-header bg-warning text-dark fw-semibold">
+        <i class="bi bi-arrow-return-left me-1"></i> Devolução Correspondente (Obrigatório)
+    </div>
+    <div class="card-body">
+        <p class="text-muted small mb-3">Este registro está com status de pago. O cancelamento exige o registro simultâneo da devolução correspondente.</p>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Valor Devolvido <span class="text-danger">*</span></label>
+                <input type="text" name="valor_devolvido" class="form-control mask-money" placeholder="0,00" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Data da Devolução <span class="text-danger">*</span></label>
+                <input type="date" name="data_devolucao" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Comprovante (GRU/Depósito) <span class="text-danger">*</span></label>
+                <input type="file" name="comprovante_devolucao" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
+            </div>
+            <div class="col-12">
+                <label class="form-label fw-semibold">Motivo da Devolução</label>
+                <textarea name="motivo_devolucao" class="form-control" rows="2" placeholder="Descreva o motivo (opcional - gerado automaticamente se vazio)"></textarea>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}

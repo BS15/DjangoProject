@@ -38,4 +38,8 @@ def gerenciar_auxilio_view(request, pk):
 @permission_required("verbas_indenizatorias.pode_gerenciar_auxilios", raise_exception=True)
 def cancelar_auxilio_spoke_view(request, pk):
     auxilio = get_object_or_404(AuxilioRepresentacao.objects.select_related("beneficiario", "status", "processo"), id=pk)
-    return render(request, "verbas/cancelar_auxilio_spoke.html", {"auxilio": auxilio})
+    status_choice = (getattr(getattr(auxilio, "status", None), "status_choice", "") or "").upper()
+    return render(request, "verbas/cancelar_auxilio_spoke.html", {
+        "auxilio": auxilio,
+        "entidade_paga": status_choice == "PAGA",
+    })

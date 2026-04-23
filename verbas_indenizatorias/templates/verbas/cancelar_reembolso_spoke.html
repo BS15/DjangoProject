@@ -8,6 +8,7 @@
 {% endblock %}
 
 {% block form_action %}{% url 'cancelar_reembolso_action' pk=reembolso.id %}{% endblock %}
+{% block form_enctype %}multipart/form-data{% endblock %}
 
 {% block form_fields %}
 <div class="alert alert-danger mb-0">
@@ -17,6 +18,7 @@
     <label for="id_justificativa" class="form-label fw-semibold">Justificativa</label>
     <textarea id="id_justificativa" name="justificativa" class="form-control" rows="4" required></textarea>
 </div>
+{% include "commons/partials/_cancelamento_devolucao.html" %}
 {% endblock %}
 
 {% block form_actions %}

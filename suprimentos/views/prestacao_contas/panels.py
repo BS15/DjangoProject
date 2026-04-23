@@ -51,8 +51,12 @@ def gerenciar_suprimento_view(request: HttpRequest, pk: int) -> HttpResponse:
 @permission_required("suprimentos.acesso_backoffice", raise_exception=True)
 def cancelar_suprimento_spoke_view(request: HttpRequest, pk: int) -> HttpResponse:
     """Exibe spoke dedicada para cancelamento formal do suprimento."""
-    suprimento: Any = get_object_or_404(SuprimentoDeFundos.objects.select_related("processo__status"), id=pk)
-    return render(request, "suprimentos/cancelar_suprimento_spoke.html", {"suprimento": suprimento})
+    suprimento: Any = get_object_or_404(SuprimentoDeFundos.objects.select_related("status", "processo__status"), id=pk)
+    status_choice = (getattr(getattr(suprimento, "status", None), "status_choice", "") or "").upper()
+    return render(request, "suprimentos/cancelar_suprimento_spoke.html", {
+        "suprimento": suprimento,
+        "entidade_paga": status_choice == "ENCERRADO",
+    })
 
 
 @require_GET
