@@ -1,3 +1,20 @@
+{% if user.is_authenticated %}
+<div class="app-sticky-userbar shadow-sm">
+    <div class="container-fluid d-flex justify-content-end align-items-center gap-3 py-2">
+        <span class="small mb-0">
+            <i class="bi bi-person-circle me-1"></i>
+            {{ user.get_full_name }} ({{ user.username }})
+        </span>
+        <form method="post" action="{% url 'logout' %}" class="mb-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-light btn-sm fw-bold">
+                <i class="bi bi-box-arrow-right"></i> sair
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
 <div class="offcanvas offcanvas-start shadow" tabindex="-1" id="menuLateral" aria-labelledby="menuLateralLabel">
     <div class="offcanvas-header bg-dark text-white">
         <h5 class="offcanvas-title fw-bold" id="menuLateralLabel"><i class="bi bi-grid-1x2-fill me-2"></i> Painéis do Sistema</h5>

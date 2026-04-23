@@ -401,6 +401,20 @@ a:hover {
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+/* --- GLOBAL STICKY USER BAR --------------------------------- */
+.app-sticky-userbar {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  background-color: var(--bs-dark);
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.app-sticky-userbar .btn-outline-light {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
 /* --- MODALS ------------------------------------------------- */
 .modal-header {
   border-radius: 0;
