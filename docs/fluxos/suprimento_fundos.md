@@ -113,14 +113,33 @@ Na aprovação:
 
 ---
 
-## 6. Ação legada de fechamento direto
+## 6. Cancelamento
+
+**Spoke (GET):** `cancelar_suprimento_spoke_view`  
+**Action (POST):** `cancelar_suprimento_action`  
+**Permissão:** `suprimentos.acesso_backoffice`  
+**Serviço:** `cancelar_suprimento` (`pagamentos/services/cancelamentos.py`)
+
+- Justificativa é sempre obrigatória.
+- **Quando o suprimento está com `status_choice == "ENCERRADO"`**, o formulário exige os dados de devolução correspondente (valor, data e comprovante). A `DevolucaoProcessual` é criada atomicamente na mesma transação.
+- A transação atômica:
+  1. Cria `DevolucaoProcessual` no processo vinculado (se encerrado).
+  2. Define status do processo como `CANCELADO / ANULADO`.
+  3. Define status do suprimento como `CANCELADO / ANULADO`.
+  4. Grava `CancelamentoProcessual` (tipo `SUPRIMENTO`).
+
+Consulte o [Fluxo de Cancelamento](cancelamento.md) para a especificação completa.
+
+---
+
+## 7. Ação legada de fechamento direto
 
 Existe rota de fechamento direto (`fechar_suprimento_action`) que também chama `_atualizar_status_apos_fechamento`.  
 No fluxo operacional recomendado, o fechamento deve ocorrer pela trilha formal de prestação (`ENVIADA` + aprovação).
 
 ---
 
-## 7. Referências de código
+## 8. Referências de código
 
 | Componente | Localização |
 |-----------|------------|
@@ -131,3 +150,4 @@ No fluxo operacional recomendado, o fechamento deve ocorrer pela trilha formal d
 | Serviços de prestação | `suprimentos/services/prestacao.py` |
 | Atualização de status após fechamento | `suprimentos/views/helpers.py` |
 | Integração com processo | `suprimentos/services/processo_integration.py` |
+| **Serviço de cancelamento** | **`pagamentos/services/cancelamentos.py`** |

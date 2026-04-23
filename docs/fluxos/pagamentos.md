@@ -29,6 +29,12 @@ stateDiagram-v2
     PAGO_A_CONTABILIZAR --> PAGO_EM_CONFERENCIA : Contabilização recusada
     CONTABILIZADO_PARA_CONSELHO_FISCAL --> PAGO_A_CONTABILIZAR : Conselho recusado
     LANCADO_AGUARDANDO_COMPROVANTE --> A_PAGAR_AUTORIZADO : Desfazer lançamento
+
+    A_EMPENHAR --> CANCELADO_ANULADO : cancelar_processo_action
+    AGUARDANDO_LIQUIDACAO --> CANCELADO_ANULADO : cancelar_processo_action
+    A_PAGAR_PENDENTE_AUTORIZACAO --> CANCELADO_ANULADO : cancelar_processo_action
+    PAGO_EM_CONFERENCIA --> CANCELADO_ANULADO : cancelar_processo_action (+ devolução)
+    PAGO_A_CONTABILIZAR --> CANCELADO_ANULADO : cancelar_processo_action (+ devolução)
 ```
 
 ### Caminhos de exceção (desvios)
@@ -197,9 +203,25 @@ Duas filas simultâneas: pendentes de autorização e já autorizados.
 
 ---
 
+## 9. Cancelamento
+
+**View (spoke):** `cancelar_processo_spoke_view`  
+**Action:** `cancelar_processo_action`  
+**Permissão:** `pagamentos.acesso_backoffice`  
+**Serviço:** `registrar_cancelamento_processo` (`pagamentos/services/cancelamentos.py`)
+
+- O botão "Cancelar Processo" é exibido no hub `process_detail` para processos que ainda não estão cancelados.
+- Justificativa é sempre obrigatória.
+- **Quando o processo está em status pago ou posterior**, o operador deve também informar os dados de devolução correspondente (valor, data e comprovante). A `DevolucaoProcessual` é criada atomicamente na mesma transação do cancelamento.
+- Status final: `CANCELADO / ANULADO`. O `CancelamentoProcessual` é gravado como trilha formal.
+
+Consulte o [Fluxo de Cancelamento](cancelamento.md) para a especificação completa.
+
+---
+
 ## Referências de código
 
-| Etapa | Localização |
+| Cancelamento de código | Localização |
 |-------|------------|
 | Criação / hub | `pagamentos/views/pre_payment/cadastro/` |
 | Empenho | `pagamentos/views/pre_payment/empenho/` |
@@ -210,5 +232,7 @@ Duas filas simultâneas: pendentes de autorização e já autorizados.
 | Contabilização | `pagamentos/views/post_payment/contabilizacao/` |
 | Conselho | `pagamentos/views/post_payment/conselho/` e `reunioes/` |
 | Arquivamento | `pagamentos/views/post_payment/arquivamento/` |
+| **Cancelamento** | **`pagamentos/views/support/cancelamento/`** |
+| **Serviço de cancelamento** | **`pagamentos/services/cancelamentos.py`** |
 | Helpers de lote / fila | `pagamentos/views/helpers/payment_builders.py` |
 | Domínio / status | `pagamentos/domain_models/processos.py` |

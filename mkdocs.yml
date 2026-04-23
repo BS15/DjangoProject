@@ -77,6 +77,7 @@ nav:
       - Retenções: fluxos/retencoes.md
       - Diárias: fluxos/diarias.md
       - Suprimento de Fundos: fluxos/suprimento_fundos.md
+      - Cancelamento: fluxos/cancelamento.md
   - Segurança e Governança:
       - Trilha de Auditoria: governanca/trilha_auditoria.md
       - Matriz de Permissões: governanca/matriz_permissoes.md

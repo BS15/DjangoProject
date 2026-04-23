@@ -29,6 +29,7 @@ Caminhos laterais (fluxos de exceção):
 - **Contingência**: desvia o processo para análise multi-nível (supervisor -> ordenador -> conselho) sem bloquear o status principal. Após aprovação, o efeito é aplicado ao processo e ele retoma a trilha.
 - **Devolução**: registra reversão formal de valor ou documento, podendo ajustar o status do processo e gerar pendências.
 - **Recusa** (em etapas de aprovação): devolve o processo ao status anterior com registro formal de motivo e criação de pendência.
+- **Cancelamento**: encerra definitivamente o processo com status `CANCELADO / ANULADO` e justificativa obrigatória. Quando o processo já está em status pago ou posterior, exige registro simultâneo de `DevolucaoProcessual`. Grava `CancelamentoProcessual` como trilha formal. Aplica-se também a verbas indenizatórias e suprimentos vinculados (ver [Fluxo de Cancelamento](../fluxos/cancelamento.md)).
 
 Para o comportamento exato de cada transição e seus turnpikes, consulte `pagamentos/domain_models/processos.py` e os serviços em `pagamentos/services/`.
 

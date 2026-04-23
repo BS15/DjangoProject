@@ -165,11 +165,20 @@ Ao aprovar, `_aplicar_contingencia_diaria` usa `_bypass_domain_seal = True` para
 
 ## 9. Cancelamento
 
-**Action:** `cancelar_diaria_action`  
-**Permissão:** `verbas_indenizatorias.pode_gerenciar_diarias`
+**Spoke (GET):** `cancelar_diaria_spoke_view`  
+**Action (POST):** `cancelar_diaria_action`  
+**Permissão:** `verbas_indenizatorias.pode_gerenciar_diarias`  
+**Serviço:** `cancelar_verba` (`pagamentos/services/cancelamentos.py`)
 
-- Tenta `avancar_status("REJEITADA")`; se o turnpike recusar, define status como `CANCELADO / ANULADO`.
-- Define `autorizada = False`.
+- Justificativa é sempre obrigatória.
+- **Quando a diária está com `status_choice == "PAGA"`**, o formulário exige os dados de devolução correspondente (valor, data e comprovante). A `DevolucaoProcessual` é criada atomicamente na mesma transação.
+- A transação atômica:
+  1. Cria `DevolucaoProcessual` no processo vinculado (se paga).
+  2. Define status do processo como `CANCELADO / ANULADO`.
+  3. Define status da diária como `CANCELADO / ANULADO` e `autorizada=False`.
+  4. Grava `CancelamentoProcessual` (tipo `DIARIA`).
+
+Consulte o [Fluxo de Cancelamento](cancelamento.md) para a especificação completa, incluindo o partial compartilhado de devolução.
 
 ---
 
