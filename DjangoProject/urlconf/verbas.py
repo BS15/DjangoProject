@@ -45,6 +45,7 @@ urlpatterns = [
     path('verbas/diarias/<int:pk>/gerenciar/cancelar/', verbas_diarias_panels.cancelar_diaria_spoke_view, name='cancelar_diaria_spoke'),
     path('verbas/diarias/<int:pk>/prestacao/gerenciar/', verbas_diarias_panels.gerenciar_prestacao_view, name='gerenciar_prestacao'),
 
+    path('verbas/diarias/autorizar/', verbas_diarias_panels.painel_autorizacao_diarias_view, name='painel_autorizacao_diarias'),
     path('verbas/diarias/<int:pk>/comprovantes/registrar/', verbas_diarias_actions.registrar_comprovante_action, name='registrar_comprovante_action'),
     path('verbas/diarias/<int:pk>/solicitar-autorizacao/', verbas_diarias_actions.solicitar_autorizacao_diaria_action, name='solicitar_autorizacao_diaria_action'),
     path('verbas/diarias/<int:pk>/autorizar/', verbas_diarias_actions.autorizar_diaria_action, name='autorizar_diaria_action'),
