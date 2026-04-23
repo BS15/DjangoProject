@@ -3,7 +3,7 @@
 {% block title %}Autorização de Diárias{% endblock %}
 
 {% block page_heading %}<i class="bi bi-person-check text-primary"></i> Painel de Autorização de Diárias{% endblock %}
-{% block page_subtitle %}Diárias com status <strong>SOLICITADA</strong> aguardando autorização do proponente.{% endblock %}
+{% block page_subtitle %}Diárias vinculadas ao seu usuário como <strong>proponente</strong> e pendentes de autorização via Autentique.{% endblock %}
 
 {% block page_actions %}
 <a href="{% url 'verbas_panel' %}" class="btn btn-outline-secondary btn-sm">
@@ -25,7 +25,8 @@
 {% endblock %}
 
 {% block table_rows %}
-{% for diaria in diarias_pendentes %}
+{% for item in diarias_pendentes %}
+{% with diaria=item.diaria %}
 <tr>
     <td class="fw-bold text-primary">{{ diaria.numero_siscac|default:"—" }}</td>
     <td>{{ diaria.beneficiario.nome|truncatechars:40 }}</td>
@@ -50,15 +51,19 @@
                class="btn btn-sm btn-outline-danger" title="Gerar PCD (PDF)">
                 <i class="bi bi-file-earmark-pdf"></i>
             </a>
-            <form method="post" action="{% url 'autorizar_diaria_action' pk=diaria.pk %}" class="d-inline">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-success" title="Autorizar diária">
-                    <i class="bi bi-check-lg"></i> Autorizar
-                </button>
-            </form>
+            {% if item.autentique_url_pendente %}
+            <a href="{{ item.autentique_url_pendente }}" target="_blank" class="btn btn-sm btn-success" title="Abrir documento para autorização">
+                <i class="bi bi-box-arrow-up-right"></i> Autorizar
+            </a>
+            {% else %}
+            <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="Documento sem link de assinatura disponível">
+                <i class="bi bi-link-45deg"></i> Sem link
+            </button>
+            {% endif %}
         </div>
     </td>
 </tr>
+{% endwith %}
 {% empty %}
 <tr>
     <td colspan="8" class="text-center text-muted py-5">

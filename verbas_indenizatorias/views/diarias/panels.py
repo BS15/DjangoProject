@@ -9,6 +9,7 @@ from pagamentos.views.shared import render_filtered_list
 from verbas_indenizatorias.forms import ComprovanteDiariaFormSet, DiariaForm
 from verbas_indenizatorias.models import Diaria, PrestacaoContasDiaria
 from verbas_indenizatorias.filters import DiariaFilter
+from verbas_indenizatorias.services.autorizacao_diarias import listar_diarias_pendentes_para_proponente
 from verbas_indenizatorias.services.prestacao import obter_ou_criar_prestacao
 from .access import _pode_acessar_prestacao, _pode_gerenciar_vinculo_diaria
 from ..shared.registry import _get_tipos_documento_verbas
@@ -60,7 +61,6 @@ def gerenciar_diaria_view(request, pk):
         'comprovantes': comprovantes,
         'tipos_documento': _get_tipos_documento_verbas(),
         'pode_gerenciar_vinculo_diaria': _pode_gerenciar_vinculo_diaria(request.user),
-        'pode_autorizar': request.user.has_perm('verbas_indenizatorias.pode_autorizar_diarias'),
     }
     return render(request, 'verbas/gerenciar_diaria.html', context)
 
@@ -158,13 +158,7 @@ def gerenciar_prestacao_view(request, pk):
 @require_GET
 @permission_required('verbas_indenizatorias.pode_autorizar_diarias', raise_exception=True)
 def painel_autorizacao_diarias_view(request):
-    from verbas_indenizatorias.constants import STATUS_VERBA_SOLICITADA
-    diarias_pendentes = (
-        Diaria.objects
-        .filter(status__status_choice__iexact=STATUS_VERBA_SOLICITADA)
-        .select_related('beneficiario', 'status')
-        .order_by('-id')
-    )
+    diarias_pendentes = listar_diarias_pendentes_para_proponente(request.user)
     return render(request, 'verbas/painel_autorizacao_diarias.html', {'diarias_pendentes': diarias_pendentes})
 
 
