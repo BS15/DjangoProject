@@ -25,7 +25,8 @@
 {% endblock %}
 
 {% block table_rows %}
-{% for diaria in diarias_pendentes %}
+{% for item in diarias_pendentes %}
+{% with diaria=item.diaria %}
 <tr>
     <td class="fw-bold text-primary">{{ diaria.numero_siscac|default:"—" }}</td>
     <td>{{ diaria.beneficiario.nome|truncatechars:40 }}</td>
@@ -50,8 +51,8 @@
                class="btn btn-sm btn-outline-danger" title="Gerar PCD (PDF)">
                 <i class="bi bi-file-earmark-pdf"></i>
             </a>
-            {% if diaria.autentique_url_pendente %}
-            <a href="{{ diaria.autentique_url_pendente }}" target="_blank" class="btn btn-sm btn-success" title="Abrir documento para autorização">
+            {% if item.autentique_url_pendente %}
+            <a href="{{ item.autentique_url_pendente }}" target="_blank" class="btn btn-sm btn-success" title="Abrir documento para autorização">
                 <i class="bi bi-box-arrow-up-right"></i> Autorizar
             </a>
             {% else %}
@@ -62,6 +63,7 @@
         </div>
     </td>
 </tr>
+{% endwith %}
 {% empty %}
 <tr>
     <td colspan="8" class="text-center text-muted py-5">

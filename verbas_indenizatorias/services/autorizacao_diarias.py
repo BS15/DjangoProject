@@ -23,14 +23,18 @@ def listar_diarias_pendentes_para_proponente(usuario):
         .order_by('-id')
     )
 
+    itens_autorizacao = []
     for diaria in diarias:
         assinaturas = getattr(diaria, 'assinaturas_para_autorizacao', [])
         assinatura = next((item for item in assinaturas if item.status == 'PENDENTE'), None)
-        if assinatura is None and assinaturas:
-            assinatura = assinaturas[0]
-        diaria.autentique_url_pendente = assinatura.autentique_url if assinatura else ''
+        itens_autorizacao.append(
+            {
+                'diaria': diaria,
+                'autentique_url_pendente': assinatura.autentique_url if assinatura else '',
+            }
+        )
 
-    return diarias
+    return itens_autorizacao
 
 
 __all__ = ['listar_diarias_pendentes_para_proponente']

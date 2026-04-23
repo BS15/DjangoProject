@@ -156,7 +156,7 @@ def gerenciar_prestacao_view(request, pk):
 
 
 @require_GET
-@permission_required('verbas_indenizatorias.pode_visualizar_verbas', raise_exception=True)
+@permission_required('verbas_indenizatorias.pode_autorizar_diarias', raise_exception=True)
 def painel_autorizacao_diarias_view(request):
     diarias_pendentes = listar_diarias_pendentes_para_proponente(request.user)
     return render(request, 'verbas/painel_autorizacao_diarias.html', {'diarias_pendentes': diarias_pendentes})
