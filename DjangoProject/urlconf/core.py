@@ -14,6 +14,10 @@ from pagamentos.views.support.devolucao import (
     registrar_devolucao_view,
     registrar_devolucao_action,
 )
+from pagamentos.views.support.cancelamento import (
+    cancelar_processo_spoke_view,
+    cancelar_processo_action,
+)
 from pagamentos.views.payment.autorizacao import actions as payment_autorizacao_actions
 from pagamentos.views.payment.autorizacao import panels as payment_autorizacao_panels
 from pagamentos.views.payment.contas_a_pagar import actions as payment_contas_actions
@@ -125,6 +129,8 @@ urlpatterns = [
     path('pagamentos/sincronizar-siscac/auto/', pagamentos_sync_views.sincronizar_siscac_auto_action, name='sincronizar_siscac_auto_action'),
     path('documentos/secure/<str:tipo_documento>/<int:documento_id>/', pagamentos_security_views.download_arquivo_seguro, name='download_arquivo_seguro'),
     path('processo/<int:pk>/', process_detail_view, name='process_detail'),
+    path('processo/<int:pk>/cancelar/', cancelar_processo_spoke_view, name='cancelar_processo_spoke'),
+    path('processo/<int:pk>/cancelar/confirmar/', cancelar_processo_action, name='cancelar_processo_action'),
     path('processo/<int:processo_id>/devolucao/', registrar_devolucao_view, name='registrar_devolucao'),
     path('processo/<int:processo_id>/devolucao/salvar/', registrar_devolucao_action, name='registrar_devolucao_action'),
     path('devolucoes/', painel_devolucoes_view, name='painel_devolucoes'),

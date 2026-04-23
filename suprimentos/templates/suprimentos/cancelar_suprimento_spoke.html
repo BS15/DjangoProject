@@ -1,0 +1,27 @@
+{% extends "layouts/base_form.html" %}
+
+{% block page_heading %}Cancelar Suprimento #{{ suprimento.id }}{% endblock %}
+{% block page_subtitle %}A ação altera o status do suprimento e do processo vinculado para cancelado/anulado.{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'gerenciar_suprimento_view' pk=suprimento.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
+{% endblock %}
+
+{% block form_action %}{% url 'cancelar_suprimento_action' pk=suprimento.id %}{% endblock %}
+{% block form_enctype %}multipart/form-data{% endblock %}
+
+{% block form_fields %}
+<div class="alert alert-danger mb-0">
+    <p class="mb-2"><strong>Confirma o cancelamento deste suprimento?</strong></p>
+</div>
+<div class="mt-3">
+    <label for="id_justificativa" class="form-label fw-semibold">Justificativa</label>
+    <textarea id="id_justificativa" name="justificativa" class="form-control" rows="4" required></textarea>
+</div>
+{% include "commons/partials/_cancelamento_devolucao.html" %}
+{% endblock %}
+
+{% block form_actions %}
+<a href="{% url 'gerenciar_suprimento_view' pk=suprimento.id %}" class="btn btn-secondary px-4">Voltar</a>
+<button type="submit" class="btn btn-danger px-4 fw-bold"><i class="bi bi-x-circle"></i> Confirmar Cancelamento</button>
+{% endblock %}

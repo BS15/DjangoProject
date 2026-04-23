@@ -8,12 +8,18 @@
 {% endblock %}
 
 {% block form_action %}{% url 'cancelar_diaria_action' pk=diaria.id %}{% endblock %}
+{% block form_enctype %}multipart/form-data{% endblock %}
 
 {% block form_fields %}
 <div class="alert alert-danger mb-0">
     <p class="mb-2"><strong>Confirma o cancelamento desta diária?</strong></p>
     <p class="mb-0">Após confirmação, o status será atualizado para cancelado/rejeitado conforme as regras do fluxo.</p>
 </div>
+<div class="mt-3">
+    <label for="id_justificativa" class="form-label fw-semibold">Justificativa</label>
+    <textarea id="id_justificativa" name="justificativa" class="form-control" rows="4" required></textarea>
+</div>
+{% include "commons/partials/_cancelamento_devolucao.html" %}
 {% endblock %}
 
 {% block form_actions %}

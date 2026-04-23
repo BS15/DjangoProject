@@ -22,3 +22,4 @@ Análise step-by-step de cada domínio de negócio, incluindo máquinas de estad
 - [Retenções](fluxos/retencoes.md) — ciclo de `RetencaoImposto` da NF ao recolhimento.
 - [Diárias](fluxos/diarias.md) — cadastro, prestação de contas, contingência e devolução.
 - [Suprimento de Fundos](fluxos/suprimento_fundos.md) — concessão, despesas e fechamento da prestação.
+- [Cancelamento](fluxos/cancelamento.md) — cancelamento formal de processos, verbas e suprimentos, com devolução obrigatória quando pago.

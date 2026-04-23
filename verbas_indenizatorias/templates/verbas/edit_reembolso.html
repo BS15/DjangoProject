@@ -91,9 +91,6 @@
 {% endif %}
 
 {% if not reembolso.status or reembolso.status.status_choice != 'PAGA' and reembolso.status.status_choice != 'CANCELADO / ANULADO' %}
-<form method="post" action="{% url 'cancelar_reembolso_action' reembolso.id %}" onsubmit="return confirm('Deseja cancelar este reembolso?');">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-outline-danger w-100 btn-sm mt-2"><i class="bi bi-x-circle"></i> Cancelar</button>
-</form>
+<a href="{% url 'cancelar_reembolso_spoke' reembolso.id %}" class="btn btn-outline-danger w-100 btn-sm mt-2"><i class="bi bi-x-circle"></i> Cancelar</a>
 {% endif %}
 {% endblock %}

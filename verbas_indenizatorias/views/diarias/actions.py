@@ -11,6 +11,7 @@ from django.core.exceptions import ValidationError
 from django.utils.http import url_has_allowed_host_and_scheme
 
 from pagamentos.domain_models import Processo
+from pagamentos.services.cancelamentos import cancelar_verba, extrair_dados_devolucao_do_post
 from verbas_indenizatorias.constants import (
     STATUS_VERBA_APROVADA,
     STATUS_VERBA_RASCUNHO,
@@ -284,19 +285,21 @@ def aceitar_prestacao_action(request, pk):
 @require_POST
 @permission_required('verbas_indenizatorias.pode_gerenciar_diarias', raise_exception=True)
 def cancelar_diaria_action(request, pk):
+    justificativa = (request.POST.get("justificativa") or "").strip()
+    if not justificativa:
+        messages.error(request, "A justificativa do cancelamento é obrigatória.")
+        return redirect("cancelar_diaria_spoke", pk=pk)
+
     with transaction.atomic():
-        diaria = get_object_or_404(Diaria.objects.select_for_update(), id=pk)
+        diaria = get_object_or_404(Diaria.objects.select_for_update().select_related("processo__status"), id=pk)
 
         try:
-            diaria.avancar_status('REJEITADA')
-        except ValidationError:
-            _set_status_case_insensitive(diaria, 'CANCELADO / ANULADO')
-
-        diaria.autorizada = False
-        diaria.save(update_fields=['autorizada'])
+            cancelar_verba(diaria, justificativa, request.user, dados_devolucao=extrair_dados_devolucao_do_post(request))
+        except ValidationError as exc:
+            messages.error(request, " ".join(exc.messages))
+            return redirect("cancelar_diaria_spoke", pk=pk)
         logger.info("mutation=cancelar_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
 
     messages.warning(request, f'Diária #{diaria.numero_siscac} cancelada.')
     return redirect('gerenciar_diaria', pk=diaria.id)
-
 

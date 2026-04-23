@@ -3,6 +3,9 @@
 ## Auxílio
 Benefício indenizatório concedido a servidores ou membros para cobertura de despesas específicas previstas em norma (ex.: auxílio saúde, auxílio creche), sujeito a requisitos de elegibilidade e aprovação.
 
+## Cancelamento
+Encerramento definitivo de um processo, verba indenizatória ou suprimento, com registro formal de justificativa e trilha de auditoria (`CancelamentoProcessual`). Quando a entidade já está em status pago ou encerrado no momento do cancelamento, a operação exige, obrigatoriamente, o registro simultâneo de uma devolução correspondente (`DevolucaoProcessual`), criada na mesma transação atômica.
+
 ## Comprovante de Pagamento
 Documento que comprova a execução financeira do processo, como um extrato bancário ou recibo. É obrigatório para concluir a etapa de conferência pós-pagamento.
 

@@ -102,7 +102,8 @@ def apostila_diaria_spoke_view(request, pk):
 @permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
 def cancelar_diaria_spoke_view(request, pk):
     diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status'), id=pk)
-    context = {'diaria': diaria}
+    status_choice = (getattr(getattr(diaria, "status", None), "status_choice", "") or "").upper()
+    context = {'diaria': diaria, 'entidade_paga': status_choice == "PAGA"}
     return render(request, 'verbas/cancelar_diaria_spoke.html', context)
 
 

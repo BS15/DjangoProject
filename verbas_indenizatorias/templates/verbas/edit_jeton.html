@@ -74,9 +74,6 @@
 {% endif %}
 
 {% if not jeton.status or jeton.status.status_choice != 'PAGA' and jeton.status.status_choice != 'CANCELADO / ANULADO' %}
-<form method="post" action="{% url 'cancelar_jeton_action' jeton.id %}" onsubmit="return confirm('Deseja realmente cancelar este Jeton?');">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-outline-danger w-100 btn-sm mt-2"><i class="bi bi-x-circle"></i> Cancelar</button>
-</form>
+<a href="{% url 'cancelar_jeton_spoke' jeton.id %}" class="btn btn-outline-danger w-100 btn-sm mt-2"><i class="bi bi-x-circle"></i> Cancelar</a>
 {% endif %}
 {% endblock %}

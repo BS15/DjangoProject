@@ -4,9 +4,11 @@ logger = logging.getLogger(__name__)
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
+from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
+from pagamentos.services.cancelamentos import cancelar_verba, extrair_dados_devolucao_do_post
 from verbas_indenizatorias.forms import JetonForm
 from verbas_indenizatorias.models import Jeton, StatusChoicesVerbasIndenizatorias
 
@@ -57,8 +59,18 @@ def autorizar_jeton_action(request, pk):
 @require_POST
 @permission_required("verbas_indenizatorias.pode_gerenciar_jetons", raise_exception=True)
 def cancelar_jeton_action(request, pk):
-    jeton = get_object_or_404(Jeton, id=pk)
-    _set_status_case_insensitive(jeton, "CANCELADO / ANULADO")
+    justificativa = (request.POST.get("justificativa") or "").strip()
+    if not justificativa:
+        messages.error(request, "A justificativa do cancelamento é obrigatória.")
+        return redirect("cancelar_jeton_spoke", pk=pk)
+
+    jeton = get_object_or_404(Jeton.objects.select_related("processo__status"), id=pk)
+    try:
+        cancelar_verba(jeton, justificativa, request.user, dados_devolucao=extrair_dados_devolucao_do_post(request))
+    except ValidationError as exc:
+        messages.error(request, " ".join(exc.messages))
+        return redirect("cancelar_jeton_spoke", pk=pk)
+
     logger.info("mutation=cancelar_jeton jeton_id=%s user_id=%s", jeton.id, request.user.pk)
     messages.warning(request, "Jeton cancelado.")
     return redirect("gerenciar_jeton", pk=jeton.id)

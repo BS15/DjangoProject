@@ -34,3 +34,13 @@ def gerenciar_jeton_view(request, pk):
         "pode_autorizar": request.user.has_perm("verbas_indenizatorias.pode_gerenciar_jetons"),
     }
     return render(request, "verbas/edit_jeton.html", context)
+
+
+@permission_required("verbas_indenizatorias.pode_gerenciar_jetons", raise_exception=True)
+def cancelar_jeton_spoke_view(request, pk):
+    jeton = get_object_or_404(Jeton.objects.select_related("beneficiario", "status", "processo"), id=pk)
+    status_choice = (getattr(getattr(jeton, "status", None), "status_choice", "") or "").upper()
+    return render(request, "verbas/cancelar_jeton_spoke.html", {
+        "jeton": jeton,
+        "entidade_paga": status_choice == "PAGA",
+    })
