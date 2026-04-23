@@ -10,7 +10,7 @@ from suprimentos.models import SuprimentoDeFundos
 from suprimentos.pdf_generators import SUPRIMENTOS_DOCUMENT_REGISTRY
 
 
-@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
+@permission_required("suprimentos.pode_gerir_prestacao_contas_suprimento", raise_exception=True)
 @xframe_options_sameorigin
 def gerar_relatorio_prestacao_contas_view(request, pk):
     """Gera o PDF do relatório de prestação de contas do suprimento de fundos."""

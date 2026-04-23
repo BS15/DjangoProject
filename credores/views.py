@@ -49,7 +49,7 @@ def edit_credor_view(request, pk):
 @permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def credores_list_view(request):
     """Lista credores com suporte a filtros do ``CredorFilter``."""
-    queryset = Credor.objects.all().order_by('nome')
+    queryset = Credor.objects.select_related('usuario').order_by('nome')
     return render_filtered_list(
         request,
         queryset=queryset,

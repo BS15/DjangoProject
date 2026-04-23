@@ -85,7 +85,7 @@ def _emitir_pcd_e_enviar_para_assinatura_beneficiario(diaria, criador):
 
 
 @require_POST
-@permission_required("verbas_indenizatorias.pode_agrupar_verbas", raise_exception=True)
+@permission_required("pagamentos.pode_agrupar_verbas", raise_exception=True)
 def agrupar_verbas_view(request, tipo_verba):
     selecionados = request.POST.getlist('verbas_selecionadas')
 

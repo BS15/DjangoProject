@@ -7,7 +7,7 @@ from fiscal.models import DocumentoFiscal
 from pagamentos.views.shared import render_filtered_list
 
 
-@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_atestar_liquidacao", raise_exception=True)
 def painel_liquidacoes_view(request):
     queryset_base = DocumentoFiscal.objects.select_related(
         "processo", "nome_emitente", "fiscal_contrato"

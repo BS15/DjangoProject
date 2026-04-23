@@ -1,87 +1,104 @@
 {% extends "layouts/base_detail.html" %}
 
-{% block title %}Perfil do Credor: {{ credor.nome }}{% endblock %}
+{% block title %}Editar Credor: {{ credor.nome }}{% endblock %}
 
 {% block detail_header %}
 <div class="d-flex justify-content-between align-items-center">
     <div>
         <h2><i class="bi bi-building text-primary"></i> {{ credor.nome|upper }}</h2>
-        <p class="text-muted mb-0">Documento: <strong class="mask-cpf-cnpj">{{ credor.cpf_cnpj }}</strong> | Tipo: {{ credor.get_tipo_display }}</p>
+        <p class="text-muted mb-0"><strong class="mask-cpf-cnpj">{{ credor.cpf_cnpj }}</strong> • {{ credor.get_tipo_display }}</p>
     </div>
     <div>
-        <a href="{% url 'credores_list' %}" class="btn btn-outline-secondary">Voltar para Diretorio</a>
+        <a href="{% url 'credores_list' %}" class="btn btn-outline-secondary">Voltar</a>
     </div>
 </div>
 {% endblock %}
 
 {% block detail_body %}
 <div class="row mt-4">
+    <!-- Form Column -->
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-pencil-square"></i> Dados Cadastrais</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'edit_credor_action' credor.id %}">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        {% for field in form_edit %}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}<small class="form-text text-muted d-block mt-1">{{ field.help_text|safe }}</small>{% endif %}
+                            {% if field.errors %}<div class="alert alert-danger small mt-1">{{ field.errors }}</div>{% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <hr class="my-4">
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'credores_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Atualizar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Column -->
     <div class="col-md-4">
-        <div class="card shadow-sm mb-4 {% if not credor.ativo %}border-danger{% endif %}">
+        <!-- Status Card -->
+        <div class="card shadow-sm mb-3">
             <div class="card-header bg-light">
-                <h5 class="card-title mb-0">Status da Entidade</h5>
+                <h6 class="card-title mb-0">Status</h6>
             </div>
             <div class="card-body text-center">
                 {% if credor.ativo %}
-                <i class="bi bi-check-circle-fill text-success fs-1"></i>
-                <h4 class="mt-2 text-success">Regular</h4>
-                <p class="text-muted small">Apto para processos de pagamento.</p>
+                <i class="bi bi-check-circle-fill text-success fs-3"></i>
+                <p class="fw-bold text-success mt-2">Ativo</p>
                 {% else %}
-                <i class="bi bi-exclamation-triangle-fill text-danger fs-1"></i>
-                <h4 class="mt-2 text-danger">Bloqueado</h4>
-                <p class="text-muted small">Pagamentos suspensos para esta entidade.</p>
+                <i class="bi bi-exclamation-circle-fill text-danger fs-3"></i>
+                <p class="fw-bold text-danger mt-2">Bloqueado</p>
                 {% endif %}
             </div>
             <div class="card-footer bg-white">
                 <form method="post" action="{% url 'toggle_status_credor_action' credor.id %}">
                     {% csrf_token %}
                     {% if credor.ativo %}
-                    <button type="submit" class="btn btn-outline-danger w-100" onclick="return confirm('Bloquear este credor impedira novos pagamentos. Confirmar?');">
-                        <i class="bi bi-lock"></i> Bloquear Credor
+                    <button type="submit" class="btn btn-sm btn-outline-danger w-100" onclick="return confirm('Bloquear este credor?');">
+                        <i class="bi bi-lock"></i> Bloquear
                     </button>
                     {% else %}
-                    <button type="submit" class="btn btn-success w-100" onclick="return confirm('Desbloquear este credor?');">
-                        <i class="bi bi-unlock"></i> Restaurar Regularidade
+                    <button type="submit" class="btn btn-sm btn-success w-100" onclick="return confirm('Desbloquear este credor?');">
+                        <i class="bi bi-unlock"></i> Desbloquear
                     </button>
                     {% endif %}
                 </form>
             </div>
         </div>
 
-        <div class="card shadow-sm mb-4">
+        <!-- History Card -->
+        <div class="card shadow-sm">
             <div class="card-header bg-light">
-                <h6 class="mb-0">Historico de Processos</h6>
+                <h6 class="card-title mb-0">Processos Associados</h6>
             </div>
-            <ul class="list-group list-group-flush">
+            <div class="list-group list-group-flush">
                 {% for processo in historico_processos %}
-                <li class="list-group-item">
+                <a href="{% url 'process_detail' processo.id %}" class="list-group-item list-group-item-action small">
                     <strong>#{{ processo.id }}</strong>
                     {% if processo.status %}
-                    <span class="badge bg-secondary float-end">{{ processo.status }}</span>
+                    <span class="badge bg-info float-end">{{ processo.status }}</span>
                     {% endif %}
-                </li>
+                </a>
                 {% empty %}
-                <li class="list-group-item text-muted small">Sem processos vinculados.</li>
+                <div class="list-group-item text-muted small">
+                    Sem processos registrados.
+                </div>
                 {% endfor %}
-            </ul>
-        </div>
-    </div>
-
-    <div class="col-md-8">
-        <div class="card shadow-sm border-primary mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="card-title mb-0"><i class="bi bi-pencil-square"></i> Atualizar Dados Cadastrais</h5>
-            </div>
-            <div class="card-body">
-                <form method="post" action="{% url 'edit_credor_action' credor.id %}">
-                    {% csrf_token %}
-                    {{ form_edit.as_p }}
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-save"></i> Atualizar Informacoes
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
@@ -89,5 +106,5 @@
 {% endblock %}
 
 {% block detail_actions %}
-<a href="{% url 'credores_list' %}" class="btn btn-outline-secondary w-100">Voltar para Diretorio</a>
+<a href="{% url 'credores_list' %}" class="btn btn-outline-secondary w-100">Voltar para Diretório</a>
 {% endblock %}

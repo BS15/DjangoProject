@@ -41,7 +41,7 @@ def _resumo_solicitacao(tipo_verba, solicitacao):
 
 
 @require_GET
-@permission_required("verbas_indenizatorias.pode_visualizar_verbas", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def verbas_panel_view(request):
     return render(request, "verbas/verbas_panel.html")
 

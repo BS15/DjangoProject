@@ -5,7 +5,7 @@ from django.shortcuts import redirect, render
 from .import_services import confirmar_diarias_lote, preview_diarias_lote
 
 
-@permission_required("verbas_indenizatorias.pode_importar_diarias", raise_exception=True)
+@permission_required("pagamentos.pode_importar_diarias", raise_exception=True)
 def importar_diarias_view(request):
     session_key = "importar_diarias_preview"
     context = {}

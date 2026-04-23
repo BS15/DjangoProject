@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 @require_POST
-@permission_required('verbas_indenizatorias.pode_gerenciar_diarias', raise_exception=True)
+@permission_required('pagamentos.pode_gerenciar_diarias', raise_exception=True)
 def add_contingencia_diaria_action(request, pk):
     """Cria uma contingência de retificação para a diária."""
     diaria = get_object_or_404(Diaria, pk=pk)
@@ -54,7 +54,7 @@ def add_contingencia_diaria_action(request, pk):
 
 
 @require_POST
-@permission_required('verbas_indenizatorias.pode_gerenciar_diarias', raise_exception=True)
+@permission_required('pagamentos.pode_gerenciar_diarias', raise_exception=True)
 def analisar_contingencia_diaria_action(request, pk):
     """Aprova ou rejeita uma contingência de diária."""
     contingencia = get_object_or_404(ContingenciaDiaria, pk=pk)

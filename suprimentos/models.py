@@ -165,6 +165,9 @@ class SuprimentoDeFundos(models.Model):
     class Meta:
         permissions = [
             ("acesso_backoffice", "Acesso ao backoffice de suprimentos"),
+            ("pode_adicionar_despesas_suprimento", "Pode adicionar despesas de suprimento"),
+            ("pode_encerrar_suprimento", "Pode encerrar suprimento"),
+            ("pode_gerir_prestacao_contas_suprimento", "Pode gerir prestação de contas de suprimento"),
         ]
         constraints = [
             models.CheckConstraint(

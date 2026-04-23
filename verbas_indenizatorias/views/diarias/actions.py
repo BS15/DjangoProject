@@ -87,7 +87,7 @@ def _set_status_e_autorizacao(diaria, status_str, autorizada):
 
 
 @require_POST
-@permission_required('verbas_indenizatorias.pode_criar_diarias', raise_exception=True)
+@permission_required('pagamentos.pode_criar_diarias', raise_exception=True)
 def add_diaria_action(request):
     form = DiariaForm(request.POST)
     if not form.is_valid():
@@ -105,7 +105,7 @@ def add_diaria_action(request):
 
 
 @require_POST
-@permission_required('verbas_indenizatorias.pode_gerenciar_diarias', raise_exception=True)
+@permission_required('pagamentos.pode_gerenciar_diarias', raise_exception=True)
 def solicitar_autorizacao_diaria_action(request, pk):
     diaria = get_object_or_404(Diaria, id=pk)
     _set_status_e_autorizacao(diaria, STATUS_VERBA_SOLICITADA, autorizada=False)
@@ -115,9 +115,18 @@ def solicitar_autorizacao_diaria_action(request, pk):
 
 
 @require_POST
-@permission_required('verbas_indenizatorias.pode_autorizar_diarias', raise_exception=True)
+@permission_required('pagamentos.pode_autorizar_diarias', raise_exception=True)
 def autorizar_diaria_action(request, pk):
     diaria = get_object_or_404(Diaria, id=pk)
+    if diaria.proponente_id != request.user.id:
+        messages.error(request, 'Você só pode autorizar diárias em que esteja vinculado como proponente.')
+        return redirect('painel_autorizacao_diarias')
+
+    status_atual = (getattr(getattr(diaria, 'status', None), 'status_choice', '') or '').upper()
+    if status_atual != STATUS_VERBA_SOLICITADA:
+        messages.error(request, 'A diária precisa estar no status SOLICITADA para autorização.')
+        return redirect('painel_autorizacao_diarias')
+
     _set_status_e_autorizacao(diaria, STATUS_VERBA_APROVADA, autorizada=True)
     logger.info("mutation=autorizar_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
     messages.success(request, 'Diária autorizada com sucesso.')
@@ -125,7 +134,7 @@ def autorizar_diaria_action(request, pk):
 
 
 @require_POST
-@permission_required('verbas_indenizatorias.pode_visualizar_verbas', raise_exception=True)
+@permission_required('pagamentos.pode_visualizar_verbas', raise_exception=True)
 def registrar_comprovante_action(request, pk):
     with transaction.atomic():
         diaria = get_object_or_404(Diaria.objects.select_for_update().select_related('beneficiario'), id=pk)
@@ -283,7 +292,7 @@ def aceitar_prestacao_action(request, pk):
 
 
 @require_POST
-@permission_required('verbas_indenizatorias.pode_gerenciar_diarias', raise_exception=True)
+@permission_required('pagamentos.pode_gerenciar_diarias', raise_exception=True)
 def cancelar_diaria_action(request, pk):
     justificativa = (request.POST.get("justificativa") or "").strip()
     if not justificativa:

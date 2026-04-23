@@ -9,7 +9,7 @@ from verbas_indenizatorias.models import ContingenciaDiaria, Diaria
 
 
 @require_GET
-@permission_required('verbas_indenizatorias.pode_gerenciar_diarias', raise_exception=True)
+@permission_required('pagamentos.pode_gerenciar_diarias', raise_exception=True)
 def painel_contingencias_diarias_view(request):
     """Lista todas as contingências de diárias com filtro básico por status."""
     contingencias = ContingenciaDiaria.objects.select_related(
@@ -27,7 +27,7 @@ def painel_contingencias_diarias_view(request):
 
 
 @require_GET
-@permission_required('verbas_indenizatorias.pode_gerenciar_diarias', raise_exception=True)
+@permission_required('pagamentos.pode_gerenciar_diarias', raise_exception=True)
 def add_contingencia_diaria_view(request, pk):
     """Formulário de abertura de contingência para a diária."""
     diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status'), pk=pk)

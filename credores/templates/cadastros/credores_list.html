@@ -21,6 +21,7 @@
 {% block table_headers %}
 <th>Nome / Razao Social</th>
 <th>CPF / CNPJ</th>
+<th>Usuário</th>
 <th>Tipo</th>
 <th>Status</th>
 <th>Acoes</th>
@@ -31,6 +32,7 @@
 <tr>
     <td><strong>{{ credor.nome|upper }}</strong></td>
     <td><span class="mask-cpf-cnpj">{{ credor.cpf_cnpj }}</span></td>
+    <td>{{ credor.usuario.get_full_name|default:"-" }}</td>
     <td>{{ credor.get_tipo_display }}</td>
     <td>
         {% if credor.ativo %}

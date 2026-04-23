@@ -209,6 +209,8 @@ class Processo(models.Model):
     class Meta:
         permissions = [
             ("operador_contas_a_pagar", "Pode operar contas a pagar"),
+            ("pode_visualizar_processos_pagamento", "Pode visualizar processos de pagamento"),
+            ("pode_editar_processos_pagamento", "Pode editar processos de pagamento"),
             ("pode_aprovar_contingencia_supervisor", "Pode aprovar contingências na etapa de supervisão/gerência"),
             ("pode_atestar_liquidacao", "Pode atestar notas fiscais (Fiscal do Contrato)"),
             ("pode_autorizar_pagamento", "Pode autorizar pagamentos (Ordenador)"),

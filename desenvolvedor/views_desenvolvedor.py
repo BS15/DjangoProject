@@ -11,10 +11,10 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.decorators import permission_required
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.base import ContentFile
 from django.http import HttpResponse
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError
@@ -49,14 +49,19 @@ _FAKE_PDF_BYTES = b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj
 
 _GRUPOS_PERMISSOES_FAKE = {
     "FUNCIONARIO(A) CONTAS A PAGAR": [
-        "operador_contas_a_pagar",
-        "pode_aprovar_contingencia_supervisor",
-        "pode_arquivar",
+        "pagamentos.operador_contas_a_pagar",
+        "pagamentos.pode_visualizar_processos_pagamento",
+        "pagamentos.pode_editar_processos_pagamento",
+        "pagamentos.pode_aprovar_contingencia_supervisor",
+        "pagamentos.pode_arquivar",
+        "suprimentos.acesso_backoffice",
+        "suprimentos.pode_gerir_prestacao_contas_suprimento",
+        "verbas_indenizatorias.analisar_prestacao_contas",
     ],
-    "FISCAL DE CONTRATO": ["operador_contas_a_pagar", "pode_atestar_liquidacao"],
-    "ORDENADOR(A) DE DESPESA": ["operador_contas_a_pagar", "pode_autorizar_pagamento"],
-    "CONTADOR(A)": ["operador_contas_a_pagar", "pode_contabilizar"],
-    "CONSELHEIRO(A) FISCAL": ["operador_contas_a_pagar", "pode_auditar_conselho"],
+    "FISCAL DE CONTRATO": ["pagamentos.pode_atestar_liquidacao"],
+    "ORDENADOR(A) DE DESPESA": ["pagamentos.pode_visualizar_processos_pagamento", "pagamentos.pode_autorizar_pagamento"],
+    "CONTADOR(A)": ["pagamentos.pode_visualizar_processos_pagamento", "pagamentos.pode_contabilizar"],
+    "CONSELHEIRO(A) FISCAL": ["pagamentos.pode_visualizar_processos_pagamento", "pagamentos.pode_auditar_conselho"],
 }
 
 _USUARIOS_TESTE_RBAC = [
@@ -102,16 +107,24 @@ _CREDENCIAIS_USUARIOS_TESTE_PATH = Path(__file__).resolve().parents[1] / "usuari
 
 def _ensure_rbac_groups_for_fake_users():
     """Garante grupos/permissoes canônicas para perfis usados nos usuários de teste."""
-    content_type = ContentType.objects.get_for_model(Processo)
     grupos = {}
     permissoes_ausentes = []
 
-    for nome_grupo, codenames in _GRUPOS_PERMISSOES_FAKE.items():
+    for nome_grupo, permissoes in _GRUPOS_PERMISSOES_FAKE.items():
         grupo, _ = Group.objects.get_or_create(name=nome_grupo)
-        for codename in codenames:
-            permissao = Permission.objects.filter(codename=codename, content_type=content_type).first()
+        for permissao_str in permissoes:
+            try:
+                app_label, codename = permissao_str.split(".", 1)
+            except ValueError:
+                permissoes_ausentes.append(permissao_str)
+                continue
+
+            permissao = Permission.objects.filter(
+                codename=codename,
+                content_type__app_label=app_label,
+            ).first()
             if permissao is None:
-                permissoes_ausentes.append(codename)
+                permissoes_ausentes.append(permissao_str)
                 continue
             grupo.permissions.add(permissao)
         grupos[nome_grupo] = grupo
@@ -667,6 +680,241 @@ def painel_teste_pdfs(request):
     return render(request, "pagamentos/teste_pdfs.html")
 
 
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
+def painel_permissoes_dev_view(request):
+    """Renderiza o painel de inspeção de RBAC para depuração operacional."""
+    return render(request, "painel_permissoes_dev.html")
+
+
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
+def api_permissoes_dev_view(request):
+    """Retorna visão completa de permissões, grupos e usuários para auditoria de acesso."""
+    if request.method != "GET":
+        return JsonResponse({"sucesso": False, "erro": "Método não permitido."}, status=405)
+
+    UserModel = get_user_model()
+    users = list(UserModel.objects.all().prefetch_related("groups", "user_permissions", "groups__permissions"))
+    groups = list(Group.objects.all().prefetch_related("permissions", "user_set"))
+    permissions = list(
+        Permission.objects.all()
+        .select_related("content_type")
+        .prefetch_related("group_set", "user_set")
+        .order_by("content_type__app_label", "codename")
+    )
+
+    users_by_id = {user.id: user for user in users}
+
+    user_groups_map = {
+        user.id: sorted(
+            [{"id": g.id, "name": g.name} for g in user.groups.all()],
+            key=lambda item: item["name"],
+        )
+        for user in users
+    }
+
+    users_direct_perms_map = {
+        user.id: {
+            perm.id for perm in user.user_permissions.all()
+        }
+        for user in users
+    }
+
+    users_via_groups_perms_map = {
+        user.id: {
+            perm.id for group in user.groups.all() for perm in group.permissions.all()
+        }
+        for user in users
+    }
+
+    groups_users_map = {
+        group.id: sorted(
+            [
+                {
+                    "id": user.id,
+                    "username": user.username,
+                    "full_name": user.get_full_name(),
+                    "email": user.email,
+                    "is_active": user.is_active,
+                }
+                for user in group.user_set.all()
+            ],
+            key=lambda item: item["username"],
+        )
+        for group in groups
+    }
+
+    permissions_payload = []
+    for perm in permissions:
+        group_objs = sorted(
+            [
+                {"id": group.id, "name": group.name}
+                for group in perm.group_set.all()
+            ],
+            key=lambda item: item["name"],
+        )
+
+        direct_users = sorted(
+            [
+                {
+                    "id": user.id,
+                    "username": user.username,
+                    "full_name": user.get_full_name(),
+                    "email": user.email,
+                    "is_active": user.is_active,
+                }
+                for user in perm.user_set.all()
+            ],
+            key=lambda item: item["username"],
+        )
+
+        via_groups_user_ids = [
+            user.id
+            for user in users
+            if perm.id in users_via_groups_perms_map.get(user.id, set())
+        ]
+        via_groups_users = sorted(
+            [
+                {
+                    "id": user_id,
+                    "username": users_by_id[user_id].username,
+                    "full_name": users_by_id[user_id].get_full_name(),
+                    "email": users_by_id[user_id].email,
+                    "is_active": users_by_id[user_id].is_active,
+                }
+                for user_id in via_groups_user_ids
+            ],
+            key=lambda item: item["username"],
+        )
+
+        total_users = {
+            item["id"]: item for item in [*direct_users, *via_groups_users]
+        }
+
+        permissions_payload.append(
+            {
+                "id": perm.id,
+                "name": perm.name,
+                "codename": perm.codename,
+                "app_label": perm.content_type.app_label,
+                "model": perm.content_type.model,
+                "groups": group_objs,
+                "users_direct": direct_users,
+                "users_via_groups": via_groups_users,
+                "users_total": sorted(total_users.values(), key=lambda item: item["username"]),
+            }
+        )
+
+    groups_payload = []
+    for group in groups:
+        perms = sorted(
+            [
+                {
+                    "id": perm.id,
+                    "name": perm.name,
+                    "codename": perm.codename,
+                    "app_label": perm.content_type.app_label,
+                    "model": perm.content_type.model,
+                }
+                for perm in group.permissions.all()
+            ],
+            key=lambda item: (item["app_label"], item["codename"]),
+        )
+        groups_payload.append(
+            {
+                "id": group.id,
+                "name": group.name,
+                "permissions": perms,
+                "users": groups_users_map.get(group.id, []),
+            }
+        )
+
+    users_payload = []
+    for user in users:
+        direct_perm_ids = users_direct_perms_map.get(user.id, set())
+        via_group_perm_ids = users_via_groups_perms_map.get(user.id, set())
+        total_perm_ids = sorted(direct_perm_ids.union(via_group_perm_ids))
+
+        direct_permissions = sorted(
+            [
+                {
+                    "id": perm.id,
+                    "name": perm.name,
+                    "codename": perm.codename,
+                    "app_label": perm.content_type.app_label,
+                    "model": perm.content_type.model,
+                }
+                for perm in permissions
+                if perm.id in direct_perm_ids
+            ],
+            key=lambda item: (item["app_label"], item["codename"]),
+        )
+
+        group_permissions = sorted(
+            [
+                {
+                    "id": perm.id,
+                    "name": perm.name,
+                    "codename": perm.codename,
+                    "app_label": perm.content_type.app_label,
+                    "model": perm.content_type.model,
+                }
+                for perm in permissions
+                if perm.id in via_group_perm_ids
+            ],
+            key=lambda item: (item["app_label"], item["codename"]),
+        )
+
+        total_permissions = sorted(
+            [
+                {
+                    "id": perm.id,
+                    "name": perm.name,
+                    "codename": perm.codename,
+                    "app_label": perm.content_type.app_label,
+                    "model": perm.content_type.model,
+                }
+                for perm in permissions
+                if perm.id in total_perm_ids
+            ],
+            key=lambda item: (item["app_label"], item["codename"]),
+        )
+
+        users_payload.append(
+            {
+                "id": user.id,
+                "username": user.username,
+                "full_name": user.get_full_name(),
+                "email": user.email,
+                "is_active": user.is_active,
+                "is_staff": user.is_staff,
+                "is_superuser": user.is_superuser,
+                "groups": user_groups_map.get(user.id, []),
+                "permissions_direct": direct_permissions,
+                "permissions_via_groups": group_permissions,
+                "permissions_total": total_permissions,
+            }
+        )
+
+    resumo = {
+        "total_permissions": len(permissions_payload),
+        "total_groups": len(groups_payload),
+        "total_users": len(users_payload),
+        "total_users_active": sum(1 for user in users if user.is_active),
+        "total_users_staff": sum(1 for user in users if user.is_staff),
+        "total_users_superuser": sum(1 for user in users if user.is_superuser),
+    }
+
+    return JsonResponse(
+        {
+            "sucesso": True,
+            "resumo": resumo,
+            "permissions": permissions_payload,
+            "groups": groups_payload,
+            "users": users_payload,
+        }
+    )
+
+
 def gerar_pdf_fake_view(request, doc_type):
     def mock_credor():
         c = MagicMock()
@@ -770,5 +1018,7 @@ __all__ = [
     "gerar_dados_fake_view",
     "gerar_dummy_pdf_view",
     "painel_teste_pdfs",
+    "painel_permissoes_dev_view",
+    "api_permissoes_dev_view",
     "gerar_pdf_fake_view",
 ]

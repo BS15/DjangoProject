@@ -24,7 +24,7 @@ def _processos_vinculaveis_queryset():
 
 
 @require_GET
-@permission_required("verbas_indenizatorias.pode_visualizar_verbas", raise_exception=True)
+@permission_required("pagamentos.pode_visualizar_verbas", raise_exception=True)
 def diarias_list_view(request):
     queryset = Diaria.objects.select_related("beneficiario", "status", "processo").order_by("-id")
     extra_context = {}
@@ -43,13 +43,13 @@ def diarias_list_view(request):
 
 
 @require_GET
-@permission_required("verbas_indenizatorias.pode_criar_diarias", raise_exception=True)
+@permission_required("pagamentos.pode_criar_diarias", raise_exception=True)
 def add_diaria_view(request):
     return render(request, 'verbas/add_diaria.html', {'form': DiariaForm()})
 
 
 @require_GET
-@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
 def gerenciar_diaria_view(request, pk):
     diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status', 'processo', 'prestacao_contas'), id=pk)
     prestacao = obter_ou_criar_prestacao(diaria)
@@ -66,7 +66,7 @@ def gerenciar_diaria_view(request, pk):
 
 
 @require_GET
-@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
 def vinculo_diaria_spoke_view(request, pk):
     diaria = get_object_or_404(
         Diaria.objects.select_related('beneficiario', 'status', 'processo', 'prestacao_contas'),
@@ -83,7 +83,7 @@ def vinculo_diaria_spoke_view(request, pk):
 
 
 @require_GET
-@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
 def devolucao_diaria_spoke_view(request, pk):
     diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status'), id=pk)
     context = {'diaria': diaria}
@@ -91,7 +91,7 @@ def devolucao_diaria_spoke_view(request, pk):
 
 
 @require_GET
-@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
 def apostila_diaria_spoke_view(request, pk):
     diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status'), id=pk)
     context = {'diaria': diaria}
@@ -99,7 +99,7 @@ def apostila_diaria_spoke_view(request, pk):
 
 
 @require_GET
-@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
 def cancelar_diaria_spoke_view(request, pk):
     diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status'), id=pk)
     status_choice = (getattr(getattr(diaria, "status", None), "status_choice", "") or "").upper()
@@ -156,14 +156,14 @@ def gerenciar_prestacao_view(request, pk):
 
 
 @require_GET
-@permission_required('verbas_indenizatorias.pode_autorizar_diarias', raise_exception=True)
+@permission_required('pagamentos.pode_autorizar_diarias', raise_exception=True)
 def painel_autorizacao_diarias_view(request):
     diarias_pendentes = listar_diarias_pendentes_para_proponente(request.user)
     return render(request, 'verbas/painel_autorizacao_diarias.html', {'diarias_pendentes': diarias_pendentes})
 
 
 @require_GET
-@permission_required('verbas_indenizatorias.analisar_prestacao_contas', raise_exception=True)
+@permission_required('verbas_indenizatorias.visualizar_prestacao_contas', raise_exception=True)
 def painel_revisar_prestacoes_view(request):
     prestacoes = PrestacaoContasDiaria.objects.select_related('diaria__beneficiario', 'diaria__status').order_by('-criado_em')
 
@@ -194,7 +194,7 @@ def painel_revisar_prestacoes_view(request):
 
 
 @require_GET
-@permission_required('verbas_indenizatorias.analisar_prestacao_contas', raise_exception=True)
+@permission_required('verbas_indenizatorias.visualizar_prestacao_contas', raise_exception=True)
 def revisar_prestacao_view(request, pk):
     prestacao = get_object_or_404(
         PrestacaoContasDiaria.objects.select_related('diaria__beneficiario', 'diaria__status', 'diaria__processo').prefetch_related('documentos__tipo'),
@@ -213,7 +213,7 @@ def revisar_prestacao_view(request, pk):
     return render(request, 'verbas/revisar_prestacao.html', context)
 
 
-@permission_required("verbas_indenizatorias.pode_importar_diarias", raise_exception=True)
+@permission_required("pagamentos.pode_importar_diarias", raise_exception=True)
 def download_template_diarias_csv(request):
     """Baixa um CSV-modelo para importação de diárias."""
     conteudo = (

@@ -60,7 +60,7 @@ def cancelar_suprimento_spoke_view(request: HttpRequest, pk: int) -> HttpRespons
 
 
 @require_GET
-@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
+@permission_required("suprimentos.pode_adicionar_despesas_suprimento", raise_exception=True)
 def adicionar_despesa_view(request: HttpRequest, pk: int) -> HttpResponse:
     """Exibe spoke dedicada para registro de nova despesa de suprimento."""
     suprimento: Any = get_object_or_404(SuprimentoDeFundos, id=pk)
@@ -87,7 +87,7 @@ def adicionar_despesa_view(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @require_GET
-@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
+@permission_required("suprimentos.pode_gerir_prestacao_contas_suprimento", raise_exception=True)
 def revisar_prestacoes_suprimento_view(request: HttpRequest) -> HttpResponse:
     """Painel do operador listando prestações de suprimento aguardando revisão."""
     prestacoes = (
@@ -103,7 +103,7 @@ def revisar_prestacoes_suprimento_view(request: HttpRequest) -> HttpResponse:
 
 
 @require_GET
-@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
+@permission_required("suprimentos.pode_gerir_prestacao_contas_suprimento", raise_exception=True)
 def revisar_prestacao_suprimento_view(request: HttpRequest, pk: int) -> HttpResponse:
     """Exibe detalhes de uma prestação de suprimento para revisão do operador."""
     prestacao: Any = get_object_or_404(

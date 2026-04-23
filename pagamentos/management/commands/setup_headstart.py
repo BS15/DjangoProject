@@ -3,7 +3,6 @@ from __future__ import annotations
 import unicodedata
 
 from django.contrib.auth.models import Group, Permission
-from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -37,48 +36,53 @@ DOCUMENTOS_CONTAS_FIXAS_CANONICOS = [
 
 GRUPOS_PERMISSOES = {
     "FUNCIONARIO(A) CONTAS A PAGAR": [
-        "operador_contas_a_pagar",
-        "pode_aprovar_contingencia_supervisor",
-        "pode_arquivar",
+        "pagamentos.pode_visualizar_processos_pagamento",
+        "pagamentos.pode_operar_contas_pagar",
+        "pagamentos.pode_aprovar_contingencia_supervisor",
+        "pagamentos.pode_arquivar",
+        "suprimentos.acesso_backoffice",
+        "suprimentos.pode_gerir_prestacao_contas_suprimento",
+        "verbas_indenizatorias.analisar_prestacao_contas",
+        "verbas_indenizatorias.pode_visualizar_verbas",
+        "verbas_indenizatorias.visualizar_prestacao_contas",
     ],
-    "FISCAL DE CONTRATO": ["operador_contas_a_pagar", "pode_atestar_liquidacao"],
-    "ORDENADOR(A) DE DESPESA": ["operador_contas_a_pagar", "pode_autorizar_pagamento"],
-    "CONTADOR(A)": ["operador_contas_a_pagar", "pode_contabilizar"],
-    "CONSELHEIRO(A) FISCAL": ["operador_contas_a_pagar", "pode_auditar_conselho"],
-    "GESTOR(A) DE VERBAS - CONSULTA": ["operador_contas_a_pagar", "pode_visualizar_verbas"],
-    "GESTOR(A) DE VERBAS - DIARIAS": [
-        "operador_contas_a_pagar",
-        "pode_visualizar_verbas",
-        "pode_criar_diarias",
-        "pode_importar_diarias",
-        "pode_gerenciar_diarias",
-        "pode_autorizar_diarias",
-        "pode_agrupar_verbas",
-        "pode_gerenciar_processos_verbas",
-        "pode_sincronizar_diarias_siscac",
+    "FISCAL DE CONTRATO": [
+        "pagamentos.pode_visualizar_processos_pagamento",
+        "pagamentos.pode_atestar_liquidacao",
     ],
-    "GESTOR(A) DE VERBAS - REEMBOLSOS": [
-        "operador_contas_a_pagar",
-        "pode_visualizar_verbas",
-        "pode_gerenciar_reembolsos",
-        "pode_agrupar_verbas",
-        "pode_gerenciar_processos_verbas",
+    "ORDENADOR(A) DE DESPESA": [
+        "pagamentos.pode_visualizar_processos_pagamento",
+        "pagamentos.pode_autorizar_pagamento",
     ],
-    "GESTOR(A) DE VERBAS - JETONS": [
-        "operador_contas_a_pagar",
-        "pode_visualizar_verbas",
-        "pode_gerenciar_jetons",
-        "pode_agrupar_verbas",
-        "pode_gerenciar_processos_verbas",
+    "CONTADOR(A)": [
+        "pagamentos.pode_visualizar_processos_pagamento",
+        "pagamentos.pode_contabilizar",
     ],
-    "GESTOR(A) DE VERBAS - AUXILIOS": [
-        "operador_contas_a_pagar",
-        "pode_visualizar_verbas",
-        "pode_gerenciar_auxilios",
-        "pode_agrupar_verbas",
-        "pode_gerenciar_processos_verbas",
+    "CONSELHEIRO(A) FISCAL": [
+        "pagamentos.pode_visualizar_processos_pagamento",
+        "pagamentos.pode_auditar_conselho",
+    ],
+    "AUTORIZADOR(A) DE DIARIAS - PROPONENTE": [
+        "verbas_indenizatorias.pode_autorizar_diarias",
+    ],
+    "OPERADOR(A) DE SUPRIMENTOS - DESPESAS": [
+        "suprimentos.pode_adicionar_despesas_suprimento",
+    ],
+    "OPERADOR(A) DE SUPRIMENTOS - ENCERRAMENTO": [
+        "suprimentos.pode_encerrar_suprimento",
+    ],
+    "GESTOR(A) DE PRESTACAO DE CONTAS DE SUPRIMENTO": [
+        "suprimentos.pode_gerir_prestacao_contas_suprimento",
     ],
 }
+
+GRUPOS_GESTORES_VERBAS_LEGADOS = [
+    "GESTOR(A) DE VERBAS - CONSULTA",
+    "GESTOR(A) DE VERBAS - DIARIAS",
+    "GESTOR(A) DE VERBAS - REEMBOLSOS",
+    "GESTOR(A) DE VERBAS - JETONS",
+    "GESTOR(A) DE VERBAS - AUXILIOS",
+]
 
 
 def _normalizar_rotulo(valor: str) -> str:
@@ -133,49 +137,49 @@ class Command(BaseCommand):
         tipos_existentes = list(TiposDePagamento.objects.all())
         for nome in TIPOS_PAGAMENTO_CANONICOS:
             tipo = next(
-                (t for t in tipos_existentes if _normalizar_rotulo(t.tipo_de_pagamento) == _normalizar_rotulo(nome)),
+                (t for t in tipos_existentes if _normalizar_rotulo(t.tipo_pagamento) == _normalizar_rotulo(nome)),
                 None,
             )
             if tipo is None:
-                TiposDePagamento.objects.create(tipo_de_pagamento=nome, ativo=True)
+                TiposDePagamento.objects.create(tipo_pagamento=nome, ativo=True)
                 tipos_criados += 1
                 self.stdout.write(f"Tipo de pagamento criado: {nome}")
                 continue
 
             mudou = False
-            if tipo.tipo_de_pagamento != nome:
-                tipo.tipo_de_pagamento = nome
+            if tipo.tipo_pagamento != nome:
+                tipo.tipo_pagamento = nome
                 mudou = True
-            if not tipo.is_active:
-                tipo.is_active = True
+            if not tipo.ativo:
+                tipo.ativo = True
                 mudou = True
             if mudou:
-                tipo.save(update_fields=["tipo_de_pagamento", "is_active"])
+                tipo.save(update_fields=["tipo_pagamento", "ativo"])
                 tipos_atualizados += 1
                 self.stdout.write(f"Tipo de pagamento atualizado: {nome}")
 
-        contas_fixas = TiposDePagamento.objects.get(tipo_de_pagamento="CONTAS FIXAS")
-        docs_existentes = list(TiposDeDocumento.objects.select_related("tipo_de_pagamento"))
+        contas_fixas = TiposDePagamento.objects.get(tipo_pagamento="CONTAS FIXAS")
+        docs_existentes = list(TiposDeDocumento.objects.select_related("tipo_pagamento"))
         for nome_doc in DOCUMENTOS_CONTAS_FIXAS_CANONICOS:
             doc_vinculado = next(
                 (
                     d
                     for d in docs_existentes
-                    if d.tipo_de_pagamento_id == contas_fixas.id
-                    and _normalizar_rotulo(d.tipo_de_documento) == _normalizar_rotulo(nome_doc)
+                    if d.tipo_pagamento_id == contas_fixas.id
+                    and _normalizar_rotulo(d.tipo_documento) == _normalizar_rotulo(nome_doc)
                 ),
                 None,
             )
             if doc_vinculado:
                 mudou = False
-                if doc_vinculado.tipo_de_documento != nome_doc:
-                    doc_vinculado.tipo_de_documento = nome_doc
+                if doc_vinculado.tipo_documento != nome_doc:
+                    doc_vinculado.tipo_documento = nome_doc
                     mudou = True
-                if not doc_vinculado.is_active:
-                    doc_vinculado.is_active = True
+                if not doc_vinculado.ativo:
+                    doc_vinculado.ativo = True
                     mudou = True
                 if mudou:
-                    doc_vinculado.save(update_fields=["tipo_de_documento", "is_active"])
+                    doc_vinculado.save(update_fields=["tipo_documento", "ativo"])
                     docs_atualizados += 1
                     self.stdout.write(f"Documento atualizado (CONTAS FIXAS): {nome_doc}")
                 continue
@@ -184,30 +188,36 @@ class Command(BaseCommand):
                 (
                     d
                     for d in docs_existentes
-                    if d.tipo_de_pagamento_id is None
-                    and _normalizar_rotulo(d.tipo_de_documento) == _normalizar_rotulo(nome_doc)
+                    if d.tipo_pagamento_id is None
+                    and _normalizar_rotulo(d.tipo_documento) == _normalizar_rotulo(nome_doc)
                 ),
                 None,
             )
             if doc_geral:
-                doc_geral.tipo_de_pagamento = contas_fixas
-                doc_geral.tipo_de_documento = nome_doc
-                doc_geral.is_active = True
-                doc_geral.save(update_fields=["tipo_de_pagamento", "tipo_de_documento", "is_active"])
+                doc_geral.tipo_pagamento = contas_fixas
+                doc_geral.tipo_documento = nome_doc
+                doc_geral.ativo = True
+                doc_geral.save(update_fields=["tipo_pagamento", "tipo_documento", "ativo"])
                 docs_reatribuidos += 1
                 self.stdout.write(f"Documento reatribuído para CONTAS FIXAS: {nome_doc}")
                 continue
 
             TiposDeDocumento.objects.create(
-                tipo_de_pagamento=contas_fixas,
-                tipo_de_documento=nome_doc,
-                is_active=True,
+                tipo_pagamento=contas_fixas,
+                tipo_documento=nome_doc,
+                ativo=True,
             )
             docs_criados += 1
             self.stdout.write(f"Documento criado (CONTAS FIXAS): {nome_doc}")
 
-        content_type = ContentType.objects.get_for_model(Processo)
-        for nome_grupo, codenames in GRUPOS_PERMISSOES.items():
+        grupos_legados_removidos = 0
+        for nome_grupo_legado in GRUPOS_GESTORES_VERBAS_LEGADOS:
+            removidos, _ = Group.objects.filter(name=nome_grupo_legado).delete()
+            if removidos:
+                grupos_legados_removidos += 1
+                self.stdout.write(f"Grupo legado removido: {nome_grupo_legado}")
+
+        for nome_grupo, permissoes in GRUPOS_PERMISSOES.items():
             grupo, created = Group.objects.get_or_create(name=nome_grupo)
             if created:
                 grupos_criados += 1
@@ -217,14 +227,25 @@ class Command(BaseCommand):
                 self.stdout.write(f"Grupo atualizado (reset de permissões): {nome_grupo}")
 
             grupo.permissions.clear()
-            for codename in codenames:
+            for permissao_str in permissoes:
                 try:
-                    permissao = Permission.objects.get(codename=codename, content_type=content_type)
-                    grupo.permissions.add(permissao)
-                    permissoes_vinculadas += 1
-                except Permission.DoesNotExist:
+                    app_label, codename = permissao_str.split(".", 1)
+                except ValueError:
                     permissoes_ausentes += 1
-                    self.stdout.write(self.style.WARNING(f"Permissão ausente: {codename}"))
+                    self.stdout.write(self.style.WARNING(f"Permissão inválida (formato app.codename): {permissao_str}"))
+                    continue
+
+                permissao = Permission.objects.filter(
+                    codename=codename,
+                    content_type__app_label=app_label,
+                ).first()
+                if permissao is None:
+                    permissoes_ausentes += 1
+                    self.stdout.write(self.style.WARNING(f"Permissão ausente: {permissao_str}"))
+                    continue
+
+                grupo.permissions.add(permissao)
+                permissoes_vinculadas += 1
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -232,7 +253,7 @@ class Command(BaseCommand):
                 f"Formas (criadas={formas_criadas}, atualizadas={formas_atualizadas}) | "
                 f"Tipos (criadas={tipos_criados}, atualizadas={tipos_atualizados}) | "
                 f"Docs CONTAS FIXAS (criadas={docs_criados}, atualizadas={docs_atualizados}, reatribuidas={docs_reatribuidos}) | "
-                f"Grupos (criados={grupos_criados}, atualizados={grupos_atualizados}, "
+                f"Grupos (criados={grupos_criados}, atualizados={grupos_atualizados}, legados_removidos={grupos_legados_removidos}, "
                 f"permissoes_vinculadas={permissoes_vinculadas}, permissoes_ausentes={permissoes_ausentes})"
             )
         )

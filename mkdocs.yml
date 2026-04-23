@@ -80,6 +80,7 @@ nav:
       - Cancelamento: fluxos/cancelamento.md
   - Segurança e Governança:
       - Trilha de Auditoria: governanca/trilha_auditoria.md
+      - Catálogo de Permissões e Grupos: governanca/catalogo_permissoes_grupos.md
       - Matriz de Permissões: governanca/matriz_permissoes.md
   - Operações:
       - Deploy: operacoes/deploy.md

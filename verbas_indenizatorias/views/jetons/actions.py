@@ -23,7 +23,7 @@ def _set_status_case_insensitive(jeton, status_str):
 
 
 @require_POST
-@permission_required("verbas_indenizatorias.pode_gerenciar_jetons", raise_exception=True)
+@permission_required("pagamentos.pode_gerenciar_jetons", raise_exception=True)
 def add_jeton_action(request):
     form = JetonForm(request.POST)
     if not form.is_valid():
@@ -37,7 +37,7 @@ def add_jeton_action(request):
 
 
 @require_POST
-@permission_required("verbas_indenizatorias.pode_gerenciar_jetons", raise_exception=True)
+@permission_required("pagamentos.pode_gerenciar_jetons", raise_exception=True)
 def solicitar_autorizacao_jeton_action(request, pk):
     jeton = get_object_or_404(Jeton, id=pk)
     _set_status_case_insensitive(jeton, "SOLICITADA")
@@ -47,7 +47,7 @@ def solicitar_autorizacao_jeton_action(request, pk):
 
 
 @require_POST
-@permission_required("verbas_indenizatorias.pode_gerenciar_jetons", raise_exception=True)
+@permission_required("pagamentos.pode_gerenciar_jetons", raise_exception=True)
 def autorizar_jeton_action(request, pk):
     jeton = get_object_or_404(Jeton, id=pk)
     _set_status_case_insensitive(jeton, "APROVADA")
@@ -57,7 +57,7 @@ def autorizar_jeton_action(request, pk):
 
 
 @require_POST
-@permission_required("verbas_indenizatorias.pode_gerenciar_jetons", raise_exception=True)
+@permission_required("pagamentos.pode_gerenciar_jetons", raise_exception=True)
 def cancelar_jeton_action(request, pk):
     justificativa = (request.POST.get("justificativa") or "").strip()
     if not justificativa:

@@ -12,7 +12,7 @@ from verbas_indenizatorias.models import Diaria, DevolucaoDiaria
 
 
 @require_GET
-@permission_required('verbas_indenizatorias.pode_gerenciar_diarias', raise_exception=True)
+@permission_required('pagamentos.pode_gerenciar_diarias', raise_exception=True)
 def painel_devolucoes_diarias_view(request):
     """Lista todas as devoluções de diárias."""
     devolucoes = DevolucaoDiaria.objects.select_related(
@@ -33,7 +33,7 @@ def painel_devolucoes_diarias_view(request):
 
 
 @require_GET
-@permission_required('verbas_indenizatorias.pode_gerenciar_diarias', raise_exception=True)
+@permission_required('pagamentos.pode_gerenciar_diarias', raise_exception=True)
 def registrar_devolucao_diaria_view(request, pk):
     """Formulário para registrar devolução de diária."""
     diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status'), pk=pk)

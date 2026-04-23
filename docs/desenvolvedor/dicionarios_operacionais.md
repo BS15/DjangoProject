@@ -230,8 +230,8 @@ Campos usados em cada entrada:
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `add_suprimento_action` | `suprimentos/views/cadastro/actions.py` | `add_suprimento_action` (`/suprimentos/novo/action/`) | `suprimentos.acesso_backoffice` | `POST` | dados cadastrais de suprimento | validação de formulário e limites | `_persistir_suprimento_com_processo` | cria suprimento e processo associado | painel/lista de suprimentos | `messages` success/error |
-| `adicionar_despesa_action` | `suprimentos/views/prestacao_contas/actions.py` | `registrar_despesa_action` (`/suprimentos/<int:pk>/despesas/adicionar/`) | `suprimentos.acesso_backoffice` | `POST` | despesa e suprimento alvo | validação de prestação e documentos | `DespesaSuprimentoForm.save()` | registra despesa do suprimento | gerência de suprimento | `messages` success/error |
-| `fechar_suprimento_action` | `suprimentos/views/prestacao_contas/actions.py` | `concluir_prestacao_action` (`/suprimentos/<int:pk>/fechar/`) | `suprimentos.acesso_backoffice` | `POST` | suprimento alvo | validação de fechamento e pendências | `_atualizar_status_apos_fechamento` | conclui prestação do suprimento | gerência/painel de suprimentos | `messages` success/error |
+| `adicionar_despesa_action` | `suprimentos/views/prestacao_contas/actions.py` | `registrar_despesa_action` (`/suprimentos/<int:pk>/despesas/adicionar/`) | `suprimentos.pode_adicionar_despesas_suprimento` | `POST` | despesa e suprimento alvo | validação de prestação e documentos | `DespesaSuprimentoForm.save()` | registra despesa do suprimento | gerência de suprimento | `messages` success/error |
+| `fechar_suprimento_action` | `suprimentos/views/prestacao_contas/actions.py` | `concluir_prestacao_action` (`/suprimentos/<int:pk>/fechar/`) | `suprimentos.pode_encerrar_suprimento` | `POST` | suprimento alvo | validação de fechamento e pendências | `_atualizar_status_apos_fechamento` | conclui prestação do suprimento | gerência/painel de suprimentos | `messages` success/error |
 
 ## Dicionário de Workers/Helpers Fiscais
 

@@ -1,0 +1,372 @@
+{% extends "layouts/base_list.html" %}
+
+{% block page_title %}Mapa de Permissões{% endblock %}
+{% block page_heading %}<i class="bi bi-shield-lock me-2"></i>Mapa de Permissões{% endblock %}
+{% block page_subtitle %}Visão dinâmica de RBAC com permissões, grupos e usuários.{% endblock %}
+
+{% block page_actions %}
+<button type="button" class="btn btn-primary btn-sm fw-bold" id="btnReloadPermissoes">
+    <i class="bi bi-arrow-clockwise"></i> Atualizar
+</button>
+<a href="{% url 'home_page' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+{% endblock %}
+
+{% block filter_card %}
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-6">
+                <label for="filtroGlobal" class="form-label fw-bold text-secondary">Buscar no painel</label>
+                <input
+                    type="text"
+                    id="filtroGlobal"
+                    class="form-control"
+                    placeholder="Filtre por app, codename, grupo, usuário ou email"
+                >
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex flex-wrap gap-2" id="resumoRBAC">
+                    <span class="badge text-bg-secondary">Carregando...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block table_headers %}
+<th>Tipo</th>
+<th>Detalhes</th>
+{% endblock %}
+
+{% block table_rows %}
+<tr>
+    <td colspan="2" class="p-0">
+        <div class="p-3 border-bottom bg-light">
+            <ul class="nav nav-tabs" id="rbacTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tab-permissoes" data-bs-toggle="tab" data-bs-target="#pane-permissoes" type="button" role="tab" aria-controls="pane-permissoes" aria-selected="true">
+                        Permissões
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-grupos" data-bs-toggle="tab" data-bs-target="#pane-grupos" type="button" role="tab" aria-controls="pane-grupos" aria-selected="false">
+                        Grupos
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-usuarios" data-bs-toggle="tab" data-bs-target="#pane-usuarios" type="button" role="tab" aria-controls="pane-usuarios" aria-selected="false">
+                        Usuários
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="tab-content p-3" id="rbacTabContent">
+            <div class="tab-pane fade show active" id="pane-permissoes" role="tabpanel" aria-labelledby="tab-permissoes" tabindex="0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>App</th>
+                                <th>Codename</th>
+                                <th>Nome da Permissão</th>
+                                <th>Grupos</th>
+                                <th>Usuários Diretos</th>
+                                <th>Usuários por Grupo</th>
+                                <th>Total de Usuários</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyPermissoes">
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">Carregando permissões...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="pane-grupos" role="tabpanel" aria-labelledby="tab-grupos" tabindex="0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Grupo</th>
+                                <th>Permissões</th>
+                                <th>Usuários</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyGrupos">
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">Carregando grupos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="pane-usuarios" role="tabpanel" aria-labelledby="tab-usuarios" tabindex="0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Usuário</th>
+                                <th>Grupos</th>
+                                <th>Permissões Diretas</th>
+                                <th>Permissões via Grupo</th>
+                                <th>Total de Permissões</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyUsuarios">
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">Carregando usuários...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </td>
+</tr>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+(function () {
+    const API_URL = "{% url 'api_permissoes_dev' %}";
+    const tbodyPermissoes = document.getElementById('tbodyPermissoes');
+    const tbodyGrupos = document.getElementById('tbodyGrupos');
+    const tbodyUsuarios = document.getElementById('tbodyUsuarios');
+    const resumoRBAC = document.getElementById('resumoRBAC');
+    const filtroGlobal = document.getElementById('filtroGlobal');
+    const btnReload = document.getElementById('btnReloadPermissoes');
+
+    let payload = {
+        permissions: [],
+        groups: [],
+        users: [],
+        resumo: {},
+    };
+
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function badgeList(items, emptyText, cssClass) {
+        if (!items || !items.length) {
+            return '<span class="text-muted small">' + escapeHtml(emptyText) + '</span>';
+        }
+        return items
+            .map(function (item) {
+                return '<span class="badge ' + cssClass + ' me-1 mb-1">' + escapeHtml(item) + '</span>';
+            })
+            .join('');
+    }
+
+    function formatUserLabel(user) {
+        const fullName = user.full_name ? ' - ' + user.full_name : '';
+        const email = user.email ? ' (' + user.email + ')' : '';
+        return user.username + fullName + email;
+    }
+
+    function renderResumo(resumo) {
+        resumoRBAC.innerHTML = [
+            '<span class="badge text-bg-dark">Permissões: ' + (resumo.total_permissions || 0) + '</span>',
+            '<span class="badge text-bg-secondary">Grupos: ' + (resumo.total_groups || 0) + '</span>',
+            '<span class="badge text-bg-primary">Usuários: ' + (resumo.total_users || 0) + '</span>',
+            '<span class="badge text-bg-success">Ativos: ' + (resumo.total_users_active || 0) + '</span>',
+            '<span class="badge text-bg-info">Staff: ' + (resumo.total_users_staff || 0) + '</span>',
+            '<span class="badge text-bg-warning text-dark">Superusers: ' + (resumo.total_users_superuser || 0) + '</span>'
+        ].join('');
+    }
+
+    function renderPermissoes(query) {
+        const q = (query || '').trim().toLowerCase();
+        const rows = payload.permissions.filter(function (perm) {
+            if (!q) {
+                return true;
+            }
+            const haystack = [
+                perm.app_label,
+                perm.codename,
+                perm.name,
+                (perm.groups || []).map(function (g) { return g.name; }).join(' '),
+                (perm.users_total || []).map(function (u) { return u.username + ' ' + (u.email || ''); }).join(' ')
+            ].join(' ').toLowerCase();
+            return haystack.includes(q);
+        });
+
+        if (!rows.length) {
+            tbodyPermissoes.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Nenhum resultado para o filtro informado.</td></tr>';
+            return;
+        }
+
+        tbodyPermissoes.innerHTML = rows.map(function (perm) {
+            return [
+                '<tr>',
+                '<td><span class="badge text-bg-light border">' + escapeHtml(perm.app_label) + '</span></td>',
+                '<td><code>' + escapeHtml(perm.codename) + '</code></td>',
+                '<td>' + escapeHtml(perm.name) + '<br><small class="text-muted">Model: ' + escapeHtml(perm.model) + '</small></td>',
+                '<td>' + badgeList((perm.groups || []).map(function (group) { return group.name; }), 'Sem grupos', 'text-bg-secondary') + '</td>',
+                '<td>' + badgeList((perm.users_direct || []).map(formatUserLabel), 'Nenhum', 'text-bg-primary') + '</td>',
+                '<td>' + badgeList((perm.users_via_groups || []).map(formatUserLabel), 'Nenhum', 'text-bg-info') + '</td>',
+                '<td><strong>' + ((perm.users_total || []).length) + '</strong><div class="mt-1">' + badgeList((perm.users_total || []).map(function (u) { return u.username; }), 'Nenhum', 'text-bg-dark') + '</div></td>',
+                '</tr>'
+            ].join('');
+        }).join('');
+    }
+
+    function renderGrupos(query) {
+        const q = (query || '').trim().toLowerCase();
+        const rows = payload.groups.filter(function (group) {
+            if (!q) {
+                return true;
+            }
+            const haystack = [
+                group.name,
+                (group.permissions || []).map(function (p) { return p.app_label + '.' + p.codename + ' ' + p.name; }).join(' '),
+                (group.users || []).map(function (u) { return u.username + ' ' + (u.email || ''); }).join(' ')
+            ].join(' ').toLowerCase();
+            return haystack.includes(q);
+        });
+
+        if (!rows.length) {
+            tbodyGrupos.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4">Nenhum resultado para o filtro informado.</td></tr>';
+            return;
+        }
+
+        tbodyGrupos.innerHTML = rows.map(function (group) {
+            return [
+                '<tr>',
+                '<td><strong>' + escapeHtml(group.name) + '</strong></td>',
+                '<td><div class="mb-1"><strong>' + (group.permissions || []).length + '</strong> permissão(ões)</div>' +
+                    badgeList((group.permissions || []).map(function (p) { return p.app_label + '.' + p.codename; }), 'Sem permissões', 'text-bg-secondary') +
+                '</td>',
+                '<td><div class="mb-1"><strong>' + (group.users || []).length + '</strong> usuário(s)</div>' +
+                    badgeList((group.users || []).map(formatUserLabel), 'Sem usuários', 'text-bg-primary') +
+                '</td>',
+                '</tr>'
+            ].join('');
+        }).join('');
+    }
+
+    function renderUsuarios(query) {
+        const q = (query || '').trim().toLowerCase();
+        const rows = payload.users.filter(function (user) {
+            if (!q) {
+                return true;
+            }
+            const haystack = [
+                user.username,
+                user.full_name,
+                user.email,
+                (user.groups || []).map(function (g) { return g.name; }).join(' '),
+                (user.permissions_total || []).map(function (p) { return p.app_label + '.' + p.codename + ' ' + p.name; }).join(' ')
+            ].join(' ').toLowerCase();
+            return haystack.includes(q);
+        });
+
+        if (!rows.length) {
+            tbodyUsuarios.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Nenhum resultado para o filtro informado.</td></tr>';
+            return;
+        }
+
+        tbodyUsuarios.innerHTML = rows.map(function (user) {
+            const status = [];
+            if (user.is_active) {
+                status.push('<span class="badge text-bg-success me-1">Ativo</span>');
+            } else {
+                status.push('<span class="badge text-bg-danger me-1">Inativo</span>');
+            }
+            if (user.is_staff) {
+                status.push('<span class="badge text-bg-info me-1">Staff</span>');
+            }
+            if (user.is_superuser) {
+                status.push('<span class="badge text-bg-warning text-dark me-1">Superuser</span>');
+            }
+
+            return [
+                '<tr>',
+                '<td>',
+                '<strong>' + escapeHtml(user.username) + '</strong><br>',
+                '<small>' + escapeHtml(user.full_name || '-') + '</small><br>',
+                '<small class="text-muted">' + escapeHtml(user.email || '-') + '</small><br>',
+                '<div class="mt-1">' + status.join('') + '</div>',
+                '</td>',
+                '<td>' + badgeList((user.groups || []).map(function (g) { return g.name; }), 'Sem grupos', 'text-bg-secondary') + '</td>',
+                '<td><div class="mb-1"><strong>' + (user.permissions_direct || []).length + '</strong></div>' +
+                    badgeList((user.permissions_direct || []).map(function (p) { return p.app_label + '.' + p.codename; }), 'Nenhuma', 'text-bg-primary') +
+                '</td>',
+                '<td><div class="mb-1"><strong>' + (user.permissions_via_groups || []).length + '</strong></div>' +
+                    badgeList((user.permissions_via_groups || []).map(function (p) { return p.app_label + '.' + p.codename; }), 'Nenhuma', 'text-bg-info') +
+                '</td>',
+                '<td><div class="mb-1"><strong>' + (user.permissions_total || []).length + '</strong></div>' +
+                    badgeList((user.permissions_total || []).map(function (p) { return p.app_label + '.' + p.codename; }), 'Nenhuma', 'text-bg-dark') +
+                '</td>',
+                '</tr>'
+            ].join('');
+        }).join('');
+    }
+
+    function renderAll() {
+        const query = filtroGlobal.value || '';
+        renderPermissoes(query);
+        renderGrupos(query);
+        renderUsuarios(query);
+    }
+
+    function renderErro(message) {
+        const rowPerm = '<tr><td colspan="7" class="text-center text-danger py-4">' + escapeHtml(message) + '</td></tr>';
+        const rowGroup = '<tr><td colspan="3" class="text-center text-danger py-4">' + escapeHtml(message) + '</td></tr>';
+        const rowUser = '<tr><td colspan="5" class="text-center text-danger py-4">' + escapeHtml(message) + '</td></tr>';
+        tbodyPermissoes.innerHTML = rowPerm;
+        tbodyGrupos.innerHTML = rowGroup;
+        tbodyUsuarios.innerHTML = rowUser;
+        resumoRBAC.innerHTML = '<span class="badge text-bg-danger">Falha ao carregar dados</span>';
+    }
+
+    async function loadData() {
+        tbodyPermissoes.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Carregando permissões...</td></tr>';
+        tbodyGrupos.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4">Carregando grupos...</td></tr>';
+        tbodyUsuarios.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Carregando usuários...</td></tr>';
+        resumoRBAC.innerHTML = '<span class="badge text-bg-secondary">Carregando...</span>';
+
+        try {
+            const response = await fetch(API_URL, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.sucesso) {
+                throw new Error(data.erro || 'Não foi possível carregar os dados de permissões.');
+            }
+
+            payload = {
+                permissions: data.permissions || [],
+                groups: data.groups || [],
+                users: data.users || [],
+                resumo: data.resumo || {},
+            };
+
+            renderResumo(payload.resumo);
+            renderAll();
+        } catch (error) {
+            renderErro(error.message || 'Erro inesperado ao carregar permissões.');
+        }
+    }
+
+    filtroGlobal.addEventListener('input', renderAll);
+    btnReload.addEventListener('click', loadData);
+    loadData();
+}());
+</script>
+{% endblock %}

@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 @require_POST
-@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
+@permission_required("suprimentos.pode_adicionar_despesas_suprimento", raise_exception=True)
 def adicionar_despesa_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Registra manualmente uma despesa de suprimento a partir de dados do POST."""
     suprimento: Any = get_object_or_404(SuprimentoDeFundos, id=pk)
@@ -53,7 +53,7 @@ def adicionar_despesa_action(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @require_POST
-@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
+@permission_required("suprimentos.pode_encerrar_suprimento", raise_exception=True)
 def fechar_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Encerra a prestacao de contas e avanca o processo vinculado para conferencia."""
     suprimento: Any = get_object_or_404(SuprimentoDeFundos, id=pk)
@@ -72,7 +72,7 @@ def fechar_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @require_POST
-@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
+@permission_required("suprimentos.pode_gerir_prestacao_contas_suprimento", raise_exception=True)
 def enviar_prestacao_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Registra o envio da prestação de contas pelo responsável pelo suprimento."""
     suprimento: Any = get_object_or_404(SuprimentoDeFundos, id=pk)
@@ -122,7 +122,7 @@ def enviar_prestacao_suprimento_action(request: HttpRequest, pk: int) -> HttpRes
 
 
 @require_POST
-@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
+@permission_required("suprimentos.pode_gerir_prestacao_contas_suprimento", raise_exception=True)
 def aprovar_prestacao_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Operador aprova a prestação de contas, aciona a devolução automática e encerra o suprimento."""
     prestacao: Any = get_object_or_404(

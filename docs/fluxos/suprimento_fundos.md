@@ -64,6 +64,7 @@ Na criação:
 
 **Hub:** `gerenciar_suprimento_view` (somente leitura com comandos)  
 **Spoke de inclusão:** `adicionar_despesa_view` / `adicionar_despesa_action`
+**Permissão:** `suprimentos.pode_adicionar_despesas_suprimento`
 
 Regras operacionais:
 
@@ -78,6 +79,7 @@ Regras operacionais:
 
 **POST:** `enviar_prestacao_suprimento_action`  
 **Service:** `enviar_prestacao_suprimento`
+**Permissão:** `suprimentos.pode_gerir_prestacao_contas_suprimento`
 
 Transição: `ABERTA → ENVIADA`.
 
@@ -100,6 +102,7 @@ Efeitos:
 **Tela de revisão:** `revisar_prestacao_suprimento_view`  
 **POST de aprovação:** `aprovar_prestacao_suprimento_action`  
 **Service:** `encerrar_prestacao_suprimento`
+**Permissão:** `suprimentos.pode_gerir_prestacao_contas_suprimento`
 
 Transição: `ENVIADA → ENCERRADA`.
 
@@ -135,6 +138,8 @@ Consulte o [Fluxo de Cancelamento](cancelamento.md) para a especificação compl
 ## 7. Ação legada de fechamento direto
 
 Existe rota de fechamento direto (`fechar_suprimento_action`) que também chama `_atualizar_status_apos_fechamento`.  
+**Permissão:** `suprimentos.pode_encerrar_suprimento`
+
 No fluxo operacional recomendado, o fechamento deve ocorrer pela trilha formal de prestação (`ENVIADA` + aprovação).
 
 ---

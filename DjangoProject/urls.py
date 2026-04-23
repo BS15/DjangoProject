@@ -13,3 +13,5 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += [path('', include('DjangoProject.urlconf.debug'))]
+
+handler403 = 'django.views.defaults.permission_denied'

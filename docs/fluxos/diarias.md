@@ -46,7 +46,7 @@ Quando a diária está vinculada a um processo em estágio `PAGO` ou posterior, 
 ## 2. Criação
 
 **View:** `add_diaria_view` / **Action:** `add_diaria_action`  
-**Permissão:** `verbas_indenizatorias.pode_criar_diarias`
+**Permissão:** `pagamentos.pode_criar_diarias`
 
 1. Operador preenche o formulário (`DiariaForm`).
 2. `_preparar_nova_diaria` define a diária como **rascunho** (`autorizada=False`, status `RASCUNHO`).
@@ -58,14 +58,14 @@ Quando a diária está vinculada a um processo em estágio `PAGO` ou posterior, 
 Após o cadastro, a diária segue o fluxo explícito de autorização:
 
 1. `solicitar_autorizacao_diaria_action`: `RASCUNHO → SOLICITADA`.
-2. `autorizar_diaria_action`: `SOLICITADA → APROVADA` (e marca `autorizada=True`).
+2. `autorizar_diaria_action`: `SOLICITADA → APROVADA` (e marca `autorizada=True`), apenas quando o usuário autenticado é o `proponente` da diária.
 
 ---
 
 ## 3. Hub de gerenciamento
 
 **View:** `gerenciar_diaria_view`  
-**Permissão:** `verbas_indenizatorias.pode_gerenciar_diarias`
+**Permissão:** `pagamentos.pode_gerenciar_diarias`
 
 Exibe:
 - Dados da diária (status, beneficiário, datas, valor calculado).

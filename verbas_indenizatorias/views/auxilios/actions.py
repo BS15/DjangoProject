@@ -22,7 +22,7 @@ def _set_status_case_insensitive(auxilio, status_str):
 
 
 @require_POST
-@permission_required("verbas_indenizatorias.pode_gerenciar_auxilios", raise_exception=True)
+@permission_required("pagamentos.pode_gerenciar_auxilios", raise_exception=True)
 def add_auxilio_action(request):
     form = AuxilioForm(request.POST)
     if not form.is_valid():
@@ -36,7 +36,7 @@ def add_auxilio_action(request):
 
 
 @require_POST
-@permission_required("verbas_indenizatorias.pode_gerenciar_auxilios", raise_exception=True)
+@permission_required("pagamentos.pode_gerenciar_auxilios", raise_exception=True)
 def solicitar_autorizacao_auxilio_action(request, pk):
     auxilio = get_object_or_404(AuxilioRepresentacao, id=pk)
     _set_status_case_insensitive(auxilio, "SOLICITADA")
@@ -46,7 +46,7 @@ def solicitar_autorizacao_auxilio_action(request, pk):
 
 
 @require_POST
-@permission_required("verbas_indenizatorias.pode_gerenciar_auxilios", raise_exception=True)
+@permission_required("pagamentos.pode_gerenciar_auxilios", raise_exception=True)
 def autorizar_auxilio_action(request, pk):
     auxilio = get_object_or_404(AuxilioRepresentacao, id=pk)
     _set_status_case_insensitive(auxilio, "APROVADA")
@@ -56,7 +56,7 @@ def autorizar_auxilio_action(request, pk):
 
 
 @require_POST
-@permission_required("verbas_indenizatorias.pode_gerenciar_auxilios", raise_exception=True)
+@permission_required("pagamentos.pode_gerenciar_auxilios", raise_exception=True)
 def cancelar_auxilio_action(request, pk):
     justificativa = (request.POST.get("justificativa") or "").strip()
     if not justificativa:

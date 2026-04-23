@@ -68,7 +68,7 @@ def _montar_peek_tables_hub(request, processo):
 
 
 @require_GET
-@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_editar_processos_pagamento", raise_exception=True)
 def add_process_view(request):
     """Renderiza a tela de criação da capa inicial do processo."""
     processo_form = ProcessoForm(prefix="processo")
@@ -86,7 +86,7 @@ def add_process_view(request):
 
 
 @require_GET
-@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_editar_processos_pagamento", raise_exception=True)
 def editar_processo(request, pk):
     """Hub de edição modular do processo."""
     processo, status_inicial, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
@@ -99,7 +99,7 @@ def editar_processo(request, pk):
 
 
 @require_GET
-@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_editar_processos_pagamento", raise_exception=True)
 def editar_processo_capa_view(request, pk):
     """Spoke GET de edição da capa do processo."""
     processo, status_inicial, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
@@ -126,7 +126,7 @@ def editar_processo_capa_view(request, pk):
 
 
 @require_GET
-@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_editar_processos_pagamento", raise_exception=True)
 def editar_processo_documentos_view(request, pk):
     """Spoke GET de edição de anexos do processo."""
     from pagamentos.views.helpers import _get_tipos_documento_para_processo
@@ -166,7 +166,7 @@ def editar_processo_documentos_view(request, pk):
 
 
 @require_GET
-@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_editar_processos_pagamento", raise_exception=True)
 def editar_processo_pendencias_view(request, pk):
     """Spoke GET de edição de pendências do processo."""
     processo, status_inicial, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
@@ -189,7 +189,7 @@ def editar_processo_pendencias_view(request, pk):
     )
 
 
-@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
+@permission_required("pagamentos.pode_editar_processos_pagamento", raise_exception=True)
 def documentos_fiscais_view(request, pk):
     """Renderiza a tela de gestão de documentos fiscais de um processo."""
     processo = get_object_or_404(Processo, id=pk)

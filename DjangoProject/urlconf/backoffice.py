@@ -52,6 +52,8 @@ urlpatterns = [
     path('relatorios/', relatorio_views.painel_relatorios_view, name='painel_relatorios'),
     path('relatorios/documentos-gerados/', relatorio_views.relatorio_documentos_gerados_view, name='relatorio_documentos_gerados'),
     path('dados-fake/', dev_views.gerar_dados_fake_view, name='gerar_dados_fake'),
+    path('desenvolvedor/permissoes/', dev_views.painel_permissoes_dev_view, name='painel_permissoes_dev'),
+    path('api/desenvolvedor/permissoes/', dev_views.api_permissoes_dev_view, name='api_permissoes_dev'),
     path('assinaturas/', assinatura_views.painel_assinaturas_view, name='painel_assinaturas'),
     path('assinaturas/disparar/<int:assinatura_id>/', assinatura_views.disparar_assinatura_view, name='disparar_assinatura'),
 ]

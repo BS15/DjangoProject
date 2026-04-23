@@ -6,7 +6,11 @@ def _pode_acessar_prestacao(request_user, diaria):
 	credor = diaria.beneficiario
 	if hasattr(credor, 'usuario') and credor.usuario and credor.usuario == request_user:
 		return True
-	return request_user.has_perm('verbas_indenizatorias.operar_prestacao_contas') or request_user.has_perm('verbas_indenizatorias.analisar_prestacao_contas')
+	return (
+		request_user.has_perm('verbas_indenizatorias.operar_prestacao_contas')
+		or request_user.has_perm('verbas_indenizatorias.visualizar_prestacao_contas')
+		or request_user.has_perm('verbas_indenizatorias.analisar_prestacao_contas')
+	)
 
 
 def _pode_gerenciar_vinculo_diaria(user):

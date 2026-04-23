@@ -66,25 +66,26 @@ Fluxos de formulário HTML surfaceiam erros de negócio via sistema de mensagens
 
 | Método | Path | Permissão | Descrição | Redirect sucesso |
 |---|---|---|---|---|
-| `POST` | `/verbas/diarias/nova/action/` | `verbas_indenizatorias.pode_criar_diarias` | Cria diária em status `RASCUNHO` | `gerenciar_diaria(pk)` |
-| `POST` | `/verbas/diarias/<pk>/solicitar-autorizacao/` | `verbas_indenizatorias.pode_gerenciar_diarias` | Avança diária para `SOLICITADA` | `gerenciar_diaria(pk)` |
-| `POST` | `/verbas/diarias/<pk>/autorizar/` | `verbas_indenizatorias.pode_autorizar_diarias` | Avança diária para `APROVADA` | `gerenciar_diaria(pk)` |
-| `POST` | `/verbas/agrupar/` | `verbas_indenizatorias.pode_agrupar_verbas` | Agrupa itens `REVISADA` em processo de pagamento | `detalhe_processo_verbas(pk)` |
+| `POST` | `/verbas/diarias/nova/action/` | `pagamentos.pode_criar_diarias` | Cria diária em status `RASCUNHO` | `gerenciar_diaria(pk)` |
+| `POST` | `/verbas/diarias/<pk>/solicitar-autorizacao/` | `pagamentos.pode_gerenciar_diarias` | Avança diária para `SOLICITADA` | `gerenciar_diaria(pk)` |
+| `POST` | `/verbas/diarias/<pk>/autorizar/` | `pagamentos.pode_autorizar_diarias` | Avança diária para `APROVADA` apenas quando o usuário é o proponente vinculado da diária | `gerenciar_diaria(pk)` |
+| `POST` | `/verbas/agrupar/` | `pagamentos.pode_agrupar_verbas` | Agrupa itens `REVISADA` em processo de pagamento | `detalhe_processo_verbas(pk)` |
 
 ---
 
 ## Domínio Suprimentos de Fundos
 
-**Permissão base:** `suprimentos.acesso_backoffice`
+**Permissões:** `suprimentos.acesso_backoffice` (cadastro/cancelamento) + permissões granulares por etapa.
 
 ### Endpoints de Formulário (HTML)
 
 | Método | Path | Permissão | Descrição | Redirect sucesso |
 |---|---|---|---|---|
 | `POST` | `/suprimentos/criar/` | `suprimentos.acesso_backoffice` | Cria `SuprimentoDeFundos` (status `ABERTO`) e `Processo` em `A EMPENHAR` | `detalhe_suprimento(pk)` |
-| `POST` | `/suprimentos/<pk>/fechar/` | `suprimentos.acesso_backoffice` | Encerra suprimento; Processo vai para `PAGO - EM CONFERÊNCIA` | `detalhe_suprimento(pk)` |
-| `POST` | `/suprimentos/<pk>/prestacao/enviar/` | `suprimentos.acesso_backoffice` | Suprido envia prestação para revisão (status `ENVIADA`) | `detalhe_prestacao(pk)` |
-| `POST` | `/suprimentos/<pk>/prestacao/aprovar/` | `suprimentos.acesso_backoffice` | Operador aprova prestação; gera devolução do saldo remanescente | `detalhe_prestacao(pk)` |
+| `POST` | `/suprimentos/<pk>/despesas/adicionar/` | `suprimentos.pode_adicionar_despesas_suprimento` | Registra despesa e anexo de comprovante no suprimento | `gerenciar_suprimento_view(pk)` |
+| `POST` | `/suprimentos/<pk>/fechar/` | `suprimentos.pode_encerrar_suprimento` | Encerra suprimento; Processo vai para `PAGO - EM CONFERÊNCIA` | `suprimentos_list` |
+| `POST` | `/suprimentos/<pk>/prestacao/enviar/` | `suprimentos.pode_gerir_prestacao_contas_suprimento` | Suprido envia prestação para revisão (status `ENVIADA`) | `gerenciar_suprimento_view(pk)` |
+| `POST` | `/suprimentos/prestacoes/<pk>/aprovar/` | `suprimentos.pode_gerir_prestacao_contas_suprimento` | Operador aprova prestação; gera devolução do saldo remanescente | `revisar_prestacoes_suprimento` |
 
 ---
 

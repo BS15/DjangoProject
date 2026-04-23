@@ -2,6 +2,8 @@
 
 O PaGé adota controle de acesso por permissões explícitas por domínio funcional.
 
+Consulte também o [Catálogo de Permissões e Grupos](catalogo_permissoes_grupos.md) para o inventário atual de permissões disponíveis, grupos canônicos e observações de implementação.
+
 ## Diretriz técnica
 - Proteção de endpoints com `@permission_required('app_label.permission_name', raise_exception=True)`.
 - Sem uso de atalho por grupos customizados na camada de view.
@@ -42,7 +44,10 @@ O PaGé adota controle de acesso por permissões explícitas por domínio funcio
 
 | Ação Operacional | Permissão Requerida | Perfil Autorizado | Risco Mitigado |
 |---|---|---|---|
-| Criação de suprimento, registro de despesas e fechamento da prestação | `suprimentos.acesso_backoffice` | Operador de Suprimentos | Concessão de adiantamento e baixa de prestação sem controle; retorna 403 (não redireciona para login). |
+| Criação e cancelamento de suprimento | `suprimentos.acesso_backoffice` | Operador de Suprimentos | Concessão/cancelamento de adiantamento sem competência operacional; retorna 403 (não redireciona para login). |
+| Registro de despesas no suprimento | `suprimentos.pode_adicionar_despesas_suprimento` | Operador de Suprimentos - Despesas | Inclusão indevida de gastos e comprovantes em prestação; retorna 403 (não redireciona para login). |
+| Encerramento do suprimento | `suprimentos.pode_encerrar_suprimento` | Operador de Suprimentos - Encerramento | Fechamento indevido de ciclo com impacto no status do processo; retorna 403 (não redireciona para login). |
+| Envio, revisão e aprovação de prestação de contas | `suprimentos.pode_gerir_prestacao_contas_suprimento` | Gestor de Prestação de Contas de Suprimento | Aprovação indevida de prestação e devolução automática sem segregação; retorna 403 (não redireciona para login). |
 
 ### Domínio Pagamentos
 

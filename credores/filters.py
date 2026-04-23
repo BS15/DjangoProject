@@ -15,4 +15,5 @@ class CredorFilter(BaseStyledFilterSet):
             'cpf_cnpj': ['icontains'],
             'tipo': ['exact'],
             'cargo_funcao': ['exact'],
+            'usuario': ['exact'],
         }

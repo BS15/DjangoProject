@@ -604,6 +604,14 @@ class Migration(migrations.Migration):
                         "Pode acessar as telas gerais do sistema financeiro",
                     ),
                     (
+                        "pode_visualizar_processos_pagamento",
+                        "Pode visualizar processos de pagamento",
+                    ),
+                    (
+                        "pode_editar_processos_pagamento",
+                        "Pode editar processos de pagamento",
+                    ),
+                    (
                         "pode_operar_contas_pagar",
                         "Pode empenhar, triar notas e fazer conferência",
                     ),
