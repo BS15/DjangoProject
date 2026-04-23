@@ -10,8 +10,8 @@ def _pode_acessar_prestacao(request_user, diaria):
 
 
 def _pode_gerenciar_vinculo_diaria(user):
-	"""Retorna True para operador de contas a pagar ou perfil de backoffice."""
-	return user.has_perm("pagamentos.pode_operar_contas_pagar") or user.has_perm("pagamentos.acesso_backoffice")
+	"""Retorna True para perfil de backoffice."""
+	return user.has_perm("pagamentos.operador_contas_a_pagar")
 
 
 __all__ = ["_pode_acessar_prestacao", "_pode_gerenciar_vinculo_diaria"]

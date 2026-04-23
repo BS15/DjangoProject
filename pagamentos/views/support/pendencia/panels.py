@@ -10,7 +10,7 @@ from pagamentos.views.shared import render_filtered_list
 
 
 @require_GET
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def painel_pendencias_view(request: HttpRequest) -> HttpResponse:
     """Painel de pendências vinculadas a processos."""
     queryset_base = Pendencia.objects.select_related(
@@ -23,7 +23,7 @@ def painel_pendencias_view(request: HttpRequest) -> HttpResponse:
         template_name="pagamentos/painel_pendencias.html",
         items_key="pendencias",
         extra_context={
-            "pode_interagir": request.user.has_perm("pagamentos.acesso_backoffice"),
+            "pode_interagir": request.user.has_perm("pagamentos.operador_contas_a_pagar"),
         },
     )
 

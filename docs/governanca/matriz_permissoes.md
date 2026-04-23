@@ -46,7 +46,7 @@ O PaGé adota controle de acesso por permissões explícitas por domínio funcio
 
 ### Domínio Pagamentos
 
-Observação técnica: o workflow financeiro principal usa codenames `fluxo.*` porque as permissões canônicas do processo estão declaradas no modelo de domínio financeiro com `app_label` `fluxo`, embora o código-fonte resida no pacote `pagamentos/`. O subdomínio de credores continua usando `pagamentos.acesso_backoffice`.
+Observação técnica: o workflow financeiro principal usa codenames `fluxo.*` porque as permissões canônicas do processo estão declaradas no modelo de domínio financeiro com `app_label` `fluxo`, embora o código-fonte resida no pacote `pagamentos/`. O subdomínio de credores continua usando `pagamentos.operador_contas_a_pagar`.
 
 | Ação Operacional | Permissão Requerida | Perfil Autorizado | Risco Mitigado |
 |---|---|---|---|
@@ -65,4 +65,4 @@ Observação de revisão: o endpoint auxiliar de upload em [pagamentos/views/pre
 
 | Ação Operacional | Permissão Requerida | Perfil Autorizado | Risco Mitigado |
 |---|---|---|---|
-| Cadastro, atualização e gestão cadastral de credores | `pagamentos.acesso_backoffice` | Operador Financeiro Backoffice | Alteração indevida de favorecidos e dados bancários; retorna 403 (não redireciona para login). |
+| Cadastro, atualização e gestão cadastral de credores | `pagamentos.operador_contas_a_pagar` | Operador contas a pagar | Alteração indevida de favorecidos e dados bancários; retorna 403 (não redireciona para login). |

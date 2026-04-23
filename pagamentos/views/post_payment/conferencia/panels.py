@@ -12,7 +12,7 @@ from pagamentos.views.helpers import _aplicar_filtro_por_opcao
 
 
 @require_GET
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def painel_conferencia_view(request):
     """Exibe o painel de conferencia de processos pagos."""
     processos_pagos = (
@@ -45,7 +45,7 @@ def painel_conferencia_view(request):
 
     context = {
         "processos": processos_pagos,
-        "pode_interagir": request.user.has_perm("pagamentos.pode_operar_contas_pagar"),
+        "pode_interagir": request.user.has_perm("pagamentos.operador_contas_a_pagar"),
         "filtro_ativo": filtro,
     }
     return render(request, "pagamentos/conferencia.html", context)

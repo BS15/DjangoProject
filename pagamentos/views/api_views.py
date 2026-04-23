@@ -21,7 +21,7 @@ from pagamentos.views.helpers.audit_builders import get_detalhes_pagamento
 logger = logging.getLogger(__name__)
 
 
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def api_detalhes_pagamento(request):
     """Monta resumo de detalhes de pagamento para uma lista de processos.
 

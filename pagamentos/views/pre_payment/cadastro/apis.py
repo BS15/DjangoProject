@@ -31,7 +31,7 @@ from django.contrib.contenttypes.models import ContentType
 from .actions import _status_bloqueia_gestao_fiscal
 
 
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def api_tipos_documento_por_pagamento(request):
     """Lista tipos de documento ativos vinculados a um tipo de pagamento."""
     tipo_pagamento_id = request.GET.get("tipo_pagamento_id")
@@ -52,7 +52,7 @@ def api_tipos_documento_por_pagamento(request):
         return JsonResponse({"sucesso": False, "erro": str(e)})
 
 
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def api_extrair_codigos_barras_upload(request):
     """Extrai dados de boleto a partir de upload único ou em lote de PDFs.
 

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 @require_POST
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def add_credor_action(request):
     """Cria credor a partir de payload completo de cadastro."""
     form = CredorForm(request.POST)
@@ -28,7 +28,7 @@ def add_credor_action(request):
 
 
 @require_POST
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def edit_credor_action(request, pk):
     """Atualiza campos operacionais do credor mantendo CPF/CNPJ imutável."""
     credor = get_object_or_404(Credor, pk=pk)
@@ -45,7 +45,7 @@ def edit_credor_action(request, pk):
 
 
 @require_POST
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def toggle_status_credor_action(request, pk):
     """Alterna status ativo/bloqueado do credor por ação isolada."""
     credor = get_object_or_404(Credor, pk=pk)

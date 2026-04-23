@@ -17,7 +17,7 @@ PENDENCIA_ACAO_STATUS = {
 
 
 @require_POST
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def atualizar_pendencias_lote_action(request: HttpRequest) -> HttpResponse:
     """Atualiza status de pendências selecionadas em lote sem exclusão física."""
     acao_lote = (request.POST.get("acao_lote") or "").strip().lower()

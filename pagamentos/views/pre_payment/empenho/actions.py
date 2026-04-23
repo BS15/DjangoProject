@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 @require_POST
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def registrar_empenho_action(request: HttpRequest) -> HttpResponse:
     """Registra empenho e avanca o processo para AGUARDANDO LIQUIDACAO."""
     processo_id = request.POST.get("processo_id")

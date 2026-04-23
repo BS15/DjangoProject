@@ -50,7 +50,7 @@ stateDiagram-v2
 ## 2. Criação do processo
 
 **View:** `add_process_view` / **Action:** `add_process_action`  
-**Permissão:** `pagamentos.acesso_backoffice`
+**Permissão:** `pagamentos.operador_contas_a_pagar`
 
 - O operador preenche a capa: credor, tipo de pagamento, valores, datas.
 - O campo `trigger_a_empenhar` define o status inicial:
@@ -94,7 +94,7 @@ Exibe peek tables paginadas de documentos recentes, liquidações e pendências.
 ## 5. Liquidação e ateste
 
 **View:** `painel_liquidacoes_view`  
-**Permissão:** `pagamentos.acesso_backoffice`
+**Permissão:** `pagamentos.operador_contas_a_pagar`
 
 - O Fiscal de Contrato visualiza somente suas NFs; gestores/ordenadores veem todas.
 - Spoke `documentos_fiscais_view`: associa documento à nota fiscal, informa dados da NF e registra retenções.
@@ -207,7 +207,7 @@ Duas filas simultâneas: pendentes de autorização e já autorizados.
 
 **View (spoke):** `cancelar_processo_spoke_view`  
 **Action:** `cancelar_processo_action`  
-**Permissão:** `pagamentos.acesso_backoffice`  
+**Permissão:** `pagamentos.operador_contas_a_pagar`  
 **Serviço:** `registrar_cancelamento_processo` (`pagamentos/services/cancelamentos.py`)
 
 - O botão "Cancelar Processo" é exibido no hub `process_detail` para processos que ainda não estão cancelados.

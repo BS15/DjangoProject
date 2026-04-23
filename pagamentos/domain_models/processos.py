@@ -208,8 +208,7 @@ class Processo(models.Model):
 
     class Meta:
         permissions = [
-            ("acesso_backoffice", "Pode acessar as telas gerais do sistema financeiro"),
-            ("pode_operar_contas_pagar", "Pode empenhar, triar notas e fazer conferência"),
+            ("operador_contas_a_pagar", "Pode operar contas a pagar"),
             ("pode_aprovar_contingencia_supervisor", "Pode aprovar contingências na etapa de supervisão/gerência"),
             ("pode_atestar_liquidacao", "Pode atestar notas fiscais (Fiscal do Contrato)"),
             ("pode_autorizar_pagamento", "Pode autorizar pagamentos (Ordenador)"),

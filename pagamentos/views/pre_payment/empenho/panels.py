@@ -11,7 +11,7 @@ from pagamentos.views.helpers import _obter_campo_ordenacao
 
 
 @require_GET
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def a_empenhar_view(request):
     """Exibe a fila filtravel/ordenavel dos processos pendentes de empenho."""
     order_field = _obter_campo_ordenacao(

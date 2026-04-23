@@ -10,14 +10,14 @@ from pagamentos.views.helpers import _iniciar_fila_sessao
 
 
 @require_POST
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def iniciar_conferencia_action(request: HttpRequest) -> HttpResponse:
     """Inicializa a fila de trabalho da conferencia na sessao do usuario."""
     return _iniciar_fila_sessao(request, "conferencia_queue", "painel_conferencia", "conferencia_processo")
 
 
 @require_POST
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def aprovar_conferencia_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Mantem compatibilidade da rota de aprovacao direta da conferencia."""
     messages.error(request, "A aprovação direta foi desativada. Abra o processo para realizar a conferência.")

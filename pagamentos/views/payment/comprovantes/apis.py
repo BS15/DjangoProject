@@ -42,7 +42,7 @@ def serializar_comprovante(comp):
     }
 
 
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 @require_POST
 def api_fatiar_comprovantes(request):
     if request.FILES.get("pdf_banco"):

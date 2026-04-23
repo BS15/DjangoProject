@@ -8,7 +8,7 @@ from django.views.decorators.http import require_GET
 
 
 @require_GET
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def download_template_csv_contas(request):
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = 'attachment; filename="template_contas_fixas.csv"'

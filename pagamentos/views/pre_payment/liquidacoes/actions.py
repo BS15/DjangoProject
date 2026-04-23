@@ -45,7 +45,7 @@ def alternar_ateste_nota_action(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @require_POST
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def avancar_para_pagamento_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Avanca processo de AGUARDANDO LIQUIDACAO para A PAGAR - PENDENTE AUTORIZACAO."""
     try:

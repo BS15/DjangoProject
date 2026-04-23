@@ -49,7 +49,7 @@ stateDiagram-v2
 
 **GET (spoke):** `cancelar_processo_spoke_view`  
 **POST (ação):** `cancelar_processo_action`  
-**Permissão:** `pagamentos.acesso_backoffice`  
+**Permissão:** `pagamentos.operador_contas_a_pagar`  
 **Serviço:** `registrar_cancelamento_processo` (`pagamentos/services/cancelamentos.py`)
 
 O botão "Cancelar Processo" aparece no hub `process_detail` para processos que ainda não estão cancelados.

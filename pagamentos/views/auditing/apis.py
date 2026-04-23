@@ -31,8 +31,7 @@ def any_permission_required(*permissions):
 
 @any_permission_required(
     "pagamentos.pode_auditar_conselho",
-    "pagamentos.acesso_backoffice",
-    "pagamentos.pode_operar_contas_pagar",
+    "pagamentos.operador_contas_a_pagar",
 )
 @require_GET
 @xframe_options_sameorigin
@@ -42,7 +41,7 @@ def api_documentos_processo(request, processo_id):
     return JsonResponse(_build_payload_documentos_processo_auditoria(processo))
 
 
-@any_permission_required("pagamentos.pode_auditar_conselho", "pagamentos.acesso_backoffice")
+@any_permission_required("pagamentos.pode_auditar_conselho", "pagamentos.operador_contas_a_pagar")
 @require_GET
 def api_processo_detalhes(request):
     """Retorna detalhes de um processo por ``id`` informado via query string."""

@@ -9,7 +9,7 @@ from pagamentos.filters import ProcessoFilter
 from fiscal.models import DocumentoFiscal, RetencaoImposto
 
 
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def home_page(request):
     """Painel principal com listagem filtrada de processos."""
     meu_filtro = ProcessoFilter(request.GET, queryset=Processo.objects.select_related(
@@ -21,7 +21,7 @@ def home_page(request):
     })
 
 
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def process_detail_view(request, pk):
     """Exibe o detalhe completo de um processo e seus vínculos."""
     processo = get_object_or_404(Processo, id=pk)

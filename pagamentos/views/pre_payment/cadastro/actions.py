@@ -121,7 +121,7 @@ def _atualizar_status_pendencia(pendencia: Pendencia, status_destino: str) -> No
 
 
 @require_POST
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def add_process_action(request: HttpRequest) -> HttpResponse:
     """Persiste a capa inicial do processo."""
     processo_form = ProcessoForm(request.POST, prefix="processo")
@@ -158,7 +158,7 @@ def add_process_action(request: HttpRequest) -> HttpResponse:
 
 
 @require_POST
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def editar_processo_capa_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Persiste alterações da capa do processo."""
     processo, status_inicial, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
@@ -190,7 +190,7 @@ def editar_processo_capa_action(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @require_POST
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def editar_processo_documentos_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Persiste anexos e documentos orçamentários do processo."""
     processo, _, redirecionamento, _ = _obter_contexto_edicao(request, pk)
@@ -231,7 +231,7 @@ def editar_processo_documentos_action(request: HttpRequest, pk: int) -> HttpResp
 
 
 @require_POST
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def extrair_codigo_barras_documento_action(request: HttpRequest, pk: int, documento_id: int) -> HttpResponse:
     """Extrai e persiste o código de barras de um documento já anexado ao processo."""
     processo, _, redirecionamento, _ = _obter_contexto_edicao(request, pk)
@@ -324,7 +324,7 @@ def _extrair_e_persistir_barcode(documento: DocumentoProcesso) -> bool:
 
 
 @require_POST
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def extrair_codigos_barras_lote_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Extrai e persiste códigos de barras de todos os documentos BOLETO BANCÁRIO do processo."""
     processo, _, redirecionamento, _ = _obter_contexto_edicao(request, pk)
@@ -366,7 +366,7 @@ def extrair_codigos_barras_lote_action(request: HttpRequest, pk: int) -> HttpRes
 
 
 @require_POST
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def editar_processo_pendencias_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Persiste pendências administrativas do processo."""
     processo, _, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
@@ -413,7 +413,7 @@ def editar_processo_pendencias_action(request: HttpRequest, pk: int) -> HttpResp
         return redirect("editar_processo_pendencias", pk=pk)
 
 
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 @require_POST
 @transaction.atomic
 def toggle_documento_fiscal_action(request, processo_pk, documento_pk):
@@ -470,7 +470,7 @@ def toggle_documento_fiscal_action(request, processo_pk, documento_pk):
     )
 
 
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 @require_POST
 @transaction.atomic
 def salvar_nota_fiscal_action(request, processo_pk, nota_pk):

@@ -106,7 +106,7 @@ def editar_processo_verbas_documentos_view(request, pk):
 
 
 @require_GET
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def painel_revisar_solicitacoes_view(request):
     solicitacoes = []
     for tipo_verba in ("diaria", "reembolso", "jeton", "auxilio"):
@@ -127,7 +127,7 @@ def painel_revisar_solicitacoes_view(request):
 
 
 @require_GET
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def revisar_solicitacao_verba_view(request, tipo_verba, pk):
     config = _VERBA_CONFIG.get(tipo_verba)
     if not config:

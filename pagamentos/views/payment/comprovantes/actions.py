@@ -19,7 +19,7 @@ from pagamentos.domain_models import DocumentoProcesso, Processo, ProcessoStatus
 __all__ = []
 
 
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 @require_POST
 def vincular_comprovantes_action(request):
     try:

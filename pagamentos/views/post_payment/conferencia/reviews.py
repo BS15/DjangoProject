@@ -6,13 +6,13 @@ from pagamentos.domain_models import ProcessoStatus
 from pagamentos.views.helpers import _processo_fila_detalhe_view
 
 
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def conferencia_processo_view(request, pk):
     """Orquestra a revisao de um processo na etapa de conferencia."""
     return _processo_fila_detalhe_view(
         request,
         pk,
-        permission="pagamentos.pode_operar_contas_pagar",
+        permission="pagamentos.operador_contas_a_pagar",
         queue_key="conferencia_queue",
         fallback_view="painel_conferencia",
         current_view="conferencia_processo",

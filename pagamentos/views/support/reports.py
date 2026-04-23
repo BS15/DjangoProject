@@ -45,7 +45,7 @@ TIPOS_RELATORIO = {
 
 
 @require_GET
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def painel_relatorios_view(request):
     tipo = request.GET.get("tipo", "processos")
     if tipo not in TIPOS_RELATORIO:
@@ -68,7 +68,7 @@ def painel_relatorios_view(request):
 
 
 @require_GET
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def relatorio_documentos_gerados_view(request):
     return painel_relatorios_view(request)
 

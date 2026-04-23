@@ -16,7 +16,7 @@ def _render_fluxo_pdf(doc_type, processo, nome_arquivo, **kwargs):
     return montar_resposta_pdf(pdf_bytes, nome_arquivo, inline=True)
 
 
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def visualizar_pdf_processo(request, processo_id):
     """Exibe o PDF consolidado do processo quando houver documentos válidos."""
     processo = get_object_or_404(Processo, id=processo_id)
@@ -26,7 +26,7 @@ def visualizar_pdf_processo(request, processo_id):
     return montar_resposta_pdf(pdf_buffer, f"processo_{processo.id}.pdf", inline=True)
 
 
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def gerar_autorizacao_pagamento_view(request, pk):
     """Gera e exibe o Termo de Autorização de Pagamento do processo."""
     processo = get_object_or_404(Processo, id=pk)

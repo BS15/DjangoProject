@@ -148,7 +148,7 @@ def agrupar_verbas_view(request, tipo_verba):
 
 
 @require_POST
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def aprovar_revisao_solicitacao_action(request, tipo_verba, pk):
     config = _VERBA_CONFIG.get(tipo_verba)
     if not config:

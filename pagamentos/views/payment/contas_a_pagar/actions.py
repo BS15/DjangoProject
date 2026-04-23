@@ -9,7 +9,7 @@ from pagamentos.views.helpers import _processar_acao_lote
 
 
 @require_POST
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def enviar_para_autorizacao_action(request: HttpRequest) -> HttpResponse:
     """Envia em lote processos elegiveis para autorizacao."""
     return _processar_acao_lote(

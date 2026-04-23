@@ -21,7 +21,7 @@ def _pode_gerenciar_processo_verbas_da_entidade(user, processo):
     Operador de contas a pagar pode gerir qualquer processo de verbas.
     Gestor de verbas mantém regra de ownership da entidade.
     """
-    if user.has_perm("pagamentos.pode_operar_contas_pagar"):
+    if user.has_perm("pagamentos.operador_contas_a_pagar"):
         return True
 
     if not user.has_perm("verbas_indenizatorias.pode_gerenciar_processos_verbas"):

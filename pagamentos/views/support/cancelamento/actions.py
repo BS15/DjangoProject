@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 @require_POST
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def cancelar_processo_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Cancela processo com justificativa obrigatória e devolução quando pago."""
     justificativa = (request.POST.get("justificativa") or "").strip()

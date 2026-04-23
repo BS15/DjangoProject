@@ -10,7 +10,7 @@ from pagamentos.views.helpers import _build_detalhes_pagamento, _consolidar_tota
 
 
 @require_GET
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def lancamento_bancario(request):
     """Renderiza o painel de lancamento bancario com totais consolidados."""
     ids = request.session.get("processos_lancamento", [])

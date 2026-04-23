@@ -15,7 +15,7 @@ from pagamentos.views.shared import apply_filterset
 
 
 @require_GET
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def painel_devolucoes_view(request: HttpRequest) -> HttpResponse:
     """Lista devolucoes com filtro e valor total agregado."""
     queryset = Devolucao.objects.select_related("processo", "processo__credor").order_by("-data_devolucao")
@@ -33,7 +33,7 @@ def painel_devolucoes_view(request: HttpRequest) -> HttpResponse:
 
 
 @require_GET
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def registrar_devolucao_view(request: HttpRequest, processo_id: int) -> HttpResponse:
     """Renderiza formulario para registrar devolucao vinculada ao processo."""
     processo = get_object_or_404(Processo, id=processo_id)

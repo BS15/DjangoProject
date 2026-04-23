@@ -11,7 +11,7 @@ from pagamentos.domain_models import Processo
 
 
 @require_POST
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def registrar_devolucao_action(request: HttpRequest, processo_id: int) -> HttpResponse:
     """Persiste devolucao vinculada ao processo a partir do POST do formulario."""
     processo = get_object_or_404(Processo, id=processo_id)

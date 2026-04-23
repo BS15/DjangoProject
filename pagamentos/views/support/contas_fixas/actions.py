@@ -33,7 +33,7 @@ def _redirect_painel_com_periodo(request):
 
 
 @require_POST
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def add_conta_fixa_action(request):
     form = ContaFixaForm(request.POST)
     if not form.is_valid():
@@ -47,7 +47,7 @@ def add_conta_fixa_action(request):
 
 
 @require_POST
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def edit_conta_fixa_action(request, pk):
     conta = get_object_or_404(ContaFixa, pk=pk)
     form = ContaFixaForm(request.POST, instance=conta)
@@ -62,7 +62,7 @@ def edit_conta_fixa_action(request, pk):
 
 
 @require_POST
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def excluir_conta_fixa_action(request, pk):
     conta = get_object_or_404(ContaFixa, pk=pk)
     conta.ativa = False
@@ -73,7 +73,7 @@ def excluir_conta_fixa_action(request, pk):
 
 
 @require_POST
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def vincular_processo_fatura_action(request, fatura_id):
     fatura = get_object_or_404(FaturaMensal, pk=fatura_id)
     processo_id = request.POST.get("processo_id")

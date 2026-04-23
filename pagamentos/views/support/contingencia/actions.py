@@ -24,7 +24,7 @@ from pagamentos.views.helpers import (
 
 
 @require_POST
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def add_contingencia_action(request: HttpRequest) -> HttpResponse:
     """Cria uma contingencia (correcao manual) para um processo."""
     processo_id = (request.POST.get("processo_id", "") or "").strip()
@@ -91,7 +91,7 @@ def add_contingencia_action(request: HttpRequest) -> HttpResponse:
 
 
 @require_POST
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def analisar_contingencia_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Aprova ou rejeita uma contingencia pendente."""
     acao = (request.POST.get("action", "")).strip()

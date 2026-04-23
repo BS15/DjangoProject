@@ -11,7 +11,7 @@ from pagamentos.views.shared import apply_filterset, render_filtered_list
 
 def _usuario_pode_acessar_painel_contingencias(user):
     """Verifica se o usuário pode acessar o painel de contingências."""
-    return user.has_perm("pagamentos.acesso_backoffice")
+    return user.has_perm("pagamentos.operador_contas_a_pagar")
 
 
 @require_GET
@@ -44,7 +44,7 @@ def add_contingencia_view(request: HttpRequest) -> HttpResponse:
     from django.contrib.auth.decorators import permission_required
     from django.shortcuts import render
 
-    @permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+    @permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
     def _view(request: HttpRequest) -> HttpResponse:
         return render(request, "pagamentos/add_contingencia.html")
 

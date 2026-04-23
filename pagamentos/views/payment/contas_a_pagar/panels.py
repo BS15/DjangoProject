@@ -18,7 +18,7 @@ STATUSES_CONTAS_A_PAGAR = list(STATUS_PROCESSO_CONTAS_A_PAGAR)
 
 
 @require_GET
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def contas_a_pagar(request):
     """Renderiza a fila de contas a pagar com facetas, filtros e ordenacao."""
     processos_base = Processo.objects.filter(status__opcao_status__in=STATUSES_CONTAS_A_PAGAR)

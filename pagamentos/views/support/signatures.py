@@ -12,7 +12,7 @@ from pagamentos.models import AssinaturaEletronica
 logger = logging.getLogger(__name__)
 
 
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def painel_assinaturas_view(request):
     """Exibe painel de assinaturas do usuário atual."""
     meus_documentos = AssinaturaEletronica.objects.filter(criador=request.user).select_related("content_type").order_by("-id")
@@ -39,7 +39,7 @@ def painel_assinaturas_view(request):
 
 
 @require_POST
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def disparar_assinatura_view(request, assinatura_id):
     """Dispara um rascunho de assinatura para a Autentique via POST."""
     assinatura = get_object_or_404(AssinaturaEletronica, id=assinatura_id, status="RASCUNHO")

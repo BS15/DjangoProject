@@ -118,14 +118,14 @@ Fluxos de formulário HTML surfaceiam erros de negócio via sistema de mensagens
 
 ## Domínio Credores
 
-**Permissão base:** `pagamentos.acesso_backoffice`
+**Permissão base:** `pagamentos.operador_contas_a_pagar`
 
 ### Endpoints de Formulário (HTML)
 
 | Método | Path | Permissão | Descrição | Redirect sucesso |
 |---|---|---|---|---|
-| `POST` | `/credores/criar/` | `pagamentos.acesso_backoffice` | Cadastra novo credor | `detalhe_credor(pk)` |
-| `POST` | `/credores/<pk>/editar/` | `pagamentos.acesso_backoffice` | Atualiza dados cadastrais e bancários | `detalhe_credor(pk)` |
+| `POST` | `/credores/criar/` | `pagamentos.operador_contas_a_pagar` | Cadastra novo credor | `detalhe_credor(pk)` |
+| `POST` | `/credores/<pk>/editar/` | `pagamentos.operador_contas_a_pagar` | Atualiza dados cadastrais e bancários | `detalhe_credor(pk)` |
 
 ---
 

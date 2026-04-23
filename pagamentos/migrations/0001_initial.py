@@ -600,7 +600,7 @@ class Migration(migrations.Migration):
             options={
                 "permissions": [
                     (
-                        "acesso_backoffice",
+                        "operador_contas_a_pagar",
                         "Pode acessar as telas gerais do sistema financeiro",
                     ),
                     (

@@ -27,7 +27,7 @@ def _mes_ano(request):
 
 
 @require_GET
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def painel_contas_fixas_view(request):
     mes, ano = _mes_ano(request)
     gerar_faturas_do_mes(ano, mes)
@@ -46,13 +46,13 @@ def painel_contas_fixas_view(request):
 
 
 @require_GET
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def add_conta_fixa_view(request):
     return render(request, "contas/add_conta_fixa.html", {"form": ContaFixaForm()})
 
 
 @require_GET
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def edit_conta_fixa_view(request, pk):
     conta = get_object_or_404(ContaFixa, pk=pk)
     return render(

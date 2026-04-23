@@ -123,7 +123,7 @@
                             <i class="bi bi-clipboard-check"></i> Revisar Prestações
                         </a>
                         {% endif %}
-                        {% if perms.pagamentos.pode_operar_contas_pagar or perms.pagamentos.acesso_backoffice %}
+                        {% if perms.pagamentos.operador_contas_a_pagar %}
                         <a href="{% url 'painel_revisar_solicitacoes' %}" class="btn btn-outline-success btn-sm">
                             <i class="bi bi-list-check"></i> Revisar Solicitações para Agrupamento
                         </a>

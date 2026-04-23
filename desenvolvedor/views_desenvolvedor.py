@@ -49,15 +49,14 @@ _FAKE_PDF_BYTES = b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj
 
 _GRUPOS_PERMISSOES_FAKE = {
     "FUNCIONARIO(A) CONTAS A PAGAR": [
-        "acesso_backoffice",
-        "pode_operar_contas_pagar",
+        "operador_contas_a_pagar",
         "pode_aprovar_contingencia_supervisor",
         "pode_arquivar",
     ],
-    "FISCAL DE CONTRATO": ["acesso_backoffice", "pode_atestar_liquidacao"],
-    "ORDENADOR(A) DE DESPESA": ["acesso_backoffice", "pode_autorizar_pagamento"],
-    "CONTADOR(A)": ["acesso_backoffice", "pode_contabilizar"],
-    "CONSELHEIRO(A) FISCAL": ["acesso_backoffice", "pode_auditar_conselho"],
+    "FISCAL DE CONTRATO": ["operador_contas_a_pagar", "pode_atestar_liquidacao"],
+    "ORDENADOR(A) DE DESPESA": ["operador_contas_a_pagar", "pode_autorizar_pagamento"],
+    "CONTADOR(A)": ["operador_contas_a_pagar", "pode_contabilizar"],
+    "CONSELHEIRO(A) FISCAL": ["operador_contas_a_pagar", "pode_auditar_conselho"],
 }
 
 _USUARIOS_TESTE_RBAC = [
@@ -529,7 +528,7 @@ def _create_fake_diarias(n, credores_pf, processos):
 
 
 @csrf_exempt
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def gerar_dados_fake_view(request):
     """Gera dados fictícios de processos, fiscais, retenções e diárias via formulário."""
     context = {"resultados": None}
@@ -615,7 +614,7 @@ def gerar_dados_fake_view(request):
     return render(request, "gerar_dados_fake.html", context)
 
 
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def gerar_dummy_pdf_view(request, pk):
     """Gera PDF fictício e anexa ao processo como documento de nota fiscal para testes."""
     from django.utils import timezone as tz

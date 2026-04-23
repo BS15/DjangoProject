@@ -11,7 +11,7 @@ from credores.models import Credor
 from pagamentos.views.shared import render_filtered_list
 
 
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def add_credor_view(request):
     """Cria um novo credor a partir do formulário de cadastro."""
     if request.method == 'POST':
@@ -28,7 +28,7 @@ def add_credor_view(request):
     return render(request, 'cadastros/add_credor.html', {'form': form})
 
 
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def edit_credor_view(request, pk):
     """Edita um credor existente identificado pela chave primária."""
     credor = get_object_or_404(Credor, pk=pk)
@@ -46,7 +46,7 @@ def edit_credor_view(request, pk):
     return render(request, 'cadastros/edit_credor.html', {'form': form, 'credor': credor})
 
 
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def credores_list_view(request):
     """Lista credores com suporte a filtros do ``CredorFilter``."""
     queryset = Credor.objects.all().order_by('nome')
@@ -60,7 +60,7 @@ def credores_list_view(request):
     )
 
 
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def api_dados_credor(request, credor_id):
     """Retorna em JSON dados de credor para autofill em formulários."""
     try:

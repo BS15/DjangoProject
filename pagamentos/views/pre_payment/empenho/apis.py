@@ -12,7 +12,7 @@ from .helpers import extract_siscac_data
 logger = logging.getLogger(__name__)
 
 
-@permission_required("pagamentos.pode_operar_contas_pagar", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def api_extrair_dados_empenho(request):
     """Extrai número e data de empenho a partir de PDF SISCAC enviado pelo usuário."""
     if request.method != "POST":

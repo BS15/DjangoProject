@@ -73,7 +73,7 @@ def importar_credores_csv(csv_file):
 
 
 
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def painel_importacao_view(request):
     """Renderiza painel de importação em lote de credores e contas fixas."""
     context = {}
@@ -95,7 +95,7 @@ def painel_importacao_view(request):
     return render(request, "pagamentos/painel_importacao.html", context)
 
 
-@permission_required("pagamentos.acesso_backoffice", raise_exception=True)
+@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def download_template_csv_credores(request):
     """Disponibiliza template CSV para importação de credores."""
     response = HttpResponse(content_type="text/csv")
