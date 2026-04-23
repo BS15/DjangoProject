@@ -207,8 +207,8 @@ def _montar_post_capa_com_campos_canonicos(request, processo):
     data = request.POST.copy()
 
     tipo_pagamento_verbas, _ = TiposDePagamento.objects.get_or_create(
-        tipo_de_pagamento__iexact="VERBAS INDENIZATÓRIAS",
-        defaults={"tipo_de_pagamento": "VERBAS INDENIZATÓRIAS"},
+        tipo_pagamento__iexact="VERBAS INDENIZATÓRIAS",
+        defaults={"tipo_pagamento": "VERBAS INDENIZATÓRIAS"},
     )
     totais = _forcar_campos_canonicos_processo_verbas(processo)
 
