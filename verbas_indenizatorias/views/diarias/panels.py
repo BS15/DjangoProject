@@ -156,6 +156,19 @@ def gerenciar_prestacao_view(request, pk):
 
 
 @require_GET
+@permission_required('verbas_indenizatorias.pode_autorizar_diarias', raise_exception=True)
+def painel_autorizacao_diarias_view(request):
+    from verbas_indenizatorias.constants import STATUS_VERBA_SOLICITADA
+    diarias_pendentes = (
+        Diaria.objects
+        .filter(status__status_choice__iexact=STATUS_VERBA_SOLICITADA)
+        .select_related('beneficiario', 'status')
+        .order_by('-id')
+    )
+    return render(request, 'verbas/painel_autorizacao_diarias.html', {'diarias_pendentes': diarias_pendentes})
+
+
+@require_GET
 @permission_required('verbas_indenizatorias.analisar_prestacao_contas', raise_exception=True)
 def painel_revisar_prestacoes_view(request):
     prestacoes = PrestacaoContasDiaria.objects.select_related('diaria__beneficiario', 'diaria__status').order_by('-criado_em')
@@ -227,6 +240,7 @@ __all__ = [
     'cancelar_diaria_spoke_view',
     'minha_prestacao_list_view',
     'gerenciar_prestacao_view',
+    'painel_autorizacao_diarias_view',
     'painel_revisar_prestacoes_view',
     'revisar_prestacao_view',
     'download_template_diarias_csv',
