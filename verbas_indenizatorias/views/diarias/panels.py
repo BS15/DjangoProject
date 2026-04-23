@@ -60,7 +60,6 @@ def gerenciar_diaria_view(request, pk):
         'comprovantes': comprovantes,
         'tipos_documento': _get_tipos_documento_verbas(),
         'pode_gerenciar_vinculo_diaria': _pode_gerenciar_vinculo_diaria(request.user),
-        'pode_autorizar': request.user.has_perm('verbas_indenizatorias.pode_autorizar_diarias'),
     }
     return render(request, 'verbas/gerenciar_diaria.html', context)
 
@@ -156,15 +155,25 @@ def gerenciar_prestacao_view(request, pk):
 
 
 @require_GET
-@permission_required('verbas_indenizatorias.pode_autorizar_diarias', raise_exception=True)
+@permission_required('verbas_indenizatorias.pode_visualizar_verbas', raise_exception=True)
 def painel_autorizacao_diarias_view(request):
     from verbas_indenizatorias.constants import STATUS_VERBA_SOLICITADA
-    diarias_pendentes = (
+    diarias_pendentes = list(
         Diaria.objects
-        .filter(status__status_choice__iexact=STATUS_VERBA_SOLICITADA)
+        .filter(
+            proponente=request.user,
+            status__status_choice__iexact=STATUS_VERBA_SOLICITADA,
+        )
         .select_related('beneficiario', 'status')
+        .prefetch_related('assinaturas_autentique')
         .order_by('-id')
     )
+    for diaria in diarias_pendentes:
+        assinatura = (
+            diaria.assinaturas_autentique.filter(status='PENDENTE').order_by('-id').first()
+            or diaria.assinaturas_autentique.order_by('-id').first()
+        )
+        diaria.autentique_url_pendente = assinatura.autentique_url if assinatura else ''
     return render(request, 'verbas/painel_autorizacao_diarias.html', {'diarias_pendentes': diarias_pendentes})
 
 

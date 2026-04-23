@@ -113,6 +113,9 @@
                         <a href="{% url 'minha_prestacao_list' %}" class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-wallet2"></i> Minhas Prestações
                         </a>
+                        <a href="{% url 'painel_autorizacao_diarias' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-pen"></i> Autorizar Minhas Diárias
+                        </a>
                         {% if perms.verbas_indenizatorias.analisar_prestacao_contas %}
                         <a href="{% url 'painel_revisar_prestacoes' %}" class="btn btn-outline-dark btn-sm">
                             <i class="bi bi-clipboard-check"></i> Revisar Prestações

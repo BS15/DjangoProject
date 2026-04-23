@@ -92,13 +92,6 @@
 {% endif %}
 {% endif %}
 
-{% if diaria.status and diaria.status.status_choice == 'SOLICITADA' and pode_autorizar %}
-<form method="post" action="{% url 'autorizar_diaria_action' diaria.id %}" data-csrf-sync="true">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-success w-100 mt-2"><i class="bi bi-check-circle"></i> Autorizar Diária</button>
-</form>
-{% endif %}
-
 {% if perms.verbas_indenizatorias.pode_gerenciar_diarias %}
 {% with status_choice=diaria.status.status_choice|default:'' %}
 {% if status_choice != 'PAGA' and status_choice != 'REJEITADA' and status_choice != 'CANCELADO / ANULADO' %}
