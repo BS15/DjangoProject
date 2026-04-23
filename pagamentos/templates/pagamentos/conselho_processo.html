@@ -70,7 +70,7 @@
 					<tr>
 						<td class="text-muted small">{{ rec.history_date|date:"d/m/Y H:i" }}</td>
 						<td>{{ rec.history_user|default:"-" }}</td>
-						<td>{{ rec.history_change_reason|default:rec.get_history_type_display }}</td>
+						<td>{{ rec.history_change_reason|default:rec.history_type_label }}</td>
 					</tr>
 					{% endfor %}
 				</tbody>

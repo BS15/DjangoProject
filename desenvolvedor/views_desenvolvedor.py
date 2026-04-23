@@ -1,18 +1,23 @@
 import csv
 import io
 import random
+from pathlib import Path
 from datetime import date, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock
 
 from faker import Faker
 from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.decorators import permission_required
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.base import ContentFile
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
+from django.db import IntegrityError
 
 from credores.imports import (
     download_template_csv_credores,
@@ -42,6 +47,133 @@ _fake_generator = Faker("pt_BR")
 _MIN_FAKE_ANO_EXERCICIO = 2020
 _FAKE_PDF_BYTES = b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 144] >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n"
 
+_GRUPOS_PERMISSOES_FAKE = {
+    "FUNCIONARIO(A) CONTAS A PAGAR": [
+        "acesso_backoffice",
+        "pode_operar_contas_pagar",
+        "pode_aprovar_contingencia_supervisor",
+        "pode_arquivar",
+    ],
+    "FISCAL DE CONTRATO": ["acesso_backoffice", "pode_atestar_liquidacao"],
+    "ORDENADOR(A) DE DESPESA": ["acesso_backoffice", "pode_autorizar_pagamento"],
+    "CONTADOR(A)": ["acesso_backoffice", "pode_contabilizar"],
+    "CONSELHEIRO(A) FISCAL": ["acesso_backoffice", "pode_auditar_conselho"],
+}
+
+_USUARIOS_TESTE_RBAC = [
+    {
+        "perfil": "Operador contas a pagar",
+        "username": "teste_operador_contas_pagar",
+        "password": "Teste@123",
+        "email": "teste_operador_contas_pagar@example.com",
+        "groups": ["FUNCIONARIO(A) CONTAS A PAGAR"],
+    },
+    {
+        "perfil": "Fiscal de contrato e proponente",
+        "username": "teste_fiscal_proponente",
+        "password": "Teste@123",
+        "email": "teste_fiscal_proponente@example.com",
+        "groups": ["FISCAL DE CONTRATO"],
+    },
+    {
+        "perfil": "Conselheiro fiscal",
+        "username": "teste_conselheiro_fiscal",
+        "password": "Teste@123",
+        "email": "teste_conselheiro_fiscal@example.com",
+        "groups": ["CONSELHEIRO(A) FISCAL"],
+    },
+    {
+        "perfil": "Contador",
+        "username": "teste_contador",
+        "password": "Teste@123",
+        "email": "teste_contador@example.com",
+        "groups": ["CONTADOR(A)"],
+    },
+    {
+        "perfil": "Ordenador de despesas",
+        "username": "teste_ordenador_despesas",
+        "password": "Teste@123",
+        "email": "teste_ordenador_despesas@example.com",
+        "groups": ["ORDENADOR(A) DE DESPESA"],
+    },
+]
+
+_CREDENCIAIS_USUARIOS_TESTE_PATH = Path(__file__).resolve().parents[1] / "usuarios_teste_credenciais.txt"
+
+
+def _ensure_rbac_groups_for_fake_users():
+    """Garante grupos/permissoes canônicas para perfis usados nos usuários de teste."""
+    content_type = ContentType.objects.get_for_model(Processo)
+    grupos = {}
+    permissoes_ausentes = []
+
+    for nome_grupo, codenames in _GRUPOS_PERMISSOES_FAKE.items():
+        grupo, _ = Group.objects.get_or_create(name=nome_grupo)
+        for codename in codenames:
+            permissao = Permission.objects.filter(codename=codename, content_type=content_type).first()
+            if permissao is None:
+                permissoes_ausentes.append(codename)
+                continue
+            grupo.permissions.add(permissao)
+        grupos[nome_grupo] = grupo
+
+    return grupos, sorted(set(permissoes_ausentes))
+
+
+def _create_or_update_fake_users_with_permissions():
+    """Cria usuários hipotéticos de teste e salva credenciais em txt na raiz do projeto."""
+    grupos, permissoes_ausentes = _ensure_rbac_groups_for_fake_users()
+    UserModel = get_user_model()
+
+    criados = 0
+    atualizados = 0
+    linhas_credenciais = [
+        "USUARIOS HIPOTETICOS DE TESTE - RBAC",
+        "",
+    ]
+
+    for user_cfg in _USUARIOS_TESTE_RBAC:
+        user, created = UserModel.objects.get_or_create(
+            username=user_cfg["username"],
+            defaults={
+                "email": user_cfg["email"],
+                "is_active": True,
+            },
+        )
+
+        user.email = user_cfg["email"]
+        user.is_active = True
+        user.set_password(user_cfg["password"])
+        user.save(update_fields=["email", "is_active", "password"])
+
+        grupos_usuario = [grupos[nome] for nome in user_cfg["groups"] if nome in grupos]
+        user.groups.set(grupos_usuario)
+
+        if created:
+            criados += 1
+        else:
+            atualizados += 1
+
+        linhas_credenciais.extend(
+            [
+                f"Perfil: {user_cfg['perfil']}",
+                f"Usuario: {user_cfg['username']}",
+                f"Senha: {user_cfg['password']}",
+                f"Grupos: {', '.join(user_cfg['groups'])}",
+                "",
+            ]
+        )
+
+    _CREDENCIAIS_USUARIOS_TESTE_PATH.write_text("\n".join(linhas_credenciais), encoding="utf-8")
+
+    return {
+        "criados": criados,
+        "atualizados": atualizados,
+        "total": len(_USUARIOS_TESTE_RBAC),
+        "arquivo": str(_CREDENCIAIS_USUARIOS_TESTE_PATH),
+        "permissoes_ausentes": permissoes_ausentes,
+    }
+
 
 def _create_fake_documento_orcamentario(processo, numero_nota_empenho, data_empenho, ano_exercicio):
     """Cria documento orçamentário canônico com arquivo e tipo obrigatórios."""
@@ -58,6 +190,18 @@ def _create_fake_documento_orcamentario(processo, numero_nota_empenho, data_empe
         data_empenho=data_empenho,
         ano_exercicio=ano_exercicio,
     )
+
+def _create_fake_pdf_documento_fiscal(processo, numero_nota_fiscal, serie_nota_fiscal):
+    """Anexa um PDF dummy de nota fiscal ao processo para validar lastro documental."""
+    tipo_nf, _ = TiposDeDocumento.objects.get_or_create(
+        tipo_documento__iexact="NOTA FISCAL (NF)",
+        defaults={"tipo_documento": "NOTA FISCAL (NF)"},
+    )
+    ordem = processo.documentos.count() + 1
+    nome_arquivo = f"nota_fiscal_fake_{processo.id}_{serie_nota_fiscal}_{numero_nota_fiscal}.pdf"
+    doc = Boleto_Bancario(processo=processo, tipo=tipo_nf, ordem=ordem)
+    doc.arquivo.save(nome_arquivo, ContentFile(_FAKE_PDF_BYTES), save=True)
+    return doc
 
 
 def _ensure_fake_lookup_tables():
@@ -201,10 +345,28 @@ def _create_fake_documentos_fiscais(n, processos):
     """Cria ``n`` documentos fiscais fictícios vinculados aos processos informados."""
     from django.contrib.auth.models import User
 
+    def _get_or_create_fiscal_contrato_fallback():
+        grupo_fiscal, _ = Group.objects.get_or_create(name="FISCAL DE CONTRATO")
+        fiscal_existente = User.objects.filter(groups=grupo_fiscal, is_active=True).first()
+        if fiscal_existente:
+            return fiscal_existente
+
+        fiscal, created = User.objects.get_or_create(
+            username="fiscal_contrato_fake",
+            defaults={
+                "email": "fiscal_contrato_fake@example.com",
+                "is_active": True,
+            },
+        )
+        if created:
+            fiscal.set_password("Teste@123")
+            fiscal.save(update_fields=["password"])
+        fiscal.groups.add(grupo_fiscal)
+        return fiscal
+
     credores_pj = list(Credor.objects.filter(tipo="PJ"))
-    fiscais = list(User.objects.filter(groups__name="FISCAL DE CONTRATO"))
-    if not fiscais:
-        fiscais = list(User.objects.all())
+    fiscais_contrato = list(User.objects.filter(groups__name="FISCAL DE CONTRATO").distinct())
+    fiscais_gerais = list(User.objects.all())
     if not credores_pj:
         credores_pj = list(Credor.objects.all())
 
@@ -212,23 +374,67 @@ def _create_fake_documentos_fiscais(n, processos):
     for _ in range(n):
         processo = random.choice(processos)
         emitente = random.choice(credores_pj) if credores_pj else None
-        fiscal = random.choice(fiscais) if fiscais else None
-        data_emissao = _fake_generator.date_between(start_date="-1y", end_date="today")
-        valor_bruto = Decimal(str(round(random.uniform(100.00, 50_000.00), 2)))
-        retencao_pct = Decimal(str(round(random.uniform(0, 0.15), 4)))
-        valor_liquido = (valor_bruto * (1 - retencao_pct)).quantize(Decimal("0.01"))
-        DocumentoFiscal.objects.create(
-            processo=processo,
-            nome_emitente=emitente,
-            numero_nota_fiscal=_fake_generator.numerify("NF-#####"),
-            serie_nota_fiscal=_fake_generator.numerify("###"),
-            data_emissao=data_emissao,
-            valor_bruto=valor_bruto,
-            valor_liquido=valor_liquido,
-            atestada=random.choice([True, False]),
-            fiscal_contrato=fiscal,
-        )
-        created += 1
+
+        status_nome = (processo.status.opcao_status if processo.status else "").upper()
+        em_liquidacao = "LIQUIDA" in status_nome
+        if em_liquidacao:
+            if not fiscais_contrato:
+                fiscais_contrato.append(_get_or_create_fiscal_contrato_fallback())
+            fiscal = random.choice(fiscais_contrato)
+        else:
+            pool_fiscais = fiscais_contrato or fiscais_gerais
+            fiscal = random.choice(pool_fiscais) if pool_fiscais else None
+
+        end_date = processo.data_pagamento or date.today()
+        start_date = end_date - timedelta(days=180)
+        data_emissao = _fake_generator.date_between(start_date=start_date, end_date=end_date)
+
+        base_bruta = processo.valor_bruto or Decimal(str(round(random.uniform(100.00, 50_000.00), 2)))
+        fracao = Decimal(str(random.choice(["0.25", "0.33", "0.50", "1.00"])))
+        valor_bruto = (base_bruta * fracao).quantize(Decimal("0.01"))
+        if valor_bruto <= 0:
+            valor_bruto = Decimal("100.00")
+
+        retencao_pct = Decimal(str(round(random.uniform(0, 0.10), 4)))
+        valor_liquido = (valor_bruto * (Decimal("1") - retencao_pct)).quantize(Decimal("0.01"))
+        if valor_liquido <= 0:
+            valor_liquido = Decimal("0.01")
+
+        numero_nota_fiscal = ""
+        serie_nota_fiscal = ""
+        for _attempt in range(10):
+            numero_candidato = f"NF-{_fake_generator.numerify('######')}"
+            serie_candidata = _fake_generator.bothify("??#").upper()
+            if not DocumentoFiscal.objects.filter(
+                processo=processo,
+                numero_nota_fiscal=numero_candidato,
+                serie_nota_fiscal=serie_candidata,
+            ).exists():
+                numero_nota_fiscal = numero_candidato
+                serie_nota_fiscal = serie_candidata
+                break
+
+        if not numero_nota_fiscal:
+            numero_nota_fiscal = f"NF-{_fake_generator.numerify('######')}"
+            serie_nota_fiscal = _fake_generator.bothify("??#").upper()
+
+        try:
+            DocumentoFiscal.objects.create(
+                processo=processo,
+                nome_emitente=emitente,
+                cnpj_emitente=(emitente.cpf_cnpj if emitente else _fake_generator.cnpj()),
+                numero_nota_fiscal=numero_nota_fiscal,
+                serie_nota_fiscal=serie_nota_fiscal,
+                data_emissao=data_emissao,
+                valor_bruto=valor_bruto,
+                valor_liquido=valor_liquido,
+                atestada=True,
+                fiscal_contrato=fiscal,
+            )
+            _create_fake_pdf_documento_fiscal(processo, numero_nota_fiscal, serie_nota_fiscal)
+            created += 1
+        except (DjangoValidationError, IntegrityError):
+            continue
     return created
 
 
@@ -339,8 +545,24 @@ def gerar_dados_fake_view(request):
             return redirect("gerar_dados_fake")
 
         _ensure_fake_lookup_tables()
+        usuarios_info = _create_or_update_fake_users_with_permissions()
 
         resultados = {}
+        resultados["usuarios_teste"] = usuarios_info["total"]
+
+        messages.success(
+            request,
+            (
+                f"✔ Usuários de teste (total={usuarios_info['total']}, criados={usuarios_info['criados']}, "
+                f"atualizados={usuarios_info['atualizados']}) salvos em: {usuarios_info['arquivo']}"
+            ),
+        )
+        if usuarios_info["permissoes_ausentes"]:
+            messages.warning(
+                request,
+                "Permissões ausentes para os usuários de teste: "
+                + ", ".join(usuarios_info["permissoes_ausentes"]),
+            )
 
         if n_processos > 0:
             criados = _create_fake_processos(n_processos)

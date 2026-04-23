@@ -74,27 +74,74 @@ class PCDDocument(BasePDFDocument):
 
 		nome = str(diaria.beneficiario.nome) if diaria.beneficiario and diaria.beneficiario.nome else "Não informado"
 		cargo = _get_cargo_funcao(diaria.beneficiario)
+		nome_p = "Não informado"
+		cargo_p = "Não informado"
+		if diaria.proponente:
+			nome_p = diaria.proponente.get_full_name() or diaria.proponente.username
+			if diaria.proponente.groups.exists():
+				cargo_p = diaria.proponente.groups.first().name
+
+		column_gap = 28
+		column_width = (text_width - column_gap) / 2
+		left_x = margin_left
+		right_x = margin_left + column_width + column_gap
 
 		c.setFont("Helvetica-Bold", 11)
-		c.drawString(margin_left, y, "DADOS DO BENEFICIÁRIO:")
+		c.drawString(left_x, y, "BENEFICIÁRIO:")
+		c.drawString(right_x, y, "PROPONENTE:")
 		y -= 16
-		c.setFont("Helvetica", 11)
-		c.drawString(margin_left, y, f"Nome:              {nome}")
-		y -= 16
-		c.drawString(margin_left, y, f"Cargo / Função: {cargo}")
-		y -= 24
 
-		if diaria.proponente:
-			c.setFont("Helvetica-Bold", 11)
-			c.drawString(margin_left, y, "PROPONENTE:")
-			y -= 16
-			c.setFont("Helvetica", 11)
-			nome_p = diaria.proponente.get_full_name() or diaria.proponente.username
-			cargo_p = "Não informado"
-			c.drawString(margin_left, y, f"Nome:              {nome_p}")
-			y -= 16
-			c.drawString(margin_left, y, f"Cargo / Função:    {cargo_p}")
-			y -= 24
+		c.setFont("Helvetica", 11)
+		left_y = y
+		right_y = y
+
+		left_y = _draw_wrapped_text(
+			c,
+			f"Nome: {nome}",
+			left_x,
+			left_y,
+			column_width,
+			font_name="Helvetica",
+			font_size=11,
+			leading=15,
+			justify=False,
+		)
+		left_y = _draw_wrapped_text(
+			c,
+			f"Cargo / Função: {cargo}",
+			left_x,
+			left_y - 2,
+			column_width,
+			font_name="Helvetica",
+			font_size=11,
+			leading=15,
+			justify=False,
+		)
+
+		right_y = _draw_wrapped_text(
+			c,
+			f"Nome: {nome_p}",
+			right_x,
+			right_y,
+			column_width,
+			font_name="Helvetica",
+			font_size=11,
+			leading=15,
+			justify=False,
+		)
+		right_y = _draw_wrapped_text(
+			c,
+			f"Cargo / Função: {cargo_p}",
+			right_x,
+			right_y - 2,
+			column_width,
+			font_name="Helvetica",
+			font_size=11,
+			leading=15,
+			justify=False,
+		)
+
+		y = min(left_y, right_y) - 14
 
 		c.setFont("Helvetica-Bold", 11)
 		c.drawString(margin_left, y, "DADOS DA VIAGEM:")
@@ -159,7 +206,7 @@ class PCDDocument(BasePDFDocument):
 		y -= 14
 		boilerplate = (
 			"Proposta de concessão de diárias elaborada nos termos da legislação e regulamento interno vigentes, "
-			"para fins de autorização pelo Ordenador de Despesas."
+			"para fins de autorização pelo Presidente."
 		)
 		_draw_wrapped_text(
 			c,
@@ -185,7 +232,7 @@ class PCDDocument(BasePDFDocument):
 
 		c.line(sig_right_x - _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y,
 			   sig_right_x + _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y)
-		c.drawCentredString(sig_right_x, _PCD_SIG_Y - 12, "Ordenador(a) de Despesa")
+		c.drawCentredString(sig_right_x, _PCD_SIG_Y - 12, "Presidente")
 
 
 class SCDDocument(BasePDFDocument):

@@ -252,6 +252,7 @@ def _build_history_record(record, modelo_label):
         "history_user": record.history_user,
         "history_type": record.history_type,
         "history_type_label": HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
+        "get_history_type_display": HISTORY_TYPE_LABELS.get(record.history_type, record.history_type),
         "history_change_reason": getattr(record, "history_change_reason", None),
         "str_repr": str(record),
         "changed_fields": changed_fields,
