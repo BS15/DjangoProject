@@ -46,8 +46,8 @@ _FAKE_PDF_BYTES = b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj
 def _create_fake_documento_orcamentario(processo, numero_nota_empenho, data_empenho, ano_exercicio):
     """Cria documento orçamentário canônico com arquivo e tipo obrigatórios."""
     tipo_doc, _ = TiposDeDocumento.objects.get_or_create(
-        tipo_de_documento__iexact="DOCUMENTOS ORÇAMENTÁRIOS",
-        defaults={"tipo_de_documento": "DOCUMENTOS ORÇAMENTÁRIOS"},
+        tipo_documento__iexact="DOCUMENTOS ORÇAMENTÁRIOS",
+        defaults={"tipo_documento": "DOCUMENTOS ORÇAMENTÁRIOS"},
     )
     nome_arquivo = f"doc_orcamentario_fake_{processo.id}_{ano_exercicio}.pdf"
     return DocumentoOrcamentario.objects.create(
@@ -81,7 +81,7 @@ def _ensure_fake_lookup_tables():
         FormasDePagamento.objects.get_or_create(forma_pagamento=f)
 
     for t in ["CONTAS FIXAS", "VERBAS INDENIZATÓRIAS", "IMPOSTOS"]:
-        TiposDePagamento.objects.get_or_create(tipo_de_pagamento=t)
+        TiposDePagamento.objects.get_or_create(tipo_pagamento=t)
 
     for s in ["A RECOLHER", "RECOLHIDA"]:
         StatusChoicesRetencoes.objects.get_or_create(status_choice=s)
@@ -402,9 +402,9 @@ def gerar_dummy_pdf_view(request, pk):
 
     processo = get_object_or_404(Processo, id=pk)
 
-    tipo_nf = TiposDeDocumento.objects.filter(tipo_de_documento__iexact="NOTA FISCAL (NF)").first()
+    tipo_nf = TiposDeDocumento.objects.filter(tipo_documento__iexact="NOTA FISCAL (NF)").first()
     if not tipo_nf:
-        tipo_nf = TiposDeDocumento.objects.create(tipo_de_documento="NOTA FISCAL (NF)")
+        tipo_nf = TiposDeDocumento.objects.create(tipo_documento="NOTA FISCAL (NF)")
 
     buffer = io.BytesIO()
     c = rl_canvas.Canvas(buffer, pagesize=A4)
