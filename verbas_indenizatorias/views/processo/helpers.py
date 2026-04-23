@@ -43,8 +43,8 @@ def _forcar_campos_canonicos_processo_verbas(processo):
     """Aplica defaults canônicos para processos de verbas indenizatórias."""
     totais = _calcular_totais_verbas(processo)
     tipo_pagamento_verbas, _ = TiposDePagamento.objects.get_or_create(
-        tipo_de_pagamento__iexact="VERBAS INDENIZATÓRIAS",
-        defaults={"tipo_de_pagamento": "VERBAS INDENIZATÓRIAS"},
+        tipo_pagamento__iexact="VERBAS INDENIZATÓRIAS",
+        defaults={"tipo_pagamento": "VERBAS INDENIZATÓRIAS"},
     )
 
     update_fields = []
