@@ -9,6 +9,7 @@ from pagamentos.views.shared import render_filtered_list
 from verbas_indenizatorias.forms import ComprovanteDiariaFormSet, DiariaForm
 from verbas_indenizatorias.models import Diaria, PrestacaoContasDiaria
 from verbas_indenizatorias.filters import DiariaFilter
+from verbas_indenizatorias.services.autorizacao_diarias import listar_diarias_pendentes_para_proponente
 from verbas_indenizatorias.services.prestacao import obter_ou_criar_prestacao
 from .access import _pode_acessar_prestacao, _pode_gerenciar_vinculo_diaria
 from ..shared.registry import _get_tipos_documento_verbas
@@ -157,23 +158,7 @@ def gerenciar_prestacao_view(request, pk):
 @require_GET
 @permission_required('verbas_indenizatorias.pode_visualizar_verbas', raise_exception=True)
 def painel_autorizacao_diarias_view(request):
-    from verbas_indenizatorias.constants import STATUS_VERBA_SOLICITADA
-    diarias_pendentes = list(
-        Diaria.objects
-        .filter(
-            proponente=request.user,
-            status__status_choice__iexact=STATUS_VERBA_SOLICITADA,
-        )
-        .select_related('beneficiario', 'status')
-        .prefetch_related('assinaturas_autentique')
-        .order_by('-id')
-    )
-    for diaria in diarias_pendentes:
-        assinaturas = list(diaria.assinaturas_autentique.all())
-        assinatura = next((item for item in assinaturas if item.status == 'PENDENTE'), None)
-        if assinatura is None and assinaturas:
-            assinatura = assinaturas[0]
-        diaria.autentique_url_pendente = assinatura.autentique_url if assinatura else ''
+    diarias_pendentes = listar_diarias_pendentes_para_proponente(request.user)
     return render(request, 'verbas/painel_autorizacao_diarias.html', {'diarias_pendentes': diarias_pendentes})
 
 
