@@ -169,10 +169,10 @@ def painel_autorizacao_diarias_view(request):
         .order_by('-id')
     )
     for diaria in diarias_pendentes:
-        assinatura = (
-            diaria.assinaturas_autentique.filter(status='PENDENTE').order_by('-id').first()
-            or diaria.assinaturas_autentique.order_by('-id').first()
-        )
+        assinaturas = list(diaria.assinaturas_autentique.all())
+        assinatura = next((item for item in assinaturas if item.status == 'PENDENTE'), None)
+        if assinatura is None and assinaturas:
+            assinatura = assinaturas[0]
         diaria.autentique_url_pendente = assinatura.autentique_url if assinatura else ''
     return render(request, 'verbas/painel_autorizacao_diarias.html', {'diarias_pendentes': diarias_pendentes})
 
