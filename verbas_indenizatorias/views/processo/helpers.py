@@ -15,6 +15,23 @@ from ..shared.registry import _get_tipos_documento_verbas
 logger = logging.getLogger(__name__)
 
 
+def _pode_gerenciar_processo_verbas_da_entidade(user, processo):
+    """Valida acesso de edição no processo de verbas.
+
+    Operador de contas a pagar pode gerir qualquer processo de verbas.
+    Gestor de verbas mantém regra de ownership da entidade.
+    """
+    if user.has_perm("pagamentos.pode_operar_contas_pagar"):
+        return True
+
+    if not user.has_perm("verbas_indenizatorias.pode_gerenciar_processos_verbas"):
+        return False
+
+    from commons.shared.access_utils import user_is_entity_owner
+
+    return user_is_entity_owner(user, processo)
+
+
 def _agregar_total(queryset, field_name):
     """Retorna total decimal agregado com fallback para 0."""
     return queryset.aggregate(

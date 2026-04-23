@@ -16,7 +16,7 @@ from verbas_indenizatorias.constants import STATUS_VERBA_APROVADA, STATUS_VERBA_
 from verbas_indenizatorias.models import StatusChoicesVerbasIndenizatorias
 from verbas_indenizatorias.services.documentos import gerar_e_anexar_pcd_diaria
 from verbas_indenizatorias.services.processo_integration import criar_processo_e_vincular_verbas
-from .helpers import _forcar_campos_canonicos_processo_verbas
+from .helpers import _forcar_campos_canonicos_processo_verbas, _pode_gerenciar_processo_verbas_da_entidade
 from ..shared.registry import (
     _CREDOR_AGRUPAMENTO_MULTIPLO,
     _VERBA_CONFIG,
@@ -237,14 +237,12 @@ def _montar_post_capa_com_campos_canonicos(request, processo):
 
 
 @require_POST
-@permission_required("verbas_indenizatorias.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas_capa_action(request, pk):
     """Spoke POST da capa de processos de verbas."""
-    from commons.shared.access_utils import user_is_entity_owner
+    from django.core.exceptions import PermissionDenied
     processo = get_object_or_404(Processo, id=pk)
-    if not user_is_entity_owner(request.user, processo):
-        from django.http import HttpResponse
-        return HttpResponse("Acesso negado: você não é o responsável por este processo.", status=403)
+    if not _pode_gerenciar_processo_verbas_da_entidade(request.user, processo):
+        raise PermissionDenied("Acesso negado para edição deste processo de verbas.")
     data = _montar_post_capa_com_campos_canonicos(request, processo)
     processo_form = ProcessoForm(data, instance=processo, prefix="processo")
 
@@ -259,14 +257,12 @@ def editar_processo_verbas_capa_action(request, pk):
 
 
 @require_POST
-@permission_required("verbas_indenizatorias.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas_pendencias_action(request, pk):
     """Spoke POST de pendências para processos de verbas."""
-    from commons.shared.access_utils import user_is_entity_owner
+    from django.core.exceptions import PermissionDenied
     processo = get_object_or_404(Processo, id=pk)
-    if not user_is_entity_owner(request.user, processo):
-        from django.http import HttpResponse
-        return HttpResponse("Acesso negado: você não é o responsável por este processo.", status=403)
+    if not _pode_gerenciar_processo_verbas_da_entidade(request.user, processo):
+        raise PermissionDenied("Acesso negado para edição deste processo de verbas.")
     pendencia_formset = PendenciaFormSet(request.POST, instance=processo, prefix="pendencia")
 
     if not pendencia_formset.is_valid():
@@ -280,10 +276,12 @@ def editar_processo_verbas_pendencias_action(request, pk):
 
 
 @require_POST
-@permission_required("verbas_indenizatorias.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas_documentos_action(request, pk):
     """Spoke POST de documentos do processo de verbas."""
+    from django.core.exceptions import PermissionDenied
     processo = get_object_or_404(Processo, id=pk)
+    if not _pode_gerenciar_processo_verbas_da_entidade(request.user, processo):
+        raise PermissionDenied("Acesso negado para edição deste processo de verbas.")
     documento_formset = DocumentoFormSet(request.POST, request.FILES, instance=processo, prefix="documento")
 
     if not documento_formset.is_valid():
