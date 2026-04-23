@@ -21,10 +21,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load environment variables from .env file (development) or the environment (production)
 load_dotenv(BASE_DIR / '.env')
 
-# Gemini AI API key – must be set via environment variable in production.
-# Falls back to a non-functional dummy so the app starts locally without a key;
-# any actual Gemini calls will return an authentication error until the key is set.
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSy-DUMMY-TEST-KEY-NOT-REAL')
 CRECI_LETTERHEAD_PATH = os.getenv('CRECI_LETTERHEAD_PATH')
 
 # Quick-start development settings - unsuitable for production

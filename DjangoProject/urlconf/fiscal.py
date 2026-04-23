@@ -1,6 +1,5 @@
 from django.urls import path
 
-from fiscal.views.impostos import apis as impostos_apis
 from fiscal.views.impostos import panels as impostos_panels
 from fiscal.views.impostos import actions as impostos_actions
 from fiscal.views.reinf import actions as reinf_actions
@@ -26,7 +25,6 @@ urlpatterns = [
     path('processo/<int:pk>/documentos-fiscais/', documentos_fiscais_panels.documentos_fiscais_view, name='documentos_fiscais'),
     path('api/processo/<int:processo_pk>/toggle-documento-fiscal/<int:documento_pk>/', documentos_fiscais_apis.api_toggle_documento_fiscal, name='api_toggle_documento_fiscal'),
     path('api/processo/<int:processo_pk>/salvar-nota-fiscal/<int:nota_pk>/', documentos_fiscais_apis.api_salvar_nota_fiscal, name='api_salvar_nota_fiscal'),
-    path('api/processar-retencoes/', impostos_apis.api_processar_retencoes, name='api_processar_retencoes'),
     path('reinf/painel/', reinf_panels.painel_reinf_view, name='painel_reinf_view'),
     path('reinf/gerar-lotes/', reinf_actions.gerar_lote_reinf_action, name='gerar_lote_reinf_action'),
     path('reinf/transmitir-lotes/', reinf_actions.transmitir_lote_reinf_action, name='transmitir_lote_reinf_action'),
