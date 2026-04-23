@@ -66,9 +66,9 @@ Fluxos de formulário HTML surfaceiam erros de negócio via sistema de mensagens
 
 | Método | Path | Permissão | Descrição | Redirect sucesso |
 |---|---|---|---|---|
-| `POST` | `/verbas/diarias/criar/` | `verbas_indenizatorias.pode_criar_diarias` | Cria diária em status `RASCUNHO` | `gerenciar_diaria(pk)` |
-| `POST` | `/verbas/diarias/<pk>/solicitar/` | `verbas_indenizatorias.pode_gerenciar_diarias` | Avança diária para `SOLICITADA` | `gerenciar_diaria(pk)` |
-| `POST` | `/verbas/diarias/<pk>/autorizar/` | `verbas_indenizatorias.pode_gerenciar_diarias` | Avança diária para `APROVADA` | `gerenciar_diaria(pk)` |
+| `POST` | `/verbas/diarias/nova/action/` | `verbas_indenizatorias.pode_criar_diarias` | Cria diária em status `RASCUNHO` | `gerenciar_diaria(pk)` |
+| `POST` | `/verbas/diarias/<pk>/solicitar-autorizacao/` | `verbas_indenizatorias.pode_gerenciar_diarias` | Avança diária para `SOLICITADA` | `gerenciar_diaria(pk)` |
+| `POST` | `/verbas/diarias/<pk>/autorizar/` | `verbas_indenizatorias.pode_autorizar_diarias` | Avança diária para `APROVADA` | `gerenciar_diaria(pk)` |
 | `POST` | `/verbas/agrupar/` | `verbas_indenizatorias.pode_agrupar_verbas` | Agrupa itens `REVISADA` em processo de pagamento | `detalhe_processo_verbas(pk)` |
 
 ---

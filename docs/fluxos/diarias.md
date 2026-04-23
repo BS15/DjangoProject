@@ -8,8 +8,12 @@ Este documento descreve o ciclo operacional completo de uma diária no PaGé —
 
 ```mermaid
 stateDiagram-v2
-    [*] --> APROVADA : add_diaria_action (_preparar_nova_diaria)
+    [*] --> RASCUNHO : add_diaria_action (_preparar_nova_diaria)
+    RASCUNHO --> SOLICITADA : solicitar_autorizacao_diaria_action
+    SOLICITADA --> APROVADA : autorizar_diaria_action
     APROVADA --> VINCULADA_A_PROCESSO : vincular_diaria_processo_action
+    RASCUNHO --> CANCELADA_ANULADA : cancelar_diaria_action
+    SOLICITADA --> CANCELADA_ANULADA : cancelar_diaria_action
     APROVADA --> CANCELADA_ANULADA : cancelar_diaria_action
     VINCULADA_A_PROCESSO --> PRESTACAO_ABERTA : obter_ou_criar_prestacao
     PRESTACAO_ABERTA --> PRESTACAO_ENCERRADA : encerrar_prestacao_action
@@ -45,12 +49,16 @@ Quando a diária está vinculada a um processo em estágio `PAGO` ou posterior, 
 **Permissão:** `verbas_indenizatorias.pode_criar_diarias`
 
 1. Operador preenche o formulário (`DiariaForm`).
-2. `_preparar_nova_diaria` define a diária como já **autorizada** (`autorizada=True`, status `APROVADA`).
+2. `_preparar_nova_diaria` define a diária como **rascunho** (`autorizada=False`, status `RASCUNHO`).
 3. Se tipo for `COMPLEMENTACAO`, o sistema gera e anexa o **SCD** (Solicitação de Complementação de Diária).
 4. Redirecionamento para `gerenciar_diaria`.
 
-!!! note "Fluxo simplificado"
-    O sistema não pratica etapas intermediárias de solicitação/autorização; toda diária já nasce aprovada operacionalmente.
+### Etapas de autorização
+
+Após o cadastro, a diária segue o fluxo explícito de autorização:
+
+1. `solicitar_autorizacao_diaria_action`: `RASCUNHO → SOLICITADA`.
+2. `autorizar_diaria_action`: `SOLICITADA → APROVADA` (e marca `autorizada=True`).
 
 ---
 
