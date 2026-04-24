@@ -13,31 +13,34 @@ Esta página concentra o inventário operacional atual de controle de acesso do 
 
 As permissões abaixo vêm de três fontes do código:
 
-- Permissões declaradas no modelo financeiro principal, que hoje concentra tanto permissões do fluxo de pagamentos quanto de verbas indenizatórias.
-- Permissões declaradas nos modelos próprios de suprimentos.
-- Grupos canônicos provisionados pelo comando `setup_headstart` e pelo utilitário de usuários de teste RBAC.
+- Permissões declaradas no modelo financeiro principal (`pagamentos/domain_models/processos.py`), que concentra tanto permissões do fluxo de pagamentos quanto de verbas indenizatórias.
+- Permissões declaradas nos modelos próprios de verbas (`verbas_indenizatorias/models.py`) e suprimentos (`suprimentos/models.py`).
+- Grupos canônicos provisionados pelo comando `setup_headstart` (`pagamentos/management/commands/setup_headstart.py`).
 
 ## Permissões disponíveis
 
 ## Pagamentos Core e Credores
 
-Estas permissões estão declaradas no domínio financeiro principal e são usadas amplamente nas views de cadastro, liquidação, pagamento, conferência, contabilização, arquivamento, contingência, credores e ferramentas auxiliares.
+Estas permissões estão declaradas em `pagamentos/domain_models/processos.py` e são usadas nas views de cadastro, empenho, liquidação, pagamento, conferência, contabilização, arquivamento, contingência, credores e ferramentas auxiliares.
 
 | Codename | Escopo em runtime | Finalidade operacional |
 |---|---|---|
-| `pagamentos.operador_contas_a_pagar` | Pagamentos, credores, contingência, documentos, sync e apoio operacional | Permissão-base do backoffice financeiro. |
+| `pagamentos.operador_contas_a_pagar` | Credores, contingência, documentos, sync e apoio operacional | Permissão-base do backoffice financeiro; usada principalmente no módulo de credores e APIs auxiliares. |
 | `pagamentos.pode_visualizar_processos_pagamento` | Painel principal e detalhe de processo | Visualização de processos de pagamento sem acesso de mutação. |
 | `pagamentos.pode_editar_processos_pagamento` | Cadastro/edição de capa, documentos, pendências e fiscal | Gestão de edição de processos de pagamento. |
-| `pagamentos.pode_aprovar_contingencia_supervisor` | Contingências em etapa de supervisão/gerência | Aprovação excepcional de contingências. |
+| `pagamentos.pode_aprovar_contingencia_supervisor` | Contingências em etapa de supervisão/gerência | Aprovação de contingências pelo perfil supervisor. |
+| `pagamentos.pode_aprovar_contingencia_ordenador` | Contingências em etapa do Ordenador de Despesa | Aprovação de contingências que exigem anuência do ordenador. |
+| `pagamentos.pode_aprovar_contingencia_conselho` | Contingências em etapa do Conselho Fiscal | Aprovação de contingências que exigem deliberação do conselho. |
+| `pagamentos.pode_revisar_contingencia_contadora` | Contingências em etapa de revisão contábil | Revisão contábil final de contingências aprovadas pela cadeia hierárquica. |
 | `pagamentos.pode_atestar_liquidacao` | Liquidação | Ateste fiscal de notas e liquidação documental. |
 | `pagamentos.pode_autorizar_pagamento` | Autorização | Aprovação ou recusa formal de pagamento. |
 | `pagamentos.pode_contabilizar` | Pós-pagamento | Registro e recusa contábil. |
 | `pagamentos.pode_auditar_conselho` | Conselho fiscal e reuniões | Deliberação final e acesso ampliado de auditoria. |
 | `pagamentos.pode_arquivar` | Pós-pagamento | Arquivamento definitivo do processo. |
 
-## Verbas indenizatórias
+## Verbas indenizatórias — escopo pagamentos
 
-Embora pertençam ao domínio de verbas, essas permissões também estão declaradas no modelo financeiro principal e hoje são consumidas em runtime com o prefixo `pagamentos.` nas views e nos templates.
+Estas permissões estão declaradas junto ao modelo financeiro principal em `pagamentos/domain_models/processos.py` e são consumidas em runtime com o prefixo `pagamentos.` nas views e templates de verbas.
 
 | Codename | Escopo em runtime | Finalidade operacional |
 |---|---|---|
@@ -49,17 +52,26 @@ Embora pertençam ao domínio de verbas, essas permissões também estão declar
 | `pagamentos.pode_gerenciar_reembolsos` | Reembolsos | Cadastro e gestão operacional de reembolsos. |
 | `pagamentos.pode_gerenciar_jetons` | Jetons | Cadastro e gestão operacional de jetons. |
 | `pagamentos.pode_gerenciar_auxilios` | Auxílios | Cadastro e gestão operacional de auxílios. |
-| `pagamentos.pode_agrupar_verbas` | Processo de verbas | Agrupamento de itens em processo de pagamento. |
-| `pagamentos.pode_gerenciar_processos_verbas` | Processo de verbas | Gestão da capa, documentos e pendências processuais. |
+| `pagamentos.pode_agrupar_verbas` | Processo de verbas | Agrupamento de itens aprovados em processo de pagamento. |
+| `pagamentos.pode_gerenciar_processos_verbas` | Processo de verbas | Gestão da capa, documentos e pendências processuais de verbas. |
 | `pagamentos.pode_sincronizar_diarias_siscac` | Diárias | Sincronização/importação via SISCAC. |
 
-Observação: o modelo de verbas também declara permissões com os mesmos codenames em `verbas_indenizatorias/models.py`. Na prática, o código operacional atual consome os codenames pelo escopo `pagamentos.*`, então esta página documenta o comportamento efetivamente usado pelas views.
+## Verbas indenizatórias — escopo próprio
+
+Estas permissões estão declaradas em `verbas_indenizatorias/models.py` e são consumidas diretamente com o prefixo `verbas_indenizatorias.` nas views de prestação de contas de diárias.
+
+| Codename | Escopo em runtime | Finalidade operacional |
+|---|---|---|
+| `verbas_indenizatorias.operar_prestacao_contas` | Prestação de contas de diárias | Operação de prestação de contas em nome de terceiros (beneficiário). |
+| `verbas_indenizatorias.visualizar_prestacao_contas` | Painel de revisão de prestações | Acesso de leitura ao painel consolidado de prestações de contas de diárias. |
+| `verbas_indenizatorias.analisar_prestacao_contas` | Revisão e aceite de prestações | Revisão, análise e aceite formal de prestações de contas de diárias. |
 
 ## Suprimentos
 
 | Codename | Escopo em runtime | Finalidade operacional |
 |---|---|---|
-| `suprimentos.acesso_backoffice` | Cadastro, prestação de contas e PDFs de suprimentos | Acesso operacional ao backoffice de suprimentos. |
+| `suprimentos.acesso_backoffice` | Listagem e cadastro inicial de suprimentos | Acesso operacional ao backoffice de suprimentos. |
+| `suprimentos.pode_gerenciar_concessao_suprimento` | Concessão e cancelamento de suprimento | Abertura de novo suprimento de fundos e spoke de cancelamento. |
 | `suprimentos.pode_adicionar_despesas_suprimento` | Despesas de suprimento | Registro manual de despesas e anexos de comprovantes no suprimento. |
 | `suprimentos.pode_encerrar_suprimento` | Encerramento do suprimento | Encerramento da prestação do suprimento e avanço para conferência. |
 | `suprimentos.pode_gerir_prestacao_contas_suprimento` | Prestação de contas de suprimento | Envio, revisão, aprovação e emissão de relatório PDF da prestação de contas de suprimento. |
@@ -70,33 +82,29 @@ Observação: o modelo de verbas também declara permissões com os mesmos coden
 |---|---|---|
 | `fiscal.acesso_backoffice` | Impostos e EFD-Reinf | Acesso operacional ao backoffice fiscal. |
 
-Observação: o uso de `fiscal.acesso_backoffice` está presente nas views do módulo fiscal. Diferentemente de pagamentos, verbas e suprimentos, essa permissão não está hoje declarada em um bloco `Meta.permissions` localizado em `fiscal/models.py`, então o catálogo do módulo fiscal ainda depende do uso observado nas views.
+Observação: `fiscal.acesso_backoffice` está presente nas views do módulo fiscal mas não é declarada em bloco `Meta.permissions` em `fiscal/models.py`. O Django cria a permissão dinamicamente a partir do uso, portanto ela deve existir em banco após as migrações e um `migrate --run-syncdb`.
 
 ## Grupos canônicos de usuários
 
-Os grupos abaixo estão definidos no provisionamento inicial do projeto e representam os perfis operacionais hoje previstos.
+Os grupos abaixo estão definidos no `setup_headstart` e representam os perfis operacionais provisionados automaticamente. A coluna de permissões reflete exatamente o código do comando.
 
 | Grupo | Permissões vinculadas |
 |---|---|
-| `FUNCIONARIO(A) CONTAS A PAGAR` | `pagamentos.operador_contas_a_pagar`, `pagamentos.pode_visualizar_processos_pagamento`, `pagamentos.pode_editar_processos_pagamento`, `pagamentos.pode_aprovar_contingencia_supervisor`, `pagamentos.pode_arquivar`, `suprimentos.acesso_backoffice`, `suprimentos.pode_gerir_prestacao_contas_suprimento`, `verbas_indenizatorias.analisar_prestacao_contas` |
-| `FISCAL DE CONTRATO` | `pagamentos.pode_atestar_liquidacao` |
-| `ORDENADOR(A) DE DESPESA` | `pagamentos.pode_visualizar_processos_pagamento`, `pagamentos.pode_autorizar_pagamento` |
-| `CONTADOR(A)` | `pagamentos.pode_visualizar_processos_pagamento`, `pagamentos.pode_contabilizar` |
-| `CONSELHEIRO(A) FISCAL` | `pagamentos.pode_visualizar_processos_pagamento`, `pagamentos.pode_auditar_conselho` |
-| `AUTORIZADOR(A) DE DIARIAS - PROPONENTE` | `pagamentos.pode_autorizar_diarias` |
-| `OPERADOR(A) DE SUPRIMENTOS - DESPESAS` | `suprimentos.pode_adicionar_despesas_suprimento` |
-| `OPERADOR(A) DE SUPRIMENTOS - ENCERRAMENTO` | `suprimentos.pode_encerrar_suprimento` |
-| `GESTOR(A) DE PRESTACAO DE CONTAS DE SUPRIMENTO` | `suprimentos.pode_gerir_prestacao_contas_suprimento` |
+| `FUNCIONARIO(A) CONTAS A PAGAR` | `pagamentos.pode_visualizar_processos_pagamento`, `pagamentos.pode_operar_contas_pagar`, `pagamentos.pode_arquivar`, `suprimentos.pode_gerenciar_concessao_suprimento`, `suprimentos.pode_gerir_prestacao_contas_suprimento`, `verbas_indenizatorias.analisar_prestacao_contas`, `verbas_indenizatorias.pode_visualizar_verbas`, `verbas_indenizatorias.visualizar_prestacao_contas` |
+| `SUPERVISOR(A) CONTAS A PAGAR` | `pagamentos.pode_visualizar_processos_pagamento`, `pagamentos.pode_operar_contas_pagar`, `pagamentos.pode_aprovar_contingencia_supervisor`, `pagamentos.pode_arquivar`, `suprimentos.pode_gerenciar_concessao_suprimento`, `suprimentos.pode_gerir_prestacao_contas_suprimento`, `verbas_indenizatorias.analisar_prestacao_contas`, `verbas_indenizatorias.pode_visualizar_verbas`, `verbas_indenizatorias.visualizar_prestacao_contas` |
+| `ORDENADOR(A) DE DESPESA` | `pagamentos.pode_visualizar_processos_pagamento`, `pagamentos.pode_autorizar_pagamento`, `pagamentos.pode_aprovar_contingencia_ordenador` |
+| `CONTADOR(A)` | `pagamentos.pode_visualizar_processos_pagamento`, `pagamentos.pode_contabilizar`, `pagamentos.pode_revisar_contingencia_contadora` |
+| `CONSELHEIRO(A) FISCAL` | `pagamentos.pode_visualizar_processos_pagamento`, `pagamentos.pode_auditar_conselho`, `pagamentos.pode_aprovar_contingencia_conselho` |
 
 ## Grupos usados em usuários de teste RBAC
 
-O gerador de usuários hipotéticos de teste cobre hoje um subconjunto dos grupos canônicos, voltado aos perfis principais do fluxo financeiro:
+O gerador de usuários hipotéticos de teste cobre todos os grupos canônicos:
 
 - `FUNCIONARIO(A) CONTAS A PAGAR`
-- `FISCAL DE CONTRATO`
-- `CONSELHEIRO(A) FISCAL`
-- `CONTADOR(A)`
+- `SUPERVISOR(A) CONTAS A PAGAR`
 - `ORDENADOR(A) DE DESPESA`
+- `CONTADOR(A)`
+- `CONSELHEIRO(A) FISCAL`
 
 Esses perfis são usados para acelerar homologação, depuração e validação manual das telas protegidas por permissão.
 

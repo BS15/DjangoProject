@@ -1535,7 +1535,7 @@
 <td>Agrupamento de retenções, anexação documental e geração/transmissão EFD-Reinf</td>
 <td><code>fiscal.acesso_backoffice</code></td>
 <td>Operador Fiscal</td>
-<td>Acesso não autorizado a dados tributários e geração de obrigação acessória; retorna 403 (não redireciona para login).</td>
+<td>Acesso não autorizado a dados tributários e geração de obrigação acessória.</td>
 </tr>
 </tbody>
 </table>
@@ -1554,43 +1554,43 @@
 <td>Criação de diária</td>
 <td><code>verbas_indenizatorias.pode_criar_diarias</code></td>
 <td>Operador de Pagamentos</td>
-<td>Inclusão de despesa indenizatória sem autorização de cadastro; retorna 403 (não redireciona para login).</td>
+<td>Inclusão de despesa indenizatória sem autorização de cadastro.</td>
 </tr>
 <tr>
 <td>Gestão operacional de diárias</td>
 <td><code>verbas_indenizatorias.pode_gerenciar_diarias</code></td>
 <td>Responsável por Liquidação/Conferência de Diárias</td>
-<td>Alteração indevida de status e comprovantes de diária; retorna 403 (não redireciona para login).</td>
+<td>Alteração indevida de status e comprovantes de diária.</td>
 </tr>
 <tr>
 <td>Gestão operacional de reembolsos</td>
 <td><code>verbas_indenizatorias.pode_gerenciar_reembolsos</code></td>
 <td>Autorizador de Verbas</td>
-<td>Pagamento de reembolso sem validação formal de competência; retorna 403 (não redireciona para login).</td>
+<td>Pagamento de reembolso sem validação formal de competência.</td>
 </tr>
 <tr>
 <td>Gestão operacional de auxílios</td>
 <td><code>verbas_indenizatorias.pode_gerenciar_auxilios</code></td>
 <td>Autorizador de Verbas</td>
-<td>Concessão de benefício indenizatório sem elegibilidade validada; retorna 403 (não redireciona para login).</td>
+<td>Concessão de benefício indenizatório sem elegibilidade validada.</td>
 </tr>
 <tr>
 <td>Agrupar verbas em processo de pagamento</td>
 <td><code>verbas_indenizatorias.pode_agrupar_verbas</code></td>
 <td>Operador de Verbas</td>
-<td>Consolidação financeira indevida de itens sem governança; retorna 403 (não redireciona para login).</td>
+<td>Consolidação financeira indevida de itens sem governança.</td>
 </tr>
 <tr>
 <td>Gerir capa, documentos e pendências do processo de verbas</td>
 <td><code>verbas_indenizatorias.pode_gerenciar_processos_verbas</code></td>
 <td>Operador de Verbas</td>
-<td>Edição indevida de dados processuais e documentais; retorna 403 (não redireciona para login).</td>
+<td>Edição indevida de dados processuais e documentais.</td>
 </tr>
 <tr>
 <td>Gerir ciclo de vida de jetons</td>
 <td><code>verbas_indenizatorias.pode_gerenciar_jetons</code></td>
 <td>Autorizador de Verbas</td>
-<td>Autorização/cancelamento de jeton por perfil sem competência; retorna 403 (não redireciona para login).</td>
+<td>Autorização/cancelamento de jeton por perfil sem competência.</td>
 </tr>
 </tbody>
 </table>
@@ -1609,7 +1609,7 @@
 <td>Criação de suprimento, registro de despesas e fechamento da prestação</td>
 <td><code>suprimentos.acesso_backoffice</code></td>
 <td>Operador de Suprimentos</td>
-<td>Concessão de adiantamento e baixa de prestação sem controle; retorna 403 (não redireciona para login).</td>
+<td>Concessão de adiantamento e baixa de prestação sem controle.</td>
 </tr>
 </tbody>
 </table>
@@ -1629,53 +1629,52 @@
 <td>Cadastro e edição geral de processos, documentos, pendências, devoluções e abertura de contingências</td>
 <td><code>fluxo.acesso_backoffice</code></td>
 <td>Operador Financeiro Backoffice</td>
-<td>Alteração indevida de dados processuais, anexos e exceções do fluxo sem competência operacional; retorna 403 (não redireciona para login).</td>
+<td>Alteração indevida de dados processuais, anexos e exceções do fluxo sem competência operacional.</td>
 </tr>
 <tr>
 <td>Empenho, avanço para pagamento, contas a pagar, lançamento bancário, conferência, sync SISCAC e APIs operacionais de comprovantes</td>
 <td><code>fluxo.pode_operar_contas_pagar</code></td>
 <td>Funcionário(a) Contas a Pagar</td>
-<td>Movimentação indevida do processo entre etapas críticas de pagamento, conciliação externa ou tratamento de comprovantes sem segregação de função; retorna 403 (não redireciona para login).</td>
+<td>Movimentação indevida do processo entre etapas críticas de pagamento, conciliação externa ou tratamento de comprovantes sem segregação de função.</td>
 </tr>
 <tr>
 <td>Ateste de notas fiscais na etapa de liquidação</td>
 <td><code>fluxo.pode_atestar_liquidacao</code></td>
 <td>Fiscal de Contrato</td>
-<td>Liquidação documental sem validação do fiscal responsável, com risco de pagamento indevido; retorna 403 (não redireciona para login).</td>
+<td>Liquidação documental sem validação do fiscal responsável, com risco de pagamento indevido.</td>
 </tr>
 <tr>
 <td>Autorização e recusa de pagamentos</td>
 <td><code>fluxo.pode_autorizar_pagamento</code></td>
 <td>Ordenador(a) de Despesa</td>
-<td>Liberação ou bloqueio indevido de despesa sem autoridade formal de ordenação; retorna 403 (não redireciona para login).</td>
+<td>Liberação ou bloqueio indevido de despesa sem autoridade formal de ordenação.</td>
 </tr>
 <tr>
 <td>Aprovação de contingências na etapa de supervisão/gerência</td>
 <td><code>fluxo.pode_aprovar_contingencia_supervisor</code></td>
 <td>Supervisor/Gerência de Contas a Pagar</td>
-<td>Aprovação excepcional de alteração processual sem revisão hierárquica adequada; retorna 403 (não redireciona para login).</td>
+<td>Aprovação excepcional de alteração processual sem revisão hierárquica adequada.</td>
 </tr>
 <tr>
 <td>Contabilização e recusa contábil de processos pagos</td>
 <td><code>fluxo.pode_contabilizar</code></td>
 <td>Contador(a)</td>
-<td>Registro contábil indevido ou devolução incorreta à conferência sem competência técnica; retorna 403 (não redireciona para login).</td>
+<td>Registro contábil indevido ou devolução incorreta à conferência sem competência técnica.</td>
 </tr>
 <tr>
 <td>Deliberação do Conselho Fiscal, gestão de reuniões e painel consolidado de auditoria</td>
 <td><code>fluxo.pode_auditar_conselho</code></td>
 <td>Conselheiro(a) Fiscal</td>
-<td>Aprovação final, recusa em conselho ou acesso ampliado à trilha de auditoria sem competência institucional; retorna 403 (não redireciona para login).</td>
+<td>Aprovação final, recusa em conselho ou acesso ampliado à trilha de auditoria sem competência institucional.</td>
 </tr>
 <tr>
 <td>Arquivamento definitivo do processo</td>
 <td><code>fluxo.pode_arquivar</code></td>
 <td>Operador de Arquivamento Financeiro</td>
-<td>Encerramento e consolidação definitiva do processo sem verificação formal de completude documental; retorna 403 (não redireciona para login).</td>
+<td>Encerramento e consolidação definitiva do processo sem verificação formal de completude documental.</td>
 </tr>
 </tbody>
 </table>
-<p>Observação de revisão: o endpoint auxiliar de upload em <a href="pagamentos/views/pre_payment/cadastro/apis.py">pagamentos/views/pre_payment/cadastro/apis.py</a> foi alinhado para <code>fluxo.pode_operar_contas_pagar</code>, eliminando a referência ao codename não canônico <code>fluxo.pode_editar_processos</code>.</p>
 <h3 id="dominio-credores">Domínio Credores<a class="headerlink" href="#dominio-credores" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -1691,7 +1690,7 @@
 <td>Cadastro, atualização e gestão cadastral de credores</td>
 <td><code>pagamentos.acesso_backoffice</code></td>
 <td>Operador Financeiro Backoffice</td>
-<td>Alteração indevida de favorecidos e dados bancários; retorna 403 (não redireciona para login).</td>
+<td>Alteração indevida de favorecidos e dados bancários.</td>
 </tr>
 </tbody>
 </table>

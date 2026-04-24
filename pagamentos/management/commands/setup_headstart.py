@@ -73,13 +73,6 @@ GRUPOS_PERMISSOES = {
     ],
 }
 
-GRUPOS_GESTORES_VERBAS_LEGADOS = [
-    "GESTOR(A) DE VERBAS - CONSULTA",
-    "GESTOR(A) DE VERBAS - DIARIAS",
-    "GESTOR(A) DE VERBAS - REEMBOLSOS",
-    "GESTOR(A) DE VERBAS - JETONS",
-    "GESTOR(A) DE VERBAS - AUXILIOS",
-]
 
 
 def _normalizar_rotulo(valor: str) -> str:
@@ -207,13 +200,6 @@ class Command(BaseCommand):
             docs_criados += 1
             self.stdout.write(f"Documento criado (CONTAS FIXAS): {nome_doc}")
 
-        grupos_legados_removidos = 0
-        for nome_grupo_legado in GRUPOS_GESTORES_VERBAS_LEGADOS:
-            removidos, _ = Group.objects.filter(name=nome_grupo_legado).delete()
-            if removidos:
-                grupos_legados_removidos += 1
-                self.stdout.write(f"Grupo legado removido: {nome_grupo_legado}")
-
         for nome_grupo, permissoes in GRUPOS_PERMISSOES.items():
             grupo, created = Group.objects.get_or_create(name=nome_grupo)
             if created:
@@ -250,7 +236,7 @@ class Command(BaseCommand):
                 f"Formas (criadas={formas_criadas}, atualizadas={formas_atualizadas}) | "
                 f"Tipos (criadas={tipos_criados}, atualizadas={tipos_atualizados}) | "
                 f"Docs CONTAS FIXAS (criadas={docs_criados}, atualizadas={docs_atualizados}, reatribuidas={docs_reatribuidos}) | "
-                f"Grupos (criados={grupos_criados}, atualizados={grupos_atualizados}, legados_removidos={grupos_legados_removidos}, "
+                f"Grupos (criados={grupos_criados}, atualizados={grupos_atualizados}, "
                 f"permissoes_vinculadas={permissoes_vinculadas}, permissoes_ausentes={permissoes_ausentes})"
             )
         )
