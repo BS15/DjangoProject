@@ -126,14 +126,6 @@ class DocumentoFiscal(models.Model):
     data_emissao = models.DateField()
     valor_bruto = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0.01)])
     valor_liquido = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
-    fiscal_contrato = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        verbose_name="Fiscal do Contrato",
-        related_name='notas_fiscalizadas',
-        null=True,
-        blank=True,
-    )
     atestada = models.BooleanField(default=False)
     serie_nota_fiscal = models.CharField(
         max_length=10,
@@ -165,6 +157,8 @@ class DocumentoFiscal(models.Model):
         if not self.codigo_servico_inss and self.nome_emitente and self.nome_emitente.codigo_servico_padrao:
             self.codigo_servico_inss = self.nome_emitente.codigo_servico_padrao
         super().save(*args, **kwargs)
+        if not kwargs.get("raw", False):
+            LiquidacaoDocumentoFiscal.objects.get_or_create(documento_fiscal=self)
 
     def clean(self):
         """Valida integridade dos dados da nota antes de salvar."""
@@ -179,6 +173,38 @@ class DocumentoFiscal(models.Model):
 
     def __str__(self):
         return f"NF {self.numero_nota_fiscal} - {self.nome_emitente}"
+
+    @property
+    def liquidacao_atual(self):
+        """Retorna o registro de liquidação quando existente."""
+        try:
+            return self.liquidacao
+        except LiquidacaoDocumentoFiscal.DoesNotExist:
+            return None
+
+
+class LiquidacaoDocumentoFiscal(models.Model):
+    """Registro da etapa de liquidação e responsável fiscal da nota."""
+
+    documento_fiscal = models.OneToOneField(
+        'DocumentoFiscal',
+        on_delete=models.CASCADE,
+        related_name='liquidacao',
+        verbose_name="Documento Fiscal",
+    )
+    fiscal_contrato = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        verbose_name="Fiscal do Contrato",
+        related_name='liquidacoes_fiscalizadas',
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Liquidação da NF {self.documento_fiscal.numero_nota_fiscal}"
 
 
 class RetencaoImposto(models.Model):

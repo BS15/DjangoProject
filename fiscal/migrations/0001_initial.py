@@ -385,6 +385,42 @@ class Migration(migrations.Migration):
                 ("is_active", models.BooleanField(default=True)),
             ],
         ),
+        migrations.CreateModel(
+            name="LiquidacaoDocumentoFiscal",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "documento_fiscal",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="liquidacao",
+                        to="fiscal.documentofiscal",
+                        verbose_name="Documento Fiscal",
+                    ),
+                ),
+                (
+                    "fiscal_contrato",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="liquidacoes_fiscalizadas",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Fiscal do Contrato",
+                    ),
+                ),
+            ],
+        ),
         migrations.AddField(
             model_name="documentofiscal",
             name="content_type",
@@ -403,18 +439,6 @@ class Migration(migrations.Migration):
                 blank=True,
                 null=True,
                 verbose_name="ID do Documento Vinculado",
-            ),
-        ),
-        migrations.AddField(
-            model_name="documentofiscal",
-            name="fiscal_contrato",
-            field=models.ForeignKey(
-                blank=True,
-                null=True,
-                on_delete=django.db.models.deletion.SET_NULL,
-                related_name="notas_fiscalizadas",
-                to=settings.AUTH_USER_MODEL,
-                verbose_name="Fiscal do Contrato",
             ),
         ),
         migrations.AddField(
@@ -456,19 +480,6 @@ class Migration(migrations.Migration):
                 blank=True,
                 null=True,
                 verbose_name="ID do Documento Vinculado",
-            ),
-        ),
-        migrations.AddField(
-            model_name="historicaldocumentofiscal",
-            name="fiscal_contrato",
-            field=models.ForeignKey(
-                blank=True,
-                db_constraint=False,
-                null=True,
-                on_delete=django.db.models.deletion.DO_NOTHING,
-                related_name="+",
-                to=settings.AUTH_USER_MODEL,
-                verbose_name="Fiscal do Contrato",
             ),
         ),
         migrations.AddField(

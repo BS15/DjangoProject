@@ -108,8 +108,12 @@ class TermoAtesteDocument(BasePDFDocument):
         y = _draw_wrapped_text(c, declaration, 72, 430, 500, font_name="Helvetica", font_size=11, leading=20)
 
         sig_x = page_width / 2
-        if documento_fiscal.fiscal_contrato:
-            fiscal_name = documento_fiscal.fiscal_contrato.get_full_name()
+        fiscal_contrato = None
+        if getattr(documento_fiscal, "liquidacao_atual", None):
+            fiscal_contrato = documento_fiscal.liquidacao_atual.fiscal_contrato
+
+        if fiscal_contrato:
+            fiscal_name = fiscal_contrato.get_full_name()
         else:
             fiscal_name = "Fiscal Não Atribuído"
         c.setFont("Helvetica", 11)

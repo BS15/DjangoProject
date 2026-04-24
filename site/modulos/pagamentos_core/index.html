@@ -1367,21 +1367,20 @@
 <p>Trilha principal (status canônicos):
 - A EMPENHAR
 - AGUARDANDO LIQUIDAÇÃO
-- EM LIQUIDAÇÃO
-- A PAGAR
-- AGUARDANDO AUTORIZAÇÃO
-- EM LANÇAMENTO
-- PAGO
-- EM CONFERENCIA
-- EM CONTABILIZACAO
-- CONTABILIZADO
-- EM CONSELHO
-- A ARQUIVAR
+- A PAGAR - PENDENTE AUTORIZAÇÃO
+- A PAGAR - ENVIADO PARA AUTORIZAÇÃO
+- A PAGAR - AUTORIZADO
+- LANÇADO - AGUARDANDO COMPROVANTE
+- PAGO - EM CONFERÊNCIA
+- PAGO - A CONTABILIZAR
+- CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL
+- APROVADO - PENDENTE ARQUIVAMENTO
 - ARQUIVADO</p>
 <p>Caminhos laterais (fluxos de exceção):
 - <strong>Contingência</strong>: desvia o processo para análise multi-nível (supervisor -&gt; ordenador -&gt; conselho) sem bloquear o status principal. Após aprovação, o efeito é aplicado ao processo e ele retoma a trilha.
 - <strong>Devolução</strong>: registra reversão formal de valor ou documento, podendo ajustar o status do processo e gerar pendências.
-- <strong>Recusa</strong> (em etapas de aprovação): devolve o processo ao status anterior com registro formal de motivo e criação de pendência.</p>
+- <strong>Recusa</strong> (em etapas de aprovação): devolve o processo ao status anterior com registro formal de motivo e criação de pendência.
+- <strong>Cancelamento</strong>: encerra definitivamente o processo com status <code>CANCELADO / ANULADO</code> e justificativa obrigatória. Quando o processo já está em status pago ou posterior, exige registro simultâneo de <code>DevolucaoProcessual</code>. Grava <code>CancelamentoProcessual</code> como trilha formal. Aplica-se também a verbas indenizatórias e suprimentos vinculados.</p>
 <p>Para o comportamento exato de cada transição e seus turnpikes, consulte <code>pagamentos/domain_models/processos.py</code> e os serviços em <code>pagamentos/services/</code>.</p>
 <h2 id="turnpikes">Turnpikes<a class="headerlink" href="#turnpikes" title="Permanent link">&para;</a></h2>
 <p>Cada transição é bloqueada até que os requisitos da etapa estejam completos (documentos, validações fiscais, autorizações e consistência cadastral).</p>

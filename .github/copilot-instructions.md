@@ -47,3 +47,10 @@ Never write standalone boilerplate HTML. Always extend the appropriate Tier 2 ar
 - **The Turnpike Pattern:** State transitions are guarded by strict validation rules (Turnpikes). A process cannot advance if it lacks mandatory attachments (like a *Nota Fiscal* or *Documento Orçamentário*).
 - **Immutability & Audit:** Public money requires strict auditing. Do not delete records. Rely on `django-simple-history` for audit trails and use `Contingência` or `Devolução` models for workflow exceptions.
 - **Security (RBAC):** All views are globally protected. NEVER use `@login_required` or `@group_required`. Use Django's native `@permission_required('app_label.permission_name', raise_exception=True)`. Operational users NEVER use the Django `/admin/` panel.
+
+---
+
+## 6. Documentation Sync Protocol (Required)
+- **Single Source + Static Mirror:** When updating documentation under `docs/`, you MUST also update the corresponding generated/static page under `site/` when that mirror exists.
+- **No Drift Allowed:** Never leave `docs/` and `site/` out of sync for the same page/flow.
+- **PR Readiness Rule:** A documentation task is only complete when both source docs and static mirror are aligned.

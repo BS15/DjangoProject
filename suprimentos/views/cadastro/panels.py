@@ -9,7 +9,7 @@ from suprimentos.forms import SuprimentoForm
 
 
 @require_GET
-@permission_required("suprimentos.acesso_backoffice", raise_exception=True)
+@permission_required("suprimentos.pode_gerenciar_concessao_suprimento", raise_exception=True)
 def add_suprimento_view(request: HttpRequest) -> HttpResponse:
     """Renderiza o formulário de criação de suprimento."""
     return render(request, "suprimentos/add_suprimento.html", {"form": SuprimentoForm()})

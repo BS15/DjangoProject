@@ -25,6 +25,7 @@ from credores.imports import (
 )
 from credores.models import CargosFuncoes, ContasBancarias, Credor
 from fiscal.models import CodigosImposto, DocumentoFiscal, RetencaoImposto, StatusChoicesRetencoes
+from fiscal.models import LiquidacaoDocumentoFiscal
 from pagamentos.domain_models import (
     Boleto_Bancario,
     DocumentoOrcamentario,
@@ -431,7 +432,7 @@ def _create_fake_documentos_fiscais(n, processos):
             serie_nota_fiscal = _fake_generator.bothify("??#").upper()
 
         try:
-            DocumentoFiscal.objects.create(
+            nota = DocumentoFiscal.objects.create(
                 processo=processo,
                 nome_emitente=emitente,
                 cnpj_emitente=(emitente.cpf_cnpj if emitente else _fake_generator.cnpj()),
@@ -441,8 +442,10 @@ def _create_fake_documentos_fiscais(n, processos):
                 valor_bruto=valor_bruto,
                 valor_liquido=valor_liquido,
                 atestada=True,
-                fiscal_contrato=fiscal,
             )
+            liquidacao, _ = LiquidacaoDocumentoFiscal.objects.get_or_create(documento_fiscal=nota)
+            liquidacao.fiscal_contrato = fiscal
+            liquidacao.save(update_fields=["fiscal_contrato", "updated_at"])
             _create_fake_pdf_documento_fiscal(processo, numero_nota_fiscal, serie_nota_fiscal)
             created += 1
         except (DjangoValidationError, IntegrityError):
@@ -961,7 +964,8 @@ def gerar_pdf_fake_view(request, doc_type):
         obj.valor_bruto = obj.valor
         obj.processo.id = _fake_generator.random_int(min=1000, max=9999)
         obj.processo.credor = mock_credor()
-        obj.fiscal_contrato = mock_user()
+        obj.liquidacao_atual = MagicMock()
+        obj.liquidacao_atual.fiscal_contrato = mock_user()
     elif doc_type.startswith("recibo_"):
         obj = MagicMock()
         if doc_type == "recibo_reembolso":

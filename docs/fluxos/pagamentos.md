@@ -1,53 +1,124 @@
 # Fluxo: Pagamentos
 
-Este documento descreve a esteira completa de um processo de pagamento no PaGé — da criação até o arquivamento — incluindo as filas operacionais, transitions de status e pontos de controle (turnpikes).
+Este documento descreve a esteira completa de um processo de pagamento no PaGé — da criação até o arquivamento — incluindo as filas operacionais, transições de status e pontos de controle (turnpikes).
 
 ---
 
-## 1. Máquina de estados canônica
+## 1. Fluxo feliz (Happy Flow)
 
-Os status são constantes definidas em `ProcessoStatus` (`pagamentos/domain_models/processos.py`).
+Caminho principal sem interrupções, do nascimento ao arquivamento. Os status são constantes definidas em `ProcessoStatus` (`pagamentos/domain_models/processos.py`).
 
 ```mermaid
 stateDiagram-v2
-    [*] --> A_EMPENHAR : Processo criado (com trigger)
-    [*] --> A_PAGAR_PENDENTE_AUTORIZACAO : Processo criado (sem trigger)
+    direction TB
+    [*] --> A_EMPENHAR : Criado com trigger
+    [*] --> A_PAGAR_PENDENTE_AUTORIZACAO : Criado sem trigger
 
-    A_EMPENHAR --> AGUARDANDO_LIQUIDACAO : Registro do empenho SISCAC
-    AGUARDANDO_LIQUIDACAO --> A_PAGAR_PENDENTE_AUTORIZACAO : Todas NFs atestadas
+    A_EMPENHAR --> AGUARDANDO_LIQUIDACAO : Empenho SISCAC registrado
+    AGUARDANDO_LIQUIDACAO --> A_PAGAR_PENDENTE_AUTORIZACAO : Todas as NFs atestadas
     A_PAGAR_PENDENTE_AUTORIZACAO --> A_PAGAR_ENVIADO_PARA_AUTORIZACAO : Envio para autorização
     A_PAGAR_ENVIADO_PARA_AUTORIZACAO --> A_PAGAR_AUTORIZADO : Aprovação do ordenador
     A_PAGAR_AUTORIZADO --> LANCADO_AGUARDANDO_COMPROVANTE : Marcação como lançado
     LANCADO_AGUARDANDO_COMPROVANTE --> PAGO_EM_CONFERENCIA : Upload do comprovante bancário
-    PAGO_EM_CONFERENCIA --> PAGO_A_CONTABILIZAR : Revisão pelo operador
-    PAGO_A_CONTABILIZAR --> CONTABILIZADO_PARA_CONSELHO_FISCAL : Aprovação pela Contabilidade
-    CONTABILIZADO_PARA_CONSELHO_FISCAL --> APROVADO_PENDENTE_ARQUIVAMENTO : Aprovação em reunião do Conselho
+    PAGO_EM_CONFERENCIA --> PAGO_A_CONTABILIZAR : Revisão aprovada pelo operador
+    PAGO_A_CONTABILIZAR --> CONTABILIZADO_CONSELHO : Aprovação pela Contabilidade
+    CONTABILIZADO_CONSELHO --> APROVADO_PENDENTE_ARQUIVAMENTO : Aprovação em reunião do Conselho
     APROVADO_PENDENTE_ARQUIVAMENTO --> ARQUIVADO : Arquivamento definitivo
     ARQUIVADO --> [*]
-
-    A_PAGAR_ENVIADO_PARA_AUTORIZACAO --> A_PAGAR_PENDENTE_AUTORIZACAO : Autorização recusada
-    PAGO_A_CONTABILIZAR --> PAGO_EM_CONFERENCIA : Contabilização recusada
-    CONTABILIZADO_PARA_CONSELHO_FISCAL --> PAGO_A_CONTABILIZAR : Conselho recusado
-    LANCADO_AGUARDANDO_COMPROVANTE --> A_PAGAR_AUTORIZADO : Desfazer lançamento
-
-    A_EMPENHAR --> CANCELADO_ANULADO : cancelar_processo_action
-    AGUARDANDO_LIQUIDACAO --> CANCELADO_ANULADO : cancelar_processo_action
-    A_PAGAR_PENDENTE_AUTORIZACAO --> CANCELADO_ANULADO : cancelar_processo_action
-    PAGO_EM_CONFERENCIA --> CANCELADO_ANULADO : cancelar_processo_action (+ devolução)
-    PAGO_A_CONTABILIZAR --> CANCELADO_ANULADO : cancelar_processo_action (+ devolução)
 ```
 
-### Caminhos de exceção (desvios)
+---
 
-| Etapa de recusa | Status de devolução |
-|-----------------|---------------------|
+## 2. Exceções e devoluções de etapa
+
+Desvios do fluxo principal causados por recusa de aprovadores. O processo retorna a um status anterior sem cancelamento.
+
+```mermaid
+stateDiagram-v2
+    direction TB
+    A_PAGAR_ENVIADO_PARA_AUTORIZACAO --> A_PAGAR_PENDENTE_AUTORIZACAO : Autorização recusada (pendência registrada)
+    LANCADO_AGUARDANDO_COMPROVANTE --> A_PAGAR_AUTORIZADO : Desfazer lançamento
+    PAGO_A_CONTABILIZAR --> PAGO_EM_CONFERENCIA : Contabilização recusada
+    CONTABILIZADO_CONSELHO --> PAGO_A_CONTABILIZAR : Conselho recusou
+```
+
+| Etapa de recusa | Status de retorno |
+|-----------------|-------------------|
 | Autorização recusada | `A PAGAR - PENDENTE AUTORIZAÇÃO` |
+| Lançamento desfeito | `A PAGAR - AUTORIZADO` |
 | Contabilização recusada | `PAGO - EM CONFERÊNCIA` |
 | Conselho recusado | `PAGO - A CONTABILIZAR` |
 
 ---
 
-## 2. Criação do processo
+## 3. Cancelamento
+
+Acionado pelo operador via `cancelar_processo_action`. Disponível enquanto o processo não estiver arquivado. Consulte o [Fluxo de Cancelamento](cancelamento.md) para a especificação completa.
+
+```mermaid
+stateDiagram-v2
+    direction TB
+    A_EMPENHAR --> CANCELADO_ANULADO : Cancelar processo
+    AGUARDANDO_LIQUIDACAO --> CANCELADO_ANULADO : Cancelar processo
+    A_PAGAR_PENDENTE_AUTORIZACAO --> CANCELADO_ANULADO : Cancelar processo
+    PAGO_EM_CONFERENCIA --> CANCELADO_ANULADO : Cancelar processo\n(+ exige devolução)
+    PAGO_A_CONTABILIZAR --> CANCELADO_ANULADO : Cancelar processo\n(+ exige devolução)
+```
+
+---
+
+## 4. Devolução processual
+
+Quando o processo já foi pago e o cancelamento é necessário, o operador deve informar os dados da devolução junto com o cancelamento. A `DevolucaoProcessual` é criada atomicamente na mesma transação.
+
+```mermaid
+stateDiagram-v2
+    direction TB
+    PAGO_EM_CONFERENCIA --> CANCELADO_ANULADO : cancelar_processo_action\n+ DevolucaoProcessual criada
+    PAGO_A_CONTABILIZAR --> CANCELADO_ANULADO : cancelar_processo_action\n+ DevolucaoProcessual criada
+```
+
+Campos obrigatórios na devolução: **valor devolvido**, **data da devolução** e **comprovante de devolução**.
+
+---
+
+## 5. Contingência
+
+Fluxo de aprovação multi-etapa para retificações formais em dados do processo. O processo permanece no seu status atual enquanto a contingência tramita. Após aprovação final, os `dados_propostos` são aplicados atomicamente.
+
+```mermaid
+stateDiagram-v2
+    direction TB
+    [*] --> PENDENTE_SUPERVISOR : Solicitação criada pelo operador
+
+    PENDENTE_SUPERVISOR --> PENDENTE_ORDENADOR : Supervisor aprova\n(se exige_aprovacao_ordenador)
+    PENDENTE_SUPERVISOR --> PENDENTE_CONTADOR : Supervisor aprova\n(sem ordenador nem conselho)
+    PENDENTE_SUPERVISOR --> REJEITADA : Supervisor recusa
+
+    PENDENTE_ORDENADOR --> PENDENTE_CONSELHO : Ordenador aprova\n(se exige_aprovacao_conselho)
+    PENDENTE_ORDENADOR --> PENDENTE_CONTADOR : Ordenador aprova\n(sem conselho)
+    PENDENTE_ORDENADOR --> REJEITADA : Ordenador recusa
+
+    PENDENTE_CONSELHO --> PENDENTE_CONTADOR : Conselho aprova
+    PENDENTE_CONSELHO --> REJEITADA : Conselho recusa
+
+    PENDENTE_CONTADOR --> APROVADA : Contadora aprova\n(dados_propostos aplicados ao Processo)
+    PENDENTE_CONTADOR --> REJEITADA : Contadora recusa
+
+    APROVADA --> [*]
+    REJEITADA --> [*]
+```
+
+| Etapa | Permissão necessária |
+|-------|----------------------|
+| Supervisão | `pode_aprovar_contingencia_supervisor` |
+| Ordenador | `pode_aprovar_contingencia_ordenador` |
+| Conselho Fiscal | `pode_aprovar_contingencia_conselho` |
+| Revisão Contadora | `pode_revisar_contingencia_contadora` |
+
+---
+
+## 6. Criação do processo
 
 **View:** `add_process_view` / **Action:** `add_process_action`  
 **Permissão:** `pagamentos.operador_contas_a_pagar`
@@ -60,7 +131,7 @@ stateDiagram-v2
 
 ---
 
-## 3. Hub de edição modular
+## 7. Hub de edição modular
 
 **View:** `editar_processo` (GET)  
 **Template:** `pagamentos/editar_processo_hub.html`
@@ -79,7 +150,7 @@ Exibe peek tables paginadas de documentos recentes, liquidações e pendências.
 
 ---
 
-## 4. Etapa de empenho
+## 8. Etapa de empenho
 
 **View:** `a_empenhar_view`  
 **Permissão:** `pagamentos.pode_operar_contas_pagar`
@@ -91,7 +162,7 @@ Exibe peek tables paginadas de documentos recentes, liquidações e pendências.
 
 ---
 
-## 5. Liquidação e ateste
+## 9. Liquidação e ateste
 
 **View:** `painel_liquidacoes_view`  
 **Permissão:** `pagamentos.operador_contas_a_pagar`
@@ -104,7 +175,7 @@ Exibe peek tables paginadas de documentos recentes, liquidações e pendências.
 
 ---
 
-## 6. Contas a pagar e envio para autorização
+## 10. Contas a pagar e envio para autorização
 
 **View:** `contas_a_pagar`  
 **Permissão:** `pagamentos.pode_operar_contas_pagar`
@@ -115,7 +186,7 @@ Exibe peek tables paginadas de documentos recentes, liquidações e pendências.
 
 ---
 
-## 7. Autorização
+## 11. Autorização
 
 **View:** `painel_autorizacao_view`  
 **Permissão:** `pagamentos.pode_autorizar_pagamento`
@@ -127,7 +198,7 @@ Duas filas simultâneas: pendentes de autorização e já autorizados.
 
 ---
 
-## 8. Lançamento bancário
+## 12. Lançamento bancário
 
 **Views:** `lancamento_bancario` / `marcar_como_lancado_action`  
 **Permissão:** `pagamentos.pode_operar_contas_pagar`
@@ -140,7 +211,7 @@ Duas filas simultâneas: pendentes de autorização e já autorizados.
 
 ---
 
-## 9. Upload de comprovantes
+## 13. Upload de comprovantes
 
 **View:** `painel_comprovantes_view` / **Action:** `vincular_comprovantes_action` (JSON API)  
 **Permissão:** `pagamentos.pode_operar_contas_pagar`
@@ -155,7 +226,7 @@ Duas filas simultâneas: pendentes de autorização e já autorizados.
 
 ---
 
-## 10. Conferência
+## 14. Conferência
 
 **Views:** `painel_conferencia_view` / `conferencia_processo_view`  
 **Permissão:** `pagamentos.pode_operar_contas_pagar`
@@ -167,7 +238,7 @@ Duas filas simultâneas: pendentes de autorização e já autorizados.
 
 ---
 
-## 11. Contabilização
+## 15. Contabilização
 
 **Views:** `painel_contabilizacao_view` / `contabilizacao_processo_view`  
 **Permissão:** `pagamentos.pode_contabilizar`
@@ -178,7 +249,7 @@ Duas filas simultâneas: pendentes de autorização e já autorizados.
 
 ---
 
-## 12. Conselho fiscal
+## 16. Conselho fiscal
 
 **Views:** `painel_conselho_view` / `analise_reuniao_view` / `conselho_processo_view`  
 **Permissão:** `pagamentos.pode_auditar_conselho`
@@ -192,7 +263,7 @@ Duas filas simultâneas: pendentes de autorização e já autorizados.
 
 ---
 
-## 13. Arquivamento
+## 17. Arquivamento
 
 **Views:** `painel_arquivamento_view` / `arquivar_processo_action`  
 **Permissão:** `pagamentos.pode_arquivar`
@@ -203,7 +274,7 @@ Duas filas simultâneas: pendentes de autorização e já autorizados.
 
 ---
 
-## 9. Cancelamento
+## 18. Cancelamento e devolução
 
 **View (spoke):** `cancelar_processo_spoke_view`  
 **Action:** `cancelar_processo_action`  
@@ -216,6 +287,19 @@ Duas filas simultâneas: pendentes de autorização e já autorizados.
 - Status final: `CANCELADO / ANULADO`. O `CancelamentoProcessual` é gravado como trilha formal.
 
 Consulte o [Fluxo de Cancelamento](cancelamento.md) para a especificação completa.
+
+---
+
+## 19. Contingência
+
+**Serviço:** `pagamentos/services/contingencias.py`  
+**Permissões:** `pode_aprovar_contingencia_supervisor`, `_ordenador`, `_conselho`, `pode_revisar_contingencia_contadora`
+
+- Solicitação formal de retificação de dados do processo após sua criação.
+- A aprovação é multi-etapa e configurável: supervisor → (ordenador opcional) → (conselho opcional) → contadora.
+- O processo permanece no seu status atual enquanto a contingência tramita.
+- Após aprovação final pela contadora, os `dados_propostos` são aplicados atomicamente ao `Processo`.
+- Em caso de rejeição em qualquer etapa, a contingência é encerrada sem alterar o processo.
 
 ---
 

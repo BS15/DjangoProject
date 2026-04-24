@@ -4,13 +4,13 @@ import logging
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import DatabaseError, transaction
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
-from fiscal.models import DocumentoFiscal
+from fiscal.models import DocumentoFiscal, LiquidacaoDocumentoFiscal
 from pagamentos.domain_models import Processo, ProcessoStatus
 
 
@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 
 @require_POST
-@permission_required("pagamentos.pode_atestar_liquidacao", raise_exception=True)
 def alternar_ateste_nota_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Permite definir explicitamente o estado de ateste de uma nota pelo painel."""
     estado_bruto = (request.POST.get("estado_alvo") or "").strip().lower()
@@ -30,6 +29,10 @@ def alternar_ateste_nota_action(request: HttpRequest, pk: int) -> HttpResponse:
 
     with transaction.atomic():
         nota = get_object_or_404(DocumentoFiscal.objects.select_for_update(), id=pk)
+        liquidacao, _ = LiquidacaoDocumentoFiscal.objects.select_for_update().get_or_create(documento_fiscal=nota)
+
+        if liquidacao.fiscal_contrato_id != request.user.pk and not request.user.has_perm("pagamentos.operador_contas_a_pagar"):
+            raise PermissionDenied
         if nota.atestada != estado_alvo:
             nota.atestada = estado_alvo
             nota.save(update_fields=["atestada"])

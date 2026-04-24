@@ -26,8 +26,8 @@ A etapa fiscal atua como gate para progressão segura até pagamento e contabili
 ## Controles e validações
 
 - Obrigatório informar retenções selecionadas.
-- Obrigatório anexar simultaneamente guia e comprovante.
-- Obrigatório informar competência válida (`mes_referencia`, `ano_referencia`).
+- Obrigatório anexar simultaneamente relatório de retenções, guia de recolhimento e comprovante de pagamento.
+- Obrigatório informar competência válida no campo `competencia` (normalizado internamente para `YYYY-MM-01`).
 - Apenas retenções já agrupadas em processo de pagamento são elegíveis para anexação.
 
 !!! note

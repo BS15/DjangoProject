@@ -76,6 +76,9 @@ mkdocs serve
 
 Acesse em `http://127.0.0.1:8000` para navegar pela wiki completa (arquitetura, fluxos, RBAC, referência de API, operações).
 
+A versão HTML estática publicada via GitHub Pages está disponível em https://BS15.github.io/DjangoProject/.
+Ao atualizar arquivos em `docs/`, mantenha também o espelho correspondente em `site/` sincronizado.
+
 ---
 
 ## Links
@@ -83,6 +86,7 @@ Acesse em `http://127.0.0.1:8000` para navegar pela wiki completa (arquitetura, 
 - [Guia de Contribuição](CONTRIBUTING.md)
 - [Política de Segurança](SECURITY.md)
 - [Changelog](CHANGELOG.md)
+- [Documentação Estática (GitHub Pages)](https://BS15.github.io/DjangoProject/)
 - [Wiki — Setup do Ambiente](docs/desenvolvedor/setup_ambiente.md)
 - [Wiki — Padrões de Código](docs/desenvolvedor/padroes_codigo.md)
 - [Wiki — Matriz de Permissões](docs/governanca/matriz_permissoes.md)

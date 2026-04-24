@@ -282,7 +282,7 @@
                             <select class="form-select form-select-sm nf-field" data-field="fiscal_contrato">
                                 <option value="">---------</option>
                                 {% for fc in fiscais_contrato %}
-                                <option value="{{ fc.id }}" {% if nota.fiscal_contrato_id == fc.id %}selected{% endif %}>{{ fc.get_full_name|default:fc.username }}</option>
+                                <option value="{{ fc.id }}" {% if nota.liquidacao_atual.fiscal_contrato_id == fc.id %}selected{% endif %}>{{ fc.get_full_name|default:fc.username }}</option>
                                 {% endfor %}
                             </select>
                         </div>

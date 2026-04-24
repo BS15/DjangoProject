@@ -115,7 +115,6 @@ def solicitar_autorizacao_diaria_action(request, pk):
 
 
 @require_POST
-@permission_required('pagamentos.pode_autorizar_diarias', raise_exception=True)
 def autorizar_diaria_action(request, pk):
     diaria = get_object_or_404(Diaria, id=pk)
     if diaria.proponente_id != request.user.id:

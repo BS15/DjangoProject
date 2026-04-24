@@ -38,41 +38,38 @@ GRUPOS_PERMISSOES = {
     "FUNCIONARIO(A) CONTAS A PAGAR": [
         "pagamentos.pode_visualizar_processos_pagamento",
         "pagamentos.pode_operar_contas_pagar",
-        "pagamentos.pode_aprovar_contingencia_supervisor",
         "pagamentos.pode_arquivar",
-        "suprimentos.acesso_backoffice",
+        "suprimentos.pode_gerenciar_concessao_suprimento",
         "suprimentos.pode_gerir_prestacao_contas_suprimento",
         "verbas_indenizatorias.analisar_prestacao_contas",
         "verbas_indenizatorias.pode_visualizar_verbas",
         "verbas_indenizatorias.visualizar_prestacao_contas",
     ],
-    "FISCAL DE CONTRATO": [
+    "SUPERVISOR(A) CONTAS A PAGAR": [
         "pagamentos.pode_visualizar_processos_pagamento",
-        "pagamentos.pode_atestar_liquidacao",
+        "pagamentos.pode_operar_contas_pagar",
+        "pagamentos.pode_aprovar_contingencia_supervisor",
+        "pagamentos.pode_arquivar",
+        "suprimentos.pode_gerenciar_concessao_suprimento",
+        "suprimentos.pode_gerir_prestacao_contas_suprimento",
+        "verbas_indenizatorias.analisar_prestacao_contas",
+        "verbas_indenizatorias.pode_visualizar_verbas",
+        "verbas_indenizatorias.visualizar_prestacao_contas",
     ],
     "ORDENADOR(A) DE DESPESA": [
         "pagamentos.pode_visualizar_processos_pagamento",
         "pagamentos.pode_autorizar_pagamento",
+        "pagamentos.pode_aprovar_contingencia_ordenador",
     ],
     "CONTADOR(A)": [
         "pagamentos.pode_visualizar_processos_pagamento",
         "pagamentos.pode_contabilizar",
+        "pagamentos.pode_revisar_contingencia_contadora",
     ],
     "CONSELHEIRO(A) FISCAL": [
         "pagamentos.pode_visualizar_processos_pagamento",
         "pagamentos.pode_auditar_conselho",
-    ],
-    "AUTORIZADOR(A) DE DIARIAS - PROPONENTE": [
-        "verbas_indenizatorias.pode_autorizar_diarias",
-    ],
-    "OPERADOR(A) DE SUPRIMENTOS - DESPESAS": [
-        "suprimentos.pode_adicionar_despesas_suprimento",
-    ],
-    "OPERADOR(A) DE SUPRIMENTOS - ENCERRAMENTO": [
-        "suprimentos.pode_encerrar_suprimento",
-    ],
-    "GESTOR(A) DE PRESTACAO DE CONTAS DE SUPRIMENTO": [
-        "suprimentos.pode_gerir_prestacao_contas_suprimento",
+        "pagamentos.pode_aprovar_contingencia_conselho",
     ],
 }
 

@@ -4,7 +4,6 @@ Este módulo define formulários para cadastro, edição e validação de notas 
 """
 
 from django import forms
-from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 from fiscal.models import DocumentoFiscal, RetencaoImposto
 from pagamentos.domain_models import Processo
@@ -21,12 +20,10 @@ class DocumentoFiscalForm(forms.ModelForm):
         self.fields['data_emissao'].required = True
         self.fields['valor_bruto'].required = True
         self.fields['valor_liquido'].required = True
-        if 'fiscal_contrato' in self.fields:
-            self.fields['fiscal_contrato'].queryset = User.objects.filter(groups__name='FISCAL DE CONTRATO')
 
     class Meta:
         model = DocumentoFiscal
-        fields = ['nome_emitente', 'cnpj_emitente', 'serie_nota_fiscal', 'numero_nota_fiscal', 'data_emissao', 'valor_bruto', 'valor_liquido', 'fiscal_contrato', 'atestada', 'codigo_servico_inss']
+        fields = ['nome_emitente', 'cnpj_emitente', 'serie_nota_fiscal', 'numero_nota_fiscal', 'data_emissao', 'valor_bruto', 'valor_liquido', 'atestada', 'codigo_servico_inss']
         widgets = {
             'nome_emitente': forms.Select(attrs={'class': 'form-select form-select-sm'}),
             'cnpj_emitente': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
@@ -35,7 +32,6 @@ class DocumentoFiscalForm(forms.ModelForm):
             'data_emissao': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date', 'class': 'form-control form-control-sm'}),
             'valor_bruto': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'step': '0.01'}),
             'valor_liquido': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'step': '0.01'}),
-            'fiscal_contrato': forms.Select(attrs={'class': 'form-select form-select-sm'}),
             'atestada': forms.CheckboxInput(attrs={'class': 'form-check-input fs-5'}),
             'codigo_servico_inss': forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Somente quando há retenção INSS'}),
         }

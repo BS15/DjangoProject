@@ -29,6 +29,20 @@ def _is_processo_selado(processo):
     return status_atual in STATUS_PROCESSO_PAGOS_E_POSTERIORES
 
 
+def _validar_vinculo_inicial_em_processo_selado(processo, entidade_label):
+    """Bloqueia criação de verba já vinculada a processo pós-pagamento."""
+    if _is_processo_selado(processo):
+        raise DjangoValidationError(
+            {
+                "processo": (
+                    f"Cadastro bloqueado: não é permitido vincular {entidade_label} "
+                    "a processo em estágio pós-pagamento. "
+                    "Use fluxo de contingência aprovado para ajustes."
+                )
+            }
+        )
+
+
 class SealedMutationQuerySet(models.QuerySet):
     """Bloqueia mutações em massa que contornam save/clean do domínio."""
 
@@ -188,6 +202,15 @@ class Diaria(models.Model):
         """Valida que data_retorno é posterior ou igual a data_saida."""
         errors = {}
 
+        if not self.pk:
+            try:
+                _validar_vinculo_inicial_em_processo_selado(self.processo, "diária")
+            except DjangoValidationError as exc:
+                if hasattr(exc, "message_dict"):
+                    errors.update(exc.message_dict)
+                else:
+                    errors["processo"] = exc.messages[0]
+
         if self.data_retorno and self.data_saida:
             if self.data_retorno < self.data_saida:
                 errors['data_retorno'] = 'Data de retorno não pode ser anterior à data de saída.'
@@ -297,10 +320,16 @@ class Diaria(models.Model):
         if getattr(self, '_bypass_domain_seal', False):
             return
 
-        if not self.pk or not _is_processo_selado(self.processo):
+        if not self.pk:
+            _validar_vinculo_inicial_em_processo_selado(self.processo, "diária")
             return
 
         original = type(self).objects.get(pk=self.pk)
+        processo_original = original.processo
+        processo_atual = self.processo
+        if not (_is_processo_selado(processo_atual) or _is_processo_selado(processo_original)):
+            return
+
         campos_sensiveis = self._CAMPOS_SENSIVEIS_POS_PAGAMENTO
         campos_avaliados = set(update_fields) & campos_sensiveis if update_fields is not None else campos_sensiveis
         alterados = [campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)]
@@ -324,6 +353,15 @@ class Diaria(models.Model):
             )
 
     def delete(self, *args, **kwargs):
+        if _is_processo_selado(self.processo):
+            raise DjangoValidationError(
+                {
+                    "status": (
+                        "Exclusão bloqueada: diária vinculada a processo em estágio pós-pagamento. "
+                        "Use fluxo de contingência aprovado para ajustes."
+                    )
+                }
+            )
         self._enforce_domain_seal()
         return super().delete(*args, **kwargs)
 
@@ -520,20 +558,32 @@ class ReembolsoCombustivel(models.Model):
 
     def clean(self):
         errors = {}
+        processo_referencia = self._processo_referencia()
+        if not self.pk:
+            try:
+                _validar_vinculo_inicial_em_processo_selado(processo_referencia, "reembolso")
+            except DjangoValidationError as exc:
+                if hasattr(exc, "message_dict"):
+                    errors.update(exc.message_dict)
+                else:
+                    errors["processo"] = exc.messages[0]
+
         if self.data_saida and self.data_retorno and self.data_retorno < self.data_saida:
             errors["data_retorno"] = "Data de retorno não pode ser anterior à data de saída."
         if errors:
             raise DjangoValidationError(errors)
 
     def _enforce_domain_seal(self, update_fields=None):
+        processo_atual = self._processo_referencia()
         if not self.pk:
-            return
-
-        processo = self._processo_referencia()
-        if not _is_processo_selado(processo):
+            _validar_vinculo_inicial_em_processo_selado(processo_atual, "reembolso")
             return
 
         original = type(self).objects.get(pk=self.pk)
+        processo_original = original._processo_referencia()
+        if not (_is_processo_selado(processo_atual) or _is_processo_selado(processo_original)):
+            return
+
         campos_sensiveis = self._CAMPOS_SENSIVEIS_POS_PAGAMENTO
         campos_avaliados = set(update_fields) & campos_sensiveis if update_fields is not None else campos_sensiveis
         alterados = [campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)]
@@ -554,6 +604,15 @@ class ReembolsoCombustivel(models.Model):
         return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
+        if _is_processo_selado(self._processo_referencia()):
+            raise DjangoValidationError(
+                {
+                    "status": (
+                        "Exclusão bloqueada: reembolso vinculado a processo em estágio pós-pagamento. "
+                        "Use fluxo de contingência aprovado para ajustes."
+                    )
+                }
+            )
         self._enforce_domain_seal()
         return super().delete(*args, **kwargs)
 
@@ -606,11 +665,21 @@ class Jeton(models.Model):
     }
     objects = SealedMutationQuerySet.as_manager()
 
+    def clean(self):
+        if not self.pk:
+            _validar_vinculo_inicial_em_processo_selado(self.processo, "jeton")
+
     def _enforce_domain_seal(self, update_fields=None):
-        if not self.pk or not _is_processo_selado(self.processo):
+        if not self.pk:
+            _validar_vinculo_inicial_em_processo_selado(self.processo, "jeton")
             return
 
         original = type(self).objects.get(pk=self.pk)
+        processo_original = original.processo
+        processo_atual = self.processo
+        if not (_is_processo_selado(processo_atual) or _is_processo_selado(processo_original)):
+            return
+
         campos_sensiveis = self._CAMPOS_SENSIVEIS_POS_PAGAMENTO
         campos_avaliados = set(update_fields) & campos_sensiveis if update_fields is not None else campos_sensiveis
         alterados = [campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)]
@@ -631,6 +700,15 @@ class Jeton(models.Model):
         return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
+        if _is_processo_selado(self.processo):
+            raise DjangoValidationError(
+                {
+                    "status": (
+                        "Exclusão bloqueada: jeton vinculado a processo em estágio pós-pagamento. "
+                        "Use fluxo de contingência aprovado para ajustes."
+                    )
+                }
+            )
         self._enforce_domain_seal()
         return super().delete(*args, **kwargs)
 
@@ -681,11 +759,21 @@ class AuxilioRepresentacao(models.Model):
     }
     objects = SealedMutationQuerySet.as_manager()
 
+    def clean(self):
+        if not self.pk:
+            _validar_vinculo_inicial_em_processo_selado(self.processo, "auxílio")
+
     def _enforce_domain_seal(self, update_fields=None):
-        if not self.pk or not _is_processo_selado(self.processo):
+        if not self.pk:
+            _validar_vinculo_inicial_em_processo_selado(self.processo, "auxílio")
             return
 
         original = type(self).objects.get(pk=self.pk)
+        processo_original = original.processo
+        processo_atual = self.processo
+        if not (_is_processo_selado(processo_atual) or _is_processo_selado(processo_original)):
+            return
+
         campos_sensiveis = self._CAMPOS_SENSIVEIS_POS_PAGAMENTO
         campos_avaliados = set(update_fields) & campos_sensiveis if update_fields is not None else campos_sensiveis
         alterados = [campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)]
@@ -706,6 +794,15 @@ class AuxilioRepresentacao(models.Model):
         return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
+        if _is_processo_selado(self.processo):
+            raise DjangoValidationError(
+                {
+                    "status": (
+                        "Exclusão bloqueada: auxílio vinculado a processo em estágio pós-pagamento. "
+                        "Use fluxo de contingência aprovado para ajustes."
+                    )
+                }
+            )
         self._enforce_domain_seal()
         return super().delete(*args, **kwargs)
 

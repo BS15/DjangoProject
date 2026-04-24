@@ -1,25 +1,18 @@
 """Painel GET de liquidações (ateste de notas fiscais)."""
 
-from django.contrib.auth.decorators import permission_required
-
 from fiscal.filters import DocumentoFiscalFilter
 from fiscal.models import DocumentoFiscal
 from pagamentos.views.shared import render_filtered_list
 
 
-@permission_required("pagamentos.pode_atestar_liquidacao", raise_exception=True)
 def painel_liquidacoes_view(request):
     queryset_base = DocumentoFiscal.objects.select_related(
-        "processo", "nome_emitente", "fiscal_contrato"
+        "processo", "nome_emitente", "liquidacao__fiscal_contrato"
     ).all().order_by("-id")
 
-    is_manager = request.user.groups.filter(name__in=["Ordenadores de Despesa", "Gestores"]).exists()
-    if not is_manager:
-        is_fiscal = request.user.groups.filter(name="FISCAL DE CONTRATO").exists()
-        if is_fiscal:
-            queryset_base = queryset_base.filter(fiscal_contrato=request.user)
-        else:
-            queryset_base = queryset_base.none()
+    is_backoffice = request.user.has_perm("pagamentos.operador_contas_a_pagar")
+    if not is_backoffice:
+        queryset_base = queryset_base.filter(liquidacao__fiscal_contrato=request.user)
 
     return render_filtered_list(
         request,
@@ -28,7 +21,7 @@ def painel_liquidacoes_view(request):
         template_name="pagamentos/painel_liquidacoes.html",
         items_key="notas",
         extra_context={
-            "pode_interagir": request.user.has_perm("pagamentos.pode_atestar_liquidacao"),
+            "pode_interagir": True,
         },
     )
 

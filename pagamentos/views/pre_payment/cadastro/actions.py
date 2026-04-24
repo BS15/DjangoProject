@@ -2,7 +2,7 @@
 
 import logging
 from typing import Optional
-from datetime import date
+from datetime import date, datetime
 import PyPDF2
 
 from django.contrib import messages
@@ -16,7 +16,7 @@ from decimal import Decimal, InvalidOperation
 import json
 from django.db.models import Sum
 from django.contrib.contenttypes.models import ContentType
-from fiscal.models import DocumentoFiscal, RetencaoImposto, StatusChoicesRetencoes
+from fiscal.models import DocumentoFiscal, LiquidacaoDocumentoFiscal, RetencaoImposto, StatusChoicesRetencoes
 from commons.shared.text_tools import normalize_text
 from pagamentos.domain_models import (
     Boleto_Bancario,
@@ -118,6 +118,57 @@ def _atualizar_status_pendencia(pendencia: Pendencia, status_destino: str) -> No
     )
     pendencia.status = status_obj
     pendencia.save(update_fields=["status"])
+
+
+def _parse_bool(value, default=False):
+    """Converte entradas comuns de frontend em booleano."""
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return default
+    return str(value).strip().lower() in {"1", "true", "on", "yes"}
+
+
+def _atualizar_campos_nota(nota, body):
+    """Atualiza campos básicos da nota e o fiscal de contrato da liquidação."""
+    numero_nota = (body.get("numero_nota_fiscal") or "").strip()
+    data_emissao = (body.get("data_emissao") or "").strip()
+    valor_bruto_raw = body.get("valor_bruto")
+
+    if not numero_nota:
+        return JsonResponse({"status": "error", "error": "Número da nota fiscal é obrigatório."}, status=400)
+    if not data_emissao:
+        return JsonResponse({"status": "error", "error": "Data de emissão é obrigatória."}, status=400)
+
+    try:
+        nota.data_emissao = datetime.strptime(data_emissao, "%Y-%m-%d").date()
+    except ValueError:
+        return JsonResponse({"status": "error", "error": "Data de emissão inválida."}, status=400)
+
+    try:
+        valor_bruto = Decimal(str(valor_bruto_raw).replace(",", "."))
+    except (TypeError, InvalidOperation):
+        return JsonResponse({"status": "error", "error": "Valor bruto inválido."}, status=400)
+
+    if valor_bruto <= 0:
+        return JsonResponse({"status": "error", "error": "Valor bruto deve ser maior que zero."}, status=400)
+
+    nota.nome_emitente_id = body.get("nome_emitente") or None
+    nota.serie_nota_fiscal = (body.get("serie_nota_fiscal") or "").strip() or None
+    nota.numero_nota_fiscal = numero_nota
+    nota.valor_bruto = valor_bruto
+    nota.atestada = _parse_bool(body.get("atestada"), default=nota.atestada)
+    nota.codigo_servico_inss = (body.get("codigo_servico_inss") or "").strip() or None
+
+    liquidacao, _ = LiquidacaoDocumentoFiscal.objects.get_or_create(documento_fiscal=nota)
+    fiscal_contrato_id = body.get("fiscal_contrato")
+    try:
+        liquidacao.fiscal_contrato_id = int(fiscal_contrato_id) if str(fiscal_contrato_id or "").strip() else None
+    except (TypeError, ValueError):
+        return JsonResponse({"status": "error", "error": "Fiscal do contrato inválido."}, status=400)
+    liquidacao.save(update_fields=["fiscal_contrato", "updated_at"])
+
+    return None
 
 
 @require_POST

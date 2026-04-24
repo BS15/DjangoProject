@@ -10,6 +10,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
+from django.core.exceptions import PermissionDenied
 from suprimentos.forms import DespesaSuprimentoForm, EnviarPrestacaoSuprimentoForm
 from suprimentos.models import PrestacaoContasSuprimento, SuprimentoDeFundos
 from pagamentos.services.cancelamentos import cancelar_suprimento, extrair_dados_devolucao_do_post
@@ -18,18 +19,18 @@ from suprimentos.services.prestacao import (
     enviar_prestacao_suprimento,
     obter_ou_criar_prestacao_suprimento,
 )
-from ..helpers import _atualizar_status_apos_fechamento, _suprimento_encerrado
+from ..helpers import _atualizar_status_apos_fechamento, _pode_acessar_suprimento, _suprimento_encerrado
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 @require_POST
-@permission_required("suprimentos.pode_adicionar_despesas_suprimento", raise_exception=True)
 def adicionar_despesa_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Registra manualmente uma despesa de suprimento a partir de dados do POST."""
-    suprimento: Any = get_object_or_404(SuprimentoDeFundos, id=pk)
-
+    suprimento: Any = get_object_or_404(SuprimentoDeFundos.objects.select_related("suprido"), id=pk)
+    if not _pode_acessar_suprimento(request.user, suprimento):
+        raise PermissionDenied
     if _suprimento_encerrado(suprimento):
         messages.error(request, "Este suprimento já foi encerrado e não pode receber novas despesas.")
         return redirect("gerenciar_suprimento_view", pk=suprimento.id)
@@ -53,10 +54,11 @@ def adicionar_despesa_action(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @require_POST
-@permission_required("suprimentos.pode_encerrar_suprimento", raise_exception=True)
 def fechar_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Encerra a prestacao de contas e avanca o processo vinculado para conferencia."""
-    suprimento: Any = get_object_or_404(SuprimentoDeFundos, id=pk)
+    suprimento: Any = get_object_or_404(SuprimentoDeFundos.objects.select_related("suprido"), id=pk)
+    if not _pode_acessar_suprimento(request.user, suprimento):
+        raise PermissionDenied
 
     if _suprimento_encerrado(suprimento):
         messages.warning(request, f"Suprimento #{suprimento.id} já está encerrado.")
@@ -72,10 +74,11 @@ def fechar_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @require_POST
-@permission_required("suprimentos.pode_gerir_prestacao_contas_suprimento", raise_exception=True)
 def enviar_prestacao_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Registra o envio da prestação de contas pelo responsável pelo suprimento."""
-    suprimento: Any = get_object_or_404(SuprimentoDeFundos, id=pk)
+    suprimento: Any = get_object_or_404(SuprimentoDeFundos.objects.select_related("suprido"), id=pk)
+    if not _pode_acessar_suprimento(request.user, suprimento):
+        raise PermissionDenied
 
     if _suprimento_encerrado(suprimento):
         messages.error(request, "Este suprimento já foi encerrado.")

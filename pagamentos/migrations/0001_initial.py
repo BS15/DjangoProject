@@ -620,6 +620,18 @@ class Migration(migrations.Migration):
                         "Pode aprovar contingências na etapa de supervisão/gerência",
                     ),
                     (
+                        "pode_aprovar_contingencia_ordenador",
+                        "Pode aprovar contingências na etapa do Ordenador de Despesa",
+                    ),
+                    (
+                        "pode_aprovar_contingencia_conselho",
+                        "Pode aprovar contingências na etapa do Conselho Fiscal",
+                    ),
+                    (
+                        "pode_revisar_contingencia_contadora",
+                        "Pode realizar a revisão contábil final de contingências",
+                    ),
+                    (
                         "pode_atestar_liquidacao",
                         "Pode atestar notas fiscais (Fiscal do Contrato)",
                     ),

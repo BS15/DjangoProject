@@ -17,6 +17,12 @@ def _suprimento_encerrado(suprimento: Any) -> bool:
     return bool(suprimento.status and suprimento.status.status_choice.upper() == "ENCERRADO")
 
 
+def _pode_acessar_suprimento(user: Any, suprimento: Any) -> bool:
+    """Retorna True apenas para o suprido vinculado ao suprimento."""
+    suprido = getattr(suprimento, "suprido", None)
+    return bool(suprido and getattr(suprido, "usuario_id", None) and suprido.usuario_id == user.pk)
+
+
 def _salvar_despesa_manual(
     suprimento: Any,
     dados_post: Mapping[str, str],

@@ -1633,40 +1633,48 @@
 <h1 id="fluxo-pagamentos">Fluxo: Pagamentos<a class="headerlink" href="#fluxo-pagamentos" title="Permanent link">&para;</a></h1>
 <p>Este documento descreve a esteira completa de um processo de pagamento no PaGé — da criação até o arquivamento — incluindo as filas operacionais, transitions de status e pontos de controle (turnpikes).</p>
 <hr />
-<h2 id="1-maquina-de-estados-canonica">1. Máquina de estados canônica<a class="headerlink" href="#1-maquina-de-estados-canonica" title="Permanent link">&para;</a></h2>
-<p>Os status são constantes definidas em <code>ProcessoStatus</code> (<code>pagamentos/domain_models/processos.py</code>).</p>
+<h2 id="1-maquina-de-estados-canonica">1. Fluxo feliz (Happy Flow)<a class="headerlink" href="#1-maquina-de-estados-canonica" title="Permanent link">&para;</a></h2>
+<p>Caminho principal sem interrupções, do nascimento ao arquivamento. Os status são constantes definidas em <code>ProcessoStatus</code> (<code>pagamentos/domain_models/processos.py</code>).</p>
 <pre class="mermaid"><code>stateDiagram-v2
-    [*] --&gt; A_EMPENHAR : Processo criado (com trigger)
-    [*] --&gt; A_PAGAR_PENDENTE_AUTORIZACAO : Processo criado (sem trigger)
+  direction TB
+  [*] --&gt; A_EMPENHAR : Criado com trigger
+  [*] --&gt; A_PAGAR_PENDENTE_AUTORIZACAO : Criado sem trigger
 
-    A_EMPENHAR --&gt; AGUARDANDO_LIQUIDACAO : Registro do empenho SISCAC
-    AGUARDANDO_LIQUIDACAO --&gt; A_PAGAR_PENDENTE_AUTORIZACAO : Todas NFs atestadas
-    A_PAGAR_PENDENTE_AUTORIZACAO --&gt; A_PAGAR_ENVIADO_PARA_AUTORIZACAO : Envio para autorização
-    A_PAGAR_ENVIADO_PARA_AUTORIZACAO --&gt; A_PAGAR_AUTORIZADO : Aprovação do ordenador
-    A_PAGAR_AUTORIZADO --&gt; LANCADO_AGUARDANDO_COMPROVANTE : Marcação como lançado
-    LANCADO_AGUARDANDO_COMPROVANTE --&gt; PAGO_EM_CONFERENCIA : Upload do comprovante bancário
-    PAGO_EM_CONFERENCIA --&gt; PAGO_A_CONTABILIZAR : Revisão pelo operador
-    PAGO_A_CONTABILIZAR --&gt; CONTABILIZADO_PARA_CONSELHO_FISCAL : Aprovação pela Contabilidade
-    CONTABILIZADO_PARA_CONSELHO_FISCAL --&gt; APROVADO_PENDENTE_ARQUIVAMENTO : Aprovação em reunião do Conselho
-    APROVADO_PENDENTE_ARQUIVAMENTO --&gt; ARQUIVADO : Arquivamento definitivo
-    ARQUIVADO --&gt; [*]
-
-    A_PAGAR_ENVIADO_PARA_AUTORIZACAO --&gt; AGUARDANDO_LIQUIDACAO : Autorização recusada
-    PAGO_A_CONTABILIZAR --&gt; PAGO_EM_CONFERENCIA : Contabilização recusada
-    CONTABILIZADO_PARA_CONSELHO_FISCAL --&gt; PAGO_A_CONTABILIZAR : Conselho recusado
-    LANCADO_AGUARDANDO_COMPROVANTE --&gt; A_PAGAR_AUTORIZADO : Desfazer lançamento</code></pre>
-<h3 id="caminhos-de-excecao-desvios">Caminhos de exceção (desvios)<a class="headerlink" href="#caminhos-de-excecao-desvios" title="Permanent link">&para;</a></h3>
+  A_EMPENHAR --&gt; AGUARDANDO_LIQUIDACAO : Empenho SISCAC registrado
+  AGUARDANDO_LIQUIDACAO --&gt; A_PAGAR_PENDENTE_AUTORIZACAO : Todas as NFs atestadas
+  A_PAGAR_PENDENTE_AUTORIZACAO --&gt; A_PAGAR_ENVIADO_PARA_AUTORIZACAO : Envio para autorização
+  A_PAGAR_ENVIADO_PARA_AUTORIZACAO --&gt; A_PAGAR_AUTORIZADO : Aprovação do ordenador
+  A_PAGAR_AUTORIZADO --&gt; LANCADO_AGUARDANDO_COMPROVANTE : Marcação como lançado
+  LANCADO_AGUARDANDO_COMPROVANTE --&gt; PAGO_EM_CONFERENCIA : Upload do comprovante bancário
+  PAGO_EM_CONFERENCIA --&gt; PAGO_A_CONTABILIZAR : Revisão aprovada pelo operador
+  PAGO_A_CONTABILIZAR --&gt; CONTABILIZADO_CONSELHO : Aprovação pela Contabilidade
+  CONTABILIZADO_CONSELHO --&gt; APROVADO_PENDENTE_ARQUIVAMENTO : Aprovação em reunião do Conselho
+  APROVADO_PENDENTE_ARQUIVAMENTO --&gt; ARQUIVADO : Arquivamento definitivo
+  ARQUIVADO --&gt; [*]</code></pre>
+<hr />
+<h2 id="2-excecoes-e-devolucoes-de-etapa">2. Exceções e devoluções de etapa<a class="headerlink" href="#2-excecoes-e-devolucoes-de-etapa" title="Permanent link">&para;</a></h2>
+<p>Desvios do fluxo principal causados por recusa de aprovadores. O processo retorna a um status anterior sem cancelamento.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+  direction TB
+  A_PAGAR_ENVIADO_PARA_AUTORIZACAO --&gt; A_PAGAR_PENDENTE_AUTORIZACAO : Autorização recusada (pendência registrada)
+  LANCADO_AGUARDANDO_COMPROVANTE --&gt; A_PAGAR_AUTORIZADO : Desfazer lançamento
+  PAGO_A_CONTABILIZAR --&gt; PAGO_EM_CONFERENCIA : Contabilização recusada
+  CONTABILIZADO_CONSELHO --&gt; PAGO_A_CONTABILIZAR : Conselho recusou</code></pre>
 <table>
 <thead>
 <tr>
 <th>Etapa de recusa</th>
-<th>Status de devolução</th>
+<th>Status de retorno</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Autorização recusada</td>
-<td><code>AGUARDANDO LIQUIDAÇÃO</code></td>
+<td><code>A PAGAR - PENDENTE AUTORIZAÇÃO</code></td>
+</tr>
+<tr>
+<td>Lançamento desfeito</td>
+<td><code>A PAGAR - AUTORIZADO</code></td>
 </tr>
 <tr>
 <td>Contabilização recusada</td>
@@ -1679,9 +1687,76 @@
 </tbody>
 </table>
 <hr />
-<h2 id="2-criacao-do-processo">2. Criação do processo<a class="headerlink" href="#2-criacao-do-processo" title="Permanent link">&para;</a></h2>
+<h2 id="3-cancelamento">3. Cancelamento<a class="headerlink" href="#3-cancelamento" title="Permanent link">&para;</a></h2>
+<p>Acionado pelo operador via <code>cancelar_processo_action</code>. Disponível enquanto o processo não estiver arquivado. Consulte o <a href="../cancelamento/">Fluxo de Cancelamento</a> para a especificação completa.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+  direction TB
+  A_EMPENHAR --&gt; CANCELADO_ANULADO : Cancelar processo
+  AGUARDANDO_LIQUIDACAO --&gt; CANCELADO_ANULADO : Cancelar processo
+  A_PAGAR_PENDENTE_AUTORIZACAO --&gt; CANCELADO_ANULADO : Cancelar processo
+  PAGO_EM_CONFERENCIA --&gt; CANCELADO_ANULADO : Cancelar processo\n(+ exige devolução)
+  PAGO_A_CONTABILIZAR --&gt; CANCELADO_ANULADO : Cancelar processo\n(+ exige devolução)</code></pre>
+<hr />
+<h2 id="4-devolucao-processual">4. Devolução processual<a class="headerlink" href="#4-devolucao-processual" title="Permanent link">&para;</a></h2>
+<p>Quando o processo já foi pago e o cancelamento é necessário, o operador deve informar os dados da devolução junto com o cancelamento. A <code>DevolucaoProcessual</code> é criada atomicamente na mesma transação.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+  direction TB
+  PAGO_EM_CONFERENCIA --&gt; CANCELADO_ANULADO : cancelar_processo_action\n+ DevolucaoProcessual criada
+  PAGO_A_CONTABILIZAR --&gt; CANCELADO_ANULADO : cancelar_processo_action\n+ DevolucaoProcessual criada</code></pre>
+<p>Campos obrigatórios na devolução: <strong>valor devolvido</strong>, <strong>data da devolução</strong> e <strong>comprovante de devolução</strong>.</p>
+<hr />
+<h2 id="5-contingencia">5. Contingência<a class="headerlink" href="#5-contingencia" title="Permanent link">&para;</a></h2>
+<p>Fluxo de aprovação multi-etapa para retificações formais em dados do processo. O processo permanece no seu status atual enquanto a contingência tramita. Após aprovação final, os <code>dados_propostos</code> são aplicados atomicamente.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+  direction TB
+  [*] --&gt; PENDENTE_SUPERVISOR : Solicitação criada pelo operador
+
+  PENDENTE_SUPERVISOR --&gt; PENDENTE_ORDENADOR : Supervisor aprova\n(se exige_aprovacao_ordenador)
+  PENDENTE_SUPERVISOR --&gt; PENDENTE_CONTADOR : Supervisor aprova\n(sem ordenador nem conselho)
+  PENDENTE_SUPERVISOR --&gt; REJEITADA : Supervisor recusa
+
+  PENDENTE_ORDENADOR --&gt; PENDENTE_CONSELHO : Ordenador aprova\n(se exige_aprovacao_conselho)
+  PENDENTE_ORDENADOR --&gt; PENDENTE_CONTADOR : Ordenador aprova\n(sem conselho)
+  PENDENTE_ORDENADOR --&gt; REJEITADA : Ordenador recusa
+
+  PENDENTE_CONSELHO --&gt; PENDENTE_CONTADOR : Conselho aprova
+  PENDENTE_CONSELHO --&gt; REJEITADA : Conselho recusa
+
+  PENDENTE_CONTADOR --&gt; APROVADA : Contadora aprova\n(dados_propostos aplicados ao Processo)
+  PENDENTE_CONTADOR --&gt; REJEITADA : Contadora recusa
+
+  APROVADA --&gt; [*]
+  REJEITADA --&gt; [*]</code></pre>
+<table>
+<thead>
+<tr>
+<th>Etapa</th>
+<th>Permissão necessária</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Supervisão</td>
+<td><code>pode_aprovar_contingencia_supervisor</code></td>
+</tr>
+<tr>
+<td>Ordenador</td>
+<td><code>pode_aprovar_contingencia_ordenador</code></td>
+</tr>
+<tr>
+<td>Conselho Fiscal</td>
+<td><code>pode_aprovar_contingencia_conselho</code></td>
+</tr>
+<tr>
+<td>Revisão Contadora</td>
+<td><code>pode_revisar_contingencia_contadora</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-criacao-do-processo">6. Criação do processo<a class="headerlink" href="#2-criacao-do-processo" title="Permanent link">&para;</a></h2>
 <p><strong>View:</strong> <code>add_process_view</code> / <strong>Action:</strong> <code>add_process_action</code><br />
-<strong>Permissão:</strong> <code>pagamentos.acesso_backoffice</code></p>
+<strong>Permissão:</strong> <code>pagamentos.operador_contas_a_pagar</code></p>
 <ul>
 <li>O operador preenche a capa: credor, tipo de pagamento, valores, datas.</li>
 <li>O campo <code>trigger_a_empenhar</code> define o status inicial:</li>
@@ -1690,7 +1765,7 @@
 <li>Processo criado via <code>_salvar_processo_completo</code> dentro de transação atômica.</li>
 </ul>
 <hr />
-<h2 id="3-hub-de-edicao-modular">3. Hub de edição modular<a class="headerlink" href="#3-hub-de-edicao-modular" title="Permanent link">&para;</a></h2>
+<h2 id="3-hub-de-edicao-modular">7. Hub de edição modular<a class="headerlink" href="#3-hub-de-edicao-modular" title="Permanent link">&para;</a></h2>
 <p><strong>View:</strong> <code>editar_processo</code> (GET)<br />
 <strong>Template:</strong> <code>pagamentos/editar_processo_hub.html</code></p>
 <p>O hub é um <strong>Command Center somente-leitura</strong> com cartões de acesso às spokes:</p>
@@ -1706,7 +1781,7 @@
 <p>Retenções não possuem card/tabela própria no hub; estão consolidadas sob "Liquidações e retenções" conforme a spoke <code>documentos_fiscais</code>.</p>
 </div>
 <hr />
-<h2 id="4-etapa-de-empenho">4. Etapa de empenho<a class="headerlink" href="#4-etapa-de-empenho" title="Permanent link">&para;</a></h2>
+<h2 id="4-etapa-de-empenho">8. Etapa de empenho<a class="headerlink" href="#4-etapa-de-empenho" title="Permanent link">&para;</a></h2>
 <p><strong>View:</strong> <code>a_empenhar_view</code><br />
 <strong>Permissão:</strong> <code>pagamentos.pode_operar_contas_pagar</code></p>
 <ul>
@@ -1716,9 +1791,9 @@
 <li>Transição: <code>A EMPENHAR → AGUARDANDO LIQUIDAÇÃO</code>.</li>
 </ul>
 <hr />
-<h2 id="5-liquidacao-e-ateste">5. Liquidação e ateste<a class="headerlink" href="#5-liquidacao-e-ateste" title="Permanent link">&para;</a></h2>
+<h2 id="5-liquidacao-e-ateste">9. Liquidação e ateste<a class="headerlink" href="#5-liquidacao-e-ateste" title="Permanent link">&para;</a></h2>
 <p><strong>View:</strong> <code>painel_liquidacoes_view</code><br />
-<strong>Permissão:</strong> <code>pagamentos.acesso_backoffice</code></p>
+<strong>Permissão:</strong> <code>pagamentos.operador_contas_a_pagar</code></p>
 <ul>
 <li>O Fiscal de Contrato visualiza somente suas NFs; gestores/ordenadores veem todas.</li>
 <li>Spoke <code>documentos_fiscais_view</code>: associa documento à nota fiscal, informa dados da NF e registra retenções.</li>
@@ -1727,7 +1802,7 @@
 <li>Turnpike: todas as NFs do processo devem estar atestadas e valores devem ser consistentes.</li>
 </ul>
 <hr />
-<h2 id="6-contas-a-pagar-e-envio-para-autorizacao">6. Contas a pagar e envio para autorização<a class="headerlink" href="#6-contas-a-pagar-e-envio-para-autorizacao" title="Permanent link">&para;</a></h2>
+<h2 id="6-contas-a-pagar-e-envio-para-autorizacao">10. Contas a pagar e envio para autorização<a class="headerlink" href="#6-contas-a-pagar-e-envio-para-autorizacao" title="Permanent link">&para;</a></h2>
 <p><strong>View:</strong> <code>contas_a_pagar</code><br />
 <strong>Permissão:</strong> <code>pagamentos.pode_operar_contas_pagar</code></p>
 <ul>
@@ -1736,16 +1811,16 @@
 <li>Ação de envio em lote: <code>A PAGAR - PENDENTE AUTORIZAÇÃO → A PAGAR - ENVIADO PARA AUTORIZAÇÃO</code>.</li>
 </ul>
 <hr />
-<h2 id="7-autorizacao">7. Autorização<a class="headerlink" href="#7-autorizacao" title="Permanent link">&para;</a></h2>
+<h2 id="7-autorizacao">11. Autorização<a class="headerlink" href="#7-autorizacao" title="Permanent link">&para;</a></h2>
 <p><strong>View:</strong> <code>painel_autorizacao_view</code><br />
 <strong>Permissão:</strong> <code>pagamentos.pode_autorizar_pagamento</code></p>
 <p>Duas filas simultâneas: pendentes de autorização e já autorizados.</p>
 <ul>
 <li><strong>Autorizar em lote:</strong> <code>A PAGAR - ENVIADO PARA AUTORIZAÇÃO → A PAGAR - AUTORIZADO</code>.</li>
-<li><strong>Recusar</strong> (por processo): devolve para <code>AGUARDANDO LIQUIDAÇÃO</code> com pendência registrada.</li>
+<li><strong>Recusar</strong> (por processo): devolve para <code>A PAGAR - PENDENTE AUTORIZAÇÃO</code> com pendência registrada.</li>
 </ul>
 <hr />
-<h2 id="8-lancamento-bancario">8. Lançamento bancário<a class="headerlink" href="#8-lancamento-bancario" title="Permanent link">&para;</a></h2>
+<h2 id="8-lancamento-bancario">12. Lançamento bancário<a class="headerlink" href="#8-lancamento-bancario" title="Permanent link">&para;</a></h2>
 <p><strong>Views:</strong> <code>lancamento_bancario</code> / <code>marcar_como_lancado_action</code><br />
 <strong>Permissão:</strong> <code>pagamentos.pode_operar_contas_pagar</code></p>
 <ol>
@@ -1756,7 +1831,7 @@
 <li>Desfazer lançamento retorna para <code>A PAGAR - AUTORIZADO</code>.</li>
 </ol>
 <hr />
-<h2 id="9-upload-de-comprovantes">9. Upload de comprovantes<a class="headerlink" href="#9-upload-de-comprovantes" title="Permanent link">&para;</a></h2>
+<h2 id="9-upload-de-comprovantes">13. Upload de comprovantes<a class="headerlink" href="#9-upload-de-comprovantes" title="Permanent link">&para;</a></h2>
 <p><strong>View:</strong> <code>painel_comprovantes_view</code> / <strong>Action:</strong> <code>vincular_comprovantes_action</code> (JSON API)<br />
 <strong>Permissão:</strong> <code>pagamentos.pode_operar_contas_pagar</code></p>
 <ol>
@@ -1769,7 +1844,7 @@
 <li>Retenções com <code>codigo.regra_competencia == "pagamento"</code> têm sua competência recalculada.</li>
 </ol>
 <hr />
-<h2 id="10-conferencia">10. Conferência<a class="headerlink" href="#10-conferencia" title="Permanent link">&para;</a></h2>
+<h2 id="10-conferencia">14. Conferência<a class="headerlink" href="#10-conferencia" title="Permanent link">&para;</a></h2>
 <p><strong>Views:</strong> <code>painel_conferencia_view</code> / <code>conferencia_processo_view</code><br />
 <strong>Permissão:</strong> <code>pagamentos.pode_operar_contas_pagar</code></p>
 <ul>
@@ -1779,7 +1854,7 @@
 <li>Permite salvar ajustes durante a revisão.</li>
 </ul>
 <hr />
-<h2 id="11-contabilizacao">11. Contabilização<a class="headerlink" href="#11-contabilizacao" title="Permanent link">&para;</a></h2>
+<h2 id="11-contabilizacao">15. Contabilização<a class="headerlink" href="#11-contabilizacao" title="Permanent link">&para;</a></h2>
 <p><strong>Views:</strong> <code>painel_contabilizacao_view</code> / <code>contabilizacao_processo_view</code><br />
 <strong>Permissão:</strong> <code>pagamentos.pode_contabilizar</code></p>
 <ul>
@@ -1788,7 +1863,7 @@
 <li>Recusa: devolve para <code>PAGO - EM CONFERÊNCIA</code>.</li>
 </ul>
 <hr />
-<h2 id="12-conselho-fiscal">12. Conselho fiscal<a class="headerlink" href="#12-conselho-fiscal" title="Permanent link">&para;</a></h2>
+<h2 id="12-conselho-fiscal">16. Conselho fiscal<a class="headerlink" href="#12-conselho-fiscal" title="Permanent link">&para;</a></h2>
 <p><strong>Views:</strong> <code>painel_conselho_view</code> / <code>analise_reuniao_view</code> / <code>conselho_processo_view</code><br />
 <strong>Permissão:</strong> <code>pagamentos.pode_auditar_conselho</code></p>
 <ol>
@@ -1800,13 +1875,37 @@
 <li>Processo somente aceito se vinculado a reunião ativa.</li>
 </ol>
 <hr />
-<h2 id="13-arquivamento">13. Arquivamento<a class="headerlink" href="#13-arquivamento" title="Permanent link">&para;</a></h2>
+<h2 id="13-arquivamento">17. Arquivamento<a class="headerlink" href="#13-arquivamento" title="Permanent link">&para;</a></h2>
 <p><strong>Views:</strong> <code>painel_arquivamento_view</code> / <code>arquivar_processo_action</code><br />
 <strong>Permissão:</strong> <code>pagamentos.pode_arquivar</code></p>
 <ul>
 <li>Exibe pendentes (<code>APROVADO - PENDENTE ARQUIVAMENTO</code>) e histórico com filtro.</li>
 <li>Arquivamento definitivo: <code>_executar_arquivamento_definitivo</code> → <code>ARQUIVADO</code>.</li>
 <li>Guard: processo sem documentos gera <code>ArquivamentoSemDocumentosError</code>.</li>
+</ul>
+<hr />
+<h2 id="18-cancelamento-e-devolucao">18. Cancelamento e devolução<a class="headerlink" href="#18-cancelamento-e-devolucao" title="Permanent link">&para;</a></h2>
+<p><strong>View (spoke):</strong> <code>cancelar_processo_spoke_view</code><br />
+<strong>Action:</strong> <code>cancelar_processo_action</code><br />
+<strong>Permissão:</strong> <code>pagamentos.operador_contas_a_pagar</code><br />
+<strong>Serviço:</strong> <code>registrar_cancelamento_processo</code> (<code>pagamentos/services/cancelamentos.py</code>)</p>
+<ul>
+<li>O botão "Cancelar Processo" é exibido no hub <code>process_detail</code> para processos que ainda não estão cancelados.</li>
+<li>Justificativa é sempre obrigatória.</li>
+<li><strong>Quando o processo está em status pago ou posterior</strong>, o operador deve também informar os dados de devolução correspondente (valor, data e comprovante). A <code>DevolucaoProcessual</code> é criada atomicamente na mesma transação do cancelamento.</li>
+<li>Status final: <code>CANCELADO / ANULADO</code>. O <code>CancelamentoProcessual</code> é gravado como trilha formal.</li>
+</ul>
+<p>Consulte o <a href="../cancelamento/">Fluxo de Cancelamento</a> para a especificação completa.</p>
+<hr />
+<h2 id="19-contingencia">19. Contingência<a class="headerlink" href="#19-contingencia" title="Permanent link">&para;</a></h2>
+<p><strong>Serviço:</strong> <code>pagamentos/services/contingencias.py</code><br />
+<strong>Permissões:</strong> <code>pode_aprovar_contingencia_supervisor</code>, <code>_ordenador</code>, <code>_conselho</code>, <code>pode_revisar_contingencia_contadora</code></p>
+<ul>
+<li>Solicitação formal de retificação de dados do processo após sua criação.</li>
+<li>A aprovação é multi-etapa e configurável: supervisor → (ordenador opcional) → (conselho opcional) → contadora.</li>
+<li>O processo permanece no seu status atual enquanto a contingência tramita.</li>
+<li>Após aprovação final pela contadora, os <code>dados_propostos</code> são aplicados atomicamente ao <code>Processo</code>.</li>
+<li>Em caso de rejeição em qualquer etapa, a contingência é encerrada sem alterar o processo.</li>
 </ul>
 <hr />
 <h2 id="referencias-de-codigo">Referências de código<a class="headerlink" href="#referencias-de-codigo" title="Permanent link">&para;</a></h2>
@@ -1853,6 +1952,14 @@
 <tr>
 <td>Arquivamento</td>
 <td><code>pagamentos/views/post_payment/arquivamento/</code></td>
+</tr>
+<tr>
+<td><strong>Cancelamento</strong></td>
+<td><strong><code>pagamentos/views/support/cancelamento/</code></strong></td>
+</tr>
+<tr>
+<td><strong>Serviço de cancelamento</strong></td>
+<td><strong><code>pagamentos/services/cancelamentos.py</code></strong></td>
 </tr>
 <tr>
 <td>Helpers de lote / fila</td>

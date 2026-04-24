@@ -90,6 +90,14 @@ def add_contingencia_action(request: HttpRequest) -> HttpResponse:
 
 
 
+_PERMISSAO_POR_STATUS_CONTINGENCIA = {
+    "PENDENTE_SUPERVISOR": "pagamentos.pode_aprovar_contingencia_supervisor",
+    "PENDENTE_ORDENADOR": "pagamentos.pode_aprovar_contingencia_ordenador",
+    "PENDENTE_CONSELHO": "pagamentos.pode_aprovar_contingencia_conselho",
+    "PENDENTE_CONTADOR": "pagamentos.pode_revisar_contingencia_contadora",
+}
+
+
 @require_POST
 @permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def analisar_contingencia_action(request: HttpRequest, pk: int) -> HttpResponse:
@@ -101,6 +109,14 @@ def analisar_contingencia_action(request: HttpRequest, pk: int) -> HttpResponse:
 
     if contingencia.status in {"APROVADA", "REJEITADA"}:
         messages.error(request, "Esta contingência já foi finalizada e não pode ser alterada.")
+        return redirect("painel_contingencias")
+
+    permissao_etapa = _PERMISSAO_POR_STATUS_CONTINGENCIA.get(contingencia.status)
+    if permissao_etapa and not request.user.has_perm(permissao_etapa):
+        messages.error(
+            request,
+            f"Você não tem permissão para agir nesta etapa da contingência ({contingencia.get_status_display()}).",
+        )
         return redirect("painel_contingencias")
 
     if acao == "aprovar":
