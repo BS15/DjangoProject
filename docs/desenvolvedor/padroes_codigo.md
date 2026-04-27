@@ -3,7 +3,7 @@
 ## Arquitetura de views
 - `panels.py`: apenas leitura (`GET`) e renderização.
 - `actions.py`: apenas escrita (`POST`) e redirecionamento.
-- Regras de negócio e mutações: `services/`.
+- Regras de negócio e mutações: `services/`. (Ver [Manager-Worker](../arquitetura/manager_worker.md))
 
 ## Templates em camadas
 Sempre estender os layouts base:
@@ -25,6 +25,6 @@ Regra de separação entre os guias:
 - a página de dicionários lista contratos concretos de cada action e worker.
 
 ## Estado e compliance
-- Tratar progressão de etapas como máquina de estados.
-- Aplicar turnpikes antes de qualquer avanço de fase.
+- Tratar progressão de etapas como máquina de estados. (Ver [Domain Knowledge](../arquitetura/domain_knowledge.md))
+- Aplicar [turnpikes](/negocio/glossario_conselho.md#turnpike) antes de qualquer avanço de fase.
 - Preservar auditabilidade como requisito de primeira classe.

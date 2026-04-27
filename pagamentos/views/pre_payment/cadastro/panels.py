@@ -57,7 +57,7 @@ def _montar_peek_tables_hub(request, processo):
     """Monta tabelas paginadas de apoio do hub (somente leitura)."""
     documentos_qs = processo.documentos.select_related("tipo").all().order_by("ordem", "id")
     pendencias_qs = processo.pendencias.select_related("tipo", "status").all().order_by("id")
-    liquidacoes_qs = DocumentoFiscal.objects.select_related("nome_emitente", "liquidacao__fiscal_contrato").filter(
+    liquidacoes_qs = DocumentoFiscal.objects.select_related("nome_emitente").filter(
         processo=processo
     ).order_by("-data_emissao", "-id")
     return {

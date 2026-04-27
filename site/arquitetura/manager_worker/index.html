@@ -1456,17 +1456,31 @@
 
 <h1 id="padrao-manager-worker">Padrão Manager-Worker<a class="headerlink" href="#padrao-manager-worker" title="Permanent link">&para;</a></h1>
 <h2 id="motivacao">Motivação<a class="headerlink" href="#motivacao" title="Permanent link">&para;</a></h2>
-<p>Em sistemas de gestão financeira com auditoria obrigatória, misturar apresentação e lógica de negócio na mesma camada cria dois problemas sérios: dificulta o rastreamento de <em>o que</em> foi feito e <em>por quê</em>, e torna impossível testar regras de domínio de forma isolada. O padrão Manager-Worker resolve isso separando uma requisição HTTP em três responsabilidades distintas que nunca se sobrepõem.</p>
+<p>Em sistemas de gestão financeira com auditoria obrigatória, misturar apresentação e lógica de negócio na mesma camada cria dois problemas sérios: dificulta o rastreamento de <em>o que</em> foi feito e <em>por quê</em>, e torna impossível testar regras de domínio de forma isolada. O padrão Manager-Worker resolve isso separando uma requisição HTTP em três responsabilidades distintas que nunca se sobrepõem. Para a visão de interface desse mesmo princípio, veja <a href="../hub_spoke/">Interface Hub-and-Spoke</a>.</p>
 <h2 id="as-tres-camadas">As três camadas<a class="headerlink" href="#as-tres-camadas" title="Permanent link">&para;</a></h2>
 <h3 id="panel-o-manager">Panel — o Manager<a class="headerlink" href="#panel-o-manager" title="Permanent link">&para;</a></h3>
 <p>O arquivo <code>panels.py</code> de cada módulo responde exclusivamente a requisições GET. Seu trabalho é reunir informações já existentes no banco e montá-las em um dicionário de contexto para que o template possa renderizar a tela. Um Panel não toma decisões, não valida regras e não altera nenhum dado. É um leitor somente-leitura.</p>
+<p><strong>Navegação Relacionada:</strong> <a href="../backend_architecture/">Arquitetura de Backend</a> | <a href="../camada_services/">Camada de Services</a> | <a href="../hub_spoke/">Hub-and-Spoke</a> | <a href="../../desenvolvedor/padroes_codigo/">Padrões de Código</a> | <a href="../../governanca/matriz_permissoes/">Matriz de Permissões</a></p>
 <p>Isso garante que qualquer tela do sistema pode ser recarregada quantas vezes for necessário sem efeitos colaterais — propriedade importante em ambientes com múltiplos usuários simultâneos operando sobre os mesmos processos.</p>
 <h3 id="action-o-roteador">Action — o Roteador<a class="headerlink" href="#action-o-roteador" title="Permanent link">&para;</a></h3>
 <p>O arquivo <code>actions.py</code> responde exclusivamente a requisições POST. Sua responsabilidade é estreita: validar a entrada via formulário Django e, se válida, delegar a operação ao Service correspondente. Após a execução, a Action redireciona — nunca renderiza um template.</p>
+<p>No projeto PaGé, Actions devem usar <code>@permission_required(..., raise_exception=True)</code> para RBAC e, quando aplicável, <code>@require_POST</code> como primeira barreira de método. Consulte também <a href="../controle_acesso_contextual/">Controle de Acesso Contextual</a> e <a href="../../governanca/matriz_permissoes/">Matriz de Permissões</a>.</p>
 <p>A Action não contém regras de negócio. Ela sabe <em>quem</em> deve executar a operação, mas não <em>como</em> executá-la. Essa separação permite que a mesma lógica de domínio seja reutilizada por diferentes pontos de entrada (interface web, importação em lote, tarefa agendada) sem duplicação.</p>
 <h3 id="servicehelper-o-worker">Service/Helper — o Worker<a class="headerlink" href="#servicehelper-o-worker" title="Permanent link">&para;</a></h3>
-<p>O diretório <code>services/</code> concentra toda a lógica que muta estado. É aqui que vivem as transições de status, os cálculos financeiros, as validações de elegibilidade e as integrações com sistemas externos. Cada operação que altera dados financeiros ou de status opera dentro de um <code>transaction.atomic()</code> com <code>select_for_update()</code>, garantindo consistência em acesso concorrente.</p>
+<p>O diretório <code>services/</code> concentra toda a lógica que muta estado: transições de status na máquina de processos, cálculos financeiros usando exclusivamente <code>decimal.Decimal</code>, validações de elegibilidade, turnpikes (validações de pré-condição que bloqueiam avanço de etapa) e integrações com sistemas externos como EFD-Reinf, isolando os pontos de falha. Para contexto de máquina de estados e turnpikes, veja <a href="../domain_knowledge/">Domain Knowledge</a>.</p>
+<p>A camada de services é chamada principalmente pelas Actions após validação de formulário, e também por rotinas de importação/lote/comandos quando necessário. Ela nunca deve ser acionada por templates e não deve depender de <code>request</code>. Services não conhecem HTTP, não retornam <code>HttpResponse</code> e não fazem renderização. Essa independência permite testá-la de forma isolada sem precisar simular uma requisição web.</p>
+<h4 id="garantias-de-consistencia">Garantias de consistência<a class="headerlink" href="#garantias-de-consistencia" title="Permanent link">&para;</a></h4>
+<p><strong><code>transaction.atomic()</code></strong> deve envolver mutações compostas que precisam ter sucesso/falha em bloco (ex.: avançar status + registrar documento + emitir evento de auditoria). Se qualquer etapa falhar, o banco retorna ao estado anterior.</p>
+<p><strong><code>select_for_update()</code></strong> deve ser aplicado quando houver risco de concorrência em fluxo de leitura-antes-da-escrita sobre os mesmos registros. Não é obrigatório em operações puramente append-only sem disputa de estado.</p>
 <p>Erros de domínio (dados fiscais inválidos, processo em estado incompatível, valor inconsistente) são levantados imediatamente como exceções — nunca silenciados ou compensados parcialmente.</p>
+<h2 id="fronteiras-obrigatorias">Fronteiras obrigatórias<a class="headerlink" href="#fronteiras-obrigatorias" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Panels: somente leitura + contexto + renderização.</li>
+<li>Actions: validação de entrada, autorização RBAC e roteamento para worker.</li>
+<li>Services/Helpers: regras de negócio e mutação de estado, sem acoplamento a HTTP.</li>
+<li>APIs (<code>apis.py</code>): serialização/retorno JSON; mutação delegada para service/helper.</li>
+</ul>
+<p>Veja também: <a href="../pattern_matching/">Code Generation: Pattern Matching First</a>.</p>
 <h2 id="fluxo-de-uma-requisicao-tipica">Fluxo de uma requisição típica<a class="headerlink" href="#fluxo-de-uma-requisicao-tipica" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>Usuário (POST) → Action
                   ├── form.is_valid()? → não: redirect com mensagem de erro
@@ -1477,7 +1491,7 @@
 </code></pre></div>
 <h2 id="apis-json">APIs JSON<a class="headerlink" href="#apis-json" title="Permanent link">&para;</a></h2>
 <p>Quando o frontend precisa de respostas estruturadas para interações assíncronas (atualização parcial de painel, formulários via JavaScript), o módulo expõe um arquivo <code>apis.py</code>. Sua responsabilidade é exclusivamente serializar e devolver <code>JsonResponse</code> — toda mutação é delegada para funções em <code>helpers.py</code> ou <code>services/</code>, nunca executada diretamente no handler da API.</p>
-<p>Erros de negócio retornam status HTTP semântico: <code>400</code> para entrada inválida, <code>403</code> para permissão negada, <code>404</code> para objeto não encontrado. Para fluxos de formulário HTML padrão, o caminho correto continua sendo <code>actions.py</code>.</p>
+<p>Erros de negócio retornam status HTTP semântico: <code>400</code> para entrada inválida, <code>403</code> para permissão negada, <code>404</code> para objeto não encontrado. Para fluxos de formulário HTML padrão, o caminho correto continua sendo <code>actions.py</code>. Em todos os casos, preserve a rastreabilidade definida em <a href="../../governanca/trilha_auditoria/">Trilha de Auditoria</a>.</p>
 
 
 

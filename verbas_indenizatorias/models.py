@@ -195,7 +195,7 @@ class Diaria(models.Model):
         "numero_siscac",
         "processo_id",
     }
-    _CAMPOS_RETIFICACAO_OFICIO = {"numero_siscac"}
+    _CAMPOS_LIBERADOS_SYNC_SISCAC = {"numero_siscac"}
     objects = SealedMutationQuerySet.as_manager()
 
     def clean(self):
@@ -339,7 +339,9 @@ class Diaria(models.Model):
             status_processo = (self.processo.status.opcao_status or "").upper()
         processo_pago = status_processo.startswith("PAGO")
 
-        if alterados and set(alterados).issubset(self._CAMPOS_RETIFICACAO_OFICIO) and not processo_pago:
+        # O número SISCAC da diária pode ser reconciliado pela rotina de sync
+        # sem exigir contingência, inclusive em estágios pós-pagamento.
+        if alterados and set(alterados).issubset(self._CAMPOS_LIBERADOS_SYNC_SISCAC):
             return
 
         if alterados:

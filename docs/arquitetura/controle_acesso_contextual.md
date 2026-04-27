@@ -2,7 +2,7 @@
 
 O PaGé utiliza duas camadas complementares de controle de acesso:
 
-1. **RBAC declarativo** — `@permission_required` decorando cada view, definindo *o que* um perfil pode fazer.
+1. **[RBAC](/governanca/catalogo_permissoes_grupos.md) declarativo** — `@permission_required` decorando cada view, definindo *o que* um perfil pode fazer.
 2. **Acesso contextual** — verificações imperativas dentro da view/helper, definindo *sobre qual registro* o usuário pode agir.
 
 Este documento mapeia todos os pontos de controle contextual que **não são** cobertos pelo decorator, listando o helper responsável, as views onde é aplicado e a lógica de decisão.

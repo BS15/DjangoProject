@@ -14,7 +14,7 @@ Ele cobre cinco frentes:
 
 ### O que é
 
-A gestão de documentos é a infraestrutura que recebe, valida, organiza, armazena e vincula arquivos aos objetos de negócio do sistema, como processos, diárias, reembolsos, jetons, auxílios, suprimentos e retenções.
+A gestão de documentos é a infraestrutura que recebe, valida, organiza, armazena e vincula arquivos aos objetos de negócio do sistema, como [processos](/negocio/glossario_conselho.md#processo), [diárias](/negocio/glossario_conselho.md#diaria), [reembolsos](/negocio/glossario_conselho.md#reembolso), [jetons](/negocio/glossario_conselho.md#jeton), [auxílios](/negocio/glossario_conselho.md#auxilio), suprimentos e retenções.
 
 No PaGé, documentos não são um detalhe periférico. Eles são parte do próprio fluxo administrativo: comprovam etapas, habilitam avanços de status, alimentam auditoria e materializam saídas do sistema, como PDFs e anexos finais.
 
@@ -27,7 +27,7 @@ Essa feature serve para:
 - decidir onde o arquivo será armazenado no storage
 - vincular o arquivo ao objeto correto do domínio
 - manter ordenação documental por entidade
-- sustentar turnpikes do fluxo, já que várias etapas dependem da presença de anexos obrigatórios
+- sustentar [turnpikes](/negocio/glossario_conselho.md#turnpike) do fluxo, já que várias etapas dependem da presença de anexos obrigatórios
 - apoiar auditoria, arquivamento e geração de artefatos finais
 
 ### Como funciona

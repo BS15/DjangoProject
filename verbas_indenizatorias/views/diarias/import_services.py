@@ -1,13 +1,14 @@
 """Serviços de importação e sincronização de diárias no próprio domínio de verbas."""
 
 
-from commons.shared.csv_import_utils import decode_csv_file, build_csv_dict_reader
+from commons.shared.csv_import_utils import build_csv_dict_reader
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
 from credores.models import Credor
-from verbas_indenizatorias.constants import STATUS_VERBA_SOLICITADA
+from verbas_indenizatorias.constants import STATUS_VERBA_APROVADA, STATUS_VERBA_SOLICITADA
 from verbas_indenizatorias.models import Diaria, StatusChoicesVerbasIndenizatorias
+from verbas_indenizatorias.services.documentos import gerar_e_anexar_pcd_diaria
 
 
 class DiariaCsvValidationError(Exception):
@@ -68,8 +69,14 @@ def preview_diarias_lote(csv_file):
     preview = []
     erros = []
     try:
-        csv_bytes = decode_csv_file(csv_file)
-        reader = build_csv_dict_reader(csv_bytes)
+        reader, erro = build_csv_dict_reader(
+            csv_file,
+            encodings=("utf-8-sig", "utf-8", "latin-1"),
+            encoding_error_message="Não foi possível decodificar o CSV. Use UTF-8 ou Latin-1.",
+        )
+        if erro:
+            return {"preview": [], "erros": [erro]}
+
         for line_num, row in enumerate(reader, start=2):
             try:
                 preview.append(_parse_diaria_row(row, line_num))
@@ -81,14 +88,22 @@ def preview_diarias_lote(csv_file):
 
 
 def confirmar_diarias_lote(preview_items, usuario):
-    """Cria objetos Diaria a partir dos dicts da prévia e gera SCDs."""
+    """Compat: cria diárias em lote no modo padrão (solicitação para autorização)."""
+
+    return confirmar_diarias_lote_com_modo(preview_items, usuario, solicitacao_assinada=False)
+
+
+def confirmar_diarias_lote_com_modo(preview_items, usuario, solicitacao_assinada=False):
+    """Cria diárias em lote no modo padrão ou no modo de solicitação já assinada."""
     from datetime import date
 
-    resultados = []
+    resultados = {"sucessos": 0, "erros": [], "modo_solicitacao_assinada": bool(solicitacao_assinada)}
+    status_destino = STATUS_VERBA_APROVADA if solicitacao_assinada else STATUS_VERBA_SOLICITADA
     status_obj, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-        status_choice__iexact=STATUS_VERBA_SOLICITADA,
-        defaults={"status_choice": STATUS_VERBA_SOLICITADA},
+        status_choice__iexact=status_destino,
+        defaults={"status_choice": status_destino},
     )
+
     for item in preview_items:
         try:
             diaria = Diaria.objects.create(
@@ -103,9 +118,14 @@ def confirmar_diarias_lote(preview_items, usuario):
                 objetivo=item.get("objetivo", ""),
                 tipo_solicitacao=item.get("tipo_solicitacao", "INICIAL"),
                 status=status_obj,
-                autorizada=False,
+                autorizada=bool(solicitacao_assinada),
             )
-            resultados.append({"ok": True, "diaria_id": diaria.id, "nome": item["beneficiario_nome"]})
+            if solicitacao_assinada:
+                gerar_e_anexar_pcd_diaria(diaria, criador=usuario)
+            resultados["sucessos"] += 1
         except Exception as exc:
-            resultados.append({"ok": False, "nome": item.get("beneficiario_nome", "?"), "erro": str(exc)})
+            resultados["erros"].append(
+                f"{item.get('beneficiario_nome', '?')}: {exc}"
+            )
+
     return resultados

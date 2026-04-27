@@ -1380,17 +1380,25 @@
 <h2 id="o-problema-das-telas-monoliticas">O problema das telas monolíticas<a class="headerlink" href="#o-problema-das-telas-monoliticas" title="Permanent link">&para;</a></h2>
 <p>Sistemas de backoffice financeiro costumam crescer em direção a formulários gigantes: uma tela com dezenas de campos, múltiplas seções colapsáveis, e lógica de salvamento que tenta cobrir todos os casos de uma única vez. O resultado é complexidade de renderização, risco de inconsistência transacional e interfaces difíceis de operar.</p>
 <p>O PaGé adota o padrão Hub-and-Spoke para evitar esse crescimento. A premissa é simples: separar <em>leitura e visibilidade</em> (o Hub) de <em>execução de tarefas</em> (os Spokes).</p>
+<p><strong>Navegação Relacionada:</strong> <a href="../manager_worker/">Padrão Manager-Worker</a> | <a href="../template_tiers/">Template Tiers</a> | <a href="../../fluxos/diarias/">Fluxo de Diárias</a> | <a href="../../modulos/verbas_indenizatorias/">Módulo Verbas Indenizatórias</a> | <a href="../../negocio/regras_fluxo_estado/">Regras de Fluxo e Estados</a></p>
 <h2 id="o-hub-painel-de-comando">O Hub — Painel de Comando<a class="headerlink" href="#o-hub-painel-de-comando" title="Permanent link">&para;</a></h2>
 <p>A tela de detalhe de cada entidade principal (um processo de pagamento, um suprimento de fundos, uma verba indenizatória) funciona como um painel de comando de leitura. Ela consolida em uma única visão o estado atual do registro: status corrente, documentos anexados, histórico de movimentações, validações pendentes e ações disponíveis para o próximo passo.</p>
 <p>O Hub não contém formulários de edição inline. Ele apresenta o estado e oferece pontos de navegação para as tarefas disponíveis.</p>
 <h2 id="os-spokes-tarefas-isoladas">Os Spokes — Tarefas Isoladas<a class="headerlink" href="#os-spokes-tarefas-isoladas" title="Permanent link">&para;</a></h2>
-<p>Cada operação de mutação — anexar um documento, aprovar uma etapa, registrar uma nota fiscal, lançar um pagamento — acontece em seu próprio endpoint dedicado. Esse endpoint recebe apenas os dados necessários para aquela operação específica, valida, executa via Service, e redireciona de volta ao Hub.</p>
+<p>Cada operação de mutação — anexar um documento, aprovar uma etapa, registrar uma nota fiscal, lançar um pagamento — acontece em seu próprio endpoint dedicado. Esse endpoint recebe apenas os dados necessários para aquela operação específica, valida, executa via Service, e redireciona de volta ao Hub. Para a separação por método e responsabilidades, veja <a href="../manager_worker/">Padrão Manager-Worker</a>.</p>
 <p>Essa isolação traz três consequências práticas:</p>
 <p><strong>Menor superfície de erro por tela</strong>: cada Spoke lida com um conjunto pequeno e coeso de dados, reduzindo o risco de um campo irrelevante causar falha em uma operação distante.</p>
 <p><strong>Transações mais limpas</strong>: como cada Spoke executa uma única operação, o <code>transaction.atomic()</code> do Service envolve apenas os registros relevantes — sem o risco de um save() amplo comprometer registros não intencionais.</p>
 <p><strong>Rastreabilidade</strong>: o histórico de auditoria (<code>django-simple-history</code>) registra operações pontuais e discretas, não salvamentos em massa que modificam múltiplos campos ao mesmo tempo.</p>
+<p>Detalhes de requisitos e cobertura de evidências: <a href="../../governanca/trilha_auditoria/">Trilha de Auditoria</a>.</p>
 <h2 id="relacao-com-o-padrao-manager-worker">Relação com o padrão Manager-Worker<a class="headerlink" href="#relacao-com-o-padrao-manager-worker" title="Permanent link">&para;</a></h2>
 <p>O Hub é renderizado por um Panel (GET). Cada Spoke é executado por uma Action (POST) que delega para um Service. A arquitetura Hub-and-Spoke é, portanto, a expressão na interface do usuário do <a href="../manager_worker/">Padrão Manager-Worker</a> na camada de código.</p>
+<p>Exemplos concretos de aplicação do padrão:</p>
+<ul>
+<li><a href="../../fluxos/diarias/">Fluxo: Diárias</a></li>
+<li><a href="../../fluxos/pagamentos/">Fluxo: Pagamentos</a></li>
+<li><a href="../../fluxos/suprimento_fundos/">Fluxo: Suprimento de Fundos</a></li>
+</ul>
 
 
 

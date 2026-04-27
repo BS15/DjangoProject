@@ -10,10 +10,4 @@ class CredorFilter(BaseStyledFilterSet):
 
     class Meta:
         model = Credor
-        fields = {
-            'nome': ['icontains'],
-            'cpf_cnpj': ['icontains'],
-            'tipo': ['exact'],
-            'cargo_funcao': ['exact'],
-            'usuario': ['exact'],
-        }
+        fields = '__all__'

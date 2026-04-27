@@ -1,20 +1,33 @@
 {% extends "layouts/base_form.html" %}
 
-{% block title %}Nova Solicitação de Diária{% endblock %}
+{% block title %}
+{% if modo_solicitacao_assinada %}Nova Diária com Solicitação Assinada{% else %}Nova Solicitação de Diária{% endif %}
+{% endblock %}
 
 {% block page_heading %}
+{% if modo_solicitacao_assinada %}
+<i class="bi bi-file-earmark-check text-primary"></i> Incluir Diária com Solicitação Assinada
+{% else %}
 <i class="bi bi-airplane text-primary"></i> Solicitar Diária
+{% endif %}
 {% endblock %}
 
 {% block page_subtitle %}
+{% if modo_solicitacao_assinada %}
+Preencha os dados da viagem, anexe a solicitação já assinada e confirme a inclusão. A diária nascerá aprovada e o PCD será gerado automaticamente.
+{% else %}
 Preencha os dados da viagem. A solicitação será encaminhada para autorização superior.
+{% endif %}
 {% endblock %}
 
 {% block page_actions %}
 <a href="{% url 'diarias_list' %}" class="btn btn-outline-secondary">Cancelar</a>
 {% endblock %}
 
-{% block form_action %}{% url 'add_diaria_action' %}{% endblock %}
+{% block form_action %}
+{% if form_action_url %}{% url form_action_url %}{% else %}{% url 'add_diaria_action' %}{% endif %}
+{% endblock %}
+{% block form_enctype %}{% if modo_solicitacao_assinada %}multipart/form-data{% else %}application/x-www-form-urlencoded{% endif %}{% endblock %}
 
 {% block form_fields %}
 {% if form.non_field_errors %}
@@ -94,13 +107,26 @@ Preencha os dados da viagem. A solicitação será encaminhada para autorizaçã
         {{ form.objetivo }}
         <div class="text-danger small">{{ form.objetivo.errors }}</div>
     </div>
+
+    {% if modo_solicitacao_assinada and form.solicitacao_assinada_arquivo %}
+    <div class="col-12">
+        <label class="form-label">{{ form.solicitacao_assinada_arquivo.label }}</label>
+        {{ form.solicitacao_assinada_arquivo }}
+        <div class="form-text">{{ form.solicitacao_assinada_arquivo.help_text }}</div>
+        <div class="text-danger small">{{ form.solicitacao_assinada_arquivo.errors }}</div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 
 {% block form_actions %}
 <a href="{% url 'diarias_list' %}" class="btn btn-outline-secondary me-2">Cancelar</a>
 <button type="submit" class="btn btn-primary">
+    {% if modo_solicitacao_assinada %}
+    <i class="bi bi-check2-square"></i> Confirmar Inclusão
+    {% else %}
     <i class="bi bi-save"></i> Salvar e Continuar
+    {% endif %}
 </button>
 {% endblock %}
 

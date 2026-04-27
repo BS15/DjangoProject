@@ -4,6 +4,7 @@ Este módulo define filtros para pesquisa e listagem de processos, documentos e 
 """
 
 import django_filters
+from django.db import models
 from pagamentos.models import (
 	Processo,
 	Pendencia,
@@ -14,9 +15,26 @@ from pagamentos.models import (
 	STATUS_CONTINGENCIA,
 )
 
-
 class BaseStyledFilterSet(django_filters.FilterSet):
 	"""Base de filtros com estilo Bootstrap consistente."""
+
+	UNSUPPORTED_TEXTUAL_FIELDS = (models.FileField, models.JSONField)
+
+	@classmethod
+	def filter_for_field(cls, field, field_name, lookup_expr=None):
+		"""Converte tipos não suportados, como `FileField`, em filtros textuais."""
+		if isinstance(field, cls.UNSUPPORTED_TEXTUAL_FIELDS):
+			return django_filters.CharFilter(
+				field_name=field_name,
+				lookup_expr=lookup_expr or 'icontains',
+			)
+		try:
+			return super().filter_for_field(field, field_name, lookup_expr)
+		except AssertionError:
+			return django_filters.CharFilter(
+				field_name=field_name,
+				lookup_expr='icontains',
+			)
 
 	def __init__(self, *args, **kwargs):
 		"""Aplica classes Bootstrap em todos os campos do formulário de filtro."""
@@ -41,11 +59,7 @@ class ProcessoFilter(BaseStyledFilterSet):
 
 	class Meta:
 		model = Processo
-		fields = [
-			'n_nota_empenho', 'n_pagamento_siscac', 'observacao', 'detalhamento',
-			'extraorcamentario', 'forma_pagamento', 'tipo_pagamento', 'status', 'tag', 'conta',
-			'data_empenho', 'data_vencimento', 'data_pagamento', 'valor_bruto', 'valor_liquido'
-		]
+		fields = '__all__'
 
 	def filter_n_nota_empenho(self, queryset, name, value):
 		return queryset.filter(documentos_orcamentarios__numero_nota_empenho__icontains=value).distinct()
@@ -71,7 +85,7 @@ class PendenciaFilter(BaseStyledFilterSet):
 
 	class Meta:
 		model = Pendencia
-		fields = ['status', 'tipo', 'processo__id', 'processo__credor__nome']
+		fields = '__all__'
 
 
 class DevolucaoFilter(BaseStyledFilterSet):
@@ -89,7 +103,7 @@ class DevolucaoFilter(BaseStyledFilterSet):
 
 	class Meta:
 		model = Devolucao
-		fields = ['processo__id', 'processo__credor__nome', 'data_devolucao__gte', 'data_devolucao__lte', 'motivo']
+		fields = '__all__'
 
 	def __init__(self, *args, **kwargs):
 		"""Inicializa filtros de devolução com widgets de data no formato nativo."""
@@ -107,7 +121,7 @@ class ContingenciaFilter(BaseStyledFilterSet):
 
 	class Meta:
 		model = Contingencia
-		fields = ['processo__id', 'solicitante__username', 'status']
+		fields = '__all__'
 
 
 class AEmpenharFilter(ProcessoFilter):
@@ -126,7 +140,7 @@ class AEmpenharFilter(ProcessoFilter):
 	)
 
 	class Meta(ProcessoFilter.Meta):
-		fields = ['credor_nome', 'tipo_pagamento', 'data_vencimento__gte', 'data_vencimento__lte', 'valor_liquido']
+		fields = '__all__'
 
 	def __init__(self, *args, **kwargs):
 		"""Configura campos de vencimento com input nativo de data."""

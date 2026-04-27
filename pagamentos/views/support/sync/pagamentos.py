@@ -104,12 +104,11 @@ def sincronizar_siscac_manual_action(request):
     for item in force_sync_ids:
         try:
             processo_id, siscac_pg = item.split("|", 1)
-            updated = Processo.objects.filter(id=int(processo_id)).update(n_pagamento_siscac=siscac_pg)
-            if updated:
-                count += 1
-            else:
-                errors += 1
-        except (TypeError, ValueError):
+            processo = Processo.objects.get(id=int(processo_id))
+            processo.n_pagamento_siscac = siscac_pg
+            processo.save(update_fields=["n_pagamento_siscac"])
+            count += 1
+        except (TypeError, ValueError, Processo.DoesNotExist):
             errors += 1
 
     if count:

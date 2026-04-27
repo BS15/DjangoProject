@@ -25,7 +25,7 @@ class DocumentoFormsetManager {
     this.batchSelectAllSelector = `.batch-select-all-docs-btn[data-doc-prefix="${prefix}"]`;
     this.batchClearSelectionSelector = `.batch-clear-docs-btn[data-doc-prefix="${prefix}"]`;
     this.typeFieldSelector = 'select[name$="-tipo"]';
-    this.draggedRow = null;
+    this.sortableRowsManager = null;
     
     this.init();
   }
@@ -257,70 +257,23 @@ class DocumentoFormsetManager {
   }
 
   makeFormsetDraggable() {
-    const container = $(this.containerSelector);
-    const rows = container.find('.document-row');
-
-    rows.each((_, rowEl) => {
-      const row = $(rowEl);
-      const handle = row.find('.drag-handle').first();
-      if (!handle.length) {
-        return;
-      }
-      handle.css('cursor', 'grab');
-      if (!row.data('drag-bound')) {
-        row.attr('draggable', true);
-        row.data('drag-bound', true);
-      }
-    });
-
-    if (container.data('drag-container-bound')) {
+    if (typeof SortableRowsManager === 'undefined') {
+      console.warn('SortableRowsManager não encontrado. Ordenação por arrastar foi desabilitada.');
       return;
     }
 
-    container.data('drag-container-bound', true);
+    if (!this.sortableRowsManager) {
+      this.sortableRowsManager = new SortableRowsManager({
+        containerSelector: this.containerSelector,
+        rowSelector: '.document-row',
+        handleSelector: '.drag-handle',
+        midpointDivisor: DOC_DRAG_MIDPOINT_DIVISOR,
+        onReorder: () => this.syncOrderFields(),
+      });
+      return;
+    }
 
-    container.on('dragstart', '.document-row', (e) => {
-      const isHandle = $(e.target).closest('.drag-handle').length > 0;
-      if (!isHandle) {
-        e.preventDefault();
-        return;
-      }
-      this.draggedRow = e.currentTarget;
-      if (e.originalEvent && e.originalEvent.dataTransfer) {
-        e.originalEvent.dataTransfer.effectAllowed = 'move';
-        // Browser DnD APIs require non-empty drag data in some engines.
-        const dragToken = this.draggedRow.dataset.docId
-          || this.draggedRow.dataset.formIndex
-          || `new-${Date.now()}`;
-        e.originalEvent.dataTransfer.setData('text/plain', dragToken);
-      }
-      $(this.draggedRow).addClass('opacity-50');
-    });
-
-    container.on('dragend', '.document-row', () => {
-      if (this.draggedRow) {
-        $(this.draggedRow).removeClass('opacity-50');
-      }
-      this.draggedRow = null;
-      this.syncOrderFields();
-    });
-
-    container.on('dragover', '.document-row', (e) => {
-      e.preventDefault();
-      if (!this.draggedRow || this.draggedRow === e.currentTarget) {
-        return;
-      }
-      const target = e.currentTarget;
-      const targetRect = target.getBoundingClientRect();
-      const halfHeight = targetRect.height / DOC_DRAG_MIDPOINT_DIVISOR;
-      const shouldInsertAfter = e.originalEvent.clientY > targetRect.top + halfHeight;
-
-      if (shouldInsertAfter) {
-        target.parentNode.insertBefore(this.draggedRow, target.nextSibling);
-      } else {
-        target.parentNode.insertBefore(this.draggedRow, target);
-      }
-    });
+    this.sortableRowsManager.ensureRowsDraggable();
   }
 
   getVisibleRows() {

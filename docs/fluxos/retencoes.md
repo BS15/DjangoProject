@@ -1,6 +1,6 @@
 # Fluxo: Retenções de Impostos
 
-Este documento descreve o fluxo canônico de retenções no PaGé: criação dentro da gestão de nota fiscal, revisão e agrupamento confirmado para recolhimento, e validações de turnpike no avanço da esteira de pagamento.
+Este documento descreve o fluxo canônico de [retenções de impostos](/negocio/glossario_conselho.md#retencao-de-imposto) no PaGé: criação dentro da gestão de [nota fiscal](/negocio/glossario_conselho.md#nota-fiscal), revisão e agrupamento confirmado para recolhimento, e validações de [turnpike](/negocio/glossario_conselho.md#turnpike) no avanço da esteira de pagamento.
 
 ---
 
@@ -40,7 +40,7 @@ stateDiagram-v2
 - Recalcula `nota.valor_liquido` e sincroniza totais do processo fiscal.
 
 !!! warning "Domain seal de pós-pagamento"
-    `_status_bloqueia_gestao_fiscal` bloqueia mutações fiscais quando o processo já está em estágios pós-pagamento (`PAGO - EM CONFERÊNCIA` em diante), exceto em contingência ativa.
+    `_status_bloqueia_gestao_fiscal` bloqueia mutações fiscais quando o processo já está em estágios pós-pagamento (`PAGO - EM CONFERÊNCIA` em diante), exceto em [contingência](/negocio/glossario_conselho.md#contingencia) ativa.
 
 ---
 

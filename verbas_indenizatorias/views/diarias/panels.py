@@ -6,13 +6,16 @@ from django.views.decorators.http import require_GET
 
 from pagamentos.domain_models import Processo, STATUS_PROCESSO_PRE_AUTORIZACAO
 from pagamentos.views.shared import render_filtered_list
-from verbas_indenizatorias.forms import ComprovanteDiariaFormSet, DiariaForm
+from verbas_indenizatorias.forms import ComprovanteDiariaFormSet, DiariaComSolicitacaoAssinadaForm, DiariaForm
 from verbas_indenizatorias.models import Diaria, PrestacaoContasDiaria
 from verbas_indenizatorias.filters import DiariaFilter
 from verbas_indenizatorias.services.autorizacao_diarias import listar_diarias_pendentes_para_proponente
 from verbas_indenizatorias.services.prestacao import obter_ou_criar_prestacao
 from .access import _pode_acessar_prestacao, _pode_gerenciar_vinculo_diaria
 from ..shared.registry import _get_tipos_documento_verbas
+
+
+PRESTACAO_REVIEW_QUEUE_KEY = 'prestacoes_review_queue'
 
 
 def _processos_vinculaveis_queryset():
@@ -45,7 +48,29 @@ def diarias_list_view(request):
 @require_GET
 @permission_required("pagamentos.pode_criar_diarias", raise_exception=True)
 def add_diaria_view(request):
-    return render(request, 'verbas/add_diaria.html', {'form': DiariaForm()})
+    return render(
+        request,
+        'verbas/add_diaria.html',
+        {
+            'form': DiariaForm(),
+            'form_action_url': 'add_diaria_action',
+            'modo_solicitacao_assinada': False,
+        },
+    )
+
+
+@require_GET
+@permission_required("pagamentos.pode_criar_diarias", raise_exception=True)
+def add_diaria_assinada_view(request):
+    return render(
+        request,
+        'verbas/add_diaria.html',
+        {
+            'form': DiariaComSolicitacaoAssinadaForm(),
+            'form_action_url': 'add_diaria_assinada_action',
+            'modo_solicitacao_assinada': True,
+        },
+    )
 
 
 @require_GET
@@ -202,12 +227,22 @@ def revisar_prestacao_view(request, pk):
     comprovantes = prestacao.documentos.select_related('tipo').all()
     diaria = prestacao.diaria
 
+    fila = [int(pid) for pid in request.session.get(PRESTACAO_REVIEW_QUEUE_KEY, []) if str(pid).isdigit()]
+    indice_atual = fila.index(pk) if pk in fila else -1
+    proxima_prestacao = fila[indice_atual + 1] if 0 <= indice_atual < len(fila) - 1 else None
+    prestacao_anterior = fila[indice_atual - 1] if indice_atual > 0 else None
+
     context = {
         'prestacao': prestacao,
         'comprovantes': comprovantes,
         'diaria': diaria,
         'processo_vinculado': diaria.processo,
         'pode_aceitar': prestacao.status == PrestacaoContasDiaria.STATUS_ABERTA,
+        'in_review_queue': indice_atual >= 0,
+        'queue_position': indice_atual + 1 if indice_atual >= 0 else 1,
+        'queue_length': len(fila),
+        'next_pk': proxima_prestacao,
+        'prev_pk': prestacao_anterior,
     }
     return render(request, 'verbas/revisar_prestacao.html', context)
 
@@ -226,6 +261,7 @@ def download_template_diarias_csv(request):
 __all__ = [
     'diarias_list_view',
     'add_diaria_view',
+    'add_diaria_assinada_view',
     'gerenciar_diaria_view',
     'vinculo_diaria_spoke_view',
     'devolucao_diaria_spoke_view',

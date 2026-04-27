@@ -73,6 +73,27 @@ class DiariaForm(forms.ModelForm):
         return cleaned_data
 
 
+class DiariaComSolicitacaoAssinadaForm(DiariaForm):
+    """Entrada alternativa de diária com solicitação já assinada anexada pelo operador."""
+
+    solicitacao_assinada_arquivo = forms.FileField(
+        label="Solicitação assinada (PDF)",
+        required=True,
+        widget=forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': '.pdf'}),
+        help_text='Anexe o PDF da solicitação já assinada para cadastro direto da diária.',
+    )
+
+    def clean_solicitacao_assinada_arquivo(self):
+        arquivo = self.cleaned_data.get('solicitacao_assinada_arquivo')
+        if not arquivo:
+            raise forms.ValidationError('Anexe a solicitação assinada.')
+
+        nome = (arquivo.name or '').lower()
+        if not nome.endswith('.pdf'):
+            raise forms.ValidationError('A solicitação assinada deve ser enviada em PDF.')
+        return arquivo
+
+
 class ReembolsoForm(forms.ModelForm):
     """Formulário de reembolso de combustível com dados de deslocamento."""
 

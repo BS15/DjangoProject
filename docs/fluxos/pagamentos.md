@@ -1,6 +1,6 @@
 # Fluxo: Pagamentos
 
-Este documento descreve a esteira completa de um processo de pagamento no PaGé — da criação até o arquivamento — incluindo as filas operacionais, transições de status e pontos de controle (turnpikes).
+Este documento descreve a esteira completa de um [processo de pagamento](/negocio/glossario_conselho.md#processo) no PaGé — da criação até o arquivamento — incluindo as filas operacionais, transições de status e pontos de controle ([turnpikes](/negocio/glossario_conselho.md#turnpike)).
 
 ---
 
@@ -15,7 +15,7 @@ stateDiagram-v2
     [*] --> A_PAGAR_PENDENTE_AUTORIZACAO : Criado sem trigger
 
     A_EMPENHAR --> AGUARDANDO_LIQUIDACAO : Empenho SISCAC registrado
-    AGUARDANDO_LIQUIDACAO --> A_PAGAR_PENDENTE_AUTORIZACAO : Todas as NFs atestadas
+    AGUARDANDO_LIQUIDACAO --> A_PAGAR_PENDENTE_AUTORIZACAO : Todas as [Notas Fiscais](/negocio/glossario_conselho.md#nota-fiscal) atestadas
     A_PAGAR_PENDENTE_AUTORIZACAO --> A_PAGAR_ENVIADO_PARA_AUTORIZACAO : Envio para autorização
     A_PAGAR_ENVIADO_PARA_AUTORIZACAO --> A_PAGAR_AUTORIZADO : Aprovação do ordenador
     A_PAGAR_AUTORIZADO --> LANCADO_AGUARDANDO_COMPROVANTE : Marcação como lançado
@@ -51,7 +51,7 @@ stateDiagram-v2
 
 ---
 
-## 3. Cancelamento
+## 3. [Cancelamento](/negocio/glossario_conselho.md#cancelamento)
 
 Acionado pelo operador via `cancelar_processo_action`. Disponível enquanto o processo não estiver arquivado. Consulte o [Fluxo de Cancelamento](cancelamento.md) para a especificação completa.
 
@@ -67,7 +67,7 @@ stateDiagram-v2
 
 ---
 
-## 4. Devolução processual
+## 4. [Devolução](/negocio/glossario_conselho.md#devolucao) processual
 
 Quando o processo já foi pago e o cancelamento é necessário, o operador deve informar os dados da devolução junto com o cancelamento. A `DevolucaoProcessual` é criada atomicamente na mesma transação.
 
@@ -82,7 +82,7 @@ Campos obrigatórios na devolução: **valor devolvido**, **data da devolução*
 
 ---
 
-## 5. Contingência
+## 5. [Contingência](/negocio/glossario_conselho.md#contingencia)
 
 Fluxo de aprovação multi-etapa para retificações formais em dados do processo. O processo permanece no seu status atual enquanto a contingência tramita. Após aprovação final, os `dados_propostos` são aplicados atomicamente.
 

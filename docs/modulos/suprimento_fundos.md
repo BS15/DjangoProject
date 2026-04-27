@@ -1,6 +1,6 @@
 # Suprimento de Fundos
 
-O módulo `suprimentos` trata concessão, execução e prestação de contas de adiantamentos.
+O módulo `suprimentos` trata conceção, execução e [prestação de contas](/negocio/glossario_conselho.md#prestacao-de-contas) de adiantamentos.
 
 ## Pontos de controle
 - Concessão vinculada a justificativa e finalidade.

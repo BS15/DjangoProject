@@ -16,10 +16,10 @@ Use o menu lateral para navegar por:
 
 ## Fluxos Operacionais Detalhados
 
-Análise step-by-step de cada domínio de negócio, incluindo máquinas de estado, turnpikes, permissões e referências de código:
+Análise step-by-step de cada domínio de negócio, incluindo máquinas de estado, [turnpikes](/negocio/glossario_conselho.md#turnpike), permissões e referências de código:
 
 - [Pagamentos](fluxos/pagamentos.md) — esteira completa de A EMPENHAR até ARQUIVADO.
-- [Retenções](fluxos/retencoes.md) — ciclo de `RetencaoImposto` da NF ao recolhimento.
-- [Diárias](fluxos/diarias.md) — cadastro, prestação de contas, contingência e devolução.
-- [Suprimento de Fundos](fluxos/suprimento_fundos.md) — concessão, despesas e fechamento da prestação.
-- [Cancelamento](fluxos/cancelamento.md) — cancelamento formal de processos, verbas e suprimentos, com devolução obrigatória quando pago.
+- [Retenções](fluxos/retencoes.md) — ciclo de `RetencaoImposto` da [Nota Fiscal](/negocio/glossario_conselho.md#nota-fiscal) ao recolhimento.
+- [Diárias](fluxos/diarias.md) — cadastro, prestação de contas, [contingência](/negocio/glossario_conselho.md#contingencia) e [devolução](/negocio/glossario_conselho.md#devolucao).
+- [Suprimento de Fundos](fluxos/suprimento_fundos.md) — conceção, despesas e fechamento da prestação.
+- [Cancelamento](fluxos/cancelamento.md) — [cancelamento](/negocio/glossario_conselho.md#cancelamento) formal de processos, verbas e suprimentos, com [devolução](/negocio/glossario_conselho.md#devolucao) obrigatória quando pago.

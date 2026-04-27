@@ -9,7 +9,7 @@ O PaGé existe para digitalizar a esteira de pagamentos da administração públ
 - Padronizar a atuação das áreas demandante, financeira, fiscal e autorizadora.
 
 ## Princípios operacionais
-- Nenhum pagamento avança sem validações obrigatórias (turnpikes).
-- Toda ação relevante deixa trilha de auditoria.
-- Exceções seguem fluxo formal (contingência, devolução, recusa).
+- Nenhum pagamento avança sem validações obrigatórias ([turnpikes](/negocio/glossario_conselho.md#turnpike)).
+- Toda ação relevante deixa [trilha de auditoria](/governanca/trilha_auditoria.md).
+- Exceções seguem fluxo formal ([contingência](/negocio/glossario_conselho.md#contingencia), [devolução](/negocio/glossario_conselho.md#devolucao), recusa).
 - Separação clara entre leitura operacional (painéis) e ação transacional (tarefas).

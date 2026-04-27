@@ -18,8 +18,10 @@ from verbas_indenizatorias.constants import (
     STATUS_VERBA_SOLICITADA,
 )
 from verbas_indenizatorias.forms import ComprovanteDiariaFormSet, DiariaForm
+from verbas_indenizatorias.forms import DiariaComSolicitacaoAssinadaForm
 from verbas_indenizatorias.models import Diaria, PrestacaoContasDiaria
 from verbas_indenizatorias.services.documentos import (
+    anexar_solicitacao_assinada_diaria,
     gerar_e_anexar_pcd_diaria,
     gerar_e_anexar_scd_diaria,
     gerar_e_anexar_termo_prestacao_diaria,
@@ -33,11 +35,59 @@ from verbas_indenizatorias.services.vinculos_diaria import (
 from ..shared.documents import _validar_upload_documento
 from .access import _pode_acessar_prestacao, _pode_gerenciar_vinculo_diaria
 
+
+PRESTACAO_REVIEW_QUEUE_KEY = 'prestacoes_review_queue'
+
 def _redirect_com_next(request, fallback_name, **kwargs):
     next_url = request.POST.get('next') or request.GET.get('next')
     if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
         return redirect(next_url)
     return redirect(fallback_name, **kwargs)
+
+
+def _obter_fila_prestacoes_da_sessao(request):
+    fila = []
+    for valor in request.session.get(PRESTACAO_REVIEW_QUEUE_KEY, []):
+        if str(valor).isdigit():
+            fila.append(int(valor))
+    return fila
+
+
+def _limpar_fila_prestacoes_da_sessao(request):
+    request.session.pop(PRESTACAO_REVIEW_QUEUE_KEY, None)
+    request.session.modified = True
+
+
+@require_POST
+@permission_required('verbas_indenizatorias.visualizar_prestacao_contas', raise_exception=True)
+def iniciar_revisao_prestacoes_action(request):
+    ids_raw = request.POST.getlist('prestacao_ids')
+    prestacao_ids = [int(pid) for pid in ids_raw if pid.isdigit()]
+
+    if not prestacao_ids:
+        messages.warning(request, 'Selecione ao menos uma prestação para iniciar a revisão.')
+        return redirect('painel_revisar_prestacoes')
+
+    ids_validos = set(
+        PrestacaoContasDiaria.objects.filter(id__in=prestacao_ids).values_list('id', flat=True)
+    )
+    fila = [pid for pid in prestacao_ids if pid in ids_validos]
+
+    if not fila:
+        messages.warning(request, 'Nenhuma prestação selecionada é válida para revisão.')
+        return redirect('painel_revisar_prestacoes')
+
+    request.session[PRESTACAO_REVIEW_QUEUE_KEY] = fila
+    request.session.modified = True
+    return redirect('revisar_prestacao', pk=fila[0])
+
+
+@require_POST
+@permission_required('verbas_indenizatorias.visualizar_prestacao_contas', raise_exception=True)
+def sair_revisao_prestacoes_action(request):
+    _limpar_fila_prestacoes_da_sessao(request)
+    messages.info(request, 'Fila de revisão de diárias encerrada.')
+    return redirect('painel_revisar_prestacoes')
 
 
 def _preparar_nova_diaria(diaria):
@@ -52,9 +102,24 @@ def _preparar_nova_diaria(diaria):
     diaria.status = status_rascunho
 
 
-def _salvar_diaria_base(form, criador=None):
+def _preparar_diaria_com_solicitacao_assinada(diaria):
+    """Cria diária em trilha direta: já aprovada e pronta para fluxo operacional."""
+    from verbas_indenizatorias.models import StatusChoicesVerbasIndenizatorias
+
+    diaria.autorizada = True
+    status_aprovada, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
+        status_choice__iexact=STATUS_VERBA_APROVADA,
+        defaults={'status_choice': STATUS_VERBA_APROVADA},
+    )
+    diaria.status = status_aprovada
+
+
+def _salvar_diaria_base(form, criador=None, solicitacao_assinada=False):
     diaria = form.save(commit=False)
-    _preparar_nova_diaria(diaria)
+    if solicitacao_assinada:
+        _preparar_diaria_com_solicitacao_assinada(diaria)
+    else:
+        _preparar_nova_diaria(diaria)
     if criador and not diaria.criado_por_id:
         diaria.criado_por = criador
     diaria.save()
@@ -101,6 +166,31 @@ def add_diaria_action(request):
         logger.info("mutation=add_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
 
     messages.success(request, 'Diária cadastrada com sucesso.')
+    return redirect('gerenciar_diaria', pk=diaria.id)
+
+
+@require_POST
+@permission_required('pagamentos.pode_criar_diarias', raise_exception=True)
+def add_diaria_assinada_action(request):
+    form = DiariaComSolicitacaoAssinadaForm(request.POST, request.FILES)
+    if not form.is_valid():
+        messages.error(request, 'Erro ao salvar diária com solicitação assinada. Verifique os campos.')
+        return redirect('add_diaria_assinada')
+
+    with transaction.atomic():
+        diaria = _salvar_diaria_base(form, criador=request.user, solicitacao_assinada=True)
+        anexar_solicitacao_assinada_diaria(diaria, form.cleaned_data['solicitacao_assinada_arquivo'])
+        gerar_e_anexar_pcd_diaria(diaria, criador=request.user)
+        logger.info(
+            "mutation=add_diaria_assinada diaria_id=%s user_id=%s",
+            diaria.id,
+            request.user.pk,
+        )
+
+    messages.success(
+        request,
+        'Diária cadastrada em modo solicitação já assinada, aprovada automaticamente e com PCD gerado.',
+    )
     return redirect('gerenciar_diaria', pk=diaria.id)
 
 
@@ -263,6 +353,7 @@ def desvincular_diaria_processo_action(request, pk):
 @require_POST
 @permission_required('verbas_indenizatorias.analisar_prestacao_contas', raise_exception=True)
 def aceitar_prestacao_action(request, pk):
+    prestacao_aceita = False
     with transaction.atomic():
         prestacao = get_object_or_404(
             PrestacaoContasDiaria.objects.select_for_update().select_related('diaria__processo'),
@@ -284,8 +375,22 @@ def aceitar_prestacao_action(request, pk):
                 request.user.pk,
             )
             messages.success(request, 'Prestação aceita e comprovantes anexados ao processo com sucesso.')
+            prestacao_aceita = True
         except ValidationError as exc:
             messages.error(request, ' '.join(exc.messages))
+
+    if not prestacao_aceita:
+        return redirect('revisar_prestacao', pk=pk)
+
+    fila = _obter_fila_prestacoes_da_sessao(request)
+    if pk in fila:
+        idx = fila.index(pk)
+        proxima_prestacao = fila[idx + 1] if idx < len(fila) - 1 else None
+        if proxima_prestacao:
+            return redirect('revisar_prestacao', pk=proxima_prestacao)
+        _limpar_fila_prestacoes_da_sessao(request)
+        messages.info(request, 'Não há mais diárias na fila de revisão.')
+        return redirect('painel_revisar_prestacoes')
 
     return redirect('revisar_prestacao', pk=pk)
 

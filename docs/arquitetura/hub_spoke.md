@@ -14,7 +14,7 @@ O Hub não contém formulários de edição inline. Ele apresenta o estado e ofe
 
 ## Os Spokes — Tarefas Isoladas
 
-Cada operação de mutação — anexar um documento, aprovar uma etapa, registrar uma nota fiscal, lançar um pagamento — acontece em seu próprio endpoint dedicado. Esse endpoint recebe apenas os dados necessários para aquela operação específica, valida, executa via Service, e redireciona de volta ao Hub.
+Cada operação de mutação — anexar um documento, aprovar uma etapa, registrar uma nota fiscal, lançar um pagamento — acontece em seu próprio endpoint dedicado. Esse endpoint recebe apenas os dados necessários para aquela operação específica, valida, executa via Service, e redireciona de volta ao Hub. Para a separação por método e responsabilidades, veja [Padrão Manager-Worker](manager_worker.md).
 
 Essa isolação traz três consequências práticas:
 
@@ -24,6 +24,14 @@ Essa isolação traz três consequências práticas:
 
 **Rastreabilidade**: o histórico de auditoria (`django-simple-history`) registra operações pontuais e discretas, não salvamentos em massa que modificam múltiplos campos ao mesmo tempo.
 
+Detalhes de requisitos e cobertura de evidências: [Trilha de Auditoria](../governanca/trilha_auditoria.md).
+
 ## Relação com o padrão Manager-Worker
 
 O Hub é renderizado por um Panel (GET). Cada Spoke é executado por uma Action (POST) que delega para um Service. A arquitetura Hub-and-Spoke é, portanto, a expressão na interface do usuário do [Padrão Manager-Worker](manager_worker.md) na camada de código.
+
+Exemplos concretos de aplicação do padrão:
+
+- [Fluxo: Diárias](../fluxos/diarias.md)
+- [Fluxo: Pagamentos](../fluxos/pagamentos.md)
+- [Fluxo: Suprimento de Fundos](../fluxos/suprimento_fundos.md)

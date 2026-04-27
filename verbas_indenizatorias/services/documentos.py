@@ -28,6 +28,23 @@ def registrar_comprovante_prestacao(diaria, arquivo, tipo_id):
     """Registra comprovante na prestação de contas da diária, bloqueando prestação encerrada."""
     return _registrar_comprovante(diaria, arquivo, tipo_id)
 
+
+def anexar_solicitacao_assinada_diaria(diaria, arquivo):
+    """Anexa solicitação assinada da diária sem criar fluxo de assinatura eletrônica."""
+    if not arquivo:
+        raise ValidationError("Arquivo da solicitação assinada é obrigatório.")
+
+    tipo_scd = obter_ou_criar_tipo_documento(
+        "SOLICITACAO DE CONCESSAO DE DIARIAS (SCD)",
+    )
+    proxima_ordem = obter_proxima_ordem_documento(diaria.documentos)
+    DocumentoDiaria.objects.create(
+        diaria=diaria,
+        arquivo=arquivo,
+        tipo=tipo_scd,
+        ordem=proxima_ordem,
+    )
+
 def gerar_e_anexar_scd_diaria(diaria, criador):
     """Gera SCD da diária, anexa DocumentoDiaria e cria rascunho de assinatura."""
     pdf_bytes = gerar_documento_bytes("scd", diaria, VERBAS_DOCUMENT_REGISTRY)

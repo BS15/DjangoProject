@@ -1,4 +1,5 @@
 {% extends "layouts/base_review.html" %}
+{% load static %}
 
 {% block title %}Revisão — {{ solicitacao.tipo_label }} #{{ solicitacao.id }}{% endblock %}
 
@@ -20,9 +21,22 @@
 {% endblock %}
 
 {% block document_viewer %}
+{% include "commons/partials/_documento_preview_widget.html" with form_prefix="reviewdocs" %}
+
 <div class="card shadow-sm border-0">
-    <div class="card-header bg-white border-bottom py-3">
+    <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
         <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-paperclip"></i> Documentos</h6>
+        <div class="d-flex gap-2">
+            {% if solicitacao.tipo_verba == 'diaria' %}
+            <a href="{% url 'gerenciar_diaria' pk=solicitacao.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-circle"></i> Adicionar/Editar</a>
+            {% elif solicitacao.tipo_verba == 'reembolso' %}
+            <a href="{% url 'edit_reembolso' pk=solicitacao.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-circle"></i> Adicionar/Editar</a>
+            {% elif solicitacao.tipo_verba == 'jeton' %}
+            <a href="{% url 'gerenciar_jeton' pk=solicitacao.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-circle"></i> Adicionar/Editar</a>
+            {% elif solicitacao.tipo_verba == 'auxilio' %}
+            <a href="{% url 'gerenciar_auxilio' pk=solicitacao.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-circle"></i> Adicionar/Editar</a>
+            {% endif %}
+        </div>
     </div>
     <div class="card-body p-0">
         <ul class="list-group list-group-flush">
@@ -30,10 +44,25 @@
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 <div>
                     <i class="bi bi-file-earmark-pdf text-danger"></i>
-                    <a href="{% url 'download_arquivo_seguro' tipo_documento_seguro doc.id %}" target="_blank" class="text-decoration-none">
+                    <a href="{% url 'download_arquivo_seguro' tipo_documento_seguro doc.id %}" target="_blank" class="text-decoration-none me-2">
                         {{ doc.arquivo.name }}
                     </a>
                     <br><small class="text-muted">Tipo: {{ doc.tipo }}</small>
+                </div>
+                <div class="d-flex gap-1">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary doc-preview-btn"
+                        data-doc-prefix="reviewdocs"
+                        data-doc-url="{% url 'download_arquivo_seguro' tipo_documento_seguro doc.id %}"
+                        data-doc-name="{{ doc.arquivo.name|default:'' }}"
+                        title="Pré-visualizar arquivo"
+                    >
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <a href="{% url 'download_arquivo_seguro' tipo_documento_seguro doc.id %}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Abrir em nova aba">
+                        <i class="bi bi-box-arrow-up-right"></i>
+                    </a>
                 </div>
             </li>
             {% empty %}
@@ -42,6 +71,16 @@
         </ul>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'js/documento_preview_widget.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    new DocumentoPreviewWidget('reviewdocs');
+});
+</script>
 {% endblock %}
 
 {% block review_panel %}

@@ -10,10 +10,12 @@ from django.shortcuts import get_object_or_404, redirect, render
 from pagamentos.forms import DocumentoFormSet, PendenciaForm, PendenciaFormSet
 from pagamentos.domain_models import (
     Contingencia,
+    Devolucao,
     Processo,
     StatusChoicesPendencias,
     TiposDeDocumento,
 )
+from fiscal.models import RetencaoImposto
 from .audit_builders import _get_unified_history
 
 
@@ -293,6 +295,23 @@ def _processo_fila_detalhe_view(
 
     history_records = _get_unified_history(pk)
 
+    processo_pendencias = list(
+        processo.pendencias.select_related("tipo", "status").order_by("-id")[:5]
+    )
+    processo_retencoes = list(
+        RetencaoImposto.objects.select_related(
+            "nota_fiscal",
+            "codigo",
+            "status",
+            "beneficiario",
+        )
+        .filter(nota_fiscal__processo=processo)
+        .order_by("-data_pagamento", "-id")[:5]
+    )
+    processo_devolucoes = list(
+        Devolucao.objects.filter(processo=processo).order_by("-data_devolucao", "-id")[:5]
+    )
+
     contingencias = Contingencia.objects.filter(processo=processo).select_related(
         "solicitante", "aprovado_por_supervisor", "aprovado_por_ordenador", "aprovado_por_conselho"
     ).order_by("-data_solicitacao")
@@ -301,6 +320,9 @@ def _processo_fila_detalhe_view(
         "processo": processo,
         "pendencia_form": PendenciaForm(),
         "history_records": history_records,
+        "processo_pendencias": processo_pendencias,
+        "processo_retencoes": processo_retencoes,
+        "processo_devolucoes": processo_devolucoes,
         "contingencias": contingencias,
         "queue": queue,
         "current_index": current_index,

@@ -5,7 +5,7 @@ No contexto de administração pública, o PaGé prioriza integridade histórica
 ## Princípios
 - Não exclusão de registros de negócio críticos.
 - Registro de histórico de alterações em entidades sensíveis.
-- Tratamento de exceções por modelos formais (ex.: contingência, devolução).
+- Tratamento de exceções por modelos formais (ex.: [contingência](/negocio/glossario_conselho.md#contingencia), [devolução](/negocio/glossario_conselho.md#devolucao)).
 
 ## Auditoria persistente
 

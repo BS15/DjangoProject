@@ -1,6 +1,8 @@
 # Fluxo: Diárias
 
-Este documento descreve o ciclo operacional completo de uma diária no PaGé — do cadastro ao encerramento da prestação de contas — incluindo vínculo com processo de pagamento, assinatura eletrônica, devolução e contingência.
+Este documento descreve o ciclo operacional completo de uma [diária](/negocio/glossario_conselho.md#diaria) no PaGé — do cadastro ao encerramento da prestação de contas — incluindo vínculo com processo de pagamento, assinatura eletrônica, devolução e contingência.
+
+Para o padrão arquitetural aplicado nas views deste fluxo, consulte [Padrão Manager-Worker](../arquitetura/manager_worker.md) e [Interface Hub-and-Spoke](../arquitetura/hub_spoke.md).
 
 ---
 
@@ -35,7 +37,9 @@ stateDiagram-v2
 
 ### Domain Seal (pós-pagamento)
 
-Quando a diária está vinculada a um processo em estágio `PAGO` ou posterior, mutações diretas em campos sensíveis são bloqueadas em `save()` e `delete()`. A única exceção autorizada é via **Contingência aprovada** com bypass controlado (`_bypass_domain_seal = True`).
+Quando a diária está vinculada a um [processo](/negocio/glossario_conselho.md#processo) em estágio `PAGO` ou posterior, mutações diretas em campos sensíveis são bloqueadas em `save()` e `delete()`. A única exceção autorizada é via **[Contingência](/negocio/glossario_conselho.md#contingencia) aprovada** com bypass controlado (`_bypass_domain_seal = True`).
+
+Contexto arquitetural do Domain Seal e [turnpikes](/negocio/glossario_conselho.md#turnpike): [Domain Knowledge](../arquitetura/domain_knowledge.md).
 
 ### Campos protegidos pós-pagamento
 
@@ -48,10 +52,25 @@ Quando a diária está vinculada a um processo em estágio `PAGO` ou posterior, 
 **View:** `add_diaria_view` / **Action:** `add_diaria_action`  
 **Permissão:** `pagamentos.pode_criar_diarias`
 
+Referência de permissão e RBAC: [Matriz de Permissões](../governanca/matriz_permissoes.md).
+
 1. Operador preenche o formulário (`DiariaForm`).
 2. `_preparar_nova_diaria` define a diária como **rascunho** (`autorizada=False`, status `RASCUNHO`).
 3. Se tipo for `COMPLEMENTACAO`, o sistema gera e anexa o **SCD** (Solicitação de Complementação de Diária).
 4. Redirecionamento para `gerenciar_diaria`.
+
+### Entrada alternativa: diária com solicitação já assinada (skip SCD)
+
+**View:** `add_diaria_assinada_view` / **Action:** `add_diaria_assinada_action`  
+**Permissão:** `pagamentos.pode_criar_diarias`
+
+Use esta trilha quando a solicitação já estiver assinada fora do fluxo eletrônico padrão.
+
+1. Operador preenche o mesmo formulário base e anexa o PDF da solicitação assinada (`solicitacao_assinada_arquivo`).
+2. A diária nasce **pré-aprovada** (`status=APROVADA`, `autorizada=True`).
+3. O sistema **não gera SCD** e **não dispara envio de SCD para assinatura**.
+4. O arquivo enviado é anexado como documento SCD para rastreabilidade.
+5. O sistema gera automaticamente o **PCD** após a confirmação da inclusão.
 
 ### Etapas de autorização
 
@@ -59,6 +78,22 @@ Após o cadastro, a diária segue o fluxo explícito de autorização:
 
 1. `solicitar_autorizacao_diaria_action`: `RASCUNHO → SOLICITADA`.
 2. `autorizar_diaria_action`: `SOLICITADA → APROVADA` (e marca `autorizada=True`), apenas quando o usuário autenticado é o `proponente` da diária.
+
+No modo de solicitação já assinada, essas duas etapas não são necessárias, pois a diária já é persistida como `APROVADA`.
+
+### Criação em lote com switch de solicitação já assinada
+
+**View:** `importar_diarias_view`  
+**Serviço:** `confirmar_diarias_lote_com_modo`
+
+Padrão de delegação Action/Service: [Padrão Manager-Worker](../arquitetura/manager_worker.md).
+
+Na tela de importação em lote existe o switch **"Entrada com solicitação já assinada"**.
+
+- **Switch desligado (modo padrão):** cria diária para trilha de autorização (`status=SOLICITADA`, `autorizada=False`).
+- **Switch ligado (modo já assinada):** cria diária como pré-aprovada (`status=APROVADA`, `autorizada=True`) e gera **PCD** automaticamente na confirmação.
+
+Importante: no lote, o switch altera o modo de criação da diária, mas não anexa PDF de solicitação assinada por linha. Para anexar o PDF da solicitação assinada na própria criação, use a entrada individual `add_diaria_assinada`.
 
 ---
 
@@ -105,6 +140,8 @@ Regras:
 
 **Views:** `painel_revisar_prestacoes_view` / `revisar_prestacao_view`  
 **Permissão:** `verbas_indenizatorias.analisar_prestacao_contas`
+
+Requisitos de trilha e evidência de mudança: [Trilha de Auditoria](../governanca/trilha_auditoria.md).
 
 - O analista revisa os comprovantes do beneficiário.
 - `aceitar_prestacao_action`:
@@ -179,6 +216,8 @@ Ao aprovar, `_aplicar_contingencia_diaria` usa `_bypass_domain_seal = True` para
   4. Grava `CancelamentoProcessual` (tipo `DIARIA`).
 
 Consulte o [Fluxo de Cancelamento](cancelamento.md) para a especificação completa, incluindo o partial compartilhado de devolução.
+
+Para o fluxo financeiro após agrupamento e pagamento, veja [Fluxo: Pagamentos](pagamentos.md).
 
 ---
 

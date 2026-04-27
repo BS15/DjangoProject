@@ -205,6 +205,7 @@ class Processo(models.Model):
         "tag_id",
         "n_pagamento_siscac",
     }
+    _CAMPOS_LIBERADOS_SYNC_SISCAC = {"n_pagamento_siscac"}
 
     class Meta:
         permissions = [
@@ -374,6 +375,11 @@ class Processo(models.Model):
         alterados = [
             campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)
         ]
+
+        # O número de pagamento SISCAC é reconciliado por rotina de sincronização
+        # e pode ser ajustado mesmo em estágios pós-pagamento.
+        if alterados and set(alterados).issubset(self._CAMPOS_LIBERADOS_SYNC_SISCAC):
+            return
 
         if alterados:
             raise ValidationError(

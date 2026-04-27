@@ -1,0 +1,91 @@
+# Mapa de termos para hyperlinks contextuais
+# Usado para auto-linkar conceitos em toda a documentação
+# Formato: termo: url_relativa
+
+glossario_termos:
+  # Fundamentos
+  "Processo": "negocio/glossario_conselho.md#processo"
+  "Credor": "negocio/glossario_conselho.md#credor"
+  "Status do Processo": "negocio/glossario_conselho.md#status-do-processo"
+  "Turnpike": "negocio/glossario_conselho.md#turnpike"
+  "Pendência": "negocio/glossario_conselho.md#pendencia"
+
+  # Pré-pagamento
+  "Empenho": "negocio/glossario_conselho.md#empenho"
+  "Documento Orçamentário": "negocio/glossario_conselho.md#documento-orcamentario"
+  "Liquidação": "negocio/glossario_conselho.md#liquidacao"
+  "Nota Fiscal": "negocio/glossario_conselho.md#nota-fiscal"
+  "Ateste de Nota Fiscal": "negocio/glossario_conselho.md#ateste-de-nota-fiscal"
+  "Ordenador de Despesas": "negocio/glossario_conselho.md#ordenador-de-despesas"
+
+  # Pagamento
+  "Lançamento Bancário": "negocio/glossario_conselho.md#lancamento-bancario"
+  "Comprovante de Pagamento": "negocio/glossario_conselho.md#comprovante-de-pagamento"
+
+  # Pós-pagamento
+  "Conferência Pós-Pagamento": "negocio/glossario_conselho.md#conferencia-pos-pagamento"
+  "Contabilização": "negocio/glossario_conselho.md#contabilizacao"
+  "Arquivamento": "negocio/glossario_conselho.md#arquivamento"
+
+  # Fiscal
+  "Retenção de Imposto": "negocio/glossario_conselho.md#retencao-de-imposto"
+  "Processo de Recolhimento": "negocio/glossario_conselho.md#processo-de-recolhimento"
+  "Competência Fiscal": "negocio/glossario_conselho.md#competencia-fiscal"
+  "Fonte Retentora": "negocio/glossario_conselho.md#fonte-retentora"
+  "EFD-Reinf": "negocio/glossario_conselho.md#efd-reinf"
+
+  # Exceções
+  "Contingência": "negocio/glossario_conselho.md#contingencia"
+  "Devolução": "negocio/glossario_conselho.md#devolucao"
+  "Cancelamento": "negocio/glossario_conselho.md#cancelamento"
+  "Recusa": "negocio/glossario_conselho.md#recusa"
+  "Selagem de Domínio": "negocio/glossario_conselho.md#selagem-de-dominio"
+
+  # Verbas
+  "Diária": "negocio/glossario_conselho.md#diaria"
+  "Reembolso": "negocio/glossario_conselho.md#reembolso"
+  "Jeton": "negocio/glossario_conselho.md#jeton"
+  "Auxílio": "negocio/glossario_conselho.md#auxilio"
+  "Suprimento de Fundos": "negocio/glossario_conselho.md#suprimento-de-fundos"
+  "Prestação de Contas": "negocio/glossario_conselho.md#prestacao-de-contas"
+
+# Padrões & Arquitetura
+arquitetura_termos:
+  "Manager-Worker": "arquitetura/manager_worker.md"
+  "Padrão Manager-Worker": "arquitetura/manager_worker.md"
+  "Hub-and-Spoke": "arquitetura/hub_spoke.md"
+  "Interface Hub-and-Spoke": "arquitetura/hub_spoke.md"
+  "Pattern Matching First": "arquitetura/pattern_matching.md"
+  "Domain Seal": "arquitetura/domain_knowledge.md#domain-seal"
+  "Máquina de Estado": "arquitetura/domain_knowledge.md#maquina-de-estado-rigida"
+  "Domain Knowledge": "arquitetura/domain_knowledge.md"
+  "Backend Architecture": "arquitetura/backend_architecture.md"
+  "RBAC": "arquitetura/controle_acesso_contextual.md"
+  "Controle de Acesso": "arquitetura/controle_acesso_contextual.md"
+
+# Fluxos
+fluxos_termos:
+  "Fluxo de Pagamentos": "fluxos/pagamentos.md"
+  "Fluxo de Diárias": "fluxos/diarias.md"
+  "Fluxo de Cancelamento": "fluxos/cancelamento.md"
+  "Fluxo de Retenções": "fluxos/retencoes.md"
+  "Fluxo de Suprimento de Fundos": "fluxos/suprimento_fundos.md"
+
+# Módulos
+modulos_termos:
+  "Verbas Indenizatórias": "modulos/verbas_indenizatorias.md"
+  "Suprimento de Fundos": "modulos/suprimento_fundos.md"
+  "Módulo Fiscal": "modulos/modulo_fiscal.md"
+  "Pagamentos Core": "modulos/pagamentos_core.md"
+
+# Governança
+governanca_termos:
+  "Matriz de Permissões": "governanca/matriz_permissoes.md"
+  "Trilha de Auditoria": "governanca/trilha_auditoria.md"
+  "Catálogo de Permissões": "governanca/catalogo_permissoes_grupos.md"
+
+# Operações
+operacoes_termos:
+  "Deploy": "operacoes/deploy.md"
+  "Monitoramento": "operacoes/monitoramento.md"
+  "Backup e Restore": "operacoes/backup_restore.md"

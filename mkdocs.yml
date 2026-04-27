@@ -65,8 +65,14 @@ nav:
       - Missão do Sistema: negocio/missao_sistema.md
       - Glossário do Conselho: negocio/glossario_conselho.md
   - Arquitetura de Software:
+      - Estado de Desenvolvimento: arquitetura/development_state.md
+      - Pattern Matching First: arquitetura/pattern_matching.md
+      - Arquitetura de Backend: arquitetura/backend_architecture.md
       - Padrão Manager-Worker: arquitetura/manager_worker.md
       - Hub-and-Spoke: arquitetura/hub_spoke.md
+      - Template Tiers: arquitetura/template_tiers.md
+      - Domain Knowledge: arquitetura/domain_knowledge.md
+      - Controle de Acesso Contextual: arquitetura/controle_acesso_contextual.md
   - Manual de Módulos:
       - Pagamentos Core: modulos/pagamentos_core.md
       - Verbas Indenizatórias: modulos/verbas_indenizatorias.md

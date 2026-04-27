@@ -1,6 +1,6 @@
 # Módulo Fiscal
 
-O módulo `fiscal` centraliza retenções e obrigações acessórias do ciclo de pagamento.
+O módulo `fiscal` centraliza [retenções](/negocio/glossario_conselho.md#retencao-de-imposto) e obrigações acessórias do ciclo de [pagamento](/fluxos/pagamentos.md).
 
 ## Responsabilidades
 
@@ -21,14 +21,14 @@ O módulo `fiscal` centraliza retenções e obrigações acessórias do ciclo de
 
 ## Relação com o fluxo
 
-A etapa fiscal atua como gate para progressão segura até pagamento e contabilização.
+A etapa fiscal atua como gate para progressão segura até [pagamento](/fluxos/pagamentos.md) e contabilização.
 
 ## Controles e validações
 
-- Obrigatório informar retenções selecionadas.
+- Obrigatório informar [retenções](/negocio/glossario_conselho.md#retencao-de-imposto) selecionadas.
 - Obrigatório anexar simultaneamente relatório de retenções, guia de recolhimento e comprovante de pagamento.
-- Obrigatório informar competência válida no campo `competencia` (normalizado internamente para `YYYY-MM-01`).
-- Apenas retenções já agrupadas em processo de pagamento são elegíveis para anexação.
+- Obrigatório informar competencia válida no campo `competencia` (normalizado internamente para `YYYY-MM-01`).
+- Apenas retenções já agrupadas em [processo](/negocio/glossario_conselho.md#processo) de pagamento são elegibles para anexação.
 
 !!! note
 	Para detalhes operacionais, consulte [Dicionários Operacionais](../desenvolvedor/dicionarios_operacionais.md).

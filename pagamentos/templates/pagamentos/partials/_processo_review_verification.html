@@ -1,0 +1,143 @@
+<div class="card shadow-sm border-0 mb-3">
+	<div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+		<h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-list-check"></i> Verificação do Processo</h6>
+		<a href="{% url 'process_detail' pk=processo.id %}" class="btn btn-sm btn-outline-secondary">
+			<i class="bi bi-box-arrow-up-right"></i> Abrir detalhe
+		</a>
+	</div>
+	<div class="card-body p-0">
+		<div class="accordion accordion-flush" id="process-review-accordion-{{ processo.id }}">
+			<div class="accordion-item">
+				<h2 class="accordion-header" id="heading-pendencias-{{ processo.id }}">
+					<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-pendencias-{{ processo.id }}" aria-expanded="true" aria-controls="collapse-pendencias-{{ processo.id }}">
+						<i class="bi bi-exclamation-triangle me-2"></i> Pendências
+						<span class="badge bg-warning text-dark ms-2">{{ processo_pendencias|length }}</span>
+					</button>
+				</h2>
+				<div id="collapse-pendencias-{{ processo.id }}" class="accordion-collapse collapse show" aria-labelledby="heading-pendencias-{{ processo.id }}" data-bs-parent="#process-review-accordion-{{ processo.id }}">
+					<div class="accordion-body small">
+						<div class="d-flex justify-content-end mb-2">
+							<a href="{% url 'editar_processo_pendencias' pk=processo.id %}" class="btn btn-sm btn-outline-secondary py-0">Gerenciar</a>
+						</div>
+						<ul class="list-group list-group-flush">
+							{% for pendencia in processo_pendencias %}
+							<li class="list-group-item px-0 small d-flex justify-content-between gap-2">
+								<span class="text-break">{{ pendencia.descricao|default:pendencia.tipo|truncatechars:70 }}</span>
+								{% if pendencia.status %}<span class="badge bg-warning text-dark align-self-start">{{ pendencia.status.opcao_status }}</span>{% endif %}
+							</li>
+							{% empty %}
+							<li class="list-group-item px-0 small text-muted">Sem pendências.</li>
+							{% endfor %}
+						</ul>
+					</div>
+				</div>
+			</div>
+
+			<div class="accordion-item">
+				<h2 class="accordion-header" id="heading-retencoes-{{ processo.id }}">
+					<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-retencoes-{{ processo.id }}" aria-expanded="false" aria-controls="collapse-retencoes-{{ processo.id }}">
+						<i class="bi bi-scissors me-2"></i> Retenções
+						<span class="badge bg-info text-dark ms-2">{{ processo_retencoes|length }}</span>
+					</button>
+				</h2>
+				<div id="collapse-retencoes-{{ processo.id }}" class="accordion-collapse collapse" aria-labelledby="heading-retencoes-{{ processo.id }}" data-bs-parent="#process-review-accordion-{{ processo.id }}">
+					<div class="accordion-body small">
+						<div class="d-flex justify-content-end mb-2">
+							<a href="{% url 'painel_impostos_view' %}" class="btn btn-sm btn-outline-secondary py-0">Painel</a>
+						</div>
+						<ul class="list-group list-group-flush">
+							{% for retencao in processo_retencoes %}
+							<li class="list-group-item px-0 small d-flex justify-content-between gap-2">
+								<div>
+									<strong>{{ retencao.codigo|default:'Imposto' }}</strong><br>
+									<span class="text-muted">R$ {{ retencao.valor|floatformat:2 }}{% if retencao.data_pagamento %} • {{ retencao.data_pagamento|date:"d/m/Y" }}{% endif %}</span>
+								</div>
+								{% if retencao.status %}<span class="badge bg-info text-dark align-self-start">{{ retencao.status }}</span>{% endif %}
+							</li>
+							{% empty %}
+							<li class="list-group-item px-0 small text-muted">Sem retenções vinculadas.</li>
+							{% endfor %}
+						</ul>
+					</div>
+				</div>
+			</div>
+
+			<div class="accordion-item">
+				<h2 class="accordion-header" id="heading-contingencias-{{ processo.id }}">
+					<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-contingencias-{{ processo.id }}" aria-expanded="false" aria-controls="collapse-contingencias-{{ processo.id }}">
+						<i class="bi bi-shield-exclamation me-2"></i> Contingências
+						<span class="badge bg-warning text-dark ms-2">{{ contingencias|length }}</span>
+					</button>
+				</h2>
+				<div id="collapse-contingencias-{{ processo.id }}" class="accordion-collapse collapse" aria-labelledby="heading-contingencias-{{ processo.id }}" data-bs-parent="#process-review-accordion-{{ processo.id }}">
+					<div class="accordion-body small">
+						<div class="d-flex justify-content-end mb-2">
+							<a href="{% url 'painel_contingencias' %}" class="btn btn-sm btn-outline-secondary py-0">Painel</a>
+						</div>
+						<ul class="list-group list-group-flush">
+							{% for contingencia in contingencias|slice:":5" %}
+							<li class="list-group-item px-0 small d-flex justify-content-between gap-2">
+								<span class="text-break">{{ contingencia.justificativa|truncatechars:70 }}</span>
+								<span class="badge bg-warning text-dark align-self-start">{{ contingencia.get_status_display }}</span>
+							</li>
+							{% empty %}
+							<li class="list-group-item px-0 small text-muted">Sem contingências.</li>
+							{% endfor %}
+						</ul>
+					</div>
+				</div>
+			</div>
+
+			<div class="accordion-item">
+				<h2 class="accordion-header" id="heading-devolucoes-{{ processo.id }}">
+					<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-devolucoes-{{ processo.id }}" aria-expanded="false" aria-controls="collapse-devolucoes-{{ processo.id }}">
+						<i class="bi bi-arrow-counterclockwise me-2"></i> Devoluções
+						<span class="badge bg-secondary ms-2">{{ processo_devolucoes|length }}</span>
+					</button>
+				</h2>
+				<div id="collapse-devolucoes-{{ processo.id }}" class="accordion-collapse collapse" aria-labelledby="heading-devolucoes-{{ processo.id }}" data-bs-parent="#process-review-accordion-{{ processo.id }}">
+					<div class="accordion-body small">
+						<div class="d-flex justify-content-end mb-2">
+							<a href="{% url 'painel_devolucoes' %}" class="btn btn-sm btn-outline-secondary py-0">Painel</a>
+						</div>
+						<ul class="list-group list-group-flush">
+							{% for devolucao in processo_devolucoes %}
+							<li class="list-group-item px-0 small">
+								<strong>R$ {{ devolucao.valor_devolvido|floatformat:2 }}</strong>
+								<span class="text-muted"> • {{ devolucao.data_devolucao|date:"d/m/Y" }}</span><br>
+								<span class="text-break">{{ devolucao.motivo|truncatechars:70 }}</span>
+							</li>
+							{% empty %}
+							<li class="list-group-item px-0 small text-muted">Sem devoluções registradas.</li>
+							{% endfor %}
+						</ul>
+					</div>
+				</div>
+			</div>
+
+			<div class="accordion-item">
+				<h2 class="accordion-header" id="heading-auditoria-{{ processo.id }}">
+					<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-auditoria-{{ processo.id }}" aria-expanded="false" aria-controls="collapse-auditoria-{{ processo.id }}">
+						<i class="bi bi-clock-history me-2"></i> Auditoria
+						<span class="badge bg-dark ms-2">{{ history_records|length }}</span>
+					</button>
+				</h2>
+				<div id="collapse-auditoria-{{ processo.id }}" class="accordion-collapse collapse" aria-labelledby="heading-auditoria-{{ processo.id }}" data-bs-parent="#process-review-accordion-{{ processo.id }}">
+					<div class="accordion-body small">
+						<ul class="list-group list-group-flush">
+							{% for rec in history_records|slice:":8" %}
+							<li class="list-group-item px-0 small">
+								<strong>{{ rec.history_date|date:"d/m/Y H:i" }}</strong>
+								<span class="text-muted"> • {{ rec.history_user|default:"-" }}</span><br>
+								<span>{{ rec.history_change_reason|default:rec.history_type_label }}</span>
+							</li>
+							{% empty %}
+							<li class="list-group-item px-0 small text-muted">Sem histórico disponível.</li>
+							{% endfor %}
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

@@ -1,5 +1,6 @@
 # Troubleshooting
 
+
 Tabela de problemas comuns, causas prováveis e ações corretivas.
 
 ---

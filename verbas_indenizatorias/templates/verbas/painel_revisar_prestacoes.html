@@ -4,6 +4,14 @@
 {% block page_subtitle %}Backoffice: análise e aceite das prestações de contas de diárias.{% endblock %}
 
 {% block page_actions %}
+<form method="post" action="{% url 'iniciar_revisao_prestacoes' %}" id="iniciar-prestacoes-form" class="d-flex align-items-center gap-2">
+    {% csrf_token %}
+    <div id="prestacoes-hidden-ids"></div>
+    <button type="submit" class="btn btn-primary btn-sm fw-bold" id="prestacoes-start-btn" disabled>
+        <i class="bi bi-play-fill"></i> Iniciar Revisão
+    </button>
+    <span class="badge bg-secondary" id="prestacoes-selected-count">0</span>
+</form>
 <a href="{% url 'verbas_panel' %}" class="btn btn-outline-secondary btn-sm">
     <i class="bi bi-arrow-left"></i> Voltar
 </a>
@@ -33,6 +41,7 @@
 {% endblock %}
 
 {% block table_headers %}
+<th class="text-center no-sort" style="width: 40px;"><input type="checkbox" id="prestacoes-select-all" class="form-check-input" title="Selecionar todos"></th>
 <th>Prestação</th>
 <th>Diária</th>
 <th>Beneficiário</th>
@@ -44,6 +53,7 @@
 {% block table_rows %}
 {% for prestacao in prestacoes %}
 <tr>
+    <td class="text-center"><input type="checkbox" class="form-check-input prestacao-row-check" value="{{ prestacao.id }}" aria-label="Selecionar prestação #{{ prestacao.id }}"></td>
     <td>#{{ prestacao.id }}</td>
     <td>{{ prestacao.diaria.numero_siscac|default:prestacao.diaria.id }}</td>
     <td>{{ prestacao.diaria.beneficiario.nome }}</td>
@@ -60,6 +70,55 @@
     </td>
 </tr>
 {% empty %}
-<tr><td colspan="6" class="text-center text-muted py-4">Nenhuma prestação encontrada.</td></tr>
+<tr><td colspan="7" class="text-center text-muted py-4">Nenhuma prestação encontrada.</td></tr>
 {% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+(function () {
+    var selectAll = document.getElementById('prestacoes-select-all');
+    var checks = Array.from(document.querySelectorAll('.prestacao-row-check'));
+    var hiddenContainer = document.getElementById('prestacoes-hidden-ids');
+    var countBadge = document.getElementById('prestacoes-selected-count');
+    var startBtn = document.getElementById('prestacoes-start-btn');
+
+    if (!selectAll || !hiddenContainer || !countBadge || !startBtn || !checks.length) {
+        if (startBtn) {
+            startBtn.disabled = true;
+        }
+        return;
+    }
+
+    function refreshSelection() {
+        var selected = checks.filter(function (check) { return check.checked; });
+        hiddenContainer.innerHTML = '';
+        selected.forEach(function (check) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'prestacao_ids';
+            input.value = check.value;
+            hiddenContainer.appendChild(input);
+        });
+
+        countBadge.textContent = String(selected.length);
+        startBtn.disabled = selected.length === 0;
+        selectAll.checked = selected.length > 0 && selected.length === checks.length;
+    }
+
+    selectAll.addEventListener('change', function () {
+        checks.forEach(function (check) {
+            check.checked = selectAll.checked;
+        });
+        refreshSelection();
+    });
+
+    checks.forEach(function (check) {
+        check.addEventListener('change', refreshSelection);
+    });
+
+    refreshSelection();
+}());
+</script>
 {% endblock %}

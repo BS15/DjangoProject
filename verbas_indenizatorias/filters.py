@@ -15,10 +15,7 @@ class DiariaFilter(BaseStyledFilterSet):
 
     class Meta:
         model = Diaria
-        fields = [
-            'numero_siscac', 'beneficiario', 'proponente',
-            'status', 'cidade_destino',
-        ]
+        fields = '__all__'
 
 
 class ReembolsoFilter(BaseStyledFilterSet):
@@ -26,11 +23,7 @@ class ReembolsoFilter(BaseStyledFilterSet):
 
     class Meta:
         model = ReembolsoCombustivel
-        fields = {
-            'numero_sequencial': ['icontains'],
-            'beneficiario': ['exact'],
-            'status': ['exact'],
-        }
+        fields = '__all__'
 
 
 class JetonFilter(BaseStyledFilterSet):
@@ -38,12 +31,7 @@ class JetonFilter(BaseStyledFilterSet):
 
     class Meta:
         model = Jeton
-        fields = {
-            'numero_sequencial': ['icontains'],
-            'beneficiario': ['exact'],
-            'reuniao': ['icontains'],
-            'status': ['exact'],
-        }
+        fields = '__all__'
 
 
 class AuxilioFilter(BaseStyledFilterSet):
@@ -51,8 +39,4 @@ class AuxilioFilter(BaseStyledFilterSet):
 
     class Meta:
         model = AuxilioRepresentacao
-        fields = {
-            'numero_sequencial': ['icontains'],
-            'beneficiario': ['exact'],
-            'status': ['exact'],
-        }
+        fields = '__all__'

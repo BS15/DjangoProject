@@ -1,6 +1,6 @@
 # Fluxo: Cancelamento
 
-Este documento descreve o fluxo formal de cancelamento no PaGé — aplicável a processos de pagamento, verbas indenizatórias (diárias, reembolsos, jetons, auxílios) e suprimentos de fundos — incluindo a regra de **devolução obrigatória** quando a entidade já está em status pago.
+Este documento descreve o fluxo formal de [cancelamento](/negocio/glossario_conselho.md#cancelamento) no PaGé — aplicável a [processos de pagamento](/negocio/glossario_conselho.md#processo), [verbas indenizatórias](/negocio/glossario_conselho.md#auxilios) ([diárias](/negocio/glossario_conselho.md#diaria), [reembolsos](/negocio/glossario_conselho.md#reembolso), [jetons](/negocio/glossario_conselho.md#jeton), [auxílios](/negocio/glossario_conselho.md#auxilio)) e [suprimentos de fundos](/negocio/glossario_conselho.md#suprimento-de-fundos) — incluindo a regra de **[devolução](/negocio/glossario_conselho.md#devolucao) obrigatória** quando a entidade já está em status pago.
 
 ---
 
@@ -9,7 +9,7 @@ Este documento descreve o fluxo formal de cancelamento no PaGé — aplicável a
 Qualquer entidade pode ser cancelada a qualquer momento mediante justificativa obrigatória. Há, porém, uma restrição adicional para entidades já pagas:
 
 !!! warning "Entidade paga → devolução obrigatória"
-    Quando o cancelamento ocorre sobre uma entidade cujo status indica pagamento efetivado, o operador deve informar, no mesmo formulário, os dados de devolução correspondente. A `DevolucaoProcessual` é criada atomicamente na mesma transação do cancelamento.
+    Quando o [cancelamento](/negocio/glossario_conselho.md#cancelamento) ocorre sobre uma entidade cujo status indica pagamento efetivado, o operador deve informar, no mesmo formulário, os dados de [devolução](/negocio/glossario_conselho.md#devolucao) correspondente. A `DevolucaoProcessual` é criada atomicamente na mesma transação do cancelamento.
 
 | Entidade | Condição de "pago" |
 |----------|-------------------|

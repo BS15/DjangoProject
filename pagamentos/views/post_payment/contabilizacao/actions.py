@@ -1,23 +1,44 @@
 """Acoes POST da etapa de contabilizacao."""
 
 from django.contrib.auth.decorators import permission_required
+from django.contrib import messages
 from django.http import HttpRequest, HttpResponse
+from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 
-from pagamentos.domain_models import ProcessoStatus
-from pagamentos.views.helpers import _aprovar_processo_view, _iniciar_fila_sessao, _recusar_processo_view
+from pagamentos.domain_models import Processo, ProcessoStatus
+from pagamentos.views.helpers import _aprovar_processo_view, _recusar_processo_view
 
 
 @require_POST
 @permission_required("pagamentos.pode_contabilizar", raise_exception=True)
 def iniciar_contabilizacao_action(request: HttpRequest) -> HttpResponse:
     """Inicializa a fila de trabalho da contabilizacao na sessao."""
-    return _iniciar_fila_sessao(
-        request,
-        "contabilizacao_queue",
-        "painel_contabilizacao",
-        "contabilizacao_processo",
+    ids_raw = request.POST.getlist("processo_ids")
+    process_ids = [int(pid) for pid in ids_raw if pid.isdigit()]
+
+    if not process_ids:
+        messages.warning(request, "Selecione ao menos um processo para iniciar a revisão.")
+        return redirect("painel_contabilizacao")
+
+    ids_validos = set(
+        Processo.objects.filter(
+            id__in=process_ids,
+            status__opcao_status__iexact=ProcessoStatus.PAGO_A_CONTABILIZAR,
+        ).values_list("id", flat=True)
     )
+    fila = [pid for pid in process_ids if pid in ids_validos]
+
+    if not fila:
+        messages.warning(request, "Nenhum processo selecionado está elegível para contabilização.")
+        return redirect("painel_contabilizacao")
+
+    if len(fila) < len(process_ids):
+        messages.info(request, "Alguns processos foram ignorados por não estarem mais na etapa de contabilização.")
+
+    request.session["contabilizacao_queue"] = fila
+    request.session.modified = True
+    return redirect("contabilizacao_processo", pk=fila[0])
 
 
 @require_POST

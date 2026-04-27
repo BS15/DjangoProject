@@ -1,6 +1,6 @@
 # Fluxo: Suprimento de Fundos
 
-Este documento descreve o workflow operacional vigente de suprimentos, incluindo a nova etapa formal de prestação de contas (`ABERTA → ENVIADA → ENCERRADA`) e a integração com o `Processo`.
+Este documento descreve o workflow operacional vigente de [suprimentos](/negocio/glossario_conselho.md#suprimento-de-fundos), incluindo a nova etapa formal de [prestação de contas](/negocio/glossario_conselho.md#prestacao-de-contas) (`ABERTA → ENVIADA → ENCERRADA`) e a integração com o [Processo](/negocio/glossario_conselho.md#processo).
 
 ---
 
@@ -27,7 +27,7 @@ stateDiagram-v2
 
 - Estado inicial: `ABERTO`.
 - Estado final: `ENCERRADO`.
-- Mantém vínculo com `Processo` financeiro criado automaticamente.
+- Mantém vínculo com [Processo](/negocio/glossario_conselho.md#processo) financeiro criado automaticamente.
 
 ### `PrestacaoContasSuprimento`
 
@@ -39,7 +39,7 @@ stateDiagram-v2
 
 ### Selagem de domínio (immutability gate)
 
-Quando o `Processo` vinculado está em estágios pagos ou posteriores, mutações sensíveis de `SuprimentoDeFundos` e `DespesaSuprimento` são bloqueadas (`save/delete` e operações em massa).
+Quando o [Processo](/negocio/glossario_conselho.md#processo) vinculado está em estágios pagos ou posteriores, mutações sensíveis de `SuprimentoDeFundos` e `DespesaSuprimento` são bloqueadas (`save/delete` e operações em massa).
 
 ---
 
@@ -52,11 +52,11 @@ Quando o `Processo` vinculado está em estágios pagos ou posteriores, mutaçõe
 Na criação:
 
 1. O suprimento nasce como `ABERTO`.
-2. É criado um `Processo` com:
+2. É criado um [Processo](/negocio/glossario_conselho.md#processo) com:
    - tipo: `SUPRIMENTO DE FUNDOS`,
    - status inicial: `A EMPENHAR`,
    - `valor_bruto = valor_liquido + taxa_saque`.
-3. O `Processo` é vinculado ao suprimento.
+3. O [Processo](/negocio/glossario_conselho.md#processo) é vinculado ao suprimento.
 
 ---
 
