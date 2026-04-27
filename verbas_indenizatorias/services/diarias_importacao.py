@@ -1,18 +1,18 @@
-"""Serviços de importação e sincronização de diárias no próprio domínio de verbas."""
+"""Servicos canonicos de importacao em lote para diarias."""
 
-
-from commons.shared.csv_import_utils import build_csv_dict_reader
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
+from commons.shared.csv_import_utils import build_csv_dict_reader
+
 from credores.models import Credor
 from verbas_indenizatorias.constants import STATUS_VERBA_APROVADA, STATUS_VERBA_SOLICITADA
-from verbas_indenizatorias.models import Diaria, StatusChoicesVerbasIndenizatorias
+from verbas_indenizatorias.models import Diaria
 from verbas_indenizatorias.services.documentos import gerar_e_anexar_pcd_diaria
 
 
 class DiariaCsvValidationError(Exception):
-    """Erro de validação de linha de diária em importação CSV."""
+    """Erro de validacao de linha de diaria em importacao CSV."""
 
 
 def _parse_diaria_row(row, line_num):
@@ -21,34 +21,36 @@ def _parse_diaria_row(row, line_num):
         nome__icontains=nome, tipo="PF"
     ).first()
     if not credor:
-        raise DiariaCsvValidationError(f"Linha {line_num}: Beneficiário '{nome}' não encontrado no sistema.")
+        raise DiariaCsvValidationError(f"Linha {line_num}: Beneficiario '{nome}' nao encontrado no sistema.")
 
     try:
         data_saida = datetime.strptime(row["DATA_SAIDA"].strip(), "%d/%m/%Y").date()
         data_retorno = datetime.strptime(row["DATA_RETORNO"].strip(), "%d/%m/%Y").date()
-    except ValueError:
-        raise DiariaCsvValidationError(f"Linha {line_num}: Data inválida. Use o formato DD/MM/AAAA.")
+    except ValueError as exc:
+        raise DiariaCsvValidationError(f"Linha {line_num}: Data invalida. Use o formato DD/MM/AAAA.") from exc
 
     raw_solicitacao = row.get("DATA_SOLICITACAO", "").strip()
     if raw_solicitacao:
         try:
             data_solicitacao = datetime.strptime(raw_solicitacao, "%d/%m/%Y").date()
-        except ValueError:
-            raise DiariaCsvValidationError(f"Linha {line_num}: DATA_SOLICITACAO inválida. Use o formato DD/MM/AAAA.")
+        except ValueError as exc:
+            raise DiariaCsvValidationError(
+                f"Linha {line_num}: DATA_SOLICITACAO invalida. Use o formato DD/MM/AAAA."
+            ) from exc
     else:
         data_solicitacao = datetime.today().date()
 
     if data_retorno < data_saida:
         raise DiariaCsvValidationError(
-            f"Linha {line_num}: Data de retorno ({row['DATA_RETORNO'].strip()}) não pode ser anterior à data de saída ({row['DATA_SAIDA'].strip()})."
+            f"Linha {line_num}: Data de retorno ({row['DATA_RETORNO'].strip()}) nao pode ser anterior a data de saida ({row['DATA_SAIDA'].strip()})."
         )
 
     try:
         qtd = Decimal(row["QUANTIDADE_DIARIAS"].strip().replace(",", "."))
         if qtd <= 0:
             raise InvalidOperation
-    except InvalidOperation:
-        raise DiariaCsvValidationError(f"Linha {line_num}: Quantidade de diárias inválida.")
+    except InvalidOperation as exc:
+        raise DiariaCsvValidationError(f"Linha {line_num}: Quantidade de diarias invalida.") from exc
 
     return {
         "beneficiario_id": credor.id,
@@ -65,14 +67,14 @@ def _parse_diaria_row(row, line_num):
 
 
 def preview_diarias_lote(csv_file):
-    """Lê o arquivo CSV e retorna preview (lista de dicts serializáveis) e erros."""
+    """Le o arquivo CSV e retorna preview serializavel com erros."""
     preview = []
     erros = []
     try:
         reader, erro = build_csv_dict_reader(
             csv_file,
             encodings=("utf-8-sig", "utf-8", "latin-1"),
-            encoding_error_message="Não foi possível decodificar o CSV. Use UTF-8 ou Latin-1.",
+            encoding_error_message="Nao foi possivel decodificar o CSV. Use UTF-8 ou Latin-1.",
         )
         if erro:
             return {"preview": [], "erros": [erro]}
@@ -88,21 +90,16 @@ def preview_diarias_lote(csv_file):
 
 
 def confirmar_diarias_lote(preview_items, usuario):
-    """Compat: cria diárias em lote no modo padrão (solicitação para autorização)."""
-
+    """Compat: cria diarias em lote no modo padrao (solicitacao para autorizacao)."""
     return confirmar_diarias_lote_com_modo(preview_items, usuario, solicitacao_assinada=False)
 
 
 def confirmar_diarias_lote_com_modo(preview_items, usuario, solicitacao_assinada=False):
-    """Cria diárias em lote no modo padrão ou no modo de solicitação já assinada."""
+    """Cria diarias em lote no modo padrao ou no modo de solicitacao ja assinada."""
     from datetime import date
 
     resultados = {"sucessos": 0, "erros": [], "modo_solicitacao_assinada": bool(solicitacao_assinada)}
     status_destino = STATUS_VERBA_APROVADA if solicitacao_assinada else STATUS_VERBA_SOLICITADA
-    status_obj, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-        status_choice__iexact=status_destino,
-        defaults={"status_choice": status_destino},
-    )
 
     for item in preview_items:
         try:
@@ -117,15 +114,20 @@ def confirmar_diarias_lote_com_modo(preview_items, usuario, solicitacao_assinada
                 cidade_destino=item.get("cidade_destino", ""),
                 objetivo=item.get("objetivo", ""),
                 tipo_solicitacao=item.get("tipo_solicitacao", "INICIAL"),
-                status=status_obj,
-                autorizada=bool(solicitacao_assinada),
             )
+            diaria.definir_status(status_destino, autorizada=bool(solicitacao_assinada))
             if solicitacao_assinada:
                 gerar_e_anexar_pcd_diaria(diaria, criador=usuario)
             resultados["sucessos"] += 1
         except Exception as exc:
-            resultados["erros"].append(
-                f"{item.get('beneficiario_nome', '?')}: {exc}"
-            )
+            resultados["erros"].append(f"{item.get('beneficiario_nome', '?')}: {exc}")
 
     return resultados
+
+
+__all__ = [
+    "DiariaCsvValidationError",
+    "preview_diarias_lote",
+    "confirmar_diarias_lote",
+    "confirmar_diarias_lote_com_modo",
+]

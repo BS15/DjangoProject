@@ -22,6 +22,16 @@ def painel_pendencias_view(request: HttpRequest) -> HttpResponse:
         filter_class=PendenciaFilter,
         template_name="pagamentos/painel_pendencias.html",
         items_key="pendencias",
+        sort_fields={
+            "id": "id",
+            "processo": "processo__id",
+            "descricao": "descricao",
+            "responsavel": "responsavel__username",
+            "status": "status__opcao_status",
+        },
+        default_ordem="id",
+        default_direcao="desc",
+        tie_breaker="-id",
         extra_context={
             "pode_interagir": request.user.has_perm("pagamentos.operador_contas_a_pagar"),
         },

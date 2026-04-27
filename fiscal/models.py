@@ -179,7 +179,12 @@ class DocumentoFiscal(models.Model):
         """Retorna o registro de liquidação quando existente."""
         try:
             return self.liquidacao
-        except LiquidacaoDocumentoFiscal.DoesNotExist:
+        except LiquidacaoDocumentoFiscal.DoesNotExist as exc:
+            logger.warning(
+                "evento=liquidacao_inexistente_documento_fiscal documento_fiscal_id=%s erro=%s",
+                self.pk,
+                exc,
+            )
             return None
 
 

@@ -33,13 +33,13 @@
 
 {% block table_headers %}
 <th class="text-center no-sort" style="width: 40px;"><input type="checkbox" id="conferencia-select-all" class="form-check-input" title="Selecionar todos"></th>
-<th>#</th>
-<th>Credor</th>
-<th>Empenho</th>
-<th>Data Pagamento</th>
-<th>Valor Líquido</th>
-<th>Alertas</th>
-<th class="text-center">Ações</th>
+<th data-campo="id">#</th>
+<th data-campo="credor">Credor</th>
+<th data-campo="empenho">Empenho</th>
+<th data-campo="data_pagamento">Data Pagamento</th>
+<th data-campo="valor_liquido">Valor Líquido</th>
+<th class="no-sort">Alertas</th>
+<th class="text-center no-sort">Ações</th>
 {% endblock %}
 
 {% block table_rows %}

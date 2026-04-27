@@ -18,6 +18,17 @@ def reembolsos_list_view(request):
         template_name="verbas/reembolsos_list.html",
         items_key="reembolsos",
         filter_key="filter",
+        sort_fields={
+            "numero_sequencial": "numero_sequencial",
+            "status": "status__status_choice",
+            "beneficiario": "beneficiario__nome",
+            "data_saida": "data_saida",
+            "valor_total": "valor_total",
+            "processo": "processo__id",
+        },
+        default_ordem="numero_sequencial",
+        default_direcao="desc",
+        tie_breaker="-id",
     )
 
 

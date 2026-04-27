@@ -19,12 +19,12 @@
 {% endblock %}
 
 {% block table_headers %}
-<th>Nome / Razao Social</th>
-<th>CPF / CNPJ</th>
-<th>Usuário</th>
-<th>Tipo</th>
-<th>Status</th>
-<th>Acoes</th>
+<th data-campo="nome">Nome / Razao Social</th>
+<th data-campo="cpf_cnpj">CPF / CNPJ</th>
+<th data-campo="usuario">Usuário</th>
+<th data-campo="tipo">Tipo</th>
+<th data-campo="status">Status</th>
+<th class="no-sort">Acoes</th>
 {% endblock %}
 
 {% block table_rows %}
@@ -49,7 +49,7 @@
 </tr>
 {% empty %}
 <tr>
-    <td colspan="5" class="text-center text-muted py-4">Nenhum credor encontrado.</td>
+    <td colspan="6" class="text-center text-muted py-4">Nenhum credor encontrado.</td>
 </tr>
 {% endfor %}
 {% endblock %}

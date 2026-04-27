@@ -21,12 +21,12 @@
 {% endblock %}
 
 {% block table_headers %}
-<th># ID</th>
-<th>Empenho</th>
-<th>Credor</th>
-<th>Data Pag.</th>
-<th class="text-end pe-4">Valor</th>
-<th class="text-center">Acesso ao Processo</th>
+<th data-campo="id"># ID</th>
+<th data-campo="empenho">Empenho</th>
+<th data-campo="credor">Credor</th>
+<th data-campo="data_pagamento">Data Pag.</th>
+<th class="text-end pe-4" data-campo="valor_liquido">Valor</th>
+<th class="text-center no-sort">Acesso ao Processo</th>
 {% endblock %}
 
 {% block table_rows %}

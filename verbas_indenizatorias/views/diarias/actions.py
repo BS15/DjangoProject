@@ -92,63 +92,26 @@ def sair_revisao_prestacoes_action(request):
 
 def _preparar_nova_diaria(diaria):
     """Cria diária em rascunho para seguir fluxo de solicitação/autorização."""
-    from verbas_indenizatorias.models import StatusChoicesVerbasIndenizatorias
-
-    diaria.autorizada = False
-    status_rascunho, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-        status_choice__iexact=STATUS_VERBA_RASCUNHO,
-        defaults={'status_choice': STATUS_VERBA_RASCUNHO},
-    )
-    diaria.status = status_rascunho
+    diaria.definir_status(STATUS_VERBA_RASCUNHO, autorizada=False)
 
 
 def _preparar_diaria_com_solicitacao_assinada(diaria):
     """Cria diária em trilha direta: já aprovada e pronta para fluxo operacional."""
-    from verbas_indenizatorias.models import StatusChoicesVerbasIndenizatorias
-
-    diaria.autorizada = True
-    status_aprovada, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-        status_choice__iexact=STATUS_VERBA_APROVADA,
-        defaults={'status_choice': STATUS_VERBA_APROVADA},
-    )
-    diaria.status = status_aprovada
+    diaria.definir_status(STATUS_VERBA_APROVADA, autorizada=True)
 
 
 def _salvar_diaria_base(form, criador=None, solicitacao_assinada=False):
     diaria = form.save(commit=False)
+    if criador and not diaria.criado_por_id:
+        diaria.criado_por = criador
+    diaria.save()
     if solicitacao_assinada:
         _preparar_diaria_com_solicitacao_assinada(diaria)
     else:
         _preparar_nova_diaria(diaria)
-    if criador and not diaria.criado_por_id:
-        diaria.criado_por = criador
-    diaria.save()
     if hasattr(form, 'save_m2m'):
         form.save_m2m()
     return diaria
-
-
-def _set_status_case_insensitive(diaria, status_str):
-    from verbas_indenizatorias.models import StatusChoicesVerbasIndenizatorias
-
-    status, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-        status_choice__iexact=status_str,
-        defaults={'status_choice': status_str},
-    )
-    diaria.status = status
-    diaria.save(update_fields=['status'])
-
-
-def _set_status_e_autorizacao(diaria, status_str, autorizada):
-    from verbas_indenizatorias.models import StatusChoicesVerbasIndenizatorias
-
-    status, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-        status_choice__iexact=status_str,
-        defaults={'status_choice': status_str},
-    )
-    diaria.status = status
-    diaria.autorizada = autorizada
-    diaria.save(update_fields=['status', 'autorizada'])
 
 
 @require_POST
@@ -198,7 +161,7 @@ def add_diaria_assinada_action(request):
 @permission_required('pagamentos.pode_gerenciar_diarias', raise_exception=True)
 def solicitar_autorizacao_diaria_action(request, pk):
     diaria = get_object_or_404(Diaria, id=pk)
-    _set_status_e_autorizacao(diaria, STATUS_VERBA_SOLICITADA, autorizada=False)
+    diaria.definir_status(STATUS_VERBA_SOLICITADA, autorizada=False)
     logger.info("mutation=solicitar_autorizacao_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
     messages.success(request, 'Solicitação de diária enviada para autorização.')
     return redirect('gerenciar_diaria', pk=diaria.id)
@@ -216,7 +179,7 @@ def autorizar_diaria_action(request, pk):
         messages.error(request, 'A diária precisa estar no status SOLICITADA para autorização.')
         return redirect('painel_autorizacao_diarias')
 
-    _set_status_e_autorizacao(diaria, STATUS_VERBA_APROVADA, autorizada=True)
+    diaria.definir_status(STATUS_VERBA_APROVADA, autorizada=True)
     logger.info("mutation=autorizar_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
     messages.success(request, 'Diária autorizada com sucesso.')
     return redirect('gerenciar_diaria', pk=diaria.id)

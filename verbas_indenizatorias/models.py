@@ -76,6 +76,33 @@ class StatusChoicesVerbasIndenizatorias(models.Model):
         return f"{self.status_choice}"
 
 
+class StatusVerbaDomainMixin(models.Model):
+    """Comportamento de domínio para transição de status de verbas indenizatórias."""
+
+    class Meta:
+        abstract = True
+
+    def definir_status(self, novo_status_str, autorizada=None):
+        """Define status de forma canônica e opcionalmente sincroniza autorização."""
+        status_str = (novo_status_str or "").strip().upper()
+        if not status_str:
+            raise DjangoValidationError({"status": "Status inválido para transição."})
+
+        novo_status, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
+            status_choice__iexact=status_str,
+            defaults={"status_choice": status_str},
+        )
+
+        update_fields = ["status"]
+        self.status = novo_status
+
+        if hasattr(self, "autorizada") and autorizada is not None:
+            self.autorizada = bool(autorizada)
+            update_fields.append("autorizada")
+
+        self.save(update_fields=update_fields)
+
+
 class MeiosDeTransporte(models.Model):
     """Tabela de meios de transporte utilizados em diárias."""
 
@@ -135,7 +162,7 @@ class Tabela_Valores_Unitarios_Verbas_Indenizatorias(models.Model):
         return None
 
 
-class Diaria(models.Model):
+class Diaria(StatusVerbaDomainMixin, models.Model):
     """Solicitação/execução de diária com cálculo automático de valor."""
 
     TIPO_SOLICITACAO = [
@@ -377,13 +404,7 @@ class Diaria(models.Model):
 
         if erros:
             raise ValidationError(' '.join(erros))
-
-        novo_status, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-            status_choice__iexact=novo_status_str,
-            defaults={'status_choice': novo_status_str}
-        )
-        self.status = novo_status
-        self.save(update_fields=['status'])
+        self.definir_status(novo_status_str)
 
     def __str__(self):
         return f"Diária {self.numero_siscac} - {self.beneficiario}"
@@ -513,7 +534,7 @@ class ContingenciaDiaria(models.Model):
         return f"Contingência #{self.pk} – Diária #{self.diaria_id} [{self.get_status_display()}]"
 
 
-class ReembolsoCombustivel(models.Model):
+class ReembolsoCombustivel(StatusVerbaDomainMixin, models.Model):
     """Registro de reembolso de combustível vinculado a diária/processo."""
 
     processo = models.ForeignKey('pagamentos.Processo', on_delete=models.CASCADE, related_name='reembolsos_combustivel', null=True,
@@ -641,7 +662,7 @@ class DocumentoReembolso(DocumentoBase):
     history = HistoricalRecords()
 
 
-class Jeton(models.Model):
+class Jeton(StatusVerbaDomainMixin, models.Model):
     """Pagamento de jeton para participação em reunião/sessão."""
 
     processo = models.ForeignKey('pagamentos.Processo', on_delete=models.CASCADE, related_name='jetons', null=True, blank=True)
@@ -733,7 +754,7 @@ class DocumentoJeton(DocumentoBase):
     history = HistoricalRecords()
 
 
-class AuxilioRepresentacao(models.Model):
+class AuxilioRepresentacao(StatusVerbaDomainMixin, models.Model):
     """Pagamento de auxílio representação para beneficiário elegível."""
 
     processo = models.ForeignKey('pagamentos.Processo', on_delete=models.CASCADE, related_name='auxilios_representacao', null=True,

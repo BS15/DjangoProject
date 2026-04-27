@@ -10,16 +10,7 @@ from django.views.decorators.http import require_POST
 
 from pagamentos.services.cancelamentos import cancelar_verba, extrair_dados_devolucao_do_post
 from verbas_indenizatorias.forms import JetonForm
-from verbas_indenizatorias.models import Jeton, StatusChoicesVerbasIndenizatorias
-
-
-def _set_status_case_insensitive(jeton, status_str):
-    status, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-        status_choice__iexact=status_str,
-        defaults={"status_choice": status_str},
-    )
-    jeton.status = status
-    jeton.save(update_fields=["status"])
+from verbas_indenizatorias.models import Jeton
 
 
 @require_POST
@@ -40,7 +31,7 @@ def add_jeton_action(request):
 @permission_required("pagamentos.pode_gerenciar_jetons", raise_exception=True)
 def solicitar_autorizacao_jeton_action(request, pk):
     jeton = get_object_or_404(Jeton, id=pk)
-    _set_status_case_insensitive(jeton, "SOLICITADA")
+    jeton.definir_status("SOLICITADA")
     logger.info("mutation=solicitar_autorizacao_jeton jeton_id=%s user_id=%s", jeton.id, request.user.pk)
     messages.success(request, "Solicitação de Jeton enviada para autorização.")
     return redirect("gerenciar_jeton", pk=jeton.id)
@@ -50,7 +41,7 @@ def solicitar_autorizacao_jeton_action(request, pk):
 @permission_required("pagamentos.pode_gerenciar_jetons", raise_exception=True)
 def autorizar_jeton_action(request, pk):
     jeton = get_object_or_404(Jeton, id=pk)
-    _set_status_case_insensitive(jeton, "APROVADA")
+    jeton.definir_status("APROVADA")
     logger.info("mutation=autorizar_jeton jeton_id=%s user_id=%s", jeton.id, request.user.pk)
     messages.success(request, "Jeton autorizado com sucesso.")
     return redirect("gerenciar_jeton", pk=jeton.id)

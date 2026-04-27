@@ -1,15 +1,20 @@
 """Views de integração com assinaturas Autentique para diárias."""
 
+import logging
+
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, redirect
 
+from commons.shared.logging_gradients import log_critical, log_recoverable
 from commons.shared.integracoes.autentique import (
     enviar_documento_para_assinatura,
     verificar_e_baixar_documento,
 )
 from pagamentos.domain_models import AssinaturaEletronica as AssinaturaAutentique
 from verbas_indenizatorias.models import Diaria
+
+logger = logging.getLogger(__name__)
 
 
 @permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
@@ -42,6 +47,13 @@ def sincronizar_assinatura_view(request, assinatura_id):
             assinatura.save(update_fields=["status"])
             messages.info(request, "Documento ainda pendente de assinatura na Autentique.")
     except Exception as exc:
+        log_critical(
+            logger,
+            "falha_sincronizar_assinatura_autentique",
+            exc=exc,
+            assinatura_id=assinatura.id,
+            diaria_id=diaria_id,
+        )
         assinatura.status = "ERRO"
         assinatura.save(update_fields=["status"])
         messages.error(request, f"Falha ao sincronizar assinatura: {exc}")
@@ -73,14 +85,26 @@ def reenviar_assinatura_view(request, diaria_id):
         assinatura.save(update_fields=["autentique_id", "autentique_url", "dados_signatarios", "status"])
         messages.success(request, "Documento reenviado para assinatura com sucesso.")
     except Exception as exc:
+        log_critical(
+            logger,
+            "falha_reenviar_assinatura_autentique",
+            exc=exc,
+            assinatura_id=assinatura.id,
+            diaria_id=diaria.id,
+        )
         assinatura.status = "ERRO"
         assinatura.save(update_fields=["status"])
         messages.error(request, f"Falha ao reenviar assinatura: {exc}")
     finally:
         try:
             assinatura.arquivo.close()
-        except Exception:
-            pass
+        except Exception as exc:
+            log_recoverable(
+                logger,
+                "erro_ao_fechar_arquivo_reenvio_assinatura",
+                exc=exc,
+                assinatura_id=assinatura.id,
+            )
 
     return redirect("gerenciar_diaria", pk=diaria.id)
 

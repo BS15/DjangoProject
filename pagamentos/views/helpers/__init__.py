@@ -23,6 +23,7 @@ from .contingencias import (
 )
 from .queries import (
     _obter_campo_ordenacao,
+    _resolver_parametros_ordenacao,
     _aplicar_filtro_por_opcao,
 )
 from .audit_builders import (
@@ -74,6 +75,7 @@ __all__ = [
     "processar_revisao_contadora_contingencia",
     # queries
     "_obter_campo_ordenacao",
+    "_resolver_parametros_ordenacao",
     "_aplicar_filtro_por_opcao",
     # audit_builders
     "_aplicar_filtros_historico",

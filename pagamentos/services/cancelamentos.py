@@ -93,7 +93,6 @@ def cancelar_verba(verba, justificativa: str, usuario, dados_devolucao: dict | N
         Diaria,
         Jeton,
         ReembolsoCombustivel,
-        StatusChoicesVerbasIndenizatorias,
     )
 
     _validar_justificativa(justificativa)
@@ -125,11 +124,6 @@ def cancelar_verba(verba, justificativa: str, usuario, dados_devolucao: dict | N
     else:
         raise ValidationError("Tipo de verba não suportado para cancelamento.")
 
-    status_cancelado, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-        status_choice__iexact=StatusProcesso.CANCELADO_ANULADO,
-        defaults={"status_choice": StatusProcesso.CANCELADO_ANULADO},
-    )
-
     with transaction.atomic():
         if verba_paga and dados_devolucao:
             _criar_devolucao(
@@ -138,12 +132,7 @@ def cancelar_verba(verba, justificativa: str, usuario, dados_devolucao: dict | N
                 motivo_padrao=f"Devolução referente ao cancelamento da verba #{verba.pk}.",
             )
         _set_processo_cancelado(processo)
-        verba.status = status_cancelado
-        update_fields = ["status"]
-        if hasattr(verba, "autorizada"):
-            verba.autorizada = False
-            update_fields.append("autorizada")
-        verba.save(update_fields=update_fields)
+        verba.definir_status(StatusProcesso.CANCELADO_ANULADO, autorizada=False)
 
         CancelamentoProcessual.objects.create(
             processo=processo,

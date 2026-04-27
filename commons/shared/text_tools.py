@@ -1,9 +1,13 @@
 """Utilitários transversais de normalização e formatação."""
 
+import logging
 import re
 import unicodedata
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
+
+
+logger = logging.getLogger(__name__)
 
 
 def _digits_only(value):
@@ -95,7 +99,8 @@ def parse_brl_decimal(value, default=None):
 
     try:
         return Decimal(normalized)
-    except (InvalidOperation, ValueError):
+    except (InvalidOperation, ValueError) as exc:
+        logger.warning("evento=erro_parse_decimal_brl valor=%s erro=%s", value, exc)
         return default
 
 
@@ -104,5 +109,6 @@ def parse_br_date(date_str):
         if not date_str:
             return None
         return datetime.strptime(date_str.strip(), "%d/%m/%Y").strftime("%Y-%m-%d")
-    except ValueError:
+    except ValueError as exc:
+        logger.warning("evento=erro_parse_data_br valor=%s erro=%s", date_str, exc)
         return None

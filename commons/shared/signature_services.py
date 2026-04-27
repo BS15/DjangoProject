@@ -1,6 +1,11 @@
 """Serviços transversais para rascunho e disparo de assinaturas."""
 
+import logging
+
 from commons.shared.integracoes.autentique import enviar_documento_para_assinatura
+from commons.shared.logging_gradients import log_recoverable
+
+logger = logging.getLogger(__name__)
 
 
 class AssinaturaSignatariosError(ValueError):
@@ -47,8 +52,13 @@ def disparar_assinatura_rascunho_com_signatarios(assinatura):
     finally:
         try:
             assinatura.arquivo.close()
-        except Exception:
-            pass
+        except Exception as exc:
+            log_recoverable(
+                logger,
+                "erro_ao_fechar_arquivo_assinatura",
+                exc=exc,
+                assinatura_id=assinatura.id,
+            )
 
     assinatura.autentique_id = payload.get("id")
     assinatura.autentique_url = payload.get("url") or ""

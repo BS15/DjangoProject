@@ -18,12 +18,12 @@
 {% endblock %}
 
 {% block table_headers %}
-<th>#</th>
-<th>Processo</th>
-<th>Descrição</th>
-<th>Responsável</th>
-<th>Status</th>
-<th class="text-center">Ações</th>
+<th data-campo="id">#</th>
+<th data-campo="processo">Processo</th>
+<th data-campo="descricao">Descrição</th>
+<th data-campo="responsavel">Responsável</th>
+<th data-campo="status">Status</th>
+<th class="text-center no-sort">Ações</th>
 {% endblock %}
 
 {% block table_rows %}

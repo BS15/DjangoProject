@@ -9,8 +9,25 @@ def _obter_campo_ordenacao(request, campos_permitidos, default_ordem="id", defau
     """
     ordem = request.GET.get("ordem", default_ordem)
     direcao = request.GET.get("direcao", default_direcao)
+    if direcao not in {"asc", "desc"}:
+        direcao = default_direcao
     order_field = campos_permitidos.get(ordem, campos_permitidos.get(default_ordem, "id"))
     return f"-{order_field}" if direcao == "desc" else order_field
+
+
+def _resolver_parametros_ordenacao(request, campos_permitidos, default_ordem="id", default_direcao="desc"):
+    """Resolve parâmetros de ordenação já sanitizados para uso em contexto e queryset."""
+    ordem = request.GET.get("ordem", default_ordem)
+    if ordem not in campos_permitidos:
+        ordem = default_ordem
+
+    direcao = request.GET.get("direcao", default_direcao)
+    if direcao not in {"asc", "desc"}:
+        direcao = default_direcao
+
+    campo = campos_permitidos.get(ordem, campos_permitidos.get(default_ordem, "id"))
+    order_field = f"-{campo}" if direcao == "desc" else campo
+    return ordem, direcao, order_field
 
 
 def _aplicar_filtro_por_opcao(queryset, opcao, mapa_filtros):
@@ -25,5 +42,6 @@ def _aplicar_filtro_por_opcao(queryset, opcao, mapa_filtros):
 
 __all__ = [
     "_obter_campo_ordenacao",
+    "_resolver_parametros_ordenacao",
     "_aplicar_filtro_por_opcao",
 ]

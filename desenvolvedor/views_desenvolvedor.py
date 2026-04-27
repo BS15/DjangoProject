@@ -1,5 +1,6 @@
 import csv
 import io
+import logging
 import random
 from pathlib import Path
 from datetime import date, timedelta
@@ -43,6 +44,8 @@ from pagamentos.pdf_generators import FLUXO_DOCUMENT_REGISTRY
 from suprimentos.pdf_generators import SUPRIMENTOS_DOCUMENT_REGISTRY
 from verbas_indenizatorias.models import Diaria, MeiosDeTransporte, StatusChoicesVerbasIndenizatorias
 from verbas_indenizatorias.pdf_generators import VERBAS_DOCUMENT_REGISTRY
+
+logger = logging.getLogger(__name__)
 
 _fake_generator = Faker("pt_BR")
 _MIN_FAKE_ANO_EXERCICIO = 2020
@@ -448,7 +451,14 @@ def _create_fake_documentos_fiscais(n, processos):
             liquidacao.save(update_fields=["fiscal_contrato", "updated_at"])
             _create_fake_pdf_documento_fiscal(processo, numero_nota_fiscal, serie_nota_fiscal)
             created += 1
-        except (DjangoValidationError, IntegrityError):
+        except (DjangoValidationError, IntegrityError) as exc:
+            logger.warning(
+                "evento=erro_geracao_documento_fiscal_fake processo_id=%s numero_nota=%s serie=%s erro=%s",
+                getattr(processo, "id", None),
+                numero_nota_fiscal,
+                serie_nota_fiscal,
+                exc,
+            )
             continue
     return created
 
@@ -538,7 +548,13 @@ def _create_fake_diarias(n, credores_pf, processos):
                 autorizada=random.choice([True, False]),
             )
             created += 1
-        except DjangoValidationError:
+        except DjangoValidationError as exc:
+            logger.warning(
+                "evento=erro_geracao_diaria_fake beneficiario_id=%s numero_siscac=%s erro=%s",
+                getattr(beneficiario, "id", None),
+                numero_seq,
+                exc,
+            )
             continue
     return created
 

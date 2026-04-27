@@ -18,13 +18,13 @@
 {% endblock %}
 
 {% block table_headers %}
-<th>#</th>
-<th>Processo</th>
-<th>Solicitante</th>
-<th>Data</th>
-<th>Justificativa</th>
-<th>Status</th>
-<th class="text-center">Ações</th>
+<th data-campo="id">#</th>
+<th data-campo="processo">Processo</th>
+<th data-campo="solicitante">Solicitante</th>
+<th data-campo="data_solicitacao">Data</th>
+<th data-campo="justificativa">Justificativa</th>
+<th data-campo="status">Status</th>
+<th class="text-center no-sort">Ações</th>
 {% endblock %}
 
 {% block table_rows %}

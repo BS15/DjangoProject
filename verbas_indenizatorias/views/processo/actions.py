@@ -11,9 +11,9 @@ from requests.exceptions import RequestException
 from pagamentos.domain_models import Processo
 from pagamentos.forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoForm
 from pagamentos.models import TiposDePagamento
+from commons.shared.logging_gradients import log_audit, log_critical, log_recoverable
 from commons.shared.integracoes.autentique import enviar_documento_para_assinatura
 from verbas_indenizatorias.constants import STATUS_VERBA_APROVADA, STATUS_VERBA_REVISADA
-from verbas_indenizatorias.models import StatusChoicesVerbasIndenizatorias
 from verbas_indenizatorias.services.documentos import gerar_e_anexar_pcd_diaria
 from verbas_indenizatorias.services.processo_integration import criar_processo_e_vincular_verbas
 from .helpers import _forcar_campos_canonicos_processo_verbas, _pode_gerenciar_processo_verbas_da_entidade
@@ -22,16 +22,6 @@ from ..shared.registry import (
     _VERBA_CONFIG,
     _obter_credor_agrupamento,
 )
-
-
-def _set_or_create_status(verba, status_str):
-    status_str = (status_str or "").upper()
-    status, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-        status_choice__iexact=status_str,
-        defaults={"status_choice": status_str},
-    )
-    verba.status = status
-    verba.save(update_fields=["status"])
 
 
 def _emitir_pcd_e_enviar_para_assinatura_beneficiario(diaria, criador):
@@ -49,8 +39,13 @@ def _emitir_pcd_e_enviar_para_assinatura_beneficiario(diaria, criador):
         finally:
             try:
                 assinatura.arquivo.close()
-            except Exception:
-                pass
+            except Exception as exc:
+                log_recoverable(
+                    logger,
+                    "erro_ao_fechar_arquivo_assinatura_diaria",
+                    exc=exc,
+                    assinatura_id=assinatura.id,
+                )
     else:
         assinatura = gerar_e_anexar_pcd_diaria(diaria, criador=criador)
         assinatura.arquivo.open("rb")
@@ -59,8 +54,13 @@ def _emitir_pcd_e_enviar_para_assinatura_beneficiario(diaria, criador):
         finally:
             try:
                 assinatura.arquivo.close()
-            except Exception:
-                pass
+            except Exception as exc:
+                log_recoverable(
+                    logger,
+                    "erro_ao_fechar_arquivo_assinatura_diaria",
+                    exc=exc,
+                    assinatura_id=assinatura.id,
+                )
 
     proponente_email = (getattr(diaria.proponente, "email", "") or "").strip()
     if not proponente_email:
@@ -133,7 +133,13 @@ def agrupar_verbas_view(request, tipo_verba):
         credor_obj,
         usuario=request.user,
     )
-    logger.info("mutation=agrupar_verbas novo_processo_id=%s user_id=%s tipo_verba=%s", novo_processo.id, request.user.pk, tipo_verba)
+    log_audit(
+        logger,
+        "agrupar_verbas",
+        novo_processo_id=novo_processo.id,
+        user_id=request.user.pk,
+        tipo_verba=tipo_verba,
+    )
 
     for identificador in falhas_pcd:
         messages.warning(
@@ -192,18 +198,32 @@ def aprovar_revisao_solicitacao_action(request, tipo_verba, pk):
                         assinatura.id,
                     )
             except RequestException:
+                log_critical(
+                    logger,
+                    "falha_envio_autentique_na_revisao",
+                    diaria_id=solicitacao.id,
+                    user_id=request.user.pk,
+                )
                 messages.error(request, "Falha de conexão ao enviar para a Autentique. Tente novamente.")
                 return redirect("revisar_solicitacao_verba", tipo_verba=tipo_verba, pk=pk)
             except RuntimeError as exc:
+                log_critical(
+                    logger,
+                    "falha_negocio_envio_autentique_na_revisao",
+                    exc=exc,
+                    diaria_id=solicitacao.id,
+                    user_id=request.user.pk,
+                )
                 messages.error(request, str(exc))
                 return redirect("revisar_solicitacao_verba", tipo_verba=tipo_verba, pk=pk)
 
-        _set_or_create_status(solicitacao, STATUS_VERBA_REVISADA)
-        logger.info(
-            "mutation=aprovar_revisao_solicitacao tipo_verba=%s solicitacao_id=%s user_id=%s",
-            tipo_verba,
-            solicitacao.id,
-            request.user.pk,
+        solicitacao.definir_status(STATUS_VERBA_REVISADA)
+        log_audit(
+            logger,
+            "aprovar_revisao_solicitacao",
+            tipo_verba=tipo_verba,
+            solicitacao_id=solicitacao.id,
+            user_id=request.user.pk,
         )
         if tipo_verba == "diaria":
             if pcd_enviado_para_assinatura:

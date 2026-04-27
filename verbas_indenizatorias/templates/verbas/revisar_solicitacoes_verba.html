@@ -10,13 +10,13 @@
 {% endblock %}
 
 {% block table_headers %}
-<th>Tipo</th>
-<th>Solicitação</th>
-<th>Beneficiário</th>
-<th>Referência</th>
-<th class="text-end">Valor (R$)</th>
-<th>Status</th>
-<th class="text-center">Ação</th>
+<th data-campo="tipo">Tipo</th>
+<th data-campo="id">Solicitação</th>
+<th data-campo="beneficiario">Beneficiário</th>
+<th data-campo="referencia">Referência</th>
+<th class="text-end" data-campo="valor_total">Valor (R$)</th>
+<th data-campo="status">Status</th>
+<th class="text-center no-sort">Ação</th>
 {% endblock %}
 
 {% block table_rows %}

@@ -1,11 +1,15 @@
 """Helpers de parsing para uploads de boleto e comprovantes de pagamento."""
 
+import logging
 import re
 
 import pdfplumber
 from commons.shared.pdf_tools import split_pdf_to_temp_pages
 from commons.shared.text_tools import normalize_account, normalize_document
 from django.core.files.storage import default_storage
+
+
+logger = logging.getLogger(__name__)
 
 
 def _extract_comprovante_fields(texto_flat):
@@ -21,8 +25,9 @@ def _extract_comprovante_fields(texto_flat):
         try:
             valor_float = float(valor_str)
             break
-        except ValueError:
-            pass
+        except ValueError as exc:
+            logger.warning("evento=erro_parse_valor_comprovante valor=%s erro=%s", valor_str, exc)
+            continue
 
     cpf_cnpj = re.findall(r"\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}|\d{3}\.\d{3}\.\d{3}-\d{2}", texto_flat)
     contas = re.findall(r"AGENCIA:\s*([\d-]+)\s*CONTA:\s*([\d.-]+[Xx]?)", texto_flat)

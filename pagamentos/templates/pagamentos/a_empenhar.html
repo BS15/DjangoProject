@@ -22,13 +22,13 @@
 {% endblock %}
 
 {% block table_headers %}
-<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="id"># ID {% if ordem == 'id' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
-<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="credor">Credor {% if ordem == 'credor' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %} text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
-<th>Status</th>
-<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="tipo_pagamento">Tipo de Pagamento {% if ordem == 'tipo_pagamento' %}<i class="bi bi-sort-{% if direcao == 'asc' %}alpha-up{% else %}alpha-down{% endif %} text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
-<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="valor_liquido">Valor Líquido {% if ordem == 'valor_liquido' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
-<th><a href="#" class="sort-header text-decoration-none text-white" data-campo="data_vencimento">Vencimento {% if ordem == 'data_vencimento' %}<i class="bi bi-sort-{% if direcao == 'asc' %}up{% else %}down{% endif %}-alt text-warning"></i>{% else %}<i class="bi bi-sort-alt text-muted"></i>{% endif %}</a></th>
-<th class="text-center">Ação</th>
+<th data-campo="id"># ID</th>
+<th data-campo="credor">Credor</th>
+<th class="no-sort">Status</th>
+<th data-campo="tipo_pagamento">Tipo de Pagamento</th>
+<th data-campo="valor_liquido">Valor Líquido</th>
+<th data-campo="data_vencimento">Vencimento</th>
+<th class="text-center no-sort">Ação</th>
 {% endblock %}
 
 {% block table_rows %}
@@ -142,26 +142,7 @@
 {% block extra_js %}
 {{ block.super }}
 <script>
-	const sortOrdemAtual   = "{{ ordem }}";
-	const sortDirecaoAtual = "{{ direcao }}";
-
 	document.addEventListener('DOMContentLoaded', function() {
-
-		// ── Sortable headers ──────────────────────────────────────────
-		document.querySelectorAll('.sort-header').forEach(function(link) {
-			link.addEventListener('click', function(e) {
-				e.preventDefault();
-				const campo  = this.getAttribute('data-campo');
-				const params = new URLSearchParams(window.location.search);
-				if (params.get('ordem') === campo) {
-					params.set('direcao', params.get('direcao') === 'asc' ? 'desc' : 'asc');
-				} else {
-					params.set('ordem', campo);
-					params.set('direcao', 'asc');
-				}
-				window.location.href = '?' + params.toString();
-			});
-		});
 		const empenhoModal = document.getElementById('empenhoModal');
 
 		if (empenhoModal) {

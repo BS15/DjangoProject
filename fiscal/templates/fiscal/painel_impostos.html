@@ -46,28 +46,28 @@
 
 {% block table_headers %}
 {% if visao == "individual" %}
-<th style="width: 40px;"><input class="form-check-input" type="checkbox" id="selectAll"></th>
-<th>Competência</th>
-<th>Credor / Fonte Retentora</th>
-<th>Processo</th>
-<th>Código Receita</th>
-<th>Base de Cálculo</th>
-<th>Valor Retido</th>
-<th>Status Reinf</th>
-<th>Documentação</th>
+<th class="no-sort" style="width: 40px;"><input class="form-check-input" type="checkbox" id="selectAll"></th>
+<th data-campo="competencia">Competência</th>
+<th data-campo="fonte_retentora">Credor / Fonte Retentora</th>
+<th data-campo="processo">Processo</th>
+<th data-campo="codigo">Código Receita</th>
+<th data-campo="base_calculo">Base de Cálculo</th>
+<th data-campo="valor">Valor Retido</th>
+<th data-campo="status">Status Reinf</th>
+<th class="no-sort">Documentação</th>
 {% elif visao == "nf" %}
-<th>NF</th>
-<th>Processo</th>
-<th>Emitente</th>
-<th>Emissão</th>
-<th>Qtd. Retenções</th>
-<th>Total Retido</th>
+<th data-campo="nf">NF</th>
+<th data-campo="processo">Processo</th>
+<th data-campo="emitente">Emitente</th>
+<th data-campo="emissao">Emissão</th>
+<th data-campo="qtd_retencoes">Qtd. Retenções</th>
+<th data-campo="total_retido">Total Retido</th>
 {% else %}
-<th>Processo</th>
-<th>Credor</th>
-<th>Qtd. NFs</th>
-<th>Qtd. Retenções</th>
-<th>Total Retido</th>
+<th data-campo="processo">Processo</th>
+<th data-campo="credor">Credor</th>
+<th data-campo="qtd_notas">Qtd. NFs</th>
+<th data-campo="qtd_retencoes">Qtd. Retenções</th>
+<th data-campo="total_retido">Total Retido</th>
 {% endif %}
 {% endblock %}
 

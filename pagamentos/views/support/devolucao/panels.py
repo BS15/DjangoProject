@@ -11,6 +11,7 @@ from django.views.decorators.http import require_GET
 from pagamentos.filters import DevolucaoFilter
 from pagamentos.forms import DevolucaoForm
 from pagamentos.domain_models import Devolucao, Processo
+from pagamentos.views.helpers import _resolver_parametros_ordenacao
 from pagamentos.views.shared import apply_filterset
 
 
@@ -18,16 +19,32 @@ from pagamentos.views.shared import apply_filterset
 @permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def painel_devolucoes_view(request: HttpRequest) -> HttpResponse:
     """Lista devolucoes com filtro e valor total agregado."""
-    queryset = Devolucao.objects.select_related("processo", "processo__credor").order_by("-data_devolucao")
+    queryset = Devolucao.objects.select_related("processo", "processo__credor")
     meu_filtro = apply_filterset(request, DevolucaoFilter, queryset)
-    total_valor = meu_filtro.qs.aggregate(total=Sum("valor_devolvido"))["total"] or Decimal("0")
+    ordem, direcao, order_field = _resolver_parametros_ordenacao(
+        request,
+        campos_permitidos={
+            "processo": "processo__id",
+            "credor": "processo__credor__nome",
+            "data_devolucao": "data_devolucao",
+            "valor_devolvido": "valor_devolvido",
+            "motivo": "motivo",
+            "criado_em": "criado_em",
+        },
+        default_ordem="data_devolucao",
+        default_direcao="desc",
+    )
+    devolucoes = meu_filtro.qs.order_by(order_field, "-id")
+    total_valor = devolucoes.aggregate(total=Sum("valor_devolvido"))["total"] or Decimal("0")
     return render(
         request,
         "pagamentos/devolucoes_list.html",
         {
             "filter": meu_filtro,
-            "devolucoes": meu_filtro.qs,
+            "devolucoes": devolucoes,
             "total_valor": total_valor,
+            "ordem": ordem,
+            "direcao": direcao,
         },
     )
 

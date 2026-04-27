@@ -14,14 +14,14 @@
 {% block filter_card %}{% endblock %}
 
 {% block table_headers %}
-<th>Nº Sequencial</th>
-<th>Beneficiário</th>
-<th>Saída</th>
-<th>Retorno</th>
-<th>Destino</th>
-<th class="text-end">Qtd.</th>
-<th class="text-end">Valor Total</th>
-<th class="text-center">Ações</th>
+<th data-campo="numero_sequencial">Nº Sequencial</th>
+<th data-campo="beneficiario">Beneficiário</th>
+<th data-campo="saida">Saída</th>
+<th data-campo="retorno">Retorno</th>
+<th data-campo="destino">Destino</th>
+<th class="text-end" data-campo="quantidade_diarias">Qtd.</th>
+<th class="text-end" data-campo="valor_total">Valor Total</th>
+<th class="text-center no-sort">Ações</th>
 {% endblock %}
 
 {% block table_rows %}

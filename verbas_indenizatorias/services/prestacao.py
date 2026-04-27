@@ -1,5 +1,7 @@
 """Serviços canônicos para ciclo de prestação de contas de diárias."""
 
+import logging
+
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.utils import timezone
@@ -7,6 +9,8 @@ from django.utils import timezone
 from commons.shared.document_services import obter_proxima_ordem_documento
 from pagamentos.models import DocumentoProcesso
 from verbas_indenizatorias.models import DocumentoComprovacao, PrestacaoContasDiaria
+
+logger = logging.getLogger(__name__)
 
 
 def obter_ou_criar_prestacao(diaria):
@@ -55,8 +59,12 @@ def _anexar_comprovantes_ao_processo(prestacao, processo):
         finally:
             try:
                 comprovante.arquivo.close()
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning(
+                    "evento=erro_ao_fechar_arquivo_comprovante comprovante_id=%s erro=%s",
+                    comprovante.id,
+                    exc,
+                )
 
         DocumentoProcesso.objects.create(
             processo=processo,

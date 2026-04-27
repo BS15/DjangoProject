@@ -1,4 +1,5 @@
 import io
+import logging
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
@@ -15,6 +16,8 @@ from pagamentos.domain_models.processos import (
 
 
 STATUS_BLOQUEADOS_TOTAL = set(STATUS_PROCESSO_BLOQUEADOS_TOTAL)
+
+logger = logging.getLogger(__name__)
 
 STATUS_SOMENTE_DOCUMENTOS = set(STATUS_PROCESSO_SOMENTE_DOCUMENTOS)
 
@@ -92,12 +95,24 @@ def verificar_turnpike(processo, status_anterior, status_novo):
                             reader = PdfReader(io.BytesIO(conteudo))
                             if len(reader.pages) == 0:
                                 continue
-                        except Exception:
+                        except Exception as exc:
+                            logger.warning(
+                                "evento=erro_leitura_pdf_turnpike processo_id=%s documento_id=%s erro=%s",
+                                getattr(processo, "id", None),
+                                getattr(doc, "id", None),
+                                exc,
+                            )
                             continue
 
                     tem_lastro_material_valido = True
                     break
-                except (OSError, TypeError, ValueError):
+                except (OSError, TypeError, ValueError) as exc:
+                    logger.warning(
+                        "evento=erro_validacao_material_documento_orcamentario processo_id=%s documento_id=%s erro=%s",
+                        getattr(processo, "id", None),
+                        getattr(doc, "id", None),
+                        exc,
+                    )
                     continue
 
             if not tem_lastro_material_valido:

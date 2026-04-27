@@ -4,8 +4,13 @@ Este módulo implementa classes para geração de PDFs de propostas,
 solicitações e recibos de diárias, reembolsos, jetons, auxílios e
 documentos correlatos.
 """
+import logging
+
 from commons.shared.pdf_tools import BasePDFDocument, _draw_wrapped_text
 from commons.shared.text_tools import format_brl_currency
+
+
+logger = logging.getLogger(__name__)
 
 
 _PCD_SIG_Y = 120
@@ -192,7 +197,12 @@ class PCDDocument(BasePDFDocument):
 		if diaria.quantidade_diarias and diaria.valor_total:
 			try:
 				valor_unitario = diaria.valor_total / diaria.quantidade_diarias
-			except Exception:
+			except Exception as exc:
+				logger.warning(
+					"evento=erro_calculo_valor_unitario_diaria diaria_id=%s erro=%s",
+					getattr(diaria, "id", None),
+					exc,
+				)
 				valor_unitario = None
 
 		qtd = diaria.quantidade_diarias or 0

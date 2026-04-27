@@ -35,6 +35,17 @@ def painel_contingencias_view(request: HttpRequest) -> HttpResponse:
         template_name="pagamentos/painel_contingencias.html",
         items_key="contingencias",
         filter_key="filter",
+        sort_fields={
+            "id": "id",
+            "processo": "processo__id",
+            "solicitante": "solicitante__username",
+            "data_solicitacao": "data_solicitacao",
+            "justificativa": "justificativa",
+            "status": "status",
+        },
+        default_ordem="data_solicitacao",
+        default_direcao="desc",
+        tie_breaker="-id",
     )
 
 

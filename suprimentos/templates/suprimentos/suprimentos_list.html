@@ -17,14 +17,14 @@
 {% endblock %}
 
 {% block table_headers %}
-    <th># ID</th>
-    <th>Suprido(a)</th>
-    <th>Lotação</th>
-    <th>Período</th>
-    <th class="text-end pe-3">Liberado (R$)</th>
-    <th class="text-end pe-3">Gasto (R$)</th>
-    <th class="text-center">Status</th>
-    <th class="text-center">Ações</th>
+    <th data-campo="id"># ID</th>
+    <th data-campo="suprido">Suprido(a)</th>
+    <th data-campo="lotacao">Lotação</th>
+    <th data-campo="periodo">Período</th>
+    <th class="text-end pe-3" data-campo="valor_liquido">Liberado (R$)</th>
+    <th class="text-end pe-3" data-campo="valor_gasto">Gasto (R$)</th>
+    <th class="text-center" data-campo="status">Status</th>
+    <th class="text-center no-sort">Ações</th>
 {% endblock %}
 
 {% block table_rows %}

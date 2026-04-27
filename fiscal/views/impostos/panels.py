@@ -10,6 +10,7 @@ from django.shortcuts import redirect, render
 from fiscal.filters import RetencaoIndividualFilter, RetencaoNotaFilter, RetencaoProcessoFilter
 from fiscal.models import DocumentoFiscal, DocumentoPagamentoImposto, RetencaoImposto
 from pagamentos.domain_models import Processo
+from pagamentos.views.helpers import _resolver_parametros_ordenacao
 from pagamentos.views.shared import apply_filterset
 
 DEFAULT_VIEW = "individual"
@@ -43,24 +44,49 @@ def painel_impostos_view(request):
             "nome_emitente",
         )
         filtro = apply_filterset(request, RetencaoNotaFilter, queryset_base.order_by("-id"))
+        ordem, direcao, order_field = _resolver_parametros_ordenacao(
+            request,
+            campos_permitidos={
+                "nf": "numero_nota_fiscal",
+                "processo": "processo__id",
+                "emitente": "nome_emitente__nome",
+                "emissao": "data_emissao",
+                "qtd_retencoes": "qtd_retencoes",
+                "total_retido": "total_retido",
+            },
+            default_ordem="nf",
+            default_direcao="desc",
+        )
         notas = list(
             filtro.qs.distinct().annotate(
                 total_retido=Sum("retencoes__valor"),
                 qtd_retencoes=Count("retencoes", distinct=True),
-            )
+            ).order_by(order_field, "-id")
         )
-        context.update({"filter": filtro, "notas_fiscais": notas})
+        context.update({"filter": filtro, "notas_fiscais": notas, "ordem": ordem, "direcao": direcao})
     elif visao == "processo":
         queryset_base = Processo.objects.select_related("credor")
         filtro = apply_filterset(request, RetencaoProcessoFilter, queryset_base.order_by("-id"))
+        ordem, direcao, order_field = _resolver_parametros_ordenacao(
+            request,
+            campos_permitidos={
+                "processo": "id",
+                "credor": "credor__nome",
+                "qtd_notas": "qtd_notas",
+                "qtd_retencoes": "qtd_retencoes",
+                "total_retido": "total_retido",
+            },
+            default_ordem="processo",
+            default_direcao="desc",
+        )
         processos = list(
             filtro.qs.distinct().annotate(
                 total_retido=Sum("notas_fiscais__retencoes__valor"),
                 qtd_retencoes=Count("notas_fiscais__retencoes", distinct=True),
                 qtd_notas=Count("notas_fiscais", distinct=True),
-            )
+            ).order_by(order_field, "-id")
         )
-        context.update({"filter": filtro, "processos": processos})
+        context.update({"filter": filtro, "processos": processos, "ordem": ordem, "direcao": direcao})
     else:
         queryset_base = RetencaoImposto.objects.select_related(
             "codigo",
@@ -70,7 +96,21 @@ def painel_impostos_view(request):
             "beneficiario",
         ).order_by("-id")
         filtro = apply_filterset(request, RetencaoIndividualFilter, queryset_base)
-        retencoes = list(filtro.qs.prefetch_related("documentos_pagamento"))
+        ordem, direcao, order_field = _resolver_parametros_ordenacao(
+            request,
+            campos_permitidos={
+                "competencia": "competencia",
+                "fonte_retentora": "beneficiario__nome",
+                "processo": "nota_fiscal__processo__id",
+                "codigo": "codigo__codigo",
+                "base_calculo": "rendimento_tributavel",
+                "valor": "valor",
+                "status": "status__status_choice",
+            },
+            default_ordem="competencia",
+            default_direcao="desc",
+        )
+        retencoes = list(filtro.qs.prefetch_related("documentos_pagamento").order_by(order_field, "-id"))
         retencao_ids = [r.id for r in retencoes]
         docs_completos = set(
             DocumentoPagamentoImposto.objects.filter(
@@ -87,7 +127,7 @@ def painel_impostos_view(request):
         for retencao in retencoes:
             retencao.fonte_retentora_nome = _resolve_fonte_retentora_nome(retencao)
             retencao.documentacao_completa = retencao.id in docs_completos
-        context.update({"filter": filtro, "retencoes": retencoes})
+        context.update({"filter": filtro, "retencoes": retencoes, "ordem": ordem, "direcao": direcao})
     return render(request, "fiscal/painel_impostos.html", context)
 
 

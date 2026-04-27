@@ -17,6 +17,17 @@ def auxilios_list_view(request):
         template_name="verbas/auxilios_list.html",
         items_key="auxilios",
         filter_key="filter",
+        sort_fields={
+            "numero_sequencial": "numero_sequencial",
+            "status": "status__status_choice",
+            "beneficiario": "beneficiario__nome",
+            "objetivo": "objetivo",
+            "valor_total": "valor_total",
+            "processo": "processo__id",
+        },
+        default_ordem="numero_sequencial",
+        default_direcao="desc",
+        tie_breaker="-id",
     )
 
 

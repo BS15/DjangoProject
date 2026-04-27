@@ -5,6 +5,10 @@ Este módulo implementa funções para decodificação, leitura e validação de
 
 import csv
 import io
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 def decode_csv_file(csv_file, encodings, error_message):
     """Read and decode a binary CSV file with encoding fallback."""
@@ -14,8 +18,10 @@ def decode_csv_file(csv_file, encodings, error_message):
     for encoding in encodings:
         try:
             return raw.decode(encoding), None
-        except UnicodeDecodeError:
+        except UnicodeDecodeError as exc:
+            logger.warning("evento=erro_decode_csv encoding=%s erro=%s", encoding, exc)
             continue
+    logger.error("evento=falha_decode_csv encodings_tentados=%s", ",".join(encodings))
     return None, error_message
 
 

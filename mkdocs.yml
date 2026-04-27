@@ -80,6 +80,7 @@ nav:
       - Módulo Fiscal: modulos/modulo_fiscal.md
   - Fluxos Operacionais:
       - Pagamentos: fluxos/pagamentos.md
+      - Pagamentos (Operador Contas a Pagar): fluxos/pagamentos_operador_contas_pagar.md
       - Retenções: fluxos/retencoes.md
       - Diárias: fluxos/diarias.md
       - Suprimento de Fundos: fluxos/suprimento_fundos.md

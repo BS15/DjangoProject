@@ -12,19 +12,9 @@ from pagamentos.services.cancelamentos import cancelar_verba, extrair_dados_devo
 from verbas_indenizatorias.forms import ReembolsoForm
 from verbas_indenizatorias.models import (
     ReembolsoCombustivel,
-    StatusChoicesVerbasIndenizatorias,
 )
 from ..shared.documents import _salvar_documento_upload
 from ..shared.registry import _get_tipos_documento_verbas
-
-
-def _set_status_case_insensitive(reembolso, status_str):
-    status, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(
-        status_choice__iexact=status_str,
-        defaults={"status_choice": status_str},
-    )
-    reembolso.status = status
-    reembolso.save(update_fields=["status"])
 
 
 @require_POST
@@ -45,7 +35,7 @@ def add_reembolso_action(request):
 @permission_required("pagamentos.pode_gerenciar_reembolsos", raise_exception=True)
 def solicitar_autorizacao_reembolso_action(request, pk):
     reembolso = get_object_or_404(ReembolsoCombustivel, id=pk)
-    _set_status_case_insensitive(reembolso, "SOLICITADA")
+    reembolso.definir_status("SOLICITADA")
     logger.info("mutation=solicitar_autorizacao_reembolso reembolso_id=%s user_id=%s", reembolso.id, request.user.pk)
     messages.success(request, "Solicitação de reembolso enviada para autorização.")
     return redirect("gerenciar_reembolso", pk=reembolso.id)
@@ -55,7 +45,7 @@ def solicitar_autorizacao_reembolso_action(request, pk):
 @permission_required("pagamentos.pode_gerenciar_reembolsos", raise_exception=True)
 def autorizar_reembolso_action(request, pk):
     reembolso = get_object_or_404(ReembolsoCombustivel, id=pk)
-    _set_status_case_insensitive(reembolso, "APROVADA")
+    reembolso.definir_status("APROVADA")
     logger.info("mutation=autorizar_reembolso reembolso_id=%s user_id=%s", reembolso.id, request.user.pk)
     messages.success(request, "Reembolso autorizado com sucesso.")
     return redirect("gerenciar_reembolso", pk=reembolso.id)

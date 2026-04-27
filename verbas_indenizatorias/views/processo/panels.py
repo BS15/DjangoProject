@@ -5,6 +5,7 @@ from django.views.decorators.http import require_GET
 
 from pagamentos.domain_models import Processo
 from pagamentos.forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoForm
+from pagamentos.views.helpers import _resolver_parametros_ordenacao
 from verbas_indenizatorias.constants import STATUS_VERBA_APROVADA
 from .helpers import _montar_contexto_processo_verbas, _pode_gerenciar_processo_verbas_da_entidade
 from ..shared.registry import _VERBA_CONFIG
@@ -122,8 +123,43 @@ def painel_revisar_solicitacoes_view(request):
         )
         solicitacoes.extend(_resumo_solicitacao(tipo_verba, item) for item in itens)
 
-    solicitacoes.sort(key=lambda item: item["id"], reverse=True)
-    return render(request, "verbas/revisar_solicitacoes_verba.html", {"solicitacoes": solicitacoes})
+    ordem, direcao, _ = _resolver_parametros_ordenacao(
+        request,
+        campos_permitidos={
+            "tipo": "tipo",
+            "id": "id",
+            "beneficiario": "beneficiario",
+            "referencia": "referencia",
+            "valor_total": "valor_total",
+            "status": "status",
+        },
+        default_ordem="id",
+        default_direcao="desc",
+    )
+
+    def _sort_key(item):
+        status_value = getattr(item.get("status"), "status_choice", "") if item.get("status") else ""
+        map_keys = {
+            "tipo": (item.get("tipo_label") or "").lower(),
+            "id": item.get("id") or 0,
+            "beneficiario": (item.get("beneficiario_nome") or "").lower(),
+            "referencia": (item.get("referencia") or "").lower(),
+            "valor_total": item.get("valor_total") or 0,
+            "status": status_value.lower(),
+        }
+        return map_keys.get(ordem, item.get("id") or 0)
+
+    solicitacoes = sorted(solicitacoes, key=_sort_key, reverse=(direcao == "desc"))
+
+    return render(
+        request,
+        "verbas/revisar_solicitacoes_verba.html",
+        {
+            "solicitacoes": solicitacoes,
+            "ordem": ordem,
+            "direcao": direcao,
+        },
+    )
 
 
 @require_GET

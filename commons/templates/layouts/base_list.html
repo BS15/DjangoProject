@@ -128,119 +128,52 @@
 }());
 
 (function () {
-    var table = document.querySelector('.table-responsive table');
-    if (!table) {
+    var sortableHeaders = Array.from(document.querySelectorAll('th[data-campo]:not(.no-sort)'));
+    if (!sortableHeaders.length) {
         return;
     }
 
-    var tbody = table.querySelector('tbody');
-    var headers = Array.from(table.querySelectorAll('thead th'));
-    if (!tbody || !headers.length) {
-        return;
-    }
+    var params = new URLSearchParams(window.location.search);
+    var ordemAtual = params.get('ordem') || '';
+    var direcaoAtual = params.get('direcao') || 'asc';
 
-    function isSortableHeader(th) {
-        if (th.classList.contains('no-sort')) {
-            return false;
-        }
-        if (th.querySelector('input,select,button')) {
-            return false;
-        }
-        var text = (th.textContent || '').trim().toLowerCase();
-        if (!text) {
-            return false;
-        }
-        if (text.includes('ação') || text.includes('acoes') || text.includes('ações')) {
-            return false;
-        }
-        return true;
-    }
-
-    function parseValue(raw) {
-        var value = (raw || '').trim();
-        if (!value) {
-            return { type: 'text', value: '' };
-        }
-
-        var maybeDate = Date.parse(value);
-        if (!Number.isNaN(maybeDate) && /\d/.test(value)) {
-            return { type: 'number', value: maybeDate };
-        }
-
-        var numericCandidate = value
-            .replace(/\s/g, '')
-            .replace('R$', '')
-            .replace(/\./g, '')
-            .replace(',', '.');
-        var parsedNumber = Number(numericCandidate);
-        if (!Number.isNaN(parsedNumber) && /\d/.test(numericCandidate)) {
-            return { type: 'number', value: parsedNumber };
-        }
-
-        return { type: 'text', value: value.toLowerCase() };
-    }
-
-    var sortState = { index: null, direction: 'asc' };
-
-    function updateIndicators() {
-        headers.forEach(function (th, idx) {
-            var indicator = th.querySelector('.sort-indicator');
-            if (!indicator) {
-                indicator = document.createElement('span');
-                indicator.className = 'sort-indicator ms-1 text-muted';
-                th.appendChild(indicator);
-            }
-            if (sortState.index !== idx) {
-                indicator.innerHTML = '<i class="bi bi-arrow-down-up"></i>';
-                return;
-            }
-            indicator.innerHTML = sortState.direction === 'asc'
-                ? '<i class="bi bi-sort-down"></i>'
-                : '<i class="bi bi-sort-up"></i>';
-        });
-    }
-
-    headers.forEach(function (th, index) {
-        if (!isSortableHeader(th)) {
+    sortableHeaders.forEach(function (th) {
+        var campo = th.getAttribute('data-campo');
+        if (!campo) {
             return;
         }
 
         th.style.cursor = 'pointer';
         th.setAttribute('title', 'Clique para ordenar');
 
+        var indicator = th.querySelector('.sort-indicator');
+        if (!indicator) {
+            indicator = document.createElement('span');
+            indicator.className = 'sort-indicator ms-1 text-light-emphasis';
+            th.appendChild(indicator);
+        }
+        if (ordemAtual === campo) {
+            indicator.innerHTML = direcaoAtual === 'asc'
+                ? '<i class="bi bi-sort-down"></i>'
+                : '<i class="bi bi-sort-up"></i>';
+        } else {
+            indicator.innerHTML = '<i class="bi bi-arrow-down-up"></i>';
+        }
+
         th.addEventListener('click', function () {
-            if (sortState.index === index) {
-                sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+            var proxDirecao = 'asc';
+            if (ordemAtual === campo) {
+                proxDirecao = direcaoAtual === 'asc' ? 'desc' : 'asc';
             } else {
-                sortState.index = index;
-                sortState.direction = 'asc';
+                proxDirecao = 'asc';
             }
 
-            var rows = Array.from(tbody.querySelectorAll('tr'));
-            rows.sort(function (rowA, rowB) {
-                var cellA = rowA.children[index] ? rowA.children[index].innerText : '';
-                var cellB = rowB.children[index] ? rowB.children[index].innerText : '';
-                var valA = parseValue(cellA);
-                var valB = parseValue(cellB);
-
-                if (valA.type === 'number' && valB.type === 'number') {
-                    return sortState.direction === 'asc' ? valA.value - valB.value : valB.value - valA.value;
-                }
-
-                return sortState.direction === 'asc'
-                    ? String(valA.value).localeCompare(String(valB.value), 'pt-BR')
-                    : String(valB.value).localeCompare(String(valA.value), 'pt-BR');
-            });
-
-            rows.forEach(function (row) {
-                tbody.appendChild(row);
-            });
-
-            updateIndicators();
+            var nextParams = new URLSearchParams(window.location.search);
+            nextParams.set('ordem', campo);
+            nextParams.set('direcao', proxDirecao);
+            window.location.search = nextParams.toString();
         });
     });
-
-    updateIndicators();
 }());
 </script>
 {% endblock %}

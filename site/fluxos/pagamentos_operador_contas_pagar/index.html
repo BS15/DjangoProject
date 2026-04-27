@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pagamentos (Operador Contas a Pagar) - Wiki PaGé</title>
+    <meta name="description" content="Guia de interface do fluxo de pagamentos para Operador de Contas a Pagar no PaGé.">
+    <style>
+      body { font-family: Arial, sans-serif; line-height: 1.5; margin: 2rem auto; max-width: 960px; padding: 0 1rem; color: #1f2937; }
+      h1, h2, h3 { color: #0f766e; }
+      code { background: #f3f4f6; padding: 0.1rem 0.3rem; border-radius: 4px; }
+      a { color: #0f766e; }
+      .small { color: #6b7280; }
+      .status-flow { background: #f8fafc; border-left: 4px solid #0f766e; padding: 0.8rem; }
+      ul, ol { padding-left: 1.2rem; }
+      hr { border: none; border-top: 1px solid #e5e7eb; margin: 1.2rem 0; }
+    </style>
+  </head>
+  <body>
+    <h1>Guia de Interface: Pagamentos (Operador de Contas a Pagar)</h1>
+    <p>Este guia descreve a tramitação completa do processo de pagamento no PaGé, com foco no perfil <strong>Operador de Contas a Pagar</strong>: da criação até o arquivamento.</p>
+    <p><strong>Navegação relacionada:</strong> para a especificação técnica detalhada da esteira e das regras de exceção, consulte <a href="../pagamentos/">Fluxo: Pagamentos</a>.</p>
+
+    <hr>
+
+    <h2>1. Visão geral da esteira</h2>
+    <p class="status-flow"><code>A EMPENHAR</code> -> <code>AGUARDANDO LIQUIDAÇÃO</code> -> <code>A PAGAR - PENDENTE AUTORIZAÇÃO</code> -> <code>A PAGAR - ENVIADO PARA AUTORIZAÇÃO</code> -> <code>A PAGAR - AUTORIZADO</code> -> <code>LANÇADO - AGUARDANDO COMPROVANTE</code> -> <code>PAGO - EM CONFERÊNCIA</code> -> <code>PAGO - A CONTABILIZAR</code> -> <code>CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL</code> -> <code>APROVADO - PENDENTE ARQUIVAMENTO</code> -> <code>ARQUIVADO</code></p>
+
+    <h2>2. Etapas operacionais (início ao fim)</h2>
+
+    <h3>2.1 Criar processo</h3>
+    <p><strong>Tela:</strong> <code>add_process_view</code> | <strong>Ação:</strong> <code>add_process_action</code></p>
+    <ul>
+      <li>Preencher capa: credor, tipo de pagamento, datas e valores.</li>
+      <li>Definir <code>trigger_a_empenhar</code>.</li>
+      <li>Saída: com trigger -> <code>A EMPENHAR</code>; sem trigger -> <code>A PAGAR - PENDENTE AUTORIZAÇÃO</code>.</li>
+    </ul>
+
+    <h3>2.2 Hub de edição</h3>
+    <p><strong>Tela:</strong> <code>editar_processo</code></p>
+    <ul>
+      <li>Completar capa, documentos, pendências e liquidações/retenções.</li>
+      <li>Objetivo: eliminar bloqueios de turnpike antes de avançar.</li>
+    </ul>
+
+    <h3>2.3 Empenho</h3>
+    <p><strong>Tela:</strong> <code>a_empenhar_view</code></p>
+    <ul>
+      <li>Entrada: <code>A EMPENHAR</code>.</li>
+      <li>Registrar empenho e conferir documento orçamentário (quando aplicável).</li>
+      <li>Saída: <code>AGUARDANDO LIQUIDAÇÃO</code>.</li>
+    </ul>
+
+    <h3>2.4 Liquidação e ateste</h3>
+    <p><strong>Telas/Ações:</strong> <code>painel_liquidacoes_view</code>, <code>documentos_fiscais_view</code>, <code>alternar_ateste_nota_action</code></p>
+    <ul>
+      <li>Entrada: <code>AGUARDANDO LIQUIDAÇÃO</code>.</li>
+      <li>Atestar NFs, registrar dados fiscais e retenções.</li>
+      <li>Turnpike: todas as NFs atestadas e valores consistentes.</li>
+      <li>Saída: <code>A PAGAR - PENDENTE AUTORIZAÇÃO</code>.</li>
+    </ul>
+
+    <h3>2.5 Contas a pagar e envio para autorização</h3>
+    <p><strong>Tela:</strong> <code>contas_a_pagar</code></p>
+    <ul>
+      <li>Entrada: <code>A PAGAR - PENDENTE AUTORIZAÇÃO</code>.</li>
+      <li>Filtrar fila, revisar pendências/retenções e enviar para autorização.</li>
+      <li>Saída: <code>A PAGAR - ENVIADO PARA AUTORIZAÇÃO</code>.</li>
+    </ul>
+
+    <h3>2.6 Autorização</h3>
+    <p><strong>Tela:</strong> <code>painel_autorizacao_view</code></p>
+    <ul>
+      <li>Entrada: <code>A PAGAR - ENVIADO PARA AUTORIZAÇÃO</code>.</li>
+      <li>Aprovado: <code>A PAGAR - AUTORIZADO</code>.</li>
+      <li>Recusado: volta para <code>A PAGAR - PENDENTE AUTORIZAÇÃO</code>.</li>
+    </ul>
+
+    <h3>2.7 Lançamento bancário</h3>
+    <p><strong>Telas/Ações:</strong> <code>lancamento_bancario</code>, <code>marcar_como_lancado_action</code></p>
+    <ul>
+      <li>Entrada: <code>A PAGAR - AUTORIZADO</code>.</li>
+      <li>Executar rodada de pagamento por forma (PIX/TED/boleto/remessa).</li>
+      <li>Saída: <code>LANÇADO - AGUARDANDO COMPROVANTE</code>.</li>
+    </ul>
+
+    <h3>2.8 Upload de comprovantes</h3>
+    <p><strong>Tela/Ação:</strong> <code>painel_comprovantes_view</code>, <code>vincular_comprovantes_action</code></p>
+    <ul>
+      <li>Entrada: <code>LANÇADO - AGUARDANDO COMPROVANTE</code>.</li>
+      <li>Vincular comprovantes corretamente ao processo.</li>
+      <li>Saída: <code>PAGO - EM CONFERÊNCIA</code>.</li>
+    </ul>
+
+    <h3>2.9 Conferência</h3>
+    <p><strong>Telas:</strong> <code>painel_conferencia_view</code>, <code>conferencia_processo_view</code></p>
+    <ul>
+      <li>Entrada: <code>PAGO - EM CONFERÊNCIA</code>.</li>
+      <li>Revisar pendências e aprovar conferência.</li>
+      <li>Saída: <code>PAGO - A CONTABILIZAR</code>.</li>
+    </ul>
+
+    <h3>2.10 Contabilização, conselho e arquivamento</h3>
+    <ul>
+      <li><strong>Contabilização:</strong> <code>PAGO - A CONTABILIZAR</code> -> <code>CONTABILIZADO - PARA APRECIAÇÃO DE CONSELHO FISCAL</code> (ou devolve para conferência).</li>
+      <li><strong>Conselho:</strong> aprovação em reunião leva a <code>APROVADO - PENDENTE ARQUIVAMENTO</code>.</li>
+      <li><strong>Arquivamento:</strong> <code>painel_arquivamento_view</code> / <code>arquivar_processo_action</code> finaliza em <code>ARQUIVADO</code>.</li>
+    </ul>
+
+    <hr>
+
+    <h2>3. Exceções críticas</h2>
+    <ul>
+      <li><strong>Cancelamento:</strong> <code>cancelar_processo_action</code> com justificativa obrigatória.</li>
+      <li><strong>Devolução:</strong> em processo pago ou posterior, informar valor, data e comprovante.</li>
+      <li><strong>Contingência:</strong> retificação formal por aprovação multi-etapa.</li>
+    </ul>
+
+    <h2>4. Checklist diário do operador</h2>
+    <ol>
+      <li>Criar processo com capa completa e status inicial correto.</li>
+      <li>Validar empenho/documentação quando exigido.</li>
+      <li>Garantir NFs atestadas e retenções consistentes.</li>
+      <li>Enviar para autorização e tratar recusas.</li>
+      <li>Lançar pagamentos e anexar comprovantes sem divergência.</li>
+      <li>Concluir conferência e acompanhar retorno de contabilização/conselho.</li>
+      <li>Encaminhar para arquivamento com dossiê completo.</li>
+    </ol>
+
+    <p class="small">Referências: <a href="../pagamentos/">Fluxo: Pagamentos</a> | <a href="../cancelamento/">Fluxo de Cancelamento</a> | <a href="../../governanca/matriz_permissoes/">Matriz de Permissões</a></p>
+  </body>
+</html>

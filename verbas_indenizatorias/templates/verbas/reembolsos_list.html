@@ -34,13 +34,13 @@
 
 {% block table_headers %}
 <th class="text-center no-sort" style="width: 40px;"><input class="form-check-input" type="checkbox" id="checkAll"></th>
-<th>Nº Seq.</th>
-<th>Status</th>
-<th>Beneficiário</th>
-<th>Trecho / Data</th>
-<th>Cálculo (KM x R$)</th>
-<th>Valor Total</th>
-<th class="text-center">Processo</th>
+<th data-campo="numero_sequencial">Nº Seq.</th>
+<th data-campo="status">Status</th>
+<th data-campo="beneficiario">Beneficiário</th>
+<th data-campo="data_saida">Trecho / Data</th>
+<th class="no-sort">Cálculo (KM x R$)</th>
+<th data-campo="valor_total">Valor Total</th>
+<th class="text-center" data-campo="processo">Processo</th>
 <th class="text-center no-sort">Gerenciar</th>
 {% endblock %}
 

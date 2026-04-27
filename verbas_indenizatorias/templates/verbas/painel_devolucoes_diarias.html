@@ -20,13 +20,13 @@
 {% endblock %}
 
 {% block table_headers %}
-<th>Diária</th>
-<th>Beneficiário</th>
-<th>Data</th>
-<th class="text-end">Valor Devolvido</th>
-<th>Motivo</th>
-<th>Registrado por</th>
-<th>Em</th>
+<th data-campo="diaria">Diária</th>
+<th data-campo="beneficiario">Beneficiário</th>
+<th data-campo="data_devolucao">Data</th>
+<th class="text-end" data-campo="valor_devolvido">Valor Devolvido</th>
+<th data-campo="motivo">Motivo</th>
+<th data-campo="registrado_por">Registrado por</th>
+<th data-campo="criado_em">Em</th>
 {% endblock %}
 
 {% block table_rows %}

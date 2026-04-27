@@ -7,14 +7,16 @@ from verbas_indenizatorias.views.auxilios import actions as verbas_auxilio_actio
 from verbas_indenizatorias.views.auxilios import panels as verbas_auxilio_panels
 from verbas_indenizatorias.views.diarias import actions as verbas_diarias_actions
 from verbas_indenizatorias.views.diarias import apis as verbas_diarias_apis
-from verbas_indenizatorias.views.diarias import imports as verbas_diarias_imports
 from verbas_indenizatorias.views.diarias import panels as verbas_diarias_panels
 from verbas_indenizatorias.views.diarias import pdf as verbas_diarias_pdf
-from verbas_indenizatorias.views.diarias import sync as verbas_diarias_sync
-from verbas_indenizatorias.views.diarias.contingencia import panels as contingencia_panels
-from verbas_indenizatorias.views.diarias.contingencia import actions as contingencia_actions
-from verbas_indenizatorias.views.diarias.devolucao import panels as devolucao_panels
-from verbas_indenizatorias.views.diarias.devolucao import actions as devolucao_actions
+from verbas_indenizatorias.views.diarias.support.contingencia import actions as contingencia_actions
+from verbas_indenizatorias.views.diarias.support.contingencia import panels as contingencia_panels
+from verbas_indenizatorias.views.diarias.support.devolucao import actions as devolucao_actions
+from verbas_indenizatorias.views.diarias.support.devolucao import panels as devolucao_panels
+from verbas_indenizatorias.views.diarias.support.imports import actions as verbas_diarias_imports_actions
+from verbas_indenizatorias.views.diarias.support.imports import panels as verbas_diarias_imports_panels
+from verbas_indenizatorias.views.diarias.support.sync import actions as verbas_diarias_sync_actions
+from verbas_indenizatorias.views.diarias.support.sync import panels as verbas_diarias_sync_panels
 from verbas_indenizatorias.views.jetons import actions as verbas_jeton_actions
 from verbas_indenizatorias.views.jetons import panels as verbas_jeton_panels
 from verbas_indenizatorias.views.reembolsos import actions as verbas_reembolso_actions
@@ -106,8 +108,10 @@ urlpatterns = [
 
     path('verbas/diarias/<int:pk>/pcd/', verbas_diarias_pdf.gerar_pcd_view, name='gerar_pcd'),
     path('verbas/diarias/<int:pk>/termo-prestacao-contas/', verbas_diarias_pdf.gerar_termo_prestacao_contas_view, name='gerar_termo_prestacao_contas'),
-    path('verbas/sincronizar-diarias/', verbas_diarias_sync.sincronizar_diarias, name='sincronizar_diarias'),
-    path('verbas/diarias/importar/', verbas_diarias_imports.importar_diarias_view, name='importar_diarias'),
+    path('verbas/sincronizar-diarias/', verbas_diarias_sync_panels.sincronizar_diarias_view, name='sincronizar_diarias'),
+    path('verbas/sincronizar-diarias/action/', verbas_diarias_sync_actions.sincronizar_diarias_action, name='sincronizar_diarias_action'),
+    path('verbas/diarias/importar/', verbas_diarias_imports_panels.importar_diarias_view, name='importar_diarias'),
+    path('verbas/diarias/importar/action/', verbas_diarias_imports_actions.importar_diarias_action, name='importar_diarias_action'),
     path('verbas/diarias/template-csv/', verbas_diarias_panels.download_template_diarias_csv, name='download_template_diarias_csv'),
 
 ]

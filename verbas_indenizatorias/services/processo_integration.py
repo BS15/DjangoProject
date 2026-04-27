@@ -113,10 +113,6 @@ def sincronizar_relacoes_apos_transicao(processo, status_anterior, novo_status, 
     if not novo_status.startswith("PAGO"):
         return
 
-    from verbas_indenizatorias.models import StatusChoicesVerbasIndenizatorias
-
-    status_paga, _ = StatusChoicesVerbasIndenizatorias.objects.get_or_create(status_choice="PAGA")
-
     conjuntos = (
         processo.diarias.all(),
         processo.reembolsos_combustivel.all(),
@@ -125,7 +121,6 @@ def sincronizar_relacoes_apos_transicao(processo, status_anterior, novo_status, 
     )
     for queryset in conjuntos:
         for item in queryset:
-            item.status = status_paga
             if usuario:
                 item._history_user = usuario
-            item.save(update_fields=["status"])
+            item.definir_status("PAGA")

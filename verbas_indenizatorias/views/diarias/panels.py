@@ -5,6 +5,7 @@ from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_GET
 
 from pagamentos.domain_models import Processo, STATUS_PROCESSO_PRE_AUTORIZACAO
+from pagamentos.views.helpers import _resolver_parametros_ordenacao
 from pagamentos.views.shared import render_filtered_list
 from verbas_indenizatorias.forms import ComprovanteDiariaFormSet, DiariaComSolicitacaoAssinadaForm, DiariaForm
 from verbas_indenizatorias.models import Diaria, PrestacaoContasDiaria
@@ -42,6 +43,17 @@ def diarias_list_view(request):
         items_key='diarias',
         filter_key='filter',
         extra_context=extra_context,
+        sort_fields={
+            'numero_siscac': 'numero_siscac',
+            'status': 'status__status_choice',
+            'beneficiario': 'beneficiario__nome',
+            'data_saida': 'data_saida',
+            'valor_total': 'valor_total',
+            'processo': 'processo__id',
+        },
+        default_ordem='numero_siscac',
+        default_direcao='desc',
+        tie_breaker='-id',
     )
 
 
@@ -145,12 +157,29 @@ def minha_prestacao_list_view(request):
         diarias = (
             Diaria.objects.filter(beneficiario=credor)
             .select_related('status', 'prestacao_contas')
-            .order_by('-id')
         )
+        ordem, direcao, order_field = _resolver_parametros_ordenacao(
+            request,
+            campos_permitidos={
+                'numero_siscac': 'numero_siscac',
+                'periodo': 'data_saida',
+                'destino': 'cidade_destino',
+                'valor_total': 'valor_total',
+                'status_diaria': 'status__status_choice',
+                'status_prestacao': 'prestacao_contas__status',
+            },
+            default_ordem='numero_siscac',
+            default_direcao='desc',
+        )
+        diarias = diarias.order_by(order_field, '-id')
+    else:
+        ordem, direcao = 'numero_siscac', 'desc'
 
     context = {
         'credor': credor,
         'diarias': diarias,
+        'ordem': ordem,
+        'direcao': direcao,
         'status_aberta': PrestacaoContasDiaria.STATUS_ABERTA,
         'status_encerrada': PrestacaoContasDiaria.STATUS_ENCERRADA,
     }
@@ -183,13 +212,34 @@ def gerenciar_prestacao_view(request, pk):
 @require_GET
 def painel_autorizacao_diarias_view(request):
     diarias_pendentes = listar_diarias_pendentes_para_proponente(request.user)
-    return render(request, 'verbas/painel_autorizacao_diarias.html', {'diarias_pendentes': diarias_pendentes})
+    ordem = request.GET.get('ordem', 'numero_sequencial')
+    if ordem not in {'numero_sequencial', 'beneficiario', 'saida', 'retorno', 'destino', 'quantidade_diarias', 'valor_total'}:
+        ordem = 'numero_sequencial'
+    direcao = request.GET.get('direcao', 'desc')
+    if direcao not in {'asc', 'desc'}:
+        direcao = 'desc'
+
+    sort_keys = {
+        'numero_sequencial': lambda item: item['diaria'].numero_siscac or item['diaria'].id,
+        'beneficiario': lambda item: (item['diaria'].beneficiario.nome or '').lower(),
+        'saida': lambda item: item['diaria'].data_saida,
+        'retorno': lambda item: item['diaria'].data_retorno,
+        'destino': lambda item: (item['diaria'].cidade_destino or '').lower(),
+        'quantidade_diarias': lambda item: item['diaria'].quantidade_diarias or 0,
+        'valor_total': lambda item: item['diaria'].valor_total or 0,
+    }
+    diarias_pendentes = sorted(diarias_pendentes, key=sort_keys[ordem], reverse=(direcao == 'desc'))
+    return render(request, 'verbas/painel_autorizacao_diarias.html', {
+        'diarias_pendentes': diarias_pendentes,
+        'ordem': ordem,
+        'direcao': direcao,
+    })
 
 
 @require_GET
 @permission_required('verbas_indenizatorias.visualizar_prestacao_contas', raise_exception=True)
 def painel_revisar_prestacoes_view(request):
-    prestacoes = PrestacaoContasDiaria.objects.select_related('diaria__beneficiario', 'diaria__status').order_by('-criado_em')
+    prestacoes = PrestacaoContasDiaria.objects.select_related('diaria__beneficiario', 'diaria__status')
 
     status = (request.GET.get('status') or '').strip()
     beneficiario = (request.GET.get('beneficiario') or '').strip()
@@ -205,8 +255,24 @@ def painel_revisar_prestacoes_view(request):
     if periodo_ate:
         prestacoes = prestacoes.filter(diaria__data_retorno__lte=periodo_ate)
 
+    ordem, direcao, order_field = _resolver_parametros_ordenacao(
+        request,
+        campos_permitidos={
+            'prestacao': 'id',
+            'diaria': 'diaria__numero_siscac',
+            'beneficiario': 'diaria__beneficiario__nome',
+            'periodo': 'diaria__data_saida',
+            'status': 'status',
+        },
+        default_ordem='prestacao',
+        default_direcao='desc',
+    )
+    prestacoes = prestacoes.order_by(order_field, '-id')
+
     context = {
         'prestacoes': prestacoes,
+        'ordem': ordem,
+        'direcao': direcao,
         'filtro_status': status,
         'filtro_beneficiario': beneficiario,
         'filtro_periodo_de': request.GET.get('periodo_de') or '',

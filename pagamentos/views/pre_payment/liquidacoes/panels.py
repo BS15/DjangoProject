@@ -20,6 +20,16 @@ def painel_liquidacoes_view(request):
         filter_class=DocumentoFiscalFilter,
         template_name="pagamentos/painel_liquidacoes.html",
         items_key="notas",
+        sort_fields={
+            "numero_nota_fiscal": "numero_nota_fiscal",
+            "processo": "processo__id",
+            "credor": "processo__credor__nome",
+            "valor_bruto": "valor_bruto",
+            "data_emissao": "data_emissao",
+        },
+        default_ordem="id",
+        default_direcao="desc",
+        tie_breaker="-id",
         extra_context={
             "pode_interagir": True,
         },

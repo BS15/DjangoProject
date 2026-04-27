@@ -18,12 +18,12 @@
 {% endblock %}
 
 {% block table_headers %}
-<th>#NF</th>
-<th>Processo</th>
-<th>Credor</th>
-<th>Valor</th>
-<th>Emissão</th>
-<th class="text-center">Ações</th>
+<th data-campo="numero_nota_fiscal">#NF</th>
+<th data-campo="processo">Processo</th>
+<th data-campo="credor">Credor</th>
+<th data-campo="valor_bruto">Valor</th>
+<th data-campo="data_emissao">Emissão</th>
+<th class="text-center no-sort">Ações</th>
 {% endblock %}
 
 {% block table_rows %}

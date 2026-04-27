@@ -1,7 +1,12 @@
 """Utilitários compartilhados para geração e resposta HTTP de PDFs."""
 
+import logging
+
 from commons.shared.pdf_tools import gerar_documento_pdf
 from django.http import HttpResponse
+
+
+logger = logging.getLogger(__name__)
 
 
 def gerar_documento_bytes(doc_type, obj, document_registry, **kwargs):
@@ -15,8 +20,8 @@ def montar_resposta_pdf(pdf_bytes, nome_arquivo, inline=True):
     if hasattr(pdf_bytes, "read"):
         try:
             pdf_bytes.seek(0)
-        except (AttributeError, OSError):
-            pass
+        except (AttributeError, OSError) as exc:
+            logger.warning("evento=erro_seek_buffer_pdf nome_arquivo=%s erro=%s", nome_arquivo, exc)
         content = pdf_bytes.read()
     else:
         content = pdf_bytes

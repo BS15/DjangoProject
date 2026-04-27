@@ -28,6 +28,16 @@ def credores_list_view(request):
         template_name="cadastros/credores_list.html",
         items_key="credores",
         filter_key="filter",
+        sort_fields={
+            "nome": "nome",
+            "cpf_cnpj": "cpf_cnpj",
+            "usuario": "usuario__username",
+            "tipo": "tipo",
+            "status": "ativo",
+        },
+        default_ordem="nome",
+        default_direcao="asc",
+        tie_breaker="id",
     )
 
 

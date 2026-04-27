@@ -17,6 +17,17 @@ def jetons_list_view(request):
         template_name="verbas/jetons_list.html",
         items_key="jetons",
         filter_key="filter",
+        sort_fields={
+            "numero_sequencial": "numero_sequencial",
+            "status": "status__status_choice",
+            "beneficiario": "beneficiario__nome",
+            "reuniao": "reuniao",
+            "valor_total": "valor_total",
+            "processo": "processo__id",
+        },
+        default_ordem="numero_sequencial",
+        default_direcao="desc",
+        tie_breaker="-id",
     )
 
 

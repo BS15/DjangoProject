@@ -11,12 +11,12 @@
 {% block filter_card %}{% endblock %}
 
 {% block table_headers %}
-<th>#</th>
-<th>Credor</th>
-<th>Empenho</th>
-<th>Valor Líquido</th>
-<th>Status</th>
-<th class="text-center">Ações</th>
+<th data-campo="id">#</th>
+<th data-campo="credor">Credor</th>
+<th data-campo="empenho">Empenho</th>
+<th data-campo="valor_liquido">Valor Líquido</th>
+<th data-campo="status">Status</th>
+<th class="text-center no-sort">Ações</th>
 {% endblock %}
 
 {% block table_rows %}

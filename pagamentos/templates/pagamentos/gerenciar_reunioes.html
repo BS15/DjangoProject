@@ -17,12 +17,12 @@
 {% block filter_card %}{% endblock %}
 
 {% block table_headers %}
-<th>#</th>
-<th>Data</th>
-<th>Descrição</th>
-<th>Processos</th>
-<th>Status</th>
-<th class="text-center">Ações</th>
+<th data-campo="id">#</th>
+<th data-campo="data">Data</th>
+<th data-campo="descricao">Descrição</th>
+<th class="no-sort">Processos</th>
+<th data-campo="status">Status</th>
+<th class="text-center no-sort">Ações</th>
 {% endblock %}
 
 {% block table_rows %}

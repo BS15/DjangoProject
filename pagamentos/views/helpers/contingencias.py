@@ -1,5 +1,6 @@
 """State machine e regras de negocio para contingencias do fluxo financeiro."""
 
+import logging
 from datetime import datetime
 from decimal import Decimal
 
@@ -30,6 +31,8 @@ _CAMPOS_PERMITIDOS_CONTINGENCIA = {
 
 _STATUS_CONTINGENCIA_FINAL = {"APROVADA", "REJEITADA"}
 _STATUS_PRE_AUTORIZACAO = set(STATUS_PROCESSO_PRE_AUTORIZACAO)
+
+logger = logging.getLogger(__name__)
 
 
 def determinar_requisitos_contingencia(status_processo):
@@ -130,7 +133,14 @@ def normalizar_dados_propostos_contingencia(dados_propostos):
                     try:
                         data_ok = datetime.strptime(valor, fmt).date()
                         break
-                    except ValueError:
+                    except ValueError as exc:
+                        logger.warning(
+                            "evento=erro_parse_data_contingencia campo=%s valor=%s formato=%s erro=%s",
+                            campo,
+                            valor,
+                            fmt,
+                            exc,
+                        )
                         continue
                 if data_ok is None:
                     raise ValidationError(f"Data inválida para o campo '{campo}'.")
