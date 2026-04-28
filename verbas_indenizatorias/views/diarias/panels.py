@@ -3,6 +3,7 @@ from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render
 from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_GET
+from openpyxl import Workbook
 
 from pagamentos.domain_models import Processo, STATUS_PROCESSO_PRE_AUTORIZACAO
 from pagamentos.views.helpers import _resolver_parametros_ordenacao
@@ -328,13 +329,41 @@ def revisar_prestacao_view(request, pk):
 
 @require_GET
 @permission_required("pagamentos.pode_importar_diarias", raise_exception=True)
-def download_template_diarias_csv(request):
-    """Baixa um CSV-modelo para importação de diárias."""
-    conteudo = (
-        "NOME_BENEFICIARIO,DATA_SOLICITACAO,DATA_SAIDA,DATA_RETORNO,QUANTIDADE_DIARIAS,CIDADE_ORIGEM,CIDADE_DESTINO,OBJETIVO,TIPO_SOLICITACAO\n"
+def download_template_diarias_xlsx(request):
+    """Baixa uma planilha XLSX-modelo para importação de diárias."""
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Diarias"
+    sheet.append(
+        [
+            "NOME_BENEFICIARIO",
+            "DATA_SOLICITACAO",
+            "DATA_SAIDA",
+            "DATA_RETORNO",
+            "CIDADE_ORIGEM",
+            "CIDADE_DESTINO",
+            "OBJETIVO",
+            "TIPO_SOLICITACAO",
+        ]
     )
-    response = HttpResponse(conteudo, content_type="text/csv; charset=utf-8")
-    response["Content-Disposition"] = 'attachment; filename="template_diarias.csv"'
+    sheet.append(
+        [
+            "NOME DO BENEFICIARIO",
+            "28/04/2026",
+            "29/04/2026",
+            "30/04/2026",
+            "Florianopolis",
+            "Blumenau",
+            "Participacao em reuniao institucional",
+            "INICIAL",
+        ]
+    )
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="template_diarias.xlsx"'
+    workbook.save(response)
     return response
 
 
@@ -352,5 +381,5 @@ __all__ = [
     'painel_autorizacao_diarias_view',
     'painel_revisar_prestacoes_view',
     'revisar_prestacao_view',
-    'download_template_diarias_csv',
+    'download_template_diarias_xlsx',
 ]

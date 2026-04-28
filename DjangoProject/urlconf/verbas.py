@@ -114,6 +114,6 @@ urlpatterns = [
     path('verbas/sincronizar-diarias/action/', verbas_diarias_sync_actions.sincronizar_diarias_action, name='sincronizar_diarias_action'),
     path('verbas/diarias/importar/', verbas_diarias_imports_panels.importar_diarias_view, name='importar_diarias'),
     path('verbas/diarias/importar/action/', verbas_diarias_imports_actions.importar_diarias_action, name='importar_diarias_action'),
-    path('verbas/diarias/template-csv/', verbas_diarias_panels.download_template_diarias_csv, name='download_template_diarias_csv'),
+    path('verbas/diarias/template-xlsx/', verbas_diarias_panels.download_template_diarias_xlsx, name='download_template_diarias_xlsx'),
 
 ]

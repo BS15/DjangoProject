@@ -84,7 +84,7 @@
                                     <th>Data Retorno</th>
                                     <th>Origem</th>
                                     <th>Destino</th>
-                                    <th>Qtd. Diárias</th>
+                                    <th>Qtd. Diárias (calc.)</th>
                                     <th>Objetivo</th>
                                 </tr>
                             </thead>
@@ -140,15 +140,16 @@
         {# ── Step 1: upload form ── #}
         <div class="card shadow-sm border-0">
             <div class="card-body p-4">
-                <a href="{% url 'download_template_diarias_csv' %}" class="btn btn-secondary mb-3">
-                    <i class="bi bi-download"></i> Baixar Planilha Modelo
+                <a href="{% url 'download_template_diarias_xlsx' %}" class="btn btn-secondary mb-3">
+                    <i class="bi bi-download"></i> Baixar Planilha Modelo (.xlsx)
                 </a>
 
                 <form method="POST" enctype="multipart/form-data" action="{% url 'importar_diarias_action' %}">
                     {% csrf_token %}
                     <div class="mb-3">
-                        <label for="csv_file" class="form-label fw-bold">Arquivo CSV</label>
-                        <input type="file" name="csv_file" id="csv_file" class="form-control" accept=".csv" required>
+                        <label for="planilha_file" class="form-label fw-bold">Arquivo XLSX (ou CSV)</label>
+                        <input type="file" name="planilha_file" id="planilha_file" class="form-control" accept=".xlsx,.csv" required>
+                        <div class="form-text">A quantidade de diárias é calculada automaticamente pelas datas de saída e retorno.</div>
                     </div>
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" name="modo_solicitacao_assinada" id="modo_solicitacao_assinada" {% if modo_solicitacao_assinada %}checked{% endif %}>

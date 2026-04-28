@@ -98,5 +98,13 @@ nav:
       - Setup do Ambiente: desenvolvedor/setup_ambiente.md
       - Padrões de Código: desenvolvedor/padroes_codigo.md
       - Dicionários Operacionais: desenvolvedor/dicionarios_operacionais.md
+      - Inventário de Actions: desenvolvedor/inventario_actions.md
+      - Inventário de Actions — Pagamentos / Pré-pagamento: desenvolvedor/inventario_actions_pagamentos_pre_payment.md
+      - Inventário de Actions — Pagamentos / Payment: desenvolvedor/inventario_actions_pagamentos_payment.md
+      - Inventário de Actions — Pagamentos / Pós-pagamento: desenvolvedor/inventario_actions_pagamentos_post_payment.md
+      - Inventário de Actions — Pagamentos / Support: desenvolvedor/inventario_actions_pagamentos_support.md
+      - Inventário de Actions — Verbas / Processo e Diárias: desenvolvedor/inventario_actions_verbas_processo_diarias.md
+      - Inventário de Actions — Verbas / Demais trilhas: desenvolvedor/inventario_actions_verbas_demais.md
+      - Inventário de Actions — Fiscal, Suprimentos e Credores: desenvolvedor/inventario_actions_fiscal_suprimentos_credores.md
       - Funcionalidades Transversais: desenvolvedor/funcionalidades_transversais.md
       - Referência de API: api.md

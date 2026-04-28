@@ -46,8 +46,8 @@ def importar_diarias_action(request):
         request.session.pop(_MODE_SESSION_KEY, None)
         return redirect("importar_diarias")
 
-    if request.FILES.get("csv_file"):
-        resultado_preview = preview_diarias_lote(request.FILES["csv_file"])
+    if request.FILES.get("planilha_file"):
+        resultado_preview = preview_diarias_lote(request.FILES["planilha_file"])
         modo_assinado = request.POST.get("modo_solicitacao_assinada") == "on"
         request.session[_PREVIEW_SESSION_KEY] = resultado_preview["preview"]
         request.session[_PREVIEW_ERRORS_SESSION_KEY] = resultado_preview["erros"]
@@ -55,7 +55,7 @@ def importar_diarias_action(request):
         request.session.pop(_RESULTS_SESSION_KEY, None)
         return redirect("importar_diarias")
 
-    messages.error(request, "Nenhum arquivo CSV foi enviado para importacao.")
+    messages.error(request, "Nenhuma planilha foi enviada para importacao.")
     return redirect("importar_diarias")
 
 
