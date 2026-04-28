@@ -1,7 +1,6 @@
 """Modelos fiscais: notas, retenções e comprovantes de pagamento."""
 
 import logging
-import re
 from django.db import models
 from datetime import date
 from django.contrib.auth.models import User
@@ -11,30 +10,11 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from simple_history.models import HistoricalRecords
 
+from commons.shared.field_validators import validar_cpf_cnpj
 from commons.shared.file_validators import validar_arquivo_seguro
 
 
 logger = logging.getLogger(__name__)
-
-
-def validar_cpf_cnpj(value):
-    """Valida formato básico de CPF/CNPJ (apenas dígitos e separadores)."""
-    if not value:
-        return
-    clean = re.sub(r'[\.\-\/]', '', value)
-    if not re.match(r'^\d{11}(\d{2})?$', clean):
-        raise ValidationError(
-            'CPF deve ter 11 dígitos e CNPJ deve ter 13 dígitos.',
-            code='invalid_cpf_cnpj'
-        )
-    
-    if len(clean) == 11:
-        if clean == clean[0] * 11:
-            raise ValidationError('CPF inválido (dígitos repetidos).', code='invalid_cpf')
-    
-    elif len(clean) == 14:
-        if clean == clean[0] * 14:
-            raise ValidationError('CNPJ inválido (dígitos repetidos).', code='invalid_cnpj')
 
 
 # --- MIGRADO DE credores.models ---

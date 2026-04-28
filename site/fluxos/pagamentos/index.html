@@ -1785,7 +1785,7 @@
 <hr />
 <h2 id="4-etapa-de-empenho">8. Etapa de empenho<a class="headerlink" href="#4-etapa-de-empenho" title="Permanent link">&para;</a></h2>
 <p><strong>View:</strong> <code>a_empenhar_view</code><br />
-<strong>Permissão:</strong> <code>pagamentos.pode_operar_contas_pagar</code></p>
+<strong>Permissão:</strong> <code>pagamentos.operador_contas_a_pagar</code></p>
 <ul>
 <li>Lista processos no status <code>A EMPENHAR</code> com filtros e ordenação.</li>
 <li>O operador registra o empenho (número, data, valor) via importação de PDF SISCAC ou manualmente.</li>
@@ -1806,7 +1806,7 @@
 <hr />
 <h2 id="6-contas-a-pagar-e-envio-para-autorizacao">10. Contas a pagar e envio para autorização<a class="headerlink" href="#6-contas-a-pagar-e-envio-para-autorizacao" title="Permanent link">&para;</a></h2>
 <p><strong>View:</strong> <code>contas_a_pagar</code><br />
-<strong>Permissão:</strong> <code>pagamentos.pode_operar_contas_pagar</code></p>
+<strong>Permissão:</strong> <code>pagamentos.operador_contas_a_pagar</code></p>
 <ul>
 <li>Fila com filtros facetados (data, forma de pagamento, status, conta).</li>
 <li>Colunas anotadas: <code>has_pendencias</code>, <code>has_retencoes</code>.</li>
@@ -1824,7 +1824,7 @@
 <hr />
 <h2 id="8-lancamento-bancario">12. Lançamento bancário<a class="headerlink" href="#8-lancamento-bancario" title="Permanent link">&para;</a></h2>
 <p><strong>Views:</strong> <code>lancamento_bancario</code> / <code>marcar_como_lancado_action</code><br />
-<strong>Permissão:</strong> <code>pagamentos.pode_operar_contas_pagar</code></p>
+<strong>Permissão:</strong> <code>pagamentos.operador_contas_a_pagar</code></p>
 <ol>
 <li>Operador seleciona processos autorizados → IDs armazenados em <strong>sessão</strong> (<code>processos_lancamento</code>).</li>
 <li>Painel exibe dois grupos: <em>a pagar</em> e <em>já lançados</em>, com totais consolidados por forma de pagamento.</li>
@@ -1835,7 +1835,7 @@
 <hr />
 <h2 id="9-upload-de-comprovantes">13. Upload de comprovantes<a class="headerlink" href="#9-upload-de-comprovantes" title="Permanent link">&para;</a></h2>
 <p><strong>View:</strong> <code>painel_comprovantes_view</code> / <strong>Action:</strong> <code>vincular_comprovantes_action</code> (JSON API)<br />
-<strong>Permissão:</strong> <code>pagamentos.pode_operar_contas_pagar</code></p>
+<strong>Permissão:</strong> <code>pagamentos.operador_contas_a_pagar</code></p>
 <ol>
 <li>Operador faz upload dos arquivos de comprovante (via interface interativa).</li>
 <li>Para cada comprovante, sistema cria:</li>
@@ -1848,7 +1848,7 @@
 <hr />
 <h2 id="10-conferencia">14. Conferência<a class="headerlink" href="#10-conferencia" title="Permanent link">&para;</a></h2>
 <p><strong>Views:</strong> <code>painel_conferencia_view</code> / <code>conferencia_processo_view</code><br />
-<strong>Permissão:</strong> <code>pagamentos.pode_operar_contas_pagar</code></p>
+<strong>Permissão:</strong> <code>pagamentos.operador_contas_a_pagar</code></p>
 <ul>
 <li>Fila de processos <code>PAGO - EM CONFERÊNCIA</code> com filtros: com pendência, com retenção, ambos, sem pendências.</li>
 <li>Revisão detalhada em fila de sessão (<code>conferencia_queue</code>).</li>

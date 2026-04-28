@@ -24,7 +24,7 @@ Permissão operacional principal para este guia:
 
 Permissões relacionadas em etapas de apoio:
 
-- `pagamentos.pode_operar_contas_pagar` (operações de contas a pagar, empenho, lançamento e comprovantes)
+- `pagamentos.operador_contas_a_pagar` (operações de contas a pagar, empenho, lançamento e comprovantes)
 - `pagamentos.pode_autorizar_pagamento` (autorização, quando aplicável ao usuário)
 - `pagamentos.pode_contabilizar` (contabilização)
 - `pagamentos.pode_auditar_conselho` (conselho)

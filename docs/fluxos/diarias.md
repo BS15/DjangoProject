@@ -155,7 +155,7 @@ Requisitos de trilha e evidência de mudança: [Trilha de Auditoria](../governan
 ## 6. Assinatura eletrônica (Autentique)
 
 **Action:** `aprovar_revisao_solicitacao_action` (quando `tipo_verba=diaria`)  
-**Permissão:** `pagamentos.pode_operar_contas_pagar`
+**Permissão:** `pagamentos.operador_contas_a_pagar`
 
 1. Na aprovação da revisão operacional da diária (`APROVADA -> REVISADA`), o sistema emite/recupera o PCD.
 2. Envia o PDF para a Autentique via `enviar_documento_para_assinatura`.
@@ -204,7 +204,7 @@ Ao aprovar, `_aplicar_contingencia_diaria` usa `_bypass_domain_seal = True` para
 
 **Spoke (GET):** `cancelar_diaria_spoke_view`  
 **Action (POST):** `cancelar_diaria_action`  
-**Permissão:** `verbas_indenizatorias.pode_gerenciar_diarias`  
+**Permissão:** `pagamentos.pode_gerenciar_diarias`  
 **Serviço:** `cancelar_verba` (`pagamentos/services/cancelamentos.py`)
 
 - Justificativa é sempre obrigatória.

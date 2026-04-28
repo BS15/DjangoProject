@@ -44,12 +44,15 @@
 			<div class="card shadow-sm border-0 h-100">
 				<div class="card-body text-center py-5">
 					<i class="bi bi-cloud-download fs-1 text-success mb-3 d-block"></i>
-					<h5 class="fw-bold">Sincronização Automática</h5>
-					<p class="text-muted small">Busca dados diretamente da API SISCAC</p>
-					<form method="post" action="{% url 'sincronizar_siscac_auto_action' %}">
+					<h5 class="fw-bold">Conciliação Automática</h5>
+					<p class="text-muted small">Importa relatório PDF exportado do SISCAC e concilia com os processos internos automaticamente</p>
+					<form method="post" action="{% url 'sincronizar_siscac_auto_action' %}" enctype="multipart/form-data">
 						{% csrf_token %}
+						<div class="mb-3">
+							<input type="file" name="siscac_pdf" accept=".pdf" class="form-control" required>
+						</div>
 						<button type="submit" class="btn btn-success fw-bold w-100">
-							<i class="bi bi-arrow-repeat"></i> Sincronizar Agora
+							<i class="bi bi-arrow-repeat"></i> Conciliar Agora
 						</button>
 					</form>
 				</div>

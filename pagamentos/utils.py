@@ -16,7 +16,7 @@ def safe_split(line, keyword, index=1):
 
 
 def parse_siscac_report(pdf_file):
-	"""Lê relatório SISCAC e consolida lançamentos por número de pagamento."""
+	"""Lê relatório SISCAC (PDF exportado manualmente) e consolida lançamentos por número de pagamento."""
 	pattern_payment = re.compile(r'^(20\d{2}PG\d{5})\s+(.*?)\s+(20\d{2}NE\d{5}).*?([\d.,]+)$')
 	pattern_comprovante = re.compile(r'Nº do Comprovante:\s*([\d.-]+)')
 
@@ -51,8 +51,6 @@ def parse_siscac_report(pdf_file):
 						}
 
 	return list(payments.values())
-
-
 
 
 __all__ = [

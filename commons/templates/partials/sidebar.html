@@ -32,8 +32,9 @@
 
         <h6 class="text-muted fw-bold mb-3 small text-uppercase">Módulo de Pagamentos</h6>
         <div class="text-muted fw-bold small text-uppercase mb-2">Pré-pagamento</div>
-        <a href="{% url 'a_empenhar' %}" class="btn btn-warning w-100 fw-bold shadow-sm"><i class="bi bi-hourglass-split"></i> Fila: A Empenhar</a>
-        <a href="{% url 'painel_liquidacoes' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-pen text-primary"></i> Liquidações / Atestes</a>
+        <a href="{% url 'a_empenhar' %}" class="btn btn-warning w-100 fw-bold shadow-sm"><i class="bi bi-hourglass-split"></i> Painél de Processos de Pagamento</a>
+        <a href="{% url 'a_empenhar' %}" class="btn btn-warning w-100 fw-bold shadow-sm"><i class="bi bi-hourglass-split"></i> Pagamentos A Empenhar</a>
+        <a href="{% url 'painel_liquidacoes' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-pen text-primary"></i> Liquidações/Atestes</a>
 
         <div class="text-muted fw-bold small text-uppercase mt-3 mb-2">Pagamento</div>
         <a href="{% url 'contas_a_pagar' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-cash-coin text-success"></i> Contas a Pagar</a>
@@ -61,6 +62,7 @@
         <hr class="my-4 text-muted">
 
         <h6 class="text-muted fw-bold mb-3 small text-uppercase">Módulo de Verbas Indenizatórias</h6>
+        <a href="{% url 'verbas_panel' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-airplane text-primary"></i> Painel de Verbas Indenizatórias</a>
         <a href="{% url 'diarias_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-airplane text-primary"></i> Diárias</a>
         <a href="{% url 'reembolsos_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-cash-stack text-success"></i> Reembolsos</a>
         <a href="{% url 'jetons_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-person-badge text-info"></i> Jetons</a>

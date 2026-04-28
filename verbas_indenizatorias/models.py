@@ -15,32 +15,11 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from decimal import Decimal
 
 from commons.shared.models import DocumentoBase
+from commons.shared.processo_guards import is_processo_selado as _is_processo_selado
 from commons.shared.storage_utils import caminho_documento, _delete_file
-
-
-def _is_processo_selado(processo):
-    """Retorna True quando o processo vinculado está em estágio pós-pagamento selado."""
-    if not processo or processo.em_contingencia or not processo.status:
-        return False
-
-    from pagamentos.domain_models.processos import STATUS_PROCESSO_PAGOS_E_POSTERIORES
-
-    status_atual = (processo.status.opcao_status or "").upper()
-    return status_atual in STATUS_PROCESSO_PAGOS_E_POSTERIORES
-
-
-def _validar_vinculo_inicial_em_processo_selado(processo, entidade_label):
-    """Bloqueia criação de verba já vinculada a processo pós-pagamento."""
-    if _is_processo_selado(processo):
-        raise DjangoValidationError(
-            {
-                "processo": (
-                    f"Cadastro bloqueado: não é permitido vincular {entidade_label} "
-                    "a processo em estágio pós-pagamento. "
-                    "Use fluxo de contingência aprovado para ajustes."
-                )
-            }
-        )
+from verbas_indenizatorias.validators import (
+    validar_vinculo_inicial_em_processo_selado as _validar_vinculo_inicial_em_processo_selado,
+)
 
 
 class SealedMutationQuerySet(models.QuerySet):

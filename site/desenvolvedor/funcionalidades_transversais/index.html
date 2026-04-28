@@ -2721,13 +2721,13 @@
 <li><code>pagamentos/views/support/sync/pagamentos.py</code></li>
 <li>implementa <code>sincronizar_siscac</code>, <code>sincronizar_siscac_auto_action</code> e <code>sincronizar_siscac_manual_action</code></li>
 <li>
-<p>implementa <code>sync_siscac_payments</code>, núcleo de conciliação entre relatório externo e processos internos</p>
+<p>implementa <code>sync_siscac_payments</code>, núcleo de conciliação entre relatório PDF e processos internos</p>
 </li>
 <li>
 <p><code>pagamentos/utils.py</code></p>
 </li>
 <li>
-<p>contém o parser de relatório SISCAC usado na sincronização automática</p>
+<p>contém <code>parse_siscac_report</code>, parser local do relatório PDF exportado do SISCAC (sem chamada à API externa)</p>
 </li>
 <li>
 <p><code>pagamentos/services/integracoes/processo_relacionados.py</code></p>

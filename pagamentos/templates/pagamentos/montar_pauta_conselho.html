@@ -7,7 +7,7 @@
 	<div class="d-flex justify-content-between align-items-center mb-4">
 		<div>
 			<h3 class="mb-0 fw-bold"><i class="bi bi-list-check text-primary me-2"></i> Pauta — Reunião #{{ reuniao.id }}</h3>
-			<p class="text-muted mb-0">{{ reuniao.data|date:"d/m/Y" }} &mdash; {{ reuniao.descricao|default:"Sem descrição" }}</p>
+			<p class="text-muted mb-0">{{ reuniao.data_reuniao|date:"d/m/Y"|default:"Data não informada" }} &mdash; {{ reuniao.trimestre_referencia|default:"Sem referência" }}</p>
 		</div>
 		<a href="{% url 'gerenciar_reunioes' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
 	</div>
@@ -20,7 +20,7 @@
 		<div class="card-body p-0">
 			<table class="table table-hover align-middle mb-0">
 				<thead class="table-dark">
-					<tr><th>#</th><th>Credor</th><th>Valor Líquido</th><th>Status</th><th class="text-center">Remover</th></tr>
+					<tr><th>#</th><th>Credor</th><th>Valor Líquido</th><th>Status</th></tr>
 				</thead>
 				<tbody>
 					{% for processo in processos_na_pauta %}
@@ -29,17 +29,9 @@
 						<td>{{ processo.credor|default:"-" }}</td>
 						<td>R$ {{ processo.valor_liquido|default:"0,00" }}</td>
 						<td><span class="badge bg-primary">{{ processo.status.opcao_status|default:"-" }}</span></td>
-						<td class="text-center">
-							{% if pode_interagir %}
-							<form method="post" action="{% url 'remover_da_pauta_action' reuniao_id=reuniao.id processo_id=processo.id %}">
-								{% csrf_token %}
-								<button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i></button>
-							</form>
-							{% endif %}
-						</td>
 					</tr>
 					{% empty %}
-					<tr><td colspan="5" class="text-center py-3 text-muted">Nenhum processo na pauta ainda.</td></tr>
+					<tr><td colspan="4" class="text-center py-3 text-muted">Nenhum processo na pauta ainda.</td></tr>
 					{% endfor %}
 				</tbody>
 			</table>
@@ -53,7 +45,7 @@
 			<h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-plus-circle"></i> Adicionar à Pauta</h6>
 		</div>
 		<div class="card-body p-0">
-			<form method="post" action="{% url 'adicionar_a_pauta_action' reuniao_id=reuniao.id %}">
+			<form method="post" action="{% url 'montar_pauta_reuniao_action' reuniao_id=reuniao.id %}">
 				{% csrf_token %}
 				<table class="table table-hover align-middle mb-0">
 					<thead class="table-dark">
@@ -62,7 +54,7 @@
 					<tbody>
 						{% for processo in processos_elegiveis %}
 						<tr>
-							<td><input type="checkbox" name="processo_ids" value="{{ processo.id }}" class="form-check-input item-check"></td>
+							<td><input type="checkbox" name="processos_selecionados" value="{{ processo.id }}" class="form-check-input item-check"></td>
 							<td class="fw-bold text-muted">#{{ processo.id }}</td>
 							<td>{{ processo.credor|default:"-" }}</td>
 							<td>R$ {{ processo.valor_liquido|default:"0,00" }}</td>

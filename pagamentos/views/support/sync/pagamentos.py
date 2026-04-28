@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def sync_siscac_payments(extracted_payments):
-    """Concilia pagamentos extraídos com processos internos e classifica sucessos/divergências."""
+    """Concilia pagamentos extraídos do relatório PDF com processos internos e classifica sucessos/divergências."""
     resultados = {"sucessos": [], "divergencias": [], "nao_encontrados": [], "retroativos_corrigidos": 0}
     matched_processo_ids = []
 
@@ -96,7 +96,7 @@ def sincronizar_siscac(request):
 @require_POST
 @permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def sincronizar_siscac_manual_action(request):
-    """Processa sincronização manual de pares processo|SISCAC selecionados."""
+    """Processa force-sync manual de pares processo|SISCAC onde a correspondência automática falhou."""
     force_sync_ids = request.POST.getlist("force_sync_ids")
     count = 0
     errors = 0
@@ -121,7 +121,7 @@ def sincronizar_siscac_manual_action(request):
 @require_POST
 @permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def sincronizar_siscac_auto_action(request):
-    """Processa upload do PDF SISCAC e executa sincronização automática."""
+    """Processa upload do relatório PDF SISCAC e executa conciliação automática com os processos internos."""
     pdf_file = request.FILES.get("siscac_pdf")
     if not pdf_file or not pdf_file.name.lower().endswith(".pdf"):
         messages.error(request, "Nenhum arquivo ou PDF inválido enviado.")
@@ -135,3 +135,4 @@ def sincronizar_siscac_auto_action(request):
         logger.exception("Falha ao processar relatório SISCAC no modo automático")
         messages.error(request, "Erro ao processar o relatório SISCAC. Verifique o arquivo e tente novamente.")
         return redirect("sincronizar_siscac")
+

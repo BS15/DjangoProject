@@ -37,23 +37,23 @@ DOCUMENTOS_CONTAS_FIXAS_CANONICOS = [
 GRUPOS_PERMISSOES = {
     "FUNCIONARIO(A) CONTAS A PAGAR": [
         "pagamentos.pode_visualizar_processos_pagamento",
-        "pagamentos.pode_operar_contas_pagar",
+        "pagamentos.operador_contas_a_pagar",
         "pagamentos.pode_arquivar",
         "suprimentos.pode_gerenciar_concessao_suprimento",
         "suprimentos.pode_gerir_prestacao_contas_suprimento",
         "verbas_indenizatorias.analisar_prestacao_contas",
-        "verbas_indenizatorias.pode_visualizar_verbas",
+        "pagamentos.pode_visualizar_verbas",
         "verbas_indenizatorias.visualizar_prestacao_contas",
     ],
     "SUPERVISOR(A) CONTAS A PAGAR": [
         "pagamentos.pode_visualizar_processos_pagamento",
-        "pagamentos.pode_operar_contas_pagar",
+        "pagamentos.operador_contas_a_pagar",
         "pagamentos.pode_aprovar_contingencia_supervisor",
         "pagamentos.pode_arquivar",
         "suprimentos.pode_gerenciar_concessao_suprimento",
         "suprimentos.pode_gerir_prestacao_contas_suprimento",
         "verbas_indenizatorias.analisar_prestacao_contas",
-        "verbas_indenizatorias.pode_visualizar_verbas",
+        "pagamentos.pode_visualizar_verbas",
         "verbas_indenizatorias.visualizar_prestacao_contas",
     ],
     "ORDENADOR(A) DE DESPESA": [

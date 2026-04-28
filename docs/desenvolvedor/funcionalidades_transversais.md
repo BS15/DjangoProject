@@ -249,10 +249,10 @@ Arquivos centrais:
 
 - `pagamentos/views/support/sync/pagamentos.py`
   - implementa `sincronizar_siscac`, `sincronizar_siscac_auto_action` e `sincronizar_siscac_manual_action`
-  - implementa `sync_siscac_payments`, núcleo de conciliação entre relatório externo e processos internos
+  - implementa `sync_siscac_payments`, núcleo de conciliação entre relatório PDF e processos internos
 
 - `pagamentos/utils.py`
-  - contém o parser de relatório SISCAC usado na sincronização automática
+  - contém `parse_siscac_report`, parser local do relatório PDF exportado do SISCAC (sem chamada à API externa)
 
 - `pagamentos/services/integracoes/processo_relacionados.py`
   - centraliza a orquestração cross-domain

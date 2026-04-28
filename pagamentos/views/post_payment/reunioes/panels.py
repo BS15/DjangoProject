@@ -17,11 +17,12 @@ def gerenciar_reunioes_view(request):
         request,
         campos_permitidos={
             "id": "id",
-            "data": "data",
-            "descricao": "descricao",
-            "status": "encerrada",
+            "numero": "numero",
+            "data_reuniao": "data_reuniao",
+            "trimestre_referencia": "trimestre_referencia",
+            "status": "status",
         },
-        default_ordem="data",
+        default_ordem="data_reuniao",
         default_direcao="desc",
     )
     reunioes = ReuniaoConselho.objects.all().order_by(order_field, "-id")

@@ -82,10 +82,10 @@ Passos:
 
 | Verba | GET spoke | POST action | Permissão |
 |-------|-----------|-------------|-----------|
-| Diária | `cancelar_diaria_spoke_view` | `cancelar_diaria_action` | `verbas_indenizatorias.pode_gerenciar_diarias` |
-| Reembolso | `cancelar_reembolso_spoke_view` | `cancelar_reembolso_action` | `verbas_indenizatorias.pode_gerenciar_reembolsos` |
-| Jeton | `cancelar_jeton_spoke_view` | `cancelar_jeton_action` | `verbas_indenizatorias.pode_gerenciar_jetons` |
-| Auxílio | `cancelar_auxilio_spoke_view` | `cancelar_auxilio_action` | `verbas_indenizatorias.pode_gerenciar_auxilios` |
+| Diária | `cancelar_diaria_spoke_view` | `cancelar_diaria_action` | `pagamentos.pode_gerenciar_diarias` |
+| Reembolso | `cancelar_reembolso_spoke_view` | `cancelar_reembolso_action` | `pagamentos.pode_gerenciar_reembolsos` |
+| Jeton | `cancelar_jeton_spoke_view` | `cancelar_jeton_action` | `pagamentos.pode_gerenciar_jetons` |
+| Auxílio | `cancelar_auxilio_spoke_view` | `cancelar_auxilio_action` | `pagamentos.pode_gerenciar_auxilios` |
 
 Passos comuns:
 

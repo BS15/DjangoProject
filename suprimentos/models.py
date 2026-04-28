@@ -14,18 +14,8 @@ from django.utils import timezone
 
 from commons.shared.file_validators import validar_arquivo_seguro
 from commons.shared.models import DocumentoBase
+from commons.shared.processo_guards import is_processo_selado as _is_processo_selado
 from commons.shared.storage_utils import caminho_documento, _delete_file
-
-
-def _is_processo_selado(processo):
-    """Retorna True quando o processo vinculado está em estágio pós-pagamento selado."""
-    if not processo or processo.em_contingencia or not processo.status:
-        return False
-
-    from pagamentos.domain_models.processos import STATUS_PROCESSO_PAGOS_E_POSTERIORES
-
-    status_atual = (processo.status.opcao_status or "").upper()
-    return status_atual in STATUS_PROCESSO_PAGOS_E_POSTERIORES
 
 
 class SealedMutationQuerySet(models.QuerySet):

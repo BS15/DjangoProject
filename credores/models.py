@@ -7,23 +7,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from simple_history.models import HistoricalRecords
 
-
-def validar_cpf_cnpj(value):
-    """Valida formato básico de CPF/CNPJ (apenas dígitos e separadores)."""
-    clean = re.sub(r'\D', '', value)
-    if not re.match(r'^(\d{11}|\d{14})$', clean):
-        raise ValidationError(
-            'CPF deve ter 11 dígitos e CNPJ deve ter 14 dígitos.',
-            code='invalid_cpf_cnpj'
-        )
-
-    if len(clean) == 11:
-        if clean == clean[0] * 11:
-            raise ValidationError('CPF inválido (dígitos repetidos).', code='invalid_cpf')
-
-    elif len(clean) == 14:
-        if clean == clean[0] * 14:
-            raise ValidationError('CNPJ inválido (dígitos repetidos).', code='invalid_cnpj')
+from commons.shared.field_validators import validar_cpf_cnpj
 
 
 class CargosFuncoes(models.Model):

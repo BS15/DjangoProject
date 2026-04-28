@@ -82,7 +82,7 @@ Estas permissões estão declaradas em `verbas_indenizatorias/models.py` e são 
 |---|---|---|
 | `fiscal.acesso_backoffice` | Impostos e EFD-Reinf | Acesso operacional ao backoffice fiscal. |
 
-Observação: `fiscal.acesso_backoffice` está presente nas views do módulo fiscal mas não é declarada em bloco `Meta.permissions` em `fiscal/models.py`. O Django cria a permissão dinamicamente a partir do uso, portanto ela deve existir em banco após as migrações e um `migrate --run-syncdb`.
+Observação: `fiscal.acesso_backoffice` está presente nas views do módulo fiscal. Por se tratar de permissão customizada, ela deve ser provisionada explicitamente no banco (via `Meta.permissions` em modelo/migração ou rotina de bootstrap), não apenas pelo uso em decorator.
 
 ## Grupos canônicos de usuários
 
@@ -90,8 +90,8 @@ Os grupos abaixo estão definidos no `setup_headstart` e representam os perfis o
 
 | Grupo | Permissões vinculadas |
 |---|---|
-| `FUNCIONARIO(A) CONTAS A PAGAR` | `pagamentos.pode_visualizar_processos_pagamento`, `pagamentos.pode_operar_contas_pagar`, `pagamentos.pode_arquivar`, `suprimentos.pode_gerenciar_concessao_suprimento`, `suprimentos.pode_gerir_prestacao_contas_suprimento`, `verbas_indenizatorias.analisar_prestacao_contas`, `verbas_indenizatorias.pode_visualizar_verbas`, `verbas_indenizatorias.visualizar_prestacao_contas` |
-| `SUPERVISOR(A) CONTAS A PAGAR` | `pagamentos.pode_visualizar_processos_pagamento`, `pagamentos.pode_operar_contas_pagar`, `pagamentos.pode_aprovar_contingencia_supervisor`, `pagamentos.pode_arquivar`, `suprimentos.pode_gerenciar_concessao_suprimento`, `suprimentos.pode_gerir_prestacao_contas_suprimento`, `verbas_indenizatorias.analisar_prestacao_contas`, `verbas_indenizatorias.pode_visualizar_verbas`, `verbas_indenizatorias.visualizar_prestacao_contas` |
+| `FUNCIONARIO(A) CONTAS A PAGAR` | `pagamentos.pode_visualizar_processos_pagamento`, `pagamentos.operador_contas_a_pagar`, `pagamentos.pode_arquivar`, `suprimentos.pode_gerenciar_concessao_suprimento`, `suprimentos.pode_gerir_prestacao_contas_suprimento`, `verbas_indenizatorias.analisar_prestacao_contas`, `pagamentos.pode_visualizar_verbas`, `verbas_indenizatorias.visualizar_prestacao_contas` |
+| `SUPERVISOR(A) CONTAS A PAGAR` | `pagamentos.pode_visualizar_processos_pagamento`, `pagamentos.operador_contas_a_pagar`, `pagamentos.pode_aprovar_contingencia_supervisor`, `pagamentos.pode_arquivar`, `suprimentos.pode_gerenciar_concessao_suprimento`, `suprimentos.pode_gerir_prestacao_contas_suprimento`, `verbas_indenizatorias.analisar_prestacao_contas`, `pagamentos.pode_visualizar_verbas`, `verbas_indenizatorias.visualizar_prestacao_contas` |
 | `ORDENADOR(A) DE DESPESA` | `pagamentos.pode_visualizar_processos_pagamento`, `pagamentos.pode_autorizar_pagamento`, `pagamentos.pode_aprovar_contingencia_ordenador` |
 | `CONTADOR(A)` | `pagamentos.pode_visualizar_processos_pagamento`, `pagamentos.pode_contabilizar`, `pagamentos.pode_revisar_contingencia_contadora` |
 | `CONSELHEIRO(A) FISCAL` | `pagamentos.pode_visualizar_processos_pagamento`, `pagamentos.pode_auditar_conselho`, `pagamentos.pode_aprovar_contingencia_conselho` |

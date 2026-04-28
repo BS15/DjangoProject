@@ -156,7 +156,7 @@ Exibe peek tables paginadas de documentos recentes, liquidações e pendências.
 ## 8. Etapa de empenho
 
 **View:** `a_empenhar_view`  
-**Permissão:** `pagamentos.pode_operar_contas_pagar`
+**Permissão:** `pagamentos.operador_contas_a_pagar`
 
 - Lista processos no status `A EMPENHAR` com filtros e ordenação.
 - O operador registra o empenho (número, data, valor) via importação de PDF SISCAC ou manualmente.
@@ -181,7 +181,7 @@ Exibe peek tables paginadas de documentos recentes, liquidações e pendências.
 ## 10. Contas a pagar e envio para autorização
 
 **View:** `contas_a_pagar`  
-**Permissão:** `pagamentos.pode_operar_contas_pagar`
+**Permissão:** `pagamentos.operador_contas_a_pagar`
 
 - Fila com filtros facetados (data, forma de pagamento, status, conta).
 - Colunas anotadas: `has_pendencias`, `has_retencoes`.
@@ -204,7 +204,7 @@ Duas filas simultâneas: pendentes de autorização e já autorizados.
 ## 12. Lançamento bancário
 
 **Views:** `lancamento_bancario` / `marcar_como_lancado_action`  
-**Permissão:** `pagamentos.pode_operar_contas_pagar`
+**Permissão:** `pagamentos.operador_contas_a_pagar`
 
 1. Operador seleciona processos autorizados → IDs armazenados em **sessão** (`processos_lancamento`).
 2. Painel exibe dois grupos: *a pagar* e *já lançados*, com totais consolidados por forma de pagamento.
@@ -217,7 +217,7 @@ Duas filas simultâneas: pendentes de autorização e já autorizados.
 ## 13. Upload de comprovantes
 
 **View:** `painel_comprovantes_view` / **Action:** `vincular_comprovantes_action` (JSON API)  
-**Permissão:** `pagamentos.pode_operar_contas_pagar`
+**Permissão:** `pagamentos.operador_contas_a_pagar`
 
 1. Operador faz upload dos arquivos de comprovante (via interface interativa).
 2. Para cada comprovante, sistema cria:
@@ -232,7 +232,7 @@ Duas filas simultâneas: pendentes de autorização e já autorizados.
 ## 14. Conferência
 
 **Views:** `painel_conferencia_view` / `conferencia_processo_view`  
-**Permissão:** `pagamentos.pode_operar_contas_pagar`
+**Permissão:** `pagamentos.operador_contas_a_pagar`
 
 - Fila de processos `PAGO - EM CONFERÊNCIA` com filtros: com pendência, com retenção, ambos, sem pendências.
 - Revisão detalhada em fila de sessão (`conferencia_queue`).

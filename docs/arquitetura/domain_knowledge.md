@@ -163,7 +163,7 @@ Toda alteração é rastreada automaticamente:
 ```python
 from simple_history.models import HistoricalRecords
 
-class ProcessoDePagamento(models.Model):
+class Processo(models.Model):
     status = models.CharField(...)
     valor = models.DecimalField(...)
     history = HistoricalRecords()
@@ -175,7 +175,7 @@ processo.valor = Decimal("5000.00")
 processo.save()
 ```
 
-Django-simple-history cria automaticamente um registro em `ProcessoDePagamentoHistory`:
+Django-simple-history cria automaticamente um registro de histórico da entidade `Processo`:
 
 ```
 | id  | valor     | status                                | changed_by | changed_at          |
@@ -302,7 +302,7 @@ Decimal('0.3')  # ✅ Correto
 
 Modelos:
 ```python
-class ProcessoDePagamento(models.Model):
+class Processo(models.Model):
     valor = models.DecimalField(max_digits=12, decimal_places=2)
     # max_digits=12 = até R$ 9.999.999.999,99
     # decimal_places=2 = sempre dois dígitos centavos

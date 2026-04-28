@@ -6,7 +6,7 @@
 
 {% block page_actions %}
 {% if pode_interagir %}
-<form method="post" action="{% url 'criar_reuniao_action' %}" class="d-inline">
+<form method="post" action="{% url 'gerenciar_reunioes_action' %}" class="d-inline">
 	{% csrf_token %}
 	<button type="submit" class="btn btn-success btn-sm fw-bold"><i class="bi bi-plus-lg"></i> Nova Reunião</button>
 </form>
@@ -18,8 +18,9 @@
 
 {% block table_headers %}
 <th data-campo="id">#</th>
-<th data-campo="data">Data</th>
-<th data-campo="descricao">Descrição</th>
+<th data-campo="numero">Número</th>
+<th data-campo="data_reuniao">Data</th>
+<th data-campo="trimestre_referencia">Trimestre</th>
 <th class="no-sort">Processos</th>
 <th data-campo="status">Status</th>
 <th class="text-center no-sort">Ações</th>
@@ -29,23 +30,26 @@
 {% for reuniao in reunioes %}
 <tr>
 	<td class="fw-bold text-muted">#{{ reuniao.id }}</td>
-	<td>{{ reuniao.data|date:"d/m/Y"|default:"-" }}</td>
-	<td>{{ reuniao.descricao|default:"-"|truncatechars:50 }}</td>
-	<td><span class="badge bg-secondary">{{ reuniao.processos.count }} processo(s)</span></td>
+	<td>{{ reuniao.numero }}ª</td>
+	<td>{{ reuniao.data_reuniao|date:"d/m/Y"|default:"-" }}</td>
+	<td>{{ reuniao.trimestre_referencia|default:"-" }}</td>
+	<td><span class="badge bg-secondary">{{ reuniao.processos_em_pauta.count }} processo(s)</span></td>
 	<td>
-		{% if reuniao.encerrada %}
+		{% if reuniao.status == 'CONCLUIDA' %}
 			<span class="badge bg-success"><i class="bi bi-check-circle"></i> Encerrada</span>
+		{% elif reuniao.status == 'EM_ANALISE' %}
+			<span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Em análise</span>
 		{% else %}
-			<span class="badge bg-primary"><i class="bi bi-clock"></i> Em aberto</span>
+			<span class="badge bg-primary"><i class="bi bi-clock"></i> Agendada</span>
 		{% endif %}
 	</td>
 	<td class="text-center">
-		<a href="{% url 'montar_pauta_reuniao' pk=reuniao.id %}" class="btn btn-sm btn-outline-primary">
+		<a href="{% url 'montar_pauta_reuniao' reuniao_id=reuniao.id %}" class="btn btn-sm btn-outline-primary">
 			<i class="bi bi-list-check"></i> Pauta
 		</a>
 	</td>
 </tr>
 {% empty %}
-<tr><td colspan="6" class="text-center py-4 text-muted">Nenhuma reunião cadastrada.</td></tr>
+<tr><td colspan="7" class="text-center py-4 text-muted">Nenhuma reunião cadastrada.</td></tr>
 {% endfor %}
 {% endblock %}

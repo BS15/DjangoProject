@@ -69,7 +69,7 @@ Fluxos de formulário HTML surfaceiam erros de negócio via sistema de mensagens
 | `POST` | `/verbas/diarias/nova/action/` | `pagamentos.pode_criar_diarias` | Cria diária em status `RASCUNHO` | `gerenciar_diaria(pk)` |
 | `POST` | `/verbas/diarias/<pk>/solicitar-autorizacao/` | `pagamentos.pode_gerenciar_diarias` | Avança diária para `SOLICITADA` | `gerenciar_diaria(pk)` |
 | `POST` | `/verbas/diarias/<pk>/autorizar/` | `pagamentos.pode_autorizar_diarias` | Avança diária para `APROVADA` apenas quando o usuário é o proponente vinculado da diária | `gerenciar_diaria(pk)` |
-| `POST` | `/verbas/agrupar/` | `pagamentos.pode_agrupar_verbas` | Agrupa itens `REVISADA` em processo de pagamento | `detalhe_processo_verbas(pk)` |
+| `POST` | `/verbas/agrupar/<tipo_verba>/` | `pagamentos.pode_agrupar_verbas` | Agrupa itens elegíveis em processo de pagamento | `editar_processo_verbas(pk)` |
 
 ---
 
@@ -81,7 +81,7 @@ Fluxos de formulário HTML surfaceiam erros de negócio via sistema de mensagens
 
 | Método | Path | Permissão | Descrição | Redirect sucesso |
 |---|---|---|---|---|
-| `POST` | `/suprimentos/criar/` | `suprimentos.acesso_backoffice` | Cria `SuprimentoDeFundos` (status `ABERTO`) e `Processo` em `A EMPENHAR` | `detalhe_suprimento(pk)` |
+| `POST` | `/suprimentos/novo/action/` | `suprimentos.acesso_backoffice` | Cria `SuprimentoDeFundos` (status `ABERTO`) e `Processo` em `A EMPENHAR` | `gerenciar_suprimento_view(pk)` |
 | `POST` | `/suprimentos/<pk>/despesas/adicionar/` | `suprimentos.pode_adicionar_despesas_suprimento` | Registra despesa e anexo de comprovante no suprimento | `gerenciar_suprimento_view(pk)` |
 | `POST` | `/suprimentos/<pk>/fechar/` | `suprimentos.pode_encerrar_suprimento` | Encerra suprimento; Processo vai para `PAGO - EM CONFERÊNCIA` | `suprimentos_list` |
 | `POST` | `/suprimentos/<pk>/prestacao/enviar/` | `suprimentos.pode_gerir_prestacao_contas_suprimento` | Suprido envia prestação para revisão (status `ENVIADA`) | `gerenciar_suprimento_view(pk)` |
@@ -93,27 +93,27 @@ Fluxos de formulário HTML surfaceiam erros de negócio via sistema de mensagens
 
 **Permissões:** ver [Matriz de Permissões](governanca/matriz_permissoes.md) — seção Pagamentos.
 
-> **Nota:** as permissões do fluxo principal usam o `app_label` `fluxo` (não `pagamentos`), pois as permissões canônicas estão declaradas no modelo de domínio financeiro com esse label.
+> **Nota:** as permissões do fluxo principal usam o namespace `pagamentos.*`, conforme decorators e permissões declaradas no modelo financeiro principal.
 
 ### Endpoints de Formulário (HTML) — Seleção Principal
 
 | Método | Path | Permissão | Descrição |
 |---|---|---|---|
-| `POST` | `/processos/criar/` | `fluxo.acesso_backoffice` | Cria novo processo financeiro |
-| `POST` | `/processos/<pk>/nota-fiscal/salvar/` | `fluxo.acesso_backoffice` | Cria/edita nota fiscal e retenções do processo |
-| `POST` | `/processos/<pk>/avancar/` | `fluxo.pode_operar_contas_pagar` | Avança processo para próxima etapa (turnpike aplicado) |
-| `POST` | `/processos/<pk>/autorizar/` | `fluxo.pode_autorizar_pagamento` | Ordena autorização ou recusa de pagamento |
-| `POST` | `/processos/<pk>/atestar/` | `fluxo.pode_atestar_liquidacao` | Fiscal de contrato atesta nota fiscal |
-| `POST` | `/processos/<pk>/contabilizar/` | `fluxo.pode_contabilizar` | Registro contábil pós-pagamento |
-| `POST` | `/processos/<pk>/arquivar/` | `fluxo.pode_arquivar` | Arquivamento definitivo |
-| `POST` | `/processos/<pk>/contingencia/` | `fluxo.acesso_backoffice` | Abre contingência processual |
-| `POST` | `/processos/<pk>/contingencia/<cid>/aprovar/` | `fluxo.pode_aprovar_contingencia_supervisor` | Supervisor aprova contingência |
+| `POST` | `/adicionar/action/` | `pagamentos.pode_editar_processos_pagamento` | Cria novo processo financeiro |
+| `POST` | `/api/processo/<processo_pk>/salvar-nota-fiscal/<nota_pk>/` | `pagamentos.operador_contas_a_pagar` | Cria/edita nota fiscal e retenções do processo |
+| `POST` | `/processo/<pk>/avancar-para-pagamento/` | `pagamentos.operador_contas_a_pagar` | Avança processo para próxima etapa (turnpike aplicado) |
+| `POST` | `/processos/autorizar-pagamento/` | `pagamentos.pode_autorizar_pagamento` | Autoriza processos em lote |
+| `POST` | `/liquidacoes/atestar/<pk>/` | `pagamentos.operador_contas_a_pagar` | Alterna ateste da nota fiscal |
+| `POST` | `/processos/contabilizacao/<pk>/aprovar/` | `pagamentos.pode_contabilizar` | Registro contábil pós-pagamento |
+| `POST` | `/processos/arquivamento/<pk>/executar/` | `pagamentos.pode_arquivar` | Arquivamento definitivo |
+| `POST` | `/contingencias/nova/enviar/` | `pagamentos.operador_contas_a_pagar` | Abre contingência processual |
+| `POST` | `/contingencias/<pk>/analisar/` | `pagamentos.operador_contas_a_pagar` | Aprova/recusa contingência conforme etapa |
 
 ### Endpoints JSON
 
 | Método | Path | Permissão | Descrição | Resposta sucesso |
 |---|---|---|---|---|
-| `POST` | `/processos/api/upload-documento/` | `fluxo.pode_operar_contas_pagar` | Upload avulso de documento (PDF/JPEG/PNG) | `200` JSON `{"id": <int>, "url": "<str>"}` |
+| `POST` | `/api/comprovantes/vincular/` | `pagamentos.operador_contas_a_pagar` | Vinculação de comprovantes de pagamento a processos | `200` JSON |
 
 ---
 
@@ -125,8 +125,8 @@ Fluxos de formulário HTML surfaceiam erros de negócio via sistema de mensagens
 
 | Método | Path | Permissão | Descrição | Redirect sucesso |
 |---|---|---|---|---|
-| `POST` | `/credores/criar/` | `pagamentos.operador_contas_a_pagar` | Cadastra novo credor | `detalhe_credor(pk)` |
-| `POST` | `/credores/<pk>/editar/` | `pagamentos.operador_contas_a_pagar` | Atualiza dados cadastrais e bancários | `detalhe_credor(pk)` |
+| `POST` | `/adicionar-credor/action/` | `pagamentos.operador_contas_a_pagar` | Cadastra novo credor | `gerenciar_credor_view(pk)` |
+| `POST` | `/credores/<pk>/editar/action/` | `pagamentos.operador_contas_a_pagar` | Atualiza dados cadastrais e bancários | `gerenciar_credor_view(pk)` |
 
 ---
 

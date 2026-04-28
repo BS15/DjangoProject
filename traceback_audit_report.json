@@ -1,0 +1,2010 @@
+{
+  "summary": {
+    "timestamp": "2026-04-28T01:44:36.753793+00:00",
+    "debug": true,
+    "total_paths": 222,
+    "ok": 222,
+    "server_error": 0,
+    "exceptions": 0
+  },
+  "results": [
+    {
+      "path": "/",
+      "source": "pagamentos.views.support.core.home_page",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/adicionar/",
+      "source": "pagamentos.views.pre_payment.cadastro.panels.add_process_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/adicionar/action/",
+      "source": "pagamentos.views.pre_payment.cadastro.actions.add_process_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/editar/",
+      "source": "pagamentos.views.pre_payment.cadastro.panels.editar_processo",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/editar/capa/",
+      "source": "pagamentos.views.pre_payment.cadastro.panels.editar_processo_capa_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/editar/capa/action/",
+      "source": "pagamentos.views.pre_payment.cadastro.actions.editar_processo_capa_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/editar/documentos/",
+      "source": "pagamentos.views.pre_payment.cadastro.panels.editar_processo_documentos_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/editar/documentos/action/",
+      "source": "pagamentos.views.pre_payment.cadastro.actions.editar_processo_documentos_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/editar/documentos/1/extrair-codigo-barras/",
+      "source": "pagamentos.views.pre_payment.cadastro.actions.extrair_codigo_barras_documento_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/editar/documentos/extrair-codigos-barras-lote/",
+      "source": "pagamentos.views.pre_payment.cadastro.actions.extrair_codigos_barras_lote_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/editar/pendencias/",
+      "source": "pagamentos.views.pre_payment.cadastro.panels.editar_processo_pendencias_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/editar/pendencias/action/",
+      "source": "pagamentos.views.pre_payment.cadastro.actions.editar_processo_pendencias_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/pdf/",
+      "source": "pagamentos.views.pdf.visualizar_pdf_processo",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/contas-a-pagar/",
+      "source": "pagamentos.views.payment.contas_a_pagar.panels.contas_a_pagar",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/api/processo/1/extrair-codigos-barras/",
+      "source": "pagamentos.views.payment.contas_a_pagar.apis.api_extrair_codigos_barras_processo",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/api/extrair-codigos-barras-upload/",
+      "source": "pagamentos.views.pre_payment.cadastro.apis.api_extrair_codigos_barras_upload",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/a-empenhar/",
+      "source": "pagamentos.views.pre_payment.empenho.panels.a_empenhar_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/a-empenhar/registrar-empenho/",
+      "source": "pagamentos.views.pre_payment.empenho.actions.registrar_empenho_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/api/extrair-dados-empenho/",
+      "source": "pagamentos.views.pre_payment.empenho.apis.api_extrair_dados_empenho",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/avancar-para-pagamento/",
+      "source": "pagamentos.views.pre_payment.liquidacoes.actions.avancar_para_pagamento_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/conferencia/",
+      "source": "pagamentos.views.post_payment.conferencia.panels.painel_conferencia_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/conferencia/iniciar/",
+      "source": "pagamentos.views.post_payment.conferencia.actions.iniciar_conferencia_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/conferencia/1/revisar/",
+      "source": "pagamentos.views.post_payment.conferencia.reviews.conferencia_processo_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/conferencia/1/aprovar/",
+      "source": "pagamentos.views.post_payment.conferencia.actions.aprovar_conferencia_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/enviar-autorizacao/",
+      "source": "pagamentos.views.payment.contas_a_pagar.actions.enviar_para_autorizacao_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/autorizacao/",
+      "source": "pagamentos.views.payment.autorizacao.panels.painel_autorizacao_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/autorizar-pagamento/",
+      "source": "pagamentos.views.payment.autorizacao.actions.autorizar_pagamento",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/autorizacao/1/recusar/",
+      "source": "pagamentos.views.payment.autorizacao.actions.recusar_autorizacao_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/contabilizacao/",
+      "source": "pagamentos.views.post_payment.contabilizacao.panels.painel_contabilizacao_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/contabilizacao/iniciar/",
+      "source": "pagamentos.views.post_payment.contabilizacao.actions.iniciar_contabilizacao_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/contabilizacao/1/revisar/",
+      "source": "pagamentos.views.post_payment.contabilizacao.reviews.contabilizacao_processo_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/contabilizacao/1/aprovar/",
+      "source": "pagamentos.views.post_payment.contabilizacao.actions.aprovar_contabilizacao_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/contabilizacao/1/recusar/",
+      "source": "pagamentos.views.post_payment.contabilizacao.actions.recusar_contabilizacao_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/conselho/",
+      "source": "pagamentos.views.post_payment.conselho.panels.painel_conselho_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/conselho/1/revisar/",
+      "source": "pagamentos.views.post_payment.conselho.reviews.conselho_processo_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/conselho/1/aprovar/",
+      "source": "pagamentos.views.post_payment.conselho.actions.aprovar_conselho_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/conselho/1/recusar/",
+      "source": "pagamentos.views.post_payment.conselho.actions.recusar_conselho_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/conselho/reunioes/",
+      "source": "pagamentos.views.post_payment.reunioes.panels.gerenciar_reunioes_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/conselho/reunioes/criar/",
+      "source": "pagamentos.views.post_payment.reunioes.actions.gerenciar_reunioes_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/conselho/reunioes/1/montar-pauta/",
+      "source": "pagamentos.views.post_payment.reunioes.panels.montar_pauta_reuniao_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/conselho/reunioes/1/montar-pauta/adicionar/",
+      "source": "pagamentos.views.post_payment.reunioes.actions.montar_pauta_reuniao_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/conselho/reunioes/1/analisar/",
+      "source": "pagamentos.views.post_payment.reunioes.panels.analise_reuniao_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/conselho/reunioes/1/iniciar/",
+      "source": "pagamentos.views.post_payment.reunioes.actions.iniciar_conselho_reuniao_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/arquivamento/",
+      "source": "pagamentos.views.post_payment.arquivamento.panels.painel_arquivamento_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/arquivamento/1/aprovar/",
+      "source": "pagamentos.views.post_payment.arquivamento.reviews.arquivar_processo_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/arquivamento/1/executar/",
+      "source": "pagamentos.views.post_payment.arquivamento.actions.arquivar_processo_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/pendencias/",
+      "source": "pagamentos.views.support.pendencia.panels.painel_pendencias_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/pendencias/action/",
+      "source": "pagamentos.views.support.pendencia.actions.atualizar_pendencias_lote_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/api/documentos-por-pagamento/",
+      "source": "pagamentos.views.pre_payment.cadastro.apis.api_tipos_documento_por_pagamento",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/api/detalhes-pagamento/",
+      "source": "pagamentos.views.api_views.api_detalhes_pagamento",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/separar-lancamento/",
+      "source": "pagamentos.views.payment.lancamento.actions.separar_para_lancamento_bancario_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/lancamento-bancario/",
+      "source": "pagamentos.views.payment.lancamento.panels.lancamento_bancario",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/marcar-lancado/",
+      "source": "pagamentos.views.payment.lancamento.actions.marcar_como_lancado_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/desmarcar-lancamento/",
+      "source": "pagamentos.views.payment.lancamento.actions.desmarcar_lancamento_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/api/processo/1/documentos/",
+      "source": "pagamentos.views.auditing.apis.api_documentos_processo",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/auditoria/",
+      "source": "pagamentos.views.auditing.panels.auditoria_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/contingencias/",
+      "source": "pagamentos.views.support.contingencia.panels.painel_contingencias_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/contingencias/nova/",
+      "source": "pagamentos.views.support.contingencia.panels.add_contingencia_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/contingencias/nova/enviar/",
+      "source": "pagamentos.views.support.contingencia.actions.add_contingencia_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/contingencias/1/analisar/",
+      "source": "pagamentos.views.support.contingencia.actions.analisar_contingencia_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/api/processo_detalhes/",
+      "source": "pagamentos.views.auditing.apis.api_processo_detalhes",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/autorizacao-pagamento/",
+      "source": "pagamentos.views.pdf.gerar_autorizacao_pagamento_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/parecer-conselho/",
+      "source": "pagamentos.views.pdf.gerar_parecer_conselho_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/pagamentos/sincronizar-siscac/",
+      "source": "pagamentos.views.support.sync.pagamentos.sincronizar_siscac",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/pagamentos/sincronizar-siscac/manual/",
+      "source": "pagamentos.views.support.sync.pagamentos.sincronizar_siscac_manual_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/pagamentos/sincronizar-siscac/auto/",
+      "source": "pagamentos.views.support.sync.pagamentos.sincronizar_siscac_auto_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/documentos/secure/sample/1/",
+      "source": "pagamentos.views.security.download_arquivo_seguro",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/",
+      "source": "pagamentos.views.support.core.process_detail_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/cancelar/",
+      "source": "pagamentos.views.support.cancelamento.panels.cancelar_processo_spoke_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/cancelar/confirmar/",
+      "source": "pagamentos.views.support.cancelamento.actions.cancelar_processo_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/devolucao/",
+      "source": "pagamentos.views.support.devolucao.panels.registrar_devolucao_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/devolucao/salvar/",
+      "source": "pagamentos.views.support.devolucao.actions.registrar_devolucao_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/devolucoes/",
+      "source": "pagamentos.views.support.devolucao.panels.painel_devolucoes_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/retencao-impostos/",
+      "source": "fiscal.views.impostos.panels.painel_impostos_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/impostos/revisar-agrupamento/",
+      "source": "fiscal.views.impostos.panels.revisar_agrupamento_retencoes_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/impostos/preparar-revisao/",
+      "source": "fiscal.views.impostos.actions.preparar_revisao_agrupamento_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/impostos/agrupar/",
+      "source": "fiscal.views.impostos.actions.agrupar_retencoes_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/impostos/anexar-documentos/",
+      "source": "fiscal.views.impostos.actions.anexar_documentos_retencoes_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processos/comprovantes/",
+      "source": "pagamentos.views.payment.comprovantes.panels.painel_comprovantes_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/api/comprovantes/fatiar/",
+      "source": "pagamentos.views.payment.comprovantes.apis.api_fatiar_comprovantes",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/api/comprovantes/vincular/",
+      "source": "pagamentos.views.payment.comprovantes.actions.vincular_comprovantes_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/liquidacoes/",
+      "source": "pagamentos.views.pre_payment.liquidacoes.panels.painel_liquidacoes_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/liquidacoes/atestar/1/",
+      "source": "pagamentos.views.pre_payment.liquidacoes.actions.alternar_ateste_nota_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/documentos-fiscais/",
+      "source": "pagamentos.views.pre_payment.cadastro.panels.documentos_fiscais_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/api/processo/1/toggle-documento-fiscal/1/",
+      "source": "pagamentos.views.pre_payment.cadastro.actions.toggle_documento_fiscal_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/api/processo/1/salvar-nota-fiscal/1/",
+      "source": "pagamentos.views.pre_payment.cadastro.actions.salvar_nota_fiscal_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/reinf/painel/",
+      "source": "fiscal.views.reinf.panels.painel_reinf_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/reinf/gerar-lotes/",
+      "source": "fiscal.views.reinf.actions.gerar_lote_reinf_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/reinf/transmitir-lotes/",
+      "source": "fiscal.views.reinf.actions.transmitir_lote_reinf_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/editar-verbas/",
+      "source": "verbas_indenizatorias.views.processo.panels.editar_processo_verbas_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/editar-verbas/capa/",
+      "source": "verbas_indenizatorias.views.processo.panels.editar_processo_verbas_capa_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/editar-verbas/capa/action/",
+      "source": "verbas_indenizatorias.views.processo.actions.editar_processo_verbas_capa_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/editar-verbas/pendencias/",
+      "source": "verbas_indenizatorias.views.processo.panels.editar_processo_verbas_pendencias_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/editar-verbas/pendencias/action/",
+      "source": "verbas_indenizatorias.views.processo.actions.editar_processo_verbas_pendencias_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/editar-verbas/itens/",
+      "source": "verbas_indenizatorias.views.processo.panels.editar_processo_verbas_itens_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/editar-verbas/documentos/",
+      "source": "verbas_indenizatorias.views.processo.panels.editar_processo_verbas_documentos_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/editar-verbas/documentos/action/",
+      "source": "verbas_indenizatorias.views.processo.actions.editar_processo_verbas_documentos_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/api/verba/sample/1/add-documento/",
+      "source": "verbas_indenizatorias.views.processo.apis.api_add_documento_verba",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/",
+      "source": "verbas_indenizatorias.views.processo.panels.verbas_panel_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/",
+      "source": "verbas_indenizatorias.views.diarias.panels.diarias_list_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/reembolsos/",
+      "source": "verbas_indenizatorias.views.reembolsos.panels.reembolsos_list_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/jetons/",
+      "source": "verbas_indenizatorias.views.jetons.panels.jetons_list_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/auxilios/",
+      "source": "verbas_indenizatorias.views.auxilios.panels.auxilios_list_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/nova/",
+      "source": "verbas_indenizatorias.views.diarias.panels.add_diaria_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/nova/action/",
+      "source": "verbas_indenizatorias.views.diarias.actions.add_diaria_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/nova-assinada/",
+      "source": "verbas_indenizatorias.views.diarias.panels.add_diaria_assinada_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/nova-assinada/action/",
+      "source": "verbas_indenizatorias.views.diarias.actions.add_diaria_assinada_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/minhas-prestacoes/",
+      "source": "verbas_indenizatorias.views.diarias.panels.minha_prestacao_list_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/1/gerenciar/",
+      "source": "verbas_indenizatorias.views.diarias.panels.gerenciar_diaria_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/1/gerenciar/vinculo/",
+      "source": "verbas_indenizatorias.views.diarias.panels.vinculo_diaria_spoke_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/1/gerenciar/devolucao/",
+      "source": "verbas_indenizatorias.views.diarias.panels.devolucao_diaria_spoke_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/1/gerenciar/apostila/",
+      "source": "verbas_indenizatorias.views.diarias.panels.apostila_diaria_spoke_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/1/gerenciar/cancelar/",
+      "source": "verbas_indenizatorias.views.diarias.panels.cancelar_diaria_spoke_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/1/prestacao/gerenciar/",
+      "source": "verbas_indenizatorias.views.diarias.panels.gerenciar_prestacao_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/autorizar/",
+      "source": "verbas_indenizatorias.views.diarias.panels.painel_autorizacao_diarias_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/1/comprovantes/registrar/",
+      "source": "verbas_indenizatorias.views.diarias.actions.registrar_comprovante_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/1/solicitar-autorizacao/",
+      "source": "verbas_indenizatorias.views.diarias.actions.solicitar_autorizacao_diaria_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/1/autorizar/",
+      "source": "verbas_indenizatorias.views.diarias.actions.autorizar_diaria_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/1/processo/vincular/action/",
+      "source": "verbas_indenizatorias.views.diarias.actions.vincular_diaria_processo_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/1/processo/desvincular/action/",
+      "source": "verbas_indenizatorias.views.diarias.actions.desvincular_diaria_processo_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/1/prestacao/encerrar/",
+      "source": "verbas_indenizatorias.views.diarias.actions.encerrar_prestacao_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/prestacoes/revisar/",
+      "source": "verbas_indenizatorias.views.diarias.panels.painel_revisar_prestacoes_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/prestacoes/revisar/iniciar/",
+      "source": "verbas_indenizatorias.views.diarias.actions.iniciar_revisao_prestacoes_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/prestacoes/revisar/sair/",
+      "source": "verbas_indenizatorias.views.diarias.actions.sair_revisao_prestacoes_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/prestacoes/1/revisar/",
+      "source": "verbas_indenizatorias.views.diarias.panels.revisar_prestacao_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/prestacoes/1/aceitar/",
+      "source": "verbas_indenizatorias.views.diarias.actions.aceitar_prestacao_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/1/cancelar/action/",
+      "source": "verbas_indenizatorias.views.diarias.actions.cancelar_diaria_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/solicitacoes/revisar/",
+      "source": "verbas_indenizatorias.views.processo.panels.painel_revisar_solicitacoes_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/solicitacoes/sample/1/revisar/",
+      "source": "verbas_indenizatorias.views.processo.panels.revisar_solicitacao_verba_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/solicitacoes/sample/1/aprovar-revisao/",
+      "source": "verbas_indenizatorias.views.processo.actions.aprovar_revisao_solicitacao_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/contingencias/",
+      "source": "verbas_indenizatorias.views.diarias.support.contingencia.panels.painel_contingencias_diarias_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/1/contingencia/nova/",
+      "source": "verbas_indenizatorias.views.diarias.support.contingencia.panels.add_contingencia_diaria_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/1/contingencia/nova/action/",
+      "source": "verbas_indenizatorias.views.diarias.support.contingencia.actions.add_contingencia_diaria_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/contingencias/1/analisar/",
+      "source": "verbas_indenizatorias.views.diarias.support.contingencia.actions.analisar_contingencia_diaria_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/devolucoes/",
+      "source": "verbas_indenizatorias.views.diarias.support.devolucao.panels.painel_devolucoes_diarias_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/1/devolucao/nova/",
+      "source": "verbas_indenizatorias.views.diarias.support.devolucao.panels.registrar_devolucao_diaria_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/1/devolucao/nova/action/",
+      "source": "verbas_indenizatorias.views.diarias.support.devolucao.actions.registrar_devolucao_diaria_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/reembolsos/novo/",
+      "source": "verbas_indenizatorias.views.reembolsos.panels.add_reembolso_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/reembolsos/novo/action/",
+      "source": "verbas_indenizatorias.views.reembolsos.actions.add_reembolso_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/jetons/novo/",
+      "source": "verbas_indenizatorias.views.jetons.panels.add_jeton_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/jetons/novo/action/",
+      "source": "verbas_indenizatorias.views.jetons.actions.add_jeton_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/auxilios/novo/",
+      "source": "verbas_indenizatorias.views.auxilios.panels.add_auxilio_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/auxilios/novo/action/",
+      "source": "verbas_indenizatorias.views.auxilios.actions.add_auxilio_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/reembolsos/1/editar/",
+      "source": "verbas_indenizatorias.views.reembolsos.panels.gerenciar_reembolso_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/reembolsos/1/gerenciar/",
+      "source": "verbas_indenizatorias.views.reembolsos.panels.gerenciar_reembolso_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/reembolsos/1/gerenciar/cancelar/",
+      "source": "verbas_indenizatorias.views.reembolsos.panels.cancelar_reembolso_spoke_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/reembolsos/1/solicitar-autorizacao/",
+      "source": "verbas_indenizatorias.views.reembolsos.actions.solicitar_autorizacao_reembolso_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/reembolsos/1/autorizar/",
+      "source": "verbas_indenizatorias.views.reembolsos.actions.autorizar_reembolso_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/reembolsos/1/cancelar/",
+      "source": "verbas_indenizatorias.views.reembolsos.actions.cancelar_reembolso_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/reembolsos/1/comprovantes/registrar/",
+      "source": "verbas_indenizatorias.views.reembolsos.actions.registrar_comprovante_reembolso_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/jetons/1/editar/",
+      "source": "verbas_indenizatorias.views.jetons.panels.gerenciar_jeton_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/jetons/1/gerenciar/",
+      "source": "verbas_indenizatorias.views.jetons.panels.gerenciar_jeton_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/jetons/1/gerenciar/cancelar/",
+      "source": "verbas_indenizatorias.views.jetons.panels.cancelar_jeton_spoke_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/jetons/1/solicitar-autorizacao/",
+      "source": "verbas_indenizatorias.views.jetons.actions.solicitar_autorizacao_jeton_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/jetons/1/autorizar/",
+      "source": "verbas_indenizatorias.views.jetons.actions.autorizar_jeton_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/jetons/1/cancelar/",
+      "source": "verbas_indenizatorias.views.jetons.actions.cancelar_jeton_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/auxilios/1/editar/",
+      "source": "verbas_indenizatorias.views.auxilios.panels.gerenciar_auxilio_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/auxilios/1/gerenciar/",
+      "source": "verbas_indenizatorias.views.auxilios.panels.gerenciar_auxilio_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/auxilios/1/gerenciar/cancelar/",
+      "source": "verbas_indenizatorias.views.auxilios.panels.cancelar_auxilio_spoke_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/auxilios/1/solicitar-autorizacao/",
+      "source": "verbas_indenizatorias.views.auxilios.actions.solicitar_autorizacao_auxilio_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/auxilios/1/autorizar/",
+      "source": "verbas_indenizatorias.views.auxilios.actions.autorizar_auxilio_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/auxilios/1/cancelar/",
+      "source": "verbas_indenizatorias.views.auxilios.actions.cancelar_auxilio_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/agrupar/sample/",
+      "source": "verbas_indenizatorias.views.processo.actions.agrupar_verbas_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/api/valor-unitario-diaria/1/",
+      "source": "verbas_indenizatorias.views.diarias.apis.api_valor_unitario_diaria",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/api/diarias-iniciais/1/",
+      "source": "verbas_indenizatorias.views.diarias.apis.api_diarias_iniciais_por_beneficiario",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/1/pcd/",
+      "source": "verbas_indenizatorias.views.diarias.pdf.gerar_pcd_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/1/termo-prestacao-contas/",
+      "source": "verbas_indenizatorias.views.diarias.pdf.gerar_termo_prestacao_contas_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/sincronizar-diarias/",
+      "source": "verbas_indenizatorias.views.diarias.support.sync.panels.sincronizar_diarias_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/sincronizar-diarias/action/",
+      "source": "verbas_indenizatorias.views.diarias.support.sync.actions.sincronizar_diarias_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/importar/",
+      "source": "verbas_indenizatorias.views.diarias.support.imports.panels.importar_diarias_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/importar/action/",
+      "source": "verbas_indenizatorias.views.diarias.support.imports.actions.importar_diarias_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/verbas/diarias/template-csv/",
+      "source": "verbas_indenizatorias.views.diarias.panels.download_template_diarias_csv",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/adicionar-credor/",
+      "source": "credores.panels.add_credor_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/adicionar-credor/action/",
+      "source": "credores.actions.add_credor_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/credores/",
+      "source": "credores.panels.credores_list_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/credores/1/gerenciar/",
+      "source": "credores.panels.gerenciar_credor_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/credores/1/editar/",
+      "source": "credores.panels.gerenciar_credor_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/credores/1/editar/action/",
+      "source": "credores.actions.edit_credor_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/credores/1/toggle-status/",
+      "source": "credores.actions.toggle_status_credor_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/api/credor/1/",
+      "source": "credores.panels.api_dados_credor",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/suprimentos/",
+      "source": "suprimentos.views.prestacao_contas.panels.painel_suprimentos_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/suprimentos/1/gerenciar/",
+      "source": "suprimentos.views.prestacao_contas.panels.gerenciar_suprimento_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/suprimentos/1/gerenciar/cancelar/",
+      "source": "suprimentos.views.prestacao_contas.panels.cancelar_suprimento_spoke_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/suprimentos/1/despesas/nova/",
+      "source": "suprimentos.views.prestacao_contas.panels.adicionar_despesa_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/suprimentos/1/despesas/adicionar/",
+      "source": "suprimentos.views.prestacao_contas.actions.adicionar_despesa_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/suprimentos/1/fechar/",
+      "source": "suprimentos.views.prestacao_contas.actions.fechar_suprimento_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/suprimentos/1/prestacao/enviar/",
+      "source": "suprimentos.views.prestacao_contas.actions.enviar_prestacao_suprimento_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/suprimentos/1/prestacao/relatorio/",
+      "source": "suprimentos.views.prestacao_contas.pdf.gerar_relatorio_prestacao_contas_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/suprimentos/prestacoes/revisar/",
+      "source": "suprimentos.views.prestacao_contas.panels.revisar_prestacoes_suprimento_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/suprimentos/prestacoes/1/revisar/",
+      "source": "suprimentos.views.prestacao_contas.panels.revisar_prestacao_suprimento_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/suprimentos/prestacoes/1/aprovar/",
+      "source": "suprimentos.views.prestacao_contas.actions.aprovar_prestacao_suprimento_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/suprimentos/1/cancelar/",
+      "source": "suprimentos.views.prestacao_contas.actions.cancelar_suprimento_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/suprimentos/novo/",
+      "source": "suprimentos.views.cadastro.panels.add_suprimento_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/suprimentos/novo/action/",
+      "source": "suprimentos.views.cadastro.actions.add_suprimento_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/importar-siscac/",
+      "source": "credores.imports.painel_importacao_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/importar-siscac/template-credores/",
+      "source": "credores.imports.download_template_csv_credores",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/importar-siscac/template-contas/",
+      "source": "pagamentos.views.support.contas_fixas.imports.download_template_csv_contas",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/contas-fixas/",
+      "source": "pagamentos.views.support.contas_fixas.panels.painel_contas_fixas_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/contas-fixas/nova/",
+      "source": "pagamentos.views.support.contas_fixas.panels.add_conta_fixa_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/contas-fixas/nova/action/",
+      "source": "pagamentos.views.support.contas_fixas.actions.add_conta_fixa_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/contas-fixas/1/editar/",
+      "source": "pagamentos.views.support.contas_fixas.panels.edit_conta_fixa_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/contas-fixas/1/editar/action/",
+      "source": "pagamentos.views.support.contas_fixas.actions.edit_conta_fixa_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/contas-fixas/1/excluir/",
+      "source": "pagamentos.views.support.contas_fixas.actions.excluir_conta_fixa_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/contas-fixas/1/vincular/",
+      "source": "pagamentos.views.support.contas_fixas.actions.vincular_processo_fatura_action",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/relatorios/",
+      "source": "pagamentos.views.support.reports.painel_relatorios_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/relatorios/documentos-gerados/",
+      "source": "pagamentos.views.support.reports.relatorio_documentos_gerados_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/dados-fake/",
+      "source": "desenvolvedor.views_desenvolvedor.gerar_dados_fake_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/desenvolvedor/permissoes/",
+      "source": "desenvolvedor.views_desenvolvedor.painel_permissoes_dev_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/api/desenvolvedor/permissoes/",
+      "source": "desenvolvedor.views_desenvolvedor.api_permissoes_dev_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/assinaturas/",
+      "source": "pagamentos.views.support.signatures.painel_assinaturas_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/assinaturas/disparar/1/",
+      "source": "pagamentos.views.support.signatures.disparar_assinatura_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/accounts/login/",
+      "source": "django.contrib.auth.views.LoginView",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/accounts/logout/",
+      "source": "django.contrib.auth.views.LogoutView",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/accounts/password_change/",
+      "source": "django.contrib.auth.views.PasswordChangeView",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/accounts/password_change/done/",
+      "source": "django.contrib.auth.views.PasswordChangeDoneView",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/accounts/password_reset/",
+      "source": "django.contrib.auth.views.PasswordResetView",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/accounts/password_reset/done/",
+      "source": "django.contrib.auth.views.PasswordResetDoneView",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/accounts/reset/sample/sample/",
+      "source": "django.contrib.auth.views.PasswordResetConfirmView",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/accounts/reset/done/",
+      "source": "django.contrib.auth.views.PasswordResetCompleteView",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/processo/1/gerar-dummy-pdf/",
+      "source": "desenvolvedor.views_desenvolvedor.gerar_dummy_pdf_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/testes/pdfs/",
+      "source": "desenvolvedor.views_desenvolvedor.painel_teste_pdfs",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    },
+    {
+      "path": "/testes/pdfs/gerar/sample/",
+      "source": "desenvolvedor.views_desenvolvedor.gerar_pdf_fake_view",
+      "status": "ok",
+      "http_status": 400,
+      "exception_type": null,
+      "exception_message": null,
+      "traceback_text": null
+    }
+  ]
+}

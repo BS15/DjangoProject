@@ -11,30 +11,29 @@ Historicamente, o sistema era construído como um único aplicativo Django monol
 
 A solução foi **quebrar o monolito** em domínios isolados, cada um com responsabilidade clara.
 
-## Arquitetura modular: Os cinco domínios
+## Arquitetura modular: Domínios atuais
 
-O PaGé é organizado em cinco apps Django semi-autônomos:
+O PaGé é organizado em apps Django com boundaries de domínio bem definidos:
 
 ```
 DjangoProject/
-├── fluxo/                  # Core: máquina de estado, transições, auditoria
+├── pagamentos/             # Core do fluxo financeiro (Processo, status, etapas)
 ├── verbas_indenizatorias/  # Diárias, Jetons, Reembolsos, etc
 ├── suprimentos/            # Suprimento de fundos
-├── fiscal/                 # NF-e, retenciones, EFD-Reinf
+├── fiscal/                 # NF-e, retenções, EFD-Reinf
 ├── credores/               # Cadastro e dados mestres de fornecedores
-├── commons/                # Utilitários compartilhados, PDF, assinaturas
-└── pagamentos/             # Legacy app (em deprecação gradual)
+└── commons/                # Utilitários compartilhados, PDF, assinaturas
 ```
 
-### `fluxo/` — O Coração
+### `pagamentos/` — O Coração do fluxo financeiro
 
 Contém:
-- **Modelos centrais:** `ProcessoDePagamento`, `ContaAReceber`, `DocumentoDePagamento`, [Empenho](/negocio/glossario_conselho.md#empenho), [Liquidação](/negocio/glossario_conselho.md#liquidacao), [Pagamento](/negocio/glossario_conselho.md#lancamento-bancario)
+- **Modelos centrais:** `Processo` (em `pagamentos/domain_models/processos.py`) e entidades correlatas de documentos/status
 - **Máquina de estado:** transições bem definidas (A EMPENHAR → AGUARDANDO LIQUIDAÇÃO → A PAGAR → PAGO, etc)
 - **Auditoria:** integração com `django-simple-history`
 - **Validadores de domínio:** regras que aplicações satélites consultam
 
-O fluxo é o coração do sistema. **Toda** operação passa por ele.
+O domínio financeiro em `pagamentos/` é o coração do sistema. **Toda** operação passa por ele.
 
 ### `verbas_indenizatorias/`, `suprimentos/` — Aplicações satélites
 
@@ -43,7 +42,7 @@ Contêm:
 - **Views isoladas:** estrutura [Manager-Worker](/arquitetura/manager_worker.md) própria
 - **Lógica de negócio própria:** regras de elegibilidade, cálculos, transições
 
-Estas apps consomem `fluxo/` mas são independentes entre si.
+Estas apps consomem o domínio financeiro central em `pagamentos/` e mantêm regras próprias.
 
 ### `fiscal/` — Integração com órgãos externos
 
@@ -69,29 +68,27 @@ Contém:
 
 ## Regra de Dependências: One-Way
 
-**Dependências permitidas:**
+**Dependências permitidas (alto nível):**
 
 ```
 verbas_indenizatorias ──┐
-suprimentos ────────────┼──> fluxo (core)
+suprimentos ────────────┼──> pagamentos (core financeiro)
 fiscal ─────────────────┤
-credores ───────────────┴
-
-pagamentos (legacy) ────> fluxo
+credores ───────────────┘
 
 Todos: commons (infraestrutura)
 ```
 
 **Dependências proibidas:**
 
-- ❌ `fluxo/` importa de `verbas_indenizatorias/`, `suprimentos/`, `fiscal/` (ciclo!)
+- ❌ `pagamentos/` importar lógicas específicas de `verbas_indenizatorias/` ou `suprimentos/` (ciclo de domínio)
 - ❌ `verbas_indenizatorias/` importa de `suprimentos/` (cruzamento)
-- ❌ `credores/` importa de `pagamentos/`
+- ❌ acoplamentos cruzados sem necessidade de domínio (ex.: app satélite importando service interno de outro satélite)
 
 ### Por que one-way?
 
-1. **Evita ciclos:** `fluxo` não "conhece" apps que o usam
-2. **Facilita testes:** você pode testar `fluxo/` sem provisionar toda a infraestrutura de aplicações satélites
+1. **Evita ciclos:** o core financeiro não deve acoplar regras satélites
+2. **Facilita testes:** você testa cada domínio com menor superfície de dependências
 3. **Clareza de boundary:** "satélite depende do core, nunca o contrário"
 
 ## Implementação de shared logic sem breaking one-way
@@ -106,9 +103,9 @@ def anexar_documento_generico(modelo, arquivo):
     pass
 ```
 
-❌ **Errado:** Coloque em `fluxo/` (isso vira "core")
+❌ **Errado:** Coloque no core financeiro sem necessidade de compartilhamento real
 ```python
-# fluxo/services/document_services.py — NÃO FAÇA ISTO
+# pagamentos/services/document_services.py — NÃO FAÇA ISTO
 def anexar_documento_generico(...):
     pass
 ```
@@ -123,7 +120,7 @@ python manage.py check
 Se vir:
 ```
 SystemCheckError: System check identified some issues:
-E001 … circular import detected between fluxo and verbas_indenizatorias
+E001 … circular import detected between pagamentos and verbas_indenizatorias
 ```
 
 **Estratégia de resolução:**
@@ -136,12 +133,12 @@ E001 … circular import detected between fluxo and verbas_indenizatorias
 # models.py — ❌ ERRADO
 from ..services.transicoes import transicion_pode_avancar
 
-class ProcessoDePagamento(models.Model):
+class Processo(models.Model):
     def avanca(self):
         transicion_pode_avancar(self)
 
 # models.py — ✅ CORRETO
-class ProcessoDePagamento(models.Model):
+class Processo(models.Model):
     def avanca(self):
         from ..services.transicoes import transicion_pode_avancar
         transicion_pode_avancar(self)
@@ -149,7 +146,7 @@ class ProcessoDePagamento(models.Model):
 
 ## Estrutura recomendada por app satélite
 
-Cada app que depende de `fluxo/` deveria ter:
+Cada app satélite deveria ter:
 
 ```
 meu_app/
@@ -183,8 +180,8 @@ meu_app/
 
 Antes de submeter PR:
 
-- ✅ `fluxo/` não importa do seu app
-- ✅ Seu app importa apenas de `fluxo/`, `commons/`, `credores/`
+- ✅ Evite import recíproco entre domínios (core ↔ satélite)
+- ✅ Prefira integrações via serviços explícitos e imports locais quando necessário
 - ✅ Circulares detectados? Use imports locais
 - ✅ `python manage.py check` passa
 - ✅ Urls estão em `urlconf/` centralizado, não em app

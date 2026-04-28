@@ -127,6 +127,7 @@ urlpatterns = [
     path('pagamentos/sincronizar-siscac/', pagamentos_sync_views.sincronizar_siscac, name='sincronizar_siscac'),
     path('pagamentos/sincronizar-siscac/manual/', pagamentos_sync_views.sincronizar_siscac_manual_action, name='sincronizar_siscac_manual_action'),
     path('pagamentos/sincronizar-siscac/auto/', pagamentos_sync_views.sincronizar_siscac_auto_action, name='sincronizar_siscac_auto_action'),
+
     path('documentos/secure/<str:tipo_documento>/<int:documento_id>/', pagamentos_security_views.download_arquivo_seguro, name='download_arquivo_seguro'),
     path('processo/<int:pk>/', process_detail_view, name='process_detail'),
     path('processo/<int:pk>/cancelar/', cancelar_processo_spoke_view, name='cancelar_processo_spoke'),
