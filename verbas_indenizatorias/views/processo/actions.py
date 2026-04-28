@@ -1,3 +1,9 @@
+"""Acoes POST do fluxo de processos de verbas indenizatorias.
+
+Este modulo executa mutacoes de agrupamento, edicao e anexacao documental
+seguindo o paradigma manager-worker do dominio.
+"""
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -23,6 +29,7 @@ from ..shared.registry import (
 @require_POST
 @permission_required("pagamentos.pode_agrupar_verbas", raise_exception=True)
 def agrupar_verbas_view(request, tipo_verba):
+    """Agrupa verbas revisadas em um novo processo de pagamento canonico."""
     selecionados = request.POST.getlist('verbas_selecionadas')
 
     config = _VERBA_CONFIG.get(tipo_verba)
@@ -170,6 +177,7 @@ def editar_processo_verbas_documentos_action(request, pk):
 @require_POST
 @permission_required("pagamentos.pode_gerenciar_processos_verbas", raise_exception=True)
 def add_documento_verba_action(request, tipo_verba, pk):
+    """Anexa documento a uma verba especifica e retorna resultado JSON."""
     config = _VERBA_CONFIG.get(tipo_verba)
     if not config:
         return JsonResponse({'ok': False, 'error': 'Tipo de verba invalido.'}, status=400)

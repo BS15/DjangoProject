@@ -12,6 +12,7 @@ from fiscal.models import DadosContribuinte
 
 
 def _build_competencia_date(month: int, year: int) -> date:
+    """Constrói objeto date de competência no primeiro dia do mês."""
     return date(year, month, 1)
 
 
@@ -21,14 +22,17 @@ def _fmt_dec(value) -> str:
 
 
 def _digits_only(value: str | None) -> str:
+    """Retorna apenas os dígitos numéricos da string."""
     return "".join(ch for ch in str(value or "") if ch.isdigit())
 
 
 def _natureza_rendimento_valida(natureza: str | None) -> bool:
+    """Verifica se a natureza do rendimento é válida (5 dígitos)."""
     return bool(re.fullmatch(r"\d{5}", str(natureza or "")))
 
 
 def get_serie_2000_data(month: int | None, year: int | None) -> list:
+    """Retorna dados agregados por credor/NF para eventos S2000 (INSS) da competência."""
     qs = RetencaoImposto.objects.filter(codigo__serie_reinf='S2000')
     if month is not None and year is not None:
         qs = qs.filter(competencia=_build_competencia_date(month, year))
@@ -70,6 +74,7 @@ def get_serie_2000_data(month: int | None, year: int | None) -> list:
 
 
 def get_serie_4000_data(month: int | None, year: int | None) -> list:
+    """Retorna dados agregados por beneficiário/natureza para eventos S4000 (IR/CSRF) da competência."""
     qs = RetencaoImposto.objects.filter(codigo__serie_reinf='S4000')
     if month is not None and year is not None:
         qs = qs.filter(competencia=_build_competencia_date(month, year))
@@ -116,6 +121,7 @@ def get_serie_4000_data(month: int | None, year: int | None) -> list:
 
 
 def _build_r2010_xml(cnpj: str, retencoes: list, month: int, year: int) -> str:
+    """Gera XML do evento R-2010 (serviços tomados com retenção INSS) para a competência."""
     root = ET.Element('Reinf', xmlns='http://www.reinf.esocial.gov.br/schemas/evtServTom/v2_01_01')
     evt = ET.SubElement(root, 'evtServTom')
 
@@ -151,6 +157,7 @@ def _build_r2010_xml(cnpj: str, retencoes: list, month: int, year: int) -> str:
 
 
 def _build_r4020_xml(cnpj: str, retencoes: list, month: int, year: int) -> str:
+    """Gera XML do evento R-4020 (pagamentos a PJ com retenção CSRF) para a competência."""
     root = ET.Element('Reinf', xmlns='http://www.reinf.esocial.gov.br/schemas/evtRetPJ/v2_01_01')
     evt = ET.SubElement(root, 'evtRetPJ')
 
@@ -183,6 +190,7 @@ def _build_r4020_xml(cnpj: str, retencoes: list, month: int, year: int) -> str:
 
 
 def _build_r1000_xml(contribuinte) -> str:
+    """Gera XML do evento R-1000 com identificação do contribuinte."""
     root = ET.Element('Reinf')
     evt = ET.SubElement(root, 'evtInfoContri')
     ide_contrib = ET.SubElement(evt, 'ideContri')
@@ -194,6 +202,7 @@ def _build_r1000_xml(contribuinte) -> str:
 
 
 def _build_fechamento_xml(evento: str, per_apur: str) -> str:
+    """Gera XML de evento de fechamento de período para EFD-Reinf."""
     root = ET.Element('Reinf')
     evt = ET.SubElement(root, evento)
     ide_evento = ET.SubElement(evt, 'ideEvento')
@@ -203,6 +212,7 @@ def _build_fechamento_xml(evento: str, per_apur: str) -> str:
 
 
 def gerar_lotes_reinf(month: int, year: int) -> dict:
+    """Gera todos os lotes XML da EFD-Reinf para a competência, agrupados por série."""
     contribuinte = DadosContribuinte.objects.first()
     if contribuinte is None:
         raise ValueError('Dados do contribuinte não configurados.')

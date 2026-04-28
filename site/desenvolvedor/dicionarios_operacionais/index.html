@@ -3094,10 +3094,10 @@
 <td><code>alternar_ateste_nota_action</code></td>
 <td><code>pagamentos/views/pre_payment/liquidacoes/actions.py</code></td>
 <td><code>alternar_ateste_nota</code> (<code>/liquidacoes/atestar/&lt;int:pk&gt;/</code>)</td>
-<td><code>pagamentos.operador_contas_a_pagar</code></td>
+<td>acesso contextual: fiscal da liquidação (<code>liquidacao.fiscal_contrato</code>) ou <code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
 <td>identificação da nota</td>
-<td>valida elegibilidade de ateste</td>
+<td>valida vínculo do fiscal com a liquidação (ou papel de backoffice) e estado alvo de ateste</td>
 <td>sem worker dedicado (mutação local na action)</td>
 <td>alterna estado de ateste</td>
 <td>painel de liquidações</td>
@@ -3603,10 +3603,10 @@
 <td><code>analisar_contingencia_action</code></td>
 <td><code>pagamentos/views/support/contingencia/actions.py</code></td>
 <td><code>analisar_contingencia</code> (<code>/contingencias/&lt;int:pk&gt;/analisar/</code>)</td>
-<td><code>pagamentos.operador_contas_a_pagar</code></td>
+<td><code>pagamentos.operador_contas_a_pagar</code> + permissão da etapa (<code>pode_aprovar_contingencia_supervisor</code>, <code>pode_aprovar_contingencia_ordenador</code>, <code>pode_aprovar_contingencia_conselho</code>, <code>pode_revisar_contingencia_contadora</code>)</td>
 <td><code>POST</code></td>
 <td>decisão sobre contingência</td>
-<td>validação de estado e permissão</td>
+<td>validação de estado, etapa corrente e permissão específica da etapa</td>
 <td><code>processar_aprovacao_contingencia</code> + <code>processar_revisao_contadora_contingencia</code></td>
 <td>aprova/recusa contingência e atualiza estado</td>
 <td>painel de contingências</td>

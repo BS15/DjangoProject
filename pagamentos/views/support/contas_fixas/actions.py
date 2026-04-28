@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def _redirect_painel_com_periodo(request):
+    """Constrói redirect para o painel de contas fixas preservando mês e ano do POST."""
     mes_raw = request.POST.get("mes")
     ano_raw = request.POST.get("ano")
     try:

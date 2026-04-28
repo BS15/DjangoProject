@@ -1,3 +1,5 @@
+"""Funções utilitárias de acesso e ownership compartilhadas entre apps."""
+
 def user_can_access_document(user, document):
     """
     Returns True if the user is allowed to access the given document object.
@@ -16,7 +18,7 @@ def user_can_access_document(user, document):
             return True
     # TODO: Add department/group-based rules as needed
     return False
-"""Funções utilitárias de acesso e ownership compartilhadas entre apps."""
+
 
 def user_is_entity_owner(user, entidade):
     """Retorna True quando o usuário é o dono funcional da entidade."""

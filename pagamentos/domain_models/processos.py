@@ -128,6 +128,7 @@ class ReuniaoConselhoFiscal(models.Model):
 class GerenciadorProcesso(models.Manager):
     """Gerenciador com compatibilidade para kwargs legados de empenho."""
     def create(self, **kwargs):
+        """Cria processo interceptando campos legados de empenho e delega ao documento orçamentário."""
         numero_nota_empenho = kwargs.pop("n_nota_empenho", None)
         data_empenho = kwargs.pop("data_empenho", None)
         ano_exercicio = kwargs.pop("ano_exercicio", None)
@@ -235,14 +236,17 @@ class Processo(models.Model):
         ]
 
     def __str__(self):
+        """Retorna representação resumida do processo com número de empenho."""
         return f"Processo {self.n_nota_empenho or 'S/N'}"
 
     def _set_pending_documento_orcamentario_field(self, field_name, value):
+        """Armazena campo do documento orçamentário pendente para persistência pós-save."""
         pending = getattr(self, "_pending_documento_orcamentario", {})
         pending[field_name] = value
         self._pending_documento_orcamentario = pending
 
     def _persist_pending_documento_orcamentario(self):
+        """Persiste campos pendentes do documento orçamentário após o save do processo."""
         pending = getattr(self, "_pending_documento_orcamentario", None)
         if not pending or not self.pk:
             return
@@ -281,33 +285,40 @@ class Processo(models.Model):
 
     @property
     def documento_orcamentario_principal(self):
+        """Retorna o documento orçamentário mais recente vinculado ao processo."""
         return self.documentos_orcamentarios.order_by("-data_empenho", "-id").first()
 
     @property
     def n_nota_empenho(self):
+        """Número da nota de empenho do documento orçamentário principal."""
         doc = self.documento_orcamentario_principal
         return doc.numero_nota_empenho if doc else None
 
     @n_nota_empenho.setter
     def n_nota_empenho(self, value):
+        """Armazena o número de empenho como campo pendente para persistência."""
         self._set_pending_documento_orcamentario_field("numero_nota_empenho", value)
 
     @property
     def data_empenho(self):
+        """Data de empenho do documento orçamentário principal."""
         doc = self.documento_orcamentario_principal
         return doc.data_empenho if doc else None
 
     @data_empenho.setter
     def data_empenho(self, value):
+        """Armazena a data de empenho como campo pendente para persistência."""
         self._set_pending_documento_orcamentario_field("data_empenho", value)
 
     @property
     def ano_exercicio(self):
+        """Ano de exercício do documento orçamentário principal."""
         doc = self.documento_orcamentario_principal
         return doc.ano_exercicio if doc else None
 
     @ano_exercicio.setter
     def ano_exercicio(self, value):
+        """Armazena o ano de exercício como campo pendente para persistência."""
         self._set_pending_documento_orcamentario_field("ano_exercicio", value)
 
     def registrar_documento_orcamentario(self, numero_nota_empenho=None, data_empenho=None, ano_exercicio=None):
@@ -340,6 +351,7 @@ class Processo(models.Model):
         )
 
     def save(self, *args, **kwargs):
+        """Aplica regras de selo de domínio e persiste documentos orçamentários pendentes."""
         self._enforce_domain_seal(update_fields=kwargs.get("update_fields"))
         super().save(*args, **kwargs)
         self._persist_pending_documento_orcamentario()

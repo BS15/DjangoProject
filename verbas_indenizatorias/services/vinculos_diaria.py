@@ -12,18 +12,21 @@ _PROCESSO_STATUS_PRE_AUTORIZACAO_VALUES = {status.value for status in STATUS_PRO
 
 
 def _agregar_total(queryset, field_name):
+    """Agrega soma de campo monetário em queryset, retornando zero se vazio."""
     return queryset.aggregate(
         total=Coalesce(Sum(field_name), 0, output_field=DecimalField(max_digits=15, decimal_places=2))
     )["total"]
 
 
 def processo_em_pre_autorizacao(processo):
+    """Verifica se o processo está em estágio de pré-autorização."""
     if not processo or not processo.status:
         return False
     return (processo.status.opcao_status or "").upper() in _PROCESSO_STATUS_PRE_AUTORIZACAO_VALUES
 
 
 def _obter_tipo_pagamento_verbas():
+    """Obtém ou cria o tipo de pagamento canônico para verbas indenizatórias."""
     tipo_pagamento_verbas, _ = TiposDePagamento.objects.get_or_create(
         tipo_pagamento__iexact="VERBAS INDENIZATÓRIAS",
         defaults={"tipo_pagamento": "VERBAS INDENIZATÓRIAS"},
@@ -32,6 +35,7 @@ def _obter_tipo_pagamento_verbas():
 
 
 def _recalcular_totais_processo_verbas(processo):
+    """Recalcula e persiste os totais financeiros do processo de verbas."""
     if not processo:
         return
 
@@ -63,6 +67,7 @@ def _recalcular_totais_processo_verbas(processo):
 
 @transaction.atomic
 def vincular_diaria_em_processo_existente(diaria, processo):
+    """Vincula diária a processo existente, validando estágio permitido."""
     processo_anterior = diaria.processo
 
     if processo and not processo_em_pre_autorizacao(processo):
@@ -82,6 +87,7 @@ def vincular_diaria_em_processo_existente(diaria, processo):
 
 @transaction.atomic
 def desvincular_diaria_do_processo(diaria):
+    """Desvincula diária do processo, validando estágio permitido."""
     processo_anterior = diaria.processo
     if not processo_anterior:
         return diaria

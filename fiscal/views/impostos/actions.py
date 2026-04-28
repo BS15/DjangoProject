@@ -1,4 +1,4 @@
-"""Action views for tax retention grouping and API operations."""
+"""Views de ação para agrupamento de retenções e operações de imposto."""
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required

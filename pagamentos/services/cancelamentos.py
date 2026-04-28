@@ -15,16 +15,19 @@ from pagamentos.domain_models import (
 
 
 def _status_processo(processo) -> str:
+    """Retorna o status textual do processo em maiúsculas, ou string vazia."""
     if not processo or not processo.status:
         return ""
     return (processo.status.opcao_status or "").upper()
 
 
 def _processo_pago_ou_posterior(processo) -> bool:
+    """Retorna True quando o processo está em estágio pago ou posterior."""
     return _status_processo(processo) in STATUS_PROCESSO_PAGOS_E_POSTERIORES
 
 
 def _set_processo_cancelado(processo):
+    """Altera o status do processo para CANCELADO_ANULADO."""
     status_cancelado, _ = StatusChoicesProcesso.objects.get_or_create(
         opcao_status__iexact=StatusProcesso.CANCELADO_ANULADO,
         defaults={"opcao_status": StatusProcesso.CANCELADO_ANULADO},
@@ -34,6 +37,7 @@ def _set_processo_cancelado(processo):
 
 
 def _validar_justificativa(justificativa: str):
+    """Lança ValidationError se a justificativa estiver vazia."""
     if not (justificativa or "").strip():
         raise ValidationError("A justificativa do cancelamento é obrigatória.")
 
@@ -67,6 +71,7 @@ def _criar_devolucao(processo, dados_devolucao: dict, motivo_padrao: str):
 
 
 def registrar_cancelamento_processo(processo, justificativa: str, usuario, dados_devolucao: dict | None = None):
+    """Cancela processo e registra devolução quando o processo já foi pago."""
     _validar_justificativa(justificativa)
     processo_pago = _processo_pago_ou_posterior(processo)
     _validar_dados_devolucao(dados_devolucao, processo_pago, "Processo")
@@ -88,6 +93,7 @@ def registrar_cancelamento_processo(processo, justificativa: str, usuario, dados
 
 
 def cancelar_verba(verba, justificativa: str, usuario, dados_devolucao: dict | None = None):
+    """Cancela verba indenizatória e registra devolução se já estava paga."""
     from verbas_indenizatorias.models import (
         AuxilioRepresentacao,
         Diaria,
@@ -144,6 +150,7 @@ def cancelar_verba(verba, justificativa: str, usuario, dados_devolucao: dict | N
 
 
 def cancelar_suprimento(suprimento, justificativa: str, usuario, dados_devolucao: dict | None = None):
+    """Cancela suprimento de fundos e registra devolução se já estava encerrado."""
     from suprimentos.models import StatusChoicesSuprimentoDeFundos
 
     _validar_justificativa(justificativa)

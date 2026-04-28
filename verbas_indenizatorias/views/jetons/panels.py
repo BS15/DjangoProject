@@ -1,3 +1,5 @@
+"""Panels (GET-only) do domínio de jetons de reunião."""
+
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, render
 
@@ -9,6 +11,7 @@ from verbas_indenizatorias.filters import JetonFilter
 
 @permission_required("pagamentos.pode_visualizar_verbas", raise_exception=True)
 def jetons_list_view(request):
+    """Renderiza lista paginada e filtrada de jetons."""
     queryset = Jeton.objects.select_related("beneficiario", "status", "processo").order_by("-id")
     return render_filtered_list(
         request,
@@ -33,11 +36,13 @@ def jetons_list_view(request):
 
 @permission_required("pagamentos.pode_gerenciar_jetons", raise_exception=True)
 def add_jeton_view(request):
+    """Renderiza formulário de cadastro de novo jeton."""
     return render(request, "verbas/add_jeton.html", {"form": JetonForm()})
 
 
 @permission_required("pagamentos.pode_gerenciar_jetons", raise_exception=True)
 def gerenciar_jeton_view(request, pk):
+    """Renderiza painel de detalhes e gestão de um jeton específico."""
     jeton = get_object_or_404(Jeton.objects.select_related("beneficiario", "status", "processo"), id=pk)
     context = {
         "jeton": jeton,
@@ -49,6 +54,7 @@ def gerenciar_jeton_view(request, pk):
 
 @permission_required("pagamentos.pode_gerenciar_jetons", raise_exception=True)
 def cancelar_jeton_spoke_view(request, pk):
+    """Renderiza spoke de confirmação de cancelamento de jeton."""
     jeton = get_object_or_404(Jeton.objects.select_related("beneficiario", "status", "processo"), id=pk)
     status_choice = (getattr(getattr(jeton, "status", None), "status_choice", "") or "").upper()
     return render(request, "verbas/cancelar_jeton_spoke.html", {

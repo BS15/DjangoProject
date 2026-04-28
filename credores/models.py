@@ -24,6 +24,7 @@ class CargosFuncoes(models.Model):
         verbose_name_plural = "Cargos e Funções"
 
     def __str__(self):
+        """Retorna representação textual do cargo/função com grupo."""
         return f"{self.grupo} -> {self.cargo_funcao}"
 
 
@@ -39,6 +40,7 @@ class ContasBancarias(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
+        """Retorna representação textual da conta bancária com titular, banco e agência."""
         return f"Titular: {self.titular} - Banco: {self.banco} - Ag: {self.agencia} / Cc: {self.conta}"
 
 
@@ -80,6 +82,7 @@ class Credor(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
+        """Retorna o nome do credor como representação textual."""
         return f"{self.nome}"
 
     def clean(self):
@@ -128,6 +131,7 @@ class ContaFixa(models.Model):
         verbose_name_plural = "Contas Fixas"
 
     def __str__(self):
+        """Retorna descrição da conta fixa com nome do credor e referência."""
         return f"{self.credor.nome} - {self.referencia}"
 
 
@@ -155,6 +159,7 @@ class FaturaMensal(models.Model):
         unique_together = ('conta_fixa', 'mes_referencia')
 
     def __str__(self):
+        """Retorna representação textual da fatura com conta fixa e mês de referência."""
         return f"{self.conta_fixa} - {self.mes_referencia.strftime('%m/%Y')}"
 
     @property

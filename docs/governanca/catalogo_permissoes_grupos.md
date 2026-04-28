@@ -32,7 +32,7 @@ Estas permissões estão declaradas em `pagamentos/domain_models/processos.py` e
 | `pagamentos.pode_aprovar_contingencia_ordenador` | Contingências em etapa do Ordenador de Despesa | Aprovação de contingências que exigem anuência do ordenador. |
 | `pagamentos.pode_aprovar_contingencia_conselho` | Contingências em etapa do Conselho Fiscal | Aprovação de contingências que exigem deliberação do conselho. |
 | `pagamentos.pode_revisar_contingencia_contadora` | Contingências em etapa de revisão contábil | Revisão contábil final de contingências aprovadas pela cadeia hierárquica. |
-| `pagamentos.pode_atestar_liquidacao` | Liquidação | Ateste fiscal de notas e liquidação documental. |
+| `pagamentos.pode_atestar_liquidacao` | Liquidação | Permissão dedicada existente no domínio; o fluxo atual de ateste usa guarda contextual por `liquidacao.fiscal_contrato` com fallback de backoffice (`pagamentos.operador_contas_a_pagar`). |
 | `pagamentos.pode_autorizar_pagamento` | Autorização | Aprovação ou recusa formal de pagamento. |
 | `pagamentos.pode_contabilizar` | Pós-pagamento | Registro e recusa contábil. |
 | `pagamentos.pode_auditar_conselho` | Conselho fiscal e reuniões | Deliberação final e acesso ampliado de auditoria. |

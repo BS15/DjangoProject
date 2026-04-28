@@ -6,9 +6,11 @@ class GlobalLoginRequiredMiddleware:
     """Force authentication for every request except login/static URLs."""
 
     def __init__(self, get_response):
+        """Inicializa o middleware com a função de resposta subsequente."""
         self.get_response = get_response
 
     def __call__(self, request):
+        """Redireciona para login quando o usuário não está autenticado."""
         if not request.user.is_authenticated:
             login_url = getattr(settings, "LOGIN_URL", "/accounts/login/")
             static_url = getattr(settings, "STATIC_URL", "/static/")

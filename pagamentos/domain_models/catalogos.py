@@ -14,6 +14,7 @@ class StatusOpcoesProcesso(models.Model):
     opcao_status = models.CharField(max_length=100, unique=True)
     ativo = models.BooleanField(default=True)
     def __str__(self):
+        """Retorna o nome do status."""
         return f"{self.opcao_status}"
 
 class StatusOpcoesPendencia(models.Model):
@@ -21,6 +22,7 @@ class StatusOpcoesPendencia(models.Model):
     opcao_status = models.CharField(max_length=100, unique=True)
     ativo = models.BooleanField(default=True)
     def __str__(self):
+        """Retorna o nome do status."""
         return f"{self.opcao_status}"
 
 class OpcoesEtiqueta(models.Model):
@@ -28,6 +30,7 @@ class OpcoesEtiqueta(models.Model):
     opcao_etiqueta = models.CharField(max_length=100, unique=True)
     ativo = models.BooleanField(default=True)
     def __str__(self):
+        """Retorna o nome da etiqueta."""
         return f"{self.opcao_etiqueta}"
 
 class FormasPagamento(models.Model):
@@ -35,6 +38,7 @@ class FormasPagamento(models.Model):
     forma_pagamento = models.CharField(max_length=100, unique=True)
     ativo = models.BooleanField(default=True)
     def __str__(self):
+        """Retorna o nome da forma de pagamento."""
         return f"{self.forma_pagamento}"
 
 class TiposPagamento(models.Model):
@@ -42,6 +46,7 @@ class TiposPagamento(models.Model):
     tipo_pagamento = models.CharField(max_length=100, unique=True)
     ativo = models.BooleanField(default=True)
     def __str__(self):
+        """Retorna o nome do tipo de pagamento."""
         return f"{self.tipo_pagamento}"
 
 class TiposDocumento(models.Model):
@@ -57,6 +62,7 @@ class TiposDocumento(models.Model):
             )
         ]
     def __str__(self):
+        """Retorna tipo e pagamento para identificação no admin."""
         if self.tipo_pagamento:
             return f"{self.tipo_documento} ({self.tipo_pagamento})"
         return f"{self.tipo_documento} (Geral)"
@@ -66,4 +72,5 @@ class TiposPendencia(models.Model):
     tipo_pendencia = models.CharField(max_length=100, unique=True)
     ativo = models.BooleanField(default=True)
     def __str__(self):
+        """Retorna o nome do tipo de pendência."""
         return f"{self.tipo_pendencia}"

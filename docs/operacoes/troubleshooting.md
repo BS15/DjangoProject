@@ -20,7 +20,7 @@ Tabela de problemas comuns, causas prováveis e ações corretivas.
 
 | Sintoma | Causa Provável | Solução |
 |---|---|---|
-| HTTP 403 ao acessar qualquer ação | Usuário não possui o codename de permissão necessário | Acessar o Django Admin → Grupos → atribuir o grupo correto ao usuário, ou adicionar a permissão individualmente. Consultar a [Matriz de Permissões](../governanca/matriz_permissoes.md) |
+| HTTP 403 ao acessar qualquer ação | Usuário não possui o codename de permissão necessário | Validar o codename exigido na [Matriz de Permissões](../governanca/matriz_permissoes.md), revisar os grupos/permissões provisionados no banco e conferir o painel RBAC de desenvolvedor (sem depender de operação via `/admin/`) |
 | HTTP 403 mesmo sendo superusuário | Improvável — superusuários têm todas as permissões | Verificar se `raise_exception=True` está correto; checar se o usuário está de fato ativo (`is_active=True`) |
 | Usuário redireciona para login ao invés de 403 | `raise_exception=False` em algum decorator | Todos os decorators do projeto devem usar `raise_exception=True`; corrigir na view afetada |
 

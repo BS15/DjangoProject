@@ -294,6 +294,7 @@ class DocumentoPagamentoImposto(models.Model):
         ]
 
     def clean(self):
+        """Valida correspondência entre código de imposto e competência da retenção vinculada."""
         errors = {}
         if self.retencao_id and self.codigo_imposto_id:
             if self.retencao.codigo_id != self.codigo_imposto_id:
@@ -310,6 +311,7 @@ class DocumentoPagamentoImposto(models.Model):
             raise ValidationError(errors)
 
     def save(self, *args, **kwargs):
+        """Normaliza a competência para o primeiro dia do mês antes de salvar."""
         if self.competencia:
             self.competencia = date(self.competencia.year, self.competencia.month, 1)
         super().save(*args, **kwargs)

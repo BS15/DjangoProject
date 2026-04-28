@@ -11,10 +11,12 @@ logger = logging.getLogger(__name__)
 
 
 def _digits_only(value):
+    """Remove todos os caracteres não numéricos de uma string."""
     return re.sub(r"\D", "", value or "")
 
 
 def normalize_text(value, *, collapse_spaces=True):
+    """Normaliza texto para maiúsculas sem acentos, com espaços colapsados opcionalmente."""
     if not value:
         return ""
 
@@ -26,20 +28,24 @@ def normalize_text(value, *, collapse_spaces=True):
 
 
 def normalize_document(value):
+    """Remove formatação de CPF/CNPJ, retornando apenas dígitos."""
     return _digits_only(value)
 
 
 def normalize_account(agencia, conta):
+    """Normaliza agência e conta bancária removendo espaços e pontos desnecessários."""
     agencia_norm = (agencia or "").strip().replace(" ", "")
     conta_norm = (conta or "").strip().replace(" ", "").replace(".", "")
     return agencia_norm.upper(), conta_norm.upper()
 
 
 def normalize_name_for_match(value):
+    """Normaliza nome para comparação tolerante a variações de escrita."""
     return normalize_text(value)
 
 
 def names_bidirectional_match(left, right):
+    """Verifica se um nome está contido no outro (correspondência bidirecional)."""
     left_norm = normalize_name_for_match(left)
     right_norm = normalize_name_for_match(right)
     if not left_norm or not right_norm:
@@ -48,20 +54,24 @@ def names_bidirectional_match(left, right):
 
 
 def decimals_equal_money(left, right):
+    """Compara dois valores Decimal com precisão monetária (2 casas decimais)."""
     if left is None or right is None:
         return False
     return Decimal(left).quantize(Decimal("0.01")) == Decimal(right).quantize(Decimal("0.01"))
 
 
 def normalize_choice(value, valid_choices, default=""):
+    """Retorna o valor se estiver entre as opções válidas, caso contrário retorna o padrão."""
     return value if value in valid_choices else default
 
 
 def format_br_date(value, empty_value="-"):
+    """Formata data no padrão brasileiro (dd/mm/aaaa), com fallback para valor vazio."""
     return value.strftime("%d/%m/%Y") if value else empty_value
 
 
 def format_brl_currency(value, empty_value="-"):
+    """Formata valor decimal como moeda brasileira (R$ 1.234,56)."""
     if value is None:
         return empty_value
 
@@ -76,6 +86,7 @@ def format_brl_currency(value, empty_value="-"):
 
 
 def format_brl_amount(value, empty_value="-", include_symbol=False):
+    """Formata valor como montante brasileiro, com controle opcional do símbolo R$."""
     formatted = format_brl_currency(value, empty_value=empty_value)
     if formatted == empty_value or include_symbol:
         return formatted
@@ -83,6 +94,7 @@ def format_brl_amount(value, empty_value="-", include_symbol=False):
 
 
 def parse_brl_decimal(value, default=None):
+    """Converte string no formato BRL (ex: R$ 1.234,56) para Decimal, com fallback."""
     if value is None:
         return default
 
@@ -105,6 +117,7 @@ def parse_brl_decimal(value, default=None):
 
 
 def parse_br_date(date_str):
+    """Converte string de data brasileira (dd/mm/aaaa) para formato ISO (aaaa-mm-dd)."""
     try:
         if not date_str:
             return None

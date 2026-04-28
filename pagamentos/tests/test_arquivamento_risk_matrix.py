@@ -67,6 +67,7 @@ def test_arquivamento_rollback_mid_flight_ao_falhar_avanco_de_status(
     )
 
     def _falhar_avanco(*args, **kwargs):
+        """Simula falha no avanço de status para validar rollback transacional."""
         raise RuntimeError("Falha no avanço de status")
 
     monkeypatch.setattr(type(processo), "avancar_status", _falhar_avanco)

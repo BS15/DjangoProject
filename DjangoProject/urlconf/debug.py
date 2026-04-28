@@ -1,3 +1,5 @@
+"""URLs disponíveis apenas em modo DEBUG: geração de dados fictícios e PDFs de teste."""
+
 from django.urls import path
 
 from desenvolvedor import views_desenvolvedor as dev_views

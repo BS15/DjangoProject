@@ -1,3 +1,5 @@
+"""URLs do domínio fiscal: impostos, retenções, liquidações e e-Social/REINF."""
+
 from django.urls import path
 
 from fiscal.views.impostos import panels as impostos_panels

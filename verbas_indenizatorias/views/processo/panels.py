@@ -1,3 +1,5 @@
+"""Paineis GET do fluxo de processos de verbas indenizatorias."""
+
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, render
@@ -11,6 +13,7 @@ from .helpers import _montar_contexto_processo_verbas, _pode_gerenciar_processo_
 @require_GET
 @permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def verbas_panel_view(request):
+    """Renderiza o painel inicial de operacoes de verbas indenizatorias."""
     return render(request, "verbas/verbas_panel.html")
 
 

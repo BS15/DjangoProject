@@ -1,3 +1,5 @@
+"""URLs do domínio de verbas indenizatórias: diárias, auxílios, jetons e reembolsos."""
+
 from django.urls import path
 
 from verbas_indenizatorias.views.processo import actions as verbas_actions

@@ -1,3 +1,5 @@
+"""Fixtures e helpers compartilhados para a suite de testes de pagamentos."""
+
 import io
 import uuid
 from decimal import Decimal
@@ -22,6 +24,7 @@ from pagamentos.domain_models import (
 
 
 def _pdf_bytes(paginas=1):
+    """Gera bytes de PDF válido com o número de páginas especificado."""
     writer = PdfWriter()
     for _ in range(paginas):
         writer.add_blank_page(width=200, height=200)

@@ -1,3 +1,5 @@
+"""Helpers de leitura e consolidacao de contexto para processos de verbas."""
+
 import logging
 
 from django.contrib import messages

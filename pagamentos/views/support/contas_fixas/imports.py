@@ -10,6 +10,7 @@ from django.views.decorators.http import require_GET
 @require_GET
 @permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def download_template_csv_contas(request):
+    """Retorna template CSV de importação de contas fixas para download."""
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = 'attachment; filename="template_contas_fixas.csv"'
     writer = csv.writer(response)

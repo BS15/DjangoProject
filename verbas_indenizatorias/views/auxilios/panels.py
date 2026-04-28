@@ -1,3 +1,5 @@
+"""Panels (GET-only) do domínio de auxílios de representação."""
+
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, render
 
@@ -9,6 +11,7 @@ from verbas_indenizatorias.filters import AuxilioFilter
 
 @permission_required("pagamentos.pode_visualizar_verbas", raise_exception=True)
 def auxilios_list_view(request):
+    """Renderiza lista paginada e filtrada de auxílios de representação."""
     queryset = AuxilioRepresentacao.objects.select_related("beneficiario", "status", "processo").order_by("-id")
     return render_filtered_list(
         request,
@@ -33,11 +36,13 @@ def auxilios_list_view(request):
 
 @permission_required("pagamentos.pode_gerenciar_auxilios", raise_exception=True)
 def add_auxilio_view(request):
+    """Renderiza formulário de cadastro de novo auxílio."""
     return render(request, "verbas/add_auxilio.html", {"form": AuxilioForm()})
 
 
 @permission_required("pagamentos.pode_gerenciar_auxilios", raise_exception=True)
 def gerenciar_auxilio_view(request, pk):
+    """Renderiza painel de detalhes e gestão de um auxílio específico."""
     auxilio = get_object_or_404(AuxilioRepresentacao.objects.select_related("beneficiario", "status", "processo"), id=pk)
     context = {
         "auxilio": auxilio,
@@ -48,6 +53,7 @@ def gerenciar_auxilio_view(request, pk):
 
 @permission_required("pagamentos.pode_gerenciar_auxilios", raise_exception=True)
 def cancelar_auxilio_spoke_view(request, pk):
+    """Renderiza spoke de confirmação de cancelamento de auxílio."""
     auxilio = get_object_or_404(AuxilioRepresentacao.objects.select_related("beneficiario", "status", "processo"), id=pk)
     status_choice = (getattr(getattr(auxilio, "status", None), "status_choice", "") or "").upper()
     return render(request, "verbas/cancelar_auxilio_spoke.html", {

@@ -4,7 +4,7 @@
 
 Todas as rotas da aplicação requerem autenticação (via `GlobalLoginRequiredMiddleware`). Requisições sem sessão válida recebem redirecionamento para `/accounts/login/`.
 
-Além da autenticação, cada endpoint exige uma permissão específica declarada com `@permission_required('app_label.codename', raise_exception=True)`. Acesso não autorizado retorna **HTTP 403** — nunca redireciona para o login.
+Além da autenticação, os endpoints usam `@permission_required('app_label.codename', raise_exception=True)` como permissão-base e, em alguns fluxos, guardas contextuais adicionais (ownership ou permissão por etapa). Em fluxos HTML, negações contextuais podem retornar `messages + redirect` em vez de `HTTP 403` direto.
 
 Consulte a [Matriz de Permissões](governanca/matriz_permissoes.md) para o mapeamento completo de codenames por perfil.
 
@@ -15,7 +15,7 @@ Consulte a [Matriz de Permissões](governanca/matriz_permissoes.md) para o mapea
 | Código | Significado | Como a UI trata |
 |---|---|---|
 | `400` | Entrada inválida (payload mal formado, parâmetro ausente) | Resposta JSON com `{"error": "mensagem"}` nos endpoints JSON; mensagem flash nos fluxos de formulário |
-| `403` | Permissão negada (usuário autenticado mas sem codename) | HTTP 403 direto — sem redirect |
+| `403` | Permissão negada (usuário autenticado mas sem codename) | HTTP 403 direto quando a negação ocorre no decorator |
 | `404` | Recurso não encontrado | HTTP 404 padrão do Django |
 
 Fluxos de formulário HTML surfaceiam erros de negócio via sistema de mensagens Django (`messages.error` / `messages.warning`) renderizados pelo partial `layouts/_messages.html`.
@@ -103,11 +103,11 @@ Fluxos de formulário HTML surfaceiam erros de negócio via sistema de mensagens
 | `POST` | `/api/processo/<processo_pk>/salvar-nota-fiscal/<nota_pk>/` | `pagamentos.operador_contas_a_pagar` | Cria/edita nota fiscal e retenções do processo |
 | `POST` | `/processo/<pk>/avancar-para-pagamento/` | `pagamentos.operador_contas_a_pagar` | Avança processo para próxima etapa (turnpike aplicado) |
 | `POST` | `/processos/autorizar-pagamento/` | `pagamentos.pode_autorizar_pagamento` | Autoriza processos em lote |
-| `POST` | `/liquidacoes/atestar/<pk>/` | `pagamentos.operador_contas_a_pagar` | Alterna ateste da nota fiscal |
+| `POST` | `/liquidacoes/atestar/<pk>/` | acesso contextual: fiscal da liquidação (`liquidacao.fiscal_contrato`) ou backoffice com `pagamentos.operador_contas_a_pagar` | Alterna ateste da nota fiscal |
 | `POST` | `/processos/contabilizacao/<pk>/aprovar/` | `pagamentos.pode_contabilizar` | Registro contábil pós-pagamento |
 | `POST` | `/processos/arquivamento/<pk>/executar/` | `pagamentos.pode_arquivar` | Arquivamento definitivo |
 | `POST` | `/contingencias/nova/enviar/` | `pagamentos.operador_contas_a_pagar` | Abre contingência processual |
-| `POST` | `/contingencias/<pk>/analisar/` | `pagamentos.operador_contas_a_pagar` | Aprova/recusa contingência conforme etapa |
+| `POST` | `/contingencias/<pk>/analisar/` | `pagamentos.operador_contas_a_pagar` + permissão da etapa (`pode_aprovar_contingencia_supervisor`, `pode_aprovar_contingencia_ordenador`, `pode_aprovar_contingencia_conselho`, `pode_revisar_contingencia_contadora`) | Aprova/recusa contingência conforme etapa |
 
 ### Endpoints JSON
 

@@ -1,4 +1,4 @@
-"""Panel views for tax retention management."""
+"""Views de painel para gestão de retenções de impostos."""
 
 from decimal import Decimal
 
@@ -18,6 +18,7 @@ VALID_VIEWS = {"individual", "nf", "processo"}
 
 
 def _resolve_fonte_retentora_nome(retencao: RetencaoImposto) -> str:
+    """Resolve o nome da fonte retentora a partir da retenção ou emitente da nota."""
     beneficiario = getattr(retencao, "beneficiario", None)
     if beneficiario and beneficiario.nome:
         return beneficiario.nome

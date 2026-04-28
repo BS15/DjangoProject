@@ -106,7 +106,7 @@ Campos usados em cada entrada:
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `alternar_ateste_nota_action` | `pagamentos/views/pre_payment/liquidacoes/actions.py` | `alternar_ateste_nota` (`/liquidacoes/atestar/<int:pk>/`) | `pagamentos.operador_contas_a_pagar` | `POST` | identificação da nota | valida elegibilidade de ateste | sem worker dedicado (mutação local na action) | alterna estado de ateste | painel de liquidações | `messages` success/error |
+| `alternar_ateste_nota_action` | `pagamentos/views/pre_payment/liquidacoes/actions.py` | `alternar_ateste_nota` (`/liquidacoes/atestar/<int:pk>/`) | acesso contextual: fiscal da liquidação (`liquidacao.fiscal_contrato`) ou `pagamentos.operador_contas_a_pagar` | `POST` | identificação da nota | valida vínculo do fiscal com a liquidação (ou papel de backoffice) e estado alvo de ateste | sem worker dedicado (mutação local na action) | alterna estado de ateste | painel de liquidações | `messages` success/error |
 | `avancar_para_pagamento_action` | `pagamentos/views/pre_payment/liquidacoes/actions.py` | `avancar_para_pagamento` (`/processo/<int:pk>/avancar-para-pagamento/`) | `pagamentos.operador_contas_a_pagar` | `POST` | processo alvo | turnpikes de liquidação e obrigatoriedades | `processo.avancar_status(...)` (método de domínio) | avança processo para pagamento | hub do processo/painel | `messages` success/error |
 
 ### Namespace `payment`
@@ -189,7 +189,7 @@ Campos usados em cada entrada:
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `add_contingencia_action` | `pagamentos/views/support/contingencia/actions.py` | `add_contingencia_action` (`/contingencias/nova/enviar/`) | `pagamentos.operador_contas_a_pagar` | `POST` | dados de contingência | validação de elegibilidade e campos obrigatórios | `normalizar_dados_propostos_contingencia` + `determinar_requisitos_contingencia` | cria contingência vinculada ao processo | painel de contingências | `messages` success/error |
-| `analisar_contingencia_action` | `pagamentos/views/support/contingencia/actions.py` | `analisar_contingencia` (`/contingencias/<int:pk>/analisar/`) | `pagamentos.operador_contas_a_pagar` | `POST` | decisão sobre contingência | validação de estado e permissão | `processar_aprovacao_contingencia` + `processar_revisao_contadora_contingencia` | aprova/recusa contingência e atualiza estado | painel de contingências | `messages` success/error |
+| `analisar_contingencia_action` | `pagamentos/views/support/contingencia/actions.py` | `analisar_contingencia` (`/contingencias/<int:pk>/analisar/`) | `pagamentos.operador_contas_a_pagar` + permissão da etapa (`pode_aprovar_contingencia_supervisor`, `pode_aprovar_contingencia_ordenador`, `pode_aprovar_contingencia_conselho`, `pode_revisar_contingencia_contadora`) | `POST` | decisão sobre contingência | validação de estado, etapa corrente e permissão específica da etapa | `processar_aprovacao_contingencia` + `processar_revisao_contadora_contingencia` | aprova/recusa contingência e atualiza estado | painel de contingências | `messages` success/error |
 
 #### Etapa `contas_fixas`
 

@@ -1,3 +1,5 @@
+"""Views de desenvolvimento para geração de dados fictícios no domínio de credores."""
+
 import csv
 import io
 import random

@@ -12,6 +12,7 @@ from .forms import ContaFixaForm
 
 
 def _mes_ano(request):
+    """Extrai e valida mês e ano da query string, com fallback para a data atual."""
     hoje = date.today()
     try:
         mes = int(request.GET.get("mes", hoje.month))

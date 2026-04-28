@@ -207,6 +207,7 @@ class CancelamentoProcessual(models.Model):
         ordering = ["-criado_em"]
 
     def clean(self):
+        """Valida consistência entre tipo de cancelamento e entidade vinculada."""
         alvo_por_tipo = {
             self.TIPO_PROCESSO: None,
             self.TIPO_DIARIA: self.diaria_id,

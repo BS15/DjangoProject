@@ -26,18 +26,21 @@ class SealedMutationQuerySet(models.QuerySet):
     """Bloqueia mutações em massa que contornam save/clean do domínio."""
 
     def update(self, **kwargs):
+        """Bloqueia update() em massa para proteger invariantes do domínio."""
         raise DjangoValidationError(
             "Mutações em massa via update() são proibidas neste domínio. "
             "Use métodos de entidade/serviço com validações de negócio."
         )
 
     def bulk_update(self, objs, fields, batch_size=None):
+        """Bloqueia bulk_update() em massa para proteger invariantes do domínio."""
         raise DjangoValidationError(
             "Mutações em massa via bulk_update() são proibidas neste domínio. "
             "Use métodos de entidade/serviço com validações de negócio."
         )
 
     def bulk_create(self, objs, batch_size=None, ignore_conflicts=False, update_conflicts=False, update_fields=None, unique_fields=None):
+        """Bloqueia bulk_create() em massa para proteger invariantes do domínio."""
         raise DjangoValidationError(
             "Inserções em massa via bulk_create() são proibidas neste domínio. "
             "Use criação canônica por entidade para garantir invariantes."
@@ -52,6 +55,7 @@ class StatusChoicesVerbasIndenizatorias(models.Model):
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
+        """Retorna o texto do status."""
         return f"{self.status_choice}"
 
 
@@ -89,6 +93,7 @@ class MeiosDeTransporte(models.Model):
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
+        """Retorna o nome do meio de transporte."""
         return f"{self.meio_de_transporte}"
 
 
@@ -100,6 +105,7 @@ class TiposDeVerbasIndenizatorias(models.Model):
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
+        """Retorna o nome do tipo de verba indenizatória."""
         return f"{self.tipo_de_verba_indenizatoria}"
 
     class Meta:
@@ -130,6 +136,7 @@ class Tabela_Valores_Unitarios_Verbas_Indenizatorias(models.Model):
 
     @classmethod
     def get_valor_para_cargo_diaria(cls, cargo_funcao):
+        """Obtém o valor unitário de diária para o cargo/função informado."""
         tabela = cls.objects.filter(
             cargo_funcao=cargo_funcao,
             tipo__tipo_de_verba_indenizatoria__icontains='diária'
@@ -323,6 +330,7 @@ class Diaria(StatusVerbaDomainMixin, models.Model):
             super().save(update_fields=['diaria_inicial'])
 
     def _enforce_domain_seal(self, update_fields=None):
+        """Bloqueia alterações em campos sensíveis quando o processo está pós-pagamento."""
         if getattr(self, '_bypass_domain_seal', False):
             return
 
@@ -361,6 +369,7 @@ class Diaria(StatusVerbaDomainMixin, models.Model):
             )
 
     def delete(self, *args, **kwargs):
+        """Bloqueia exclusão de diária vinculada a processo pós-pagamento."""
         if _is_processo_selado(self.processo):
             raise DjangoValidationError(
                 {
@@ -386,10 +395,12 @@ class Diaria(StatusVerbaDomainMixin, models.Model):
         self.definir_status(novo_status_str)
 
     def __str__(self):
+        """Retorna identificação textual da diária."""
         return f"Diária {self.numero_siscac} - {self.beneficiario}"
 
     @property
     def comprovantes(self):
+        """Retorna documentos de comprovação da prestação de contas da diária."""
         prestacao = getattr(self, "prestacao_contas", None)
         if prestacao:
             return prestacao.documentos.all()
@@ -456,6 +467,7 @@ class DevolucaoDiaria(models.Model):
     history = HistoricalRecords()
 
     def clean(self):
+        """Valida que o valor devolvido não excede o total da diária."""
         if self.diaria_id and self.valor_devolvido and self.valor_devolvido > self.diaria.valor_total:
             raise DjangoValidationError(
                 {'valor_devolvido': 'Valor devolvido não pode exceder o valor total da diária.'}
@@ -552,6 +564,7 @@ class ReembolsoCombustivel(StatusVerbaDomainMixin, models.Model):
     objects = SealedMutationQuerySet.as_manager()
 
     def _processo_referencia(self):
+        """Resolve o processo de referência via vínculo direto ou pela diária."""
         if self.processo_id:
             return self.processo
         if self.diaria_id:
@@ -559,6 +572,7 @@ class ReembolsoCombustivel(StatusVerbaDomainMixin, models.Model):
         return None
 
     def clean(self):
+        """Valida datas e restrições de vinculação do reembolso."""
         errors = {}
         processo_referencia = self._processo_referencia()
         if not self.pk:
@@ -576,6 +590,7 @@ class ReembolsoCombustivel(StatusVerbaDomainMixin, models.Model):
             raise DjangoValidationError(errors)
 
     def _enforce_domain_seal(self, update_fields=None):
+        """Bloqueia alterações em campos sensíveis quando o processo está pós-pagamento."""
         processo_atual = self._processo_referencia()
         if not self.pk:
             _validar_vinculo_inicial_em_processo_selado(processo_atual, "reembolso")
@@ -601,11 +616,13 @@ class ReembolsoCombustivel(StatusVerbaDomainMixin, models.Model):
             )
 
     def save(self, *args, **kwargs):
+        """Aplica domain seal, valida e persiste o reembolso."""
         self._enforce_domain_seal(update_fields=kwargs.get("update_fields"))
         self.full_clean()
         return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
+        """Bloqueia exclusão de reembolso vinculado a processo pós-pagamento."""
         if _is_processo_selado(self._processo_referencia()):
             raise DjangoValidationError(
                 {
@@ -668,10 +685,12 @@ class Jeton(StatusVerbaDomainMixin, models.Model):
     objects = SealedMutationQuerySet.as_manager()
 
     def clean(self):
+        """Valida restrições de vinculação do jeton em processo."""
         if not self.pk:
             _validar_vinculo_inicial_em_processo_selado(self.processo, "jeton")
 
     def _enforce_domain_seal(self, update_fields=None):
+        """Bloqueia alterações em campos sensíveis quando o processo está pós-pagamento."""
         if not self.pk:
             _validar_vinculo_inicial_em_processo_selado(self.processo, "jeton")
             return
@@ -697,11 +716,13 @@ class Jeton(StatusVerbaDomainMixin, models.Model):
             )
 
     def save(self, *args, **kwargs):
+        """Aplica domain seal, valida e persiste o jeton."""
         self._enforce_domain_seal(update_fields=kwargs.get("update_fields"))
         self.full_clean()
         return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
+        """Bloqueia exclusão de jeton vinculado a processo pós-pagamento."""
         if _is_processo_selado(self.processo):
             raise DjangoValidationError(
                 {
@@ -715,6 +736,7 @@ class Jeton(StatusVerbaDomainMixin, models.Model):
         return super().delete(*args, **kwargs)
 
     def __str__(self):
+        """Retorna identificação textual do jeton."""
         return f"Jeton {self.reuniao} - {self.beneficiario}"
 
     class Meta:
@@ -762,10 +784,12 @@ class AuxilioRepresentacao(StatusVerbaDomainMixin, models.Model):
     objects = SealedMutationQuerySet.as_manager()
 
     def clean(self):
+        """Valida restrições de vinculação do auxílio em processo."""
         if not self.pk:
             _validar_vinculo_inicial_em_processo_selado(self.processo, "auxílio")
 
     def _enforce_domain_seal(self, update_fields=None):
+        """Bloqueia alterações em campos sensíveis quando o processo está pós-pagamento."""
         if not self.pk:
             _validar_vinculo_inicial_em_processo_selado(self.processo, "auxílio")
             return
@@ -791,11 +815,13 @@ class AuxilioRepresentacao(StatusVerbaDomainMixin, models.Model):
             )
 
     def save(self, *args, **kwargs):
+        """Aplica domain seal, valida e persiste o auxílio de representação."""
         self._enforce_domain_seal(update_fields=kwargs.get("update_fields"))
         self.full_clean()
         return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
+        """Bloqueia exclusão de auxílio vinculado a processo pós-pagamento."""
         if _is_processo_selado(self.processo):
             raise DjangoValidationError(
                 {
@@ -809,6 +835,7 @@ class AuxilioRepresentacao(StatusVerbaDomainMixin, models.Model):
         return super().delete(*args, **kwargs)
 
     def __str__(self):
+        """Retorna identificação textual do auxílio de representação."""
         return f"Aux. Representação {self.numero_sequencial} - {self.beneficiario}"
 
     class Meta:

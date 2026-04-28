@@ -1,3 +1,5 @@
+"""APIs JSON do domínio de diárias indenizatórias."""
+
 from django.contrib.auth.decorators import permission_required
 from django.http import JsonResponse
 
@@ -7,6 +9,7 @@ from verbas_indenizatorias.models import Diaria, Tabela_Valores_Unitarios_Verbas
 
 @permission_required('pagamentos.pode_criar_diarias', raise_exception=True)
 def api_valor_unitario_diaria(request, beneficiario_id):
+    """Retorna valor unitário de diária para o cargo/função do beneficiário."""
     try:
         credor = Credor.objects.select_related('cargo_funcao').get(id=beneficiario_id)
 

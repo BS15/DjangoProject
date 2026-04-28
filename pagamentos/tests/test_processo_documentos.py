@@ -30,6 +30,7 @@ from commons.shared.pdf_tools import mesclar_pdfs_em_memoria
 
 
 def _gerar_pdf_bytes(paginas=1):
+    """Gera bytes de PDF em memória com a quantidade de páginas informada."""
     writer = PdfWriter()
     for _ in range(paginas):
         writer.add_blank_page(width=200, height=200)

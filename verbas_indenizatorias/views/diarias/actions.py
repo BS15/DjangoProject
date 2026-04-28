@@ -1,3 +1,5 @@
+"""Actions (POST-only) do domínio de diárias indenizatórias."""
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -39,6 +41,7 @@ from .access import _pode_acessar_prestacao, _pode_gerenciar_vinculo_diaria
 PRESTACAO_REVIEW_QUEUE_KEY = 'prestacoes_review_queue'
 
 def _redirect_com_next(request, fallback_name, **kwargs):
+    """Redireciona para URL do parâmetro 'next' se segura, ou para o fallback informado."""
     next_url = request.POST.get('next') or request.GET.get('next')
     if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
         return redirect(next_url)
@@ -46,6 +49,7 @@ def _redirect_com_next(request, fallback_name, **kwargs):
 
 
 def _obter_fila_prestacoes_da_sessao(request):
+    """Retorna lista de IDs de diárias armazenados na fila de revisão da sessão."""
     fila = []
     for valor in request.session.get(PRESTACAO_REVIEW_QUEUE_KEY, []):
         if str(valor).isdigit():
@@ -54,6 +58,7 @@ def _obter_fila_prestacoes_da_sessao(request):
 
 
 def _limpar_fila_prestacoes_da_sessao(request):
+    """Remove a fila de revisão de prestações da sessão atual."""
     request.session.pop(PRESTACAO_REVIEW_QUEUE_KEY, None)
     request.session.modified = True
 

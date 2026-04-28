@@ -23,6 +23,7 @@ from pagamentos.views.pre_payment.cadastro import actions as cadastro_actions
 
 
 def _pdf_bytes():
+    """Gera um PDF mínimo em memória para uso nos cenários de teste."""
     writer = PdfWriter()
     writer.add_blank_page(width=200, height=200)
     buffer = io.BytesIO()
@@ -31,6 +32,7 @@ def _pdf_bytes():
 
 
 def _create_backoffice_user():
+    """Cria usuário de teste com permissão de operador de contas a pagar."""
     user = get_user_model().objects.create_user(
         username=f"backoffice_{uuid.uuid4().hex[:8]}",
         email=f"backoffice_{uuid.uuid4().hex[:8]}@example.com",
@@ -42,6 +44,7 @@ def _create_backoffice_user():
 
 
 def _create_processo():
+    """Cria processo base de teste com credor, forma/tipo de pagamento e status."""
     credor = Credor.objects.create(
         nome=f"Credor {uuid.uuid4().hex[:6]}",
         cpf_cnpj=f"{uuid.uuid4().int % 10**11:011d}",
@@ -64,10 +67,12 @@ def _create_processo():
 
 
 def _create_tipo_documento(nome, tipo_pagamento):
+    """Cria tipo de documento de teste associado ao tipo de pagamento informado."""
     return TiposDocumento.objects.create(tipo_documento=nome, tipo_pagamento=tipo_pagamento)
 
 
 def _add_documento(processo, tipo, ordem, nome_arquivo):
+    """Anexa documento de teste ao processo com ordem e arquivo informados."""
     return DocumentoProcesso.objects.create(
         processo=processo,
         tipo=tipo,

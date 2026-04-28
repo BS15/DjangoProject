@@ -34,10 +34,12 @@ class DiariaCsvValidationError(Exception):
 
 
 def _normalizar_coluna(coluna):
+    """Normaliza nome de coluna para maiúsculas sem espaços extras."""
     return str(coluna or "").strip().upper()
 
 
 def _valor_texto(row, coluna):
+    """Extrai e normaliza valor de coluna da linha do arquivo."""
     valor = row.get(coluna, "")
     if valor is None:
         return ""
@@ -45,6 +47,7 @@ def _valor_texto(row, coluna):
 
 
 def _parse_data(raw_value, line_num, nome_coluna):
+    """Converte valor bruto em objeto date, aceitando múltiplos formatos."""
     if isinstance(raw_value, datetime):
         return raw_value.date()
     if isinstance(raw_value, date):
@@ -66,6 +69,7 @@ def _parse_data(raw_value, line_num, nome_coluna):
 
 
 def _calcular_quantidade_preview(data_saida, data_retorno, tipo_solicitacao):
+    """Calcula a quantidade de diárias para prévia de importação."""
     diferenca_dias = (data_retorno - data_saida).days
     if (tipo_solicitacao or "INICIAL").upper() == "INICIAL":
         return Decimal(diferenca_dias) + Decimal("0.5")
@@ -73,6 +77,7 @@ def _calcular_quantidade_preview(data_saida, data_retorno, tipo_solicitacao):
 
 
 def _build_xlsx_rows(planilha_file):
+    """Lê planilha XLSX e retorna tupla (rows, erro, colunas)."""
     if load_workbook is None:
         raise RuntimeError("Dependencia openpyxl indisponivel para leitura de XLSX.")
 
@@ -103,6 +108,7 @@ def _build_xlsx_rows(planilha_file):
 
 
 def _build_rows_from_file(planilha_file):
+    """Detecta formato do arquivo e retorna (rows, erro) normalizados."""
     nome_arquivo = (getattr(planilha_file, "name", "") or "").lower()
 
     if nome_arquivo.endswith(".xlsx"):
@@ -122,6 +128,7 @@ def _build_rows_from_file(planilha_file):
 
 
 def _parse_diaria_row(row, line_num):
+    """Valida e converte uma linha do arquivo em dicionário de diária."""
     nome = _valor_texto(row, "NOME_BENEFICIARIO")
     credor = Credor.objects.filter(nome__iexact=nome, tipo="PF").first() or Credor.objects.filter(
         nome__icontains=nome, tipo="PF"

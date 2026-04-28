@@ -26,6 +26,7 @@ DOC_RELATORIO_AGRUPAMENTO = "RELATÓRIO DE RETENÇÕES AGRUPADAS"
 
 
 def _get_tipo_documento_impostos(nome_tipo: str) -> TiposDeDocumento:
+    """Obtém ou cria o tipo de documento de imposto pelo nome, vinculado ao tipo de pagamento 'IMPOSTOS'."""
     tipo_pagamento_impostos, _ = TiposDePagamento.objects.get_or_create(
         tipo_de_pagamento__iexact="IMPOSTOS",
         defaults={"tipo_de_pagamento": "IMPOSTOS"},
@@ -97,6 +98,7 @@ def gerar_relatorio_retencoes_mensal_csv(retencoes: list, mes: int, ano: int) ->
 
 
 def _format_decimal(value) -> str:
+    """Formata valor decimal com duas casas para uso em relatórios."""
     valor = value if value is not None else Decimal("0")
     return f"{valor:.2f}"
 
@@ -112,12 +114,14 @@ def gerar_relatorio_retencoes_agrupamento_pdf(retencoes: list["RetencaoImposto"]
     passo = 14
 
     def _nova_pagina_se_necessario():
+        """Quebra a página quando a escrita alcança a margem inferior."""
         nonlocal linha
         if linha <= 48:
             pdf.showPage()
             linha = page_height - 40
 
     def _escrever(texto: str, negrito: bool = False):
+        """Escreve uma linha no PDF aplicando estilo e avanço vertical."""
         nonlocal linha
         _nova_pagina_se_necessario()
         pdf.setFont("Helvetica-Bold" if negrito else "Helvetica", 9)

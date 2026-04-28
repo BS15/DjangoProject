@@ -1,8 +1,31 @@
-"""Helpers de ingestão de documentos na etapa de cadastro pré-pagamento."""
+"""Helpers compartilhados da etapa de cadastro pré-pagamento."""
 
 import re
+from typing import Optional
 
 import PyPDF2
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import get_object_or_404
+
+from pagamentos.domain_models import Processo
+
+from ..helpers import _validar_regras_edicao_processo
+
+
+def get_status_inicial(processo: Processo) -> str:
+    """Normaliza o status textual do processo para uso nas guards da UI."""
+    return processo.status.opcao_status.upper() if processo.status else ""
+
+
+def obter_contexto_edicao(
+    request: HttpRequest,
+    pk: int,
+) -> tuple[Processo, str, Optional[HttpResponse], bool]:
+    """Carrega processo e aplica as regras de guarda compartilhadas da edição."""
+    processo = get_object_or_404(Processo, id=pk)
+    status_inicial = get_status_inicial(processo)
+    redirecionamento, somente_documentos = _validar_regras_edicao_processo(request, processo, status_inicial)
+    return processo, status_inicial, redirecionamento, somente_documentos
 
 
 def processar_pdf_boleto(pdf_file):
@@ -35,4 +58,4 @@ def processar_pdf_boleto(pdf_file):
     raise ValueError("Linha digitavel valida nao encontrada no PDF.")
 
 
-__all__ = ["processar_pdf_boleto"]
+__all__ = ["get_status_inicial", "obter_contexto_edicao", "processar_pdf_boleto"]

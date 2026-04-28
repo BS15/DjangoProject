@@ -1,3 +1,5 @@
+"""Serviços de listagem e autorização de diárias pendentes para proponentes."""
+
 from django.db.models import Prefetch
 
 from pagamentos.models import AssinaturaEletronica
@@ -8,6 +10,7 @@ STATUS_ASSINATURA_PENDENTE = 'PENDENTE'
 
 
 def listar_diarias_pendentes_para_proponente(usuario):
+    """Lista diárias pendentes de autorização vinculadas ao proponente."""
     diarias = (
         Diaria.objects
         .filter(

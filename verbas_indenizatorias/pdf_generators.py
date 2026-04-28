@@ -628,6 +628,7 @@ class TermoPrestacaoContasDocument(BasePDFDocument):
 	"""Gera termo de veracidade para prestação de contas de diária."""
 
 	def draw_content(self):
+		"""Desenha o termo de prestação de contas da diária no canvas."""
 		diaria = self.obj
 		c = self.canvas
 		width = self.page_width

@@ -1,3 +1,5 @@
+"""Validadores e regras de transição de status (turnpike) do fluxo de pagamento."""
+
 import io
 import logging
 from decimal import Decimal

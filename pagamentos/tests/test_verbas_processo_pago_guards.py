@@ -1,3 +1,5 @@
+"""Testes de guarda: valida bloqueio de operações em processo já pago."""
+
 from datetime import date
 from decimal import Decimal
 import uuid
@@ -11,6 +13,7 @@ from verbas_indenizatorias.models import AuxilioRepresentacao, Jeton, ReembolsoC
 
 
 def _credor_pf():
+    """Cria e retorna um Credor do tipo Pessoa Física com dados únicos."""
     return Credor.objects.create(
         nome=f"Credor {uuid.uuid4().hex[:6]}",
         cpf_cnpj=f"{uuid.uuid4().int % 10**11:011d}",
@@ -19,6 +22,7 @@ def _credor_pf():
 
 
 def _novo_reembolso(processo, beneficiario):
+    """Instancia ReembolsoCombustível não persistido vinculado ao processo informado."""
     return ReembolsoCombustivel(
         processo=processo,
         beneficiario=beneficiario,
@@ -34,6 +38,7 @@ def _novo_reembolso(processo, beneficiario):
 
 
 def _novo_jeton(processo, beneficiario):
+    """Instancia Jeton não persistido vinculado ao processo informado."""
     return Jeton(
         processo=processo,
         beneficiario=beneficiario,
@@ -46,6 +51,7 @@ def _novo_jeton(processo, beneficiario):
 
 
 def _novo_auxilio(processo, beneficiario):
+    """Instancia AuxilioRepresentação não persistido vinculado ao processo informado."""
     return AuxilioRepresentacao(
         processo=processo,
         beneficiario=beneficiario,
@@ -58,6 +64,7 @@ def _novo_auxilio(processo, beneficiario):
 
 
 def _marcar_processo_como_pago(processo):
+    """Altera status do processo para PAGO_EM_CONFERENCIA diretamente no banco."""
     status_pago, _ = StatusChoicesProcesso.objects.get_or_create(
         status_choice__iexact=ProcessoStatus.PAGO_EM_CONFERENCIA,
         defaults={"status_choice": ProcessoStatus.PAGO_EM_CONFERENCIA},

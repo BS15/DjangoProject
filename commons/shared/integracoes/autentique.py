@@ -11,10 +11,12 @@ AUTENTIQUE_API_TOKEN = os.getenv("AUTENTIQUE_API_TOKEN", "")
 
 
 def _get_headers():
+    """Retorna cabeçalhos HTTP com token de autorização da Autentique."""
     return {"Authorization": f"Bearer {AUTENTIQUE_API_TOKEN}"}
 
 
 def _get_robust_session():
+    """Cria sessão HTTP com retry automático para resiliência contra falhas transitórias."""
     session = requests.Session()
     retries = Retry(total=3, backoff_factor=0.5, status_forcelist=[500, 502, 503, 504])
     session.mount("https://", HTTPAdapter(max_retries=retries))

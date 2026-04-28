@@ -1,3 +1,5 @@
+"""Panels (GET-only) do domínio de reembolsos de combustível."""
+
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, render
 
@@ -10,6 +12,7 @@ from ..shared.registry import _get_tipos_documento_verbas
 
 @permission_required("pagamentos.pode_visualizar_verbas", raise_exception=True)
 def reembolsos_list_view(request):
+    """Renderiza lista paginada e filtrada de reembolsos de combustível."""
     queryset = ReembolsoCombustivel.objects.select_related("beneficiario", "status", "processo").order_by("-id")
     return render_filtered_list(
         request,
@@ -34,11 +37,13 @@ def reembolsos_list_view(request):
 
 @permission_required("pagamentos.pode_gerenciar_reembolsos", raise_exception=True)
 def add_reembolso_view(request):
+    """Renderiza formulário de cadastro de novo reembolso."""
     return render(request, "verbas/add_reembolso.html", {"form": ReembolsoForm()})
 
 
 @permission_required("pagamentos.pode_gerenciar_reembolsos", raise_exception=True)
 def gerenciar_reembolso_view(request, pk):
+    """Renderiza painel de detalhes e gestão de um reembolso específico."""
     reembolso = get_object_or_404(ReembolsoCombustivel.objects.select_related("beneficiario", "status", "processo"), id=pk)
     comprovantes = reembolso.documentos.select_related("tipo").all()
     context = {
@@ -52,6 +57,7 @@ def gerenciar_reembolso_view(request, pk):
 
 @permission_required("pagamentos.pode_gerenciar_reembolsos", raise_exception=True)
 def cancelar_reembolso_spoke_view(request, pk):
+    """Renderiza spoke de confirmação de cancelamento de reembolso."""
     reembolso = get_object_or_404(ReembolsoCombustivel.objects.select_related("beneficiario", "status", "processo"), id=pk)
     status_choice = (getattr(getattr(reembolso, "status", None), "status_choice", "") or "").upper()
     return render(request, "verbas/cancelar_reembolso_spoke.html", {

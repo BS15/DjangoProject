@@ -1,3 +1,5 @@
+"""Roteador raiz do projeto — agrega todos os sub-roteadores por domínio."""
+
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path

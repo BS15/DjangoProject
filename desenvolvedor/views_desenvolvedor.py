@@ -1,3 +1,5 @@
+"""Views de suporte ao desenvolvimento: geração de dados fictícios, PDFs de teste e inspeção de RBAC."""
+
 import csv
 import io
 import logging
@@ -696,6 +698,7 @@ def gerar_dummy_pdf_view(request, pk):
 
 
 def painel_teste_pdfs(request):
+    """Renderiza o painel de testes de geração de PDFs."""
     return render(request, "pagamentos/teste_pdfs.html")
 
 
@@ -935,7 +938,10 @@ def api_permissoes_dev_view(request):
 
 
 def gerar_pdf_fake_view(request, doc_type):
+    """Gera e retorna PDF fictício do tipo informado para validação visual de templates."""
+
     def mock_credor():
+        """Cria objeto credor fictício com dados gerados aleatoriamente."""
         c = MagicMock()
         c.nome = _fake_generator.name()
         c.cpf_cnpj = _fake_generator.cpf()
@@ -944,6 +950,7 @@ def gerar_pdf_fake_view(request, doc_type):
         return c
 
     def mock_user():
+        """Cria objeto usuário fictício com nome e username gerados aleatoriamente."""
         u = MagicMock()
         u.get_full_name.return_value = _fake_generator.name()
         u.username = _fake_generator.user_name()

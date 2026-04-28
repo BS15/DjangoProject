@@ -11,10 +11,9 @@ from credores.models import Credor
 from fiscal.models import CodigosImposto, DocumentoFiscal
 from pagamentos.domain_models import Processo, ProcessoStatus
 
-from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoCapaEdicaoForm, ProcessoForm
-from ..helpers import _validar_regras_edicao_processo
-
 from .actions import _status_bloqueia_gestao_fiscal
+from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoCapaEdicaoForm, ProcessoForm
+from .helpers import obter_contexto_edicao
 
 
 def _get_next_url(request, *, allow_referer=False):
@@ -23,21 +22,6 @@ def _get_next_url(request, *, allow_referer=False):
     if not next_url and allow_referer:
         next_url = request.META.get("HTTP_REFERER", "")
     return next_url
-
-
-def _get_status_inicial(processo):
-    """Normaliza o status textual do processo para uso nas guards da UI."""
-    return processo.status.opcao_status.upper() if processo.status else ""
-
-
-def _obter_contexto_edicao(request, pk):
-    """Carrega processo, status inicial e resultado das regras de guarda da edição."""
-    processo = get_object_or_404(Processo, id=pk)
-    status_inicial = _get_status_inicial(processo)
-    redirecionamento, somente_documentos = _validar_regras_edicao_processo(request, processo, status_inicial)
-    return processo, status_inicial, redirecionamento, somente_documentos
-
-
 def _montar_contexto_hub(processo, status_inicial, somente_documentos):
     """Monta os indicadores resumidos exibidos no hub de edição."""
     return {
@@ -89,7 +73,7 @@ def add_process_view(request):
 @permission_required("pagamentos.pode_editar_processos_pagamento", raise_exception=True)
 def editar_processo(request, pk):
     """Hub de edição modular do processo."""
-    processo, status_inicial, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
+    processo, status_inicial, redirecionamento, somente_documentos = obter_contexto_edicao(request, pk)
     if redirecionamento:
         return redirecionamento
 
@@ -102,7 +86,7 @@ def editar_processo(request, pk):
 @permission_required("pagamentos.pode_editar_processos_pagamento", raise_exception=True)
 def editar_processo_capa_view(request, pk):
     """Spoke GET de edição da capa do processo."""
-    processo, status_inicial, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
+    processo, status_inicial, redirecionamento, somente_documentos = obter_contexto_edicao(request, pk)
     if redirecionamento:
         return redirecionamento
 
@@ -131,7 +115,7 @@ def editar_processo_documentos_view(request, pk):
     """Spoke GET de edição de anexos do processo."""
     from pagamentos.views.helpers import _get_tipos_documento_para_processo
 
-    processo, status_inicial, redirecionamento, _ = _obter_contexto_edicao(request, pk)
+    processo, status_inicial, redirecionamento, _ = obter_contexto_edicao(request, pk)
     if redirecionamento:
         return redirecionamento
 
@@ -169,7 +153,7 @@ def editar_processo_documentos_view(request, pk):
 @permission_required("pagamentos.pode_editar_processos_pagamento", raise_exception=True)
 def editar_processo_pendencias_view(request, pk):
     """Spoke GET de edição de pendências do processo."""
-    processo, status_inicial, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
+    processo, status_inicial, redirecionamento, somente_documentos = obter_contexto_edicao(request, pk)
     if redirecionamento:
         return redirecionamento
 

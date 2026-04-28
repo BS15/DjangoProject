@@ -1,3 +1,5 @@
+"""URLs do núcleo do sistema: home, processos, pagamentos e contingências."""
+
 from django.urls import path
 
 from pagamentos.views import api_views as pagamentos_api_views

@@ -22,18 +22,21 @@ class SealedMutationQuerySet(models.QuerySet):
     """Bloqueia mutações em massa que contornam save/clean do domínio."""
 
     def update(self, **kwargs):
+        """Bloqueia update() em massa para proteger invariantes do domínio."""
         raise DjangoValidationError(
             "Mutações em massa via update() são proibidas neste domínio. "
             "Use métodos de entidade/serviço com validações de negócio."
         )
 
     def bulk_update(self, objs, fields, batch_size=None):
+        """Bloqueia bulk_update() em massa para proteger invariantes do domínio."""
         raise DjangoValidationError(
             "Mutações em massa via bulk_update() são proibidas neste domínio. "
             "Use métodos de entidade/serviço com validações de negócio."
         )
 
     def bulk_create(self, objs, batch_size=None, ignore_conflicts=False, update_conflicts=False, update_fields=None, unique_fields=None):
+        """Bloqueia bulk_create() em massa para proteger invariantes do domínio."""
         raise DjangoValidationError(
             "Inserções em massa via bulk_create() são proibidas neste domínio. "
             "Use criação canônica por entidade para garantir invariantes."
@@ -125,6 +128,7 @@ class SuprimentoDeFundos(models.Model):
             raise DjangoValidationError(errors)
 
     def _enforce_domain_seal(self, update_fields=None):
+        """Bloqueia alterações em campos sensíveis quando o processo está pós-pagamento."""
         if not self.pk or not _is_processo_selado(self.processo):
             return
 
@@ -144,11 +148,13 @@ class SuprimentoDeFundos(models.Model):
             )
 
     def save(self, *args, **kwargs):
+        """Aplica domain seal, valida e persiste o suprimento."""
         self._enforce_domain_seal(update_fields=kwargs.get("update_fields"))
         self.full_clean()
         return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
+        """Bloqueia exclusão de suprimento vinculado a processo pós-pagamento."""
         self._enforce_domain_seal()
         return super().delete(*args, **kwargs)
 
@@ -208,6 +214,7 @@ class DespesaSuprimento(models.Model):
     objects = SealedMutationQuerySet.as_manager()
 
     def _enforce_domain_seal(self, update_fields=None):
+        """Bloqueia alterações em campos sensíveis quando o processo está pós-pagamento."""
         if not self.pk:
             return
 
@@ -240,11 +247,13 @@ class DespesaSuprimento(models.Model):
             )
 
     def save(self, *args, **kwargs):
+        """Aplica domain seal, valida e persiste a despesa."""
         self._enforce_domain_seal(update_fields=kwargs.get("update_fields"))
         self.full_clean()
         return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
+        """Bloqueia exclusão de despesa vinculada a processo pós-pagamento."""
         self._enforce_domain_seal()
         return super().delete(*args, **kwargs)
 

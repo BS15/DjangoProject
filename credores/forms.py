@@ -3,8 +3,6 @@
 Este módulo define formulários para entrada, edição e validação de dados de credores e contas bancárias.
 """
 
-import re
-
 from django import forms
 from django.contrib.auth import get_user_model
 
@@ -26,6 +24,7 @@ class CredorForm(forms.ModelForm):
     """Formulário de cadastro de credores com dados bancários e serviço padrão."""
 
     def __init__(self, *args, **kwargs):
+        """Inicializa o formulário filtrando usuários ainda não vinculados a credor."""
         super().__init__(*args, **kwargs)
         self.fields['usuario'].queryset = _usuarios_disponiveis()
         self.fields['usuario'].empty_label = "— Sem usuário vinculado —"
@@ -46,25 +45,11 @@ class CredorForm(forms.ModelForm):
             'usuario': forms.Select(attrs={'class': 'form-select'}),
         }
 
-    def clean_cpf_cnpj(self):
-        """Valida tamanho do documento conforme tipo de pessoa selecionado."""
-        valor = self.cleaned_data.get('cpf_cnpj', '')
-        tipo = self.cleaned_data.get('tipo')
-        documento = re.sub(r'\D', '', valor)
-
-        if tipo == 'PF' and len(documento) != 11:
-            raise forms.ValidationError('Para Pessoa Física, informe um CPF com 11 dígitos.')
-
-        if tipo == 'PJ' and len(documento) != 14:
-            raise forms.ValidationError('Para Pessoa Jurídica, informe um CNPJ com 14 dígitos.')
-
-        return valor
-
-
 class CredorEditForm(forms.ModelForm):
     """Formulário de manutenção sem permitir alteração de CPF/CNPJ e tipo."""
 
     def __init__(self, *args, **kwargs):
+        """Inicializa o formulário de edição preservando o usuário do credor atual."""
         super().__init__(*args, **kwargs)
         instance = kwargs.get('instance')
         credor_pk = instance.pk if instance else None

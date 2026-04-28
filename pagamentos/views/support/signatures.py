@@ -1,3 +1,5 @@
+"""Views de painel e disparo de assinaturas eletrônicas."""
+
 import logging
 
 from django.contrib import messages

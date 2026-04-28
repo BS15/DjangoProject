@@ -1,7 +1,6 @@
 """Acoes POST da etapa de documentos fiscais do cadastro."""
 
 import logging
-from typing import Optional
 from datetime import date, datetime
 import PyPDF2
 
@@ -9,7 +8,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.db import DatabaseError, transaction
 from django.http import HttpRequest, HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 
 from decimal import Decimal, InvalidOperation
@@ -28,11 +27,11 @@ from pagamentos.domain_models import (
     ProcessoStatus,
 )
 from .helpers import processar_pdf_boleto
+from .helpers import obter_contexto_edicao
 from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoCapaEdicaoForm, ProcessoForm
 from ..helpers import (
     _redirect_seguro_ou_fallback,
     _salvar_processo_completo,
-    _validar_regras_edicao_processo,
 )
 
 
@@ -68,19 +67,6 @@ def _mensagens_validacao_formset_documentos(documento_formset: DocumentoFormSet)
             mensagens.append(f"Documento {idx} - {rotulo_campo}: {erros_linha}")
 
     return mensagens
-
-
-def _get_status_inicial(processo):
-    return processo.status.opcao_status.upper() if processo.status else ""
-
-
-def _obter_contexto_edicao(request: HttpRequest, pk: int) -> tuple[Processo, str, Optional[HttpResponse], bool]:
-    processo = get_object_or_404(Processo, id=pk)
-    status_inicial = _get_status_inicial(processo)
-    redirecionamento, somente_documentos = _validar_regras_edicao_processo(request, processo, status_inicial)
-    return processo, status_inicial, redirecionamento, somente_documentos
-
-
 def _salvar_formsets_em_transacao(*formsets):
     with transaction.atomic():
         for formset in formsets:
@@ -206,7 +192,7 @@ def add_process_action(request: HttpRequest) -> HttpResponse:
 @permission_required("pagamentos.pode_editar_processos_pagamento", raise_exception=True)
 def editar_processo_capa_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Persiste alterações da capa do processo."""
-    processo, status_inicial, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
+    processo, status_inicial, redirecionamento, somente_documentos = obter_contexto_edicao(request, pk)
     if redirecionamento:
         return redirecionamento
     if somente_documentos:
@@ -238,7 +224,7 @@ def editar_processo_capa_action(request: HttpRequest, pk: int) -> HttpResponse:
 @permission_required("pagamentos.pode_editar_processos_pagamento", raise_exception=True)
 def editar_processo_documentos_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Persiste anexos e documentos orçamentários do processo."""
-    processo, _, redirecionamento, _ = _obter_contexto_edicao(request, pk)
+    processo, _, redirecionamento, _ = obter_contexto_edicao(request, pk)
     if redirecionamento:
         return redirecionamento
 

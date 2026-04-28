@@ -1627,10 +1627,10 @@
 </thead>
 <tbody>
 <tr>
-<td>Cadastro e edição geral de processos, documentos, pendências, devoluções e abertura de contingências</td>
+<td>Cadastro e edição de capa, documentos e pendências no pré-pagamento</td>
 <td><code>pagamentos.pode_editar_processos_pagamento</code></td>
 <td>Operador Financeiro Backoffice</td>
-<td>Alteração indevida de dados processuais, anexos e exceções do fluxo sem competência operacional.</td>
+<td>Alteração indevida de dados processuais e anexos na fase de preparação do processo.</td>
 </tr>
 <tr>
 <td>Empenho, avanço para pagamento, contas a pagar, lançamento bancário, conferência, sync SISCAC e APIs operacionais de comprovantes</td>
@@ -1640,9 +1640,9 @@
 </tr>
 <tr>
 <td>Ateste de notas fiscais na etapa de liquidação</td>
-<td><code>pagamentos.pode_atestar_liquidacao</code></td>
-<td>Fiscal de Contrato</td>
-<td>Liquidação documental sem validação do fiscal responsável, com risco de pagamento indevido.</td>
+<td>Acesso contextual por vínculo do fiscal na liquidação; fallback de backoffice por <code>pagamentos.operador_contas_a_pagar</code></td>
+<td>Fiscal de Contrato da liquidação ou backoffice de contas a pagar</td>
+<td>Liquidação documental sem validação do fiscal responsável da nota, com risco de pagamento indevido.</td>
 </tr>
 <tr>
 <td>Autorização e recusa de pagamentos</td>
@@ -1651,10 +1651,16 @@
 <td>Liberação ou bloqueio indevido de despesa sem autoridade formal de ordenação.</td>
 </tr>
 <tr>
-<td>Aprovação de contingências na etapa de supervisão/gerência</td>
-<td><code>pagamentos.pode_aprovar_contingencia_supervisor</code></td>
-<td>Supervisor/Gerência de Contas a Pagar</td>
-<td>Aprovação excepcional de alteração processual sem revisão hierárquica adequada.</td>
+<td>Ações de suporte (pendências em lote, devolução processual e abertura de contingência)</td>
+<td><code>pagamentos.operador_contas_a_pagar</code></td>
+<td>Funcionário(a) Contas a Pagar</td>
+<td>Mutação indevida de registros de suporte e exceções processuais sem trilha operacional apropriada.</td>
+</tr>
+<tr>
+<td>Aprovação/rejeição de contingências por etapa</td>
+<td><code>pagamentos.operador_contas_a_pagar</code> + permissão da etapa (<code>pagamentos.pode_aprovar_contingencia_supervisor</code>, <code>pagamentos.pode_aprovar_contingencia_ordenador</code>, <code>pagamentos.pode_aprovar_contingencia_conselho</code>, <code>pagamentos.pode_revisar_contingencia_contadora</code>)</td>
+<td>Supervisor/Gerência, Ordenador, Conselho Fiscal ou Contadora conforme etapa corrente</td>
+<td>Aprovação excepcional de alteração processual sem validação da autoridade correta na etapa vigente.</td>
 </tr>
 <tr>
 <td>Contabilização e recusa contábil de processos pagos</td>

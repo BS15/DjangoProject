@@ -1,3 +1,5 @@
+"""URLs do backoffice: credores, suprimentos, relatórios e assinaturas."""
+
 from django.urls import path
 
 from credores import imports as credores_import_views
