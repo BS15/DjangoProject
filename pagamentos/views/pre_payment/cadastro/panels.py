@@ -189,6 +189,7 @@ def editar_processo_pendencias_view(request, pk):
     )
 
 
+@require_GET
 @permission_required("pagamentos.pode_editar_processos_pagamento", raise_exception=True)
 def documentos_fiscais_view(request, pk):
     """Renderiza a tela de gestão de documentos fiscais de um processo."""

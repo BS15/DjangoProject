@@ -1,62 +1,45 @@
-{% extends "base.html" %}
+{% extends "layouts/base_form.html" %}
 
 {% block page_title %}Pendências — Processo #{{ processo.id }}{% endblock %}
 
-{% block content %}
-<div class="container mt-4 mb-5">
-	<div class="d-flex justify-content-between align-items-center mb-4">
-		<div>
-			<h4 class="mb-0 fw-bold"><i class="bi bi-exclamation-triangle text-warning me-2"></i> Pendências — Processo #{{ processo.id }}</h4>
-			<p class="text-muted mb-0">{{ processo.credor|default:"-" }} &mdash; {{ status_inicial }}</p>
-		</div>
-		<a href="{% url 'editar_processo' pk=processo.id %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+{% block page_heading %}<i class="bi bi-exclamation-triangle text-warning me-2"></i> Pendências — Processo #{{ processo.id }}{% endblock %}
+{% block page_subtitle %}{{ processo.credor|default:"-" }} &mdash; {{ status_inicial }}{% endblock %}
+{% block page_actions %}
+<a href="{% url 'editar_processo' pk=processo.id %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+{% endblock %}
+{% block form_action %}{% url 'editar_processo_pendencias_action' pk=processo.id %}{% endblock %}
+{% block form_fields %}
+{{ pendencia_formset.management_form }}
+<div class="card shadow-sm border-0 mb-4">
+	<div class="card-header bg-white border-bottom py-3">
+		<h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-list-check"></i> Pendências</h6>
 	</div>
-
-	{% if messages %}
-	{% for message in messages %}
-	<div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-		{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+	<div class="card-body p-0">
+		<table class="table table-hover align-middle mb-0">
+			<thead class="table-dark">
+				<tr>
+					<th>Descrição</th>
+					<th>Status</th>
+					<th>Responsável</th>
+					<th class="text-center">Remover</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for form in pendencia_formset %}
+				<tr>
+					{{ form.id }}
+					<td>{{ form.descricao }}</td>
+					<td>{{ form.status }}</td>
+					<td>{{ form.responsavel }}</td>
+					<td class="text-center">{{ form.DELETE }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
 	</div>
-	{% endfor %}
-	{% endif %}
-
-	<form method="post" action="{% url 'editar_processo_pendencias_action' pk=processo.id %}">
-		{% csrf_token %}
-		{{ pendencia_formset.management_form }}
-
-		<div class="card shadow-sm border-0 mb-4">
-			<div class="card-header bg-white border-bottom py-3">
-				<h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-list-check"></i> Pendências</h6>
-			</div>
-			<div class="card-body p-0">
-				<table class="table table-hover align-middle mb-0">
-					<thead class="table-dark">
-						<tr>
-							<th>Descrição</th>
-							<th>Status</th>
-							<th>Responsável</th>
-							<th class="text-center">Remover</th>
-						</tr>
-					</thead>
-					<tbody>
-						{% for form in pendencia_formset %}
-						<tr>
-							{{ form.id }}
-							<td>{{ form.descricao }}</td>
-							<td>{{ form.status }}</td>
-							<td>{{ form.responsavel }}</td>
-							<td class="text-center">{{ form.DELETE }}</td>
-						</tr>
-						{% endfor %}
-					</tbody>
-				</table>
-			</div>
-		</div>
-
-		<div class="d-flex gap-2">
-			<button type="submit" class="btn btn-success fw-bold"><i class="bi bi-floppy"></i> Salvar Pendências</button>
-			<a href="{{ next_url|default:'/' }}" class="btn btn-outline-secondary">Cancelar</a>
-		</div>
-	</form>
 </div>
+{% endblock %}
+{% block form_actions %}
+<button type="submit" class="btn btn-success fw-bold"><i class="bi bi-floppy"></i> Salvar Pendências</button>
+<a href="{{ next_url|default:'/' }}" class="btn btn-outline-secondary">Cancelar</a>
 {% endblock %}

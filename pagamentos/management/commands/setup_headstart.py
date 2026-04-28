@@ -73,6 +73,12 @@ GRUPOS_PERMISSOES = {
     ],
 }
 
+GRUPOS_LEGADOS_SUPRIMENTOS = [
+    "OPERADOR(A) DE SUPRIMENTOS - DESPESAS",
+    "OPERADOR(A) DE SUPRIMENTOS - ENCERRAMENTO",
+    "GESTOR(A) DE PRESTACAO DE CONTAS DE SUPRIMENTO",
+]
+
 
 
 def _normalizar_rotulo(valor: str) -> str:
@@ -97,6 +103,7 @@ class Command(BaseCommand):
         docs_reatribuidos = 0
         grupos_criados = 0
         grupos_atualizados = 0
+        grupos_legados_removidos = 0
         permissoes_vinculadas = 0
         permissoes_ausentes = 0
 
@@ -230,13 +237,23 @@ class Command(BaseCommand):
                 grupo.permissions.add(permissao)
                 permissoes_vinculadas += 1
 
+        grupos_legados_qs = Group.objects.filter(name__in=GRUPOS_LEGADOS_SUPRIMENTOS)
+        grupos_legados_removidos = grupos_legados_qs.count()
+        if grupos_legados_removidos:
+            grupos_legados_qs.delete()
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Grupos legados removidos: {grupos_legados_removidos}"
+                )
+            )
+
         self.stdout.write(
             self.style.SUCCESS(
                 "Headstart concluído. "
                 f"Formas (criadas={formas_criadas}, atualizadas={formas_atualizadas}) | "
                 f"Tipos (criadas={tipos_criados}, atualizadas={tipos_atualizados}) | "
                 f"Docs CONTAS FIXAS (criadas={docs_criados}, atualizadas={docs_atualizados}, reatribuidas={docs_reatribuidos}) | "
-                f"Grupos (criados={grupos_criados}, atualizados={grupos_atualizados}, "
+                f"Grupos (criados={grupos_criados}, atualizados={grupos_atualizados}, legados_removidos={grupos_legados_removidos}, "
                 f"permissoes_vinculadas={permissoes_vinculadas}, permissoes_ausentes={permissoes_ausentes})"
             )
         )

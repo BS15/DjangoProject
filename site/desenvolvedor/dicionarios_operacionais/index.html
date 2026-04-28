@@ -3636,12 +3636,12 @@
 <td><code>add_conta_fixa_action</code></td>
 <td><code>pagamentos/views/support/contas_fixas/actions.py</code></td>
 <td><code>add_conta_fixa_action</code> (<code>/contas-fixas/nova/action/</code>)</td>
-<td>não implementado no codebase (<code>actions.py/</code> vazio)</td>
+<td><code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
 <td>dados da conta fixa</td>
 <td>validação de formulário</td>
-<td>não implementado no codebase (<code>actions.py/</code> vazio)</td>
-<td>cria conta/fatura</td>
+<td><code>ContaFixaForm.save()</code></td>
+<td>cria conta fixa</td>
 <td>painel de contas fixas</td>
 <td><code>messages</code> success/error</td>
 </tr>
@@ -3649,12 +3649,12 @@
 <td><code>edit_conta_fixa_action</code></td>
 <td><code>pagamentos/views/support/contas_fixas/actions.py</code></td>
 <td><code>edit_conta_fixa_action</code> (<code>/contas-fixas/&lt;int:pk&gt;/editar/action/</code>)</td>
-<td>não implementado no codebase (<code>actions.py/</code> vazio)</td>
+<td><code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
 <td>atualização de conta fixa</td>
 <td>validação de formulário</td>
-<td>não implementado no codebase (<code>actions.py/</code> vazio)</td>
-<td>atualiza conta/fatura</td>
+<td><code>ContaFixaForm.save()</code></td>
+<td>atualiza conta fixa</td>
 <td>painel de contas fixas</td>
 <td><code>messages</code> success/error</td>
 </tr>
@@ -3662,11 +3662,11 @@
 <td><code>vincular_processo_fatura_action</code></td>
 <td><code>pagamentos/views/support/contas_fixas/actions.py</code></td>
 <td><code>vincular_processo_fatura</code> (<code>/contas-fixas/&lt;int:fatura_id&gt;/vincular/</code>)</td>
-<td>não implementado no codebase (<code>actions.py/</code> vazio)</td>
+<td><code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
 <td>fatura e processo alvo</td>
 <td>validação de vínculo permitido</td>
-<td>não implementado no codebase (<code>actions.py/</code> vazio)</td>
+<td><code>FaturaMensal.save(update_fields=["processo_vinculado"])</code></td>
 <td>vincula fatura a processo</td>
 <td>painel de contas fixas</td>
 <td><code>messages</code> success/error</td>
@@ -3675,12 +3675,12 @@
 <td><code>excluir_conta_fixa_action</code></td>
 <td><code>pagamentos/views/support/contas_fixas/actions.py</code></td>
 <td><code>excluir_conta_fixa</code> (<code>/contas-fixas/&lt;int:pk&gt;/excluir/</code>)</td>
-<td>não implementado no codebase (<code>actions.py/</code> vazio)</td>
+<td><code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
 <td>conta fixa alvo</td>
-<td>validação de exclusão permitida</td>
-<td>não implementado no codebase (<code>actions.py/</code> vazio)</td>
-<td>remove/desativa vínculo conforme regra do módulo</td>
+<td>validação de conta existente</td>
+<td><code>ContaFixa.save(update_fields=["ativa"])</code></td>
+<td>inativa conta fixa (soft delete)</td>
 <td>painel de contas fixas</td>
 <td><code>messages</code> success/error</td>
 </tr>

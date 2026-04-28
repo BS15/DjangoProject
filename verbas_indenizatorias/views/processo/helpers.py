@@ -198,7 +198,7 @@ def _montar_cards_documentos_verba(*, diarias, reembolsos, jetons, auxilios):
 
 def _montar_contexto_processo_verbas(processo, *, processo_form=None, pendencia_formset=None):
     """Monta contexto consolidado usado no hub e spokes de verbas."""
-    totais = _forcar_campos_canonicos_processo_verbas(processo)
+    totais = _calcular_totais_verbas(processo)
 
     diarias = Diaria.objects.filter(processo=processo).select_related("beneficiario", "status").prefetch_related("prestacao_contas__documentos__tipo")
     reembolsos = ReembolsoCombustivel.objects.filter(processo=processo).select_related("beneficiario", "status").prefetch_related("documentos__tipo")

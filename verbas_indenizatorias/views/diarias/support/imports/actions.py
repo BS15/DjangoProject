@@ -2,7 +2,7 @@
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 
 from verbas_indenizatorias.services.diarias_importacao import (
@@ -11,7 +11,9 @@ from verbas_indenizatorias.services.diarias_importacao import (
 )
 
 _PREVIEW_SESSION_KEY = "importar_diarias_preview"
+_PREVIEW_ERRORS_SESSION_KEY = "importar_diarias_preview_erros"
 _MODE_SESSION_KEY = "importar_diarias_modo_assinado"
+_RESULTS_SESSION_KEY = "importar_diarias_resultados"
 
 
 @require_POST
@@ -33,17 +35,14 @@ def importar_diarias_action(request):
             request.user,
             solicitacao_assinada=modo_assinado,
         )
-        return render(
-            request,
-            "verbas/importar_diarias.html",
-            {
-                "resultados": resultados,
-                "modo_solicitacao_assinada": modo_assinado,
-            },
-        )
+        request.session[_RESULTS_SESSION_KEY] = resultados
+        request.session[_MODE_SESSION_KEY] = modo_assinado
+        return redirect("importar_diarias")
 
     if action == "cancelar":
         request.session.pop(_PREVIEW_SESSION_KEY, None)
+        request.session.pop(_PREVIEW_ERRORS_SESSION_KEY, None)
+        request.session.pop(_RESULTS_SESSION_KEY, None)
         request.session.pop(_MODE_SESSION_KEY, None)
         return redirect("importar_diarias")
 
@@ -51,16 +50,10 @@ def importar_diarias_action(request):
         resultado_preview = preview_diarias_lote(request.FILES["csv_file"])
         modo_assinado = request.POST.get("modo_solicitacao_assinada") == "on"
         request.session[_PREVIEW_SESSION_KEY] = resultado_preview["preview"]
+        request.session[_PREVIEW_ERRORS_SESSION_KEY] = resultado_preview["erros"]
         request.session[_MODE_SESSION_KEY] = modo_assinado
-        return render(
-            request,
-            "verbas/importar_diarias.html",
-            {
-                "preview": resultado_preview["preview"],
-                "erros_preview": resultado_preview["erros"],
-                "modo_solicitacao_assinada": modo_assinado,
-            },
-        )
+        request.session.pop(_RESULTS_SESSION_KEY, None)
+        return redirect("importar_diarias")
 
     messages.error(request, "Nenhum arquivo CSV foi enviado para importacao.")
     return redirect("importar_diarias")

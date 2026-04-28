@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.db import DatabaseError, transaction
 from django.http import HttpRequest, HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
 from decimal import Decimal, InvalidOperation
@@ -180,17 +180,11 @@ def add_process_action(request: HttpRequest) -> HttpResponse:
     trigger_a_empenhar = request.POST.get("trigger_a_empenhar") == "on"
 
     if not processo_form.is_valid():
+        for field_errors in processo_form.errors.values():
+            for err in field_errors:
+                messages.error(request, err)
         messages.error(request, "Verifique os erros no formulário da capa do processo.")
-        return render(
-            request,
-            "pagamentos/add_process.html",
-            {
-                "processo_form": processo_form,
-                "next_url": next_url,
-                "trigger_a_empenhar_checked": trigger_a_empenhar,
-            },
-            status=400,
-        )
+        return redirect("add_process")
 
     try:
         def mutator(processo_instancia):

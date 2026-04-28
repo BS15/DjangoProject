@@ -2,10 +2,12 @@
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 
 from verbas_indenizatorias.services.diarias_sync import sincronizar_numero_siscac_csv
+
+_SYNC_RESULTS_SESSION_KEY = "sincronizar_diarias_resultados"
 
 
 @require_POST
@@ -22,8 +24,9 @@ def sincronizar_diarias_action(request):
         messages.success(request, f"{resultados['atualizadas']} diaria(s) sincronizada(s) com sucesso.")
     if resultados["erros"]:
         messages.warning(request, f"Sincronizacao concluida com {len(resultados['erros'])} erro(s).")
+    request.session[_SYNC_RESULTS_SESSION_KEY] = resultados
 
-    return render(request, "verbas/sincronizar_diarias.html", {"resultados": resultados})
+    return redirect("sincronizar_diarias")
 
 
 __all__ = ["sincronizar_diarias_action"]

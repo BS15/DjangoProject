@@ -168,6 +168,7 @@ def solicitar_autorizacao_diaria_action(request, pk):
 
 
 @require_POST
+@permission_required('pagamentos.pode_gerenciar_diarias', raise_exception=True)
 def autorizar_diaria_action(request, pk):
     diaria = get_object_or_404(Diaria, id=pk)
     if diaria.proponente_id != request.user.id:
@@ -237,6 +238,7 @@ def registrar_comprovante_action(request, pk):
 
 
 @require_POST
+@permission_required('pagamentos.pode_visualizar_verbas', raise_exception=True)
 def encerrar_prestacao_action(request, pk):
     with transaction.atomic():
         diaria = get_object_or_404(Diaria.objects.select_for_update().select_related('beneficiario'), id=pk)
@@ -257,6 +259,7 @@ def encerrar_prestacao_action(request, pk):
 
 
 @require_POST
+@permission_required('pagamentos.operador_contas_a_pagar', raise_exception=True)
 def vincular_diaria_processo_action(request, pk):
     if not _pode_gerenciar_vinculo_diaria(request.user):
         return HttpResponseForbidden("Acesso negado para vinculação de diárias.")
@@ -288,6 +291,7 @@ def vincular_diaria_processo_action(request, pk):
 
 
 @require_POST
+@permission_required('pagamentos.operador_contas_a_pagar', raise_exception=True)
 def desvincular_diaria_processo_action(request, pk):
     if not _pode_gerenciar_vinculo_diaria(request.user):
         return HttpResponseForbidden("Acesso negado para desvinculação de diárias.")

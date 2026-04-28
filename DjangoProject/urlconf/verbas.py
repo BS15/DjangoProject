@@ -3,6 +3,8 @@ from django.urls import path
 from verbas_indenizatorias.views.processo import actions as verbas_actions
 from verbas_indenizatorias.views.processo import apis as verbas_apis
 from verbas_indenizatorias.views.processo import panels as verbas_panels
+from verbas_indenizatorias.views.solicitacoes import actions as verbas_solicitacoes_actions
+from verbas_indenizatorias.views.solicitacoes import panels as verbas_solicitacoes_panels
 from verbas_indenizatorias.views.auxilios import actions as verbas_auxilio_actions
 from verbas_indenizatorias.views.auxilios import panels as verbas_auxilio_panels
 from verbas_indenizatorias.views.diarias import actions as verbas_diarias_actions
@@ -62,9 +64,9 @@ urlpatterns = [
     path('verbas/prestacoes/<int:pk>/revisar/', verbas_diarias_panels.revisar_prestacao_view, name='revisar_prestacao'),
     path('verbas/prestacoes/<int:pk>/aceitar/', verbas_diarias_actions.aceitar_prestacao_action, name='aceitar_prestacao_action'),
     path('verbas/diarias/<int:pk>/cancelar/action/', verbas_diarias_actions.cancelar_diaria_action, name='cancelar_diaria_action'),
-    path('verbas/solicitacoes/revisar/', verbas_panels.painel_revisar_solicitacoes_view, name='painel_revisar_solicitacoes'),
-    path('verbas/solicitacoes/<str:tipo_verba>/<int:pk>/revisar/', verbas_panels.revisar_solicitacao_verba_view, name='revisar_solicitacao_verba'),
-    path('verbas/solicitacoes/<str:tipo_verba>/<int:pk>/aprovar-revisao/', verbas_actions.aprovar_revisao_solicitacao_action, name='aprovar_revisao_solicitacao_action'),
+    path('verbas/solicitacoes/revisar/', verbas_solicitacoes_panels.painel_revisar_solicitacoes_view, name='painel_revisar_solicitacoes'),
+    path('verbas/solicitacoes/<str:tipo_verba>/<int:pk>/revisar/', verbas_solicitacoes_panels.revisar_solicitacao_verba_view, name='revisar_solicitacao_verba'),
+    path('verbas/solicitacoes/<str:tipo_verba>/<int:pk>/aprovar-revisao/', verbas_solicitacoes_actions.aprovar_revisao_solicitacao_action, name='aprovar_revisao_solicitacao_action'),
 
     # Contingências de Diárias
     path('verbas/diarias/contingencias/', contingencia_panels.painel_contingencias_diarias_view, name='painel_contingencias_diarias'),

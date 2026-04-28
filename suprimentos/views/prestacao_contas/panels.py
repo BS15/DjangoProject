@@ -10,7 +10,6 @@ from django.views.decorators.http import require_GET
 
 from pagamentos.views.helpers import _resolver_parametros_ordenacao
 from suprimentos.models import PrestacaoContasSuprimento, SuprimentoDeFundos
-from suprimentos.services.prestacao import obter_ou_criar_prestacao_suprimento
 from ..helpers import _pode_acessar_suprimento, _suprimento_encerrado
 from suprimentos.forms import DespesaSuprimentoForm, EnviarPrestacaoSuprimentoForm
 
@@ -42,6 +41,7 @@ def painel_suprimentos_view(request: HttpRequest) -> HttpResponse:
 
 
 @require_GET
+@permission_required("suprimentos.pode_adicionar_despesas_suprimento", raise_exception=True)
 def gerenciar_suprimento_view(request: HttpRequest, pk: int) -> HttpResponse:
     """Exibe detalhes operacionais read-only de um suprimento e suas despesas."""
     suprimento: Any = get_object_or_404(SuprimentoDeFundos.objects.select_related("suprido"), id=pk)
@@ -49,7 +49,12 @@ def gerenciar_suprimento_view(request: HttpRequest, pk: int) -> HttpResponse:
     if not is_backoffice and not _pode_acessar_suprimento(request.user, suprimento):
         raise PermissionDenied
     despesas = suprimento.despesas.all().order_by("data", "id")
-    prestacao = obter_ou_criar_prestacao_suprimento(suprimento)
+    prestacao = PrestacaoContasSuprimento.objects.filter(suprimento=suprimento).first()
+    if prestacao is None:
+        prestacao = PrestacaoContasSuprimento(
+            suprimento=suprimento,
+            status=PrestacaoContasSuprimento.STATUS_ABERTA,
+        )
 
     pode_editar = (
         not _suprimento_encerrado(suprimento)
@@ -82,6 +87,7 @@ def cancelar_suprimento_spoke_view(request: HttpRequest, pk: int) -> HttpRespons
 
 
 @require_GET
+@permission_required("suprimentos.pode_adicionar_despesas_suprimento", raise_exception=True)
 def adicionar_despesa_view(request: HttpRequest, pk: int) -> HttpResponse:
     """Exibe spoke dedicada para registro de nova despesa de suprimento."""
     suprimento: Any = get_object_or_404(SuprimentoDeFundos.objects.select_related("suprido"), id=pk)

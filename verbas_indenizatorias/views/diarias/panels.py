@@ -11,12 +11,18 @@ from verbas_indenizatorias.forms import ComprovanteDiariaFormSet, DiariaComSolic
 from verbas_indenizatorias.models import Diaria, PrestacaoContasDiaria
 from verbas_indenizatorias.filters import DiariaFilter
 from verbas_indenizatorias.services.autorizacao_diarias import listar_diarias_pendentes_para_proponente
-from verbas_indenizatorias.services.prestacao import obter_ou_criar_prestacao
 from .access import _pode_acessar_prestacao, _pode_gerenciar_vinculo_diaria
 from ..shared.registry import _get_tipos_documento_verbas
 
 
 PRESTACAO_REVIEW_QUEUE_KEY = 'prestacoes_review_queue'
+
+
+def _obter_prestacao_sem_criar(diaria):
+    try:
+        return diaria.prestacao_contas
+    except PrestacaoContasDiaria.DoesNotExist:
+        return None
 
 
 def _processos_vinculaveis_queryset():
@@ -89,8 +95,8 @@ def add_diaria_assinada_view(request):
 @permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
 def gerenciar_diaria_view(request, pk):
     diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status', 'processo', 'prestacao_contas'), id=pk)
-    prestacao = obter_ou_criar_prestacao(diaria)
-    comprovantes = prestacao.documentos.select_related('tipo').all()
+    prestacao = _obter_prestacao_sem_criar(diaria)
+    comprovantes = prestacao.documentos.select_related('tipo').all() if prestacao else []
 
     context = {
         'diaria': diaria,
@@ -145,6 +151,7 @@ def cancelar_diaria_spoke_view(request, pk):
 
 
 @require_GET
+@permission_required("pagamentos.pode_visualizar_verbas", raise_exception=True)
 def minha_prestacao_list_view(request):
     from credores.models import Credor
 
@@ -187,13 +194,18 @@ def minha_prestacao_list_view(request):
 
 
 @require_GET
+@permission_required("pagamentos.pode_visualizar_verbas", raise_exception=True)
 def gerenciar_prestacao_view(request, pk):
     diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status', 'processo', 'prestacao_contas'), id=pk)
     if not _pode_acessar_prestacao(request.user, diaria):
         return HttpResponseForbidden("Acesso negado para prestação de contas desta diária.")
 
-    prestacao = obter_ou_criar_prestacao(diaria)
-    comprovantes = prestacao.documentos.select_related('tipo').all()
+    prestacao = _obter_prestacao_sem_criar(diaria)
+    if prestacao is None:
+        prestacao = PrestacaoContasDiaria(diaria=diaria, status=PrestacaoContasDiaria.STATUS_ABERTA)
+        comprovantes = []
+    else:
+        comprovantes = prestacao.documentos.select_related('tipo').all()
     pode_editar = prestacao.status == PrestacaoContasDiaria.STATUS_ABERTA
     comprovante_formset = ComprovanteDiariaFormSet(instance=prestacao, prefix='comprovante')
 
@@ -204,12 +216,13 @@ def gerenciar_prestacao_view(request, pk):
         'tipos_documento': _get_tipos_documento_verbas(),
         'pode_editar': pode_editar,
         'comprovante_formset': comprovante_formset,
-        'total_docs_prestacao': prestacao.documentos.count(),
+        'total_docs_prestacao': prestacao.documentos.count() if prestacao.pk else 0,
     }
     return render(request, 'verbas/gerenciar_prestacao.html', context)
 
 
 @require_GET
+@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
 def painel_autorizacao_diarias_view(request):
     diarias_pendentes = listar_diarias_pendentes_para_proponente(request.user)
     ordem = request.GET.get('ordem', 'numero_sequencial')
@@ -313,6 +326,7 @@ def revisar_prestacao_view(request, pk):
     return render(request, 'verbas/revisar_prestacao.html', context)
 
 
+@require_GET
 @permission_required("pagamentos.pode_importar_diarias", raise_exception=True)
 def download_template_diarias_csv(request):
     """Baixa um CSV-modelo para importação de diárias."""

@@ -4,41 +4,8 @@ from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
 from pagamentos.domain_models import Processo
-from pagamentos.forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoForm
-from pagamentos.views.helpers import _resolver_parametros_ordenacao
-from verbas_indenizatorias.constants import STATUS_VERBA_APROVADA
+from pagamentos.forms import DocumentoFormSet, PendenciaFormSet, ProcessoForm
 from .helpers import _montar_contexto_processo_verbas, _pode_gerenciar_processo_verbas_da_entidade
-from ..shared.registry import _VERBA_CONFIG
-
-
-_SOLICITACAO_LABELS = {
-    "diaria": "Diária",
-    "reembolso": "Reembolso",
-    "jeton": "Jeton",
-    "auxilio": "Auxílio",
-}
-def _resumo_solicitacao(tipo_verba, solicitacao):
-    """Normaliza dados de exibição da solicitação para fila e tela de revisão."""
-    if tipo_verba == "diaria":
-        data_saida = solicitacao.data_saida.strftime("%d/%m/%Y") if solicitacao.data_saida else "-"
-        data_retorno = solicitacao.data_retorno.strftime("%d/%m/%Y") if solicitacao.data_retorno else "-"
-        referencia = f"{solicitacao.numero_siscac or solicitacao.id} — {data_saida} a {data_retorno}"
-    elif tipo_verba == "jeton":
-        referencia = f"{solicitacao.numero_sequencial} — Reunião {solicitacao.reuniao}"
-    elif tipo_verba == "auxilio":
-        referencia = f"{solicitacao.numero_sequencial} — {solicitacao.objetivo or 'Representação'}"
-    else:
-        referencia = f"{solicitacao.numero_sequencial} — {solicitacao.cidade_origem} → {solicitacao.cidade_destino}"
-
-    return {
-        "id": solicitacao.id,
-        "tipo_verba": tipo_verba,
-        "tipo_label": _SOLICITACAO_LABELS[tipo_verba],
-        "beneficiario_nome": getattr(solicitacao.beneficiario, "nome", "-"),
-        "status": solicitacao.status,
-        "referencia": referencia,
-        "valor_total": solicitacao.valor_total,
-    }
 
 
 @require_GET
@@ -48,6 +15,7 @@ def verbas_panel_view(request):
 
 
 @require_GET
+@permission_required("pagamentos.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas_view(request, pk):
     """Hub de edição para processos de verbas indenizatórias."""
     processo = get_object_or_404(Processo, id=pk)
@@ -58,6 +26,7 @@ def editar_processo_verbas_view(request, pk):
 
 
 @require_GET
+@permission_required("pagamentos.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas_capa_view(request, pk):
     """Spoke de edição da capa do processo de verbas."""
     processo = get_object_or_404(Processo, id=pk)
@@ -69,6 +38,7 @@ def editar_processo_verbas_capa_view(request, pk):
 
 
 @require_GET
+@permission_required("pagamentos.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas_pendencias_view(request, pk):
     """Spoke de edição das pendências do processo de verbas."""
     processo = get_object_or_404(Processo, id=pk)
@@ -80,6 +50,7 @@ def editar_processo_verbas_pendencias_view(request, pk):
 
 
 @require_GET
+@permission_required("pagamentos.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas_itens_view(request, pk):
     """Spoke de gestão dos itens individuais vinculados ao processo."""
     processo = get_object_or_404(Processo, id=pk)
@@ -90,6 +61,7 @@ def editar_processo_verbas_itens_view(request, pk):
 
 
 @require_GET
+@permission_required("pagamentos.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas_documentos_view(request, pk):
     """Spoke de gestão de documentos do processo e cards read-only dos docs de verba."""
     processo = get_object_or_404(Processo, id=pk)
@@ -104,85 +76,3 @@ def editar_processo_verbas_documentos_view(request, pk):
         ),
     })
     return render(request, "verbas/editar_processo_verbas_documentos.html", context)
-
-
-@require_GET
-@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
-def painel_revisar_solicitacoes_view(request):
-    solicitacoes = []
-    for tipo_verba in ("diaria", "reembolso", "jeton", "auxilio"):
-        config = _VERBA_CONFIG[tipo_verba]
-        itens = (
-            config["model"]
-            .objects.select_related("beneficiario", "status")
-            .filter(
-                processo__isnull=True,
-                status__status_choice__iexact=STATUS_VERBA_APROVADA,
-            )
-            .order_by("-id")
-        )
-        solicitacoes.extend(_resumo_solicitacao(tipo_verba, item) for item in itens)
-
-    ordem, direcao, _ = _resolver_parametros_ordenacao(
-        request,
-        campos_permitidos={
-            "tipo": "tipo",
-            "id": "id",
-            "beneficiario": "beneficiario",
-            "referencia": "referencia",
-            "valor_total": "valor_total",
-            "status": "status",
-        },
-        default_ordem="id",
-        default_direcao="desc",
-    )
-
-    def _sort_key(item):
-        status_value = getattr(item.get("status"), "status_choice", "") if item.get("status") else ""
-        map_keys = {
-            "tipo": (item.get("tipo_label") or "").lower(),
-            "id": item.get("id") or 0,
-            "beneficiario": (item.get("beneficiario_nome") or "").lower(),
-            "referencia": (item.get("referencia") or "").lower(),
-            "valor_total": item.get("valor_total") or 0,
-            "status": status_value.lower(),
-        }
-        return map_keys.get(ordem, item.get("id") or 0)
-
-    solicitacoes = sorted(solicitacoes, key=_sort_key, reverse=(direcao == "desc"))
-
-    return render(
-        request,
-        "verbas/revisar_solicitacoes_verba.html",
-        {
-            "solicitacoes": solicitacoes,
-            "ordem": ordem,
-            "direcao": direcao,
-        },
-    )
-
-
-@require_GET
-@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
-def revisar_solicitacao_verba_view(request, tipo_verba, pk):
-    config = _VERBA_CONFIG.get(tipo_verba)
-    if not config:
-        from django.http import Http404
-        raise Http404("Tipo de solicitação inválido para revisão.")
-
-    solicitacao = get_object_or_404(
-        config["model"].objects.select_related("beneficiario", "status"),
-        id=pk,
-    )
-    documentos = solicitacao.documentos.select_related("tipo").all()
-    status_atual = (solicitacao.status.status_choice if solicitacao.status else "").upper()
-    pode_revisar = (status_atual == STATUS_VERBA_APROVADA) and not solicitacao.processo_id
-
-    context = {
-        "solicitacao": _resumo_solicitacao(tipo_verba, solicitacao),
-        "obj": solicitacao,
-        "documentos": documentos,
-        "tipo_documento_seguro": config["doc_tipo_seguro"],
-        "pode_revisar": pode_revisar,
-    }
-    return render(request, "verbas/revisar_solicitacao_verba.html", context)
