@@ -1,11 +1,11 @@
 """Helpers de construção de dados para painéis de pagamento e ações em lote."""
 
 from django.contrib import messages
-from django.db import transaction
 from django.db.models import Count
 from django.shortcuts import redirect
 
 from pagamentos.domain_models import Boleto_Bancario, Processo
+from pagamentos.services.acoes_lote import atualizar_status_em_lote, obter_processos_elegiveis_por_status
 
 
 def _obter_estatisticas_boletos(processo):
@@ -133,27 +133,6 @@ def _consolidar_totais_pagamento(totais_a_pagar, totais_lancados):
     }
 
 
-def _atualizar_status_em_lote(ids, nome_status, usuario, queryset_base=None):
-    """Atualiza em lote garantindo o acionamento de signals (Auditoria) e Turnpikes.
-
-    Itera pelos processos elegíveis chamando avancar_status() para cada um,
-    assegurando que as regras de negócio são respeitadas e o usuário é registrado
-    no histórico de auditoria.
-    """
-    if not ids:
-        return 0
-
-    qs = queryset_base if queryset_base is not None else Processo.objects.filter(id__in=ids)
-
-    count = 0
-    with transaction.atomic():
-        for processo in qs:
-            processo.avancar_status(nome_status, usuario=usuario)
-            count += 1
-
-    return count
-
-
 def _processar_acao_lote(
     request,
     *,
@@ -181,15 +160,15 @@ def _processar_acao_lote(
         messages.warning(request, msg_vazio)
         return redirect(redirect_to)
 
-    elegiveis = Processo.objects.filter(
-        id__in=selecionados,
-        status__opcao_status__iexact=status_origem_esperado,
+    elegiveis = obter_processos_elegiveis_por_status(
+        ids=selecionados,
+        status_origem_esperado=status_origem_esperado,
     )
     count_elegiveis = elegiveis.count()
     count_ignorados = len(selecionados) - count_elegiveis
 
     if count_elegiveis > 0:
-        _atualizar_status_em_lote(
+        atualizar_status_em_lote(
             selecionados,
             status_destino,
             usuario=request.user,
@@ -224,6 +203,5 @@ __all__ = [
     "_aplicar_filtros_contas_a_pagar",
     "_build_detalhes_pagamento",
     "_consolidar_totais_pagamento",
-    "_atualizar_status_em_lote",
     "_processar_acao_lote",
 ]

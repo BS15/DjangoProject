@@ -47,7 +47,8 @@ def painel_contingencias_view(request: HttpRequest) -> HttpResponse:
 @permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def add_contingencia_view(request: HttpRequest) -> HttpResponse:
     """Renderiza o formulario para abertura de contingencia."""
-    return render(request, "pagamentos/add_contingencia.html")
+    processo_id = request.GET.get("processo_id", "")
+    return render(request, "pagamentos/add_contingencia.html", {"processo_id_prefill": processo_id})
 
 
 __all__ = [

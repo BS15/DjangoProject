@@ -1,18 +1,16 @@
-"""Serviços fiscais para anexação documental e relatório mensal de retenções."""
+"""Serviços fiscais para anexação documental e orquestração de retenções."""
 
-import csv
-import io
-from collections import defaultdict
-from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from django.apps import apps
 from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import F
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
 
+from fiscal.services.impostos_relatorios import (
+    gerar_relatorio_retencoes_agrupamento_pdf,
+    gerar_relatorio_retencoes_mensal_csv,
+)
 from pagamentos.domain_models import TiposDeDocumento, TiposDePagamento
 
 if TYPE_CHECKING:
@@ -37,135 +35,6 @@ def _get_tipo_documento_impostos(nome_tipo: str) -> TiposDeDocumento:
         defaults={"tipo_de_documento": nome_tipo},
     )
     return tipo_documento
-
-
-def gerar_relatorio_retencoes_mensal_csv(retencoes: list, mes: int, ano: int) -> bytes:
-    """Gera relatório CSV consolidado por código de imposto para competência mensal."""
-    saida = io.StringIO()
-    writer = csv.writer(saida, delimiter=";")
-
-    writer.writerow(["RELATORIO MENSAL DE RETENCOES"])
-    writer.writerow(["Competencia", f"{mes:02d}/{ano}"])
-    writer.writerow([])
-    writer.writerow(["Codigo", "Qtde Retencoes", "Base Calculo Total", "Valor Retido Total"])
-
-    agregado = defaultdict(lambda: {"qtd": 0, "base": Decimal("0"), "valor": Decimal("0")})
-
-    for retencao in retencoes:
-        codigo = (retencao.codigo.codigo or "SEM_CODIGO").strip()
-        agregado[codigo]["qtd"] += 1
-        agregado[codigo]["base"] += retencao.rendimento_tributavel or Decimal("0")
-        agregado[codigo]["valor"] += retencao.valor or Decimal("0")
-
-    for codigo in sorted(agregado.keys()):
-        writer.writerow(
-            [
-                codigo,
-                agregado[codigo]["qtd"],
-                f"{agregado[codigo]['base']:.2f}",
-                f"{agregado[codigo]['valor']:.2f}",
-            ]
-        )
-
-    writer.writerow([])
-    writer.writerow(["Detalhamento"])
-    writer.writerow(
-        [
-            "RetencaoID",
-            "ProcessoPagamentoID",
-            "Codigo",
-            "NF",
-            "Competencia",
-            "BaseCalculo",
-            "ValorRetido",
-        ]
-    )
-
-    for retencao in sorted(retencoes, key=lambda item: item.id):
-        writer.writerow(
-            [
-                retencao.id,
-                retencao.processo_pagamento_id,
-                retencao.codigo.codigo if retencao.codigo else "",
-                retencao.nota_fiscal.numero_nota_fiscal if retencao.nota_fiscal else "",
-                retencao.competencia.strftime("%m/%Y") if retencao.competencia else "",
-                f"{(retencao.rendimento_tributavel or Decimal('0')):.2f}",
-                f"{(retencao.valor or Decimal('0')):.2f}",
-            ]
-        )
-
-    return saida.getvalue().encode("utf-8-sig")
-
-
-def _format_decimal(value) -> str:
-    """Formata valor decimal com duas casas para uso em relatórios."""
-    valor = value if value is not None else Decimal("0")
-    return f"{valor:.2f}"
-
-
-def gerar_relatorio_retencoes_agrupamento_pdf(retencoes: list["RetencaoImposto"], processo_id: int) -> bytes:
-    """Gera PDF com todas as colunas canônicas das retenções agrupadas."""
-    buffer = io.BytesIO()
-    pdf = canvas.Canvas(buffer, pagesize=A4)
-    page_width, page_height = A4
-
-    margem_esquerda = 36
-    linha = page_height - 40
-    passo = 14
-
-    def _nova_pagina_se_necessario():
-        """Quebra a página quando a escrita alcança a margem inferior."""
-        nonlocal linha
-        if linha <= 48:
-            pdf.showPage()
-            linha = page_height - 40
-
-    def _escrever(texto: str, negrito: bool = False):
-        """Escreve uma linha no PDF aplicando estilo e avanço vertical."""
-        nonlocal linha
-        _nova_pagina_se_necessario()
-        pdf.setFont("Helvetica-Bold" if negrito else "Helvetica", 9)
-        texto_normalizado = str(texto)
-        try:
-            pdf.drawString(margem_esquerda, linha, texto_normalizado)
-        except Exception as exc:
-            raise ValueError("Falha ao renderizar conteúdo textual no relatório PDF de retenções.") from exc
-        linha -= passo
-
-    _escrever(f"RELATÓRIO DE RETENÇÕES AGRUPADAS - PROCESSO #{processo_id}", negrito=True)
-    _escrever(f"Quantidade de retenções: {len(retencoes)}")
-    _escrever(
-        "Campos: id, nota_fiscal, beneficiario, rendimento_tributavel, data_pagamento, codigo, valor, status, processo_pagamento, competencia"
-    )
-    linha -= 4
-
-    for indice, retencao in enumerate(sorted(retencoes, key=lambda item: item.id), start=1):
-        nota_fiscal = getattr(retencao, "nota_fiscal", None)
-        beneficiario = getattr(retencao, "beneficiario", None)
-        codigo = getattr(retencao, "codigo", None)
-        status = getattr(retencao, "status", None)
-
-        _escrever(f"Retenção {indice}", negrito=True)
-        _escrever(f"id: {retencao.id}")
-        _escrever(f"nota_fiscal: {retencao.nota_fiscal_id or ''}")
-        _escrever(f"nota_fiscal.numero_nota_fiscal: {getattr(nota_fiscal, 'numero_nota_fiscal', '')}")
-        _escrever(f"nota_fiscal.processo_id: {getattr(nota_fiscal, 'processo_id', '')}")
-        _escrever(f"beneficiario: {retencao.beneficiario_id or ''}")
-        _escrever(f"beneficiario.nome: {getattr(beneficiario, 'nome', '')}")
-        _escrever(f"rendimento_tributavel: {_format_decimal(retencao.rendimento_tributavel)}")
-        _escrever(f"data_pagamento: {retencao.data_pagamento.isoformat() if retencao.data_pagamento else ''}")
-        _escrever(f"codigo: {retencao.codigo_id or ''}")
-        _escrever(f"codigo.codigo: {getattr(codigo, 'codigo', '')}")
-        _escrever(f"valor: {_format_decimal(retencao.valor)}")
-        _escrever(f"status: {retencao.status_id or ''}")
-        _escrever(f"status.status_choice: {getattr(status, 'status_choice', '')}")
-        _escrever(f"processo_pagamento: {retencao.processo_pagamento_id or ''}")
-        _escrever(f"competencia: {retencao.competencia.isoformat() if retencao.competencia else ''}")
-        linha -= 4
-
-    pdf.save()
-    buffer.seek(0)
-    return buffer.getvalue()
 
 
 def anexar_relatorio_agrupamento_retencoes_no_processo(
@@ -241,6 +110,97 @@ def anexar_guia_comprovante_relatorio_em_processos(
             total_processos += 1
 
     return total_processos
+
+
+def agrupar_retencoes_em_processo_recolhimento(retencao_ids: list[str]):
+    """Agrupa retenções elegíveis e cria processo de recolhimento com relatório anexado."""
+    RetencaoImposto = apps.get_model("fiscal", "RetencaoImposto")
+    Credor = apps.get_model("credores", "Credor")
+    Processo = apps.get_model("pagamentos", "Processo")
+    StatusChoicesProcesso = apps.get_model("pagamentos", "StatusChoicesProcesso")
+
+    with transaction.atomic():
+        retencoes = list(
+            RetencaoImposto.objects.select_for_update()
+            .select_related("codigo", "status", "beneficiario", "nota_fiscal")
+            .filter(id__in=retencao_ids, processo_pagamento__isnull=True)
+        )
+
+        if not retencoes:
+            return None
+
+        total_impostos = sum((retencao.valor or 0) for retencao in retencoes)
+        if total_impostos <= 0:
+            raise ValueError("Os itens selecionados não possuem valores válidos.")
+
+        status_padrao, _ = StatusChoicesProcesso.objects.get_or_create(
+            status_choice__iexact="A PAGAR - PENDENTE AUTORIZAÇÃO",
+            defaults={"status_choice": "A PAGAR - PENDENTE AUTORIZAÇÃO"},
+        )
+
+        credor_orgao, _ = Credor.objects.get_or_create(
+            nome="Órgão Arrecadador (A Definir)",
+            defaults={"nome": "Órgão Arrecadador (A Definir)"},
+        )
+
+        tipo_pagamento_impostos, _ = TiposDePagamento.objects.get_or_create(
+            tipo_de_pagamento="IMPOSTOS"
+        )
+
+        novo_processo = Processo.objects.create(
+            credor=credor_orgao,
+            valor_bruto=total_impostos,
+            valor_liquido=total_impostos,
+            detalhamento="Pagamento Agrupado de Impostos Retidos",
+            observacao="Gerado automaticamente.",
+            status=status_padrao,
+            tipo_pagamento=tipo_pagamento_impostos,
+        )
+
+        for retencao in retencoes:
+            retencao.processo_pagamento = novo_processo
+            retencao.save(update_fields=["processo_pagamento"])
+
+        anexar_relatorio_agrupamento_retencoes_no_processo(
+            processo=novo_processo,
+            retencoes=retencoes,
+        )
+
+    return novo_processo
+
+
+def anexar_documentos_competencia_retencoes(
+    retencao_ids: list[str],
+    guia_bytes: bytes,
+    guia_nome: str,
+    comprovante_bytes: bytes,
+    comprovante_nome: str,
+    mes: int,
+    ano: int,
+) -> int:
+    """Anexa guia, comprovante e relatório mensal para retenções elegíveis por competência."""
+    RetencaoImposto = apps.get_model("fiscal", "RetencaoImposto")
+
+    with transaction.atomic():
+        retencoes = list(
+            RetencaoImposto.objects.select_for_update()
+            .select_related("processo_pagamento", "codigo", "nota_fiscal")
+            .filter(id__in=retencao_ids, competencia__month=mes, competencia__year=ano)
+            .exclude(processo_pagamento__isnull=True)
+        )
+
+        if not retencoes:
+            return 0
+
+        return anexar_guia_comprovante_relatorio_em_processos(
+            retencoes=retencoes,
+            guia_bytes=guia_bytes,
+            guia_nome=guia_nome,
+            comprovante_bytes=comprovante_bytes,
+            comprovante_nome=comprovante_nome,
+            mes=mes,
+            ano=ano,
+        )
 
 
 def criar_documentos_pagamento_impostos(
@@ -323,8 +283,8 @@ def verificar_completude_documentos_impostos(processo) -> list:
 __all__ = [
     "anexar_relatorio_agrupamento_retencoes_no_processo",
     "anexar_guia_comprovante_relatorio_em_processos",
-    "gerar_relatorio_retencoes_agrupamento_pdf",
-    "gerar_relatorio_retencoes_mensal_csv",
+    "agrupar_retencoes_em_processo_recolhimento",
+    "anexar_documentos_competencia_retencoes",
     "criar_documentos_pagamento_impostos",
     "verificar_completude_documentos_impostos",
 ]

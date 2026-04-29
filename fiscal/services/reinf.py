@@ -156,8 +156,15 @@ def _build_r2010_xml(cnpj: str, retencoes: list, month: int, year: int) -> str:
     return xml.dom.minidom.parseString(raw).toprettyxml(indent='  ')
 
 
-def _build_r4020_xml(cnpj: str, retencoes: list, month: int, year: int) -> str:
-    """Gera XML do evento R-4020 (pagamentos a PJ com retenção CSRF) para a competência."""
+def _build_r4020_xml(cnpj: str, items: list, month: int, year: int) -> str:
+    """Gera XML do evento R-4020 (pagamentos a PJ com retenção CSRF ou isentos).
+    
+    Args:
+        cnpj: CNPJ do prestador/tomador
+        items: Lista mista de RetencaoImposto e DocumentoFiscal (isentas)
+        month: Mês da competência
+        year: Ano da competência
+    """
     root = ET.Element('Reinf', xmlns='http://www.reinf.esocial.gov.br/schemas/evtRetPJ/v2_01_01')
     evt = ET.SubElement(root, 'evtRetPJ')
 
@@ -175,15 +182,51 @@ def _build_r4020_xml(cnpj: str, retencoes: list, month: int, year: int) -> str:
     ide_pj = ET.SubElement(evt, 'idePJ')
     ET.SubElement(ide_pj, 'cnpjPrestador').text = cnpj
 
-    natureza_map: dict = defaultdict(list)
-    for retencao in retencoes:
-        natureza_map[retencao.codigo.natureza_rendimento or 'Não informado'].append(retencao)
+    # Agrupa por natureza de rendimento
+    det_pag_map: dict = defaultdict(lambda: {'vlrRet': 0, 'vlrBaseRet': 0, 'vlrIsento': 0, 'tpIsencao': None, 'descIsencao': None})
+    
+    for item in items:
+        # Trata RetencaoImposto
+        if hasattr(item, 'codigo') and hasattr(item, 'rendimento_tributavel'):  # É RetencaoImposto
+            natureza = item.codigo.natureza_rendimento or 'Não informado'
+            det_pag_map[natureza]['vlrBaseRet'] += (item.rendimento_tributavel or 0)
+            det_pag_map[natureza]['vlrRet'] += (item.valor or 0)
+            det_pag_map[natureza]['natRend'] = natureza
+        
+        # Trata DocumentoFiscal isenta
+        elif hasattr(item, 'is_rendimento_isento') and item.is_rendimento_isento:  # É DocumentoFiscal
+            # Para notas isentas, usamos a natureza padrão ou informada
+            natureza = '15001'  # Natureza padrão para serviços
+            det_pag_map[natureza]['vlrIsento'] += (item.valor_bruto or 0)
+            det_pag_map[natureza]['tpIsencao'] = item.tpIsencao or '99'
+            det_pag_map[natureza]['descIsencao'] = item.descIsencao or ''
+            det_pag_map[natureza]['natRend'] = natureza
 
-    for natureza, rets in natureza_map.items():
+    # Monta XML detPag
+    for det in det_pag_map.values():
         det_pag = ET.SubElement(ide_pj, 'detPag')
-        ET.SubElement(det_pag, 'natRend').text = str(natureza)
-        ET.SubElement(det_pag, 'vrBaseRet').text = _fmt_dec(sum((ret.rendimento_tributavel or 0) for ret in rets))
-        ET.SubElement(det_pag, 'vrRet').text = _fmt_dec(sum((ret.valor or 0) for ret in rets))
+        ET.SubElement(det_pag, 'natRend').text = str(det.get('natRend', ''))
+        
+        # Valor retido (caso tenha retenção)
+        vlr_ret = det.get('vlrRet', 0)
+        vlr_base = det.get('vlrBaseRet', 0)
+        if vlr_ret and vlr_ret > 0:
+            ET.SubElement(det_pag, 'vrBaseRet').text = _fmt_dec(vlr_base)
+            ET.SubElement(det_pag, 'vrRet').text = _fmt_dec(vlr_ret)
+        
+        # Valor isento (caso seja entidade imune/isenta)
+        vlr_isento = det.get('vlrIsento', 0)
+        if vlr_isento and vlr_isento > 0:
+            rend_isento = ET.SubElement(det_pag, 'rendIsento')
+            ET.SubElement(rend_isento, 'vlrIsento').text = _fmt_dec(vlr_isento)
+            
+            tp_isencao = det.get('tpIsencao')
+            if tp_isencao:
+                ET.SubElement(rend_isento, 'tpIsencao').text = str(tp_isencao)
+                
+                desc_isencao = det.get('descIsencao')
+                if desc_isencao and tp_isencao == '99':  # Campo obrigatório para código 99
+                    ET.SubElement(rend_isento, 'descIsencao').text = str(desc_isencao)[:255]
 
     raw = ET.tostring(root, encoding='unicode')
     return xml.dom.minidom.parseString(raw).toprettyxml(indent='  ')
@@ -212,7 +255,14 @@ def _build_fechamento_xml(evento: str, per_apur: str) -> str:
 
 
 def gerar_lotes_reinf(month: int, year: int) -> dict:
-    """Gera todos os lotes XML da EFD-Reinf para a competência, agrupados por série."""
+    """Gera todos os lotes XML da EFD-Reinf para a competência, agrupados por série.
+    
+    Inclui:
+    - Retenções normais (IR/CSRF/PIS/COFINS)
+    - Pagamentos a entidades imunes/isentas (sem retenção)
+    """
+    from fiscal.models import DocumentoFiscal
+    
     contribuinte = DadosContribuinte.objects.first()
     if contribuinte is None:
         raise ValueError('Dados do contribuinte não configurados.')
@@ -250,6 +300,21 @@ def gerar_lotes_reinf(month: int, year: int) -> dict:
             inss_por_cnpj[provider_cnpj].append(retencao)
         elif retencao.codigo.serie_reinf == 'S4000':
             federal_por_cnpj[provider_cnpj].append(retencao)
+
+    # Busca também notas com rendimento isento/imune (sem retenção)
+    notas_isentas = DocumentoFiscal.objects.filter(
+        is_rendimento_isento=True,
+        atestada=True,
+        processo__data_pagamento__year=year,
+        processo__data_pagamento__month=month,
+    ).select_related('nome_emitente')
+    
+    # Agrupa notas isentas por emitente para incluir no XML federal
+    for nota in notas_isentas:
+        if nota.nome_emitente:
+            provider_cnpj = _digits_only(nota.nome_emitente.cpf_cnpj)
+            # Cria um "pseudo objeto" para representar a nota isenta na estrutura do XML
+            federal_por_cnpj[provider_cnpj].append(nota)
 
     per_apur = f'{year}-{month:02d}'
     xmls = {

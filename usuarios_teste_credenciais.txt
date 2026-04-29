@@ -1,36 +1,26 @@
 USUARIOS HIPOTETICOS DE TESTE - RBAC
 
 Perfil: Operador contas a pagar
-Usuario: 
-teste_operador_contas_pagar
-Senha: 
-Teste@123
+Usuario: teste_operador_contas_pagar
+Senha: Teste@123
 Grupos: FUNCIONARIO(A) CONTAS A PAGAR
 
 Perfil: Fiscal de contrato e proponente
-Usuario: 
-teste_fiscal_proponente
-Senha: 
-Teste@123
+Usuario: teste_fiscal_proponente
+Senha: Teste@123
 Grupos: FISCAL DE CONTRATO
 
 Perfil: Conselheiro fiscal
-Usuario: 
-teste_conselheiro_fiscal
-Senha: 
-Teste@123
+Usuario: teste_conselheiro_fiscal
+Senha: Teste@123
 Grupos: CONSELHEIRO(A) FISCAL
 
 Perfil: Contador
-Usuario: 
-teste_contador
-Senha: 
-Teste@123
+Usuario: teste_contador
+Senha: Teste@123
 Grupos: CONTADOR(A)
 
 Perfil: Ordenador de despesas
-Usuario: 
-teste_ordenador_despesas
-Senha: 
-Teste@123
+Usuario: teste_ordenador_despesas
+Senha: Teste@123
 Grupos: ORDENADOR(A) DE DESPESA

@@ -78,6 +78,11 @@ class Credor(models.Model):
         verbose_name="Cód. Serviço Padrão INSS (Tabela 06)",
         help_text="Ex: 100000001 (Limpeza). Será herdado automaticamente pelas Notas Fiscais deste credor."
     )
+    is_entidade_imune = models.BooleanField(
+        "Entidade Imune/Isenta (EFD-Reinf)",
+        default=False,
+        help_text="Marque se a entidade é legalmente imune/isenta de tributação (ex: entidades públicas, igrejas, ONGs)."
+    )
     ativo = models.BooleanField("Credor Ativo", default=True)
     history = HistoricalRecords()
 

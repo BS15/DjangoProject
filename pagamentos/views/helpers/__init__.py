@@ -1,26 +1,11 @@
 """Helpers do fluxo financeiro — re-exporta API pública dos submódulos.
 
 Organização por responsabilidade:
-- contingencias.py: state machine e regras de negócio de contingências
 - audit_builders.py: builders de payloads de auditoria e histórico
 - queries.py: utilitários genéricos de query e ordenação
 - payment_builders.py: builders de dados para painéis de pagamento e ações em lote
-- archival.py: lógica de arquivamento definitivo
 - workflows.py: filas de revisão, aprovação/recusa e formulários de fluxo
 """
-
-from .contingencias import (
-    _CAMPOS_PERMITIDOS_CONTINGENCIA,
-    _STATUS_CONTINGENCIA_FINAL,
-    _STATUS_PRE_AUTORIZACAO,
-    determinar_requisitos_contingencia,
-    proximo_status_contingencia,
-    sincronizar_flag_contingencia_processo,
-    normalizar_dados_propostos_contingencia,
-    aplicar_aprovacao_contingencia,
-    processar_aprovacao_contingencia,
-    processar_revisao_contadora_contingencia,
-)
 from .queries import (
     _obter_campo_ordenacao,
     _resolver_parametros_ordenacao,
@@ -43,36 +28,18 @@ from .payment_builders import (
     _aplicar_filtros_contas_a_pagar,
     _build_detalhes_pagamento,
     _consolidar_totais_pagamento,
-    _atualizar_status_em_lote,
     _processar_acao_lote,
-)
-from .archival import (
-    _executar_arquivamento_definitivo,
 )
 from .errors import ArquivamentoDefinitivoError, ArquivamentoSemDocumentosError
 from .workflows import (
-    _registrar_recusa,
-    _salvar_documentos_sem_exclusao,
     _iniciar_fila_sessao,
     _handle_queue_navigation,
     _processo_fila_detalhe_view,
     _aprovar_processo_view,
     _recusar_processo_view,
-    _get_tipos_documento_para_processo,
 )
 
 __all__ = [
-    # contingencias
-    "_CAMPOS_PERMITIDOS_CONTINGENCIA",
-    "_STATUS_CONTINGENCIA_FINAL",
-    "_STATUS_PRE_AUTORIZACAO",
-    "determinar_requisitos_contingencia",
-    "proximo_status_contingencia",
-    "sincronizar_flag_contingencia_processo",
-    "normalizar_dados_propostos_contingencia",
-    "aplicar_aprovacao_contingencia",
-    "processar_aprovacao_contingencia",
-    "processar_revisao_contadora_contingencia",
     # queries
     "_obter_campo_ordenacao",
     "_resolver_parametros_ordenacao",
@@ -89,19 +56,14 @@ __all__ = [
     "_aplicar_filtros_contas_a_pagar",
     "_build_detalhes_pagamento",
     "_consolidar_totais_pagamento",
-    "_atualizar_status_em_lote",
     "_processar_acao_lote",
-    # archival
+    # errors
     "ArquivamentoDefinitivoError",
     "ArquivamentoSemDocumentosError",
-    "_executar_arquivamento_definitivo",
     # workflows
-    "_registrar_recusa",
-    "_salvar_documentos_sem_exclusao",
     "_iniciar_fila_sessao",
     "_handle_queue_navigation",
     "_processo_fila_detalhe_view",
     "_aprovar_processo_view",
     "_recusar_processo_view",
-    "_get_tipos_documento_para_processo",
 ]

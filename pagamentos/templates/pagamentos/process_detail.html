@@ -109,6 +109,7 @@
 
 {% block detail_actions %}
 <a href="{% url 'home_page' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Voltar</a>
+<a href="{% url 'add_contingencia' %}?processo_id={{ processo.id }}" class="btn btn-outline-warning text-dark"><i class="bi bi-exclamation-triangle"></i> Informar Contingência</a>
 <a href="{% url 'editar_processo' pk=processo.id %}" class="btn btn-primary fw-bold"><i class="bi bi-pencil-square"></i> Editar</a>
 {% if processo.status.opcao_status != 'CANCELADO / ANULADO' %}
 <a href="{% url 'cancelar_processo_spoke' pk=processo.id %}" class="btn btn-outline-danger btn-sm mt-2 w-100"><i class="bi bi-x-circle"></i> Cancelar Processo</a>

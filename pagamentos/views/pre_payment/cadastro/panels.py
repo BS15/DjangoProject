@@ -10,6 +10,7 @@ from django.views.decorators.http import require_GET
 from credores.models import Credor
 from fiscal.models import CodigosImposto, DocumentoFiscal
 from pagamentos.domain_models import Processo, ProcessoStatus
+from pagamentos.services.revisao_fluxo import obter_tipos_documento_para_processo
 
 from .actions import _status_bloqueia_gestao_fiscal
 from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoCapaEdicaoForm, ProcessoForm
@@ -113,8 +114,6 @@ def editar_processo_capa_view(request, pk):
 @permission_required("pagamentos.pode_editar_processos_pagamento", raise_exception=True)
 def editar_processo_documentos_view(request, pk):
     """Spoke GET de edição de anexos do processo."""
-    from pagamentos.views.helpers import _get_tipos_documento_para_processo
-
     processo, status_inicial, redirecionamento, _ = obter_contexto_edicao(request, pk)
     if redirecionamento:
         return redirecionamento
@@ -127,7 +126,7 @@ def editar_processo_documentos_view(request, pk):
         and not processo.documentos.filter(tipo__tipo_documento__iexact="DOCUMENTOS ORÇAMENTÁRIOS").exists()
     )
 
-    tipos_documento = _get_tipos_documento_para_processo(processo)
+    tipos_documento = obter_tipos_documento_para_processo(processo)
 
     return render(
         request,

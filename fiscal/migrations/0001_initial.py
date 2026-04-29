@@ -163,6 +163,35 @@ class Migration(migrations.Migration):
                         verbose_name="Cód. Serviço INSS (Tabela 06 Reinf)",
                     ),
                 ),
+                (
+                    "is_rendimento_isento",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Marque se o pagamento é para entidade imune ou isenta de tributação (sem retenção).",
+                        verbose_name="Rendimento Isento/Imune",
+                    ),
+                ),
+                (
+                    "tpIsencao",
+                    models.CharField(
+                        blank=True,
+                        choices=[("01", "Imunidade"), ("02", "Pessoa Jurídica isenta"), ("03", "Rendimento isento"), ("99", "Outras isençõe/imunidades")],
+                        max_length=2,
+                        null=True,
+                        verbose_name="Tipo de Isenção (Reinf)",
+                        help_text="Código do tipo de isenção conforme Tabela do SPED. Ex: '99' para outras isençõe/imunidades.",
+                    ),
+                ),
+                (
+                    "descIsencao",
+                    models.CharField(
+                        blank=True,
+                        max_length=255,
+                        null=True,
+                        verbose_name="Descrição da Isenção",
+                        help_text="Fundamentação legal ou descrição resumida da isenção/imunidade.",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(

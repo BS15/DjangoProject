@@ -119,6 +119,31 @@ class DocumentoFiscal(models.Model):
         null=True,
         verbose_name="Cód. Serviço INSS (Tabela 06 Reinf)"
     )
+    is_rendimento_isento = models.BooleanField(
+        "Rendimento Isento/Imune",
+        default=False,
+        help_text="Marque se o pagamento é para entidade imune ou isenta de tributação (sem retenção)."
+    )
+    tpIsencao = models.CharField(
+        max_length=2,
+        blank=True,
+        null=True,
+        verbose_name="Tipo de Isenção (Reinf)",
+        help_text="Código do tipo de isenção conforme Tabela do SPED. Ex: '99' para outras isençõe/imunidades.",
+        choices=[
+            ('01', 'Imunidade'),
+            ('02', 'Pessoa Jurídica isenta'),
+            ('03', 'Rendimento isento'),
+            ('99', 'Outras isençõe/imunidades'),
+        ]
+    )
+    descIsencao = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name="Descrição da Isenção",
+        help_text="Fundamentação legal ou descrição resumida da isenção/imunidade."
+    )
     history = HistoricalRecords()
 
     class Meta:

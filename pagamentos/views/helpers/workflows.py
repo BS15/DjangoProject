@@ -16,42 +16,9 @@ from pagamentos.services.revisao_fluxo import (
     obter_tipos_documento_para_processo,
     persistir_revisao_processo,
     registrar_recusa_processo,
-    salvar_documentos_sem_exclusao,
 )
 from fiscal.models import RetencaoImposto
 from .audit_builders import _get_unified_history
-
-
-def _get_tipos_documento_para_processo(processo):
-    """Retorna os TiposDocumento ativos válidos para o processo informado.
-
-    Inclui tipos vinculados ao tipo de pagamento do processo e tipos gerais
-    (sem tipo_pagamento definido), excluindo tipos de outros contextos de pagamento.
-    """
-    return obter_tipos_documento_para_processo(processo)
-
-
-def _registrar_recusa(request, processo, form, status_devolucao):
-    """Registra uma pendência e devolve o processo ao status informado.
-
-    A criação da pendência e a transição de status ocorrem em uma única
-    transação para preservar consistência no fluxo administrativo.
-    """
-    return registrar_recusa_processo(
-        request_user=request.user,
-        processo=processo,
-        form=form,
-        status_devolucao=status_devolucao,
-    )
-
-
-def _salvar_documentos_sem_exclusao(doc_formset, processo):
-    """Salva documentos do processo sem permitir exclusão física.
-
-    O helper aceita inclusões e atualizações vindas do formset, mas ignora
-    marcações de remoção para respeitar o requisito de imutabilidade do fluxo.
-    """
-    return salvar_documentos_sem_exclusao(doc_formset, processo)
 
 
 def _iniciar_fila_sessao(request, queue_key, fallback_view, detail_view, extra_args=None):
@@ -197,7 +164,12 @@ def _processo_fila_detalhe_view(
             if reject_action and action == reject_action:
                 form = PendenciaForm(request.POST)
                 if form.is_valid():
-                    _registrar_recusa(request, processo, form, reject_status)
+                    registrar_recusa_processo(
+                        request_user=request.user,
+                        processo=processo,
+                        form=form,
+                        status_devolucao=reject_status,
+                    )
                     messages.error(request, reject_message.format(processo_id=processo.id))
                     if next_pk:
                         return redirect(current_view, pk=next_pk)
@@ -272,7 +244,7 @@ def _processo_fila_detalhe_view(
         )
 
     if editable:
-        tipos_documento = _get_tipos_documento_para_processo(processo)
+        tipos_documento = obter_tipos_documento_para_processo(processo)
         if doc_formset is None:
             doc_formset = DocumentoFormSet(
                 instance=processo,
@@ -367,7 +339,12 @@ def _recusar_processo_view(request, pk, *, permission, status_devolucao, error_m
             raise PermissionDenied
         form = PendenciaForm(request.POST)
         if form.is_valid():
-            _registrar_recusa(request, processo, form, status_devolucao)
+            registrar_recusa_processo(
+                request_user=request.user,
+                processo=processo,
+                form=form,
+                status_devolucao=status_devolucao,
+            )
             messages.error(request, error_message.format(processo_id=processo.id))
         else:
             messages.warning(request, "Erro ao registrar recusa. Verifique os dados da pendência.")
@@ -375,8 +352,6 @@ def _recusar_processo_view(request, pk, *, permission, status_devolucao, error_m
 
 
 __all__ = [
-    "_registrar_recusa",
-    "_salvar_documentos_sem_exclusao",
     "_iniciar_fila_sessao",
     "_handle_queue_navigation",
     "_processo_fila_detalhe_view",

@@ -314,6 +314,52 @@
                         </div>
                     </div>
 
+                    <!-- Rendimento Isento/Imune (Entidades Imunes) -->
+                    <div class="mb-3">
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input rendimento-isento-toggle" type="checkbox"
+                                   id="tem-isento-{{ nota.id }}" role="switch"
+                                   data-field="is_rendimento_isento"
+                                   {% if nota.is_rendimento_isento %}checked{% endif %}>
+                            <label class="form-check-label fw-bold text-success" for="tem-isento-{{ nota.id }}">
+                                <i class="bi bi-shield-check"></i> Rendimento Isento/Imune (Entidade Imune)
+                            </label>
+                        </div>
+                        <div class="container-isento {% if not nota.is_rendimento_isento %}d-none{% endif %}" id="isento-container-{{ nota.id }}" style="background-color: #f0fff4; border: 1px solid #86efac; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="small fw-bold text-muted mb-1">
+                                        <i class="bi bi-tag"></i> Tipo de Isenção
+                                    </label>
+                                    <select class="form-select form-select-sm nf-field nf-tp-isencao" data-field="tpIsencao"
+                                            id="tp-isencao-{{ nota.id }}">
+                                        <option value="">— Selecione —</option>
+                                        <option value="01" {% if nota.tpIsencao == "01" %}selected{% endif %}>01 - Imunidade</option>
+                                        <option value="02" {% if nota.tpIsencao == "02" %}selected{% endif %}>02 - Pessoa Jurídica isenta</option>
+                                        <option value="03" {% if nota.tpIsencao == "03" %}selected{% endif %}>03 - Rendimento isento</option>
+                                        <option value="99" {% if nota.tpIsencao == "99" %}selected{% endif %}>99 - Outras isençõe/imunidades</option>
+                                    </select>
+                                    <small class="text-muted">Conforme Tabela da EFD-Reinf</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small fw-bold text-muted mb-1">
+                                        <i class="bi bi-info-circle"></i> Fundamentação Legal
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm nf-field nf-desc-isencao" data-field="descIsencao"
+                                           id="desc-isencao-{{ nota.id }}"
+                                           value="{{ nota.descIsencao|default:'' }}"
+                                           placeholder="Ex: Entidade pública, Lei nº X.XXX/XX"
+                                           maxlength="255">
+                                </div>
+                            </div>
+                            <div class="alert alert-info small mt-2 mb-0">
+                                <i class="bi bi-info-circle"></i>
+                                <strong>Entidade Imune/Isenta:</strong> Selecione o beneficiário que é legalmente imune/isento de tributação. 
+                                O valor bruto será informado na EFD-Reinf como rendimento isento (sem retenção).
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Retenções de Impostos -->
                     <div class="mb-2">
                         <div class="form-check form-switch mb-2">
@@ -465,6 +511,12 @@ document.addEventListener('change', function(e) {
     if (e.target.classList.contains('tem-retencao-toggle')) {
         const notaId = e.target.id.replace('tem-ret-', '');
         const container = document.getElementById('tax-container-' + notaId);
+        if (container) container.classList.toggle('d-none', !e.target.checked);
+    }
+    /* ── Rendimento Isento toggle visibility ── */
+    if (e.target.classList.contains('rendimento-isento-toggle')) {
+        const notaId = e.target.id.replace('tem-isento-', '');
+        const container = document.getElementById('isento-container-' + notaId);
         if (container) container.classList.toggle('d-none', !e.target.checked);
     }
 });

@@ -2,19 +2,15 @@
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
-from django.db import transaction
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from credores.models import Credor
-from fiscal.models import RetencaoImposto
 from fiscal.services.impostos import (
-    anexar_relatorio_agrupamento_retencoes_no_processo,
-    anexar_guia_comprovante_relatorio_em_processos,
+    agrupar_retencoes_em_processo_recolhimento,
+    anexar_documentos_competencia_retencoes,
 )
-from pagamentos.domain_models import Processo, StatusChoicesProcesso, TiposDePagamento
 import logging
 
 logger = logging.getLogger(__name__)
@@ -45,60 +41,17 @@ def agrupar_retencoes_action(request: HttpRequest) -> HttpResponse:
         messages.warning(request, "Nenhum item selecionado para agrupar.")
         return redirect("painel_impostos_view")
 
-    with transaction.atomic():
-        retencoes = list(
-            RetencaoImposto.objects.select_for_update()
-            .select_related(
-                "codigo",
-                "status",
-                "beneficiario",
-                "nota_fiscal",
-            )
-            .filter(id__in=selecionados, processo_pagamento__isnull=True)
-        )
+    try:
+        novo_processo = agrupar_retencoes_em_processo_recolhimento(selecionados)
+    except ValueError as exc:
+        messages.warning(request, str(exc))
+        return redirect("painel_impostos_view")
 
-        if not retencoes:
-            messages.warning(request, "Nenhuma retenção elegível para agrupamento foi encontrada.")
-            return redirect("painel_impostos_view")
+    if not novo_processo:
+        messages.warning(request, "Nenhuma retenção elegível para agrupamento foi encontrada.")
+        return redirect("painel_impostos_view")
 
-        total_impostos = sum((retencao.valor or 0) for retencao in retencoes)
-        if total_impostos <= 0:
-            messages.warning(request, "Os itens selecionados não possuem valores válidos.")
-            return redirect("painel_impostos_view")
-
-        status_padrao, _ = StatusChoicesProcesso.objects.get_or_create(
-            status_choice__iexact="A PAGAR - PENDENTE AUTORIZAÇÃO",
-            defaults={"status_choice": "A PAGAR - PENDENTE AUTORIZAÇÃO"},
-        )
-
-        credor_orgao, _ = Credor.objects.get_or_create(
-            nome="Órgão Arrecadador (A Definir)",
-            defaults={"nome": "Órgão Arrecadador (A Definir)"},
-        )
-
-        tipo_pagamento_impostos, _ = TiposDePagamento.objects.get_or_create(
-            tipo_de_pagamento="IMPOSTOS"
-        )
-
-        novo_processo = Processo.objects.create(
-            credor=credor_orgao,
-            valor_bruto=total_impostos,
-            valor_liquido=total_impostos,
-            detalhamento="Pagamento Agrupado de Impostos Retidos",
-            observacao="Gerado automaticamente.",
-            status=status_padrao,
-            tipo_pagamento=tipo_pagamento_impostos,
-        )
-        logger.info("mutation=agrupar_retencoes novo_processo_id=%s user_id=%s", novo_processo.id, request.user.pk)
-
-        for retencao in retencoes:
-            retencao.processo_pagamento = novo_processo
-            retencao.save(update_fields=["processo_pagamento"])
-
-        anexar_relatorio_agrupamento_retencoes_no_processo(
-            processo=novo_processo,
-            retencoes=retencoes,
-        )
+    logger.info("mutation=agrupar_retencoes novo_processo_id=%s user_id=%s", novo_processo.id, request.user.pk)
 
     messages.success(request, f"Processo #{novo_processo.id} para recolhimento gerado com sucesso!")
     return redirect("editar_processo", pk=novo_processo.id)
@@ -132,33 +85,21 @@ def anexar_documentos_retencoes_action(request: HttpRequest) -> HttpResponse:
         messages.error(request, "Mês de referência inválido.")
         return redirect("painel_impostos_view")
 
-    with transaction.atomic():
-        retencoes = list(
-            RetencaoImposto.objects.select_for_update()
-            .select_related("processo_pagamento", "codigo", "nota_fiscal")
-            .filter(id__in=selecionados, competencia__month=mes_referencia, competencia__year=ano_referencia)
-            .exclude(processo_pagamento__isnull=True)
-        )
-
-        if not retencoes:
-            messages.error(
-                request,
-                "Nenhuma retenção elegível encontrada para a competência informada. Verifique se as retenções já foram agrupadas.",
-            )
-            return redirect("painel_impostos_view")
-
-        total_processos = anexar_guia_comprovante_relatorio_em_processos(
-            retencoes=retencoes,
-            guia_bytes=guia_arquivo.read(),
-            guia_nome=guia_arquivo.name,
-            comprovante_bytes=comprovante_arquivo.read(),
-            comprovante_nome=comprovante_arquivo.name,
-            mes=mes_referencia,
-            ano=ano_referencia,
-        )
+    total_processos = anexar_documentos_competencia_retencoes(
+        retencao_ids=selecionados,
+        guia_bytes=guia_arquivo.read(),
+        guia_nome=guia_arquivo.name,
+        comprovante_bytes=comprovante_arquivo.read(),
+        comprovante_nome=comprovante_arquivo.name,
+        mes=mes_referencia,
+        ano=ano_referencia,
+    )
 
     if not total_processos:
-        messages.error(request, "Não foi possível identificar processos de recolhimento para anexação dos documentos.")
+        messages.error(
+            request,
+            "Nenhuma retenção elegível encontrada para a competência informada. Verifique se as retenções já foram agrupadas.",
+        )
         return redirect("painel_impostos_view")
 
     messages.success(
