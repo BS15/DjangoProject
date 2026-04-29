@@ -7,7 +7,7 @@ from credores.models import Credor
 from verbas_indenizatorias.models import Diaria, Tabela_Valores_Unitarios_Verbas_Indenizatorias
 
 
-@permission_required('pagamentos.pode_criar_diarias', raise_exception=True)
+@permission_required('verbas_indenizatorias.pode_criar_diarias', raise_exception=True)
 def api_valor_unitario_diaria(request, beneficiario_id):
     """Retorna valor unitário de diária para o cargo/função do beneficiário."""
     try:
@@ -37,7 +37,7 @@ def api_valor_unitario_diaria(request, beneficiario_id):
         return JsonResponse({'sucesso': False, 'erro': 'Beneficiario nao encontrado', 'valor_unitario': None})
 
 
-@permission_required('pagamentos.pode_criar_diarias', raise_exception=True)
+@permission_required('verbas_indenizatorias.pode_criar_diarias', raise_exception=True)
 def api_diarias_iniciais_por_beneficiario(request, beneficiario_id):
     """Retorna diárias iniciais de um beneficiário para uso em complementações."""
     diarias = Diaria.objects.filter(

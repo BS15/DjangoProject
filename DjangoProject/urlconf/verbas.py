@@ -25,6 +25,8 @@ from verbas_indenizatorias.views.jetons import actions as verbas_jeton_actions
 from verbas_indenizatorias.views.jetons import panels as verbas_jeton_panels
 from verbas_indenizatorias.views.reembolsos import actions as verbas_reembolso_actions
 from verbas_indenizatorias.views.reembolsos import panels as verbas_reembolso_panels
+from verbas_indenizatorias.views.tabela_valores import actions as verbas_tabela_valores_actions
+from verbas_indenizatorias.views.tabela_valores import panels as verbas_tabela_valores_panels
 
 urlpatterns = [
     path('processo/<int:pk>/editar-verbas/', verbas_panels.editar_processo_verbas_view, name='editar_processo_verbas'),
@@ -41,6 +43,11 @@ urlpatterns = [
     path('verbas/reembolsos/', verbas_reembolso_panels.reembolsos_list_view, name='reembolsos_list'),
     path('verbas/jetons/', verbas_jeton_panels.jetons_list_view, name='jetons_list'),
     path('verbas/auxilios/', verbas_auxilio_panels.auxilios_list_view, name='auxilios_list'),
+    path('verbas/tabela-valores-unitarios/', verbas_tabela_valores_panels.tabela_valores_unitarios_list_view, name='tabela_valores_unitarios_list'),
+    path('verbas/tabela-valores-unitarios/novo/', verbas_tabela_valores_panels.add_tabela_valor_unitario_view, name='add_tabela_valor_unitario'),
+    path('verbas/tabela-valores-unitarios/novo/action/', verbas_tabela_valores_actions.add_tabela_valor_unitario_action, name='add_tabela_valor_unitario_action'),
+    path('verbas/tabela-valores-unitarios/<int:pk>/editar/', verbas_tabela_valores_panels.edit_tabela_valor_unitario_view, name='edit_tabela_valor_unitario'),
+    path('verbas/tabela-valores-unitarios/<int:pk>/editar/action/', verbas_tabela_valores_actions.edit_tabela_valor_unitario_action, name='edit_tabela_valor_unitario_action'),
     path('verbas/diarias/nova/', verbas_diarias_panels.add_diaria_view, name='add_diaria'),
     path('verbas/diarias/nova/action/', verbas_diarias_actions.add_diaria_action, name='add_diaria_action'),
     path('verbas/diarias/nova-assinada/', verbas_diarias_panels.add_diaria_assinada_view, name='add_diaria_assinada'),

@@ -32,12 +32,12 @@ Consulte também o [Catálogo de Permissões e Grupos](catalogo_permissoes_grupo
 
 | Ação Operacional | Permissão Requerida | Perfil Autorizado | Risco Mitigado |
 |---|---|---|---|
-| Criação de diária | `pagamentos.pode_criar_diarias` | Operador de Pagamentos | Inclusão de despesa indenizatória sem autorização de cadastro. |
-| Gestão operacional de diárias | `pagamentos.pode_gerenciar_diarias` | Responsável por Liquidação/Conferência de Diárias | Alteração indevida de status e comprovantes de diária. |
+| Criação de diária | `verbas_indenizatorias.pode_criar_diarias` | Operador de Pagamentos | Inclusão de despesa indenizatória sem autorização de cadastro. |
+| Gestão operacional de diárias | `verbas_indenizatorias.pode_gerenciar_diarias` | Responsável por Liquidação/Conferência de Diárias | Alteração indevida de status e comprovantes de diária. |
 | Gestão operacional de reembolsos | `pagamentos.pode_gerenciar_reembolsos` | Autorizador de Verbas | Pagamento de reembolso sem validação formal de competência. |
 | Gestão operacional de auxílios | `pagamentos.pode_gerenciar_auxilios` | Autorizador de Verbas | Concessão de benefício indenizatório sem elegibilidade validada. |
-| Agrupar verbas em processo de pagamento | `pagamentos.pode_agrupar_verbas` | Operador de Verbas | Consolidação financeira indevida de itens sem governança. |
-| Gerir capa, documentos e pendências do processo de verbas | `pagamentos.pode_gerenciar_processos_verbas` | Operador de Verbas | Edição indevida de dados processuais e documentais. |
+| Agrupar verbas em processo de pagamento | `verbas_indenizatorias.pode_agrupar_verbas` | Operador de Verbas | Consolidação financeira indevida de itens sem governança. |
+| Gerir capa, documentos e pendências do processo de verbas | `verbas_indenizatorias.pode_gerenciar_processos_verbas` | Operador de Verbas | Edição indevida de dados processuais e documentais. |
 | Gerir ciclo de vida de jetons | `pagamentos.pode_gerenciar_jetons` | Autorizador de Verbas | Autorização/cancelamento de jeton por perfil sem competência. |
 
 ### Domínio Suprimentos

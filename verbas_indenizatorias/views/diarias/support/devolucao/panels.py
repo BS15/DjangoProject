@@ -7,13 +7,13 @@ from django.db.models import Sum
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
-from pagamentos.views.helpers import _resolver_parametros_ordenacao
+from commons.shared.query_tools import resolver_parametros_ordenacao
 from verbas_indenizatorias.forms import DevolucaoDiariaForm
 from verbas_indenizatorias.models import DevolucaoDiaria, Diaria
 
 
 @require_GET
-@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
 def painel_devolucoes_diarias_view(request):
     """Lista devolucoes de diarias."""
     devolucoes = DevolucaoDiaria.objects.select_related("diaria__beneficiario", "registrado_por")
@@ -22,7 +22,7 @@ def painel_devolucoes_diarias_view(request):
     if beneficiario_q:
         devolucoes = devolucoes.filter(diaria__beneficiario__nome__icontains=beneficiario_q)
 
-    ordem, direcao, order_field = _resolver_parametros_ordenacao(
+    ordem, direcao, order_field = resolver_parametros_ordenacao(
         request,
         campos_permitidos={
             "diaria": "diaria__id",
@@ -54,7 +54,7 @@ def painel_devolucoes_diarias_view(request):
 
 
 @require_GET
-@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
 def registrar_devolucao_diaria_view(request, pk):
     """Formulario para registrar devolucao de diaria."""
     diaria = get_object_or_404(Diaria.objects.select_related("beneficiario", "status"), pk=pk)

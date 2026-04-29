@@ -1568,6 +1568,18 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
+            options={
+                "permissions": [
+                    (
+                        "pode_visualizar_tabela_valores_unitarios",
+                        "Pode visualizar tabela de valores unitários de verbas",
+                    ),
+                    (
+                        "pode_gerenciar_tabela_valores_unitarios",
+                        "Pode gerenciar tabela de valores unitários de verbas",
+                    ),
+                ],
+            },
         ),
         migrations.AddField(
             model_name="diaria",

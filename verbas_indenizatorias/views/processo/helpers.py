@@ -26,7 +26,7 @@ def _pode_gerenciar_processo_verbas_da_entidade(user, processo):
     if user.has_perm("pagamentos.operador_contas_a_pagar"):
         return True
 
-    if not user.has_perm("pagamentos.pode_gerenciar_processos_verbas"):
+    if not user.has_perm("verbas_indenizatorias.pode_gerenciar_processos_verbas"):
         return False
 
     from commons.shared.access_utils import user_is_entity_owner

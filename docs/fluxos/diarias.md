@@ -50,7 +50,7 @@ Contexto arquitetural do Domain Seal e [turnpikes](/negocio/glossario_conselho.m
 ## 2. Criação
 
 **View:** `add_diaria_view` / **Action:** `add_diaria_action`  
-**Permissão:** `pagamentos.pode_criar_diarias`
+**Permissão:** `verbas_indenizatorias.pode_criar_diarias`
 
 Referência de permissão e RBAC: [Matriz de Permissões](../governanca/matriz_permissoes.md).
 
@@ -62,7 +62,7 @@ Referência de permissão e RBAC: [Matriz de Permissões](../governanca/matriz_p
 ### Entrada alternativa: diária com solicitação já assinada (skip SCD)
 
 **View:** `add_diaria_assinada_view` / **Action:** `add_diaria_assinada_action`  
-**Permissão:** `pagamentos.pode_criar_diarias`
+**Permissão:** `verbas_indenizatorias.pode_criar_diarias`
 
 Use esta trilha quando a solicitação já estiver assinada fora do fluxo eletrônico padrão.
 

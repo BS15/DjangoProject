@@ -2,7 +2,7 @@
 
 from django.shortcuts import render
 
-from pagamentos.views.helpers import _resolver_parametros_ordenacao
+from commons.shared.query_tools import resolver_parametros_ordenacao
 
 
 def apply_filterset(request, filter_class, queryset):
@@ -29,7 +29,7 @@ def render_filtered_list(
     items = filterset.qs
     sort_context = {}
     if sort_fields:
-        ordem, direcao, order_field = _resolver_parametros_ordenacao(
+        ordem, direcao, order_field = resolver_parametros_ordenacao(
             request,
             campos_permitidos=sort_fields,
             default_ordem=default_ordem,

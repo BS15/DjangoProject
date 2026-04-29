@@ -20,12 +20,10 @@ def contabilizacao_processo_view(request, pk):
         approve_action="aprovar",
         approve_status=ProcessoStatus.CONTABILIZADO_CONSELHO,
         approve_message="Processo #{processo_id} contabilizado e enviado ao Conselho Fiscal!",
-        save_action="salvar",
-        save_message="Alterações do Processo #{processo_id} salvas.",
         reject_action="rejeitar",
         reject_status=ProcessoStatus.PAGO_EM_CONFERENCIA,
         reject_message="Processo #{processo_id} recusado pela Contabilidade e devolvido para a Conferência!",
-        editable=True,
+        editable=False,
     )
 
 

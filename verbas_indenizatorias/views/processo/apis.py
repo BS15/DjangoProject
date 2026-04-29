@@ -19,7 +19,7 @@ from ..shared.registry import (
     _VERBA_CONFIG,
     _get_permissao_gestao_verba,
 )
-from ...services.documentos import obter_ou_criar_prestacao
+from ...services.prestacao import obter_ou_criar_prestacao
 
 
 @require_POST

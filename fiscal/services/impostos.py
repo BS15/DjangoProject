@@ -112,97 +112,6 @@ def anexar_guia_comprovante_relatorio_em_processos(
     return total_processos
 
 
-def agrupar_retencoes_em_processo_recolhimento(retencao_ids: list[str]):
-    """Agrupa retenções elegíveis e cria processo de recolhimento com relatório anexado."""
-    RetencaoImposto = apps.get_model("fiscal", "RetencaoImposto")
-    Credor = apps.get_model("credores", "Credor")
-    Processo = apps.get_model("pagamentos", "Processo")
-    StatusChoicesProcesso = apps.get_model("pagamentos", "StatusChoicesProcesso")
-
-    with transaction.atomic():
-        retencoes = list(
-            RetencaoImposto.objects.select_for_update()
-            .select_related("codigo", "status", "beneficiario", "nota_fiscal")
-            .filter(id__in=retencao_ids, processo_pagamento__isnull=True)
-        )
-
-        if not retencoes:
-            return None
-
-        total_impostos = sum((retencao.valor or 0) for retencao in retencoes)
-        if total_impostos <= 0:
-            raise ValueError("Os itens selecionados não possuem valores válidos.")
-
-        status_padrao, _ = StatusChoicesProcesso.objects.get_or_create(
-            status_choice__iexact="A PAGAR - PENDENTE AUTORIZAÇÃO",
-            defaults={"status_choice": "A PAGAR - PENDENTE AUTORIZAÇÃO"},
-        )
-
-        credor_orgao, _ = Credor.objects.get_or_create(
-            nome="Órgão Arrecadador (A Definir)",
-            defaults={"nome": "Órgão Arrecadador (A Definir)"},
-        )
-
-        tipo_pagamento_impostos, _ = TiposDePagamento.objects.get_or_create(
-            tipo_de_pagamento="IMPOSTOS"
-        )
-
-        novo_processo = Processo.objects.create(
-            credor=credor_orgao,
-            valor_bruto=total_impostos,
-            valor_liquido=total_impostos,
-            detalhamento="Pagamento Agrupado de Impostos Retidos",
-            observacao="Gerado automaticamente.",
-            status=status_padrao,
-            tipo_pagamento=tipo_pagamento_impostos,
-        )
-
-        for retencao in retencoes:
-            retencao.processo_pagamento = novo_processo
-            retencao.save(update_fields=["processo_pagamento"])
-
-        anexar_relatorio_agrupamento_retencoes_no_processo(
-            processo=novo_processo,
-            retencoes=retencoes,
-        )
-
-    return novo_processo
-
-
-def anexar_documentos_competencia_retencoes(
-    retencao_ids: list[str],
-    guia_bytes: bytes,
-    guia_nome: str,
-    comprovante_bytes: bytes,
-    comprovante_nome: str,
-    mes: int,
-    ano: int,
-) -> int:
-    """Anexa guia, comprovante e relatório mensal para retenções elegíveis por competência."""
-    RetencaoImposto = apps.get_model("fiscal", "RetencaoImposto")
-
-    with transaction.atomic():
-        retencoes = list(
-            RetencaoImposto.objects.select_for_update()
-            .select_related("processo_pagamento", "codigo", "nota_fiscal")
-            .filter(id__in=retencao_ids, competencia__month=mes, competencia__year=ano)
-            .exclude(processo_pagamento__isnull=True)
-        )
-
-        if not retencoes:
-            return 0
-
-        return anexar_guia_comprovante_relatorio_em_processos(
-            retencoes=retencoes,
-            guia_bytes=guia_bytes,
-            guia_nome=guia_nome,
-            comprovante_bytes=comprovante_bytes,
-            comprovante_nome=comprovante_nome,
-            mes=mes,
-            ano=ano,
-        )
-
-
 def criar_documentos_pagamento_impostos(
     retencoes: list,
     relatorio_bytes: bytes,
@@ -283,8 +192,6 @@ def verificar_completude_documentos_impostos(processo) -> list:
 __all__ = [
     "anexar_relatorio_agrupamento_retencoes_no_processo",
     "anexar_guia_comprovante_relatorio_em_processos",
-    "agrupar_retencoes_em_processo_recolhimento",
-    "anexar_documentos_competencia_retencoes",
     "criar_documentos_pagamento_impostos",
     "verificar_completude_documentos_impostos",
 ]

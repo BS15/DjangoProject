@@ -4,9 +4,9 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
+from commons.shared.query_tools import resolver_parametros_ordenacao
 from pagamentos.filters import ProcessoFilter
 from pagamentos.domain_models import Processo, ProcessoStatus
-from pagamentos.views.helpers import _resolver_parametros_ordenacao
 from pagamentos.views.shared import apply_filterset
 
 
@@ -21,7 +21,7 @@ def painel_arquivamento_view(request):
     arquivados_qs = Processo.objects.filter(status__opcao_status__iexact=ProcessoStatus.ARQUIVADO)
 
     arquivamento_filtro = apply_filterset(request, ProcessoFilter, arquivados_qs)
-    ordem, direcao, order_field = _resolver_parametros_ordenacao(
+    ordem, direcao, order_field = resolver_parametros_ordenacao(
         request,
         campos_permitidos={
             "id": "id",

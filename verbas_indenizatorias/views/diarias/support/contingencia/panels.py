@@ -4,13 +4,13 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
-from pagamentos.views.helpers import _resolver_parametros_ordenacao
+from commons.shared.query_tools import resolver_parametros_ordenacao
 from verbas_indenizatorias.forms import ContingenciaDiariaForm
 from verbas_indenizatorias.models import ContingenciaDiaria, Diaria
 
 
 @require_GET
-@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
 def painel_contingencias_diarias_view(request):
     """Lista contingencias de diarias com filtro basico por status."""
     contingencias = ContingenciaDiaria.objects.select_related(
@@ -21,7 +21,7 @@ def painel_contingencias_diarias_view(request):
     if status_filtro in {"PENDENTE_SUPERVISOR", "APROVADA", "REJEITADA"}:
         contingencias = contingencias.filter(status=status_filtro)
 
-    ordem, direcao, order_field = _resolver_parametros_ordenacao(
+    ordem, direcao, order_field = resolver_parametros_ordenacao(
         request,
         campos_permitidos={
             "id": "id",
@@ -50,7 +50,7 @@ def painel_contingencias_diarias_view(request):
 
 
 @require_GET
-@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
 def add_contingencia_diaria_view(request, pk):
     """Formulario de abertura de contingencia para diaria."""
     diaria = get_object_or_404(Diaria.objects.select_related("beneficiario", "status"), pk=pk)

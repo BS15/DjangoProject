@@ -120,7 +120,7 @@ def _salvar_diaria_base(form, criador=None, solicitacao_assinada=False):
 
 
 @require_POST
-@permission_required('pagamentos.pode_criar_diarias', raise_exception=True)
+@permission_required('verbas_indenizatorias.pode_criar_diarias', raise_exception=True)
 def add_diaria_action(request):
     form = DiariaForm(request.POST)
     if not form.is_valid():
@@ -138,7 +138,7 @@ def add_diaria_action(request):
 
 
 @require_POST
-@permission_required('pagamentos.pode_criar_diarias', raise_exception=True)
+@permission_required('verbas_indenizatorias.pode_criar_diarias', raise_exception=True)
 def add_diaria_assinada_action(request):
     form = DiariaComSolicitacaoAssinadaForm(request.POST, request.FILES)
     if not form.is_valid():
@@ -163,7 +163,7 @@ def add_diaria_assinada_action(request):
 
 
 @require_POST
-@permission_required('pagamentos.pode_gerenciar_diarias', raise_exception=True)
+@permission_required('verbas_indenizatorias.pode_gerenciar_diarias', raise_exception=True)
 def solicitar_autorizacao_diaria_action(request, pk):
     diaria = get_object_or_404(Diaria, id=pk)
     diaria.definir_status(STATUS_VERBA_SOLICITADA, autorizada=False)
@@ -173,7 +173,7 @@ def solicitar_autorizacao_diaria_action(request, pk):
 
 
 @require_POST
-@permission_required('pagamentos.pode_gerenciar_diarias', raise_exception=True)
+@permission_required('verbas_indenizatorias.pode_gerenciar_diarias', raise_exception=True)
 def autorizar_diaria_action(request, pk):
     diaria = get_object_or_404(Diaria, id=pk)
     if diaria.proponente_id != request.user.id:
@@ -368,7 +368,7 @@ def aceitar_prestacao_action(request, pk):
 
 
 @require_POST
-@permission_required('pagamentos.pode_gerenciar_diarias', raise_exception=True)
+@permission_required('verbas_indenizatorias.pode_gerenciar_diarias', raise_exception=True)
 def cancelar_diaria_action(request, pk):
     justificativa = (request.POST.get("justificativa") or "").strip()
     if not justificativa:

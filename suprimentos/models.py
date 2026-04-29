@@ -129,10 +129,28 @@ class SuprimentoDeFundos(models.Model):
 
     def _enforce_domain_seal(self, update_fields=None):
         """Bloqueia alterações em campos sensíveis quando o processo está pós-pagamento."""
-        if not self.pk or not _is_processo_selado(self.processo):
+        if getattr(self, '_bypass_domain_seal', False):
+            return
+
+        if not self.pk:
+            if _is_processo_selado(self.processo):
+                raise DjangoValidationError(
+                    {
+                        "processo": (
+                            "Cadastro bloqueado: não é permitido vincular suprimento "
+                            "a processo em estágio pós-pagamento. "
+                            "Use fluxo de contingência aprovado para ajustes."
+                        )
+                    }
+                )
             return
 
         original = type(self).objects.get(pk=self.pk)
+        processo_original = original.processo
+        processo_atual = self.processo
+        if not (_is_processo_selado(processo_atual) or _is_processo_selado(processo_original)):
+            return
+
         campos_sensiveis = self._CAMPOS_SENSIVEIS_POS_PAGAMENTO
         campos_avaliados = set(update_fields) & campos_sensiveis if update_fields is not None else campos_sensiveis
         alterados = [campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)]
@@ -155,6 +173,15 @@ class SuprimentoDeFundos(models.Model):
 
     def delete(self, *args, **kwargs):
         """Bloqueia exclusão de suprimento vinculado a processo pós-pagamento."""
+        if _is_processo_selado(self.processo):
+            raise DjangoValidationError(
+                {
+                    "status": (
+                        "Exclusão bloqueada: suprimento vinculado a processo em estágio pós-pagamento. "
+                        "Use fluxo de contingência aprovado para ajustes."
+                    )
+                }
+            )
         self._enforce_domain_seal()
         return super().delete(*args, **kwargs)
 
@@ -213,26 +240,47 @@ class DespesaSuprimento(models.Model):
     history = HistoricalRecords()
     objects = SealedMutationQuerySet.as_manager()
 
+    _CAMPOS_SENSIVEIS_POS_PAGAMENTO = {
+        "suprimento_id",
+        "data",
+        "estabelecimento",
+        "cnpj_cpf",
+        "detalhamento",
+        "nota_fiscal",
+        "valor",
+        "arquivo",
+    }
+
+    def _processo_referencia(self):
+        """Retorna o processo associado via suprimento."""
+        return self.suprimento.processo if self.suprimento_id else None
+
     def _enforce_domain_seal(self, update_fields=None):
         """Bloqueia alterações em campos sensíveis quando o processo está pós-pagamento."""
-        if not self.pk:
+        if getattr(self, '_bypass_domain_seal', False):
             return
 
-        processo = self.suprimento.processo if self.suprimento_id else None
-        if not _is_processo_selado(processo):
+        processo_atual = self._processo_referencia()
+
+        if not self.pk:
+            if _is_processo_selado(processo_atual):
+                raise DjangoValidationError(
+                    {
+                        "suprimento": (
+                            "Cadastro bloqueado: não é permitido adicionar despesa "
+                            "a suprimento vinculado a processo em estágio pós-pagamento. "
+                            "Use fluxo de contingência aprovado para ajustes."
+                        )
+                    }
+                )
             return
 
         original = type(self).objects.get(pk=self.pk)
-        campos_sensiveis = {
-            "suprimento_id",
-            "data",
-            "estabelecimento",
-            "cnpj_cpf",
-            "detalhamento",
-            "nota_fiscal",
-            "valor",
-            "arquivo",
-        }
+        processo_original = original._processo_referencia()
+        if not (_is_processo_selado(processo_atual) or _is_processo_selado(processo_original)):
+            return
+
+        campos_sensiveis = self._CAMPOS_SENSIVEIS_POS_PAGAMENTO
         campos_avaliados = set(update_fields) & campos_sensiveis if update_fields is not None else campos_sensiveis
         alterados = [campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)]
 
@@ -254,6 +302,15 @@ class DespesaSuprimento(models.Model):
 
     def delete(self, *args, **kwargs):
         """Bloqueia exclusão de despesa vinculada a processo pós-pagamento."""
+        if _is_processo_selado(self._processo_referencia()):
+            raise DjangoValidationError(
+                {
+                    "status": (
+                        "Exclusão bloqueada: despesa vinculada a processo em estágio pós-pagamento. "
+                        "Use fluxo de contingência aprovado para ajustes."
+                    )
+                }
+            )
         self._enforce_domain_seal()
         return super().delete(*args, **kwargs)
 

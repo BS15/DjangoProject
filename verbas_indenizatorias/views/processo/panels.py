@@ -11,14 +11,14 @@ from .helpers import _montar_contexto_processo_verbas, _pode_gerenciar_processo_
 
 
 @require_GET
-@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_processos_verbas", raise_exception=True)
 def verbas_panel_view(request):
     """Renderiza o painel inicial de operacoes de verbas indenizatorias."""
     return render(request, "verbas/verbas_panel.html")
 
 
 @require_GET
-@permission_required("pagamentos.pode_gerenciar_processos_verbas", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas_view(request, pk):
     """Hub de edição para processos de verbas indenizatórias."""
     processo = get_object_or_404(Processo, id=pk)
@@ -29,7 +29,7 @@ def editar_processo_verbas_view(request, pk):
 
 
 @require_GET
-@permission_required("pagamentos.pode_gerenciar_processos_verbas", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas_capa_view(request, pk):
     """Spoke de edição da capa do processo de verbas."""
     processo = get_object_or_404(Processo, id=pk)
@@ -41,7 +41,7 @@ def editar_processo_verbas_capa_view(request, pk):
 
 
 @require_GET
-@permission_required("pagamentos.pode_gerenciar_processos_verbas", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas_pendencias_view(request, pk):
     """Spoke de edição das pendências do processo de verbas."""
     processo = get_object_or_404(Processo, id=pk)
@@ -53,7 +53,7 @@ def editar_processo_verbas_pendencias_view(request, pk):
 
 
 @require_GET
-@permission_required("pagamentos.pode_gerenciar_processos_verbas", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas_itens_view(request, pk):
     """Spoke de gestão dos itens individuais vinculados ao processo."""
     processo = get_object_or_404(Processo, id=pk)
@@ -64,7 +64,7 @@ def editar_processo_verbas_itens_view(request, pk):
 
 
 @require_GET
-@permission_required("pagamentos.pode_gerenciar_processos_verbas", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas_documentos_view(request, pk):
     """Spoke de gestão de documentos do processo e cards read-only dos docs de verba."""
     processo = get_object_or_404(Processo, id=pk)

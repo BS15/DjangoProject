@@ -8,7 +8,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
-from pagamentos.views.helpers import _resolver_parametros_ordenacao
+from commons.shared.query_tools import resolver_parametros_ordenacao
 from suprimentos.models import PrestacaoContasSuprimento, SuprimentoDeFundos
 from ..helpers import _pode_acessar_suprimento, _suprimento_encerrado
 from suprimentos.forms import DespesaSuprimentoForm, EnviarPrestacaoSuprimentoForm
@@ -18,7 +18,7 @@ from suprimentos.forms import DespesaSuprimentoForm, EnviarPrestacaoSuprimentoFo
 @permission_required("suprimentos.acesso_backoffice", raise_exception=True)
 def painel_suprimentos_view(request: HttpRequest) -> HttpResponse:
     """Exibe painel resumido com os suprimentos cadastrados."""
-    ordem, direcao, order_field = _resolver_parametros_ordenacao(
+    ordem, direcao, order_field = resolver_parametros_ordenacao(
         request,
         campos_permitidos={
             "id": "id",
@@ -119,7 +119,7 @@ def adicionar_despesa_view(request: HttpRequest, pk: int) -> HttpResponse:
 @permission_required("suprimentos.pode_gerir_prestacao_contas_suprimento", raise_exception=True)
 def revisar_prestacoes_suprimento_view(request: HttpRequest) -> HttpResponse:
     """Painel do operador listando prestações de suprimento aguardando revisão."""
-    ordem, direcao, order_field = _resolver_parametros_ordenacao(
+    ordem, direcao, order_field = resolver_parametros_ordenacao(
         request,
         campos_permitidos={
             "suprimento": "suprimento__id",

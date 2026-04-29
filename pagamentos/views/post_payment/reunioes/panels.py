@@ -4,16 +4,16 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
+from commons.shared.query_tools import resolver_parametros_ordenacao
 from pagamentos.forms import PendenciaForm
 from pagamentos.domain_models import Processo, ProcessoStatus, ReuniaoConselho
-from pagamentos.views.helpers import _resolver_parametros_ordenacao
 
 
 @require_GET
 @permission_required("pagamentos.pode_auditar_conselho", raise_exception=True)
 def gerenciar_reunioes_view(request):
     """Exibe listagem de reunioes cadastradas do conselho fiscal."""
-    ordem, direcao, order_field = _resolver_parametros_ordenacao(
+    ordem, direcao, order_field = resolver_parametros_ordenacao(
         request,
         campos_permitidos={
             "id": "id",

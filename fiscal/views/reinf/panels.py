@@ -1,6 +1,4 @@
 """Views de painel para EFD-Reinf."""
-
-from datetime import date
 from decimal import Decimal
 
 from django.contrib.auth.decorators import permission_required
@@ -16,7 +14,7 @@ from .shared import parse_competencia
 @permission_required("fiscal.acesso_backoffice", raise_exception=True)
 def painel_reinf_view(request):
     """Renderiza command center da EFD-Reinf por competência."""
-    today = date.today()
+    now = timezone.localtime()
     mes, ano, _ = parse_competencia(request, allow_all=False)
 
     competencia_atual = f"{mes:02d}/{ano}"
@@ -43,14 +41,14 @@ def painel_reinf_view(request):
         eventos_prontos.append({
             "tipo_evento": "R-2010",
             "credor_nome": getattr(grupo.get("credor"), "nome", "Credor não informado"),
-            "data_geracao": today,
+            "data_geracao": now,
             "numero_recibo": None,
         })
     for grupo in serie_4000:
         eventos_prontos.append({
             "tipo_evento": grupo.get("evento", "R-4020"),
             "credor_nome": getattr(grupo.get("beneficiario"), "nome", "Beneficiário não informado"),
-            "data_geracao": today,
+            "data_geracao": now,
             "numero_recibo": None,
         })
 

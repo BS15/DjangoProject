@@ -10,10 +10,10 @@ from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
 from pagamentos.domain_models import Processo, ProcessoStatus
+from pagamentos.services.arquivamento import executar_arquivamento_definitivo
 from pagamentos.views.helpers import (
     ArquivamentoDefinitivoError,
     ArquivamentoSemDocumentosError,
-    _executar_arquivamento_definitivo,
 )
 
 
@@ -36,7 +36,7 @@ def arquivar_processo_action(request: HttpRequest, pk: int) -> HttpResponse:
                 messages.error(request, f"Processo #{processo.id} não está no status correto para arquivamento.")
                 return redirect("painel_arquivamento")
 
-            _executar_arquivamento_definitivo(processo, request.user)
+            executar_arquivamento_definitivo(processo, request.user)
     except ArquivamentoSemDocumentosError:
         messages.error(request, f"Processo #{processo.id} não possui documentos para arquivar.")
         return redirect("painel_arquivamento")

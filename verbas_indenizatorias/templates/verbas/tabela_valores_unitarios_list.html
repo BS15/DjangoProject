@@ -1,0 +1,51 @@
+{% extends "layouts/base_list.html" %}
+
+{% block title %}Tabela de Valores Unitários{% endblock %}
+{% block page_heading %}Tabela de Valores Unitários{% endblock %}
+{% block page_subtitle %}Cadastre e mantenha os valores unitários por tipo de verba e cargo/função.{% endblock %}
+
+{% block page_actions %}
+{% if perms.verbas_indenizatorias.pode_gerenciar_tabela_valores_unitarios %}
+<a href="{% url 'add_tabela_valor_unitario' %}" class="btn btn-success btn-sm fw-bold"><i class="bi bi-plus-circle"></i> Novo Valor Unitário</a>
+{% endif %}
+<a href="{% url 'verbas_panel' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+{% endblock %}
+
+{% block filter_form %}
+<div class="col-md-4">
+    <label class="small fw-bold text-secondary mb-1">Tipo de Verba</label>
+    {{ filter.form.tipo }}
+</div>
+<div class="col-md-4">
+    <label class="small fw-bold text-secondary mb-1">Cargo/Função</label>
+    {{ filter.form.cargo_funcao }}
+</div>
+{% endblock %}
+
+{% block table_headers %}
+<th data-campo="tipo">Tipo de Verba</th>
+<th data-campo="cargo_funcao">Cargo/Função</th>
+<th data-campo="valor_unitario" class="text-end">Valor Unitário</th>
+<th class="text-center no-sort">Ações</th>
+{% endblock %}
+
+{% block table_rows %}
+{% for item in tabelas %}
+<tr>
+    <td>{{ item.tipo|default:"—" }}</td>
+    <td>{{ item.cargo_funcao|default:"—" }}</td>
+    <td class="text-end fw-bold text-success">R$ {{ item.valor_unitario|floatformat:2 }}</td>
+    <td class="text-center">
+        {% if perms.verbas_indenizatorias.pode_gerenciar_tabela_valores_unitarios %}
+        <a href="{% url 'edit_tabela_valor_unitario' pk=item.id %}" class="btn btn-sm btn-outline-primary py-0" title="Editar">
+            <i class="bi bi-pencil-square"></i>
+        </a>
+        {% else %}
+        <span class="text-muted small">Somente leitura</span>
+        {% endif %}
+    </td>
+</tr>
+{% empty %}
+<tr><td colspan="4" class="text-center text-muted py-4">Nenhum valor unitário cadastrado.</td></tr>
+{% endfor %}
+{% endblock %}

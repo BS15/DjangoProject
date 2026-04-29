@@ -1718,7 +1718,7 @@
 <hr />
 <h2 id="2-criacao">2. Criação<a class="headerlink" href="#2-criacao" title="Permanent link">&para;</a></h2>
 <p><strong>View:</strong> <code>add_diaria_view</code> / <strong>Action:</strong> <code>add_diaria_action</code><br />
-<strong>Permissão:</strong> <code>pagamentos.pode_criar_diarias</code></p>
+<strong>Permissão:</strong> <code>verbas_indenizatorias.pode_criar_diarias</code></p>
 <p>Referência de permissão e RBAC: <a href="../../governanca/matriz_permissoes/">Matriz de Permissões</a>.</p>
 <ol>
 <li>Operador preenche o formulário (<code>DiariaForm</code>).</li>
@@ -1728,7 +1728,7 @@
 </ol>
 <h3 id="entrada-alternativa-diaria-com-solicitacao-ja-assinada-skip-scd">Entrada alternativa: diária com solicitação já assinada (skip SCD)<a class="headerlink" href="#entrada-alternativa-diaria-com-solicitacao-ja-assinada-skip-scd" title="Permanent link">&para;</a></h3>
 <p><strong>View:</strong> <code>add_diaria_assinada_view</code> / <strong>Action:</strong> <code>add_diaria_assinada_action</code><br />
-<strong>Permissão:</strong> <code>pagamentos.pode_criar_diarias</code></p>
+<strong>Permissão:</strong> <code>verbas_indenizatorias.pode_criar_diarias</code></p>
 <p>Use esta trilha quando a solicitação já estiver assinada fora do fluxo eletrônico padrão.</p>
 <ol>
 <li>Operador preenche o mesmo formulário base e anexa o PDF da solicitação assinada (<code>solicitacao_assinada_arquivo</code>).</li>
@@ -1757,7 +1757,7 @@
 <hr />
 <h2 id="3-hub-de-gerenciamento">3. Hub de gerenciamento<a class="headerlink" href="#3-hub-de-gerenciamento" title="Permanent link">&para;</a></h2>
 <p><strong>View:</strong> <code>gerenciar_diaria_view</code><br />
-<strong>Permissão:</strong> <code>pagamentos.pode_gerenciar_diarias</code></p>
+<strong>Permissão:</strong> <code>verbas_indenizatorias.pode_gerenciar_diarias</code></p>
 <p>Exibe:
 - Dados da diária (status, beneficiário, datas, valor calculado).
 - Prestação de contas com comprovantes.
@@ -1823,7 +1823,7 @@
 <hr />
 <h2 id="6-assinatura-eletronica-autentique">6. Assinatura eletrônica (Autentique)<a class="headerlink" href="#6-assinatura-eletronica-autentique" title="Permanent link">&para;</a></h2>
 <p><strong>Action:</strong> <code>liberar_para_assinatura_action</code><br />
-<strong>Permissão:</strong> <code>pagamentos.pode_gerenciar_diarias</code></p>
+<strong>Permissão:</strong> <code>verbas_indenizatorias.pode_gerenciar_diarias</code></p>
 <ol>
 <li>Verifica se já existe um <code>AssinaturaEletronica</code> do tipo PCD; se não, gera e anexa o PDF.</li>
 <li>Envia o PDF para a Autentique via <code>enviar_documento_para_assinatura</code>.</li>
@@ -1856,7 +1856,7 @@
 <h2 id="9-cancelamento">9. Cancelamento<a class="headerlink" href="#9-cancelamento" title="Permanent link">&para;</a></h2>
 <p><strong>Spoke (GET):</strong> <code>cancelar_diaria_spoke_view</code><br />
 <strong>Action (POST):</strong> <code>cancelar_diaria_action</code><br />
-<strong>Permissão:</strong> <code>pagamentos.pode_gerenciar_diarias</code><br />
+<strong>Permissão:</strong> <code>verbas_indenizatorias.pode_gerenciar_diarias</code><br />
 <strong>Serviço:</strong> <code>cancelar_verba</code> (<code>pagamentos/services/cancelamentos.py</code>)</p>
 <ul>
 <li>Justificativa é sempre obrigatória.</li>

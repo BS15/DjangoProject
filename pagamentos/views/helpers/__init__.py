@@ -2,15 +2,9 @@
 
 Organização por responsabilidade:
 - audit_builders.py: builders de payloads de auditoria e histórico
-- queries.py: utilitários genéricos de query e ordenação
 - payment_builders.py: builders de dados para painéis de pagamento e ações em lote
 - workflows.py: filas de revisão, aprovação/recusa e formulários de fluxo
 """
-from .queries import (
-    _obter_campo_ordenacao,
-    _resolver_parametros_ordenacao,
-    _aplicar_filtro_por_opcao,
-)
 from .audit_builders import (
     _aplicar_filtros_historico,
     _serializar_documentos_processo_auditoria,
@@ -28,9 +22,17 @@ from .payment_builders import (
     _aplicar_filtros_contas_a_pagar,
     _build_detalhes_pagamento,
     _consolidar_totais_pagamento,
+    _atualizar_status_em_lote,
     _processar_acao_lote,
 )
 from .errors import ArquivamentoDefinitivoError, ArquivamentoSemDocumentosError
+from .contingencias import (
+    determinar_requisitos_contingencia,
+    normalizar_dados_propostos_contingencia,
+    sincronizar_flag_contingencia_processo,
+    processar_aprovacao_contingencia,
+    processar_revisao_contadora_contingencia,
+)
 from .workflows import (
     _iniciar_fila_sessao,
     _handle_queue_navigation,
@@ -40,10 +42,6 @@ from .workflows import (
 )
 
 __all__ = [
-    # queries
-    "_obter_campo_ordenacao",
-    "_resolver_parametros_ordenacao",
-    "_aplicar_filtro_por_opcao",
     # audit_builders
     "_aplicar_filtros_historico",
     "_build_history_record",
@@ -56,10 +54,17 @@ __all__ = [
     "_aplicar_filtros_contas_a_pagar",
     "_build_detalhes_pagamento",
     "_consolidar_totais_pagamento",
+    "_atualizar_status_em_lote",
     "_processar_acao_lote",
     # errors
     "ArquivamentoDefinitivoError",
     "ArquivamentoSemDocumentosError",
+    # contingencias
+    "determinar_requisitos_contingencia",
+    "normalizar_dados_propostos_contingencia",
+    "sincronizar_flag_contingencia_processo",
+    "processar_aprovacao_contingencia",
+    "processar_revisao_contadora_contingencia",
     # workflows
     "_iniciar_fila_sessao",
     "_handle_queue_navigation",

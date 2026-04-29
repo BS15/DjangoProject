@@ -5,12 +5,12 @@ from django.db.models import Exists, OuterRef
 from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
+from commons.shared.query_tools import obter_campo_ordenacao
 from fiscal.models import RetencaoImposto
 from pagamentos.domain_models import STATUS_PROCESSO_CONTAS_A_PAGAR, PendenciaProcessual, Processo
 from pagamentos.views.helpers import (
     _aplicar_filtros_contas_a_pagar,
     _gerar_agrupamentos_contas_a_pagar,
-    _obter_campo_ordenacao,
 )
 
 
@@ -31,7 +31,7 @@ def contas_a_pagar(request):
     ordem = request.GET.get("ordem", "id")
     direcao = request.GET.get("direcao", "asc")
 
-    order_field = _obter_campo_ordenacao(
+    order_field = obter_campo_ordenacao(
         request,
         campos_permitidos={
             "id": "id",

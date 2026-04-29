@@ -17,7 +17,7 @@ from verbas_indenizatorias.models import Diaria
 logger = logging.getLogger(__name__)
 
 
-@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
 def sincronizar_assinatura_view(request, assinatura_id):
     """Sincroniza o estado de uma assinatura e baixa o PDF assinado quando disponível."""
     assinatura = get_object_or_404(AssinaturaAutentique, id=assinatura_id)
@@ -61,7 +61,7 @@ def sincronizar_assinatura_view(request, assinatura_id):
     return redirect("gerenciar_diaria", pk=diaria_id)
 
 
-@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
 def reenviar_assinatura_view(request, diaria_id):
     """Reenvia o rascunho SCD da diária para assinatura na Autentique."""
     diaria = get_object_or_404(Diaria, id=diaria_id)

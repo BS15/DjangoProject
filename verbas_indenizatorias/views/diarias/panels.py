@@ -3,10 +3,9 @@ from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render
 from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_GET
-from openpyxl import Workbook
 
+from commons.shared.query_tools import resolver_parametros_ordenacao
 from pagamentos.domain_models import Processo, STATUS_PROCESSO_PRE_AUTORIZACAO
-from pagamentos.views.helpers import _resolver_parametros_ordenacao
 from pagamentos.views.shared import render_filtered_list
 from verbas_indenizatorias.forms import ComprovanteDiariaFormSet, DiariaComSolicitacaoAssinadaForm, DiariaForm
 from verbas_indenizatorias.models import Diaria, PrestacaoContasDiaria
@@ -65,7 +64,7 @@ def diarias_list_view(request):
 
 
 @require_GET
-@permission_required("pagamentos.pode_criar_diarias", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_criar_diarias", raise_exception=True)
 def add_diaria_view(request):
     return render(
         request,
@@ -79,7 +78,7 @@ def add_diaria_view(request):
 
 
 @require_GET
-@permission_required("pagamentos.pode_criar_diarias", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_criar_diarias", raise_exception=True)
 def add_diaria_assinada_view(request):
     return render(
         request,
@@ -93,7 +92,7 @@ def add_diaria_assinada_view(request):
 
 
 @require_GET
-@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
 def gerenciar_diaria_view(request, pk):
     diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status', 'processo', 'prestacao_contas'), id=pk)
     prestacao = _obter_prestacao_sem_criar(diaria)
@@ -110,7 +109,7 @@ def gerenciar_diaria_view(request, pk):
 
 
 @require_GET
-@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
 def vinculo_diaria_spoke_view(request, pk):
     diaria = get_object_or_404(
         Diaria.objects.select_related('beneficiario', 'status', 'processo', 'prestacao_contas'),
@@ -127,7 +126,7 @@ def vinculo_diaria_spoke_view(request, pk):
 
 
 @require_GET
-@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
 def devolucao_diaria_spoke_view(request, pk):
     diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status'), id=pk)
     context = {'diaria': diaria}
@@ -135,7 +134,7 @@ def devolucao_diaria_spoke_view(request, pk):
 
 
 @require_GET
-@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
 def apostila_diaria_spoke_view(request, pk):
     diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status'), id=pk)
     context = {'diaria': diaria}
@@ -143,7 +142,7 @@ def apostila_diaria_spoke_view(request, pk):
 
 
 @require_GET
-@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
 def cancelar_diaria_spoke_view(request, pk):
     diaria = get_object_or_404(Diaria.objects.select_related('beneficiario', 'status'), id=pk)
     status_choice = (getattr(getattr(diaria, "status", None), "status_choice", "") or "").upper()
@@ -166,7 +165,7 @@ def minha_prestacao_list_view(request):
             Diaria.objects.filter(beneficiario=credor)
             .select_related('status', 'prestacao_contas')
         )
-        ordem, direcao, order_field = _resolver_parametros_ordenacao(
+        ordem, direcao, order_field = resolver_parametros_ordenacao(
             request,
             campos_permitidos={
                 'numero_siscac': 'numero_siscac',
@@ -223,7 +222,7 @@ def gerenciar_prestacao_view(request, pk):
 
 
 @require_GET
-@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
 def painel_autorizacao_diarias_view(request):
     diarias_pendentes = listar_diarias_pendentes_para_proponente(request.user)
     ordem = request.GET.get('ordem', 'numero_sequencial')
@@ -269,7 +268,7 @@ def painel_revisar_prestacoes_view(request):
     if periodo_ate:
         prestacoes = prestacoes.filter(diaria__data_retorno__lte=periodo_ate)
 
-    ordem, direcao, order_field = _resolver_parametros_ordenacao(
+    ordem, direcao, order_field = resolver_parametros_ordenacao(
         request,
         campos_permitidos={
             'prestacao': 'id',
@@ -331,6 +330,16 @@ def revisar_prestacao_view(request, pk):
 @permission_required("pagamentos.pode_importar_diarias", raise_exception=True)
 def download_template_diarias_xlsx(request):
     """Baixa uma planilha XLSX-modelo para importação de diárias."""
+    # Import tardio para não bloquear o bootstrap do Django quando a dependência
+    # opcional de exportação XLSX não estiver disponível no ambiente ativo.
+    try:
+        from openpyxl import Workbook
+    except ModuleNotFoundError:
+        return HttpResponse(
+            "Exportação XLSX indisponível: dependência openpyxl não instalada no ambiente atual.",
+            status=503,
+        )
+
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = "Diarias"

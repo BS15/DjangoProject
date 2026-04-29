@@ -5,7 +5,7 @@ import re
 
 import pdfplumber
 from commons.shared.pdf_tools import split_pdf_to_temp_pages
-from commons.shared.text_tools import normalize_account, normalize_document
+from commons.shared.text_tools import normalize_account
 from django.core.files.storage import default_storage
 
 
@@ -67,7 +67,7 @@ def _match_credor_por_cpf_cnpj(cpf_cnpj_list, cnpj_orgao_norm, Credor):
     cpf_cnpj_encontrados = []
 
     for cpf_cnpj in cpf_cnpj_list:
-        cpf_cnpj_norm = normalize_document(cpf_cnpj)
+        cpf_cnpj_norm = re.sub(r"\D", "", cpf_cnpj or "")
         if cpf_cnpj_norm and cpf_cnpj_norm != cnpj_orgao_norm:
             credor = Credor.objects.filter(cpf_cnpj=cpf_cnpj).first()
             cpf_cnpj_encontrados.append({"cpf_cnpj": cpf_cnpj, "credor": credor})
@@ -102,7 +102,7 @@ def processar_pdf_comprovantes(pdf_file):
     agencia_orgao = "3582-3"
     conta_orgao_limpa = "7429-2"
 
-    cnpj_orgao_norm = normalize_document(cnpj_orgao)
+    cnpj_orgao_norm = re.sub(r"\D", "", cnpj_orgao or "")
     agencia_orgao_norm, conta_orgao_norm = normalize_account(agencia_orgao, conta_orgao_limpa)
 
     paginas_temp = split_pdf_to_temp_pages(pdf_file)

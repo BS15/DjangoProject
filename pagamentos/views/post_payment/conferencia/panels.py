@@ -5,10 +5,10 @@ from django.db.models import Exists, OuterRef
 from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
+from commons.shared.query_tools import aplicar_filtro_por_opcao, resolver_parametros_ordenacao
 from commons.shared.text_tools import normalize_choice
 from fiscal.models import RetencaoImposto
 from pagamentos.domain_models import Contingencia, Processo, ProcessoStatus
-from pagamentos.views.helpers import _aplicar_filtro_por_opcao, _resolver_parametros_ordenacao
 
 
 @require_GET
@@ -28,7 +28,7 @@ def painel_conferencia_view(request):
         request.GET.get("filtro", ""),
         {"com_pendencia", "com_retencao", "com_ambos", "sem_pendencias"},
     )
-    processos_pagos = _aplicar_filtro_por_opcao(
+    processos_pagos = aplicar_filtro_por_opcao(
         processos_pagos,
         filtro,
         {
@@ -39,7 +39,7 @@ def painel_conferencia_view(request):
         },
     )
 
-    ordem, direcao, order_field = _resolver_parametros_ordenacao(
+    ordem, direcao, order_field = resolver_parametros_ordenacao(
         request,
         campos_permitidos={
             "id": "id",

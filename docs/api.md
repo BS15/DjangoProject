@@ -66,10 +66,10 @@ Fluxos de formulário HTML surfaceiam erros de negócio via sistema de mensagens
 
 | Método | Path | Permissão | Descrição | Redirect sucesso |
 |---|---|---|---|---|
-| `POST` | `/verbas/diarias/nova/action/` | `pagamentos.pode_criar_diarias` | Cria diária em status `RASCUNHO` | `gerenciar_diaria(pk)` |
+| `POST` | `/verbas/diarias/nova/action/` | `verbas_indenizatorias.pode_criar_diarias` | Cria diária em status `RASCUNHO` | `gerenciar_diaria(pk)` |
 | `POST` | `/verbas/diarias/<pk>/solicitar-autorizacao/` | `pagamentos.pode_gerenciar_diarias` | Avança diária para `SOLICITADA` | `gerenciar_diaria(pk)` |
 | `POST` | `/verbas/diarias/<pk>/autorizar/` | `pagamentos.pode_autorizar_diarias` | Avança diária para `APROVADA` apenas quando o usuário é o proponente vinculado da diária | `gerenciar_diaria(pk)` |
-| `POST` | `/verbas/agrupar/<tipo_verba>/` | `pagamentos.pode_agrupar_verbas` | Agrupa itens elegíveis em processo de pagamento | `editar_processo_verbas(pk)` |
+| `POST` | `/verbas/agrupar/<tipo_verba>/` | `verbas_indenizatorias.pode_agrupar_verbas` | Agrupa itens elegíveis em processo de pagamento | `editar_processo_verbas(pk)` |
 
 ---
 

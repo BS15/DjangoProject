@@ -7,10 +7,10 @@ from django.contrib.auth.decorators import permission_required
 from django.db.models import Count, Sum
 from django.shortcuts import redirect, render
 
+from commons.shared.query_tools import resolver_parametros_ordenacao
 from fiscal.filters import RetencaoIndividualFilter, RetencaoNotaFilter, RetencaoProcessoFilter
 from fiscal.models import DocumentoFiscal, DocumentoPagamentoImposto, RetencaoImposto
 from pagamentos.domain_models import Processo
-from pagamentos.views.helpers import _resolver_parametros_ordenacao
 from pagamentos.views.shared import apply_filterset
 
 DEFAULT_VIEW = "individual"
@@ -45,7 +45,7 @@ def painel_impostos_view(request):
             "nome_emitente",
         )
         filtro = apply_filterset(request, RetencaoNotaFilter, queryset_base.order_by("-id"))
-        ordem, direcao, order_field = _resolver_parametros_ordenacao(
+        ordem, direcao, order_field = resolver_parametros_ordenacao(
             request,
             campos_permitidos={
                 "nf": "numero_nota_fiscal",
@@ -68,7 +68,7 @@ def painel_impostos_view(request):
     elif visao == "processo":
         queryset_base = Processo.objects.select_related("credor")
         filtro = apply_filterset(request, RetencaoProcessoFilter, queryset_base.order_by("-id"))
-        ordem, direcao, order_field = _resolver_parametros_ordenacao(
+        ordem, direcao, order_field = resolver_parametros_ordenacao(
             request,
             campos_permitidos={
                 "processo": "id",
@@ -97,7 +97,7 @@ def painel_impostos_view(request):
             "beneficiario",
         ).order_by("-id")
         filtro = apply_filterset(request, RetencaoIndividualFilter, queryset_base)
-        ordem, direcao, order_field = _resolver_parametros_ordenacao(
+        ordem, direcao, order_field = resolver_parametros_ordenacao(
             request,
             campos_permitidos={
                 "competencia": "competencia",

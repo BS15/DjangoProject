@@ -13,20 +13,6 @@ from verbas_indenizatorias.pdf_generators import VERBAS_DOCUMENT_REGISTRY
 from verbas_indenizatorias.models import (
     DocumentoDiaria, DocumentoReembolso, DocumentoJeton, DocumentoAuxilio,
 )
-from verbas_indenizatorias.services.prestacao import (
-    obter_ou_criar_prestacao as _obter_ou_criar_prestacao,
-    registrar_comprovante as _registrar_comprovante,
-)
-
-
-def obter_ou_criar_prestacao(diaria):
-    """Obtém prestação de contas da diária, criando em estado aberto quando ausente."""
-    return _obter_ou_criar_prestacao(diaria)
-
-
-def registrar_comprovante_prestacao(diaria, arquivo, tipo_id):
-    """Registra comprovante na prestação de contas da diária, bloqueando prestação encerrada."""
-    return _registrar_comprovante(diaria, arquivo, tipo_id)
 
 
 def anexar_solicitacao_assinada_diaria(diaria, arquivo):

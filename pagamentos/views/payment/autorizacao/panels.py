@@ -4,16 +4,16 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
+from commons.shared.query_tools import resolver_parametros_ordenacao
 from pagamentos.forms import PendenciaForm
 from pagamentos.domain_models import Processo, ProcessoStatus
-from pagamentos.views.helpers import _resolver_parametros_ordenacao
 
 
 @require_GET
 @permission_required("pagamentos.pode_autorizar_pagamento", raise_exception=True)
 def painel_autorizacao_view(request):
     """Renderiza o painel de autorizacao com filas pendente e autorizada."""
-    ordem, direcao, order_field = _resolver_parametros_ordenacao(
+    ordem, direcao, order_field = resolver_parametros_ordenacao(
         request,
         campos_permitidos={
             "id": "id",

@@ -3708,7 +3708,7 @@
 <td><code>editar_processo_verbas_capa_action</code></td>
 <td><code>verbas_indenizatorias/views/processo/actions.py</code></td>
 <td><code>editar_processo_verbas_capa_action</code> (<code>/processo/&lt;int:pk&gt;/editar-verbas/capa/action/</code>)</td>
-<td><code>pagamentos.pode_gerenciar_processos_verbas</code></td>
+<td><code>verbas_indenizatorias.pode_gerenciar_processos_verbas</code></td>
 <td><code>POST</code></td>
 <td>dados de capa do processo de verbas</td>
 <td>validação de formulário</td>
@@ -3721,7 +3721,7 @@
 <td><code>editar_processo_verbas_pendencias_action</code></td>
 <td><code>verbas_indenizatorias/views/processo/actions.py</code></td>
 <td><code>editar_processo_verbas_pendencias_action</code> (<code>/processo/&lt;int:pk&gt;/editar-verbas/pendencias/action/</code>)</td>
-<td><code>pagamentos.pode_gerenciar_processos_verbas</code></td>
+<td><code>verbas_indenizatorias.pode_gerenciar_processos_verbas</code></td>
 <td><code>POST</code></td>
 <td>atualização de pendências</td>
 <td>validação de transições de pendência</td>
@@ -3734,7 +3734,7 @@
 <td><code>editar_processo_verbas_documentos_action</code></td>
 <td><code>verbas_indenizatorias/views/processo/actions.py</code></td>
 <td><code>editar_processo_verbas_documentos_action</code> (<code>/processo/&lt;int:pk&gt;/editar-verbas/documentos/action/</code>)</td>
-<td><code>pagamentos.pode_gerenciar_processos_verbas</code></td>
+<td><code>verbas_indenizatorias.pode_gerenciar_processos_verbas</code></td>
 <td><code>POST</code></td>
 <td>dados documentais e anexos</td>
 <td>regras documentais da etapa</td>
@@ -3747,7 +3747,7 @@
 <td><code>agrupar_verbas_view</code></td>
 <td><code>verbas_indenizatorias/views/processo/actions.py</code></td>
 <td><code>agrupar_verbas</code> (<code>/verbas/agrupar/&lt;str:tipo_verba&gt;/</code>)</td>
-<td><code>pagamentos.pode_agrupar_verbas</code></td>
+<td><code>verbas_indenizatorias.pode_agrupar_verbas</code></td>
 <td><code>POST</code></td>
 <td>tipo de verba + seleção de itens</td>
 <td>validação por tipo de verba</td>
@@ -3760,7 +3760,7 @@
 <td><code>add_diaria_action</code></td>
 <td><code>verbas_indenizatorias/views/diarias/actions.py</code></td>
 <td><code>add_diaria_action</code> (<code>/verbas/diarias/nova/action/</code>)</td>
-<td><code>pagamentos.pode_criar_diarias</code></td>
+<td><code>verbas_indenizatorias.pode_criar_diarias</code></td>
 <td><code>POST</code></td>
 <td>dados de diária</td>
 <td>validações de beneficiário e período</td>
@@ -3773,7 +3773,7 @@
 <td><code>registrar_comprovante_action</code></td>
 <td><code>verbas_indenizatorias/views/diarias/actions.py</code></td>
 <td><code>registrar_comprovante_action</code> (<code>/verbas/diarias/&lt;int:pk&gt;/comprovantes/registrar/</code>)</td>
-<td><code>pagamentos.pode_gerenciar_diarias</code></td>
+<td><code>verbas_indenizatorias.pode_gerenciar_diarias</code></td>
 <td><code>POST</code></td>
 <td>comprovante e diária alvo</td>
 <td>validação de arquivo e estado</td>
@@ -3786,7 +3786,7 @@
 <td><code>cancelar_diaria_action</code></td>
 <td><code>verbas_indenizatorias/views/diarias/actions.py</code></td>
 <td><code>cancelar_diaria_action</code> (<code>/verbas/diarias/&lt;int:pk&gt;/cancelar/</code>)</td>
-<td><code>pagamentos.pode_gerenciar_diarias</code></td>
+<td><code>verbas_indenizatorias.pode_gerenciar_diarias</code></td>
 <td><code>POST</code></td>
 <td>diária alvo</td>
 <td>validação de cancelamento permitido</td>

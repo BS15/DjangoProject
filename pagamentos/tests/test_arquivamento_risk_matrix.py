@@ -3,7 +3,7 @@ import io
 import pytest
 
 from pagamentos.domain_models import ProcessoStatus
-from pagamentos.views.helpers.archival import _executar_arquivamento_definitivo
+from pagamentos.services.arquivamento import executar_arquivamento_definitivo
 from pagamentos.views.helpers.errors import ArquivamentoDefinitivoError, ArquivamentoSemDocumentosError
 
 _STATUS_FIELD = "opcao_status"
@@ -18,19 +18,19 @@ class _BufferComFalhaLeitura:
 def test_arquivamento_falha_sem_documentos_validos(processo_factory, user_factory):
     processo = processo_factory(status=ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO)
     with pytest.raises(ArquivamentoSemDocumentosError):
-        _executar_arquivamento_definitivo(processo, user_factory("arq_sem_docs"))
+        executar_arquivamento_definitivo(processo, user_factory("arq_sem_docs"))
 
 
 @pytest.mark.django_db
 def test_arquivamento_aborta_quando_consolidado_tem_zero_bytes(monkeypatch, processo_factory, user_factory):
     processo = processo_factory(status=ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO)
     monkeypatch.setattr(
-        "pagamentos.views.helpers.archival.gerar_pdf_consolidado_processo",
+        "pagamentos.services.arquivamento.gerar_pdf_consolidado_processo",
         lambda _processo: io.BytesIO(b""),
     )
 
     with pytest.raises(ArquivamentoDefinitivoError):
-        _executar_arquivamento_definitivo(processo, user_factory("arq_zero"))
+        executar_arquivamento_definitivo(processo, user_factory("arq_zero"))
 
     processo.refresh_from_db()
     assert not processo.arquivo_final
@@ -41,12 +41,12 @@ def test_arquivamento_aborta_quando_consolidado_tem_zero_bytes(monkeypatch, proc
 def test_arquivamento_aborta_em_falha_de_leitura_cloud(monkeypatch, processo_factory, user_factory):
     processo = processo_factory(status=ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO)
     monkeypatch.setattr(
-        "pagamentos.views.helpers.archival.gerar_pdf_consolidado_processo",
+        "pagamentos.services.arquivamento.gerar_pdf_consolidado_processo",
         lambda _processo: _BufferComFalhaLeitura(),
     )
 
     with pytest.raises(ArquivamentoDefinitivoError):
-        _executar_arquivamento_definitivo(processo, user_factory("arq_cloud_fail"))
+        executar_arquivamento_definitivo(processo, user_factory("arq_cloud_fail"))
 
     processo.refresh_from_db()
     assert not processo.arquivo_final
@@ -62,7 +62,7 @@ def test_arquivamento_rollback_mid_flight_ao_falhar_avanco_de_status(
 ):
     processo = processo_factory(status=ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO)
     monkeypatch.setattr(
-        "pagamentos.views.helpers.archival.gerar_pdf_consolidado_processo",
+        "pagamentos.services.arquivamento.gerar_pdf_consolidado_processo",
         lambda _processo: io.BytesIO(pdf_bytes),
     )
 
@@ -73,7 +73,7 @@ def test_arquivamento_rollback_mid_flight_ao_falhar_avanco_de_status(
     monkeypatch.setattr(type(processo), "avancar_status", _falhar_avanco)
 
     with pytest.raises(RuntimeError):
-        _executar_arquivamento_definitivo(processo, user_factory("arq_midflight"))
+        executar_arquivamento_definitivo(processo, user_factory("arq_midflight"))
 
     processo.refresh_from_db()
     assert not processo.arquivo_final

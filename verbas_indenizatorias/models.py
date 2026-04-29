@@ -134,6 +134,12 @@ class Tabela_Valores_Unitarios_Verbas_Indenizatorias(models.Model):
     cargo_funcao = models.ForeignKey('credores.CargosFuncoes', on_delete=models.PROTECT, blank=True, null=True)
     valor_unitario = models.DecimalField(null=True, blank=True, max_digits=12, decimal_places=2)
 
+    def __str__(self):
+        """Retorna descrição amigável da linha da tabela de valores unitários."""
+        tipo = self.tipo.tipo_de_verba_indenizatoria if self.tipo_id else "Sem tipo"
+        cargo = self.cargo_funcao.cargo_funcao if self.cargo_funcao_id else "Sem cargo/função"
+        return f"{tipo} - {cargo}: R$ {self.valor_unitario}"
+
     @classmethod
     def get_valor_para_cargo_diaria(cls, cargo_funcao):
         """Obtém o valor unitário de diária para o cargo/função informado."""
@@ -146,6 +152,18 @@ class Tabela_Valores_Unitarios_Verbas_Indenizatorias(models.Model):
         if tabela and tabela.valor_unitario is not None:
             return tabela.valor_unitario
         return None
+
+    class Meta:
+        permissions = [
+            (
+                "pode_visualizar_tabela_valores_unitarios",
+                "Pode visualizar tabela de valores unitários de verbas",
+            ),
+            (
+                "pode_gerenciar_tabela_valores_unitarios",
+                "Pode gerenciar tabela de valores unitários de verbas",
+            ),
+        ]
 
 
 class Diaria(StatusVerbaDomainMixin, models.Model):

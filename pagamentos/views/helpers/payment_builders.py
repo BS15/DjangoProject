@@ -133,6 +133,16 @@ def _consolidar_totais_pagamento(totais_a_pagar, totais_lancados):
     }
 
 
+def _atualizar_status_em_lote(ids, nome_status, usuario, queryset_base=None):
+    """Atualiza em lote garantindo o acionamento de signals (Auditoria) e Turnpikes.
+
+    Itera pelos processos elegíveis chamando avancar_status() para cada um,
+    assegurando que as regras de negócio são respeitadas e o usuário é registrado
+    no histórico de auditoria.
+    """
+    return atualizar_status_em_lote(ids, nome_status, usuario, queryset_base=queryset_base)
+
+
 def _processar_acao_lote(
     request,
     *,
@@ -168,7 +178,7 @@ def _processar_acao_lote(
     count_ignorados = len(selecionados) - count_elegiveis
 
     if count_elegiveis > 0:
-        atualizar_status_em_lote(
+        _atualizar_status_em_lote(
             selecionados,
             status_destino,
             usuario=request.user,
@@ -203,5 +213,6 @@ __all__ = [
     "_aplicar_filtros_contas_a_pagar",
     "_build_detalhes_pagamento",
     "_consolidar_totais_pagamento",
+    "_atualizar_status_em_lote",
     "_processar_acao_lote",
 ]

@@ -73,11 +73,6 @@ def _salvar_formsets_em_transacao(*formsets):
             formset.save()
 
 
-def _status_bloqueia_exclusao_nota_fiscal(processo):
-    """Indica se o processo já está em estágio onde exclusão de nota é proibida."""
-    return _status_bloqueia_gestao_fiscal(processo)
-
-
 def _status_bloqueia_gestao_fiscal(processo):
     """Bloqueia gestão fiscal no pós-pagamento, exceto quando há contingência ativa."""
     if processo.em_contingencia:
@@ -652,5 +647,4 @@ __all__ = [
     "editar_processo_documentos_action",
     "editar_processo_pendencias_action",
     "_status_bloqueia_gestao_fiscal",
-    "_status_bloqueia_exclusao_nota_fiscal",
 ]

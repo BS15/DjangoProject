@@ -8,10 +8,10 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
+from commons.shared.query_tools import resolver_parametros_ordenacao
 from pagamentos.filters import DevolucaoFilter
 from pagamentos.forms import DevolucaoForm
 from pagamentos.domain_models import Devolucao, Processo
-from pagamentos.views.helpers import _resolver_parametros_ordenacao
 from pagamentos.views.shared import apply_filterset
 
 
@@ -21,7 +21,7 @@ def painel_devolucoes_view(request: HttpRequest) -> HttpResponse:
     """Lista devolucoes com filtro e valor total agregado."""
     queryset = Devolucao.objects.select_related("processo", "processo__credor")
     meu_filtro = apply_filterset(request, DevolucaoFilter, queryset)
-    ordem, direcao, order_field = _resolver_parametros_ordenacao(
+    ordem, direcao, order_field = resolver_parametros_ordenacao(
         request,
         campos_permitidos={
             "processo": "processo__id",

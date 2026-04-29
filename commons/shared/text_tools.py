@@ -27,11 +27,6 @@ def normalize_text(value, *, collapse_spaces=True):
     return re.sub(r"\s+", " ", no_accents).strip()
 
 
-def normalize_document(value):
-    """Remove formatação de CPF/CNPJ, retornando apenas dígitos."""
-    return _digits_only(value)
-
-
 def normalize_account(agencia, conta):
     """Normaliza agência e conta bancária removendo espaços e pontos desnecessários."""
     agencia_norm = (agencia or "").strip().replace(" ", "")
@@ -39,15 +34,10 @@ def normalize_account(agencia, conta):
     return agencia_norm.upper(), conta_norm.upper()
 
 
-def normalize_name_for_match(value):
-    """Normaliza nome para comparação tolerante a variações de escrita."""
-    return normalize_text(value)
-
-
 def names_bidirectional_match(left, right):
     """Verifica se um nome está contido no outro (correspondência bidirecional)."""
-    left_norm = normalize_name_for_match(left)
-    right_norm = normalize_name_for_match(right)
+    left_norm = normalize_text(left)
+    right_norm = normalize_text(right)
     if not left_norm or not right_norm:
         return False
     return left_norm in right_norm or right_norm in left_norm

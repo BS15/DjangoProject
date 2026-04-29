@@ -45,15 +45,15 @@ Estas permissões estão declaradas junto ao modelo financeiro principal em `pag
 | Codename | Escopo em runtime | Finalidade operacional |
 |---|---|---|
 | `pagamentos.pode_visualizar_verbas` | Painéis e listagens | Acesso de consulta ao módulo de verbas. |
-| `pagamentos.pode_criar_diarias` | Diárias | Cadastro inicial de solicitações de diárias. |
+| `verbas_indenizatorias.pode_criar_diarias` | Diárias | Cadastro inicial de solicitações de diárias. |
 | `pagamentos.pode_importar_diarias` | Diárias | Importação em lote. |
-| `pagamentos.pode_gerenciar_diarias` | Diárias | Edição, documentos, assinaturas e PDFs. |
+| `verbas_indenizatorias.pode_gerenciar_diarias` | Diárias | Edição, documentos, assinaturas e PDFs. |
 | `pagamentos.pode_autorizar_diarias` | Diárias | Aprovação de diárias pendentes, restrita às diárias em que o usuário é o proponente vinculado. |
 | `pagamentos.pode_gerenciar_reembolsos` | Reembolsos | Cadastro e gestão operacional de reembolsos. |
 | `pagamentos.pode_gerenciar_jetons` | Jetons | Cadastro e gestão operacional de jetons. |
 | `pagamentos.pode_gerenciar_auxilios` | Auxílios | Cadastro e gestão operacional de auxílios. |
-| `pagamentos.pode_agrupar_verbas` | Processo de verbas | Agrupamento de itens aprovados em processo de pagamento. |
-| `pagamentos.pode_gerenciar_processos_verbas` | Processo de verbas | Gestão da capa, documentos e pendências processuais de verbas. |
+| `verbas_indenizatorias.pode_agrupar_verbas` | Processo de verbas | Agrupamento de itens aprovados em processo de pagamento. |
+| `verbas_indenizatorias.pode_gerenciar_processos_verbas` | Processo de verbas | Gestão da capa, documentos e pendências processuais de verbas. |
 | `pagamentos.pode_sincronizar_diarias_siscac` | Diárias | Sincronização/importação via SISCAC. |
 
 ## Verbas indenizatórias — escopo próprio

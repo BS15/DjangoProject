@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 @require_POST
-@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
 def registrar_devolucao_diaria_action(request, pk):
     """Persiste devolucao vinculada a diaria a partir do POST do formulario."""
     diaria = get_object_or_404(Diaria.objects.select_for_update(), pk=pk)

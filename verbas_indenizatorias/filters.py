@@ -2,7 +2,13 @@
 
 import django_filters
 from pagamentos.filters import BaseStyledFilterSet
-from verbas_indenizatorias.models import Diaria, ReembolsoCombustivel, Jeton, AuxilioRepresentacao
+from verbas_indenizatorias.models import (
+    Diaria,
+    ReembolsoCombustivel,
+    Jeton,
+    AuxilioRepresentacao,
+    Tabela_Valores_Unitarios_Verbas_Indenizatorias,
+)
 
 
 class DiariaFilter(BaseStyledFilterSet):
@@ -39,4 +45,12 @@ class AuxilioFilter(BaseStyledFilterSet):
 
     class Meta:
         model = AuxilioRepresentacao
+        fields = '__all__'
+
+
+class TabelaValoresUnitariosFilter(BaseStyledFilterSet):
+    """Filtro para tabela de valores unitários de verbas."""
+
+    class Meta:
+        model = Tabela_Valores_Unitarios_Verbas_Indenizatorias
         fields = '__all__'

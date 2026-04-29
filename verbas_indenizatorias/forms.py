@@ -10,6 +10,7 @@ from verbas_indenizatorias.models import (
     ReembolsoCombustivel,
     Jeton,
     AuxilioRepresentacao,
+    Tabela_Valores_Unitarios_Verbas_Indenizatorias,
     DevolucaoDiaria,
     ContingenciaDiaria,
     PrestacaoContasDiaria,
@@ -147,6 +148,19 @@ class AuxilioForm(forms.ModelForm):
             'data_evento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'local_evento': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Local do evento ou ato de representação'}),
             'valor_total': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        }
+
+
+class TabelaValoresUnitariosForm(forms.ModelForm):
+    """Formulário para manutenção da tabela de valores unitários."""
+
+    class Meta:
+        model = Tabela_Valores_Unitarios_Verbas_Indenizatorias
+        fields = ['tipo', 'cargo_funcao', 'valor_unitario']
+        widgets = {
+            'tipo': forms.Select(attrs={'class': 'form-select'}),
+            'cargo_funcao': forms.Select(attrs={'class': 'form-select'}),
+            'valor_unitario': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
 
 

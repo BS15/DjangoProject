@@ -55,11 +55,11 @@ _VERBA_CONFIG = {
 }
 
 _VERBA_PERMISSION_MAP = {
-    "diaria": "pagamentos.pode_gerenciar_diarias",
-    "diaria_comprovante": "pagamentos.pode_gerenciar_diarias",
-    "reembolso": "pagamentos.pode_gerenciar_reembolsos",
-    "jeton": "pagamentos.pode_gerenciar_jetons",
-    "auxilio": "pagamentos.pode_gerenciar_auxilios",
+    "diaria": "verbas_indenizatorias.pode_gerenciar_diarias",
+    "diaria_comprovante": "verbas_indenizatorias.pode_gerenciar_diarias",
+    "reembolso": "verbas_indenizatorias.pode_gerenciar_reembolsos",
+    "jeton": "verbas_indenizatorias.pode_gerenciar_jetons",
+    "auxilio": "verbas_indenizatorias.pode_gerenciar_auxilios",
 }
 
 

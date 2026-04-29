@@ -175,5 +175,143 @@
         });
     });
 }());
+
+(function () {
+    var table = document.querySelector('.card .table-responsive > table.table');
+    if (!table) {
+        return;
+    }
+
+    // Evita interferir em layouts complexos com sub-tabelas no corpo.
+    if (table.querySelector('tbody table')) {
+        return;
+    }
+
+    var headerRow = table.querySelector('thead tr');
+    var bodyRows = Array.from(table.querySelectorAll('tbody tr'));
+    if (!headerRow || !bodyRows.length) {
+        return;
+    }
+
+    var dataRows = bodyRows.filter(function (row) {
+        var onlyCell = row.children.length === 1 ? row.children[0] : null;
+        if (onlyCell && onlyCell.hasAttribute('colspan')) {
+            return false;
+        }
+        return true;
+    });
+
+    if (!dataRows.length) {
+        return;
+    }
+
+    var getRowCheckbox = function (row) {
+        return row.querySelector(
+            'input[type="checkbox"].batch-item-check,' +
+            'input[type="checkbox"].check-item,' +
+            'input[type="checkbox"].retencao-check,' +
+            'input[type="checkbox"].conferencia-row-check,' +
+            'input[type="checkbox"].contabilizacao-row-check,' +
+            'input[type="checkbox"].row-check,' +
+            'input[type="checkbox"].check-linha,' +
+            'input[type="checkbox"].item-check,' +
+            'input[type="checkbox"].comp-check,' +
+            'input[type="checkbox"].base-row-check,' +
+            'input[type="checkbox"][name="processos_selecionados"],' +
+            'input[type="checkbox"][name="verbas_selecionadas"],' +
+            'input[type="checkbox"][name="retencao_ids"]'
+        );
+    };
+
+    var inferRowValue = function (row, fallbackIndex) {
+        var dataValue = row.getAttribute('data-id') || row.getAttribute('data-processo-id') || row.getAttribute('data-pk');
+        if (dataValue) {
+            return dataValue;
+        }
+
+        var text = row.textContent || '';
+        var match = text.match(/#\s*(\d+)/);
+        if (match) {
+            return match[1];
+        }
+
+        return String(fallbackIndex + 1);
+    };
+
+    var hasAnyRowCheckbox = dataRows.some(function (row) {
+        return !!getRowCheckbox(row);
+    });
+
+    if (!hasAnyRowCheckbox) {
+        dataRows.forEach(function (row, index) {
+            var checkboxCell = document.createElement('td');
+            checkboxCell.className = 'text-center';
+            checkboxCell.style.width = '40px';
+
+            var checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'form-check-input base-row-check';
+            checkbox.value = inferRowValue(row, index);
+            checkbox.setAttribute('aria-label', 'Selecionar item ' + checkbox.value);
+
+            checkboxCell.appendChild(checkbox);
+            row.insertBefore(checkboxCell, row.firstChild);
+        });
+    }
+
+    var masterCheckbox =
+        headerRow.querySelector('#batchCheckAll') ||
+        headerRow.querySelector('input[type="checkbox"][data-role="select-all"]') ||
+        headerRow.querySelector('th input[type="checkbox"]');
+
+    if (!masterCheckbox) {
+        var masterTh = document.createElement('th');
+        masterTh.className = 'text-center no-sort';
+        masterTh.style.width = '40px';
+
+        masterCheckbox = document.createElement('input');
+        masterCheckbox.type = 'checkbox';
+        masterCheckbox.id = 'batchCheckAll';
+        masterCheckbox.className = 'form-check-input';
+        masterCheckbox.setAttribute('data-role', 'select-all');
+        masterCheckbox.setAttribute('title', 'Selecionar todos');
+
+        masterTh.appendChild(masterCheckbox);
+        headerRow.insertBefore(masterTh, headerRow.firstChild);
+    }
+
+    var getSelectableCheckboxes = function () {
+        return dataRows
+            .map(function (row) { return getRowCheckbox(row); })
+            .filter(function (checkbox) { return checkbox && !checkbox.disabled; });
+    };
+
+    var syncMasterState = function () {
+        var items = getSelectableCheckboxes();
+        if (!items.length) {
+            masterCheckbox.checked = false;
+            masterCheckbox.indeterminate = false;
+            return;
+        }
+
+        var checkedCount = items.filter(function (item) { return item.checked; }).length;
+        masterCheckbox.checked = checkedCount > 0 && checkedCount === items.length;
+        masterCheckbox.indeterminate = checkedCount > 0 && checkedCount < items.length;
+    };
+
+    masterCheckbox.addEventListener('change', function () {
+        getSelectableCheckboxes().forEach(function (item) {
+            item.checked = masterCheckbox.checked;
+            item.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        syncMasterState();
+    });
+
+    getSelectableCheckboxes().forEach(function (item) {
+        item.addEventListener('change', syncMasterState);
+    });
+
+    syncMasterState();
+}());
 </script>
 {% endblock %}

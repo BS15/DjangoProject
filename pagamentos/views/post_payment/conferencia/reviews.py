@@ -20,10 +20,7 @@ def conferencia_processo_view(request, pk):
         approve_action="confirmar",
         approve_status=ProcessoStatus.PAGO_A_CONTABILIZAR,
         approve_message="Processo #{processo_id} confirmado na conferência e enviado para Contabilização!",
-        save_action="salvar",
-        save_message="Alterações do Processo #{processo_id} salvas.",
-        editable=True,
-        lock_documents=True,
+        editable=False,
     )
 
 

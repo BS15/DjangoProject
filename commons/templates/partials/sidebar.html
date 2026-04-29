@@ -21,72 +21,70 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body p-4">
-        
-        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Módulo de Cadastros</h6>
-        <a href="{% url 'credores_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-people text-info"></i> Lista de Credores</a>
-        <a href="{% url 'painel_assinaturas' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-vector-pen text-primary"></i> Painel de Assinaturas</a>
-        <a href="{% url 'painel_relatorios' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-file-earmark-spreadsheet text-success"></i> Relatórios</a>
-        <a href="{% url 'painel_importacao' %}" class="btn btn-warning w-100 fw-bold shadow-sm mt-2"><i class="bi bi-cloud-upload"></i> Importar Dados SISCAC</a>
+        <h6 class="sidebar-section-title module-cadastros"><i class="bi bi-journal-bookmark-fill"></i> Módulo de Cadastros</h6>
+        <a href="{% url 'credores_list' %}" class="btn sidebar-link module-cadastros w-100 fw-bold shadow-sm"><i class="bi bi-people-fill"></i> Lista de Credores</a>
+        <a href="{% url 'painel_assinaturas' %}" class="btn sidebar-link module-cadastros w-100 fw-bold shadow-sm"><i class="bi bi-pen-fill"></i> Painel de Assinaturas</a>
+        <a href="{% url 'painel_relatorios' %}" class="btn sidebar-link module-cadastros w-100 fw-bold shadow-sm mt-2"><i class="bi bi-bar-chart-line-fill"></i> Relatórios</a>
+        <a href="{% url 'painel_importacao' %}" class="btn sidebar-link module-cadastros w-100 fw-bold shadow-sm mt-2"><i class="bi bi-cloud-arrow-up-fill"></i> Importar Dados SISCAC</a>
 
         <hr class="my-4 text-muted">
 
-        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Módulo de Pagamentos</h6>
-        <div class="text-muted fw-bold small text-uppercase mb-2">Pré-pagamento</div>
-        <a href="{% url 'home_page' %}" class="btn btn-warning w-100 fw-bold shadow-sm"><i class="bi bi-hourglass-split"></i> Painél de Processos de Pagamento</a>
-        <a href="{% url 'a_empenhar' %}" class="btn btn-warning w-100 fw-bold shadow-sm"><i class="bi bi-hourglass-split"></i> Pagamentos A Empenhar</a>
-        <a href="{% url 'painel_liquidacoes' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-pen text-primary"></i> Liquidações/Atestes</a>
+        <h6 class="sidebar-section-title module-pagamentos"><i class="bi bi-cash-stack"></i> Módulo de Pagamentos</h6>
+        <div class="sidebar-subsection-title">Pré-pagamento</div>
+        <a href="{% url 'home_page' %}" class="btn sidebar-link module-pagamentos w-100 fw-bold shadow-sm"><i class="bi bi-kanban-fill"></i> Painel de Processos de Pagamento</a>
+        <a href="{% url 'a_empenhar' %}" class="btn sidebar-link module-pagamentos w-100 fw-bold shadow-sm"><i class="bi bi-hourglass-top"></i> Pagamentos A Empenhar</a>
+        <a href="{% url 'painel_liquidacoes' %}" class="btn sidebar-link module-pagamentos w-100 fw-bold shadow-sm mt-2"><i class="bi bi-file-earmark-check-fill"></i> Liquidações/Atestes</a>
 
-        <div class="text-muted fw-bold small text-uppercase mt-3 mb-2">Pagamento</div>
-        <a href="{% url 'contas_a_pagar' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-cash-coin text-success"></i> Contas a Pagar</a>
+        <div class="sidebar-subsection-title mt-3">Pagamento</div>
+        <a href="{% url 'contas_a_pagar' %}" class="btn sidebar-link module-pagamentos w-100 fw-bold shadow-sm"><i class="bi bi-wallet-fill"></i> Contas a Pagar</a>
 
-        <div class="text-muted fw-bold small text-uppercase mt-3 mb-2">Controle</div>
-        <a href="{% url 'painel_pendencias' %}" class="btn btn-danger text-white w-100 fw-bold shadow-sm mt-2"><i class="bi bi-exclamation-triangle"></i> Painel de Pendências</a>
-        <a href="{% url 'painel_conferencia' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-clipboard-check text-info"></i> Painel de Conferência</a>
-        <a href="{% url 'painel_contabilizacao' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-calculator text-secondary"></i> Painel de Contabilização</a>
-        <a href="{% url 'painel_conselho' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-bank text-secondary"></i> Conselho Fiscal</a>
-        <a href="{% url 'painel_arquivamento' %}" class="btn btn-dark w-100 fw-bold shadow-sm text-white mt-2"><i class="bi bi-archive-fill"></i> Arquivo Morto / Digital</a>
-        <a href="{% url 'auditoria' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-clock-history text-primary"></i> Auditoria / Histórico</a>
+        <div class="sidebar-subsection-title mt-3">Controle</div>
+        <a href="{% url 'painel_pendencias' %}" class="btn sidebar-link module-pagamentos w-100 fw-bold shadow-sm mt-2"><i class="bi bi-cone-striped"></i> Painel de Pendências</a>
+        <a href="{% url 'painel_conferencia' %}" class="btn sidebar-link module-pagamentos w-100 fw-bold shadow-sm"><i class="bi bi-clipboard2-check-fill"></i> Painel de Conferência</a>
+        <a href="{% url 'painel_contabilizacao' %}" class="btn sidebar-link module-pagamentos w-100 fw-bold shadow-sm mt-2"><i class="bi bi-calculator-fill"></i> Painel de Contabilização</a>
+        <a href="{% url 'painel_conselho' %}" class="btn sidebar-link module-pagamentos w-100 fw-bold shadow-sm mt-2"><i class="bi bi-building-fill-check"></i> Conselho Fiscal</a>
+        <a href="{% url 'painel_arquivamento' %}" class="btn sidebar-link module-pagamentos w-100 fw-bold shadow-sm mt-2"><i class="bi bi-archive-fill"></i> Arquivo Morto / Digital</a>
+        <a href="{% url 'auditoria' %}" class="btn sidebar-link module-pagamentos w-100 fw-bold shadow-sm mt-2"><i class="bi bi-search-heart-fill"></i> Auditoria / Histórico</a>
 
-        <div class="text-muted fw-bold small text-uppercase mt-3 mb-2">Suporte</div>
-        <a href="{% url 'painel_contas_fixas' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-calendar-check text-primary"></i> Contas Fixas</a>
-        <a href="{% url 'painel_devolucoes' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-arrow-return-left text-danger"></i> Devoluções ao Erário</a>
-        <a href="{% url 'painel_contingencias' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-shield-exclamation text-danger"></i> Contingências</a>
-        
-        <a href="{% url 'sincronizar_siscac' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-arrow-repeat text-primary"></i> Sincronizar SISCAC</a>
-
-        <hr class="my-4 text-muted">
-
-        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Módulo de Retenções</h6>
-        <a href="{% url 'painel_impostos_view' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-receipt text-warning"></i> Retenção de Impostos</a>
+        <div class="sidebar-subsection-title mt-3">Suporte</div>
+        <a href="{% url 'painel_contas_fixas' %}" class="btn sidebar-link module-pagamentos w-100 fw-bold shadow-sm"><i class="bi bi-calendar2-week-fill"></i> Contas Fixas</a>
+        <a href="{% url 'painel_devolucoes' %}" class="btn sidebar-link module-pagamentos w-100 fw-bold shadow-sm"><i class="bi bi-arrow-counterclockwise"></i> Devoluções ao Erário</a>
+        <a href="{% url 'painel_contingencias' %}" class="btn sidebar-link module-pagamentos w-100 fw-bold shadow-sm mt-2"><i class="bi bi-shield-fill-exclamation"></i> Contingências</a>
+        <a href="{% url 'sincronizar_siscac' %}" class="btn sidebar-link module-pagamentos w-100 fw-bold shadow-sm mt-2"><i class="bi bi-arrow-repeat"></i> Sincronizar SISCAC</a>
 
         <hr class="my-4 text-muted">
 
-        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Módulo de Verbas Indenizatórias</h6>
-        <a href="{% url 'verbas_panel' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-airplane text-primary"></i> Painel de Verbas Indenizatórias</a>
-        <a href="{% url 'diarias_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-airplane text-primary"></i> Diárias</a>
-        <a href="{% url 'reembolsos_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-cash-stack text-success"></i> Reembolsos</a>
-        <a href="{% url 'jetons_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-person-badge text-info"></i> Jetons</a>
-        <a href="{% url 'auxilios_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark mt-2"><i class="bi bi-heart-pulse text-danger"></i> Auxílios</a>
+        <h6 class="sidebar-section-title module-retencoes"><i class="bi bi-receipt-cutoff"></i> Módulo de Retenções</h6>
+        <a href="{% url 'painel_impostos_view' %}" class="btn sidebar-link module-retencoes w-100 fw-bold shadow-sm"><i class="bi bi-percent"></i> Retenção de Impostos</a>
 
         <hr class="my-4 text-muted">
 
-        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Módulo de Suprimento de Fundos</h6>
-        <a href="{% url 'suprimentos_list' %}" class="btn btn-light w-100 fw-bold shadow-sm text-dark"><i class="bi bi-wallet2 text-primary"></i> Suprimentos de Fundos</a>
+        <h6 class="sidebar-section-title module-verbas"><i class="bi bi-currency-exchange"></i> Módulo de Verbas Indenizatórias</h6>
+        <a href="{% url 'verbas_panel' %}" class="btn sidebar-link module-verbas w-100 fw-bold shadow-sm"><i class="bi bi-grid-fill"></i> Painel de Verbas Indenizatórias</a>
+        <a href="{% url 'diarias_list' %}" class="btn sidebar-link module-verbas w-100 fw-bold shadow-sm"><i class="bi bi-airplane-fill"></i> Diárias</a>
+        <a href="{% url 'reembolsos_list' %}" class="btn sidebar-link module-verbas w-100 fw-bold shadow-sm mt-2"><i class="bi bi-cash"></i> Reembolsos</a>
+        <a href="{% url 'jetons_list' %}" class="btn sidebar-link module-verbas w-100 fw-bold shadow-sm mt-2"><i class="bi bi-award-fill"></i> Jetons</a>
+        <a href="{% url 'auxilios_list' %}" class="btn sidebar-link module-verbas w-100 fw-bold shadow-sm mt-2"><i class="bi bi-heart-pulse-fill"></i> Auxílios</a>
 
         <hr class="my-4 text-muted">
 
-        <h6 class="text-muted fw-bold mb-3 small text-uppercase">Ferramentas de Desenvolvedor</h6>
+        <h6 class="sidebar-section-title module-suprimentos"><i class="bi bi-box-seam-fill"></i> Módulo de Suprimento de Fundos</h6>
+        <a href="{% url 'suprimentos_list' %}" class="btn sidebar-link module-suprimentos w-100 fw-bold shadow-sm"><i class="bi bi-wallet2"></i> Suprimentos de Fundos</a>
+
+        <hr class="my-4 text-muted">
+
+        <h6 class="sidebar-section-title module-dev"><i class="bi bi-code-slash"></i> Ferramentas de Desenvolvedor</h6>
         {% url 'gerar_dados_fake' as gerar_dados_fake_url %}
         {% if gerar_dados_fake_url %}
-        <a href="{{ gerar_dados_fake_url }}" class="btn btn-warning w-100 fw-bold shadow-sm"><i class="bi bi-database-fill-gear"></i> Gerador de Dados de Teste</a>
+        <a href="{{ gerar_dados_fake_url }}" class="btn sidebar-link module-dev w-100 fw-bold shadow-sm"><i class="bi bi-database-fill-gear"></i> Gerador de Dados de Teste</a>
         {% endif %}
         {% url 'painel_teste_pdfs' as painel_teste_pdfs_url %}
         {% if painel_teste_pdfs_url %}
-        <a href="{{ painel_teste_pdfs_url }}" class="btn btn-warning w-100 fw-bold shadow-sm mt-2"><i class="bi bi-file-earmark-pdf"></i> Laboratório de PDFs</a>
+        <a href="{{ painel_teste_pdfs_url }}" class="btn sidebar-link module-dev w-100 fw-bold shadow-sm mt-2"><i class="bi bi-file-earmark-zip-fill"></i> Laboratório de PDFs</a>
         {% endif %}
         {% url 'painel_permissoes_dev' as painel_permissoes_dev_url %}
         {% if painel_permissoes_dev_url %}
-        <a href="{{ painel_permissoes_dev_url }}" class="btn btn-warning w-100 fw-bold shadow-sm mt-2"><i class="bi bi-shield-lock"></i> Mapa de Permissões</a>
+        <a href="{{ painel_permissoes_dev_url }}" class="btn sidebar-link module-dev w-100 fw-bold shadow-sm mt-2"><i class="bi bi-shield-lock-fill"></i> Mapa de Permissões</a>
         {% endif %}
 
         <hr class="my-4 text-muted">

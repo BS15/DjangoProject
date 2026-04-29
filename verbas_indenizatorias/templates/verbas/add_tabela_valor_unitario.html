@@ -1,0 +1,28 @@
+{% extends "layouts/base_form.html" %}
+
+{% block title %}Novo Valor Unitário{% endblock %}
+
+{% block page_heading %}
+<i class="bi bi-cash-coin text-success"></i> Novo Valor Unitário
+{% endblock %}
+
+{% block page_subtitle %}
+Cadastre o valor unitário para um tipo de verba e cargo/função.
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'tabela_valores_unitarios_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+{% endblock %}
+
+{% block form_action %}{% url 'add_tabela_valor_unitario_action' %}{% endblock %}
+
+{% block form_fields %}
+{{ form.as_p }}
+{% endblock %}
+
+{% block form_actions %}
+<a href="{% url 'tabela_valores_unitarios_list' %}" class="btn btn-outline-secondary me-2">Cancelar</a>
+<button type="submit" class="btn btn-success">
+    <i class="bi bi-save"></i> Registrar
+</button>
+{% endblock %}

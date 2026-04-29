@@ -15,7 +15,7 @@ from verbas_indenizatorias.services.contingencia import (
 
 
 @require_POST
-@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
 def add_contingencia_diaria_action(request, pk):
     """Cria contingencia de retificacao para diaria."""
     diaria = get_object_or_404(Diaria, pk=pk)
@@ -49,7 +49,7 @@ def add_contingencia_diaria_action(request, pk):
 
 
 @require_POST
-@permission_required("pagamentos.pode_gerenciar_diarias", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
 def analisar_contingencia_diaria_action(request, pk):
     """Aprova ou rejeita uma contingencia de diaria."""
     contingencia = get_object_or_404(ContingenciaDiaria, pk=pk)

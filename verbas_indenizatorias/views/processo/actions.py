@@ -27,7 +27,7 @@ from ..shared.registry import (
 
 
 @require_POST
-@permission_required("pagamentos.pode_agrupar_verbas", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_agrupar_verbas", raise_exception=True)
 def agrupar_verbas_view(request, tipo_verba):
     """Agrupa verbas revisadas em um novo processo de pagamento canonico."""
     selecionados = request.POST.getlist('verbas_selecionadas')
@@ -115,7 +115,7 @@ def _montar_post_capa_com_campos_canonicos(request, processo):
 
 
 @require_POST
-@permission_required("pagamentos.pode_gerenciar_processos_verbas", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas_capa_action(request, pk):
     """Spoke POST da capa de processos de verbas."""
     from django.core.exceptions import PermissionDenied
@@ -136,7 +136,7 @@ def editar_processo_verbas_capa_action(request, pk):
 
 
 @require_POST
-@permission_required("pagamentos.pode_gerenciar_processos_verbas", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas_pendencias_action(request, pk):
     """Spoke POST de pendências para processos de verbas."""
     from django.core.exceptions import PermissionDenied
@@ -156,7 +156,7 @@ def editar_processo_verbas_pendencias_action(request, pk):
 
 
 @require_POST
-@permission_required("pagamentos.pode_gerenciar_processos_verbas", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_processos_verbas", raise_exception=True)
 def editar_processo_verbas_documentos_action(request, pk):
     """Spoke POST de documentos do processo de verbas."""
     from django.core.exceptions import PermissionDenied
@@ -175,7 +175,7 @@ def editar_processo_verbas_documentos_action(request, pk):
 
 
 @require_POST
-@permission_required("pagamentos.pode_gerenciar_processos_verbas", raise_exception=True)
+@permission_required("verbas_indenizatorias.pode_gerenciar_processos_verbas", raise_exception=True)
 def add_documento_verba_action(request, tipo_verba, pk):
     """Anexa documento a uma verba especifica e retorna resultado JSON."""
     config = _VERBA_CONFIG.get(tipo_verba)

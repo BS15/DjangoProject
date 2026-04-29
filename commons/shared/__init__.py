@@ -7,6 +7,11 @@ from .signature_services import (
     criar_assinatura_rascunho,
     disparar_assinatura_rascunho_com_signatarios,
 )
+from .query_tools import (
+    aplicar_filtro_por_opcao,
+    obter_campo_ordenacao,
+    resolver_parametros_ordenacao,
+)
 from .text_tools import (
     decimals_equal_money,
     format_br_date,
@@ -15,8 +20,6 @@ from .text_tools import (
     names_bidirectional_match,
     normalize_account,
     normalize_choice,
-    normalize_document,
-    normalize_name_for_match,
     normalize_text,
     parse_br_date,
     parse_brl_decimal,
@@ -30,6 +33,9 @@ __all__ = [
     "AssinaturaSignatariosError",
     "criar_assinatura_rascunho",
     "disparar_assinatura_rascunho_com_signatarios",
+    "aplicar_filtro_por_opcao",
+    "obter_campo_ordenacao",
+    "resolver_parametros_ordenacao",
     "decimals_equal_money",
     "format_br_date",
     "format_brl_amount",
@@ -37,8 +43,6 @@ __all__ = [
     "names_bidirectional_match",
     "normalize_account",
     "normalize_choice",
-    "normalize_document",
-    "normalize_name_for_match",
     "normalize_text",
     "parse_br_date",
     "parse_brl_decimal",

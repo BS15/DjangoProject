@@ -3,7 +3,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
-from pagamentos.views.helpers import _resolver_parametros_ordenacao
+from commons.shared.query_tools import resolver_parametros_ordenacao
 from verbas_indenizatorias.constants import STATUS_VERBA_APROVADA
 from ..shared.registry import _VERBA_CONFIG
 from .helpers import resumo_solicitacao
@@ -26,7 +26,7 @@ def painel_revisar_solicitacoes_view(request):
         )
         solicitacoes.extend(resumo_solicitacao(tipo_verba, item) for item in itens)
 
-    ordem, direcao, _ = _resolver_parametros_ordenacao(
+    ordem, direcao, _ = resolver_parametros_ordenacao(
         request,
         campos_permitidos={
             "tipo": "tipo",

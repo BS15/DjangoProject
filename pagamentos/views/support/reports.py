@@ -67,10 +67,4 @@ def painel_relatorios_view(request):
     )
 
 
-@require_GET
-@permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
-def relatorio_documentos_gerados_view(request):
-    return painel_relatorios_view(request)
-
-
-__all__ = ["painel_relatorios_view", "relatorio_documentos_gerados_view"]
+__all__ = ["painel_relatorios_view"]
