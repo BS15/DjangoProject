@@ -34,6 +34,7 @@ def a_empenhar_view(request):
 
     context = {
         "processos": meu_filtro.qs.order_by(order_field, "-id"),
+        "filter": meu_filtro,
         "meu_filtro": meu_filtro,
         "ordem": request.GET.get("ordem", "data_vencimento"),
         "direcao": request.GET.get("direcao", "asc"),

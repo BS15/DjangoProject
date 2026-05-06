@@ -132,19 +132,10 @@ class AEmpenharFilter(ProcessoFilter):
 		label='Tipo de Pagamento',
 		empty_label='Todos',
 	)
-	data_vencimento__gte = django_filters.DateFilter(
-		field_name='data_vencimento', lookup_expr='gte', label='Vencimento De'
-	)
-	data_vencimento__lte = django_filters.DateFilter(
-		field_name='data_vencimento', lookup_expr='lte', label='Vencimento Até'
-	)
 
 	class Meta(ProcessoFilter.Meta):
-		fields = '__all__'
-
-	def __init__(self, *args, **kwargs):
-		"""Configura campos de vencimento com input nativo de data."""
-		super().__init__(*args, **kwargs)
-		self.form.fields['data_vencimento__gte'].widget.input_type = 'date'
-		self.form.fields['data_vencimento__lte'].widget.input_type = 'date'
+		# Evita herdar filtros automáticos de todos os campos do modelo (incluindo
+		# campos não aderentes à fila, como arquivos) e mantém apenas filtros
+		# explicitamente declarados no filtro-base + desta especialização.
+		fields = []
 

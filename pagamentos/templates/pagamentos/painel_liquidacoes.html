@@ -9,12 +9,18 @@
 {% endblock %}
 
 {% block filter_form %}
-{% for field in filter.form %}
 <div class="col-md-3">
-	<label class="small fw-bold text-secondary mb-1">{{ field.label }}</label>
-	{{ field }}
+	<label class="small fw-bold text-secondary mb-1">{{ filter.form.numero_nota_fiscal.label }}</label>
+	{{ filter.form.numero_nota_fiscal }}
 </div>
-{% endfor %}
+<div class="col-md-4">
+	<label class="small fw-bold text-secondary mb-1">{{ filter.form.nome_emitente__nome.label }}</label>
+	{{ filter.form.nome_emitente__nome }}
+</div>
+<div class="col-md-3">
+	<label class="small fw-bold text-secondary mb-1">{{ filter.form.atestada.label }}</label>
+	{{ filter.form.atestada }}
+</div>
 {% endblock %}
 
 {% block table_headers %}

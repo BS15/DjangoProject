@@ -42,6 +42,7 @@ def painel_arquivamento_view(request):
             "processos_pendentes": processos_pendentes,
             "processos_arquivados": processos_arquivados,
             "processos_arquivados_count": processos_arquivados.count(),
+            "filter": arquivamento_filtro,
             "arquivamento_filtro": arquivamento_filtro,
             "ordem": ordem,
             "direcao": direcao,

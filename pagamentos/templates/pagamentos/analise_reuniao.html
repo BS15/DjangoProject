@@ -1,48 +1,32 @@
+{% extends "layouts/base_detail.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-	<meta charset="UTF-8">
-	<title>Análise - {{ reuniao }}</title>
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-	<link rel="stylesheet" href="{% static 'css/institutional.css' %}">
-	<style>
-		#start-conselho-bar { display: none; }
-		tr.selected-row { background-color: #f0fdfd !important; }
-	</style>
-</head>
-<body class="bg-light">
-{% include 'partials/sidebar.html' %}
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow-sm">
-	<div class="container-fluid px-4">
-		<a class="navbar-brand fw-bold" href="{% url 'home_page' %}">PaGé</a>
+{% block page_title %}Análise - {{ reuniao }}{% endblock %}
+
+{% block extra_css %}
+<style>
+	#start-conselho-bar { display: none; }
+	tr.selected-row { background-color: #f0fdfd !important; }
+</style>
+{% endblock %}
+
+{% block detail_header %}
+<div class="d-flex justify-content-between align-items-center">
+	<div>
+		<h2><i class="bi bi-people-fill text-info"></i> Análise - {{ reuniao }}</h2>
+		<p class="text-muted small mb-0">
+			{% if reuniao.data_reuniao %}Data: {{ reuniao.data_reuniao|br_date }} &mdash; {% endif %}
+			{{ reuniao.trimestre_referencia }}
+		</p>
 	</div>
-</nav>
+	<a href="{% url 'painel_conselho' %}" class="btn btn-outline-secondary">
+		<i class="bi bi-arrow-left"></i> Voltar
+	</a>
+</div>
+{% endblock %}
 
-<div class="container mt-4 mb-5">
-	<div class="d-flex justify-content-between align-items-center mb-3">
-		<div>
-			<h2><i class="bi bi-people-fill text-info"></i> Análise - {{ reuniao }}</h2>
-			<p class="text-muted small mb-0">
-				{% if reuniao.data_reuniao %}Data: {{ reuniao.data_reuniao|br_date }} &mdash; {% endif %}
-				{{ reuniao.trimestre_referencia }}
-			</p>
-		</div>
-		<a href="{% url 'painel_conselho' %}" class="btn btn-outline-secondary">
-			<i class="bi bi-arrow-left"></i> Voltar
-		</a>
-	</div>
-
-	{% if messages %}
-		{% for message in messages %}
-			<div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-				{{ message }}
-				<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-			</div>
-		{% endfor %}
-	{% endif %}
+{% block detail_body %}
+	{% include "layouts/_messages.html" %}
 
 	<!-- Selection action bar -->
 	<div id="start-conselho-bar" class="alert alert-info d-flex align-items-center gap-3 mb-3 shadow-sm">
@@ -122,11 +106,13 @@
 			</form>
 		</div>
 	</div>
-</div>
 
 {% include 'pagamentos/partials/preview_modal.html' %}
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
 <script>
 (function () {
 	'use strict';
@@ -180,5 +166,4 @@
 	});
 })();
 </script>
-</body>
-</html>
+{% endblock %}

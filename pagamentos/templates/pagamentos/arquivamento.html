@@ -12,12 +12,22 @@
 {% block filter_title %}Filtrar Processos Arquivados{% endblock %}
 
 {% block filter_form %}
-{% for field in arquivamento_filtro.form %}
-<div class="col-md-2">
-	<label class="form-label small fw-bold text-muted mb-1">{{ field.label }}</label>
-	{{ field }}
+<div class="col-md-3">
+	<label class="form-label small fw-bold text-muted mb-1">{{ filter.form.credor_nome.label }}</label>
+	{{ filter.form.credor_nome }}
 </div>
-{% endfor %}
+<div class="col-md-3">
+	<label class="form-label small fw-bold text-muted mb-1">{{ filter.form.n_nota_empenho.label }}</label>
+	{{ filter.form.n_nota_empenho }}
+</div>
+<div class="col-md-3">
+	<label class="form-label small fw-bold text-muted mb-1">{{ filter.form.data_pagamento.label }}</label>
+	{{ filter.form.data_pagamento }}
+</div>
+<div class="col-md-3">
+	<label class="form-label small fw-bold text-muted mb-1">{{ filter.form.valor_liquido.label }}</label>
+	{{ filter.form.valor_liquido }}
+</div>
 {% endblock %}
 
 {% block table_headers %}

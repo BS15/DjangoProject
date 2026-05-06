@@ -9,12 +9,22 @@
 {% endblock %}
 
 {% block filter_form %}
-{% for field in filter.form %}
 <div class="col-md-3">
-	<label class="small fw-bold text-secondary mb-1">{{ field.label }}</label>
-	{{ field }}
+	<label class="small fw-bold text-secondary mb-1">{{ filter.form.processo__id.label }}</label>
+	{{ filter.form.processo__id }}
 </div>
-{% endfor %}
+<div class="col-md-3">
+	<label class="small fw-bold text-secondary mb-1">{{ filter.form.processo__credor__nome.label }}</label>
+	{{ filter.form.processo__credor__nome }}
+</div>
+<div class="col-md-3">
+	<label class="small fw-bold text-secondary mb-1">{{ filter.form.tipo.label }}</label>
+	{{ filter.form.tipo }}
+</div>
+<div class="col-md-3">
+	<label class="small fw-bold text-secondary mb-1">{{ filter.form.status.label }}</label>
+	{{ filter.form.status }}
+</div>
 {% endblock %}
 
 {% block table_headers %}
