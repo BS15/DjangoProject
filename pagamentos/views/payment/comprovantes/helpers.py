@@ -103,6 +103,12 @@ def processar_pdf_comprovantes(pdf_file):
     agencia_orgao = getattr(settings, 'ORGAO_BANCO_AGENCIA', '')
     conta_orgao_limpa = getattr(settings, 'ORGAO_BANCO_CONTA', '')
 
+    if not all([cnpj_orgao, agencia_orgao, conta_orgao_limpa]):
+        logger.warning(
+            "Identificadores bancários do órgão não configurados (ORGAO_CNPJ, ORGAO_BANCO_AGENCIA, "
+            "ORGAO_BANCO_CONTA). A reconciliação automática de comprovantes não funcionará corretamente."
+        )
+
     cnpj_orgao_norm = re.sub(r"\D", "", cnpj_orgao or "")
     agencia_orgao_norm, conta_orgao_norm = normalize_account(agencia_orgao, conta_orgao_limpa)
 

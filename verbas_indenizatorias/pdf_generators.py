@@ -7,6 +7,7 @@ documentos correlatos.
 import logging
 
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 
 from commons.shared.pdf_tools import BasePDFDocument, _draw_wrapped_text
 from commons.shared.text_tools import format_brl_currency
@@ -505,6 +506,12 @@ class ReciboDocument(BasePDFDocument):
 
 	def _draw_recibo_evento(self, obj, beneficiario, valor_formatado, tipo_verba):
 		"""Renderiza recibo de jeton ou auxílio com informações do evento."""
+		orgao_nome = getattr(settings, 'ORGAO_NOME_COMPLETO', '')
+		if not orgao_nome:
+			raise ImproperlyConfigured(
+				"ORGAO_NOME_COMPLETO não está configurado. "
+				"Defina a variável de ambiente ORGAO_NOME_COMPLETO antes de gerar recibos de pagamento."
+			)
 		c = self.canvas
 		page_width = self.page_width
 		margin_left = 72
@@ -518,14 +525,14 @@ class ReciboDocument(BasePDFDocument):
 		if obj.__class__.__name__ == 'Jeton':
 			evento = _safe_text(getattr(obj, "reuniao", None))
 			declaration = (
-				f"Recebi do {settings.ORGAO_NOME_COMPLETO}, "
+				f"Recebi do {orgao_nome}, "
 				f"a importância líquida de {valor_formatado}, referente ao pagamento de Jeton pela participação em "
 				f"{evento}, realizada em {data_evento}, no local {local_evento}, na qualidade de {cargo}."
 			)
 		else:
 			evento = _safe_text(getattr(obj, "objetivo", None), "atividade de representação não informada")
 			declaration = (
-				f"Recebi do {settings.ORGAO_NOME_COMPLETO}, "
+				f"Recebi do {orgao_nome}, "
 				f"a importância líquida de {valor_formatado}, referente ao pagamento de Auxílio Representação para "
 				f"{evento}, realizado em {data_evento}, no local {local_evento}, na qualidade de {cargo}."
 			)

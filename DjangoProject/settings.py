@@ -169,13 +169,9 @@ STATIC_ROOT = os.getenv('STATIC_ROOT', str(BASE_DIR / 'staticfiles'))
 # Path to the institutional letterhead PDF used as a background for
 # auto-generated documents (payment authorisations, fiscal-council opinions,
 # etc.).  Override via LETTERHEAD_PATH to use a different file per deployment.
-LETTERHEAD_PATH = os.getenv(
-    'LETTERHEAD_PATH',
-    os.getenv(
-        'CRECI_LETTERHEAD_PATH',  # legacy alias kept for existing deployments
-        str(BASE_DIR / 'processos' / 'pdf_templates' / 'papel_timbrado.pdf'),
-    ),
-)
+# Defaults to None so that PDF generators can skip the watermark gracefully
+# when no letterhead has been configured.
+LETTERHEAD_PATH = os.getenv('LETTERHEAD_PATH') or os.getenv('CRECI_LETTERHEAD_PATH') or None
 
 # ---------------------------------------------------------------------------
 # Institutional identity settings
@@ -183,6 +179,9 @@ LETTERHEAD_PATH = os.getenv(
 # These values are embedded in PDF receipts and other generated documents.
 # Override via environment variables to adapt the system for any public-
 # administration body without touching source code.
+# ORGAO_NOME_COMPLETO is required for PDF receipt generation.
+# ORGAO_CNPJ / ORGAO_BANCO_AGENCIA / ORGAO_BANCO_CONTA are required for
+# automatic payment-slip reconciliation in the comprovantes module.
 ORGAO_NOME_COMPLETO = os.getenv('ORGAO_NOME_COMPLETO', '')
 ORGAO_CNPJ = os.getenv('ORGAO_CNPJ', '')
 ORGAO_BANCO_AGENCIA = os.getenv('ORGAO_BANCO_AGENCIA', '')
