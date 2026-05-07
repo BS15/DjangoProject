@@ -66,8 +66,8 @@ def _novo_auxilio(processo, beneficiario):
 def _marcar_processo_como_pago(processo):
     """Altera status do processo para PAGO_EM_CONFERENCIA diretamente no banco."""
     status_pago, _ = StatusChoicesProcesso.objects.get_or_create(
-        status_choice__iexact=ProcessoStatus.PAGO_EM_CONFERENCIA,
-        defaults={"status_choice": ProcessoStatus.PAGO_EM_CONFERENCIA},
+        opcao_status__iexact=ProcessoStatus.PAGO_EM_CONFERENCIA,
+        defaults={"opcao_status": ProcessoStatus.PAGO_EM_CONFERENCIA},
     )
     processo.status = status_pago
     processo.save(update_fields=["status"])

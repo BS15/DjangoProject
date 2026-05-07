@@ -31,7 +31,7 @@ def validar_completude_recolhimento_impostos(processo):
     tipo_pagamento_nome = ""
     if getattr(processo, "tipo_pagamento_id", None):
         try:
-            tipo_pagamento_nome = (processo.tipo_pagamento.tipo_de_pagamento or "").upper()
+            tipo_pagamento_nome = (processo.tipo_pagamento.tipo_pagamento or "").upper()
         except AttributeError:
             tipo_pagamento_nome = ""
 
@@ -70,7 +70,7 @@ def verificar_turnpike(processo, status_anterior, status_novo):
 
     if anterior == StatusProcesso.A_EMPENHAR and novo == StatusProcesso.AGUARDANDO_LIQUIDACAO:
         docs_orcamentarios = processo.documentos.filter(
-            tipo__tipo_de_documento__iexact='DOCUMENTOS ORÇAMENTÁRIOS'
+            tipo__tipo_documento__iexact='DOCUMENTOS ORÇAMENTÁRIOS'
         )
         if not docs_orcamentarios.exists():
             erros.append(
@@ -162,14 +162,14 @@ def verificar_turnpike(processo, status_anterior, status_novo):
         tipo_pagamento_nome = ''
         if getattr(processo, 'tipo_pagamento_id', None):
             try:
-                tipo_pagamento_nome = (processo.tipo_pagamento.tipo_de_pagamento or '').upper()
+                tipo_pagamento_nome = (processo.tipo_pagamento.tipo_pagamento or '').upper()
             except AttributeError:
                 tipo_pagamento_nome = ''
 
         is_suprimento = 'SUPRIMENTO' in tipo_pagamento_nome
 
         tem_comprovante = processo.documentos.filter(
-            tipo__tipo_de_documento__iexact='COMPROVANTE DE PAGAMENTO'
+            tipo__tipo_documento__iexact='COMPROVANTE DE PAGAMENTO'
         ).exists()
         if not tem_comprovante:
             erros.append(

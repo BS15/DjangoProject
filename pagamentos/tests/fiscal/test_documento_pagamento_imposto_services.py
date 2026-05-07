@@ -156,5 +156,5 @@ def test_anexar_relatorio_agrupamento_retencoes_no_processo_insere_na_ordem_1(
     assert DocumentoProcesso.objects.filter(processo=processo).count() == 2
     assert documento_relatorio.ordem == 1
     assert doc_preexistente.ordem == 2
-    assert documento_relatorio.tipo.tipo_de_documento == DOC_RELATORIO_AGRUPAMENTO
+    assert documento_relatorio.tipo.tipo_documento == DOC_RELATORIO_AGRUPAMENTO
     assert documento_relatorio.arquivo.name.lower().endswith(".pdf")

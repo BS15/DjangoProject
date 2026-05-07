@@ -74,11 +74,11 @@ def processo_factory(db):
             forma_pagamento=f"{forma_nome} {uuid.uuid4().hex[:6]}"
         )
         tipo_pagamento = TiposDePagamento.objects.create(
-            tipo_de_pagamento=f"{tipo_nome} {uuid.uuid4().hex[:6]}"
+            tipo_pagamento=f"{tipo_nome} {uuid.uuid4().hex[:6]}"
         )
         status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
-            status_choice__iexact=status,
-            defaults={"status_choice": status},
+            opcao_status__iexact=status,
+            defaults={"opcao_status": status},
         )
         return Processo.objects.create(
             credor=credor,
@@ -96,8 +96,8 @@ def processo_factory(db):
 def tipo_documento_factory(db):
     def factory(nome, *, tipo_pagamento=None):
         return TiposDeDocumento.objects.create(
-            tipo_de_documento=f"{nome} {uuid.uuid4().hex[:6]}",
-            tipo_de_pagamento=tipo_pagamento,
+            tipo_documento=f"{nome} {uuid.uuid4().hex[:6]}",
+            tipo_pagamento=tipo_pagamento,
         )
 
     return factory
@@ -119,7 +119,7 @@ def test_documento_processo_generico_nao_cria_especializacao_boleto(processo_fac
     assert Boleto_Bancario.objects.count() == 0
 
     with pytest.raises(Boleto_Bancario.DoesNotExist):
-        _ = documento.boleto_bancario
+        _ = documento.boletobancario
 
 
 @pytest.mark.django_db
@@ -168,7 +168,7 @@ def test_gerar_documentos_automaticos_processo_gera_documentos_esperados(
     assert [documento.ordem for documento in documentos] == list(range(1, len(documentos) + 1))
 
     for documento, (tipo_esperado, nome_esperado) in zip(documentos, documentos_esperados):
-        assert documento.tipo.tipo_de_documento == tipo_esperado
+        assert documento.tipo.tipo_documento == tipo_esperado
         assert _nomes_documentais_equivalentes(
             documento.arquivo.name,
             nome_esperado.format(processo_id=processo.id),
@@ -234,7 +234,7 @@ def test_gerar_pdf_consolidado_processo_usa_storage_cloud_sem_path(
     processo_factory,
 ):
     processo = processo_factory()
-    tipo_documento = TiposDeDocumento.objects.create(tipo_de_documento=f"PDF CLOUD {uuid.uuid4().hex[:6]}")
+    tipo_documento = TiposDeDocumento.objects.create(tipo_documento=f"PDF CLOUD {uuid.uuid4().hex[:6]}")
     pdf_a = _gerar_pdf_bytes()
     pdf_b = _gerar_pdf_bytes()
 
