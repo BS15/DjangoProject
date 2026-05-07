@@ -90,3 +90,13 @@ Ao atualizar arquivos em `docs/`, mantenha também o espelho correspondente em `
 - [Wiki — Setup do Ambiente](docs/desenvolvedor/setup_ambiente.md)
 - [Wiki — Padrões de Código](docs/desenvolvedor/padroes_codigo.md)
 - [Wiki — Matriz de Permissões](docs/governanca/matriz_permissoes.md)
+
+---
+
+## Licença
+
+Licenciado sob a **European Union Public Licence v. 1.2 (EUPL-1.2)** — consulte o arquivo [LICENSE](LICENSE) para o texto completo.
+
+A EUPL-1.2 é uma licença copyleft aprovada pela OSI, desenvolvida pela Comissão Europeia especificamente para software de administração pública. Ela é compatível com GPL v2/v3, AGPL v3 e outras licenças de código aberto amplamente utilizadas.
+
+**Uso de terceiros:** todo software de terceiros referenciado por este projeto permanece sob as suas próprias licenças, que são compatíveis com a EUPL-1.2. Consulte [`requirements.txt`](requirements.txt) para a lista completa de dependências.

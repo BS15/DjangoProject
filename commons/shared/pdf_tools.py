@@ -211,7 +211,7 @@ class BasePDFDocument:
 		self.packet = io.BytesIO()
 		self.canvas = canvas.Canvas(self.packet, pagesize=A4)
 		self.page_width, self.page_height = A4
-		self.letterhead_path = letterhead_path or getattr(settings, 'CRECI_LETTERHEAD_PATH', None)
+		self.letterhead_path = letterhead_path or getattr(settings, 'LETTERHEAD_PATH', None) or getattr(settings, 'CRECI_LETTERHEAD_PATH', None)
 		self.kwargs = kwargs
 
 	def draw_content(self):

@@ -6,6 +6,7 @@ import re
 import pdfplumber
 from commons.shared.pdf_tools import split_pdf_to_temp_pages
 from commons.shared.text_tools import normalize_account
+from django.conf import settings
 from django.core.files.storage import default_storage
 
 
@@ -98,9 +99,9 @@ def processar_pdf_comprovantes(pdf_file):
     """Processa comprovantes em PDF e retorna dados extraídos por página."""
     from credores.models import Credor, ContasBancarias
 
-    cnpj_orgao = "82.894.098/0001-32"
-    agencia_orgao = "3582-3"
-    conta_orgao_limpa = "7429-2"
+    cnpj_orgao = getattr(settings, 'ORGAO_CNPJ', '')
+    agencia_orgao = getattr(settings, 'ORGAO_BANCO_AGENCIA', '')
+    conta_orgao_limpa = getattr(settings, 'ORGAO_BANCO_CONTA', '')
 
     cnpj_orgao_norm = re.sub(r"\D", "", cnpj_orgao or "")
     agencia_orgao_norm, conta_orgao_norm = normalize_account(agencia_orgao, conta_orgao_limpa)
