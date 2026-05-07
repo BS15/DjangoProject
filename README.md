@@ -95,8 +95,8 @@ Ao atualizar arquivos em `docs/`, mantenha também o espelho correspondente em `
 
 ## Licença
 
-Licenciado sob a **European Union Public Licence v. 1.2 (EUPL-1.2)** — consulte o arquivo [LICENSE](LICENSE) para o texto completo.
+Licenciado sob a **GNU General Public License v3.0 (GPL-3.0)** — consulte o arquivo [LICENSE](LICENSE) para o texto completo.
 
-A EUPL-1.2 é uma licença copyleft aprovada pela OSI, desenvolvida pela Comissão Europeia especificamente para software de administração pública. Ela é compatível com GPL v2/v3, AGPL v3 e outras licenças de código aberto amplamente utilizadas.
+A GPL-3.0 é uma licença copyleft aprovada pela OSI, amplamente adotada em projetos de software livre. Ela assegura que redistribuições e trabalhos derivados mantenham as mesmas liberdades de uso, estudo, modificação e distribuição.
 
-**Uso de terceiros:** todo software de terceiros referenciado por este projeto permanece sob as suas próprias licenças, que são compatíveis com a EUPL-1.2. Consulte [`requirements.txt`](requirements.txt) para a lista completa de dependências.
+**Uso de terceiros:** todo software de terceiros referenciado por este projeto permanece sob as suas próprias licenças compatíveis. Consulte [`requirements.txt`](requirements.txt) para a lista completa de dependências.
