@@ -21,8 +21,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load environment variables from .env file (development) or the environment (production)
 load_dotenv(BASE_DIR / '.env')
 
-CRECI_LETTERHEAD_PATH = os.getenv('CRECI_LETTERHEAD_PATH')
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
@@ -168,14 +166,26 @@ STATIC_ROOT = os.getenv('STATIC_ROOT', str(BASE_DIR / 'staticfiles'))
 # ---------------------------------------------------------------------------
 # PDF template settings
 # ---------------------------------------------------------------------------
-# Path to the CRECI-SC letterhead PDF used as a background for auto-generated
-# documents (payment authorisations, fiscal-council opinions, etc.).
-# Override via the CRECI_LETTERHEAD_PATH environment variable to use a
-# different file per deployment without touching source code.
-CRECI_LETTERHEAD_PATH = os.getenv(
-    'CRECI_LETTERHEAD_PATH',
-    str(BASE_DIR / 'processos' / 'pdf_templates' / 'papel_timbrado_creci_sc.pdf'),
-)
+# Path to the institutional letterhead PDF used as a background for
+# auto-generated documents (payment authorisations, fiscal-council opinions,
+# etc.).  Override via LETTERHEAD_PATH to use a different file per deployment.
+# Defaults to None so that PDF generators can skip the watermark gracefully
+# when no letterhead has been configured.
+LETTERHEAD_PATH = os.getenv('LETTERHEAD_PATH') or os.getenv('CRECI_LETTERHEAD_PATH') or None
+
+# ---------------------------------------------------------------------------
+# Institutional identity settings
+# ---------------------------------------------------------------------------
+# These values are embedded in PDF receipts and other generated documents.
+# Override via environment variables to adapt the system for any public-
+# administration body without touching source code.
+# ORGAO_NOME_COMPLETO is required for PDF receipt generation.
+# ORGAO_CNPJ / ORGAO_BANCO_AGENCIA / ORGAO_BANCO_CONTA are required for
+# automatic payment-slip reconciliation in the comprovantes module.
+ORGAO_NOME_COMPLETO = os.getenv('ORGAO_NOME_COMPLETO', '')
+ORGAO_CNPJ = os.getenv('ORGAO_CNPJ', '')
+ORGAO_BANCO_AGENCIA = os.getenv('ORGAO_BANCO_AGENCIA', '')
+ORGAO_BANCO_CONTA = os.getenv('ORGAO_BANCO_CONTA', '')
 
 # ---------------------------------------------------------------------------
 # Reverse-proxy / Docker settings

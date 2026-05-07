@@ -1,5 +1,8 @@
 """Geradores de PDF para documentos de suprimentos de fundos."""
 
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
+
 from commons.shared.pdf_tools import BasePDFDocument, _draw_wrapped_text
 from commons.shared.text_tools import format_brl_currency
 
@@ -26,6 +29,12 @@ class ReciboSuprimentoDocument(BasePDFDocument):
 
     def draw_content(self):
         """Desenha corpo do recibo de suprimento."""
+        orgao_nome = getattr(settings, 'ORGAO_NOME_COMPLETO', '')
+        if not orgao_nome:
+            raise ImproperlyConfigured(
+                "ORGAO_NOME_COMPLETO não está configurado. "
+                "Defina a variável de ambiente ORGAO_NOME_COMPLETO antes de gerar recibos de pagamento."
+            )
         suprimento = self.obj
         c = self.canvas
         page_width = self.page_width
@@ -50,7 +59,7 @@ class ReciboSuprimentoDocument(BasePDFDocument):
         c.drawCentredString(page_width / 2, 590, "SUPRIMENTO DE FUNDOS")
 
         declaration = (
-            f"Recebi do Conselho Regional de Corretores de Imóveis de Santa Catarina - 11ª Região (CRECI-SC), "
+            f"Recebi do {orgao_nome}, "
             f"a importância líquida de {valor_formatado} para custear despesas de pequeno vulto e pronto pagamento "
             f"da unidade {lotacao}, no período de concessão de {periodo_concessao}, ciente de que devo prestar "
             f"contas até {prazo_prestacao}."

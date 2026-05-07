@@ -90,3 +90,13 @@ Ao atualizar arquivos em `docs/`, mantenha também o espelho correspondente em `
 - [Wiki — Setup do Ambiente](docs/desenvolvedor/setup_ambiente.md)
 - [Wiki — Padrões de Código](docs/desenvolvedor/padroes_codigo.md)
 - [Wiki — Matriz de Permissões](docs/governanca/matriz_permissoes.md)
+
+---
+
+## Licença
+
+Licenciado sob a **GNU General Public License v3.0 (GPL-3.0)** — consulte o arquivo [LICENSE](LICENSE) para o texto completo.
+
+A GPL-3.0 é uma licença copyleft aprovada pela OSI, amplamente adotada em projetos de software livre. Ela assegura que redistribuições e trabalhos derivados mantenham as mesmas liberdades de uso, estudo, modificação e distribuição.
+
+**Uso de terceiros:** todo software de terceiros referenciado por este projeto permanece sob as suas próprias licenças compatíveis. Consulte [`requirements.txt`](requirements.txt) para a lista completa de dependências.

@@ -10,7 +10,12 @@ O PaGé é um sistema de backoffice financeiro e administrativo para uso interno
 
 **Não abra issues públicas para relatar vulnerabilidades de segurança.**
 
-Reporte de forma privada através do canal interno da equipe (e-mail ou sistema de gestão interno — contate o responsável técnico do projeto para obter o canal correto). Inclua:
+Reporte de forma privada através de um dos canais abaixo:
+
+- **GitHub Private Vulnerability Reporting:** utilize o botão *"Report a vulnerability"* na aba **Security** deste repositório (https://github.com/BS15/DjangoProject/security/advisories/new). Esta é a forma preferencial pois mantém o reporte confidencial até a publicação do patch.
+- **E-mail:** caso não utilize o GitHub, envie um e-mail detalhado ao responsável técnico do projeto. O endereço de contato será adicionado aqui após a transferência oficial de titularidade para o órgão público.
+
+Inclua:
 
 1. Descrição detalhada da vulnerabilidade.
 2. Passos para reproduzir.
