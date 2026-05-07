@@ -55,8 +55,8 @@ def _registrar_empenho_e_anexar_siscac(processo, n_empenho, data_empenho_str, si
 
     if siscac_file:
         tipo_doc, _ = TiposDeDocumento.objects.get_or_create(
-            tipo_de_documento__iexact="DOCUMENTOS ORÇAMENTÁRIOS",
-            defaults={"tipo_de_documento": "DOCUMENTOS ORÇAMENTÁRIOS"},
+            tipo_documento__iexact="DOCUMENTOS ORÇAMENTÁRIOS",
+            defaults={"tipo_documento": "DOCUMENTOS ORÇAMENTÁRIOS"},
         )
         processo.documentos.all().update(ordem=F("ordem") + 1)
         DocumentoProcesso.objects.create(

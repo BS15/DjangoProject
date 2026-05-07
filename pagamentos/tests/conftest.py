@@ -63,11 +63,11 @@ def processo_factory(db):
             forma_pagamento=f"PIX-{uuid.uuid4().hex[:6]}"
         )
         tipo_pagamento = TiposDePagamento.objects.create(
-            tipo_de_pagamento=f"{tipo_pagamento_nome}-{uuid.uuid4().hex[:6]}"
+            tipo_pagamento=f"{tipo_pagamento_nome}-{uuid.uuid4().hex[:6]}"
         )
         status_obj, _ = StatusChoicesProcesso.objects.get_or_create(
-            status_choice__iexact=status,
-            defaults={"status_choice": status},
+            opcao_status__iexact=status,
+            defaults={"opcao_status": status},
         )
         return Processo.objects.create(
             credor=credor,
@@ -85,8 +85,8 @@ def processo_factory(db):
 def tipo_documento_factory(db):
     def factory(nome, *, tipo_pagamento=None):
         return TiposDeDocumento.objects.create(
-            tipo_de_documento=nome,
-            tipo_de_pagamento=tipo_pagamento,
+            tipo_documento=nome,
+            tipo_pagamento=tipo_pagamento,
         )
 
     return factory
@@ -96,8 +96,8 @@ def tipo_documento_factory(db):
 def add_documento_processo(db, tipo_documento_factory, pdf_bytes):
     def factory(processo, *, tipo_nome, conteudo=None, nome_arquivo=None):
         tipo = TiposDeDocumento.objects.filter(
-            tipo_de_documento__iexact=tipo_nome,
-            tipo_de_pagamento=processo.tipo_pagamento,
+            tipo_documento__iexact=tipo_nome,
+            tipo_pagamento=processo.tipo_pagamento,
         ).first() or tipo_documento_factory(tipo_nome, tipo_pagamento=processo.tipo_pagamento)
 
         if conteudo is None:
@@ -119,8 +119,8 @@ def add_documento_processo(db, tipo_documento_factory, pdf_bytes):
 def add_comprovante(db, tipo_documento_factory, pdf_bytes):
     def factory(processo, *, valor_pago):
         tipo = TiposDeDocumento.objects.filter(
-            tipo_de_documento__iexact="COMPROVANTE DE PAGAMENTO",
-            tipo_de_pagamento=processo.tipo_pagamento,
+            tipo_documento__iexact="COMPROVANTE DE PAGAMENTO",
+            tipo_pagamento=processo.tipo_pagamento,
         ).first() or tipo_documento_factory("COMPROVANTE DE PAGAMENTO", tipo_pagamento=processo.tipo_pagamento)
 
         nome = f"comprovante_{uuid.uuid4().hex[:8]}.pdf"

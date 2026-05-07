@@ -38,7 +38,7 @@ def _create_backoffice_user():
         email=f"backoffice_{uuid.uuid4().hex[:8]}@example.com",
         password="x",
     )
-    permissao = Permission.objects.get(codename="operador_contas_a_pagar", content_type__app_label="pagamentos")
+    permissao = Permission.objects.get(codename="pode_editar_processos_pagamento", content_type__app_label="pagamentos")
     user.user_permissions.add(permissao)
     return user
 
