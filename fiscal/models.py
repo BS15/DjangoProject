@@ -8,10 +8,13 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
+from django.db.models.signals import post_delete, pre_save
+from django.dispatch import receiver
 from simple_history.models import HistoricalRecords
 
 from commons.shared.field_validators import validar_cpf_cnpj
 from commons.shared.file_validators import validar_arquivo_seguro
+from commons.shared.storage_utils import _delete_file
 
 
 logger = logging.getLogger(__name__)
@@ -347,3 +350,38 @@ class DocumentoPagamentoImposto(models.Model):
 
     def __str__(self):
         return f"DocPagImposto #{self.pk} – {self.codigo_imposto} / {self.competencia}"
+
+
+# ==============================================================================
+# FILE LIFECYCLE SIGNALS – documentos de pagamento de impostos
+# ==============================================================================
+
+@receiver(post_delete, sender=DocumentoPagamentoImposto)
+def auto_delete_files_on_delete_doc_pagamento_imposto(sender, instance, **kwargs):
+    """Remove todos os arquivos físicos ao excluir documento de pagamento de imposto."""
+    _delete_file(instance.relatorio_retencoes)
+    _delete_file(instance.guia_recolhimento)
+    _delete_file(instance.comprovante_pagamento)
+
+
+@receiver(pre_save, sender=DocumentoPagamentoImposto)
+def cleanup_old_files_on_save_doc_pagamento_imposto(sender, instance, **kwargs):
+    """Apaga arquivos antigos ao substituir versões de documentos de pagamento de imposto."""
+    if not instance.pk:
+        return
+    try:
+        old = sender.objects.get(pk=instance.pk)
+    except sender.DoesNotExist:
+        return
+    
+    # Limpeza de relatório de retenções
+    if old.relatorio_retencoes and old.relatorio_retencoes.name and old.relatorio_retencoes.name != instance.relatorio_retencoes.name:
+        _delete_file(old.relatorio_retencoes)
+    
+    # Limpeza de guia de recolhimento
+    if old.guia_recolhimento and old.guia_recolhimento.name and old.guia_recolhimento.name != instance.guia_recolhimento.name:
+        _delete_file(old.guia_recolhimento)
+    
+    # Limpeza de comprovante de pagamento
+    if old.comprovante_pagamento and old.comprovante_pagamento.name and old.comprovante_pagamento.name != instance.comprovante_pagamento.name:
+        _delete_file(old.comprovante_pagamento)

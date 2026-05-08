@@ -7,9 +7,12 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Sum
+from django.db.models.signals import post_delete, pre_save
+from django.dispatch import receiver
 from simple_history.models import HistoricalRecords
 
 from commons.shared.file_validators import validar_arquivo_seguro
+from commons.shared.storage_utils import _delete_file
 
 
 STATUS_CONTINGENCIA = [
@@ -261,3 +264,52 @@ class AssinaturaEletronica(models.Model):
         ordering = ["-criado_em"]
     def __str__(self):
         return f"{self.tipo_documento} - {self.autentique_id} ({self.status})"
+
+
+# ==============================================================================
+# FILE LIFECYCLE SIGNALS – devolucao, assinatura e proceso consolidado
+# ==============================================================================
+
+@receiver(post_delete, sender=DevolucaoProcessual)
+def auto_delete_file_on_delete_devolucao(sender, instance, **kwargs):
+    """Remove arquivo físico ao excluir devolução processual."""
+    _delete_file(instance.comprovante)
+
+
+@receiver(pre_save, sender=DevolucaoProcessual)
+def cleanup_old_file_on_save_devolucao(sender, instance, **kwargs):
+    """Apaga arquivo antigo ao substituir comprovante da devolução."""
+    if not instance.pk:
+        return
+    try:
+        old = sender.objects.get(pk=instance.pk)
+    except sender.DoesNotExist:
+        return
+    if old.comprovante and old.comprovante.name and old.comprovante.name != instance.comprovante.name:
+        _delete_file(old.comprovante)
+
+
+@receiver(post_delete, sender=AssinaturaEletronica)
+def auto_delete_file_on_delete_assinatura(sender, instance, **kwargs):
+    """Remove arquivos físicos (rascunho e assinado) ao excluir assinatura eletrônica."""
+    _delete_file(instance.arquivo)
+    _delete_file(instance.arquivo_assinado)
+
+
+@receiver(pre_save, sender=AssinaturaEletronica)
+def cleanup_old_files_on_save_assinatura(sender, instance, **kwargs):
+    """Apaga arquivos antigos ao substituir versões de assinatura."""
+    if not instance.pk:
+        return
+    try:
+        old = sender.objects.get(pk=instance.pk)
+    except sender.DoesNotExist:
+        return
+    
+    # Limpeza de arquivo rascunho
+    if old.arquivo and old.arquivo.name and old.arquivo.name != instance.arquivo.name:
+        _delete_file(old.arquivo)
+    
+    # Limpeza de arquivo assinado
+    if old.arquivo_assinado and old.arquivo_assinado.name and old.arquivo_assinado.name != instance.arquivo_assinado.name:
+        _delete_file(old.arquivo_assinado)

@@ -72,7 +72,23 @@
             <p>O Nginx expõe <code>/media/</code> com alias para <code>/app/media/</code>. Isso atende URLs diretas de <code>arquivo.url</code>, mas bypassa checagens contextuais da rota segura.</p>
 
             <h2 id="8-limpeza-de-arquivos">8. Limpeza de arquivos</h2>
-            <p>Documentos de processo e de verbas possuem limpeza explícita (delete/substituição) com sinais e <code>_delete_file</code>.</p>
+            <p>Para <strong>todos</strong> os documentos com <code>FileField</code> no sistema, existe limpeza explícita de arquivo anterior/físico via <code>_delete_file</code> em sinais (<code>pre_save</code>, <code>post_delete</code>).</p>
+            <h3 id="81-modelos-cobertos">8.1 Modelos cobertos</h3>
+            <ul>
+              <li><strong>Documentos de processo</strong>: <code>DocumentoProcesso</code>, <code>DocumentoOrcamentarioProcessual</code>, <code>ComprovantePagamento</code></li>
+              <li><strong>Processo consolidado:</strong> <code>Processo.arquivo_final</code></li>
+              <li><strong>Devoluções e suporte:</strong> <code>DevolucaoProcessual.comprovante</code>, <code>AssinaturaEletronica</code> (rascunho e assinado)</li>
+              <li><strong>Documentos de verbas:</strong> <code>DocumentoDiaria</code>, <code>DocumentoComprovacao</code>, <code>DocumentoReembolso</code>, <code>DocumentoJeton</code>, <code>DocumentoAuxilio</code></li>
+              <li><strong>Documentos de suprimento:</strong> <code>DocumentoSuprimentoDeFundos</code>, <code>DespesaSuprimento</code>, <code>PrestacaoContasSuprimento.comprovante_devolucao</code></li>
+              <li><strong>Documentos fiscais:</strong> <code>DocumentoPagamentoImposto</code> (3 campos)</li>
+            </ul>
+            <h3 id="82-padronizacao-completa">8.2 Padronização completa</h3>
+            <p>A estratégia de cleanup automático é uniforme. Cada modelo com <code>FileField</code> implementa:</p>
+            <ol>
+              <li><code>@receiver(post_delete)</code> para remover arquivo ao deletar registro</li>
+              <li><code>@receiver(pre_save)</code> para remover versão anterior se arquivo for sobrescrito</li>
+            </ol>
+            <p>Não há exceções: todos os agregados documentais seguem o mesmo padrão.</p>
 
             <h2 id="9-compatibilidade-com-storage-remoto">9. Compatibilidade com storage remoto</h2>
             <p>Serviços documentais usam <code>storage.exists</code> e <code>arquivo.open("rb")</code>, sem depender de caminho local, o que mantém compatibilidade com storages cloud.</p>

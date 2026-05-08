@@ -1480,7 +1480,6 @@
 <li>Services/Helpers: regras de negócio e mutação de estado, sem acoplamento a HTTP.</li>
 <li>APIs (<code>apis.py</code>): serialização/retorno JSON; mutação delegada para service/helper.</li>
 </ul>
-<p>Veja também: <a href="../pattern_matching/">Code Generation: Pattern Matching First</a>.</p>
 <h2 id="fluxo-de-uma-requisicao-tipica">Fluxo de uma requisição típica<a class="headerlink" href="#fluxo-de-uma-requisicao-tipica" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>Usuário (POST) → Action
                   ├── form.is_valid()? → não: redirect com mensagem de erro

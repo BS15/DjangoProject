@@ -107,9 +107,30 @@
         return;
     }
 
+    var normalizeFieldName = function (name) {
+        if (!name) {
+            return '';
+        }
+
+        var suffixes = ['_after', '_before', '_min', '_max'];
+        for (var i = 0; i < suffixes.length; i += 1) {
+            if (name.endsWith(suffixes[i])) {
+                return name.slice(0, -suffixes[i].length);
+            }
+        }
+
+        var multiWidgetMatch = name.match(/^(.*)_\d+$/);
+        if (multiWidgetMatch) {
+            return multiWidgetMatch[1];
+        }
+
+        return name;
+    };
+
     var basicFieldNames = new Set();
     basicContainer.querySelectorAll('input[name], select[name], textarea[name]').forEach(function (el) {
         basicFieldNames.add(el.name);
+        basicFieldNames.add(normalizeFieldName(el.name));
     });
 
     var advancedCount = 0;

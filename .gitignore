@@ -3,6 +3,12 @@
 venv/
 env/
 
+# Memórias/instruções locais de agente (não versionar)
+memories/
+.memories/
+.ai-memory/
+.copilot-memory/
+
 # Banco de Dados Local (NUNCA suba o banco de dados)
 db.sqlite3
 

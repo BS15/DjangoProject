@@ -1,7 +1,14 @@
 """Filtros de listagem para o domínio fiscal (retenções e documentos fiscais)."""
 
 import django_filters
-from pagamentos.filters import BaseStyledFilterSet
+from pagamentos.filters import (
+    BaseStyledFilterSet,
+    boolean_filter,
+    exact_text_filter,
+    icontains_filter,
+    month_filter,
+    year_filter,
+)
 from credores.models import Credor
 from fiscal.models import DocumentoFiscal, RetencaoImposto, CodigosImposto, StatusChoicesRetencoes
 from pagamentos.domain_models import Processo
@@ -10,10 +17,10 @@ from pagamentos.domain_models import Processo
 class RetencaoNotaFilter(BaseStyledFilterSet):
     """Filtro de retenções na visão agrupada por documento fiscal."""
 
-    mes = django_filters.NumberFilter(field_name='data_emissao', lookup_expr='month', label='Mês da Emissão')
-    ano = django_filters.NumberFilter(field_name='data_emissao', lookup_expr='year', label='Ano da Emissão')
-    processo = django_filters.CharFilter(field_name='processo__id', lookup_expr='exact', label='Nº do Processo')
-    emitente = django_filters.CharFilter(field_name='nome_emitente', lookup_expr='icontains', label='Emitente/Credor')
+    mes = month_filter('data_emissao', label='Mês da Emissão')
+    ano = year_filter('data_emissao', label='Ano da Emissão')
+    processo = exact_text_filter(field_name='processo__id', label='Nº do Processo')
+    emitente = icontains_filter(field_name='nome_emitente', label='Emitente/Credor')
     beneficiario = django_filters.ModelChoiceFilter(
         field_name='retencoes__beneficiario',
         queryset=Credor.objects.all(),
@@ -38,10 +45,10 @@ class RetencaoNotaFilter(BaseStyledFilterSet):
 class RetencaoProcessoFilter(BaseStyledFilterSet):
     """Filtro de retenções na visão agrupada por processo."""
 
-    mes = django_filters.NumberFilter(field_name='notas_fiscais__data_emissao', lookup_expr='month', label='Mês da Emissão')
-    ano = django_filters.NumberFilter(field_name='notas_fiscais__data_emissao', lookup_expr='year', label='Ano da Emissão')
-    processo = django_filters.CharFilter(field_name='id', lookup_expr='exact', label='Nº do Processo')
-    credor = django_filters.CharFilter(field_name='credor__nome', lookup_expr='icontains', label='Credor')
+    mes = month_filter('notas_fiscais__data_emissao', label='Mês da Emissão')
+    ano = year_filter('notas_fiscais__data_emissao', label='Ano da Emissão')
+    processo = exact_text_filter(field_name='id', label='Nº do Processo')
+    credor = icontains_filter(field_name='credor__nome', label='Credor')
     imposto = django_filters.ModelChoiceFilter(
         field_name='notas_fiscais__retencoes__codigo',
         queryset=CodigosImposto.objects.filter(is_active=True),
@@ -61,11 +68,11 @@ class RetencaoProcessoFilter(BaseStyledFilterSet):
 class RetencaoIndividualFilter(BaseStyledFilterSet):
     """Filtro granular para listagem individual de impostos retidos."""
 
-    mes = django_filters.NumberFilter(field_name='nota_fiscal__data_emissao', lookup_expr='month', label='Mês (Emissão NF)')
-    ano = django_filters.NumberFilter(field_name='nota_fiscal__data_emissao', lookup_expr='year', label='Ano (Emissão NF)')
-    nota_fiscal = django_filters.CharFilter(field_name='nota_fiscal__numero_nota_fiscal', lookup_expr='icontains', label='Nº Documento Fiscal')
-    processo_lancamento = django_filters.CharFilter(field_name='nota_fiscal__processo__id', lookup_expr='exact', label='Processo de Lançamento')
-    emitente = django_filters.CharFilter(field_name='nota_fiscal__nome_emitente', lookup_expr='exact', label='Emitente/Credor')
+    mes = month_filter('nota_fiscal__data_emissao', label='Mês (Emissão NF)')
+    ano = year_filter('nota_fiscal__data_emissao', label='Ano (Emissão NF)')
+    nota_fiscal = icontains_filter(field_name='nota_fiscal__numero_nota_fiscal', label='Nº Documento Fiscal')
+    processo_lancamento = exact_text_filter(field_name='nota_fiscal__processo__id', label='Processo de Lançamento')
+    emitente = exact_text_filter(field_name='nota_fiscal__nome_emitente', label='Emitente/Credor')
     beneficiario = django_filters.ModelChoiceFilter(
         field_name='beneficiario',
         queryset=Credor.objects.all(),
@@ -90,12 +97,9 @@ class RetencaoIndividualFilter(BaseStyledFilterSet):
 class DocumentoFiscalFilter(BaseStyledFilterSet):
     """Filtro para documentos fiscais por número, emitente e ateste."""
 
-    numero_nota_fiscal = django_filters.CharFilter(lookup_expr='icontains', label='Nº da Nota')
-    nome_emitente__nome = django_filters.CharFilter(lookup_expr='icontains', label='Nome do Emitente')
-    atestada = django_filters.BooleanFilter(
-        label='Status de Liquidação (Atestada?)',
-        widget=django_filters.widgets.BooleanWidget()
-    )
+    numero_nota_fiscal = icontains_filter(label='Nº da Nota')
+    nome_emitente__nome = icontains_filter(label='Nome do Emitente')
+    atestada = boolean_filter(label='Status de Liquidação (Atestada?)')
 
     class Meta:
         model = DocumentoFiscal

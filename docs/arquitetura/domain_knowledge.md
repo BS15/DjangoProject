@@ -76,7 +76,7 @@ Um **[Turnpike](/negocio/glossario_conselho.md#turnpike)** é uma validação qu
 
 **Prestação de Contas de Diária:**
 - ✅ Beneficiário anexou comprovantes (notas, recibos)?
-- ✅ Valor devolvido + valor gasto = valor concedido?
+- ✅ Comprovantes justificam as despesas realizadas?
 - ✅ Documentos estão em PDF válido?
 
 **Suprimento de Fundos:**

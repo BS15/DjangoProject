@@ -16,6 +16,25 @@
     <a href="{% url 'home_page' %}" class="btn btn-outline-secondary">Voltar para Home</a>
 {% endblock %}
 
+{% block filter_form %}
+<div class="col-md-3">
+    <label class="small fw-bold text-secondary mb-1">Suprido(a)</label>
+    {{ filter.form.suprido }}
+</div>
+<div class="col-md-3">
+    <label class="small fw-bold text-secondary mb-1">Lotação</label>
+    {{ filter.form.lotacao }}
+</div>
+<div class="col-md-3">
+    <label class="small fw-bold text-secondary mb-1">Status</label>
+    {{ filter.form.status }}
+</div>
+<div class="col-md-3">
+    <label class="small fw-bold text-secondary mb-1">Início do Período</label>
+    {{ filter.form.inicio_periodo }}
+</div>
+{% endblock %}
+
 {% block table_headers %}
     <th data-campo="id"># ID</th>
     <th data-campo="suprido">Suprido(a)</th>

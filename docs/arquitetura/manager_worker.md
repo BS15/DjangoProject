@@ -41,8 +41,6 @@ Erros de domínio são levantados imediatamente como exceções — nunca absorv
 - Services/Helpers: regras de negócio e mutação de estado, sem acoplamento a HTTP.
 - APIs (`apis.py`): serialização/retorno JSON; mutação delegada para service/helper.
 
-Veja também: [Code Generation: Pattern Matching First](pattern_matching.md).
-
 ## Fluxo de uma requisição típica
 
 ```

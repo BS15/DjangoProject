@@ -8,8 +8,9 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
-from commons.shared.query_tools import resolver_parametros_ordenacao
 from suprimentos.models import PrestacaoContasSuprimento, SuprimentoDeFundos
+from suprimentos.filters import PrestacaoSuprimentoReviewFilter, SuprimentoPainelFilter
+from pagamentos.views.shared import render_filtered_list
 from ..helpers import _pode_acessar_suprimento, _suprimento_encerrado
 from suprimentos.forms import DespesaSuprimentoForm, EnviarPrestacaoSuprimentoForm
 
@@ -18,25 +19,25 @@ from suprimentos.forms import DespesaSuprimentoForm, EnviarPrestacaoSuprimentoFo
 @permission_required("suprimentos.acesso_backoffice", raise_exception=True)
 def painel_suprimentos_view(request: HttpRequest) -> HttpResponse:
     """Exibe painel resumido com os suprimentos cadastrados."""
-    ordem, direcao, order_field = resolver_parametros_ordenacao(
+    return render_filtered_list(
         request,
-        campos_permitidos={
+        queryset=SuprimentoDeFundos.objects.select_related("suprido", "status").all(),
+        filter_class=SuprimentoPainelFilter,
+        template_name="suprimentos/suprimentos_list.html",
+        items_key="suprimentos",
+        filter_key="filter",
+        sort_fields={
             "id": "id",
             "suprido": "suprido__nome",
             "lotacao": "lotacao",
             "periodo": "inicio_periodo",
             "valor_liquido": "valor_liquido",
             "valor_gasto": "valor_gasto",
-            "status": "status",
+            "status": "status__status_choice",
         },
         default_ordem="id",
         default_direcao="desc",
-    )
-    suprimentos = SuprimentoDeFundos.objects.select_related("suprido").all().order_by(order_field, "-id")
-    return render(
-        request,
-        "suprimentos/suprimentos_list.html",
-        {"suprimentos": suprimentos, "ordem": ordem, "direcao": direcao},
+        tie_breaker="-id",
     )
 
 
@@ -119,9 +120,18 @@ def adicionar_despesa_view(request: HttpRequest, pk: int) -> HttpResponse:
 @permission_required("suprimentos.pode_gerir_prestacao_contas_suprimento", raise_exception=True)
 def revisar_prestacoes_suprimento_view(request: HttpRequest) -> HttpResponse:
     """Painel do operador listando prestações de suprimento aguardando revisão."""
-    ordem, direcao, order_field = resolver_parametros_ordenacao(
+    return render_filtered_list(
         request,
-        campos_permitidos={
+        queryset=(
+            PrestacaoContasSuprimento.objects.select_related("suprimento__suprido", "submetido_por")
+            .filter(status=PrestacaoContasSuprimento.STATUS_ENVIADA)
+        ),
+        filter_class=PrestacaoSuprimentoReviewFilter,
+        template_name="suprimentos/revisar_prestacoes_suprimento.html",
+        items_key="prestacoes",
+        filter_key="filter",
+        extra_context={"STATUS_ENVIADA": PrestacaoContasSuprimento.STATUS_ENVIADA},
+        sort_fields={
             "suprimento": "suprimento__id",
             "suprido": "suprimento__suprido__nome",
             "lotacao": "suprimento__lotacao",
@@ -133,19 +143,8 @@ def revisar_prestacoes_suprimento_view(request: HttpRequest) -> HttpResponse:
         },
         default_ordem="submetido_em",
         default_direcao="asc",
+        tie_breaker="id",
     )
-    prestacoes = (
-        PrestacaoContasSuprimento.objects.select_related("suprimento__suprido", "submetido_por")
-        .filter(status=PrestacaoContasSuprimento.STATUS_ENVIADA)
-        .order_by(order_field, "id")
-    )
-    context: dict[str, Any] = {
-        "prestacoes": prestacoes,
-        "ordem": ordem,
-        "direcao": direcao,
-        "STATUS_ENVIADA": PrestacaoContasSuprimento.STATUS_ENVIADA,
-    }
-    return render(request, "suprimentos/revisar_prestacoes_suprimento.html", context)
 
 
 @require_GET

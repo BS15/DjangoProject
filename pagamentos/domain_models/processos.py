@@ -9,9 +9,12 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Sum
+from django.db.models.signals import post_delete, pre_save
+from django.dispatch import receiver
 from simple_history.models import HistoricalRecords
 
 from commons.shared.file_validators import validar_arquivo_seguro
+from commons.shared.storage_utils import _delete_file
 
 
 
@@ -477,3 +480,26 @@ class Processo(models.Model):
         novo_status_norm = (novo_status_str or "").upper()
         gerar_documentos_automaticos_processo(self, status_anterior_norm, novo_status_norm)
         sincronizar_relacoes_apos_transicao(self, status_anterior_norm, novo_status_norm, usuario=usuario)
+
+
+# ==============================================================================
+# FILE LIFECYCLE SIGNALS – arquivo final consolidado do processo
+# ==============================================================================
+
+@receiver(post_delete, sender=Processo)
+def auto_delete_file_on_delete_processo(sender, instance, **kwargs):
+    """Remove arquivo consolidado final ao excluir processo."""
+    _delete_file(instance.arquivo_final)
+
+
+@receiver(pre_save, sender=Processo)
+def cleanup_old_file_on_save_processo(sender, instance, **kwargs):
+    """Apaga arquivo consolidado antigo ao substituir o arquivo final do processo."""
+    if not instance.pk:
+        return
+    try:
+        old = sender.objects.get(pk=instance.pk)
+    except sender.DoesNotExist:
+        return
+    if old.arquivo_final and old.arquivo_final.name and old.arquivo_final.name != instance.arquivo_final.name:
+        _delete_file(old.arquivo_final)

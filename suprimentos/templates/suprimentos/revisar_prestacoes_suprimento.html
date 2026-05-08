@@ -12,6 +12,25 @@
     <a href="{% url 'suprimentos_list' %}" class="btn btn-outline-secondary">Voltar para Suprimentos</a>
 {% endblock %}
 
+{% block filter_form %}
+<div class="col-md-3">
+    <label class="small fw-bold text-secondary mb-1">Suprido(a)</label>
+    {{ filter.form.suprido }}
+</div>
+<div class="col-md-3">
+    <label class="small fw-bold text-secondary mb-1">Lotação</label>
+    {{ filter.form.lotacao }}
+</div>
+<div class="col-md-3">
+    <label class="small fw-bold text-secondary mb-1">Enviado por</label>
+    {{ filter.form.submetido_por }}
+</div>
+<div class="col-md-3">
+    <label class="small fw-bold text-secondary mb-1">Enviada em</label>
+    {{ filter.form.submetido_em }}
+</div>
+{% endblock %}
+
 {% block table_headers %}
     <th data-campo="suprimento"># Suprimento</th>
     <th data-campo="suprido">Suprido(a)</th>

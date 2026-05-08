@@ -58,7 +58,7 @@ A única exceção autorizada é via **[Contingência](/negocio/glossario_consel
 
 ## Distribuição de Hyperlinks por Categoria
 
-### Arquitetura (5/6 arquivos) ✅
+### Arquitetura (5/5 arquivos) ✅
 | Arquivo | Hyperlinks | Termos |
 |---------|-----------|--------|
 | `domain_knowledge.md` | 4 | Processo, Empenho, Nota Fiscal, Liquidação, Turnpike |
@@ -67,7 +67,6 @@ A única exceção autorizada é via **[Contingência](/negocio/glossario_consel
 | `template_tiers.md` | 4 | Processo, Diária, Suprimentos, Nota Fiscal |
 | `manager_worker.md` | ✓ | Já tinham links |
 | `hub_spoke.md` | ✓ | Já tinham links |
-| `pattern_matching.md` | ⚠️ | Pendente (problemas de formatação) |
 
 ### Fluxos (5/5 arquivos) ✅
 | Arquivo | Hyperlinks | Termos |
@@ -137,7 +136,7 @@ Arquivo: `.term_map.yaml` em `docs/`
 - **Verbas**: Diária, Reembolso, Jeton, Auxílio, Suprimento de Fundos, Prestação de Contas
 
 ### Referências Arquiteturais
-- Manager-Worker, Hub-and-Spoke, Pattern Matching First
+- Manager-Worker, Hub-and-Spoke
 - Domain Knowledge, Backend Architecture, RBAC
 - Controle de Acesso, Máquina de Estado, Domain Seal
 

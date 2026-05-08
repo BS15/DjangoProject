@@ -111,11 +111,23 @@ Hoje, o uso predominante da UI para documentos processuais e de verbas e via rot
 
 ### 8.1 Coberto por sinais/modelos
 
-Para documentos de processo e documentos de verbas indenizatorias, existe limpeza explicita de arquivo anterior/fisico via `_delete_file` em sinais (`pre_save`, `post_delete`) quando aplicavel.
+Para **todos** os documentos com `FileField` no sistema, existe limpeza explícita de arquivo anterior/físico via `_delete_file` em sinais (`pre_save`, `post_delete`). 
 
-### 8.2 Pontos de atenção
+#### Modelos cobertos:
+- **Documentos de processo**: `DocumentoProcesso` (e subclasses), `DocumentoOrcamentarioProcessual`, `ComprovantePagamento`
+- **Documentos de processo consolidado**: `Processo.arquivo_final`
+- **Devoluções e suporte**: `DevolucaoProcessual.comprovante`, `AssinaturaEletronica` (ambos os campos)
+- **Documentos de verbas indenizatórias**: `DocumentoDiaria`, `DocumentoComprovacao`, `DocumentoReembolso`, `DocumentoJeton`, `DocumentoAuxilio`
+- **Documentos de suprimento**: `DocumentoSuprimentoDeFundos`, `DespesaSuprimento`, `PrestacaoContasSuprimento.comprovante_devolucao`
+- **Documentos fiscais**: `DocumentoPagamentoImposto` (todos os 3 campos: relatorio, guia, comprovante)
 
-Modelos com `FileField` fora desses sinais dependem do comportamento de sobrescrita/exclusão do próprio fluxo de negócio. Em revisoes futuras, vale padronizar a mesma estratégia de cleanup para todos os agregados documentais.
+### 8.2 Padronização completa
+
+A partir da versão de produção, **a estratégia de cleanup automático é uniforme** em toda a codebase. Cada modelo com `FileField`:
+1. Implementa `@receiver(post_delete)` para remover arquivo ao deletar o registro
+2. Implementa `@receiver(pre_save)` para remover versão anterior se o arquivo for sobrescrito
+
+Não há mais exceções ou modelos que dependem do fluxo de negócio para limpeza de arquivos.
 
 ## 9. Compatibilidade com storages nao-locais
 

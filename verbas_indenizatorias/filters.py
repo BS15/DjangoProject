@@ -1,7 +1,7 @@
 """Filtros de listagem para o domínio de verbas indenizatórias."""
 
 import django_filters
-from pagamentos.filters import BaseStyledFilterSet
+from pagamentos.filters import BaseStyledFilterSet, date_range_filter, icontains_filter
 from verbas_indenizatorias.models import (
     Diaria,
     ReembolsoCombustivel,
@@ -14,38 +14,44 @@ from verbas_indenizatorias.models import (
 class DiariaFilter(BaseStyledFilterSet):
     """Filtro para listagem de diárias com critérios operacionais."""
 
-    data_saida = django_filters.DateFromToRangeFilter(label='Data Saída (De - Até)', widget=django_filters.widgets.RangeWidget(attrs={'type': 'date'}))
-    beneficiario__nome = django_filters.CharFilter(lookup_expr='icontains', label='Nome do Beneficiário')
-    proponente__username = django_filters.CharFilter(lookup_expr='icontains', label='Username do Proponente')
-    autorizada = django_filters.BooleanFilter(label='Status de Autorização (Autorizada?)', widget=django_filters.widgets.BooleanWidget())
+    numero_siscac__icontains = icontains_filter(field_name='numero_siscac', label='Nº SISCAC')
+    data_saida = date_range_filter(label='Data Saída (De - Até)')
+    cidade_destino__icontains = icontains_filter(field_name='cidade_destino', label='Destino')
 
     class Meta:
         model = Diaria
-        fields = '__all__'
+        fields = ['beneficiario', 'status']
 
 
 class ReembolsoFilter(BaseStyledFilterSet):
     """Filtro para reembolsos de combustível."""
 
+    numero_sequencial__icontains = icontains_filter(field_name='numero_sequencial', label='Nº Seq.')
+
     class Meta:
         model = ReembolsoCombustivel
-        fields = '__all__'
+        fields = ['beneficiario', 'status']
 
 
 class JetonFilter(BaseStyledFilterSet):
     """Filtro para lançamentos de jeton."""
 
+    numero_sequencial__icontains = icontains_filter(field_name='numero_sequencial', label='Nº Seq.')
+    reuniao__icontains = icontains_filter(field_name='reuniao', label='Reunião')
+
     class Meta:
         model = Jeton
-        fields = '__all__'
+        fields = ['beneficiario', 'status']
 
 
 class AuxilioFilter(BaseStyledFilterSet):
     """Filtro para auxílios de representação."""
 
+    numero_sequencial__icontains = icontains_filter(field_name='numero_sequencial', label='N Seq.')
+
     class Meta:
         model = AuxilioRepresentacao
-        fields = '__all__'
+        fields = ['beneficiario', 'status']
 
 
 class TabelaValoresUnitariosFilter(BaseStyledFilterSet):
