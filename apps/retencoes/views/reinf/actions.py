@@ -6,7 +6,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 
-from retencoes.services import gerar_lotes_reinf
+from apps.retencoes.services import gerar_lotes_reinf
 
 from .shared import build_zip_response
 from django.core.exceptions import ValidationError

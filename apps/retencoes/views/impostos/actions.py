@@ -8,9 +8,9 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from cadastros.models import Credor
-from retencoes.models import RetencaoImposto
-from retencoes.services.impostos import (
+from apps.cadastros.models import Credor
+from apps.retencoes.models import RetencaoImposto
+from apps.retencoes.services.impostos import (
     anexar_relatorio_agrupamento_retencoes_no_processo,
     anexar_guia_comprovante_relatorio_em_processos,
 )

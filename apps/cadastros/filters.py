@@ -1,7 +1,7 @@
 """Filtros de listagem para o domínio de credores."""
 
 from apps.pagamentos.filters import BaseStyledFilterSet, icontains_filter
-from cadastros.models import Credor
+from apps.cadastros.models import Credor
 
 
 class CredorFilter(BaseStyledFilterSet):

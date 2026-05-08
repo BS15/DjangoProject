@@ -6,7 +6,7 @@ Este módulo define formulários para entrada, edição e validação de dados d
 from django import forms
 from django.contrib.auth import get_user_model
 
-from cadastros.models import Credor, ContaFixa, ContasBancarias
+from apps.cadastros.models import Credor, ContaFixa, ContasBancarias
 
 User = get_user_model()
 

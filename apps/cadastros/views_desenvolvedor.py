@@ -13,7 +13,7 @@ from django.core.files.base import ContentFile
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from cadastros.imports import (
+from apps.cadastros.imports import (
     download_template_csv_contas,
     download_template_csv_credores,
     painel_importacao_view,
@@ -149,7 +149,6 @@ def _create_fake_processos(n):
         retencao_pct = Decimal(str(round(random.uniform(0, 0.15), 4)))
         valor_liquido = (valor_bruto * (1 - retencao_pct)).quantize(Decimal("0.01"))
         ano = data_empenho.year if _MIN_FAKE_ANO_EXERCICIO <= data_empenho.year <= current_year else current_year
-        existing_count = Processo.objects.count()
         n_empenho = f"{ano}NE{str(existing_count + i + 1).zfill(5)}"
         n_siscac = f"PAG{str(existing_count + i + 1).zfill(6)}"
         Processo.objects.create(

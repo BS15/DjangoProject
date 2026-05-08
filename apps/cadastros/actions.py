@@ -5,8 +5,8 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
-from cadastros.forms import CredorEditForm, CredorForm
-from cadastros.models import Credor
+from apps.cadastros.forms import CredorEditForm, CredorForm
+from apps.cadastros.models import Credor
 import logging
 
 logger = logging.getLogger(__name__)

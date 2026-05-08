@@ -7,14 +7,14 @@ from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import F
 
-from retencoes.services.impostos_relatorios import (
+from apps.retencoes.services.impostos_relatorios import (
     gerar_relatorio_retencoes_agrupamento_pdf,
     gerar_relatorio_retencoes_mensal_csv,
 )
 from apps.pagamentos.domain_models import TiposDeDocumento, TiposDePagamento
 
 if TYPE_CHECKING:
-    from retencoes.models import RetencaoImposto
+    from apps.retencoes.models import RetencaoImposto
     from apps.pagamentos.domain_models import Processo
 
 DOC_GUIA = "GUIA DE RECOLHIMENTO DE IMPOSTOS"
@@ -126,7 +126,7 @@ def criar_documentos_pagamento_impostos(
 
     Idempotente: se já existir documento para a combinação retencao/codigo/competencia, ignora.
     """
-    from retencoes.models import DocumentoPagamentoImposto
+    from apps.retencoes.models import DocumentoPagamentoImposto
     from django.core.files.base import ContentFile
     from datetime import date as _date
 
@@ -165,7 +165,7 @@ def verificar_completude_documentos_impostos(processo) -> list:
 
     Retorna lista de IDs de retenções pendentes. Lista vazia = processo completo.
     """
-    from retencoes.models import DocumentoPagamentoImposto
+    from apps.retencoes.models import DocumentoPagamentoImposto
 
     retencoes = list(
         processo.impostos_recolhidos.select_related('codigo').all()

@@ -5,8 +5,8 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import render
 from django.utils import timezone
 
-from retencoes.services import get_serie_2000_data, get_serie_4000_data
-from retencoes.models import RetencaoImposto
+from apps.retencoes.services import get_serie_2000_data, get_serie_4000_data
+from apps.retencoes.models import RetencaoImposto
 
 from .shared import parse_competencia
 

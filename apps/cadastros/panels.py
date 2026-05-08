@@ -4,9 +4,9 @@ from django.contrib.auth.decorators import permission_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 
-from cadastros.filters import CredorFilter
-from cadastros.forms import CredorEditForm, CredorForm
-from cadastros.models import Credor
+from apps.cadastros.filters import CredorFilter
+from apps.cadastros.forms import CredorEditForm, CredorForm
+from apps.cadastros.models import Credor
 from apps.pagamentos.domain_models import Processo
 from apps.pagamentos.views.shared import render_filtered_list
 

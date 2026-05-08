@@ -13,7 +13,7 @@ from django.db import DatabaseError
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from cadastros.models import CargosFuncoes, ContasBancarias, Credor
+from apps.cadastros.models import CargosFuncoes, ContasBancarias, Credor
 
 
 
@@ -72,7 +72,6 @@ def importar_credores_csv(csv_file):
 
 
 
-
 @permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def painel_importacao_view(request):
     """Renderiza painel de importação em lote de credores e contas fixas."""
@@ -103,5 +102,4 @@ def download_template_csv_credores(request):
     writer = csv.writer(response)
     writer.writerow(["NOME", "CPF_CNPJ", "GRUPO", "CARGO_FUNCAO", "BANCO", "AGENCIA", "CONTA", "PIX"])
     return response
-
 

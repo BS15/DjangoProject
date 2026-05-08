@@ -8,8 +8,8 @@ from django.db.models import Count, Sum
 from django.shortcuts import redirect, render
 
 from commons.shared.query_tools import resolver_parametros_ordenacao
-from retencoes.filters import RetencaoIndividualFilter, RetencaoNotaFilter, RetencaoProcessoFilter
-from retencoes.models import DocumentoFiscal, DocumentoPagamentoImposto, RetencaoImposto
+from apps.retencoes.filters import RetencaoIndividualFilter, RetencaoNotaFilter, RetencaoProcessoFilter
+from apps.retencoes.models import DocumentoFiscal, DocumentoPagamentoImposto, RetencaoImposto
 from apps.pagamentos.domain_models import Processo
 from apps.pagamentos.views.shared import apply_filterset
 
@@ -190,4 +190,3 @@ def revisar_agrupamento_retencoes_view(request):
             "qtd": qtd,
         },
     )
-

@@ -9,4 +9,4 @@ from django.apps import AppConfig
 
 class RetencoesConfig(AppConfig):
     """Configuração do aplicativo de retenções."""
-    name = "retencoes"
+    name = "apps.retencoes"

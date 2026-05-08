@@ -9,8 +9,8 @@ from apps.pagamentos.filters import (
     month_filter,
     year_filter,
 )
-from cadastros.models import Credor
-from retencoes.models import DocumentoFiscal, RetencaoImposto, CodigosImposto, StatusChoicesRetencoes
+from apps.cadastros.models import Credor
+from apps.retencoes.models import DocumentoFiscal, RetencaoImposto, CodigosImposto, StatusChoicesRetencoes
 from apps.pagamentos.domain_models import Processo
 
 

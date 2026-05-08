@@ -7,8 +7,8 @@ from datetime import date
 from decimal import Decimal, ROUND_HALF_UP
 import re
 
-from retencoes.models import RetencaoImposto
-from retencoes.models import DadosContribuinte
+from apps.retencoes.models import RetencaoImposto
+from apps.retencoes.models import DadosContribuinte
 
 
 def _build_competencia_date(month: int, year: int) -> date:
@@ -261,7 +261,7 @@ def gerar_lotes_reinf(month: int, year: int) -> dict:
     - Retenções normais (IR/CSRF/PIS/COFINS)
     - Pagamentos a entidades imunes/isentas (sem retenção)
     """
-    from retencoes.models import DocumentoFiscal
+    from apps.retencoes.models import DocumentoFiscal
     
     contribuinte = DadosContribuinte.objects.first()
     if contribuinte is None:

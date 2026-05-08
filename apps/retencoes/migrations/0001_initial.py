@@ -4,7 +4,7 @@ import commons.shared.file_validators
 import commons.shared.field_validators
 import django.core.validators
 import django.db.models.deletion
-import retencoes.models
+import apps.retencoes.models
 import simple_history.models
 from django.conf import settings
 from django.db import migrations, models
@@ -714,7 +714,7 @@ class Migration(migrations.Migration):
                 (
                     "relatorio_retencoes",
                     models.FileField(
-                        upload_to=retencoes.models._upload_documento_pagamento_imposto,
+                        upload_to=apps.retencoes.models._upload_documento_pagamento_imposto,
                         validators=[commons.shared.file_validators.validar_arquivo_seguro],
                         verbose_name="Relatório de Retenções",
                     ),
@@ -722,7 +722,7 @@ class Migration(migrations.Migration):
                 (
                     "guia_recolhimento",
                     models.FileField(
-                        upload_to=retencoes.models._upload_documento_pagamento_imposto,
+                        upload_to=apps.retencoes.models._upload_documento_pagamento_imposto,
                         validators=[commons.shared.file_validators.validar_arquivo_seguro],
                         verbose_name="Guia de Recolhimento",
                     ),
@@ -730,7 +730,7 @@ class Migration(migrations.Migration):
                 (
                     "comprovante_pagamento",
                     models.FileField(
-                        upload_to=retencoes.models._upload_documento_pagamento_imposto,
+                        upload_to=apps.retencoes.models._upload_documento_pagamento_imposto,
                         validators=[commons.shared.file_validators.validar_arquivo_seguro],
                         verbose_name="Comprovante de Pagamento",
                     ),
