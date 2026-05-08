@@ -94,7 +94,7 @@ def registrar_cancelamento_processo(processo, justificativa: str, usuario, dados
 
 def cancelar_verba(verba, justificativa: str, usuario, dados_devolucao: dict | None = None):
     """Cancela verba indenizatória e registra devolução se já estava paga."""
-    from verbas_indenizatorias.models import (
+    from apps.verbas_indenizatorias.models import (
         AuxilioRepresentacao,
         Diaria,
         Jeton,

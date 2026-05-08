@@ -5,12 +5,12 @@ from django.utils.module_loading import import_string
 
 GERADORES_POR_TRANSICAO = (
     "apps.suprimentos.services.processo_integration.gerar_documentos_relacionados_por_transicao",
-    "verbas_indenizatorias.services.processo_integration.gerar_documentos_relacionados_por_transicao",
+    "apps.verbas_indenizatorias.services.processo_integration.gerar_documentos_relacionados_por_transicao",
 )
 
 SINCRONIZADORES_POR_TRANSICAO = (
     "apps.suprimentos.services.processo_integration.sincronizar_relacoes_apos_transicao",
-    "verbas_indenizatorias.services.processo_integration.sincronizar_relacoes_apos_transicao",
+    "apps.verbas_indenizatorias.services.processo_integration.sincronizar_relacoes_apos_transicao",
 )
 
 

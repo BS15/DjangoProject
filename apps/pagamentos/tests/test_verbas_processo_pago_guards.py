@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 
 from credores.models import Credor
 from apps.pagamentos.domain_models import ProcessoStatus, StatusChoicesProcesso
-from verbas_indenizatorias.models import AuxilioRepresentacao, Jeton, ReembolsoCombustivel
+from apps.verbas_indenizatorias.models import AuxilioRepresentacao, Jeton, ReembolsoCombustivel
 
 
 def _credor_pf():

@@ -13,7 +13,7 @@ from apps.pagamentos.models import (
     RegistroAcessoArquivoProcessual,
 )
 from apps.suprimentos.models import DespesaSuprimento, PrestacaoContasSuprimento
-from verbas_indenizatorias.models import (
+from apps.verbas_indenizatorias.models import (
     DocumentoAuxilio,
     DocumentoComprovacao,
     DocumentoDiaria,
@@ -77,7 +77,7 @@ def _has_access(user, tipo_documento, objeto_pai):
         return True
 
     if tipo_documento == "verba_diaria_comprov":
-        from verbas_indenizatorias.views.diarias.access import _pode_acessar_prestacao
+        from apps.verbas_indenizatorias.views.diarias.access import _pode_acessar_prestacao
 
         return _pode_acessar_prestacao(user, objeto_pai)
 

@@ -6,7 +6,7 @@ import pytest
 from django.core.exceptions import ValidationError
 
 from credores.models import Credor
-from verbas_indenizatorias.models import (
+from apps.verbas_indenizatorias.models import (
     AuxilioRepresentacao,
     Diaria,
     Jeton,

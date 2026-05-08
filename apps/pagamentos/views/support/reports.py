@@ -8,7 +8,7 @@ from fiscal.models import RetencaoImposto
 from apps.pagamentos.domain_models import Processo
 from apps.pagamentos.filters import BaseStyledFilterSet, ProcessoFilter
 from apps.pagamentos.views.helpers.reports import gerar_csv_relatorio
-from verbas_indenizatorias.models import Diaria
+from apps.verbas_indenizatorias.models import Diaria
 
 
 class DiariaReportFilter(BaseStyledFilterSet):

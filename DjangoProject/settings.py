@@ -61,7 +61,7 @@ INSTALLED_APPS = [
     'credores.apps.CredoresConfig',
     'apps.pagamentos.apps.PagamentosConfig',
     'apps.suprimentos.apps.SuprimentosConfig',
-    'verbas_indenizatorias.apps.VerbasIndenizatoriasConfig',
+    'apps.verbas_indenizatorias.apps.VerbasIndenizatoriasConfig',
         'fiscal.apps.FiscalConfig',
 ]
 

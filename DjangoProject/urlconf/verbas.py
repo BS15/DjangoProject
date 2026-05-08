@@ -2,31 +2,31 @@
 
 from django.urls import path
 
-from verbas_indenizatorias.views.processo import actions as verbas_actions
-from verbas_indenizatorias.views.processo import apis as verbas_apis
-from verbas_indenizatorias.views.processo import panels as verbas_panels
-from verbas_indenizatorias.views.solicitacoes import actions as verbas_solicitacoes_actions
-from verbas_indenizatorias.views.solicitacoes import panels as verbas_solicitacoes_panels
-from verbas_indenizatorias.views.auxilios import actions as verbas_auxilio_actions
-from verbas_indenizatorias.views.auxilios import panels as verbas_auxilio_panels
-from verbas_indenizatorias.views.diarias import actions as verbas_diarias_actions
-from verbas_indenizatorias.views.diarias import apis as verbas_diarias_apis
-from verbas_indenizatorias.views.diarias import panels as verbas_diarias_panels
-from verbas_indenizatorias.views.diarias import pdf as verbas_diarias_pdf
-from verbas_indenizatorias.views.diarias.support.contingencia import actions as contingencia_actions
-from verbas_indenizatorias.views.diarias.support.contingencia import panels as contingencia_panels
-from verbas_indenizatorias.views.diarias.support.devolucao import actions as devolucao_actions
-from verbas_indenizatorias.views.diarias.support.devolucao import panels as devolucao_panels
-from verbas_indenizatorias.views.diarias.support.imports import actions as verbas_diarias_imports_actions
-from verbas_indenizatorias.views.diarias.support.imports import panels as verbas_diarias_imports_panels
-from verbas_indenizatorias.views.diarias.support.sync import actions as verbas_diarias_sync_actions
-from verbas_indenizatorias.views.diarias.support.sync import panels as verbas_diarias_sync_panels
-from verbas_indenizatorias.views.jetons import actions as verbas_jeton_actions
-from verbas_indenizatorias.views.jetons import panels as verbas_jeton_panels
-from verbas_indenizatorias.views.reembolsos import actions as verbas_reembolso_actions
-from verbas_indenizatorias.views.reembolsos import panels as verbas_reembolso_panels
-from verbas_indenizatorias.views.tabela_valores import actions as verbas_tabela_valores_actions
-from verbas_indenizatorias.views.tabela_valores import panels as verbas_tabela_valores_panels
+from apps.verbas_indenizatorias.views.processo import actions as verbas_actions
+from apps.verbas_indenizatorias.views.processo import apis as verbas_apis
+from apps.verbas_indenizatorias.views.processo import panels as verbas_panels
+from apps.verbas_indenizatorias.views.solicitacoes import actions as verbas_solicitacoes_actions
+from apps.verbas_indenizatorias.views.solicitacoes import panels as verbas_solicitacoes_panels
+from apps.verbas_indenizatorias.views.auxilios import actions as verbas_auxilio_actions
+from apps.verbas_indenizatorias.views.auxilios import panels as verbas_auxilio_panels
+from apps.verbas_indenizatorias.views.diarias import actions as verbas_diarias_actions
+from apps.verbas_indenizatorias.views.diarias import apis as verbas_diarias_apis
+from apps.verbas_indenizatorias.views.diarias import panels as verbas_diarias_panels
+from apps.verbas_indenizatorias.views.diarias import pdf as verbas_diarias_pdf
+from apps.verbas_indenizatorias.views.diarias.support.contingencia import actions as contingencia_actions
+from apps.verbas_indenizatorias.views.diarias.support.contingencia import panels as contingencia_panels
+from apps.verbas_indenizatorias.views.diarias.support.devolucao import actions as devolucao_actions
+from apps.verbas_indenizatorias.views.diarias.support.devolucao import panels as devolucao_panels
+from apps.verbas_indenizatorias.views.diarias.support.imports import actions as verbas_diarias_imports_actions
+from apps.verbas_indenizatorias.views.diarias.support.imports import panels as verbas_diarias_imports_panels
+from apps.verbas_indenizatorias.views.diarias.support.sync import actions as verbas_diarias_sync_actions
+from apps.verbas_indenizatorias.views.diarias.support.sync import panels as verbas_diarias_sync_panels
+from apps.verbas_indenizatorias.views.jetons import actions as verbas_jeton_actions
+from apps.verbas_indenizatorias.views.jetons import panels as verbas_jeton_panels
+from apps.verbas_indenizatorias.views.reembolsos import actions as verbas_reembolso_actions
+from apps.verbas_indenizatorias.views.reembolsos import panels as verbas_reembolso_panels
+from apps.verbas_indenizatorias.views.tabela_valores import actions as verbas_tabela_valores_actions
+from apps.verbas_indenizatorias.views.tabela_valores import panels as verbas_tabela_valores_panels
 
 urlpatterns = [
     path('processo/<int:pk>/editar-verbas/', verbas_panels.editar_processo_verbas_view, name='editar_processo_verbas'),
