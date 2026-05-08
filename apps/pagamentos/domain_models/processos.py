@@ -153,7 +153,7 @@ class Processo(models.Model):
         default=False,
         help_text="Marque se este processo não utiliza dotação orçamentária (ex: cauções).",
     )
-    credor = models.ForeignKey("credores.Credor", on_delete=models.PROTECT, blank=False, null=False)
+    credor = models.ForeignKey("cadastros.Credor", on_delete=models.PROTECT, blank=False, null=False)
     valor_bruto = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, validators=[MinValueValidator(0)])
     valor_liquido = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, validators=[MinValueValidator(0)])
     n_pagamento_siscac = models.CharField(max_length=50, blank=True, null=True)
@@ -163,7 +163,7 @@ class Processo(models.Model):
     tipo_pagamento = models.ForeignKey("pagamentos.TiposPagamento", on_delete=models.PROTECT, blank=False, null=False)
     observacao = models.CharField(max_length=200, blank=True, null=True)
     conta = models.ForeignKey(
-        "credores.ContasBancarias",
+        "cadastros.ContasBancarias",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

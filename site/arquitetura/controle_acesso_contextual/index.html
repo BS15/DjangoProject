@@ -117,7 +117,7 @@
 <table>
 <thead><tr><th>Aspecto</th><th>Detalhe</th></tr></thead>
 <tbody>
-<tr><td><strong>Helper</strong></td><td><code>verbas_indenizatorias/views/diarias/access.py</code> → <code>_pode_acessar_prestacao(user, diaria)</code></td></tr>
+<tr><td><strong>Helper</strong></td><td><code>apps/verbas_indenizatorias/views/diarias/access.py</code> → <code>_pode_acessar_prestacao(user, diaria)</code></td></tr>
 <tr><td><strong>Views protegidas</strong></td><td><code>panels.py</code> (detalhe da prestação) · <code>actions.py</code> (submeter comprovante, registrar devolução)</td></tr>
 <tr><td><strong>Lógica</strong></td><td>Retorna <code>True</code> se <code>diaria.beneficiario.usuario == request.user</code> <strong>ou</strong> se o usuário possui um de: <code>verbas_indenizatorias.operar_prestacao_contas</code>, <code>visualizar_prestacao_contas</code>, <code>analisar_prestacao_contas</code></td></tr>
 <tr><td><strong>Resposta ao negar</strong></td><td><code>HttpResponseForbidden</code></td></tr>
@@ -129,7 +129,7 @@
 <table>
 <thead><tr><th>Aspecto</th><th>Detalhe</th></tr></thead>
 <tbody>
-<tr><td><strong>View</strong></td><td><code>verbas_indenizatorias/views/diarias/actions.py</code> → <code>autorizar_diaria_action</code></td></tr>
+<tr><td><strong>View</strong></td><td><code>apps/verbas_indenizatorias/views/diarias/actions.py</code> → <code>autorizar_diaria_action</code></td></tr>
 <tr><td><strong>Lógica</strong></td><td><code>diaria.proponente_id != request.user.id</code> → bloqueia com mensagem de erro e redirect</td></tr>
 <tr><td><strong>Resposta ao negar</strong></td><td><code>messages.error</code> + redirect (sem HTTP 403)</td></tr>
 </tbody>
@@ -155,7 +155,7 @@
 <table>
 <thead><tr><th>Aspecto</th><th>Detalhe</th></tr></thead>
 <tbody>
-<tr><td><strong>Helper</strong></td><td><code>verbas_indenizatorias/views/processo/helpers.py</code> → <code>_pode_gerenciar_processo_verbas_da_entidade(user, processo)</code></td></tr>
+<tr><td><strong>Helper</strong></td><td><code>apps/verbas_indenizatorias/views/processo/helpers.py</code> → <code>_pode_gerenciar_processo_verbas_da_entidade(user, processo)</code></td></tr>
 <tr><td><strong>Views protegidas</strong></td><td><code>processo/panels.py</code> (hub, capa, pendências, itens, documentos) · <code>processo/actions.py</code> (salvar capa, pendências, documentos)</td></tr>
 <tr><td><strong>Lógica</strong></td><td><code>operador_contas_a_pagar</code> → acesso irrestrito. <code>pode_gerenciar_processos_verbas</code> → apenas se <code>user_is_entity_owner(user, processo)</code> (ver §7).</td></tr>
 <tr><td><strong>Resposta ao negar</strong></td><td><code>raise PermissionDenied</code></td></tr>
@@ -170,7 +170,7 @@
 <table>
 <thead><tr><th>Aspecto</th><th>Detalhe</th></tr></thead>
 <tbody>
-<tr><td><strong>Helper</strong></td><td><code>suprimentos/views/helpers.py</code> → <code>_pode_acessar_suprimento(user, suprimento)</code></td></tr>
+<tr><td><strong>Helper</strong></td><td><code>apps/suprimentos/views/helpers.py</code> → <code>_pode_acessar_suprimento(user, suprimento)</code></td></tr>
 <tr><td><strong>Views protegidas</strong></td><td><code>prestacao_contas/panels.py</code> (painel e detalhe) · <code>prestacao_contas/actions.py</code> (lançar despesa, submeter prestação, excluir despesa)</td></tr>
 <tr><td><strong>Lógica</strong></td><td><code>suprimento.suprido.usuario_id == user.pk</code>. Backoffice com <code>suprimentos.pode_gerenciar_concessao_suprimento</code> tem acesso independentemente.</td></tr>
 <tr><td><strong>Resposta ao negar</strong></td><td><code>raise PermissionDenied</code></td></tr>
@@ -186,7 +186,7 @@
 <table>
 <thead><tr><th>Aspecto</th><th>Detalhe</th></tr></thead>
 <tbody>
-<tr><td><strong>View</strong></td><td><code>pagamentos/views/pre_payment/liquidacoes/actions.py</code> → <code>confirmar_liquidacao_action</code></td></tr>
+<tr><td><strong>View</strong></td><td><code>apps/pagamentos/views/pre_payment/liquidacoes/actions.py</code> → <code>confirmar_liquidacao_action</code></td></tr>
 <tr><td><strong>Lógica</strong></td><td><code>liquidacao.fiscal_contrato_id != request.user.pk and not user.has_perm("pagamentos.operador_contas_a_pagar")</code> → bloqueia</td></tr>
 <tr><td><strong>Resposta ao negar</strong></td><td><code>raise PermissionDenied</code></td></tr>
 </tbody>
@@ -200,7 +200,7 @@
 <table>
 <thead><tr><th>Aspecto</th><th>Detalhe</th></tr></thead>
 <tbody>
-<tr><td><strong>View</strong></td><td><code>pagamentos/views/support/signatures.py</code> → <code>disparar_assinatura_action</code></td></tr>
+<tr><td><strong>View</strong></td><td><code>apps/pagamentos/views/support/signatures.py</code> → <code>disparar_assinatura_action</code></td></tr>
 <tr><td><strong>Lógica</strong></td><td><code>assinatura.criador != request.user</code> → PermissionDenied</td></tr>
 <tr><td><strong>Resposta ao negar</strong></td><td><code>raise PermissionDenied</code></td></tr>
 </tbody>
@@ -214,7 +214,7 @@
 <table>
 <thead><tr><th>Aspecto</th><th>Detalhe</th></tr></thead>
 <tbody>
-<tr><td><strong>View</strong></td><td><code>pagamentos/views/security/__init__.py</code> → <code>download_arquivo_seguro</code></td></tr>
+<tr><td><strong>View</strong></td><td><code>apps/pagamentos/views/security/__init__.py</code> → <code>download_arquivo_seguro</code></td></tr>
 <tr><td><strong>Lógica</strong></td><td>Superusuário ou <code>pagamentos.pode_auditar_conselho</code> → acesso irrestrito. Para <code>verba_diaria_comprov</code> delega a <code>_pode_acessar_prestacao</code>. Para demais documentos delega a <code>user_is_entity_owner</code> (ver §7).</td></tr>
 <tr><td><strong>Efeito colateral</strong></td><td>Toda tentativa de download grava <code>RegistroAcessoArquivoProcessual</code> independentemente do resultado.</td></tr>
 <tr><td><strong>Resposta ao negar</strong></td><td><code>HttpResponseForbidden</code></td></tr>
@@ -247,27 +247,27 @@
 <p>Diferentemente das guards acima, os filtros abaixo reduzem silenciosamente o queryset do painel conforme o perfil do usuário, sem expor registros de terceiros.</p>
 
 <h3 id="81-painel-de-liquidacoes-fiscal-de-contrato">8.1 Painel de liquidações — fiscal de contrato<a class="headerlink" href="#81-painel-de-liquidacoes-fiscal-de-contrato" title="Permanent link">&para;</a></h3>
-<p><strong>Arquivo:</strong> <code>pagamentos/views/pre_payment/liquidacoes/panels.py</code></p>
+<p><strong>Arquivo:</strong> <code>apps/pagamentos/views/pre_payment/liquidacoes/panels.py</code></p>
 <div class="highlight"><pre><span></span><code>if not is_backoffice:
     queryset_base = queryset_base.filter(liquidacao__fiscal_contrato=request.user)
 </code></pre></div>
 <p>Usuários sem <code>pagamentos.operador_contas_a_pagar</code> enxergam apenas os <code>DocumentoFiscal</code> cujas liquidações estão atribuídas a eles. Backoffice vê tudo.</p>
 
 <h3 id="82-painel-minhas-diarias-beneficiario">8.2 Painel "Minhas Diárias" — beneficiário<a class="headerlink" href="#82-painel-minhas-diarias-beneficiario" title="Permanent link">&para;</a></h3>
-<p><strong>Arquivo:</strong> <code>verbas_indenizatorias/views/diarias/panels.py</code></p>
+<p><strong>Arquivo:</strong> <code>apps/verbas_indenizatorias/views/diarias/panels.py</code></p>
 <div class="highlight"><pre><span></span><code>credor = Credor.objects.filter(usuario=request.user).first()
 diarias = Diaria.objects.filter(beneficiario=credor)
 </code></pre></div>
 <p>O painel pessoal do credor exibe exclusivamente as diárias onde ele figura como beneficiário. Se não houver <code>Credor</code> vinculado ao usuário, o queryset retorna vazio.</p>
 
 <h3 id="83-painel-de-autorizacao-de-diarias-proponente">8.3 Painel de autorização de diárias — proponente<a class="headerlink" href="#83-painel-de-autorizacao-de-diarias-proponente" title="Permanent link">&para;</a></h3>
-<p><strong>Arquivo:</strong> <code>verbas_indenizatorias/services/autorizacao_diarias.py</code> → <code>listar_diarias_pendentes_para_proponente(usuario)</code></p>
+<p><strong>Arquivo:</strong> <code>apps/verbas_indenizatorias/services/autorizacao_diarias.py</code> → <code>listar_diarias_pendentes_para_proponente(usuario)</code></p>
 <div class="highlight"><pre><span></span><code>Diaria.objects.filter(proponente=usuario, status__status_choice__iexact=STATUS_VERBA_SOLICITADA)
 </code></pre></div>
 <p>O painel de autorização exibe apenas as diárias em que o usuário logado é o proponente e que estão no status <code>SOLICITADA</code>. Diárias de outros proponentes nunca aparecem, mesmo que o usuário possua permissões operacionais.</p>
 
 <h3 id="84-minhas-assinaturas-eletronicas">8.4 Minhas assinaturas eletrônicas<a class="headerlink" href="#84-minhas-assinaturas-eletronicas" title="Permanent link">&para;</a></h3>
-<p><strong>Arquivo:</strong> <code>pagamentos/views/support/signatures.py</code></p>
+<p><strong>Arquivo:</strong> <code>apps/pagamentos/views/support/signatures.py</code></p>
 <div class="highlight"><pre><span></span><code>meus_documentos = AssinaturaEletronica.objects.filter(criador=request.user)
 </code></pre></div>
 <p>A listagem de documentos para assinatura mostra apenas os documentos criados pelo próprio usuário.</p>

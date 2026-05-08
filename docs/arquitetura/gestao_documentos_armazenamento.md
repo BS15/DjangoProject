@@ -86,7 +86,7 @@ A validação e baseada em assinatura binaria (magic bytes), nao apenas extensao
 O sistema possui endpoint dedicado de download seguro:
 
 - URL: `/documentos/secure/<tipo_documento>/<documento_id>/`
-- View: `pagamentos.views.security.download_arquivo_seguro`
+- View: `apps.pagamentos.views.security.download_arquivo_seguro`
 
 Comportamento:
 

@@ -20,15 +20,15 @@ DjangoProject/
 ├── pagamentos/             # Core do fluxo financeiro (Processo, status, etapas)
 ├── verbas_indenizatorias/  # Diárias, Jetons, Reembolsos, etc
 ├── suprimentos/            # Suprimento de fundos
-├── fiscal/                 # NF-e, retenções, EFD-Reinf
-├── credores/               # Cadastro e dados mestres de fornecedores
+├── retencoes/                 # NF-e, retenções, EFD-Reinf
+├── cadastros/               # Cadastro e dados mestres de fornecedores
 └── commons/                # Utilitários compartilhados, PDF, assinaturas
 ```
 
 ### `pagamentos/` — O Coração do fluxo financeiro
 
 Contém:
-- **Modelos centrais:** `Processo` (em `pagamentos/domain_models/processos.py`) e entidades correlatas de documentos/status
+- **Modelos centrais:** `Processo` (em `apps/pagamentos/domain_models/processos.py`) e entidades correlatas de documentos/status
 - **Máquina de estado:** transições bem definidas (A EMPENHAR → AGUARDANDO LIQUIDAÇÃO → A PAGAR → PAGO, etc)
 - **Auditoria:** integração com `django-simple-history`
 - **Validadores de domínio:** regras que aplicações satélites consultam
@@ -44,14 +44,14 @@ Contêm:
 
 Estas apps consomem o domínio financeiro central em `pagamentos/` e mantêm regras próprias.
 
-### `fiscal/` — Integração com órgãos externos
+### `retencoes/` — Integração com órgãos externos
 
 Contém:
 - **Sincronização de NF-e:** integração com sistema fiscal
 - **[Retenções](/negocio/glossario_conselho.md#retencao-de-imposto):** cálculo de impostos e repasse
 - **EFD-Reinf:** geração de escrituração fiscal
 
-### `credores/` — Dados mestres
+### `cadastros/` — Dados mestres
 
 Contém:
 - **Cadastro de fornecedores**
@@ -105,7 +105,7 @@ def anexar_documento_generico(modelo, arquivo):
 
 ❌ **Errado:** Coloque no core financeiro sem necessidade de compartilhamento real
 ```python
-# pagamentos/services/document_services.py — NÃO FAÇA ISTO
+# apps/pagamentos/services/document_services.py — NÃO FAÇA ISTO
 def anexar_documento_generico(...):
     pass
 ```

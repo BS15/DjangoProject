@@ -15,7 +15,7 @@ Este documento mapeia todos os pontos de controle contextual que **não são** c
 
 | Aspecto | Detalhe |
 |---|---|
-| **Helper** | `verbas_indenizatorias/views/diarias/access.py` → `_pode_acessar_prestacao(user, diaria)` |
+| **Helper** | `apps/verbas_indenizatorias/views/diarias/access.py` → `_pode_acessar_prestacao(user, diaria)` |
 | **Views protegidas** | `panels.py` (detalhe da prestação) · `actions.py` (submeter comprovante, registrar devolução) |
 | **Lógica** | Retorna `True` se `diaria.beneficiario.usuario == request.user` **ou** se o usuário possui um de: `verbas_indenizatorias.operar_prestacao_contas`, `verbas_indenizatorias.visualizar_prestacao_contas`, `verbas_indenizatorias.analisar_prestacao_contas` |
 | **Resposta ao negar** | `HttpResponseForbidden` |
@@ -26,7 +26,7 @@ O credor-beneficiário acessa *apenas a sua própria* prestação de contas; ope
 
 | Aspecto | Detalhe |
 |---|---|
-| **View** | `verbas_indenizatorias/views/diarias/actions.py` → `autorizar_diaria_action` |
+| **View** | `apps/verbas_indenizatorias/views/diarias/actions.py` → `autorizar_diaria_action` |
 | **Lógica** | `diaria.proponente_id != request.user.id` → bloqueia com mensagem de erro e redirect |
 | **Resposta ao negar** | `messages.error` + redirect (sem HTTP 403) |
 
@@ -49,7 +49,7 @@ Somente o próprio proponente registrado na diária pode assinar a autorização
 
 | Aspecto | Detalhe |
 |---|---|
-| **Helper** | `verbas_indenizatorias/views/processo/helpers.py` → `_pode_gerenciar_processo_verbas_da_entidade(user, processo)` |
+| **Helper** | `apps/verbas_indenizatorias/views/processo/helpers.py` → `_pode_gerenciar_processo_verbas_da_entidade(user, processo)` |
 | **Views protegidas** | `processo/panels.py` (hub, capa, pendências, itens, documentos) · `processo/actions.py` (salvar capa, pendências, documentos) |
 | **Lógica** | `operador_contas_a_pagar` → acesso irrestrito. `pode_gerenciar_processos_verbas` → apenas se `user_is_entity_owner(user, processo)` (ver §5). |
 | **Resposta ao negar** | `raise PermissionDenied` |
@@ -62,7 +62,7 @@ Somente o próprio proponente registrado na diária pode assinar a autorização
 
 | Aspecto | Detalhe |
 |---|---|
-| **Helper** | `suprimentos/views/helpers.py` → `_pode_acessar_suprimento(user, suprimento)` |
+| **Helper** | `apps/suprimentos/views/helpers.py` → `_pode_acessar_suprimento(user, suprimento)` |
 | **Views protegidas** | `prestacao_contas/panels.py` (painel e detalhe) · `prestacao_contas/actions.py` (lançar despesa, submeter prestação, excluir despesa) |
 | **Lógica** | `suprimento.suprido.usuario_id == user.pk`. Backoffice com `suprimentos.pode_gerenciar_concessao_suprimento` tem acesso independentemente. |
 | **Resposta ao negar** | `raise PermissionDenied` |
@@ -77,7 +77,7 @@ O suprido acessa *apenas o seu próprio* suprimento de fundos; não há visibili
 
 | Aspecto | Detalhe |
 |---|---|
-| **View** | `pagamentos/views/pre_payment/liquidacoes/actions.py` → `confirmar_liquidacao_action` |
+| **View** | `apps/pagamentos/views/pre_payment/liquidacoes/actions.py` → `confirmar_liquidacao_action` |
 | **Lógica** | `liquidacao.fiscal_contrato_id != request.user.pk and not user.has_perm("pagamentos.operador_contas_a_pagar")` → bloqueia |
 | **Resposta ao negar** | `raise PermissionDenied` |
 
@@ -89,7 +89,7 @@ O suprido acessa *apenas o seu próprio* suprimento de fundos; não há visibili
 
 | Aspecto | Detalhe |
 |---|---|
-| **View** | `pagamentos/views/support/signatures.py` → `disparar_assinatura_action` |
+| **View** | `apps/pagamentos/views/support/signatures.py` → `disparar_assinatura_action` |
 | **Lógica** | `assinatura.criador != request.user` → PermissionDenied |
 | **Resposta ao negar** | `raise PermissionDenied` |
 
@@ -101,7 +101,7 @@ O suprido acessa *apenas o seu próprio* suprimento de fundos; não há visibili
 
 | Aspecto | Detalhe |
 |---|---|
-| **View** | `pagamentos/views/security/__init__.py` → `download_arquivo_seguro` |
+| **View** | `apps/pagamentos/views/security/__init__.py` → `download_arquivo_seguro` |
 | **Lógica** | Superusuário ou `pagamentos.pode_auditar_conselho` → acesso irrestrito. Para `verba_diaria_comprov` delega a `_pode_acessar_prestacao`. Para demais documentos delega a `user_is_entity_owner` (ver §7). |
 | **Efeito colateral** | Toda tentativa de download grava `RegistroAcessoArquivoProcessual` independentemente do resultado. |
 | **Resposta ao negar** | `HttpResponseForbidden` |
@@ -133,7 +133,7 @@ Diferentemente das guards acima, os filtros abaixo reduzem silenciosamente o que
 
 ### 8.1 Painel de liquidações — fiscal de contrato
 
-**Arquivo:** `pagamentos/views/pre_payment/liquidacoes/panels.py`
+**Arquivo:** `apps/pagamentos/views/pre_payment/liquidacoes/panels.py`
 
 ```python
 if not is_backoffice:
@@ -144,7 +144,7 @@ Usuários sem `pagamentos.operador_contas_a_pagar` enxergam apenas os `Documento
 
 ### 8.2 Painel "Minhas Diárias" — beneficiário
 
-**Arquivo:** `verbas_indenizatorias/views/diarias/panels.py`
+**Arquivo:** `apps/verbas_indenizatorias/views/diarias/panels.py`
 
 ```python
 credor = Credor.objects.filter(usuario=request.user).first()
@@ -155,7 +155,7 @@ O painel pessoal do credor exibe exclusivamente as diárias onde ele figura como
 
 ### 8.3 Painel de autorização de diárias — proponente
 
-**Arquivo:** `verbas_indenizatorias/services/autorizacao_diarias.py` → `listar_diarias_pendentes_para_proponente(usuario)`
+**Arquivo:** `apps/verbas_indenizatorias/services/autorizacao_diarias.py` → `listar_diarias_pendentes_para_proponente(usuario)`
 
 ```python
 Diaria.objects.filter(proponente=usuario, status__status_choice__iexact=STATUS_VERBA_SOLICITADA)
@@ -165,7 +165,7 @@ O painel de autorização exibe apenas as diárias em que o usuário logado é o
 
 ### 8.4 Minhas assinaturas eletrônicas
 
-**Arquivo:** `pagamentos/views/support/signatures.py`
+**Arquivo:** `apps/pagamentos/views/support/signatures.py`
 
 ```python
 meus_documentos = AssinaturaEletronica.objects.filter(criador=request.user)

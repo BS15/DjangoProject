@@ -1536,7 +1536,7 @@
 <hr />
 <h2 id="2-painel-operacional-de-retencoes">2. Painel operacional de retenções<a class="headerlink" href="#2-painel-operacional-de-retencoes" title="Permanent link">&para;</a></h2>
 <p><strong>URL name:</strong> <code>painel_impostos_view</code><br />
-<strong>Permissão:</strong> <code>fiscal.acesso_backoffice</code></p>
+<strong>Permissão:</strong> <code>retencoes.acesso_backoffice</code></p>
 <p>O painel suporta três visões selecionáveis via <code>?visao=</code>:</p>
 <table>
 <thead>
@@ -1621,23 +1621,23 @@
 <tbody>
 <tr>
 <td>Criação/edição de retenção</td>
-<td><code>pagamentos/views/pre_payment/cadastro/actions.py</code></td>
+<td><code>apps/pagamentos/views/pre_payment/cadastro/actions.py</code></td>
 </tr>
 <tr>
 <td>Painel operacional (GET)</td>
-<td><code>fiscal/views/impostos/panels.py</code></td>
+<td><code>retencoes/views/impostos/panels.py</code></td>
 </tr>
 <tr>
 <td>Ações de agrupamento/documentação</td>
-<td><code>fiscal/views/impostos/actions.py</code></td>
+<td><code>retencoes/views/impostos/actions.py</code></td>
 </tr>
 <tr>
 <td>Serviços de documentação fiscal</td>
-<td><code>fiscal/services/impostos.py</code></td>
+<td><code>retencoes/services/impostos.py</code></td>
 </tr>
 <tr>
 <td>Modelo <code>RetencaoImposto</code></td>
-<td><code>fiscal/models.py</code></td>
+<td><code>retencoes/models.py</code></td>
 </tr>
 </tbody>
 </table>

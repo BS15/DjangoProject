@@ -153,7 +153,7 @@ def cancelar_diaria_spoke_view(request, pk):
 @require_GET
 @permission_required("pagamentos.pode_visualizar_verbas", raise_exception=True)
 def minha_prestacao_list_view(request):
-    from credores.models import Credor
+    from cadastros.models import Credor
 
     credor = getattr(request.user, 'credor_vinculado', None)
     if not credor:

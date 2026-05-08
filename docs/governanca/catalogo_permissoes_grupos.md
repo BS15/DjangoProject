@@ -13,15 +13,15 @@ Esta página concentra o inventário operacional atual de controle de acesso do 
 
 As permissões abaixo vêm de três fontes do código:
 
-- Permissões declaradas no modelo financeiro principal (`pagamentos/domain_models/processos.py`), que concentra tanto permissões do fluxo de pagamentos quanto de verbas indenizatórias.
-- Permissões declaradas nos modelos próprios de verbas (`verbas_indenizatorias/models.py`) e suprimentos (`suprimentos/models.py`).
-- Grupos canônicos provisionados pelo comando `setup_headstart` (`pagamentos/management/commands/setup_headstart.py`).
+- Permissões declaradas no modelo financeiro principal (`apps/pagamentos/domain_models/processos.py`), que concentra tanto permissões do fluxo de pagamentos quanto de verbas indenizatórias.
+- Permissões declaradas nos modelos próprios de verbas (`apps/verbas_indenizatorias/models.py`) e suprimentos (`apps/suprimentos/models.py`).
+- Grupos canônicos provisionados pelo comando `setup_headstart` (`apps/pagamentos/management/commands/setup_headstart.py`).
 
 ## Permissões disponíveis
 
 ## Pagamentos Core e Credores
 
-Estas permissões estão declaradas em `pagamentos/domain_models/processos.py` e são usadas nas views de cadastro, empenho, liquidação, pagamento, conferência, contabilização, arquivamento, contingência, credores e ferramentas auxiliares.
+Estas permissões estão declaradas em `apps/pagamentos/domain_models/processos.py` e são usadas nas views de cadastro, empenho, liquidação, pagamento, conferência, contabilização, arquivamento, contingência, credores e ferramentas auxiliares.
 
 | Codename | Escopo em runtime | Finalidade operacional |
 |---|---|---|
@@ -40,7 +40,7 @@ Estas permissões estão declaradas em `pagamentos/domain_models/processos.py` e
 
 ## Verbas indenizatórias — escopo pagamentos
 
-Estas permissões estão declaradas junto ao modelo financeiro principal em `pagamentos/domain_models/processos.py` e são consumidas em runtime com o prefixo `pagamentos.` nas views e templates de verbas.
+Estas permissões estão declaradas junto ao modelo financeiro principal em `apps/pagamentos/domain_models/processos.py` e são consumidas em runtime com o prefixo `pagamentos.` nas views e templates de verbas.
 
 | Codename | Escopo em runtime | Finalidade operacional |
 |---|---|---|
@@ -58,7 +58,7 @@ Estas permissões estão declaradas junto ao modelo financeiro principal em `pag
 
 ## Verbas indenizatórias — escopo próprio
 
-Estas permissões estão declaradas em `verbas_indenizatorias/models.py` e são consumidas diretamente com o prefixo `verbas_indenizatorias.` nas views de prestação de contas de diárias.
+Estas permissões estão declaradas em `apps/verbas_indenizatorias/models.py` e são consumidas diretamente com o prefixo `verbas_indenizatorias.` nas views de prestação de contas de diárias.
 
 | Codename | Escopo em runtime | Finalidade operacional |
 |---|---|---|
@@ -80,9 +80,9 @@ Estas permissões estão declaradas em `verbas_indenizatorias/models.py` e são 
 
 | Codename | Escopo em runtime | Finalidade operacional |
 |---|---|---|
-| `fiscal.acesso_backoffice` | Impostos e EFD-Reinf | Acesso operacional ao backoffice fiscal. |
+| `retencoes.acesso_backoffice` | Impostos e EFD-Reinf | Acesso operacional ao backoffice fiscal. |
 
-Observação: `fiscal.acesso_backoffice` está presente nas views do módulo fiscal. Por se tratar de permissão customizada, ela deve ser provisionada explicitamente no banco (via `Meta.permissions` em modelo/migração ou rotina de bootstrap), não apenas pelo uso em decorator.
+Observação: `retencoes.acesso_backoffice` está presente nas views do módulo fiscal. Por se tratar de permissão customizada, ela deve ser provisionada explicitamente no banco (via `Meta.permissions` em modelo/migração ou rotina de bootstrap), não apenas pelo uso em decorator.
 
 ## Grupos canônicos de usuários
 

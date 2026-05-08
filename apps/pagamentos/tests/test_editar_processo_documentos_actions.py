@@ -9,7 +9,7 @@ from django.core.files.base import ContentFile
 from django.urls import reverse
 from pypdf import PdfWriter
 
-from credores.models import Credor
+from cadastros.models import Credor
 from apps.pagamentos.domain_models import (
     Boleto_Bancario,
     DocumentoProcesso,

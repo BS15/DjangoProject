@@ -38,7 +38,7 @@ def validar_completude_recolhimento_impostos(processo):
     if "IMPOSTO" not in tipo_pagamento_nome:
         return []
 
-    from fiscal.services.impostos import verificar_completude_documentos_impostos
+    from retencoes.services.impostos import verificar_completude_documentos_impostos
 
     pendentes = verificar_completude_documentos_impostos(processo)
     if not pendentes:

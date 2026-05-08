@@ -1704,7 +1704,7 @@
 <p>Para o padrão arquitetural aplicado nas views deste fluxo, consulte <a href="../../arquitetura/manager_worker/">Padrão Manager-Worker</a> e <a href="../../arquitetura/hub_spoke/">Interface Hub-and-Spoke</a>.</p>
 <hr />
 <h2 id="1-modelo-de-dominio">1. Modelo de domínio<a class="headerlink" href="#1-modelo-de-dominio" title="Permanent link">&para;</a></h2>
-<p><code>Diaria</code> (<code>verbas_indenizatorias/models.py</code>) é a entidade central. Ao ser salva, o modelo:</p>
+<p><code>Diaria</code> (<code>apps/verbas_indenizatorias/models.py</code>) é a entidade central. Ao ser salva, o modelo:</p>
 <ul>
 <li>Recalcula <code>quantidade_diarias</code> automaticamente pelo intervalo de datas e tipo.</li>
 <li>Recalcula <code>valor_total</code> com base na tabela <code>Tabela_Valores_Unitarios_Verbas_Indenizatorias</code> para o cargo/função do beneficiário.</li>
@@ -1857,7 +1857,7 @@
 <p><strong>Spoke (GET):</strong> <code>cancelar_diaria_spoke_view</code><br />
 <strong>Action (POST):</strong> <code>cancelar_diaria_action</code><br />
 <strong>Permissão:</strong> <code>verbas_indenizatorias.pode_gerenciar_diarias</code><br />
-<strong>Serviço:</strong> <code>cancelar_verba</code> (<code>pagamentos/services/cancelamentos.py</code>)</p>
+<strong>Serviço:</strong> <code>cancelar_verba</code> (<code>apps/pagamentos/services/cancelamentos.py</code>)</p>
 <ul>
 <li>Justificativa é sempre obrigatória.</li>
 <li><strong>Quando a diária está com <code>status_choice == "PAGA"</code></strong>, o formulário exige os dados de devolução correspondente (valor, data e comprovante). A <code>DevolucaoProcessual</code> é criada atomicamente na mesma transação.</li>
@@ -1881,39 +1881,39 @@
 <tbody>
 <tr>
 <td>Modelos</td>
-<td><code>verbas_indenizatorias/models.py</code></td>
+<td><code>apps/verbas_indenizatorias/models.py</code></td>
 </tr>
 <tr>
 <td>Painel / spokes (GET)</td>
-<td><code>verbas_indenizatorias/views/diarias/panels.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/diarias/panels.py</code></td>
 </tr>
 <tr>
 <td>Ações principais (POST)</td>
-<td><code>verbas_indenizatorias/views/diarias/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/diarias/actions.py</code></td>
 </tr>
 <tr>
 <td>Devolução</td>
-<td><code>verbas_indenizatorias/views/diarias/devolucao/</code></td>
+<td><code>apps/verbas_indenizatorias/views/diarias/devolucao/</code></td>
 </tr>
 <tr>
 <td>Contingência</td>
-<td><code>verbas_indenizatorias/views/diarias/contingencia/</code></td>
+<td><code>apps/verbas_indenizatorias/views/diarias/contingencia/</code></td>
 </tr>
 <tr>
 <td>Assinaturas</td>
-<td><code>verbas_indenizatorias/views/diarias/signatures.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/diarias/signatures.py</code></td>
 </tr>
 <tr>
 <td>Serviço de prestação</td>
-<td><code>verbas_indenizatorias/services/prestacao.py</code></td>
+<td><code>apps/verbas_indenizatorias/services/prestacao.py</code></td>
 </tr>
 <tr>
 <td>Serviço de vínculo</td>
-<td><code>verbas_indenizatorias/services/vinculos_diaria.py</code></td>
+<td><code>apps/verbas_indenizatorias/services/vinculos_diaria.py</code></td>
 </tr>
 <tr>
 <td>Serviço de contingência</td>
-<td><code>verbas_indenizatorias/services/contingencia.py</code></td>
+<td><code>apps/verbas_indenizatorias/services/contingencia.py</code></td>
 </tr>
 </tbody>
 </table>

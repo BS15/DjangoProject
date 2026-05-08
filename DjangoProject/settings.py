@@ -58,11 +58,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'commons.apps.CommonsConfig',
-    'credores.apps.CredoresConfig',
+    'cadastros.apps.CadastrosConfig',
     'apps.pagamentos.apps.PagamentosConfig',
     'apps.suprimentos.apps.SuprimentosConfig',
     'apps.verbas_indenizatorias.apps.VerbasIndenizatoriasConfig',
-        'fiscal.apps.FiscalConfig',
+        'retencoes.apps.RetencoesConfig',
 ]
 
 MIDDLEWARE = [

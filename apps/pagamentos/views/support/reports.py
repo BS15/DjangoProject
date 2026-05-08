@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
-from fiscal.models import RetencaoImposto
+from retencoes.models import RetencaoImposto
 from apps.pagamentos.domain_models import Processo
 from apps.pagamentos.filters import BaseStyledFilterSet, ProcessoFilter
 from apps.pagamentos.views.helpers.reports import gerar_csv_relatorio

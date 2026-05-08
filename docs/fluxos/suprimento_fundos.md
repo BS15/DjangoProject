@@ -121,7 +121,7 @@ Na aprovação:
 **Spoke (GET):** `cancelar_suprimento_spoke_view`  
 **Action (POST):** `cancelar_suprimento_action`  
 **Permissão:** `suprimentos.acesso_backoffice`  
-**Serviço:** `cancelar_suprimento` (`pagamentos/services/cancelamentos.py`)
+**Serviço:** `cancelar_suprimento` (`apps/pagamentos/services/cancelamentos.py`)
 
 - Justificativa é sempre obrigatória.
 - **Quando o suprimento está com `status_choice == "ENCERRADO"`**, o formulário exige os dados de devolução correspondente (valor, data e comprovante). A `DevolucaoProcessual` é criada atomicamente na mesma transação.
@@ -148,11 +148,11 @@ No fluxo operacional recomendado, o fechamento deve ocorrer pela trilha formal d
 
 | Componente | Localização |
 |-----------|------------|
-| Modelos de suprimento/prestação | `suprimentos/models.py` |
-| Cadastro (GET/POST) | `suprimentos/views/cadastro/panels.py` / `suprimentos/views/cadastro/actions.py` |
-| Painéis de prestação (GET) | `suprimentos/views/prestacao_contas/panels.py` |
-| Ações de prestação (POST) | `suprimentos/views/prestacao_contas/actions.py` |
-| Serviços de prestação | `suprimentos/services/prestacao.py` |
-| Atualização de status após fechamento | `suprimentos/views/helpers.py` |
-| Integração com processo | `suprimentos/services/processo_integration.py` |
-| **Serviço de cancelamento** | **`pagamentos/services/cancelamentos.py`** |
+| Modelos de suprimento/prestação | `apps/suprimentos/models.py` |
+| Cadastro (GET/POST) | `apps/suprimentos/views/cadastro/panels.py` / `apps/suprimentos/views/cadastro/actions.py` |
+| Painéis de prestação (GET) | `apps/suprimentos/views/prestacao_contas/panels.py` |
+| Ações de prestação (POST) | `apps/suprimentos/views/prestacao_contas/actions.py` |
+| Serviços de prestação | `apps/suprimentos/services/prestacao.py` |
+| Atualização de status após fechamento | `apps/suprimentos/views/helpers.py` |
+| Integração com processo | `apps/suprimentos/services/processo_integration.py` |
+| **Serviço de cancelamento** | **`apps/pagamentos/services/cancelamentos.py`** |

@@ -143,7 +143,7 @@ class Tabela_Valores_Unitarios_Verbas_Indenizatorias(models.Model):
     """Tabela de valores unitários por tipo de verba e cargo/função."""
 
     tipo = models.ForeignKey('TiposDeVerbasIndenizatorias', on_delete=models.PROTECT, blank=True, null=True)
-    cargo_funcao = models.ForeignKey('credores.CargosFuncoes', on_delete=models.PROTECT, blank=True, null=True)
+    cargo_funcao = models.ForeignKey('cadastros.CargosFuncoes', on_delete=models.PROTECT, blank=True, null=True)
     valor_unitario = models.DecimalField(null=True, blank=True, max_digits=12, decimal_places=2)
 
     def __str__(self):
@@ -187,7 +187,7 @@ class Diaria(StatusVerbaDomainMixin, models.Model):
     ]
 
     processo = models.ForeignKey('pagamentos.Processo', on_delete=models.CASCADE, related_name='diarias', null=True, blank=True)
-    beneficiario = models.ForeignKey('credores.Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
+    beneficiario = models.ForeignKey('cadastros.Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
                                      verbose_name="Beneficiário", related_name='diarias_como_beneficiario')
     proponente = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                    related_name='diarias_propostas', verbose_name="Proponente")
@@ -563,7 +563,7 @@ class ReembolsoCombustivel(StatusVerbaDomainMixin, models.Model):
     diaria = models.ForeignKey('Diaria', on_delete=models.CASCADE, related_name='reembolsos_combustivel', null=True,
                                blank=True, verbose_name="Diária")
     numero_sequencial = models.CharField("Número Sequencial", max_length=50)
-    beneficiario = models.ForeignKey('credores.Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
+    beneficiario = models.ForeignKey('cadastros.Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
                                      verbose_name="Beneficiário")
 
     data_saida = models.DateField("Data de Saída")
@@ -693,7 +693,7 @@ class Jeton(StatusVerbaDomainMixin, models.Model):
 
     processo = models.ForeignKey('pagamentos.Processo', on_delete=models.CASCADE, related_name='jetons', null=True, blank=True)
     numero_sequencial = models.CharField("Número Sequencial", max_length=50)
-    beneficiario = models.ForeignKey('credores.Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
+    beneficiario = models.ForeignKey('cadastros.Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
                                      verbose_name="Conselheiro(a)")
 
     reuniao = models.CharField("Reunião/Sessão de Referência", max_length=7)
@@ -791,7 +791,7 @@ class AuxilioRepresentacao(StatusVerbaDomainMixin, models.Model):
     processo = models.ForeignKey('pagamentos.Processo', on_delete=models.CASCADE, related_name='auxilios_representacao', null=True,
                                  blank=True)
     numero_sequencial = models.CharField("Número Sequencial", max_length=50)
-    beneficiario = models.ForeignKey('credores.Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
+    beneficiario = models.ForeignKey('cadastros.Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
                                      verbose_name="Beneficiário")
 
     objetivo = models.CharField("Evento/Motivo da Representação", max_length=200, blank=True, null=True,

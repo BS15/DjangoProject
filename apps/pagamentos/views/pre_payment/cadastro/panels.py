@@ -7,8 +7,8 @@ from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET
 
-from credores.models import Credor
-from fiscal.models import CodigosImposto, DocumentoFiscal
+from cadastros.models import Credor
+from retencoes.models import CodigosImposto, DocumentoFiscal
 from apps.pagamentos.domain_models import Processo, ProcessoStatus
 from apps.pagamentos.services.revisao_fluxo import obter_tipos_documento_para_processo
 

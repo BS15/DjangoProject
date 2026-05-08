@@ -17,7 +17,7 @@ from apps.pagamentos.services.revisao_fluxo import (
     persistir_revisao_processo,
     registrar_recusa_processo,
 )
-from fiscal.models import RetencaoImposto
+from retencoes.models import RetencaoImposto
 from .audit_builders import _get_unified_history
 
 

@@ -7,7 +7,7 @@ from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from pypdf import PdfReader, PdfWriter
 
-from credores.models import Credor
+from cadastros.models import Credor
 from apps.pagamentos.domain_models import (
     Boleto_Bancario,
     DocumentoProcesso,

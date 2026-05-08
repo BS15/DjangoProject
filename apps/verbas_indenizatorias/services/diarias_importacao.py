@@ -6,7 +6,7 @@ from io import BytesIO
 
 from commons.shared.csv_import_utils import build_csv_dict_reader
 
-from credores.models import Credor
+from cadastros.models import Credor
 from apps.verbas_indenizatorias.constants import STATUS_VERBA_APROVADA, STATUS_VERBA_SOLICITADA
 from apps.verbas_indenizatorias.models import Diaria
 from apps.verbas_indenizatorias.services.documentos import gerar_e_anexar_pcd_diaria

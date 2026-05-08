@@ -82,12 +82,12 @@ Arquivos centrais:
   - fornece utilitários reutilizáveis como `obter_proxima_ordem_documento`
   - resolve ou cria tipos documentais com `obter_ou_criar_tipo_documento`
 
-- `verbas_indenizatorias/views/shared/documents.py`
+- `apps/verbas_indenizatorias/views/shared/documents.py`
   - concentra workers reutilizáveis de upload no domínio de verbas
   - `_salvar_documento_upload` valida e persiste um anexo retornando `(documento, erro)`
   - `_processar_upload_documento` e `_salvar_verba_com_anexo_opcional` conectam request, persistência e feedback ao usuário
 
-- `fiscal/services/impostos.py`
+- `retencoes/services/impostos.py`
   - cria anexos documentais automáticos em processos de recolhimento de impostos
   - materializa guia, comprovante e relatório mensal como documentos de pagamento
 
@@ -160,22 +160,22 @@ Arquivos centrais:
   - oferece funções compartilhadas de leitura, decodificação e construção de `DictReader`
   - é a base técnica para vários fluxos de importação
 
-- `credores/imports.py`
+- `cadastros/imports.py`
   - implementa `painel_importacao_view`
   - implementa `importar_credores_csv`, que cria ou reaproveita `Credor`, `ContasBancarias` e `CargosFuncoes`
   - concentra também o fluxo de download de template de credores
 
-- `pagamentos/views/support/contas_fixas/imports.py`
+- `apps/pagamentos/views/support/contas_fixas/imports.py`
   - implementa `importar_contas_fixas_csv`
   - cria `ContaFixa` a partir de linhas CSV vinculadas a credores já existentes
   - também fornece template CSV para o usuário
 
-- `verbas_indenizatorias/views/diarias/imports.py`
+- `apps/verbas_indenizatorias/views/diarias/imports.py`
   - implementa a view `importar_diarias_view`
   - controla as ações de preview, confirmação e cancelamento
   - usa sessão para segurar o lote provisório até a confirmação
 
-- `verbas_indenizatorias/views/diarias/import_services.py`
+- `apps/verbas_indenizatorias/views/diarias/import_services.py`
   - implementa `_parse_diaria_row`, `preview_diarias_lote` e `confirmar_diarias_lote`
   - valida datas, quantidade de diárias, existência do beneficiário e coerência da linha
   - transforma a prévia em objetos `Diaria` no momento da confirmação
@@ -247,19 +247,19 @@ Saídas típicas:
 
 Arquivos centrais:
 
-- `pagamentos/views/support/sync/pagamentos.py`
+- `apps/pagamentos/views/support/sync/pagamentos.py`
   - implementa `sincronizar_siscac`, `sincronizar_siscac_auto_action` e `sincronizar_siscac_manual_action`
   - implementa `sync_siscac_payments`, núcleo de conciliação entre relatório PDF e processos internos
 
 - `pagamentos/utils.py`
   - contém `parse_siscac_report`, parser local do relatório PDF exportado do SISCAC (sem chamada à API externa)
 
-- `pagamentos/services/integracoes/processo_relacionados.py`
+- `apps/pagamentos/services/integracoes/processo_relacionados.py`
   - centraliza a orquestração cross-domain
   - `sincronizar_relacoes_apos_transicao` delega propagação para módulos satélite
   - `gerar_documentos_relacionados_por_transicao` dispara documentos dependentes do status do processo
 
-- `verbas_indenizatorias/services/processo_integration.py`
+- `apps/verbas_indenizatorias/services/processo_integration.py`
   - propaga status de processo pago para diárias, reembolsos, jetons e auxílios
   - cria documentos relacionados e rascunhos de assinatura em fluxos específicos
 
@@ -317,15 +317,15 @@ Saídas típicas:
 
 Arquivos centrais:
 
-- `pagamentos/views/helpers/payment_builders.py`
+- `apps/pagamentos/views/helpers/payment_builders.py`
   - implementa `_processar_acao_lote`, helper genérico para ações em lote
   - implementa `_atualizar_status_em_lote`, que itera processo a processo chamando `avancar_status(..., usuario=...)`
   - usa `transaction.atomic` para garantir integridade da operação
 
-- `pagamentos/views/payment/lancamento/actions.py`
+- `apps/pagamentos/views/payment/lancamento/actions.py`
   - usa esse padrão para separar processos para lançamento bancário, marcar como lançados e desfazer lançamentos
 
-- `pagamentos/views/support/pendencia/actions.py`
+- `apps/pagamentos/views/support/pendencia/actions.py`
   - aplica o mesmo raciocínio a tratamento de pendências em lote
 
 ### Observações arquiteturais
@@ -387,7 +387,7 @@ Saídas típicas:
 
 Arquivos centrais:
 
-- `pagamentos/domain_models/suporte.py`
+- `apps/pagamentos/domain_models/suporte.py`
   - define o modelo `AssinaturaAutentique`
   - guarda vínculo genérico com a entidade relacionada, status, arquivos e metadados da integração
 
@@ -400,11 +400,11 @@ Arquivos centrais:
   - implementa o cliente GraphQL da Autentique
   - envia documentos, processa respostas e consulta status para download do assinado
 
-- `pagamentos/views/support/signatures.py`
+- `apps/pagamentos/views/support/signatures.py`
   - implementa o painel do usuário e a action de disparo
   - aplica controle de permissão operacional no nível de dono do rascunho
 
-- `verbas_indenizatorias/services/processo_integration.py`
+- `apps/verbas_indenizatorias/services/processo_integration.py`
   - usa a infraestrutura de assinatura para criar rascunhos de PCD em fluxos de diárias
 
 ### Observações arquiteturais

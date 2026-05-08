@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
-from credores.models import ContaFixa, FaturaMensal, gerar_faturas_do_mes
+from cadastros.models import ContaFixa, FaturaMensal, gerar_faturas_do_mes
 
 from .forms import ContaFixaForm
 

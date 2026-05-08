@@ -7,7 +7,7 @@ from django.urls import reverse
 
 from commons.shared.text_tools import format_br_date, format_brl_currency, normalize_text
 from apps.pagamentos.domain_models.documentos import ComprovanteDePagamento
-from fiscal.models import DocumentoFiscal, RetencaoImposto
+from retencoes.models import DocumentoFiscal, RetencaoImposto
 from apps.pagamentos.domain_models import (
     Devolucao,
     Boleto_Bancario,

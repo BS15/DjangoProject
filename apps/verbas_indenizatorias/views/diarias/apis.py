@@ -3,7 +3,7 @@
 from django.contrib.auth.decorators import permission_required
 from django.http import JsonResponse
 
-from credores.models import Credor
+from cadastros.models import Credor
 from apps.verbas_indenizatorias.models import Diaria, Tabela_Valores_Unitarios_Verbas_Indenizatorias
 
 

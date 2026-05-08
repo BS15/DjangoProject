@@ -22,8 +22,8 @@ from .actions import (
 
 logger = logging.getLogger(__name__)
 
-from credores.models import Credor
-from fiscal.models import DocumentoFiscal, RetencaoImposto
+from cadastros.models import Credor
+from retencoes.models import DocumentoFiscal, RetencaoImposto
 from apps.pagamentos.domain_models import Boleto_Bancario, Pendencia, Processo, StatusChoicesPendencias, TiposDeDocumento, TiposDePendencias
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType

@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("credores", "0001_initial"),
+        ("cadastros", "0001_initial"),
         ("pagamentos", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
@@ -137,7 +137,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="credores.credor",
+                        to="cadastros.credor",
                         verbose_name="Suprido",
                     ),
                 ),
@@ -249,7 +249,7 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         limit_choices_to={"tipo": "PF"},
                         on_delete=django.db.models.deletion.PROTECT,
-                        to="credores.credor",
+                        to="cadastros.credor",
                         verbose_name="Suprido",
                     ),
                 ),

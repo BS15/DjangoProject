@@ -33,7 +33,7 @@ class BoletoBancario(DocumentoProcesso):
     """Especialização documental para anexos com metadados bancários."""
     codigo_barras = models.CharField("Código de Barras", max_length=60, null=True, blank=True)
     nota_referente = GenericRelation(
-        "fiscal.DocumentoFiscal",
+        "retencoes.DocumentoFiscal",
         content_type_field="content_type",
         object_id_field="object_id",
     )

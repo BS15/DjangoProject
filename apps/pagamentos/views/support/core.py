@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404, render
 
 from apps.pagamentos.domain_models import Processo
 from apps.pagamentos.filters import ProcessoFilter
-from fiscal.models import DocumentoFiscal, RetencaoImposto
+from retencoes.models import DocumentoFiscal, RetencaoImposto
 
 
 @permission_required("pagamentos.pode_visualizar_processos_pagamento", raise_exception=True)

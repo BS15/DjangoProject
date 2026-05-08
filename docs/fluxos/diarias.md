@@ -29,7 +29,7 @@ stateDiagram-v2
 
 ## 1. Modelo de domínio
 
-`Diaria` (`verbas_indenizatorias/models.py`) é a entidade central. Ao ser salva, o modelo:
+`Diaria` (`apps/verbas_indenizatorias/models.py`) é a entidade central. Ao ser salva, o modelo:
 
 - Recalcula `quantidade_diarias` automaticamente pelo intervalo de datas e tipo.
 - Recalcula `valor_total` com base na tabela `Tabela_Valores_Unitarios_Verbas_Indenizatorias` para o cargo/função do beneficiário.
@@ -205,7 +205,7 @@ Ao aprovar, `_aplicar_contingencia_diaria` usa `_bypass_domain_seal = True` para
 **Spoke (GET):** `cancelar_diaria_spoke_view`  
 **Action (POST):** `cancelar_diaria_action`  
 **Permissão:** `pagamentos.pode_gerenciar_diarias`  
-**Serviço:** `cancelar_verba` (`pagamentos/services/cancelamentos.py`)
+**Serviço:** `cancelar_verba` (`apps/pagamentos/services/cancelamentos.py`)
 
 - Justificativa é sempre obrigatória.
 - **Quando a diária está com `status_choice == "PAGA"`**, o formulário exige os dados de devolução correspondente (valor, data e comprovante). A `DevolucaoProcessual` é criada atomicamente na mesma transação.
@@ -225,12 +225,12 @@ Para o fluxo financeiro após agrupamento e pagamento, veja [Fluxo: Pagamentos](
 
 | Componente | Localização |
 |-----------|------------|
-| Modelos | `verbas_indenizatorias/models.py` |
-| Painel / spokes (GET) | `verbas_indenizatorias/views/diarias/panels.py` |
-| Ações principais (POST) | `verbas_indenizatorias/views/diarias/actions.py` |
-| Devolução | `verbas_indenizatorias/views/diarias/devolucao/` |
-| Contingência | `verbas_indenizatorias/views/diarias/contingencia/` |
-| Assinaturas | `verbas_indenizatorias/views/diarias/signatures.py` |
-| Serviço de prestação | `verbas_indenizatorias/services/prestacao.py` |
-| Serviço de vínculo | `verbas_indenizatorias/services/vinculos_diaria.py` |
-| Serviço de contingência | `verbas_indenizatorias/services/contingencia.py` |
+| Modelos | `apps/verbas_indenizatorias/models.py` |
+| Painel / spokes (GET) | `apps/verbas_indenizatorias/views/diarias/panels.py` |
+| Ações principais (POST) | `apps/verbas_indenizatorias/views/diarias/actions.py` |
+| Devolução | `apps/verbas_indenizatorias/views/diarias/devolucao/` |
+| Contingência | `apps/verbas_indenizatorias/views/diarias/contingencia/` |
+| Assinaturas | `apps/verbas_indenizatorias/views/diarias/signatures.py` |
+| Serviço de prestação | `apps/verbas_indenizatorias/services/prestacao.py` |
+| Serviço de vínculo | `apps/verbas_indenizatorias/services/vinculos_diaria.py` |
+| Serviço de contingência | `apps/verbas_indenizatorias/services/contingencia.py` |

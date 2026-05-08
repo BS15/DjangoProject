@@ -62,7 +62,7 @@ class SuprimentoDeFundos(models.Model):
 
     processo = models.ForeignKey('pagamentos.Processo', on_delete=models.CASCADE, related_name='suprimentos', null=True,
                                  blank=True)
-    suprido = models.ForeignKey('credores.Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
+    suprido = models.ForeignKey('cadastros.Credor', on_delete=models.PROTECT, limit_choices_to={'tipo': 'PF'},
                                 verbose_name="Suprido")
 
     # Valores Iniciais

@@ -2760,7 +2760,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>fiscal/views/impostos/actions.py</code></td>
+<td><code>retencoes/views/impostos/actions.py</code></td>
 </tr>
 <tr>
 <td>Rota</td>
@@ -2768,7 +2768,7 @@
 </tr>
 <tr>
 <td>Permissão</td>
-<td><code>fiscal.acesso_backoffice</code></td>
+<td><code>retencoes.acesso_backoffice</code></td>
 </tr>
 <tr>
 <td>Método</td>
@@ -2815,7 +2815,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>fiscal/views/impostos/actions.py</code></td>
+<td><code>retencoes/views/impostos/actions.py</code></td>
 </tr>
 <tr>
 <td>Rota</td>
@@ -2823,7 +2823,7 @@
 </tr>
 <tr>
 <td>Permissão</td>
-<td><code>fiscal.acesso_backoffice</code></td>
+<td><code>retencoes.acesso_backoffice</code></td>
 </tr>
 <tr>
 <td>Método</td>
@@ -2870,7 +2870,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>fiscal/views/reinf/actions.py</code></td>
+<td><code>retencoes/views/reinf/actions.py</code></td>
 </tr>
 <tr>
 <td>Rota</td>
@@ -2878,7 +2878,7 @@
 </tr>
 <tr>
 <td>Permissão</td>
-<td><code>fiscal.acesso_backoffice</code></td>
+<td><code>retencoes.acesso_backoffice</code></td>
 </tr>
 <tr>
 <td>Método</td>
@@ -2925,7 +2925,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>fiscal/views/reinf/actions.py</code></td>
+<td><code>retencoes/views/reinf/actions.py</code></td>
 </tr>
 <tr>
 <td>Rota</td>
@@ -2933,7 +2933,7 @@
 </tr>
 <tr>
 <td>Permissão</td>
-<td><code>fiscal.acesso_backoffice</code></td>
+<td><code>retencoes.acesso_backoffice</code></td>
 </tr>
 <tr>
 <td>Método</td>
@@ -2987,7 +2987,7 @@
 <tbody>
 <tr>
 <td><code>add_process_action</code></td>
-<td><code>pagamentos/views/pre_payment/cadastro/actions.py</code></td>
+<td><code>apps/pagamentos/views/pre_payment/cadastro/actions.py</code></td>
 <td><code>add_process_action</code> (<code>/adicionar/action/</code>)</td>
 <td><code>pagamentos.pode_editar_processos_pagamento</code></td>
 <td><code>POST</code></td>
@@ -3000,7 +3000,7 @@
 </tr>
 <tr>
 <td><code>editar_processo_capa_action</code></td>
-<td><code>pagamentos/views/pre_payment/cadastro/actions.py</code></td>
+<td><code>apps/pagamentos/views/pre_payment/cadastro/actions.py</code></td>
 <td><code>editar_processo_capa_action</code> (<code>/processo/&lt;int:pk&gt;/editar/capa/action/</code>)</td>
 <td><code>pagamentos.pode_editar_processos_pagamento</code></td>
 <td><code>POST</code></td>
@@ -3013,7 +3013,7 @@
 </tr>
 <tr>
 <td><code>editar_processo_documentos_action</code></td>
-<td><code>pagamentos/views/pre_payment/cadastro/actions.py</code></td>
+<td><code>apps/pagamentos/views/pre_payment/cadastro/actions.py</code></td>
 <td><code>editar_processo_documentos_action</code> (<code>/processo/&lt;int:pk&gt;/editar/documentos/action/</code>)</td>
 <td><code>pagamentos.pode_editar_processos_pagamento</code></td>
 <td><code>POST</code></td>
@@ -3026,7 +3026,7 @@
 </tr>
 <tr>
 <td><code>editar_processo_pendencias_action</code></td>
-<td><code>pagamentos/views/pre_payment/cadastro/actions.py</code></td>
+<td><code>apps/pagamentos/views/pre_payment/cadastro/actions.py</code></td>
 <td><code>editar_processo_pendencias_action</code> (<code>/processo/&lt;int:pk&gt;/editar/pendencias/action/</code>)</td>
 <td><code>pagamentos.pode_editar_processos_pagamento</code></td>
 <td><code>POST</code></td>
@@ -3059,7 +3059,7 @@
 <tbody>
 <tr>
 <td><code>registrar_empenho_action</code></td>
-<td><code>pagamentos/views/pre_payment/empenho/actions.py</code></td>
+<td><code>apps/pagamentos/views/pre_payment/empenho/actions.py</code></td>
 <td><code>registrar_empenho_action</code> (<code>/a-empenhar/registrar-empenho/</code>)</td>
 <td><code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
@@ -3092,7 +3092,7 @@
 <tbody>
 <tr>
 <td><code>alternar_ateste_nota_action</code></td>
-<td><code>pagamentos/views/pre_payment/liquidacoes/actions.py</code></td>
+<td><code>apps/pagamentos/views/pre_payment/liquidacoes/actions.py</code></td>
 <td><code>alternar_ateste_nota</code> (<code>/liquidacoes/atestar/&lt;int:pk&gt;/</code>)</td>
 <td>acesso contextual: fiscal da liquidação (<code>liquidacao.fiscal_contrato</code>) ou <code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
@@ -3105,7 +3105,7 @@
 </tr>
 <tr>
 <td><code>avancar_para_pagamento_action</code></td>
-<td><code>pagamentos/views/pre_payment/liquidacoes/actions.py</code></td>
+<td><code>apps/pagamentos/views/pre_payment/liquidacoes/actions.py</code></td>
 <td><code>avancar_para_pagamento</code> (<code>/processo/&lt;int:pk&gt;/avancar-para-pagamento/</code>)</td>
 <td><code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
@@ -3139,7 +3139,7 @@
 <tbody>
 <tr>
 <td><code>enviar_para_autorizacao_action</code></td>
-<td><code>pagamentos/views/payment/contas_a_pagar/actions.py</code></td>
+<td><code>apps/pagamentos/views/payment/contas_a_pagar/actions.py</code></td>
 <td><code>enviar_para_autorizacao</code> (<code>/processos/enviar-autorizacao/</code>)</td>
 <td><code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
@@ -3172,7 +3172,7 @@
 <tbody>
 <tr>
 <td><code>autorizar_pagamento</code></td>
-<td><code>pagamentos/views/payment/autorizacao/actions.py</code></td>
+<td><code>apps/pagamentos/views/payment/autorizacao/actions.py</code></td>
 <td><code>autorizar_pagamento</code> (<code>/processos/autorizar-pagamento/</code>)</td>
 <td><code>pagamentos.pode_autorizar_pagamento</code></td>
 <td><code>POST</code></td>
@@ -3185,7 +3185,7 @@
 </tr>
 <tr>
 <td><code>recusar_autorizacao_action</code></td>
-<td><code>pagamentos/views/payment/autorizacao/actions.py</code></td>
+<td><code>apps/pagamentos/views/payment/autorizacao/actions.py</code></td>
 <td><code>recusar_autorizacao</code> (<code>/processos/autorizacao/&lt;int:pk&gt;/recusar/</code>)</td>
 <td><code>pagamentos.pode_autorizar_pagamento</code></td>
 <td><code>POST</code></td>
@@ -3218,7 +3218,7 @@
 <tbody>
 <tr>
 <td><code>separar_para_lancamento_bancario_action</code></td>
-<td><code>pagamentos/views/payment/lancamento/actions.py</code></td>
+<td><code>apps/pagamentos/views/payment/lancamento/actions.py</code></td>
 <td><code>separar_para_lancamento_bancario</code> (<code>/processos/separar-lancamento/</code>)</td>
 <td><code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
@@ -3231,7 +3231,7 @@
 </tr>
 <tr>
 <td><code>marcar_como_lancado_action</code></td>
-<td><code>pagamentos/views/payment/lancamento/actions.py</code></td>
+<td><code>apps/pagamentos/views/payment/lancamento/actions.py</code></td>
 <td><code>marcar_como_lancado</code> (<code>/processos/marcar-lancado/</code>)</td>
 <td><code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
@@ -3244,7 +3244,7 @@
 </tr>
 <tr>
 <td><code>desmarcar_lancamento_action</code></td>
-<td><code>pagamentos/views/payment/lancamento/actions.py</code></td>
+<td><code>apps/pagamentos/views/payment/lancamento/actions.py</code></td>
 <td><code>desmarcar_lancamento</code> (<code>/processos/desmarcar-lancamento/</code>)</td>
 <td><code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
@@ -3278,7 +3278,7 @@
 <tbody>
 <tr>
 <td><code>iniciar_conferencia_action</code></td>
-<td><code>pagamentos/views/post_payment/conferencia/actions.py</code></td>
+<td><code>apps/pagamentos/views/post_payment/conferencia/actions.py</code></td>
 <td><code>iniciar_conferencia</code> (<code>/processos/conferencia/iniciar/</code>)</td>
 <td><code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
@@ -3291,7 +3291,7 @@
 </tr>
 <tr>
 <td><code>aprovar_conferencia_action</code></td>
-<td><code>pagamentos/views/post_payment/conferencia/actions.py</code></td>
+<td><code>apps/pagamentos/views/post_payment/conferencia/actions.py</code></td>
 <td><code>aprovar_conferencia</code> (<code>/processos/conferencia/&lt;int:pk&gt;/aprovar/</code>)</td>
 <td><code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
@@ -3324,7 +3324,7 @@
 <tbody>
 <tr>
 <td><code>iniciar_contabilizacao_action</code></td>
-<td><code>pagamentos/views/post_payment/contabilizacao/actions.py</code></td>
+<td><code>apps/pagamentos/views/post_payment/contabilizacao/actions.py</code></td>
 <td><code>iniciar_contabilizacao</code> (<code>/processos/contabilizacao/iniciar/</code>)</td>
 <td><code>pagamentos.pode_contabilizar</code></td>
 <td><code>POST</code></td>
@@ -3337,7 +3337,7 @@
 </tr>
 <tr>
 <td><code>aprovar_contabilizacao_action</code></td>
-<td><code>pagamentos/views/post_payment/contabilizacao/actions.py</code></td>
+<td><code>apps/pagamentos/views/post_payment/contabilizacao/actions.py</code></td>
 <td><code>aprovar_contabilizacao</code> (<code>/processos/contabilizacao/&lt;int:pk&gt;/aprovar/</code>)</td>
 <td><code>pagamentos.pode_contabilizar</code></td>
 <td><code>POST</code></td>
@@ -3350,7 +3350,7 @@
 </tr>
 <tr>
 <td><code>recusar_contabilizacao_action</code></td>
-<td><code>pagamentos/views/post_payment/contabilizacao/actions.py</code></td>
+<td><code>apps/pagamentos/views/post_payment/contabilizacao/actions.py</code></td>
 <td><code>recusar_contabilizacao</code> (<code>/processos/contabilizacao/&lt;int:pk&gt;/recusar/</code>)</td>
 <td><code>pagamentos.pode_contabilizar</code></td>
 <td><code>POST</code></td>
@@ -3383,7 +3383,7 @@
 <tbody>
 <tr>
 <td><code>aprovar_conselho_action</code></td>
-<td><code>pagamentos/views/post_payment/conselho/actions.py</code></td>
+<td><code>apps/pagamentos/views/post_payment/conselho/actions.py</code></td>
 <td><code>aprovar_conselho</code> (<code>/processos/conselho/&lt;int:pk&gt;/aprovar/</code>)</td>
 <td><code>pagamentos.pode_auditar_conselho</code></td>
 <td><code>POST</code></td>
@@ -3396,7 +3396,7 @@
 </tr>
 <tr>
 <td><code>recusar_conselho_action</code></td>
-<td><code>pagamentos/views/post_payment/conselho/actions.py</code></td>
+<td><code>apps/pagamentos/views/post_payment/conselho/actions.py</code></td>
 <td><code>recusar_conselho</code> (<code>/processos/conselho/&lt;int:pk&gt;/recusar/</code>)</td>
 <td><code>pagamentos.pode_auditar_conselho</code></td>
 <td><code>POST</code></td>
@@ -3429,7 +3429,7 @@
 <tbody>
 <tr>
 <td><code>gerenciar_reunioes_action</code></td>
-<td><code>pagamentos/views/post_payment/reunioes/actions.py</code></td>
+<td><code>apps/pagamentos/views/post_payment/reunioes/actions.py</code></td>
 <td><code>gerenciar_reunioes_action</code> (<code>/processos/conselho/reunioes/criar/</code>)</td>
 <td><code>pagamentos.pode_auditar_conselho</code></td>
 <td><code>POST</code></td>
@@ -3442,7 +3442,7 @@
 </tr>
 <tr>
 <td><code>montar_pauta_reuniao_action</code></td>
-<td><code>pagamentos/views/post_payment/reunioes/actions.py</code></td>
+<td><code>apps/pagamentos/views/post_payment/reunioes/actions.py</code></td>
 <td><code>montar_pauta_reuniao_action</code> (<code>/processos/conselho/reunioes/&lt;int:reuniao_id&gt;/montar-pauta/adicionar/</code>)</td>
 <td><code>pagamentos.pode_auditar_conselho</code></td>
 <td><code>POST</code></td>
@@ -3455,7 +3455,7 @@
 </tr>
 <tr>
 <td><code>iniciar_conselho_reuniao_action</code></td>
-<td><code>pagamentos/views/post_payment/reunioes/actions.py</code></td>
+<td><code>apps/pagamentos/views/post_payment/reunioes/actions.py</code></td>
 <td><code>iniciar_conselho_reuniao</code> (<code>/processos/conselho/reunioes/&lt;int:reuniao_id&gt;/iniciar/</code>)</td>
 <td><code>pagamentos.pode_auditar_conselho</code></td>
 <td><code>POST</code></td>
@@ -3488,7 +3488,7 @@
 <tbody>
 <tr>
 <td><code>arquivar_processo_action</code></td>
-<td><code>pagamentos/views/post_payment/arquivamento/actions.py</code></td>
+<td><code>apps/pagamentos/views/post_payment/arquivamento/actions.py</code></td>
 <td><code>arquivar_processo_action</code> (<code>/processos/arquivamento/&lt;int:pk&gt;/executar/</code>)</td>
 <td><code>pagamentos.pode_arquivar</code></td>
 <td><code>POST</code></td>
@@ -3522,7 +3522,7 @@
 <tbody>
 <tr>
 <td><code>atualizar_pendencias_lote_action</code></td>
-<td><code>pagamentos/views/support/pendencia/actions.py</code></td>
+<td><code>apps/pagamentos/views/support/pendencia/actions.py</code></td>
 <td><code>painel_pendencias_action</code> (<code>/pendencias/action/</code>)</td>
 <td><code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
@@ -3555,7 +3555,7 @@
 <tbody>
 <tr>
 <td><code>registrar_devolucao_action</code></td>
-<td><code>pagamentos/views/support/devolucao/actions.py</code></td>
+<td><code>apps/pagamentos/views/support/devolucao/actions.py</code></td>
 <td><code>registrar_devolucao_action</code> (<code>/processo/&lt;int:processo_id&gt;/devolucao/salvar/</code>)</td>
 <td><code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
@@ -3588,7 +3588,7 @@
 <tbody>
 <tr>
 <td><code>add_contingencia_action</code></td>
-<td><code>pagamentos/views/support/contingencia/actions.py</code></td>
+<td><code>apps/pagamentos/views/support/contingencia/actions.py</code></td>
 <td><code>add_contingencia_action</code> (<code>/contingencias/nova/enviar/</code>)</td>
 <td><code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
@@ -3601,7 +3601,7 @@
 </tr>
 <tr>
 <td><code>analisar_contingencia_action</code></td>
-<td><code>pagamentos/views/support/contingencia/actions.py</code></td>
+<td><code>apps/pagamentos/views/support/contingencia/actions.py</code></td>
 <td><code>analisar_contingencia</code> (<code>/contingencias/&lt;int:pk&gt;/analisar/</code>)</td>
 <td><code>pagamentos.operador_contas_a_pagar</code> + permissão da etapa (<code>pode_aprovar_contingencia_supervisor</code>, <code>pode_aprovar_contingencia_ordenador</code>, <code>pode_aprovar_contingencia_conselho</code>, <code>pode_revisar_contingencia_contadora</code>)</td>
 <td><code>POST</code></td>
@@ -3634,7 +3634,7 @@
 <tbody>
 <tr>
 <td><code>add_conta_fixa_action</code></td>
-<td><code>pagamentos/views/support/contas_fixas/actions.py</code></td>
+<td><code>apps/pagamentos/views/support/contas_fixas/actions.py</code></td>
 <td><code>add_conta_fixa_action</code> (<code>/contas-fixas/nova/action/</code>)</td>
 <td><code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
@@ -3647,7 +3647,7 @@
 </tr>
 <tr>
 <td><code>edit_conta_fixa_action</code></td>
-<td><code>pagamentos/views/support/contas_fixas/actions.py</code></td>
+<td><code>apps/pagamentos/views/support/contas_fixas/actions.py</code></td>
 <td><code>edit_conta_fixa_action</code> (<code>/contas-fixas/&lt;int:pk&gt;/editar/action/</code>)</td>
 <td><code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
@@ -3660,7 +3660,7 @@
 </tr>
 <tr>
 <td><code>vincular_processo_fatura_action</code></td>
-<td><code>pagamentos/views/support/contas_fixas/actions.py</code></td>
+<td><code>apps/pagamentos/views/support/contas_fixas/actions.py</code></td>
 <td><code>vincular_processo_fatura</code> (<code>/contas-fixas/&lt;int:fatura_id&gt;/vincular/</code>)</td>
 <td><code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
@@ -3673,7 +3673,7 @@
 </tr>
 <tr>
 <td><code>excluir_conta_fixa_action</code></td>
-<td><code>pagamentos/views/support/contas_fixas/actions.py</code></td>
+<td><code>apps/pagamentos/views/support/contas_fixas/actions.py</code></td>
 <td><code>excluir_conta_fixa</code> (<code>/contas-fixas/&lt;int:pk&gt;/excluir/</code>)</td>
 <td><code>pagamentos.operador_contas_a_pagar</code></td>
 <td><code>POST</code></td>
@@ -3706,7 +3706,7 @@
 <tbody>
 <tr>
 <td><code>editar_processo_verbas_capa_action</code></td>
-<td><code>verbas_indenizatorias/views/processo/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/processo/actions.py</code></td>
 <td><code>editar_processo_verbas_capa_action</code> (<code>/processo/&lt;int:pk&gt;/editar-verbas/capa/action/</code>)</td>
 <td><code>verbas_indenizatorias.pode_gerenciar_processos_verbas</code></td>
 <td><code>POST</code></td>
@@ -3719,7 +3719,7 @@
 </tr>
 <tr>
 <td><code>editar_processo_verbas_pendencias_action</code></td>
-<td><code>verbas_indenizatorias/views/processo/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/processo/actions.py</code></td>
 <td><code>editar_processo_verbas_pendencias_action</code> (<code>/processo/&lt;int:pk&gt;/editar-verbas/pendencias/action/</code>)</td>
 <td><code>verbas_indenizatorias.pode_gerenciar_processos_verbas</code></td>
 <td><code>POST</code></td>
@@ -3732,7 +3732,7 @@
 </tr>
 <tr>
 <td><code>editar_processo_verbas_documentos_action</code></td>
-<td><code>verbas_indenizatorias/views/processo/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/processo/actions.py</code></td>
 <td><code>editar_processo_verbas_documentos_action</code> (<code>/processo/&lt;int:pk&gt;/editar-verbas/documentos/action/</code>)</td>
 <td><code>verbas_indenizatorias.pode_gerenciar_processos_verbas</code></td>
 <td><code>POST</code></td>
@@ -3745,7 +3745,7 @@
 </tr>
 <tr>
 <td><code>agrupar_verbas_view</code></td>
-<td><code>verbas_indenizatorias/views/processo/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/processo/actions.py</code></td>
 <td><code>agrupar_verbas</code> (<code>/verbas/agrupar/&lt;str:tipo_verba&gt;/</code>)</td>
 <td><code>verbas_indenizatorias.pode_agrupar_verbas</code></td>
 <td><code>POST</code></td>
@@ -3758,7 +3758,7 @@
 </tr>
 <tr>
 <td><code>add_diaria_action</code></td>
-<td><code>verbas_indenizatorias/views/diarias/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/diarias/actions.py</code></td>
 <td><code>add_diaria_action</code> (<code>/verbas/diarias/nova/action/</code>)</td>
 <td><code>verbas_indenizatorias.pode_criar_diarias</code></td>
 <td><code>POST</code></td>
@@ -3771,7 +3771,7 @@
 </tr>
 <tr>
 <td><code>registrar_comprovante_action</code></td>
-<td><code>verbas_indenizatorias/views/diarias/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/diarias/actions.py</code></td>
 <td><code>registrar_comprovante_action</code> (<code>/verbas/diarias/&lt;int:pk&gt;/comprovantes/registrar/</code>)</td>
 <td><code>verbas_indenizatorias.pode_gerenciar_diarias</code></td>
 <td><code>POST</code></td>
@@ -3784,7 +3784,7 @@
 </tr>
 <tr>
 <td><code>cancelar_diaria_action</code></td>
-<td><code>verbas_indenizatorias/views/diarias/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/diarias/actions.py</code></td>
 <td><code>cancelar_diaria_action</code> (<code>/verbas/diarias/&lt;int:pk&gt;/cancelar/</code>)</td>
 <td><code>verbas_indenizatorias.pode_gerenciar_diarias</code></td>
 <td><code>POST</code></td>
@@ -3797,7 +3797,7 @@
 </tr>
 <tr>
 <td><code>add_reembolso_action</code></td>
-<td><code>verbas_indenizatorias/views/reembolsos/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/reembolsos/actions.py</code></td>
 <td><code>add_reembolso_action</code> (<code>/verbas/reembolsos/novo/action/</code>)</td>
 <td><code>pagamentos.pode_gerenciar_reembolsos</code></td>
 <td><code>POST</code></td>
@@ -3810,7 +3810,7 @@
 </tr>
 <tr>
 <td><code>solicitar_autorizacao_reembolso_action</code></td>
-<td><code>verbas_indenizatorias/views/reembolsos/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/reembolsos/actions.py</code></td>
 <td><code>solicitar_autorizacao_reembolso_action</code> (<code>/verbas/reembolsos/&lt;int:pk&gt;/solicitar-autorizacao/</code>)</td>
 <td><code>pagamentos.pode_gerenciar_reembolsos</code></td>
 <td><code>POST</code></td>
@@ -3823,7 +3823,7 @@
 </tr>
 <tr>
 <td><code>autorizar_reembolso_action</code></td>
-<td><code>verbas_indenizatorias/views/reembolsos/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/reembolsos/actions.py</code></td>
 <td><code>autorizar_reembolso_action</code> (<code>/verbas/reembolsos/&lt;int:pk&gt;/autorizar/</code>)</td>
 <td><code>pagamentos.pode_gerenciar_reembolsos</code></td>
 <td><code>POST</code></td>
@@ -3836,7 +3836,7 @@
 </tr>
 <tr>
 <td><code>cancelar_reembolso_action</code></td>
-<td><code>verbas_indenizatorias/views/reembolsos/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/reembolsos/actions.py</code></td>
 <td><code>cancelar_reembolso_action</code> (<code>/verbas/reembolsos/&lt;int:pk&gt;/cancelar/</code>)</td>
 <td><code>pagamentos.pode_gerenciar_reembolsos</code></td>
 <td><code>POST</code></td>
@@ -3849,7 +3849,7 @@
 </tr>
 <tr>
 <td><code>registrar_comprovante_reembolso_action</code></td>
-<td><code>verbas_indenizatorias/views/reembolsos/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/reembolsos/actions.py</code></td>
 <td><code>registrar_comprovante_reembolso_action</code> (<code>/verbas/reembolsos/&lt;int:pk&gt;/comprovantes/registrar/</code>)</td>
 <td><code>pagamentos.pode_gerenciar_reembolsos</code></td>
 <td><code>POST</code></td>
@@ -3862,7 +3862,7 @@
 </tr>
 <tr>
 <td><code>add_jeton_action</code></td>
-<td><code>verbas_indenizatorias/views/jetons/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/jetons/actions.py</code></td>
 <td><code>add_jeton_action</code> (<code>/verbas/jetons/novo/action/</code>)</td>
 <td><code>pagamentos.pode_gerenciar_jetons</code></td>
 <td><code>POST</code></td>
@@ -3875,7 +3875,7 @@
 </tr>
 <tr>
 <td><code>solicitar_autorizacao_jeton_action</code></td>
-<td><code>verbas_indenizatorias/views/jetons/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/jetons/actions.py</code></td>
 <td><code>solicitar_autorizacao_jeton_action</code> (<code>/verbas/jetons/&lt;int:pk&gt;/solicitar-autorizacao/</code>)</td>
 <td><code>pagamentos.pode_gerenciar_jetons</code></td>
 <td><code>POST</code></td>
@@ -3888,7 +3888,7 @@
 </tr>
 <tr>
 <td><code>autorizar_jeton_action</code></td>
-<td><code>verbas_indenizatorias/views/jetons/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/jetons/actions.py</code></td>
 <td><code>autorizar_jeton_action</code> (<code>/verbas/jetons/&lt;int:pk&gt;/autorizar/</code>)</td>
 <td><code>pagamentos.pode_gerenciar_jetons</code></td>
 <td><code>POST</code></td>
@@ -3901,7 +3901,7 @@
 </tr>
 <tr>
 <td><code>cancelar_jeton_action</code></td>
-<td><code>verbas_indenizatorias/views/jetons/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/jetons/actions.py</code></td>
 <td><code>cancelar_jeton_action</code> (<code>/verbas/jetons/&lt;int:pk&gt;/cancelar/</code>)</td>
 <td><code>pagamentos.pode_gerenciar_jetons</code></td>
 <td><code>POST</code></td>
@@ -3914,7 +3914,7 @@
 </tr>
 <tr>
 <td><code>add_auxilio_action</code></td>
-<td><code>verbas_indenizatorias/views/auxilios/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/auxilios/actions.py</code></td>
 <td><code>add_auxilio_action</code> (<code>/verbas/auxilios/novo/action/</code>)</td>
 <td><code>pagamentos.pode_gerenciar_auxilios</code></td>
 <td><code>POST</code></td>
@@ -3927,7 +3927,7 @@
 </tr>
 <tr>
 <td><code>solicitar_autorizacao_auxilio_action</code></td>
-<td><code>verbas_indenizatorias/views/auxilios/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/auxilios/actions.py</code></td>
 <td><code>solicitar_autorizacao_auxilio_action</code> (<code>/verbas/auxilios/&lt;int:pk&gt;/solicitar-autorizacao/</code>)</td>
 <td><code>pagamentos.pode_gerenciar_auxilios</code></td>
 <td><code>POST</code></td>
@@ -3940,7 +3940,7 @@
 </tr>
 <tr>
 <td><code>autorizar_auxilio_action</code></td>
-<td><code>verbas_indenizatorias/views/auxilios/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/auxilios/actions.py</code></td>
 <td><code>autorizar_auxilio_action</code> (<code>/verbas/auxilios/&lt;int:pk&gt;/autorizar/</code>)</td>
 <td><code>pagamentos.pode_gerenciar_auxilios</code></td>
 <td><code>POST</code></td>
@@ -3953,7 +3953,7 @@
 </tr>
 <tr>
 <td><code>cancelar_auxilio_action</code></td>
-<td><code>verbas_indenizatorias/views/auxilios/actions.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/auxilios/actions.py</code></td>
 <td><code>cancelar_auxilio_action</code> (<code>/verbas/auxilios/&lt;int:pk&gt;/cancelar/</code>)</td>
 <td><code>pagamentos.pode_gerenciar_auxilios</code></td>
 <td><code>POST</code></td>
@@ -3986,7 +3986,7 @@
 <tbody>
 <tr>
 <td><code>add_suprimento_action</code></td>
-<td><code>suprimentos/views/cadastro/actions.py</code></td>
+<td><code>apps/suprimentos/views/cadastro/actions.py</code></td>
 <td><code>add_suprimento_action</code> (<code>/suprimentos/novo/action/</code>)</td>
 <td><code>suprimentos.acesso_backoffice</code></td>
 <td><code>POST</code></td>
@@ -3999,7 +3999,7 @@
 </tr>
 <tr>
 <td><code>adicionar_despesa_action</code></td>
-<td><code>suprimentos/views/prestacao_contas/actions.py</code></td>
+<td><code>apps/suprimentos/views/prestacao_contas/actions.py</code></td>
 <td><code>registrar_despesa_action</code> (<code>/suprimentos/&lt;int:pk&gt;/despesas/adicionar/</code>)</td>
 <td><code>suprimentos.acesso_backoffice</code></td>
 <td><code>POST</code></td>
@@ -4012,7 +4012,7 @@
 </tr>
 <tr>
 <td><code>fechar_suprimento_action</code></td>
-<td><code>suprimentos/views/prestacao_contas/actions.py</code></td>
+<td><code>apps/suprimentos/views/prestacao_contas/actions.py</code></td>
 <td><code>concluir_prestacao_action</code> (<code>/suprimentos/&lt;int:pk&gt;/fechar/</code>)</td>
 <td><code>suprimentos.acesso_backoffice</code></td>
 <td><code>POST</code></td>
@@ -4041,7 +4041,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>fiscal/services/impostos.py</code></td>
+<td><code>retencoes/services/impostos.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4084,7 +4084,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>fiscal/services/reinf.py</code></td>
+<td><code>retencoes/services/reinf.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4128,7 +4128,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>fiscal/views/impostos/helpers.py</code></td>
+<td><code>retencoes/views/impostos/helpers.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4171,7 +4171,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>fiscal/views/impostos/helpers.py</code></td>
+<td><code>retencoes/views/impostos/helpers.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4216,7 +4216,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>pagamentos/views/pre_payment/cadastro/helpers.py</code></td>
+<td><code>apps/pagamentos/views/pre_payment/cadastro/helpers.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4259,7 +4259,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>pagamentos/views/pre_payment/cadastro/helpers.py</code></td>
+<td><code>apps/pagamentos/views/pre_payment/cadastro/helpers.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4302,7 +4302,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>pagamentos/views/pre_payment/cadastro/helpers.py</code></td>
+<td><code>apps/pagamentos/views/pre_payment/cadastro/helpers.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4346,7 +4346,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>pagamentos/views/payment/comprovantes/helpers.py</code></td>
+<td><code>apps/pagamentos/views/payment/comprovantes/helpers.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4389,7 +4389,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>pagamentos/views/pre_payment/helpers.py</code></td>
+<td><code>apps/pagamentos/views/pre_payment/helpers.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4432,7 +4432,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>pagamentos/views/pre_payment/helpers.py</code></td>
+<td><code>apps/pagamentos/views/pre_payment/helpers.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4475,7 +4475,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>pagamentos/views/helpers/payment_builders.py</code></td>
+<td><code>apps/pagamentos/views/helpers/payment_builders.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4518,7 +4518,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>pagamentos/views/helpers/workflows.py</code></td>
+<td><code>apps/pagamentos/views/helpers/workflows.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4561,7 +4561,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>pagamentos/views/helpers/workflows.py</code></td>
+<td><code>apps/pagamentos/views/helpers/workflows.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4604,7 +4604,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>pagamentos/views/helpers/workflows.py</code></td>
+<td><code>apps/pagamentos/views/helpers/workflows.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4647,7 +4647,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>pagamentos/views/helpers/archival.py</code></td>
+<td><code>apps/pagamentos/views/helpers/archival.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4690,7 +4690,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>pagamentos/views/helpers/contingencias.py</code></td>
+<td><code>apps/pagamentos/views/helpers/contingencias.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4734,7 +4734,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>pagamentos/views/helpers/contingencias.py</code></td>
+<td><code>apps/pagamentos/views/helpers/contingencias.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4777,7 +4777,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>pagamentos/views/helpers/contingencias.py</code></td>
+<td><code>apps/pagamentos/views/helpers/contingencias.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4821,7 +4821,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>verbas_indenizatorias/services/processo_integration.py</code></td>
+<td><code>apps/verbas_indenizatorias/services/processo_integration.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4864,7 +4864,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>verbas_indenizatorias/views/processo/helpers.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/processo/helpers.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4907,7 +4907,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>verbas_indenizatorias/views/shared/documents.py</code></td>
+<td><code>apps/verbas_indenizatorias/views/shared/documents.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4951,7 +4951,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>suprimentos/services/processo_integration.py</code></td>
+<td><code>apps/suprimentos/services/processo_integration.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -4994,7 +4994,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>suprimentos/views/cadastro/helpers.py</code></td>
+<td><code>apps/suprimentos/views/cadastro/helpers.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>
@@ -5037,7 +5037,7 @@
 </tr>
 <tr>
 <td>Arquivo</td>
-<td><code>suprimentos/views/helpers.py</code></td>
+<td><code>apps/suprimentos/views/helpers.py</code></td>
 </tr>
 <tr>
 <td>Assinatura</td>

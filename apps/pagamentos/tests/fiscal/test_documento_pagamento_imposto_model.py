@@ -5,7 +5,7 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 
-from fiscal.models import (
+from retencoes.models import (
     CodigosImposto,
     DocumentoPagamentoImposto,
     RetencaoImposto,

@@ -22,13 +22,13 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError
 
-from credores.imports import (
+from cadastros.imports import (
     download_template_csv_credores,
     painel_importacao_view,
 )
-from credores.models import CargosFuncoes, ContasBancarias, Credor
-from fiscal.models import CodigosImposto, DocumentoFiscal, RetencaoImposto, StatusChoicesRetencoes
-from fiscal.models import LiquidacaoDocumentoFiscal
+from cadastros.models import CargosFuncoes, ContasBancarias, Credor
+from retencoes.models import CodigosImposto, DocumentoFiscal, RetencaoImposto, StatusChoicesRetencoes
+from retencoes.models import LiquidacaoDocumentoFiscal
 from apps.pagamentos.domain_models import (
     Boleto_Bancario,
     DocumentoOrcamentario,

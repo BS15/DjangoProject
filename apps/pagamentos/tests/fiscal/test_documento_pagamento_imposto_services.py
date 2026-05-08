@@ -5,8 +5,8 @@ from decimal import Decimal
 import pytest
 from pypdf import PdfReader
 
-from fiscal.models import CodigosImposto, DocumentoPagamentoImposto, RetencaoImposto
-from fiscal.services.impostos import (
+from retencoes.models import CodigosImposto, DocumentoPagamentoImposto, RetencaoImposto
+from retencoes.services.impostos import (
     DOC_RELATORIO_AGRUPAMENTO,
     anexar_relatorio_agrupamento_retencoes_no_processo,
     criar_documentos_pagamento_impostos,

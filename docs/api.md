@@ -32,21 +32,21 @@ Fluxos de formulário HTML surfaceiam erros de negócio via sistema de mensagens
 
 ## Domínio Fiscal
 
-**Permissão base:** `fiscal.acesso_backoffice`
+**Permissão base:** `retencoes.acesso_backoffice`
 
 ### Endpoints de Formulário (HTML)
 
 | Método | Path | Permissão | Descrição | Redirect sucesso |
 |---|---|---|---|---|
-| `POST` | `/impostos/agrupar/` | `fiscal.acesso_backoffice` | Agrupa `RetencaoImposto` selecionadas em um `Processo` de recolhimento | `editar_processo(pk)` |
-| `POST` | `/impostos/anexar-documentos/` | `fiscal.acesso_backoffice` | Anexa guia, comprovante e relatório mensal a processos de recolhimento | `painel_impostos_view` |
+| `POST` | `/impostos/agrupar/` | `retencoes.acesso_backoffice` | Agrupa `RetencaoImposto` selecionadas em um `Processo` de recolhimento | `editar_processo(pk)` |
+| `POST` | `/impostos/anexar-documentos/` | `retencoes.acesso_backoffice` | Anexa guia, comprovante e relatório mensal a processos de recolhimento | `painel_impostos_view` |
 
 ### Endpoints JSON / File Response
 
 | Método | Path | Permissão | Descrição | Resposta sucesso |
 |---|---|---|---|---|
-| `POST` | `/reinf/gerar-lotes/` | `fiscal.acesso_backoffice` | Gera XMLs de lotes EFD-Reinf para a competência informada | `200` + arquivo ZIP |
-| `POST` | `/reinf/transmitir-lotes/` | `fiscal.acesso_backoffice` | Transmite lotes EFD-Reinf pendentes | `200` JSON |
+| `POST` | `/reinf/gerar-lotes/` | `retencoes.acesso_backoffice` | Gera XMLs de lotes EFD-Reinf para a competência informada | `200` + arquivo ZIP |
+| `POST` | `/reinf/transmitir-lotes/` | `retencoes.acesso_backoffice` | Transmite lotes EFD-Reinf pendentes | `200` JSON |
 
 **Parâmetros — `/reinf/gerar-lotes/`:**
 

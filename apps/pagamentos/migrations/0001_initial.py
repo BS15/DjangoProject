@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("contenttypes", "0002_remove_content_type_name"),
-        ("credores", "0001_initial"),
+        ("cadastros", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -545,7 +545,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
                         related_name="processos_sacados",
-                        to="credores.contasbancarias",
+                        to="cadastros.contasbancarias",
                         verbose_name="Conta Sacada",
                     ),
                 ),
@@ -553,7 +553,7 @@ class Migration(migrations.Migration):
                     "credor",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.PROTECT,
-                        to="credores.credor",
+                        to="cadastros.credor",
                     ),
                 ),
                 (
@@ -1718,7 +1718,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="credores.contasbancarias",
+                        to="cadastros.contasbancarias",
                         verbose_name="Conta Sacada",
                     ),
                 ),
@@ -1730,7 +1730,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.DO_NOTHING,
                         related_name="+",
-                        to="credores.credor",
+                        to="cadastros.credor",
                     ),
                 ),
                 (

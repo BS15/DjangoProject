@@ -15,7 +15,7 @@ from decimal import Decimal, InvalidOperation
 import json
 from django.db.models import Sum
 from django.contrib.contenttypes.models import ContentType
-from fiscal.models import DocumentoFiscal, LiquidacaoDocumentoFiscal, RetencaoImposto, StatusChoicesRetencoes
+from retencoes.models import DocumentoFiscal, LiquidacaoDocumentoFiscal, RetencaoImposto, StatusChoicesRetencoes
 from commons.shared.text_tools import normalize_text
 from apps.pagamentos.domain_models import (
     Boleto_Bancario,

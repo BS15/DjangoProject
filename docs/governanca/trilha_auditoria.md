@@ -16,8 +16,8 @@ No contexto de administração pública, o PaGé prioriza integridade histórica
 
 Arquivos centrais:
 
-- `pagamentos/views/auditing/panels.py` — implementa `auditoria_view`, consolida históricos de modelos financeiros, fiscais e documentais.
-- `pagamentos/domain_models/suporte.py` — define `RegistroAcessoArquivo`, `Contingencia`, `Devolucao` e `AssinaturaAutentique` com histórico.
+- `apps/pagamentos/views/auditing/panels.py` — implementa `auditoria_view`, consolida históricos de modelos financeiros, fiscais e documentais.
+- `apps/pagamentos/domain_models/suporte.py` — define `RegistroAcessoArquivo`, `Contingencia`, `Devolucao` e `AssinaturaAutentique` com histórico.
 - Modelos críticos em múltiplos apps usam `HistoricalRecords()` em entidades como processo, retenção, documentos, suprimentos e assinatura.
 
 ## Logging técnico
@@ -27,10 +27,10 @@ Módulos sensíveis criam `logger = logging.getLogger(__name__)`. Exceções ope
 Principais pontos de logging:
 
 - `commons/shared/storage_utils.py`
-- `verbas_indenizatorias/views/shared/documents.py`
-- `pagamentos/views/support/sync/pagamentos.py`
-- `pagamentos/views/support/signatures.py`
-- `verbas_indenizatorias/services/processo_integration.py`
+- `apps/verbas_indenizatorias/views/shared/documents.py`
+- `apps/pagamentos/views/support/sync/pagamentos.py`
+- `apps/pagamentos/views/support/signatures.py`
+- `apps/verbas_indenizatorias/services/processo_integration.py`
 
 A decisão de chamar `avancar_status(..., usuario=...)` em vez de atualizar o status diretamente reforça esse compromisso: cada transição é rastreada ao operador que a executou.
 

@@ -37,7 +37,7 @@ Cada flecha é uma **transição validada** por regras de negócio.
 Transições são orquestradas via `Services`:
 
 ```python
-# verbas_indenizatorias/services/transicoes_service.py
+# apps/verbas_indenizatorias/services/transicoes_service.py
 def transicionar_diaria_para_prestacao(diaria: Diaria):
     """Passa diária de EMITIDA para PRESTACAO se pré-condições OK"""
     
@@ -257,7 +257,7 @@ Mesmo com permissão global, um usuário pode não ter acesso a um **registro es
 Validators contextuais vivem em `helpers.py` de cada módulo:
 
 ```python
-# verbas_indenizatorias/views/diarias/helpers.py
+# apps/verbas_indenizatorias/views/diarias/helpers.py
 def pode_acessar_prestacao(usuario, diaria):
     """Valida acesso contextual a uma diária"""
     
