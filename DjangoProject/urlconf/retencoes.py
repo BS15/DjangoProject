@@ -2,10 +2,10 @@
 
 from django.urls import path
 
-from retencoes.views.impostos import panels as impostos_panels
-from retencoes.views.impostos import actions as impostos_actions
-from retencoes.views.reinf import actions as reinf_actions
-from retencoes.views.reinf import panels as reinf_panels
+from apps.retencoes.views.impostos import panels as impostos_panels
+from apps.retencoes.views.impostos import actions as impostos_actions
+from apps.retencoes.views.reinf import actions as reinf_actions
+from apps.retencoes.views.reinf import panels as reinf_panels
 from apps.pagamentos.views.payment.comprovantes import panels as comprovantes_panels
 from apps.pagamentos.views.payment.comprovantes import apis as comprovantes_apis
 from apps.pagamentos.views.pre_payment.liquidacoes import panels as liquidacoes_panels

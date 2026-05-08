@@ -117,7 +117,7 @@ Fluxos de formulário HTML surfaceiam erros de negócio via sistema de mensagens
 
 ---
 
-## Domínio Credores
+## Domínio Cadastros (Credores)
 
 **Permissão base:** `pagamentos.operador_contas_a_pagar`
 
@@ -134,12 +134,12 @@ Fluxos de formulário HTML surfaceiam erros de negócio via sistema de mensagens
 
 ::: commons
 
-::: credores
+::: cadastros
 
-::: fiscal
+::: retencoes
 
-::: pagamentos
+::: apps.pagamentos
 
-::: suprimentos
+::: apps.suprimentos
 
-::: verbas_indenizatorias
+::: apps.verbas_indenizatorias

@@ -5,7 +5,7 @@ Este módulo define formulários para cadastro, edição e validação de suprim
 
 from django import forms
 from apps.suprimentos.models import SuprimentoDeFundos, PrestacaoContasSuprimento
-from apps.pagamentos.validators import validar_regras_suprimento
+from apps.suprimentos.validators import validar_regras_suprimento
 from apps.suprimentos.models import DespesaSuprimento
 
 

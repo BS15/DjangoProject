@@ -10,7 +10,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
-from retencoes.models import DocumentoFiscal, LiquidacaoDocumentoFiscal
+from apps.retencoes.models import DocumentoFiscal, LiquidacaoDocumentoFiscal
 from apps.pagamentos.domain_models import Processo, ProcessoStatus
 
 

@@ -6,7 +6,7 @@ from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
 from commons.shared.query_tools import obter_campo_ordenacao
-from retencoes.models import RetencaoImposto
+from apps.retencoes.models import RetencaoImposto
 from apps.pagamentos.domain_models import STATUS_PROCESSO_CONTAS_A_PAGAR, PendenciaProcessual, Processo
 from apps.pagamentos.views.helpers import (
     _aplicar_filtros_contas_a_pagar,

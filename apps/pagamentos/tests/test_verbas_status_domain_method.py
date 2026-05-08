@@ -5,7 +5,7 @@ import uuid
 import pytest
 from django.core.exceptions import ValidationError
 
-from cadastros.models import Credor
+from apps.cadastros.models import Credor
 from apps.verbas_indenizatorias.models import (
     AuxilioRepresentacao,
     Diaria,

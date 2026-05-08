@@ -12,8 +12,8 @@ from apps.pagamentos.models import (
 	StatusChoicesPendencias,
 	TiposDePagamento,
 )
-from retencoes.models import DadosContribuinte
-from cadastros.models import ContasBancarias, ContaFixa
+from apps.retencoes.models import DadosContribuinte
+from apps.cadastros.models import ContasBancarias, ContaFixa
 from apps.pagamentos.validators import validar_regras_processo, STATUS_BLOQUEADOS_FORM
 
 SUPRIMENTO_DE_FUNDOS = 'SUPRIMENTO DE FUNDOS'

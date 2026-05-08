@@ -7,7 +7,7 @@ import uuid
 import pytest
 from django.core.exceptions import ValidationError
 
-from cadastros.models import Credor
+from apps.cadastros.models import Credor
 from apps.pagamentos.domain_models import ProcessoStatus, StatusChoicesProcesso
 from apps.verbas_indenizatorias.models import AuxilioRepresentacao, Jeton, ReembolsoCombustivel
 

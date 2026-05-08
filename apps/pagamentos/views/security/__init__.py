@@ -37,7 +37,7 @@ def _resolve_documento(tipo_documento, documento_id):
         documento = get_object_or_404(DevolucaoProcessual, id=documento_id)
         return documento, documento.processo
     if tipo_documento == "fiscal":
-        from retencoes.models import DocumentoFiscal
+        from apps.retencoes.models import DocumentoFiscal
 
         documento = get_object_or_404(DocumentoFiscal, id=documento_id)
         documento_vinculado = documento.documento_vinculado

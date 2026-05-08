@@ -1,7 +1,7 @@
 """Painel GET de liquidações (ateste de notas fiscais)."""
 
-from retencoes.filters import DocumentoFiscalFilter
-from retencoes.models import DocumentoFiscal
+from apps.retencoes.filters import DocumentoFiscalFilter
+from apps.retencoes.models import DocumentoFiscal
 from apps.pagamentos.views.shared import render_filtered_list
 
 

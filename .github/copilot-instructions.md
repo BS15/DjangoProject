@@ -17,8 +17,8 @@ Your code MUST adhere to the strict architectural paradigms defined below. Failu
 ---
 
 ## 3. The Backend Architecture (Modular & Decoupled)
-The monolithic `processos` app has been shattered. The system is divided into isolated domains: `fluxo` (Core), `suprimentos`, `verbas_indenizatorias`, `fiscal`, `commons`, and `credores`.
-- **Strict One-Way Dependencies:** Satellite apps (`verbas`, `suprimentos`) can import from `commons` or `credores`, but avoid circular dependencies with `fluxo` wherever possible.
+The monolithic `processos` app has been shattered. The system is divided into isolated domains: `fluxo` (Core), `suprimentos`, `verbas_indenizatorias`, `retencoes`, `commons`, and `cadastros`.
+- **Strict One-Way Dependencies:** Satellite apps (`verbas`, `suprimentos`) can import from `commons` or `cadastros`, but avoid circular dependencies with `fluxo` wherever possible.
 
 ### The "Manager-Worker" View Paradigm
 Do NOT use standard Django "Fat Views" (e.g., writing business logic inside a single `views.py` file). Views are strictly separated by HTTP method:

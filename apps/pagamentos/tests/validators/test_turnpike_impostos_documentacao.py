@@ -4,7 +4,7 @@ from decimal import Decimal
 import pytest
 from django.core.files.base import ContentFile
 
-from retencoes.models import CodigosImposto, DocumentoPagamentoImposto, RetencaoImposto
+from apps.retencoes.models import CodigosImposto, DocumentoPagamentoImposto, RetencaoImposto
 from apps.pagamentos.validators import verificar_turnpike
 
 

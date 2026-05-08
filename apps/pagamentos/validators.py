@@ -7,7 +7,6 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from pypdf import PdfReader
 
-from commons.shared.file_validators import validar_arquivo_seguro
 from commons.shared.text_tools import format_brl_currency
 from apps.pagamentos.domain_models.processos import (
     STATUS_PROCESSO_BLOQUEADOS_FORM,
@@ -38,7 +37,7 @@ def validar_completude_recolhimento_impostos(processo):
     if "IMPOSTO" not in tipo_pagamento_nome:
         return []
 
-    from retencoes.services.impostos import verificar_completude_documentos_impostos
+    from apps.retencoes.services.impostos import verificar_completude_documentos_impostos
 
     pendentes = verificar_completude_documentos_impostos(processo)
     if not pendentes:
@@ -197,36 +196,6 @@ def verificar_turnpike(processo, status_anterior, status_novo):
     return erros
 
 
-def verificar_turnpike_diaria(diaria, status_anterior, novo_status_str):
-    """Valida transições de status permitidas para diárias.
-
-    A função retorna lista de erros; quando vazia, a transição está autorizada.
-    """
-    erros = []
-    novo_status_upper = novo_status_str.upper()
-
-    transicoes_validas = {
-        '': ['SOLICITADA'],
-        'SOLICITADA': ['APROVADA', 'REJEITADA'],
-        'APROVADA': ['ENVIADA PARA PAGAMENTO', 'SOLICITADA'],
-        'ENVIADA PARA PAGAMENTO': ['PAGA', 'APROVADA'],
-        'PAGA': [],
-    }
-
-    if status_anterior:
-        status_anterior_upper = status_anterior.upper()
-        if status_anterior_upper in transicoes_validas and novo_status_upper not in transicoes_validas[status_anterior_upper]:
-            permitidas = ', '.join(transicoes_validas.get(status_anterior_upper, [])) or 'nenhuma'
-            erros.append(
-                (
-                    f"Transição inválida de '{status_anterior_upper}' para '{novo_status_upper}'. "
-                    f"Transições permitidas: {permitidas}."
-                )
-            )
-
-    return erros
-
-
 def validar_regras_processo(cleaned_data):
     """
     Valida regras de negócio do formulário de processo.
@@ -253,20 +222,3 @@ def validar_regras_processo(cleaned_data):
     return errors
 
 
-def validar_regras_suprimento(cleaned_data):
-    """
-    Valida regras de negócio do formulário de suprimento de fundos.
-
-    Retorna um dicionário no formato ``{campo: ValidationError}``.
-    """
-    errors = {}
-
-    inicio_periodo = cleaned_data.get('inicio_periodo')
-    fim_periodo = cleaned_data.get('fim_periodo')
-
-    if inicio_periodo and fim_periodo and fim_periodo < inicio_periodo:
-        errors['fim_periodo'] = ValidationError(
-            "O período final não pode ser anterior ao período inicial."
-        )
-
-    return errors

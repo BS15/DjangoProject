@@ -415,7 +415,7 @@ class Diaria(StatusVerbaDomainMixin, models.Model):
     def avancar_status(self, novo_status_str):
         """Avança status da diária com validação de turnpike específico."""
         from django.core.exceptions import ValidationError
-        from apps.pagamentos.validators import verificar_turnpike_diaria
+        from apps.verbas_indenizatorias.validators import verificar_turnpike_diaria
 
         status_anterior = self.status.status_choice if self.status else ''
         erros = verificar_turnpike_diaria(self, status_anterior, novo_status_str)

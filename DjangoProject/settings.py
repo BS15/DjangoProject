@@ -58,12 +58,17 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'commons.apps.CommonsConfig',
-    'cadastros.apps.CadastrosConfig',
+    'apps.cadastros.apps.CadastrosConfig',
     'apps.pagamentos.apps.PagamentosConfig',
     'apps.suprimentos.apps.SuprimentosConfig',
     'apps.verbas_indenizatorias.apps.VerbasIndenizatoriasConfig',
-        'retencoes.apps.RetencoesConfig',
+    'apps.retencoes.apps.RetencoesConfig',
 ]
+
+MIGRATION_MODULES = {
+    'cadastros': 'apps.cadastros.migrations',
+    'retencoes': 'apps.retencoes.migrations',
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

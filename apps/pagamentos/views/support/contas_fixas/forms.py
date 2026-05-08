@@ -2,7 +2,7 @@
 
 from django import forms
 
-from cadastros.models import ContaFixa
+from apps.cadastros.models import ContaFixa
 
 
 class ContaFixaForm(forms.ModelForm):

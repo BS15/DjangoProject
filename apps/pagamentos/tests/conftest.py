@@ -9,8 +9,8 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from pypdf import PdfWriter
 
-from cadastros.models import Credor
-from retencoes.models import DocumentoFiscal
+from apps.cadastros.models import Credor
+from apps.retencoes.models import DocumentoFiscal
 from apps.pagamentos.domain_models import (
     ComprovanteDePagamento,
     DocumentoProcesso,

@@ -7,7 +7,7 @@ from django.views.decorators.http import require_GET
 
 from commons.shared.query_tools import aplicar_filtro_por_opcao, resolver_parametros_ordenacao
 from commons.shared.text_tools import normalize_choice
-from retencoes.models import RetencaoImposto
+from apps.retencoes.models import RetencaoImposto
 from apps.pagamentos.domain_models import Contingencia, Processo, ProcessoStatus
 
 

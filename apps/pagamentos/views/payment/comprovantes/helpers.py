@@ -97,7 +97,7 @@ def _match_credor_por_contas(contas, agencia_orgao_norm, conta_orgao_norm, Conta
 
 def processar_pdf_comprovantes(pdf_file):
     """Processa comprovantes em PDF e retorna dados extraídos por página."""
-    from cadastros.models import Credor, ContasBancarias
+    from apps.cadastros.models import Credor, ContasBancarias
 
     cnpj_orgao = getattr(settings, 'ORGAO_CNPJ', '')
     agencia_orgao = getattr(settings, 'ORGAO_BANCO_AGENCIA', '')

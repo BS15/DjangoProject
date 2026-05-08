@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from cadastros.models import ContaFixa, FaturaMensal
+from apps.cadastros.models import ContaFixa, FaturaMensal
 from apps.pagamentos.domain_models import Processo
 
 from .forms import ContaFixaForm
