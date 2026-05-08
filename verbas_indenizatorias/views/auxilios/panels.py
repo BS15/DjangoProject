@@ -3,7 +3,7 @@
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, render
 
-from pagamentos.views.shared import render_filtered_list
+from apps.pagamentos.views.shared import render_filtered_list
 from verbas_indenizatorias.forms import AuxilioForm
 from verbas_indenizatorias.models import AuxilioRepresentacao
 from verbas_indenizatorias.filters import AuxilioFilter

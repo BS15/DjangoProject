@@ -7,8 +7,8 @@ from django.shortcuts import get_object_or_404, render
 from credores.filters import CredorFilter
 from credores.forms import CredorEditForm, CredorForm
 from credores.models import Credor
-from pagamentos.domain_models import Processo
-from pagamentos.views.shared import render_filtered_list
+from apps.pagamentos.domain_models import Processo
+from apps.pagamentos.views.shared import render_filtered_list
 
 
 @permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)

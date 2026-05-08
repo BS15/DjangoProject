@@ -7,7 +7,7 @@ from django.core.files.base import ContentFile
 from django.utils import timezone
 
 from commons.shared.document_services import obter_proxima_ordem_documento
-from pagamentos.models import DocumentoProcesso
+from apps.pagamentos.models import DocumentoProcesso
 from verbas_indenizatorias.models import DocumentoComprovacao, PrestacaoContasDiaria
 
 logger = logging.getLogger(__name__)

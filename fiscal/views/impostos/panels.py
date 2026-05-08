@@ -10,8 +10,8 @@ from django.shortcuts import redirect, render
 from commons.shared.query_tools import resolver_parametros_ordenacao
 from fiscal.filters import RetencaoIndividualFilter, RetencaoNotaFilter, RetencaoProcessoFilter
 from fiscal.models import DocumentoFiscal, DocumentoPagamentoImposto, RetencaoImposto
-from pagamentos.domain_models import Processo
-from pagamentos.views.shared import apply_filterset
+from apps.pagamentos.domain_models import Processo
+from apps.pagamentos.views.shared import apply_filterset
 
 DEFAULT_VIEW = "individual"
 VALID_VIEWS = {"individual", "nf", "processo"}

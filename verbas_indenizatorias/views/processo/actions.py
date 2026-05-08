@@ -12,9 +12,9 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
-from pagamentos.domain_models import Processo
-from pagamentos.forms import DocumentoFormSet, PendenciaFormSet, ProcessoForm
-from pagamentos.models import TiposDePagamento
+from apps.pagamentos.domain_models import Processo
+from apps.pagamentos.forms import DocumentoFormSet, PendenciaFormSet, ProcessoForm
+from apps.pagamentos.models import TiposDePagamento
 from commons.shared.logging_gradients import log_audit
 from verbas_indenizatorias.constants import STATUS_VERBA_REVISADA
 from verbas_indenizatorias.services.processo_integration import criar_processo_e_vincular_verbas

@@ -5,8 +5,8 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
-from pagamentos.domain_models import Processo
-from pagamentos.forms import DocumentoFormSet, PendenciaFormSet, ProcessoForm
+from apps.pagamentos.domain_models import Processo
+from apps.pagamentos.forms import DocumentoFormSet, PendenciaFormSet, ProcessoForm
 from .helpers import _montar_contexto_processo_verbas, _pode_gerenciar_processo_verbas_da_entidade
 
 

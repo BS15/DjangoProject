@@ -4,11 +4,11 @@ from django.urls import path
 
 from credores import imports as credores_import_views
 from desenvolvedor import views_desenvolvedor as dev_views
-from pagamentos.views.support import reports as relatorio_views
-from pagamentos.views.support import signatures as assinatura_views
-from pagamentos.views.support.contas_fixas import imports as conta_fixa_imports
-from pagamentos.views.support.contas_fixas import actions as conta_actions
-from pagamentos.views.support.contas_fixas import panels as conta_panels
+from apps.pagamentos.views.support import reports as relatorio_views
+from apps.pagamentos.views.support import signatures as assinatura_views
+from apps.pagamentos.views.support.contas_fixas import imports as conta_fixa_imports
+from apps.pagamentos.views.support.contas_fixas import actions as conta_actions
+from apps.pagamentos.views.support.contas_fixas import panels as conta_panels
 from credores import actions as credor_actions
 from credores import panels as credor_panels
 from suprimentos.views.cadastro import actions as suprimento_cadastro_actions

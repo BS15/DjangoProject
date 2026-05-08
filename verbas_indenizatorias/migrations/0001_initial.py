@@ -5,7 +5,7 @@ import django.db.models.deletion
 import django.utils.timezone
 import commons.shared.file_validators
 from commons.shared.storage_utils import caminho_documento
-import pagamentos.validators
+import apps.pagamentos.validators
 import simple_history.models
 from decimal import Decimal
 from django.conf import settings

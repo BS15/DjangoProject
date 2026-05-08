@@ -11,11 +11,11 @@ from fiscal.services.impostos_relatorios import (
     gerar_relatorio_retencoes_agrupamento_pdf,
     gerar_relatorio_retencoes_mensal_csv,
 )
-from pagamentos.domain_models import TiposDeDocumento, TiposDePagamento
+from apps.pagamentos.domain_models import TiposDeDocumento, TiposDePagamento
 
 if TYPE_CHECKING:
     from fiscal.models import RetencaoImposto
-    from pagamentos.domain_models import Processo
+    from apps.pagamentos.domain_models import Processo
 
 DOC_GUIA = "GUIA DE RECOLHIMENTO DE IMPOSTOS"
 DOC_COMPROVANTE = "COMPROVANTE DE RECOLHIMENTO DE IMPOSTOS"

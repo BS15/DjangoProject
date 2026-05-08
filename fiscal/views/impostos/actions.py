@@ -14,7 +14,7 @@ from fiscal.services.impostos import (
     anexar_relatorio_agrupamento_retencoes_no_processo,
     anexar_guia_comprovante_relatorio_em_processos,
 )
-from pagamentos.domain_models import Processo, StatusChoicesProcesso, TiposDePagamento
+from apps.pagamentos.domain_models import Processo, StatusChoicesProcesso, TiposDePagamento
 import logging
 
 logger = logging.getLogger(__name__)

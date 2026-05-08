@@ -3,7 +3,7 @@
 import pytest
 from django.core.exceptions import ValidationError
 
-from pagamentos.domain_models import ProcessoStatus
+from apps.pagamentos.domain_models import ProcessoStatus
 from verbas_indenizatorias.validators import validar_vinculo_inicial_em_processo_selado
 
 

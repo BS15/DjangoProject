@@ -79,7 +79,7 @@ def encerrar_prestacao_suprimento(prestacao, user):
     """
     from suprimentos.models import PrestacaoContasSuprimento
     from suprimentos.views.helpers import _atualizar_status_apos_fechamento
-    from pagamentos.models import Devolucao
+    from apps.pagamentos.models import Devolucao
 
     if prestacao.status == PrestacaoContasSuprimento.STATUS_ENCERRADA:
         raise ValidationError("Esta prestação de contas já está encerrada.")

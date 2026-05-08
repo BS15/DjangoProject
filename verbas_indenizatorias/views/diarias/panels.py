@@ -5,8 +5,8 @@ from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_GET
 
 from commons.shared.query_tools import resolver_parametros_ordenacao
-from pagamentos.domain_models import Processo, STATUS_PROCESSO_PRE_AUTORIZACAO
-from pagamentos.views.shared import render_filtered_list
+from apps.pagamentos.domain_models import Processo, STATUS_PROCESSO_PRE_AUTORIZACAO
+from apps.pagamentos.views.shared import render_filtered_list
 from verbas_indenizatorias.forms import ComprovanteDiariaFormSet, DiariaComSolicitacaoAssinadaForm, DiariaForm
 from verbas_indenizatorias.models import Diaria, PrestacaoContasDiaria
 from verbas_indenizatorias.filters import DiariaFilter

@@ -27,7 +27,7 @@ def test_proxima_ordem_com_documentos(processo_factory, add_documento_processo):
 
 @pytest.mark.django_db
 def test_cria_tipo_quando_nao_existe(processo_factory):
-    from pagamentos.domain_models import TiposDocumento
+    from apps.pagamentos.domain_models import TiposDocumento
     processo = processo_factory()
     nome = "TIPO UNICO XPTO"
     tipo = obter_ou_criar_tipo_documento(nome, tipo_pagamento=processo.tipo_pagamento)
@@ -37,7 +37,7 @@ def test_cria_tipo_quando_nao_existe(processo_factory):
 
 @pytest.mark.django_db
 def test_retorna_tipo_especifico_quando_existe(processo_factory):
-    from pagamentos.domain_models import TiposDocumento
+    from apps.pagamentos.domain_models import TiposDocumento
     processo = processo_factory()
     nome = "NOTA FISCAL SERVICO"
     TiposDocumento.objects.create(tipo_documento=nome, tipo_pagamento=processo.tipo_pagamento)
@@ -48,7 +48,7 @@ def test_retorna_tipo_especifico_quando_existe(processo_factory):
 
 @pytest.mark.django_db
 def test_retorna_tipo_geral_quando_especifico_nao_existe(processo_factory):
-    from pagamentos.domain_models import TiposDocumento
+    from apps.pagamentos.domain_models import TiposDocumento
     processo = processo_factory()
     nome = "RECIBO PADRAO"
     TiposDocumento.objects.create(tipo_documento=nome, tipo_pagamento=None)
@@ -59,7 +59,7 @@ def test_retorna_tipo_geral_quando_especifico_nao_existe(processo_factory):
 
 @pytest.mark.django_db
 def test_sem_tipo_pagamento_usa_tipo_geral():
-    from pagamentos.domain_models import TiposDocumento
+    from apps.pagamentos.domain_models import TiposDocumento
     nome = "DOCUMENTO GERAL ABC"
     TiposDocumento.objects.create(tipo_documento=nome, tipo_pagamento=None)
     tipo = obter_ou_criar_tipo_documento(nome)
@@ -69,7 +69,7 @@ def test_sem_tipo_pagamento_usa_tipo_geral():
 
 @pytest.mark.django_db
 def test_case_insensitive_lookup(processo_factory):
-    from pagamentos.domain_models import TiposDocumento
+    from apps.pagamentos.domain_models import TiposDocumento
     processo = processo_factory()
     TiposDocumento.objects.create(tipo_documento="CONTRATO DE SERVICO", tipo_pagamento=None)
     tipo = obter_ou_criar_tipo_documento("contrato de servico")

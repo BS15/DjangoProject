@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, render
 
-from pagamentos.views.shared import render_filtered_list
+from apps.pagamentos.views.shared import render_filtered_list
 from verbas_indenizatorias.filters import TabelaValoresUnitariosFilter
 from verbas_indenizatorias.models import Tabela_Valores_Unitarios_Verbas_Indenizatorias
 from .forms import TabelaValoresUnitariosForm

@@ -3,7 +3,7 @@
 import django.core.validators
 import django.db.models.deletion
 from commons.shared.storage_utils import caminho_documento
-import pagamentos.validators
+import apps.pagamentos.validators
 import simple_history.models
 from django.conf import settings
 from django.db import migrations, models

@@ -1,7 +1,7 @@
 """Filtros de listagem para o domínio fiscal (retenções e documentos fiscais)."""
 
 import django_filters
-from pagamentos.filters import (
+from apps.pagamentos.filters import (
     BaseStyledFilterSet,
     boolean_filter,
     exact_text_filter,
@@ -11,7 +11,7 @@ from pagamentos.filters import (
 )
 from credores.models import Credor
 from fiscal.models import DocumentoFiscal, RetencaoImposto, CodigosImposto, StatusChoicesRetencoes
-from pagamentos.domain_models import Processo
+from apps.pagamentos.domain_models import Processo
 
 
 class RetencaoNotaFilter(BaseStyledFilterSet):

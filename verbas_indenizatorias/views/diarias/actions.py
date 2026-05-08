@@ -12,8 +12,8 @@ from django.views.decorators.http import require_POST
 from django.core.exceptions import ValidationError
 from django.utils.http import url_has_allowed_host_and_scheme
 
-from pagamentos.domain_models import Processo
-from pagamentos.services.cancelamentos import cancelar_verba, extrair_dados_devolucao_do_post
+from apps.pagamentos.domain_models import Processo
+from apps.pagamentos.services.cancelamentos import cancelar_verba, extrair_dados_devolucao_do_post
 from verbas_indenizatorias.constants import (
     STATUS_VERBA_APROVADA,
     STATUS_VERBA_RASCUNHO,

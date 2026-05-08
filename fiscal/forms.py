@@ -6,7 +6,7 @@ Este módulo define formulários para cadastro, edição e validação de notas 
 from django import forms
 from django.forms import inlineformset_factory
 from fiscal.models import DocumentoFiscal, RetencaoImposto
-from pagamentos.domain_models import Processo
+from apps.pagamentos.domain_models import Processo
 
 
 class DocumentoFiscalForm(forms.ModelForm):

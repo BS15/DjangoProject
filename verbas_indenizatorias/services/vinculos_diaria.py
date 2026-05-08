@@ -5,7 +5,7 @@ from django.db import transaction
 from django.db.models import DecimalField, Sum
 from django.db.models.functions import Coalesce
 
-from pagamentos.domain_models import STATUS_PROCESSO_PRE_AUTORIZACAO, TiposDePagamento
+from apps.pagamentos.domain_models import STATUS_PROCESSO_PRE_AUTORIZACAO, TiposDePagamento
 from verbas_indenizatorias.models import AuxilioRepresentacao, Diaria, Jeton, ReembolsoCombustivel
 
 _PROCESSO_STATUS_PRE_AUTORIZACAO_VALUES = {status.value for status in STATUS_PROCESSO_PRE_AUTORIZACAO}

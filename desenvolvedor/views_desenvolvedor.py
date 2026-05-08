@@ -29,7 +29,7 @@ from credores.imports import (
 from credores.models import CargosFuncoes, ContasBancarias, Credor
 from fiscal.models import CodigosImposto, DocumentoFiscal, RetencaoImposto, StatusChoicesRetencoes
 from fiscal.models import LiquidacaoDocumentoFiscal
-from pagamentos.domain_models import (
+from apps.pagamentos.domain_models import (
     Boleto_Bancario,
     DocumentoOrcamentario,
     FormasDePagamento,
@@ -39,10 +39,10 @@ from pagamentos.domain_models import (
     TiposDeDocumento,
     TiposDePagamento,
 )
-from pagamentos.views.support.contas_fixas.imports import download_template_csv_contas
+from apps.pagamentos.views.support.contas_fixas.imports import download_template_csv_contas
 from commons.shared.text_tools import format_brl_currency
 from commons.shared.pdf_tools import gerar_documento_pdf
-from pagamentos.pdf_generators import FLUXO_DOCUMENT_REGISTRY
+from apps.pagamentos.pdf_generators import FLUXO_DOCUMENT_REGISTRY
 from suprimentos.pdf_generators import SUPRIMENTOS_DOCUMENT_REGISTRY
 from verbas_indenizatorias.models import Diaria, MeiosDeTransporte, StatusChoicesVerbasIndenizatorias
 from verbas_indenizatorias.pdf_generators import VERBAS_DOCUMENT_REGISTRY

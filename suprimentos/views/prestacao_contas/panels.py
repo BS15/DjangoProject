@@ -10,7 +10,7 @@ from django.views.decorators.http import require_GET
 
 from suprimentos.models import PrestacaoContasSuprimento, SuprimentoDeFundos
 from suprimentos.filters import PrestacaoSuprimentoReviewFilter, SuprimentoPainelFilter
-from pagamentos.views.shared import render_filtered_list
+from apps.pagamentos.views.shared import render_filtered_list
 from ..helpers import _pode_acessar_suprimento, _suprimento_encerrado
 from suprimentos.forms import DespesaSuprimentoForm, EnviarPrestacaoSuprimentoForm
 

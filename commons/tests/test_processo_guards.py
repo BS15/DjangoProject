@@ -3,7 +3,7 @@
 import pytest
 
 from commons.shared.processo_guards import is_processo_selado
-from pagamentos.domain_models import ProcessoStatus
+from apps.pagamentos.domain_models import ProcessoStatus
 
 
 # --- is_processo_selado ---

@@ -11,7 +11,7 @@ from commons.shared.integracoes.autentique import (
     enviar_documento_para_assinatura,
     verificar_e_baixar_documento,
 )
-from pagamentos.domain_models import AssinaturaEletronica as AssinaturaAutentique
+from apps.pagamentos.domain_models import AssinaturaEletronica as AssinaturaAutentique
 from verbas_indenizatorias.models import Diaria
 
 logger = logging.getLogger(__name__)

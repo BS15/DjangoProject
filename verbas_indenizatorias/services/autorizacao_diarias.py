@@ -2,7 +2,7 @@
 
 from django.db.models import Prefetch
 
-from pagamentos.models import AssinaturaEletronica
+from apps.pagamentos.models import AssinaturaEletronica
 from verbas_indenizatorias.constants import STATUS_VERBA_SOLICITADA
 from verbas_indenizatorias.models import Diaria
 

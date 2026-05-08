@@ -1,7 +1,7 @@
 """Filtros de listagem para o domínio de verbas indenizatórias."""
 
 import django_filters
-from pagamentos.filters import BaseStyledFilterSet, date_range_filter, icontains_filter
+from apps.pagamentos.filters import BaseStyledFilterSet, date_range_filter, icontains_filter
 from verbas_indenizatorias.models import (
     Diaria,
     ReembolsoCombustivel,

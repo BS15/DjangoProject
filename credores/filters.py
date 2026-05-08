@@ -1,6 +1,6 @@
 """Filtros de listagem para o domínio de credores."""
 
-from pagamentos.filters import BaseStyledFilterSet, icontains_filter
+from apps.pagamentos.filters import BaseStyledFilterSet, icontains_filter
 from credores.models import Credor
 
 

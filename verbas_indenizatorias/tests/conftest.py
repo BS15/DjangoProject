@@ -10,7 +10,7 @@ from pypdf import PdfWriter
 import io
 
 from credores.models import Credor
-from pagamentos.domain_models import (
+from apps.pagamentos.domain_models import (
     FormasDePagamento,
     Processo,
     ProcessoStatus,
