@@ -77,7 +77,7 @@ def agrupar_retencoes_action(request: HttpRequest) -> HttpResponse:
         )
 
         tipo_pagamento_impostos, _ = TiposDePagamento.objects.get_or_create(
-            tipo_de_pagamento="IMPOSTOS"
+            tipo_pagamento="IMPOSTOS"
         )
 
         novo_processo = Processo.objects.create(

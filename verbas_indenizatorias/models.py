@@ -22,6 +22,18 @@ from verbas_indenizatorias.validators import (
 )
 
 
+def _expandir_update_fields(update_fields, campos_sensiveis):
+    """Normaliza update_fields incluindo attnames de FKs (campo → campo_id)."""
+    if update_fields is None:
+        return campos_sensiveis
+    expandido = set(update_fields)
+    for campo in list(expandido):
+        attname = f"{campo}_id"
+        if attname in campos_sensiveis:
+            expandido.add(attname)
+    return expandido & campos_sensiveis
+
+
 class SealedMutationQuerySet(models.QuerySet):
     """Bloqueia mutações em massa que contornam save/clean do domínio."""
 
@@ -363,7 +375,7 @@ class Diaria(StatusVerbaDomainMixin, models.Model):
             return
 
         campos_sensiveis = self._CAMPOS_SENSIVEIS_POS_PAGAMENTO
-        campos_avaliados = set(update_fields) & campos_sensiveis if update_fields is not None else campos_sensiveis
+        campos_avaliados = _expandir_update_fields(update_fields, campos_sensiveis)
         alterados = [campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)]
 
         status_processo = ""
@@ -620,7 +632,7 @@ class ReembolsoCombustivel(StatusVerbaDomainMixin, models.Model):
             return
 
         campos_sensiveis = self._CAMPOS_SENSIVEIS_POS_PAGAMENTO
-        campos_avaliados = set(update_fields) & campos_sensiveis if update_fields is not None else campos_sensiveis
+        campos_avaliados = _expandir_update_fields(update_fields, campos_sensiveis)
         alterados = [campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)]
 
         if alterados:
@@ -720,7 +732,7 @@ class Jeton(StatusVerbaDomainMixin, models.Model):
             return
 
         campos_sensiveis = self._CAMPOS_SENSIVEIS_POS_PAGAMENTO
-        campos_avaliados = set(update_fields) & campos_sensiveis if update_fields is not None else campos_sensiveis
+        campos_avaliados = _expandir_update_fields(update_fields, campos_sensiveis)
         alterados = [campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)]
 
         if alterados:
@@ -819,7 +831,7 @@ class AuxilioRepresentacao(StatusVerbaDomainMixin, models.Model):
             return
 
         campos_sensiveis = self._CAMPOS_SENSIVEIS_POS_PAGAMENTO
-        campos_avaliados = set(update_fields) & campos_sensiveis if update_fields is not None else campos_sensiveis
+        campos_avaliados = _expandir_update_fields(update_fields, campos_sensiveis)
         alterados = [campo for campo in campos_avaliados if getattr(self, campo) != getattr(original, campo)]
 
         if alterados:

@@ -42,8 +42,8 @@ def vincular_comprovantes_action(request):
             )
 
         tipo_comprovante, _ = TiposDeDocumento.objects.get_or_create(
-            tipo_de_documento__iexact="Comprovante de Pagamento",
-            defaults={"tipo_de_documento": "Comprovante de Pagamento"},
+            tipo_documento__iexact="Comprovante de Pagamento",
+            defaults={"tipo_documento": "Comprovante de Pagamento"},
         )
 
         temp_paths_to_delete = []

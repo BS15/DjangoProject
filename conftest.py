@@ -1,4 +1,4 @@
-"""Fixtures e helpers compartilhados para a suite de testes de pagamentos."""
+"""Fixtures compartilhadas entre todas as suites de testes do projeto."""
 
 import io
 import uuid
@@ -10,9 +10,7 @@ from django.core.files.base import ContentFile
 from pypdf import PdfWriter
 
 from credores.models import Credor
-from fiscal.models import DocumentoFiscal
 from pagamentos.domain_models import (
-    ComprovanteDePagamento,
     DocumentoProcesso,
     FormasDePagamento,
     Processo,
@@ -24,13 +22,17 @@ from pagamentos.domain_models import (
 
 
 def _pdf_bytes(paginas=1):
-    """Gera bytes de PDF válido com o número de páginas especificado."""
     writer = PdfWriter()
     for _ in range(paginas):
         writer.add_blank_page(width=200, height=200)
-    buffer = io.BytesIO()
-    writer.write(buffer)
-    return buffer.getvalue()
+    buf = io.BytesIO()
+    writer.write(buf)
+    return buf.getvalue()
+
+
+@pytest.fixture(scope="session")
+def pdf_bytes_session():
+    return _pdf_bytes()
 
 
 @pytest.fixture
@@ -47,7 +49,6 @@ def user_factory(db):
             password="x",
             email=f"{username}@example.com",
         )
-
     return factory
 
 
@@ -77,7 +78,6 @@ def processo_factory(db):
             tipo_pagamento=tipo_pagamento,
             status=status_obj,
         )
-
     return factory
 
 
@@ -88,7 +88,6 @@ def tipo_documento_factory(db):
             tipo_documento=nome,
             tipo_pagamento=tipo_pagamento,
         )
-
     return factory
 
 
@@ -111,50 +110,4 @@ def add_documento_processo(db, tipo_documento_factory, pdf_bytes):
             ordem=(processo.documentos.count() + 1),
             arquivo=ContentFile(conteudo, name=nome_arquivo),
         )
-
-    return factory
-
-
-@pytest.fixture
-def add_comprovante(db, tipo_documento_factory, pdf_bytes):
-    def factory(processo, *, valor_pago):
-        tipo = TiposDeDocumento.objects.filter(
-            tipo_documento__iexact="COMPROVANTE DE PAGAMENTO",
-            tipo_pagamento=processo.tipo_pagamento,
-        ).first() or tipo_documento_factory("COMPROVANTE DE PAGAMENTO", tipo_pagamento=processo.tipo_pagamento)
-
-        nome = f"comprovante_{uuid.uuid4().hex[:8]}.pdf"
-        DocumentoProcesso.objects.create(
-            processo=processo,
-            tipo=tipo,
-            ordem=(processo.documentos.count() + 1),
-            arquivo=ContentFile(pdf_bytes, name=nome),
-        )
-
-        return ComprovanteDePagamento.objects.create(
-            processo=processo,
-            tipo=tipo,
-            ordem=1,
-            arquivo=ContentFile(pdf_bytes, name=nome),
-            valor_pago=Decimal(valor_pago),
-            numero_comprovante=uuid.uuid4().hex[:10],
-        )
-
-    return factory
-
-
-@pytest.fixture
-def add_nota_fiscal(db):
-    def factory(processo, *, atestada, valor_bruto=Decimal("100.00"), valor_liquido=Decimal("100.00")):
-        return DocumentoFiscal.objects.create(
-            processo=processo,
-            nome_emitente=processo.credor,
-            cnpj_emitente=processo.credor.cpf_cnpj,
-            numero_nota_fiscal=uuid.uuid4().hex[:12],
-            data_emissao="2026-04-01",
-            valor_bruto=Decimal(valor_bruto),
-            valor_liquido=Decimal(valor_liquido),
-            atestada=atestada,
-        )
-
     return factory

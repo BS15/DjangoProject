@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.db import DatabaseError, transaction
 from django.http import HttpRequest, HttpResponse, JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
 from decimal import Decimal, InvalidOperation
@@ -260,7 +260,7 @@ def editar_processo_documentos_action(request: HttpRequest, pk: int) -> HttpResp
 @permission_required("pagamentos.pode_editar_processos_pagamento", raise_exception=True)
 def extrair_codigo_barras_documento_action(request: HttpRequest, pk: int, documento_id: int) -> HttpResponse:
     """Extrai e persiste o código de barras de um documento já anexado ao processo."""
-    processo, _, redirecionamento, _ = _obter_contexto_edicao(request, pk)
+    processo, _, redirecionamento, _ = obter_contexto_edicao(request, pk)
     if redirecionamento:
         return redirecionamento
 
@@ -353,7 +353,7 @@ def _extrair_e_persistir_barcode(documento: DocumentoProcesso) -> bool:
 @permission_required("pagamentos.pode_editar_processos_pagamento", raise_exception=True)
 def extrair_codigos_barras_lote_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Extrai e persiste códigos de barras de todos os documentos BOLETO BANCÁRIO do processo."""
-    processo, _, redirecionamento, _ = _obter_contexto_edicao(request, pk)
+    processo, _, redirecionamento, _ = obter_contexto_edicao(request, pk)
     if redirecionamento:
         return redirecionamento
 
@@ -395,7 +395,7 @@ def extrair_codigos_barras_lote_action(request: HttpRequest, pk: int) -> HttpRes
 @permission_required("pagamentos.pode_editar_processos_pagamento", raise_exception=True)
 def editar_processo_pendencias_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Persiste pendências administrativas do processo."""
-    processo, _, redirecionamento, somente_documentos = _obter_contexto_edicao(request, pk)
+    processo, _, redirecionamento, somente_documentos = obter_contexto_edicao(request, pk)
     if redirecionamento:
         return redirecionamento
     if somente_documentos:

@@ -26,13 +26,13 @@ DOC_RELATORIO_AGRUPAMENTO = "RELATÓRIO DE RETENÇÕES AGRUPADAS"
 def _get_tipo_documento_impostos(nome_tipo: str) -> TiposDeDocumento:
     """Obtém ou cria o tipo de documento de imposto pelo nome, vinculado ao tipo de pagamento 'IMPOSTOS'."""
     tipo_pagamento_impostos, _ = TiposDePagamento.objects.get_or_create(
-        tipo_de_pagamento__iexact="IMPOSTOS",
-        defaults={"tipo_de_pagamento": "IMPOSTOS"},
+        tipo_pagamento__iexact="IMPOSTOS",
+        defaults={"tipo_pagamento": "IMPOSTOS"},
     )
     tipo_documento, _ = TiposDeDocumento.objects.get_or_create(
-        tipo_de_documento__iexact=nome_tipo,
-        tipo_de_pagamento=tipo_pagamento_impostos,
-        defaults={"tipo_de_documento": nome_tipo},
+        tipo_documento__iexact=nome_tipo,
+        tipo_pagamento=tipo_pagamento_impostos,
+        defaults={"tipo_documento": nome_tipo},
     )
     return tipo_documento
 

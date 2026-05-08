@@ -257,6 +257,9 @@ class RetencaoImposto(models.Model):
             elif self.codigo.regra_competencia == 'pagamento':
                 data_base = self.data_pagamento or self.nota_fiscal.processo.data_pagamento
             if data_base:
+                if isinstance(data_base, str):
+                    import datetime
+                    data_base = datetime.date.fromisoformat(data_base)
                 self.competencia = date(data_base.year, data_base.month, 1)
         super().save(*args, **kwargs)
 
