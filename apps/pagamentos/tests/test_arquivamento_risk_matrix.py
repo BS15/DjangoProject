@@ -25,7 +25,7 @@ def test_arquivamento_falha_sem_documentos_validos(processo_factory, user_factor
 def test_arquivamento_aborta_quando_consolidado_tem_zero_bytes(monkeypatch, processo_factory, user_factory):
     processo = processo_factory(status=ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO)
     monkeypatch.setattr(
-        "pagamentos.services.arquivamento.gerar_pdf_consolidado_processo",
+        "apps.pagamentos.services.arquivamento.gerar_pdf_consolidado_processo",
         lambda _processo: io.BytesIO(b""),
     )
 
@@ -41,7 +41,7 @@ def test_arquivamento_aborta_quando_consolidado_tem_zero_bytes(monkeypatch, proc
 def test_arquivamento_aborta_em_falha_de_leitura_cloud(monkeypatch, processo_factory, user_factory):
     processo = processo_factory(status=ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO)
     monkeypatch.setattr(
-        "pagamentos.services.arquivamento.gerar_pdf_consolidado_processo",
+        "apps.pagamentos.services.arquivamento.gerar_pdf_consolidado_processo",
         lambda _processo: _BufferComFalhaLeitura(),
     )
 
@@ -62,7 +62,7 @@ def test_arquivamento_rollback_mid_flight_ao_falhar_avanco_de_status(
 ):
     processo = processo_factory(status=ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO)
     monkeypatch.setattr(
-        "pagamentos.services.arquivamento.gerar_pdf_consolidado_processo",
+        "apps.pagamentos.services.arquivamento.gerar_pdf_consolidado_processo",
         lambda _processo: io.BytesIO(pdf_bytes),
     )
 

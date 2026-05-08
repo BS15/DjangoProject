@@ -4,6 +4,7 @@ import django.core.validators
 import django.db.models.deletion
 import commons.shared.file_validators
 from commons.shared.storage_utils import caminho_documento
+import apps.pagamentos as pagamentos
 import apps.pagamentos.validators
 import simple_history.models
 from django.conf import settings

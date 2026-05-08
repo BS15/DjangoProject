@@ -3,7 +3,7 @@
 from django.urls import path
 
 from credores import imports as credores_import_views
-from desenvolvedor import views_desenvolvedor as dev_views
+from apps.desenvolvedor import views_desenvolvedor as dev_views
 from apps.pagamentos.views.support import reports as relatorio_views
 from apps.pagamentos.views.support import signatures as assinatura_views
 from apps.pagamentos.views.support.contas_fixas import imports as conta_fixa_imports
