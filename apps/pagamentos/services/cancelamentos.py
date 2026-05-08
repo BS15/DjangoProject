@@ -151,7 +151,7 @@ def cancelar_verba(verba, justificativa: str, usuario, dados_devolucao: dict | N
 
 def cancelar_suprimento(suprimento, justificativa: str, usuario, dados_devolucao: dict | None = None):
     """Cancela suprimento de fundos e registra devolução se já estava encerrado."""
-    from suprimentos.models import StatusChoicesSuprimentoDeFundos
+    from apps.suprimentos.models import StatusChoicesSuprimentoDeFundos
 
     _validar_justificativa(justificativa)
     processo = getattr(suprimento, "processo", None)

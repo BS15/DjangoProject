@@ -8,8 +8,8 @@ from commons.shared.pdf_response import gerar_documento_bytes
 from commons.shared.signature_services import criar_assinatura_rascunho
 from django.core.files.base import ContentFile
 from apps.pagamentos.models import AssinaturaEletronica
-from suprimentos.pdf_generators import SUPRIMENTOS_DOCUMENT_REGISTRY
-from suprimentos.models import DocumentoSuprimentoDeFundos
+from apps.suprimentos.pdf_generators import SUPRIMENTOS_DOCUMENT_REGISTRY
+from apps.suprimentos.models import DocumentoSuprimentoDeFundos
 
 def gerar_e_anexar_recibo_suprimento(suprimento, criador):
     """Gera recibo de suprimento, anexa DocumentoSuprimentoDeFundos e cria rascunho de assinatura."""

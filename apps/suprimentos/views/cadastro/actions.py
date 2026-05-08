@@ -9,9 +9,9 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 
-from suprimentos.forms import SuprimentoForm
-from suprimentos.models import StatusChoicesSuprimentoDeFundos
-from suprimentos.services.processo_integration import criar_processo_para_suprimento
+from apps.suprimentos.forms import SuprimentoForm
+from apps.suprimentos.models import StatusChoicesSuprimentoDeFundos
+from apps.suprimentos.services.processo_integration import criar_processo_para_suprimento
 
 logger = logging.getLogger(__name__)
 

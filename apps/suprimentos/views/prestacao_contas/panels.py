@@ -8,11 +8,11 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
-from suprimentos.models import PrestacaoContasSuprimento, SuprimentoDeFundos
-from suprimentos.filters import PrestacaoSuprimentoReviewFilter, SuprimentoPainelFilter
+from apps.suprimentos.models import PrestacaoContasSuprimento, SuprimentoDeFundos
+from apps.suprimentos.filters import PrestacaoSuprimentoReviewFilter, SuprimentoPainelFilter
 from apps.pagamentos.views.shared import render_filtered_list
 from ..helpers import _pode_acessar_suprimento, _suprimento_encerrado
-from suprimentos.forms import DespesaSuprimentoForm, EnviarPrestacaoSuprimentoForm
+from apps.suprimentos.forms import DespesaSuprimentoForm, EnviarPrestacaoSuprimentoForm
 
 
 @require_GET

@@ -10,7 +10,7 @@ from django.db import transaction
 from commons.shared.text_tools import parse_brl_decimal
 from apps.pagamentos.domain_models import StatusChoicesProcesso
 from apps.pagamentos.services.processo_documentos import gerar_documentos_automaticos_processo
-from suprimentos.models import DespesaSuprimento, StatusChoicesSuprimentoDeFundos
+from apps.suprimentos.models import DespesaSuprimento, StatusChoicesSuprimentoDeFundos
 
 def _suprimento_encerrado(suprimento: Any) -> bool:
     """Indica se o suprimento está em status final de encerramento."""

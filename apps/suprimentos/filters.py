@@ -1,7 +1,7 @@
 """Filtros de listagem para o domínio de suprimentos de fundos."""
 
 from apps.pagamentos.filters import BaseStyledFilterSet, date_range_filter, icontains_filter
-from suprimentos.models import PrestacaoContasSuprimento, StatusChoicesSuprimentoDeFundos, SuprimentoDeFundos
+from apps.suprimentos.models import PrestacaoContasSuprimento, StatusChoicesSuprimentoDeFundos, SuprimentoDeFundos
 
 import django_filters
 

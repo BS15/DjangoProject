@@ -11,10 +11,10 @@ from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
 from django.core.exceptions import PermissionDenied
-from suprimentos.forms import DespesaSuprimentoForm, EnviarPrestacaoSuprimentoForm
-from suprimentos.models import PrestacaoContasSuprimento, SuprimentoDeFundos
+from apps.suprimentos.forms import DespesaSuprimentoForm, EnviarPrestacaoSuprimentoForm
+from apps.suprimentos.models import PrestacaoContasSuprimento, SuprimentoDeFundos
 from apps.pagamentos.services.cancelamentos import cancelar_suprimento, extrair_dados_devolucao_do_post
-from suprimentos.services.prestacao import (
+from apps.suprimentos.services.prestacao import (
     encerrar_prestacao_suprimento,
     enviar_prestacao_suprimento,
     obter_ou_criar_prestacao_suprimento,

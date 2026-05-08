@@ -12,7 +12,7 @@ from apps.pagamentos.models import (
     DocumentoProcesso,
     RegistroAcessoArquivoProcessual,
 )
-from suprimentos.models import DespesaSuprimento, PrestacaoContasSuprimento
+from apps.suprimentos.models import DespesaSuprimento, PrestacaoContasSuprimento
 from verbas_indenizatorias.models import (
     DocumentoAuxilio,
     DocumentoComprovacao,

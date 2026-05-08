@@ -6,8 +6,8 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from commons.shared.pdf_tools import gerar_documento_pdf
 from commons.shared.pdf_response import montar_resposta_pdf
-from suprimentos.models import SuprimentoDeFundos
-from suprimentos.pdf_generators import SUPRIMENTOS_DOCUMENT_REGISTRY
+from apps.suprimentos.models import SuprimentoDeFundos
+from apps.suprimentos.pdf_generators import SUPRIMENTOS_DOCUMENT_REGISTRY
 
 
 @permission_required("suprimentos.pode_gerir_prestacao_contas_suprimento", raise_exception=True)

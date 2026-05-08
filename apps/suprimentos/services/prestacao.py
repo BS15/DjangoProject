@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def obter_ou_criar_prestacao_suprimento(suprimento):
     """Obtém ou cria a prestação de contas do suprimento em estado aberto."""
-    from suprimentos.models import PrestacaoContasSuprimento
+    from apps.suprimentos.models import PrestacaoContasSuprimento
 
     prestacao, _ = PrestacaoContasSuprimento.objects.get_or_create(
         suprimento=suprimento,
@@ -26,7 +26,7 @@ def enviar_prestacao_suprimento(prestacao, comprovante, data_devolucao, user):
 
     Valida que o comprovante de devolução foi fornecido quando existe saldo remanescente.
     """
-    from suprimentos.models import PrestacaoContasSuprimento
+    from apps.suprimentos.models import PrestacaoContasSuprimento
 
     if prestacao.status == PrestacaoContasSuprimento.STATUS_ENCERRADA:
         raise ValidationError("Esta prestação de contas já foi encerrada.")
@@ -77,8 +77,8 @@ def encerrar_prestacao_suprimento(prestacao, user):
       3. Marca o suprimento como ENCERRADO.
       4. Fecha a prestação com status ENCERRADA.
     """
-    from suprimentos.models import PrestacaoContasSuprimento
-    from suprimentos.views.helpers import _atualizar_status_apos_fechamento
+    from apps.suprimentos.models import PrestacaoContasSuprimento
+    from apps.suprimentos.views.helpers import _atualizar_status_apos_fechamento
     from apps.pagamentos.models import Devolucao
 
     if prestacao.status == PrestacaoContasSuprimento.STATUS_ENCERRADA:

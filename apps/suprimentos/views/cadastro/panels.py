@@ -5,7 +5,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
-from suprimentos.forms import SuprimentoForm
+from apps.suprimentos.forms import SuprimentoForm
 
 
 @require_GET

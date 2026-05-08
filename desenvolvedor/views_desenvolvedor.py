@@ -43,7 +43,7 @@ from apps.pagamentos.views.support.contas_fixas.imports import download_template
 from commons.shared.text_tools import format_brl_currency
 from commons.shared.pdf_tools import gerar_documento_pdf
 from apps.pagamentos.pdf_generators import FLUXO_DOCUMENT_REGISTRY
-from suprimentos.pdf_generators import SUPRIMENTOS_DOCUMENT_REGISTRY
+from apps.suprimentos.pdf_generators import SUPRIMENTOS_DOCUMENT_REGISTRY
 from verbas_indenizatorias.models import Diaria, MeiosDeTransporte, StatusChoicesVerbasIndenizatorias
 from verbas_indenizatorias.pdf_generators import VERBAS_DOCUMENT_REGISTRY
 
