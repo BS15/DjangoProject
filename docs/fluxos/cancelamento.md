@@ -50,7 +50,7 @@ stateDiagram-v2
 **GET (spoke):** `cancelar_processo_spoke_view`  
 **POST (ação):** `cancelar_processo_action`  
 **Permissão:** `pagamentos.operador_contas_a_pagar`  
-**Serviço:** `registrar_cancelamento_processo` (`pagamentos/services/cancelamentos.py`)
+**Serviço:** `registrar_cancelamento_processo` (`apps/pagamentos/services/cancelamentos.py`)
 
 O botão "Cancelar Processo" aparece no hub `process_detail` para processos que ainda não estão cancelados.
 
@@ -77,7 +77,7 @@ Passos:
 
 ### 2. Cancelamento de Verba Indenizatória
 
-**Serviço:** `cancelar_verba` (`pagamentos/services/cancelamentos.py`)  
+**Serviço:** `cancelar_verba` (`apps/pagamentos/services/cancelamentos.py`)  
 **Entidades suportadas:** `Diaria`, `ReembolsoCombustivel`, `Jeton`, `AuxilioRepresentacao`
 
 | Verba | GET spoke | POST action | Permissão |
@@ -107,7 +107,7 @@ Passos comuns:
 **GET (spoke):** `cancelar_suprimento_spoke_view`  
 **POST (ação):** `cancelar_suprimento_action`  
 **Permissão:** `suprimentos.acesso_backoffice`  
-**Serviço:** `cancelar_suprimento` (`pagamentos/services/cancelamentos.py`)
+**Serviço:** `cancelar_suprimento` (`apps/pagamentos/services/cancelamentos.py`)
 
 Condição de pago: `status_choice == "ENCERRADO"`.
 
@@ -157,7 +157,7 @@ Histórico em `django-simple-history` em ambos os modelos.
 
 ### Serviço central
 
-`pagamentos/services/cancelamentos.py` concentra toda a lógica de negócio do cancelamento. As views são roteadoras; nenhuma lógica de mutação fica nas actions.
+`apps/pagamentos/services/cancelamentos.py` concentra toda a lógica de negócio do cancelamento. As views são roteadoras; nenhuma lógica de mutação fica nas actions.
 
 ```python
 # API pública do serviço
@@ -185,10 +185,10 @@ Todos os templates de cancelamento usam `enctype="multipart/form-data"` para sup
 
 | Componente | Localização |
 |-----------|------------|
-| Serviço central | `pagamentos/services/cancelamentos.py` |
-| Spoke/action de processo | `pagamentos/views/support/cancelamento/` |
-| Spokes/actions de verbas | `verbas_indenizatorias/views/{diarias,reembolsos,jetons,auxilios}/` |
-| Spoke/action de suprimento | `suprimentos/views/prestacao_contas/panels.py` e `actions.py` |
+| Serviço central | `apps/pagamentos/services/cancelamentos.py` |
+| Spoke/action de processo | `apps/pagamentos/views/support/cancelamento/` |
+| Spokes/actions de verbas | `apps/verbas_indenizatorias/views/{diarias,reembolsos,jetons,auxilios}/` |
+| Spoke/action de suprimento | `apps/suprimentos/views/prestacao_contas/panels.py` e `actions.py` |
 | Partial de devolução | `commons/templates/commons/partials/_cancelamento_devolucao.html` |
-| Modelos (`CancelamentoProcessual`, `DevolucaoProcessual`) | `pagamentos/domain_models/suporte.py` |
+| Modelos (`CancelamentoProcessual`, `DevolucaoProcessual`) | `apps/pagamentos/domain_models/suporte.py` |
 | Template spoke processo | `pagamentos/templates/pagamentos/cancelar_processo_spoke.html` |

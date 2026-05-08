@@ -26,7 +26,7 @@ Consulte também o [Catálogo de Permissões e Grupos](catalogo_permissoes_grupo
 
 | Ação Operacional | Permissão Requerida | Perfil Autorizado | Risco Mitigado |
 |---|---|---|---|
-| Agrupamento de retenções, anexação documental e geração/transmissão EFD-Reinf | `fiscal.acesso_backoffice` | Operador Fiscal | Acesso não autorizado a dados tributários e geração de obrigação acessória. |
+| Agrupamento de retenções, anexação documental e geração/transmissão EFD-Reinf | `retencoes.acesso_backoffice` | Operador Fiscal | Acesso não autorizado a dados tributários e geração de obrigação acessória. |
 
 ### Domínio Verbas Indenizatórias
 
@@ -51,7 +51,7 @@ Consulte também o [Catálogo de Permissões e Grupos](catalogo_permissoes_grupo
 
 ### Domínio Pagamentos
 
-Observação técnica: o workflow financeiro principal usa codenames `pagamentos.*` declarados no modelo de domínio financeiro em `pagamentos/domain_models/processos.py`. O subdomínio de credores também usa `pagamentos.operador_contas_a_pagar`.
+Observação técnica: o workflow financeiro principal usa codenames `pagamentos.*` declarados no modelo de domínio financeiro em `apps/pagamentos/domain_models/processos.py`. O subdomínio de credores também usa `pagamentos.operador_contas_a_pagar`.
 
 | Ação Operacional | Permissão Requerida | Perfil Autorizado | Risco Mitigado |
 |---|---|---|---|

@@ -2,7 +2,7 @@
 
 from django.urls import path
 
-from desenvolvedor import views_desenvolvedor as dev_views
+from apps.desenvolvedor import views_desenvolvedor as dev_views
 
 urlpatterns = [
     path('processo/<int:pk>/gerar-dummy-pdf/', dev_views.gerar_dummy_pdf_view, name='gerar_dummy_pdf'),

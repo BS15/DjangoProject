@@ -47,7 +47,7 @@ stateDiagram-v2
 ## 2. Painel de retenções (hub operacional fiscal)
 
 **View:** `painel_impostos_view` — GET `retencao-impostos/`  
-**Permissão:** `fiscal.acesso_backoffice`
+**Permissão:** `retencoes.acesso_backoffice`
 
 Três visões selecionáveis via `?visao=`:
 
@@ -74,7 +74,7 @@ O fluxo de agrupamento é composto por duas etapas consecutivas para garantir qu
 
 **Action:** `preparar_revisao_agrupamento_action`  
 **URL:** `POST impostos/preparar-revisao/`  
-**Permissão:** `fiscal.acesso_backoffice`
+**Permissão:** `retencoes.acesso_backoffice`
 
 Recebe os `retencao_ids` do formulário do painel. Valida que ao menos um ID foi enviado e redireciona para a página de revisão com os IDs como query param:
 
@@ -90,7 +90,7 @@ GET /impostos/revisar-agrupamento/?ids=1,2,3
 **View:** `revisar_agrupamento_retencoes_view`  
 **URL:** `GET impostos/revisar-agrupamento/?ids=1,2,3`  
 **Template:** `fiscal/revisar_agrupamento_retencoes.html`  
-**Permissão:** `fiscal.acesso_backoffice`
+**Permissão:** `retencoes.acesso_backoffice`
 
 A view:
 
@@ -115,7 +115,7 @@ O template exibe:
 
 **Action:** `agrupar_retencoes_action`  
 **URL:** `POST impostos/agrupar/`  
-**Permissão:** `fiscal.acesso_backoffice`
+**Permissão:** `retencoes.acesso_backoffice`
 
 Executado somente após confirmação explícita na página de revisão.
 
@@ -135,7 +135,7 @@ Redireciona para `editar_processo` do processo criado.
 
 ### Relatório PDF de agrupamento
 
-`anexar_relatorio_agrupamento_retencoes_no_processo` (em `fiscal/services/impostos.py`):
+`anexar_relatorio_agrupamento_retencoes_no_processo` (em `retencoes/services/impostos.py`):
 
 - Gera PDF via ReportLab com todos os campos canônicos de cada retenção.
 - Empurra todos os documentos existentes do processo uma posição (`ordem += 1`).
@@ -150,7 +150,7 @@ Redireciona para `editar_processo` do processo criado.
 
 **Action:** `anexar_documentos_retencoes_action`  
 **URL:** `POST impostos/anexar-documentos/`  
-**Permissão:** `fiscal.acesso_backoffice`
+**Permissão:** `retencoes.acesso_backoffice`
 
 **Entradas obrigatórias:**
 
@@ -178,10 +178,10 @@ Redireciona para `editar_processo` do processo criado.
 
 ## 6. Turnpike para avanço em comprovantes
 
-Na transição `LANÇADO - AGUARDANDO COMPROVANTE` → `PAGO - EM CONFERÊNCIA`, o validador `verificar_turnpike` (em `pagamentos/validators.py`) aplica regra adicional para processos do tipo IMPOSTOS:
+Na transição `LANÇADO - AGUARDANDO COMPROVANTE` → `PAGO - EM CONFERÊNCIA`, o validador `verificar_turnpike` (em `apps/pagamentos/validators.py`) aplica regra adicional para processos do tipo IMPOSTOS:
 
 1. Chama `validar_completude_recolhimento_impostos`.
-2. Que chama `verificar_completude_documentos_impostos` (em `fiscal/services/impostos.py`).
+2. Que chama `verificar_completude_documentos_impostos` (em `retencoes/services/impostos.py`).
 3. Bloqueia a transição se qualquer retenção vinculada ao processo não possuir `DocumentoPagamentoImposto` com os três arquivos preenchidos (`relatorio_retencoes`, `guia_recolhimento`, `comprovante_pagamento`).
 
 ---
@@ -190,10 +190,10 @@ Na transição `LANÇADO - AGUARDANDO COMPROVANTE` → `PAGO - EM CONFERÊNCIA`,
 
 | Componente | Localização |
 |-----------|------------|
-| Registro de nota fiscal e retenções | `pagamentos/views/pre_payment/cadastro/actions.py` |
-| Turnpikes de transição de status | `pagamentos/validators.py` |
-| Painel e página de revisão (GET) | `fiscal/views/impostos/panels.py` |
-| Actions de seleção, agrupamento e anexação (POST) | `fiscal/views/impostos/actions.py` |
-| Serviços: PDF, CSV, anexação | `fiscal/services/impostos.py` |
-| Modelos fiscais | `fiscal/models.py` |
-| URLs fiscais | `DjangoProject/urlconf/fiscal.py` |
+| Registro de nota fiscal e retenções | `apps/pagamentos/views/pre_payment/cadastro/actions.py` |
+| Turnpikes de transição de status | `apps/pagamentos/validators.py` |
+| Painel e página de revisão (GET) | `retencoes/views/impostos/panels.py` |
+| Actions de seleção, agrupamento e anexação (POST) | `retencoes/views/impostos/actions.py` |
+| Serviços: PDF, CSV, anexação | `retencoes/services/impostos.py` |
+| Modelos fiscais | `retencoes/models.py` |
+| URLs fiscais | `DjangoProject/urlconf/retencoes.py` |

@@ -58,11 +58,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'commons.apps.CommonsConfig',
-    'credores.apps.CredoresConfig',
-    'pagamentos.apps.PagamentosConfig',
-    'suprimentos.apps.SuprimentosConfig',
-    'verbas_indenizatorias.apps.VerbasIndenizatoriasConfig',
-        'fiscal.apps.FiscalConfig',
+    'cadastros.apps.CadastrosConfig',
+    'apps.pagamentos.apps.PagamentosConfig',
+    'apps.suprimentos.apps.SuprimentosConfig',
+    'apps.verbas_indenizatorias.apps.VerbasIndenizatoriasConfig',
+        'retencoes.apps.RetencoesConfig',
 ]
 
 MIDDLEWARE = [
@@ -71,7 +71,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'pagamentos.middleware.GlobalLoginRequiredMiddleware',
+    'apps.pagamentos.middleware.GlobalLoginRequiredMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
@@ -86,13 +86,13 @@ TEMPLATES = [
         ,
         'APP_DIRS': True,
         'OPTIONS': {
-            'builtins': ['pagamentos.templatetags.fmt_builtin'],
+            'builtins': ['apps.pagamentos.templatetags.fmt_builtin'],
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.template.context_processors.static',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'pagamentos.context_processors.alertas_contas_fixas',
+                'apps.pagamentos.context_processors.alertas_contas_fixas',
             ],
         },
     },

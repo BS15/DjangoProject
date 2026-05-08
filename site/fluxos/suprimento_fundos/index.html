@@ -1503,7 +1503,7 @@
 <p>Este documento descreve o ciclo completo de um suprimento de fundos no PaGé — da concessão ao encerramento da prestação de contas — e sua integração com a esteira de pagamentos.</p>
 <hr />
 <h2 id="1-modelo-de-dominio">1. Modelo de domínio<a class="headerlink" href="#1-modelo-de-dominio" title="Permanent link">&para;</a></h2>
-<p><code>SuprimentoDeFundos</code> (<code>suprimentos/models.py</code>) representa o adiantamento concedido a um servidor (suprido) para pagamento de despesas miúdas ou urgentes.</p>
+<p><code>SuprimentoDeFundos</code> (<code>apps/suprimentos/models.py</code>) representa o adiantamento concedido a um servidor (suprido) para pagamento de despesas miúdas ou urgentes.</p>
 <p>Campos principais:</p>
 <table>
 <thead>
@@ -1600,7 +1600,7 @@
 </code></pre></div>
 <hr />
 <h2 id="6-geracao-de-documentos">6. Geração de documentos<a class="headerlink" href="#6-geracao-de-documentos" title="Permanent link">&para;</a></h2>
-<p>O serviço <code>gerar_e_anexar_recibo_suprimento</code> (<code>suprimentos/services/documentos.py</code>):</p>
+<p>O serviço <code>gerar_e_anexar_recibo_suprimento</code> (<code>apps/suprimentos/services/documentos.py</code>):</p>
 <ol>
 <li>Gera o PDF do recibo via <code>gerar_documento_bytes</code>.</li>
 <li>Cria <code>DocumentoSuprimentoDeFundos</code> com o arquivo.</li>
@@ -1608,7 +1608,7 @@
 </ol>
 <hr />
 <h2 id="7-validacoes-de-negocio">7. Validações de negócio<a class="headerlink" href="#7-validacoes-de-negocio" title="Permanent link">&para;</a></h2>
-<p>As regras do regime de suprimento são verificadas em <code>validar_regras_suprimento</code> (<code>pagamentos/validators.py</code>), chamado no <code>clean()</code> do <code>SuprimentoForm</code>. Erros são propagados por campo para exibição no formulário.</p>
+<p>As regras do regime de suprimento são verificadas em <code>validar_regras_suprimento</code> (<code>apps/pagamentos/validators.py</code>), chamado no <code>clean()</code> do <code>SuprimentoForm</code>. Erros são propagados por campo para exibição no formulário.</p>
 <hr />
 <h2 id="referencias-de-codigo">Referências de código<a class="headerlink" href="#referencias-de-codigo" title="Permanent link">&para;</a></h2>
 <table>
@@ -1621,39 +1621,39 @@
 <tbody>
 <tr>
 <td>Modelo</td>
-<td><code>suprimentos/models.py</code></td>
+<td><code>apps/suprimentos/models.py</code></td>
 </tr>
 <tr>
 <td>Cadastro (GET)</td>
-<td><code>suprimentos/views/cadastro/panels.py</code></td>
+<td><code>apps/suprimentos/views/cadastro/panels.py</code></td>
 </tr>
 <tr>
 <td>Cadastro (POST)</td>
-<td><code>suprimentos/views/cadastro/actions.py</code></td>
+<td><code>apps/suprimentos/views/cadastro/actions.py</code></td>
 </tr>
 <tr>
 <td>Painel / despesas / fechamento (GET)</td>
-<td><code>suprimentos/views/prestacao_contas/panels.py</code></td>
+<td><code>apps/suprimentos/views/prestacao_contas/panels.py</code></td>
 </tr>
 <tr>
 <td>Ações despesas / fechamento (POST)</td>
-<td><code>suprimentos/views/prestacao_contas/actions.py</code></td>
+<td><code>apps/suprimentos/views/prestacao_contas/actions.py</code></td>
 </tr>
 <tr>
 <td>Helpers internos</td>
-<td><code>suprimentos/views/helpers.py</code></td>
+<td><code>apps/suprimentos/views/helpers.py</code></td>
 </tr>
 <tr>
 <td>Integração com Processo</td>
-<td><code>suprimentos/services/processo_integration.py</code></td>
+<td><code>apps/suprimentos/services/processo_integration.py</code></td>
 </tr>
 <tr>
 <td>Geração de documentos</td>
-<td><code>suprimentos/services/documentos.py</code></td>
+<td><code>apps/suprimentos/services/documentos.py</code></td>
 </tr>
 <tr>
 <td>Validações de negócio</td>
-<td><code>pagamentos/validators.py</code></td>
+<td><code>apps/pagamentos/validators.py</code></td>
 </tr>
 </tbody>
 </table>

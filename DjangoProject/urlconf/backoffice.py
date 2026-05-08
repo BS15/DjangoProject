@@ -2,20 +2,20 @@
 
 from django.urls import path
 
-from credores import imports as credores_import_views
-from desenvolvedor import views_desenvolvedor as dev_views
-from pagamentos.views.support import reports as relatorio_views
-from pagamentos.views.support import signatures as assinatura_views
-from pagamentos.views.support.contas_fixas import imports as conta_fixa_imports
-from pagamentos.views.support.contas_fixas import actions as conta_actions
-from pagamentos.views.support.contas_fixas import panels as conta_panels
-from credores import actions as credor_actions
-from credores import panels as credor_panels
-from suprimentos.views.cadastro import actions as suprimento_cadastro_actions
-from suprimentos.views.cadastro import panels as suprimento_cadastro_panels
-from suprimentos.views.prestacao_contas import actions as suprimento_actions
-from suprimentos.views.prestacao_contas import panels as suprimento_panels
-from suprimentos.views.prestacao_contas import pdf as suprimento_pdf
+from cadastros import imports as credores_import_views
+from apps.desenvolvedor import views_desenvolvedor as dev_views
+from apps.pagamentos.views.support import reports as relatorio_views
+from apps.pagamentos.views.support import signatures as assinatura_views
+from apps.pagamentos.views.support.contas_fixas import imports as conta_fixa_imports
+from apps.pagamentos.views.support.contas_fixas import actions as conta_actions
+from apps.pagamentos.views.support.contas_fixas import panels as conta_panels
+from cadastros import actions as credor_actions
+from cadastros import panels as credor_panels
+from apps.suprimentos.views.cadastro import actions as suprimento_cadastro_actions
+from apps.suprimentos.views.cadastro import panels as suprimento_cadastro_panels
+from apps.suprimentos.views.prestacao_contas import actions as suprimento_actions
+from apps.suprimentos.views.prestacao_contas import panels as suprimento_panels
+from apps.suprimentos.views.prestacao_contas import pdf as suprimento_pdf
 
 urlpatterns = [
     path('adicionar-credor/', credor_panels.add_credor_view, name='add_credor_view'),

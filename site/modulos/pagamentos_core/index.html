@@ -1364,7 +1364,7 @@
 <li>Expor o Hub principal de acompanhamento do processo.</li>
 </ul>
 <h2 id="maquina-de-estados">Máquina de estados<a class="headerlink" href="#maquina-de-estados" title="Permanent link">&para;</a></h2>
-<p>A progressão ocorre por estágios com regras de entrada e saída (turnpikes). A trilha principal do processo segue a sequência abaixo; etapas e nomes exatos estão definidos como constantes em <code>pagamentos/domain_models/processos.py</code>.</p>
+<p>A progressão ocorre por estágios com regras de entrada e saída (turnpikes). A trilha principal do processo segue a sequência abaixo; etapas e nomes exatos estão definidos como constantes em <code>apps/pagamentos/domain_models/processos.py</code>.</p>
 <p>Trilha principal (status canônicos):
 - A EMPENHAR
 - AGUARDANDO LIQUIDAÇÃO
@@ -1382,7 +1382,7 @@
 - <strong>Devolução</strong>: registra reversão formal de valor ou documento, podendo ajustar o status do processo e gerar pendências.
 - <strong>Recusa</strong> (em etapas de aprovação): devolve o processo ao status anterior com registro formal de motivo e criação de pendência.
 - <strong>Cancelamento</strong>: encerra definitivamente o processo com status <code>CANCELADO / ANULADO</code> e justificativa obrigatória. Quando o processo já está em status pago ou posterior, exige registro simultâneo de <code>DevolucaoProcessual</code>. Grava <code>CancelamentoProcessual</code> como trilha formal. Aplica-se também a verbas indenizatórias e suprimentos vinculados.</p>
-<p>Para o comportamento exato de cada transição e seus turnpikes, consulte <code>pagamentos/domain_models/processos.py</code> e os serviços em <code>pagamentos/services/</code>.</p>
+<p>Para o comportamento exato de cada transição e seus turnpikes, consulte <code>apps/pagamentos/domain_models/processos.py</code> e os serviços em <code>apps/pagamentos/services/</code>.</p>
 <h2 id="turnpikes">Turnpikes<a class="headerlink" href="#turnpikes" title="Permanent link">&para;</a></h2>
 <p>Cada transição é bloqueada até que os requisitos da etapa estejam completos (documentos, validações fiscais, autorizações e consistência cadastral).</p>
 

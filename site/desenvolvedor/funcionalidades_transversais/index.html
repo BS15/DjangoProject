@@ -2553,7 +2553,7 @@
 <p>resolve ou cria tipos documentais com <code>obter_ou_criar_tipo_documento</code></p>
 </li>
 <li>
-<p><code>verbas_indenizatorias/views/shared/documents.py</code></p>
+<p><code>apps/verbas_indenizatorias/views/shared/documents.py</code></p>
 </li>
 <li>concentra workers reutilizáveis de upload no domínio de verbas</li>
 <li><code>_salvar_documento_upload</code> valida e persiste um anexo retornando <code>(documento, erro)</code></li>
@@ -2561,7 +2561,7 @@
 <p><code>_processar_upload_documento</code> e <code>_salvar_verba_com_anexo_opcional</code> conectam request, persistência e feedback ao usuário</p>
 </li>
 <li>
-<p><code>fiscal/services/impostos.py</code></p>
+<p><code>retencoes/services/impostos.py</code></p>
 </li>
 <li>cria anexos documentais automáticos em processos de recolhimento de impostos</li>
 <li>materializa guia, comprovante e relatório mensal como documentos de pagamento</li>
@@ -2627,7 +2627,7 @@
 <p>é a base técnica para vários fluxos de importação</p>
 </li>
 <li>
-<p><code>credores/imports.py</code></p>
+<p><code>cadastros/imports.py</code></p>
 </li>
 <li>implementa <code>painel_importacao_view</code></li>
 <li>implementa <code>importar_credores_csv</code>, que cria ou reaproveita <code>Credor</code>, <code>ContasBancarias</code> e <code>CargosFuncoes</code></li>
@@ -2635,7 +2635,7 @@
 <p>concentra também o fluxo de download de template de credores</p>
 </li>
 <li>
-<p><code>pagamentos/views/support/contas_fixas/imports.py</code></p>
+<p><code>apps/pagamentos/views/support/contas_fixas/imports.py</code></p>
 </li>
 <li>implementa <code>importar_contas_fixas_csv</code></li>
 <li>cria <code>ContaFixa</code> a partir de linhas CSV vinculadas a credores já existentes</li>
@@ -2643,7 +2643,7 @@
 <p>também fornece template CSV para o usuário</p>
 </li>
 <li>
-<p><code>verbas_indenizatorias/views/diarias/imports.py</code></p>
+<p><code>apps/verbas_indenizatorias/views/diarias/imports.py</code></p>
 </li>
 <li>implementa a view <code>importar_diarias_view</code></li>
 <li>controla as ações de preview, confirmação e cancelamento</li>
@@ -2651,7 +2651,7 @@
 <p>usa sessão para segurar o lote provisório até a confirmação</p>
 </li>
 <li>
-<p><code>verbas_indenizatorias/views/diarias/import_services.py</code></p>
+<p><code>apps/verbas_indenizatorias/views/diarias/import_services.py</code></p>
 </li>
 <li>implementa <code>_parse_diaria_row</code>, <code>preview_diarias_lote</code> e <code>confirmar_diarias_lote</code></li>
 <li>valida datas, quantidade de diárias, existência do beneficiário e coerência da linha</li>
@@ -2718,7 +2718,7 @@
 <h3 id="como-se-reflete-no-codigo_2">Como se reflete no código<a class="headerlink" href="#como-se-reflete-no-codigo_2" title="Permanent link">&para;</a></h3>
 <p>Arquivos centrais:</p>
 <ul>
-<li><code>pagamentos/views/support/sync/pagamentos.py</code></li>
+<li><code>apps/pagamentos/views/support/sync/pagamentos.py</code></li>
 <li>implementa <code>sincronizar_siscac</code>, <code>sincronizar_siscac_auto_action</code> e <code>sincronizar_siscac_manual_action</code></li>
 <li>
 <p>implementa <code>sync_siscac_payments</code>, núcleo de conciliação entre relatório PDF e processos internos</p>
@@ -2730,7 +2730,7 @@
 <p>contém <code>parse_siscac_report</code>, parser local do relatório PDF exportado do SISCAC (sem chamada à API externa)</p>
 </li>
 <li>
-<p><code>pagamentos/services/integracoes/processo_relacionados.py</code></p>
+<p><code>apps/pagamentos/services/integracoes/processo_relacionados.py</code></p>
 </li>
 <li>centraliza a orquestração cross-domain</li>
 <li><code>sincronizar_relacoes_apos_transicao</code> delega propagação para módulos satélite</li>
@@ -2738,7 +2738,7 @@
 <p><code>gerar_documentos_relacionados_por_transicao</code> dispara documentos dependentes do status do processo</p>
 </li>
 <li>
-<p><code>verbas_indenizatorias/services/processo_integration.py</code></p>
+<p><code>apps/verbas_indenizatorias/services/processo_integration.py</code></p>
 </li>
 <li>propaga status de processo pago para diárias, reembolsos, jetons e auxílios</li>
 <li>cria documentos relacionados e rascunhos de assinatura em fluxos específicos</li>
@@ -2790,20 +2790,20 @@
 <h3 id="como-se-reflete-no-codigo_3">Como se reflete no código<a class="headerlink" href="#como-se-reflete-no-codigo_3" title="Permanent link">&para;</a></h3>
 <p>Arquivos centrais:</p>
 <ul>
-<li><code>pagamentos/views/helpers/payment_builders.py</code></li>
+<li><code>apps/pagamentos/views/helpers/payment_builders.py</code></li>
 <li>implementa <code>_processar_acao_lote</code>, helper genérico para ações em lote</li>
 <li>implementa <code>_atualizar_status_em_lote</code>, que itera processo a processo chamando <code>avancar_status(..., usuario=...)</code></li>
 <li>
 <p>usa <code>transaction.atomic</code> para garantir integridade da operação</p>
 </li>
 <li>
-<p><code>pagamentos/views/payment/lancamento/actions.py</code></p>
+<p><code>apps/pagamentos/views/payment/lancamento/actions.py</code></p>
 </li>
 <li>
 <p>usa esse padrão para separar processos para lançamento bancário, marcar como lançados e desfazer lançamentos</p>
 </li>
 <li>
-<p><code>pagamentos/views/support/pendencia/actions.py</code></p>
+<p><code>apps/pagamentos/views/support/pendencia/actions.py</code></p>
 </li>
 <li>aplica o mesmo raciocínio a tratamento de pendências em lote</li>
 </ul>
@@ -2859,26 +2859,26 @@
 <h3 id="como-se-reflete-no-codigo_4">Como se reflete no código<a class="headerlink" href="#como-se-reflete-no-codigo_4" title="Permanent link">&para;</a></h3>
 <p>Arquivos centrais:</p>
 <ul>
-<li><code>fiscal/models.py</code></li>
+<li><code>retencoes/models.py</code></li>
 <li>define entidades como <code>DocumentoFiscal</code>, <code>RetencaoImposto</code>, <code>CodigosImposto</code> e status do domínio</li>
 <li>
 <p>representa o núcleo persistente da feature</p>
 </li>
 <li>
-<p><code>fiscal/views/impostos/actions.py</code></p>
+<p><code>retencoes/views/impostos/actions.py</code></p>
 </li>
 <li>expõe as actions de agrupamento e anexação documental</li>
 <li>
 <p>faz a ponte entre o painel fiscal e os services do módulo</p>
 </li>
 <li>
-<p><code>fiscal/views/impostos/panels.py</code></p>
+<p><code>retencoes/views/impostos/panels.py</code></p>
 </li>
 <li>
 <p>renderiza o painel de retenções com filtros operacionais</p>
 </li>
 <li>
-<p><code>fiscal/services/impostos.py</code></p>
+<p><code>retencoes/services/impostos.py</code></p>
 </li>
 <li>implementa <code>anexar_guia_comprovante_relatorio_em_processos</code></li>
 <li>implementa <code>gerar_relatorio_retencoes_mensal_csv</code></li>
@@ -2886,7 +2886,7 @@
 <p>cria artefatos e documentos com ordens reservadas para o recolhimento</p>
 </li>
 <li>
-<p><code>fiscal/services/reinf.py</code></p>
+<p><code>retencoes/services/reinf.py</code></p>
 </li>
 <li>centraliza a geração dos lotes EFD-Reinf a partir da competência informada</li>
 </ul>
@@ -2942,7 +2942,7 @@
 <h3 id="como-se-reflete-no-codigo_5">Como se reflete no código<a class="headerlink" href="#como-se-reflete-no-codigo_5" title="Permanent link">&para;</a></h3>
 <p>Arquivos centrais:</p>
 <ul>
-<li><code>pagamentos/domain_models/suporte.py</code></li>
+<li><code>apps/pagamentos/domain_models/suporte.py</code></li>
 <li>define o modelo <code>AssinaturaAutentique</code></li>
 <li>
 <p>guarda vínculo genérico com a entidade relacionada, status, arquivos e metadados da integração</p>
@@ -2963,14 +2963,14 @@
 <p>envia documentos, processa respostas e consulta status para download do assinado</p>
 </li>
 <li>
-<p><code>pagamentos/views/support/signatures.py</code></p>
+<p><code>apps/pagamentos/views/support/signatures.py</code></p>
 </li>
 <li>implementa o painel do usuário e a action de disparo</li>
 <li>
 <p>aplica controle de permissão operacional no nível de dono do rascunho</p>
 </li>
 <li>
-<p><code>verbas_indenizatorias/services/processo_integration.py</code></p>
+<p><code>apps/verbas_indenizatorias/services/processo_integration.py</code></p>
 </li>
 <li>usa a infraestrutura de assinatura para criar rascunhos de PCD em fluxos de diárias</li>
 </ul>
@@ -3031,7 +3031,7 @@
 <p>documenta os princípios de não exclusão, histórico e compliance do sistema</p>
 </li>
 <li>
-<p><code>pagamentos/views/auditing/panels.py</code></p>
+<p><code>apps/pagamentos/views/auditing/panels.py</code></p>
 </li>
 <li>implementa <code>auditoria_view</code></li>
 <li>consolida históricos de vários modelos financeiros, fiscais e documentais</li>
@@ -3039,7 +3039,7 @@
 <p>aplica filtros por modelo, ação, data e usuário</p>
 </li>
 <li>
-<p><code>pagamentos/domain_models/suporte.py</code></p>
+<p><code>apps/pagamentos/domain_models/suporte.py</code></p>
 </li>
 <li>define <code>RegistroAcessoArquivo</code>, <code>Contingencia</code>, <code>Devolucao</code> e <code>AssinaturaAutentique</code> com histórico</li>
 <li>
@@ -3056,10 +3056,10 @@
 <p>módulos com logging técnico</p>
 </li>
 <li><code>commons/shared/storage_utils.py</code></li>
-<li><code>verbas_indenizatorias/views/shared/documents.py</code></li>
-<li><code>pagamentos/views/support/sync/pagamentos.py</code></li>
-<li><code>pagamentos/views/support/signatures.py</code></li>
-<li><code>verbas_indenizatorias/services/processo_integration.py</code></li>
+<li><code>apps/verbas_indenizatorias/views/shared/documents.py</code></li>
+<li><code>apps/pagamentos/views/support/sync/pagamentos.py</code></li>
+<li><code>apps/pagamentos/views/support/signatures.py</code></li>
+<li><code>apps/verbas_indenizatorias/services/processo_integration.py</code></li>
 <li>nesses pontos, falhas técnicas são registradas sem quebrar a separação entre erro operacional e erro de infraestrutura</li>
 </ul>
 <h3 id="observacoes-arquiteturais_6">Observações arquiteturais<a class="headerlink" href="#observacoes-arquiteturais_6" title="Permanent link">&para;</a></h3>

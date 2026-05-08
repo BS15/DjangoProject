@@ -1636,7 +1636,7 @@
 <p><strong>Atalho para operação diária:</strong> Se você atua como <strong>Operador de Contas a Pagar</strong>, use primeiro o guia de interface orientado por tela e ação: <a href="../pagamentos_operador_contas_pagar/">Pagamentos (Operador Contas a Pagar)</a>.</p>
 <hr />
 <h2 id="1-maquina-de-estados-canonica">1. Fluxo feliz (Happy Flow)<a class="headerlink" href="#1-maquina-de-estados-canonica" title="Permanent link">&para;</a></h2>
-<p>Caminho principal sem interrupções, do nascimento ao arquivamento. Os status são constantes definidas em <code>ProcessoStatus</code> (<code>pagamentos/domain_models/processos.py</code>).</p>
+<p>Caminho principal sem interrupções, do nascimento ao arquivamento. Os status são constantes definidas em <code>ProcessoStatus</code> (<code>apps/pagamentos/domain_models/processos.py</code>).</p>
 <pre class="mermaid"><code>stateDiagram-v2
   direction TB
   [*] --&gt; A_EMPENHAR : Criado com trigger
@@ -1890,7 +1890,7 @@
 <p><strong>View (spoke):</strong> <code>cancelar_processo_spoke_view</code><br />
 <strong>Action:</strong> <code>cancelar_processo_action</code><br />
 <strong>Permissão:</strong> <code>pagamentos.operador_contas_a_pagar</code><br />
-<strong>Serviço:</strong> <code>registrar_cancelamento_processo</code> (<code>pagamentos/services/cancelamentos.py</code>)</p>
+<strong>Serviço:</strong> <code>registrar_cancelamento_processo</code> (<code>apps/pagamentos/services/cancelamentos.py</code>)</p>
 <ul>
 <li>O botão "Cancelar Processo" é exibido no hub <code>process_detail</code> para processos que ainda não estão cancelados.</li>
 <li>Justificativa é sempre obrigatória.</li>
@@ -1900,7 +1900,7 @@
 <p>Consulte o <a href="../cancelamento/">Fluxo de Cancelamento</a> para a especificação completa.</p>
 <hr />
 <h2 id="19-contingencia">19. Contingência<a class="headerlink" href="#19-contingencia" title="Permanent link">&para;</a></h2>
-<p><strong>Serviço:</strong> <code>pagamentos/services/contingencias.py</code><br />
+<p><strong>Serviço:</strong> <code>apps/pagamentos/services/contingencias.py</code><br />
 <strong>Permissões:</strong> <code>pode_aprovar_contingencia_supervisor</code>, <code>_ordenador</code>, <code>_conselho</code>, <code>pode_revisar_contingencia_contadora</code></p>
 <ul>
 <li>Solicitação formal de retificação de dados do processo após sua criação.</li>
@@ -1921,55 +1921,55 @@
 <tbody>
 <tr>
 <td>Criação / hub</td>
-<td><code>pagamentos/views/pre_payment/cadastro/</code></td>
+<td><code>apps/pagamentos/views/pre_payment/cadastro/</code></td>
 </tr>
 <tr>
 <td>Empenho</td>
-<td><code>pagamentos/views/pre_payment/empenho/</code></td>
+<td><code>apps/pagamentos/views/pre_payment/empenho/</code></td>
 </tr>
 <tr>
 <td>Liquidação</td>
-<td><code>pagamentos/views/pre_payment/liquidacoes/</code></td>
+<td><code>apps/pagamentos/views/pre_payment/liquidacoes/</code></td>
 </tr>
 <tr>
 <td>Contas a pagar / autorização</td>
-<td><code>pagamentos/views/payment/</code></td>
+<td><code>apps/pagamentos/views/payment/</code></td>
 </tr>
 <tr>
 <td>Comprovantes</td>
-<td><code>pagamentos/views/payment/comprovantes/</code></td>
+<td><code>apps/pagamentos/views/payment/comprovantes/</code></td>
 </tr>
 <tr>
 <td>Conferência</td>
-<td><code>pagamentos/views/post_payment/conferencia/</code></td>
+<td><code>apps/pagamentos/views/post_payment/conferencia/</code></td>
 </tr>
 <tr>
 <td>Contabilização</td>
-<td><code>pagamentos/views/post_payment/contabilizacao/</code></td>
+<td><code>apps/pagamentos/views/post_payment/contabilizacao/</code></td>
 </tr>
 <tr>
 <td>Conselho</td>
-<td><code>pagamentos/views/post_payment/conselho/</code> e <code>reunioes/</code></td>
+<td><code>apps/pagamentos/views/post_payment/conselho/</code> e <code>reunioes/</code></td>
 </tr>
 <tr>
 <td>Arquivamento</td>
-<td><code>pagamentos/views/post_payment/arquivamento/</code></td>
+<td><code>apps/pagamentos/views/post_payment/arquivamento/</code></td>
 </tr>
 <tr>
 <td><strong>Cancelamento</strong></td>
-<td><strong><code>pagamentos/views/support/cancelamento/</code></strong></td>
+<td><strong><code>apps/pagamentos/views/support/cancelamento/</code></strong></td>
 </tr>
 <tr>
 <td><strong>Serviço de cancelamento</strong></td>
-<td><strong><code>pagamentos/services/cancelamentos.py</code></strong></td>
+<td><strong><code>apps/pagamentos/services/cancelamentos.py</code></strong></td>
 </tr>
 <tr>
 <td>Helpers de lote / fila</td>
-<td><code>pagamentos/views/helpers/payment_builders.py</code></td>
+<td><code>apps/pagamentos/views/helpers/payment_builders.py</code></td>
 </tr>
 <tr>
 <td>Domínio / status</td>
-<td><code>pagamentos/domain_models/processos.py</code></td>
+<td><code>apps/pagamentos/domain_models/processos.py</code></td>
 </tr>
 </tbody>
 </table>

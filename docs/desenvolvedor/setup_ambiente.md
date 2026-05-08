@@ -47,7 +47,7 @@ pytest
 A configuração está em `pytest.ini` na raiz do projeto. Para executar um módulo específico:
 
 ```bash
-pytest fiscal/
+pytest retencoes/
 pytest pagamentos/
 ```
 

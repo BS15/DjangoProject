@@ -9,7 +9,7 @@ Este documento descreve a esteira completa de um [processo de pagamento](/negoci
 
 ## 1. Fluxo feliz (Happy Flow)
 
-Caminho principal sem interrupções, do nascimento ao arquivamento. Os status são constantes definidas em `ProcessoStatus` (`pagamentos/domain_models/processos.py`).
+Caminho principal sem interrupções, do nascimento ao arquivamento. Os status são constantes definidas em `ProcessoStatus` (`apps/pagamentos/domain_models/processos.py`).
 
 ```mermaid
 stateDiagram-v2
@@ -282,7 +282,7 @@ Duas filas simultâneas: pendentes de autorização e já autorizados.
 **View (spoke):** `cancelar_processo_spoke_view`  
 **Action:** `cancelar_processo_action`  
 **Permissão:** `pagamentos.operador_contas_a_pagar`  
-**Serviço:** `registrar_cancelamento_processo` (`pagamentos/services/cancelamentos.py`)
+**Serviço:** `registrar_cancelamento_processo` (`apps/pagamentos/services/cancelamentos.py`)
 
 - O botão "Cancelar Processo" é exibido no hub `process_detail` para processos que ainda não estão cancelados.
 - Justificativa é sempre obrigatória.
@@ -295,7 +295,7 @@ Consulte o [Fluxo de Cancelamento](cancelamento.md) para a especificação compl
 
 ## 19. Contingência
 
-**Serviço:** `pagamentos/services/contingencias.py`  
+**Serviço:** `apps/pagamentos/services/contingencias.py`  
 **Permissões:** `pode_aprovar_contingencia_supervisor`, `_ordenador`, `_conselho`, `pode_revisar_contingencia_contadora`
 
 - Solicitação formal de retificação de dados do processo após sua criação.
@@ -310,16 +310,16 @@ Consulte o [Fluxo de Cancelamento](cancelamento.md) para a especificação compl
 
 | Cancelamento de código | Localização |
 |-------|------------|
-| Criação / hub | `pagamentos/views/pre_payment/cadastro/` |
-| Empenho | `pagamentos/views/pre_payment/empenho/` |
-| Liquidação | `pagamentos/views/pre_payment/liquidacoes/` |
-| Contas a pagar / autorização | `pagamentos/views/payment/` |
-| Comprovantes | `pagamentos/views/payment/comprovantes/` |
-| Conferência | `pagamentos/views/post_payment/conferencia/` |
-| Contabilização | `pagamentos/views/post_payment/contabilizacao/` |
-| Conselho | `pagamentos/views/post_payment/conselho/` e `reunioes/` |
-| Arquivamento | `pagamentos/views/post_payment/arquivamento/` |
-| **Cancelamento** | **`pagamentos/views/support/cancelamento/`** |
-| **Serviço de cancelamento** | **`pagamentos/services/cancelamentos.py`** |
-| Helpers de lote / fila | `pagamentos/views/helpers/payment_builders.py` |
-| Domínio / status | `pagamentos/domain_models/processos.py` |
+| Criação / hub | `apps/pagamentos/views/pre_payment/cadastro/` |
+| Empenho | `apps/pagamentos/views/pre_payment/empenho/` |
+| Liquidação | `apps/pagamentos/views/pre_payment/liquidacoes/` |
+| Contas a pagar / autorização | `apps/pagamentos/views/payment/` |
+| Comprovantes | `apps/pagamentos/views/payment/comprovantes/` |
+| Conferência | `apps/pagamentos/views/post_payment/conferencia/` |
+| Contabilização | `apps/pagamentos/views/post_payment/contabilizacao/` |
+| Conselho | `apps/pagamentos/views/post_payment/conselho/` e `reunioes/` |
+| Arquivamento | `apps/pagamentos/views/post_payment/arquivamento/` |
+| **Cancelamento** | **`apps/pagamentos/views/support/cancelamento/`** |
+| **Serviço de cancelamento** | **`apps/pagamentos/services/cancelamentos.py`** |
+| Helpers de lote / fila | `apps/pagamentos/views/helpers/payment_builders.py` |
+| Domínio / status | `apps/pagamentos/domain_models/processos.py` |
