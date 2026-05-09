@@ -1,6 +1,6 @@
 # Template Tiers: As Quatro Camadas Base
 
-O PaGé utiliza herança de templates em quatro camadas base, garantindo consistência visual e funcional em toda a interface.
+O GeCap utiliza herança de templates em quatro camadas base, garantindo consistência visual e funcional em toda a interface.
 
 Nunca escreva HTML standalone. **Sempre estenda** uma destas camadas.
 Para o padrão de views associado, consulte [Manager-Worker](manager_worker.md) e [Hub-and-Spoke](hub_spoke.md).

@@ -7,3 +7,7 @@ class PagamentosConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "apps.pagamentos"
     verbose_name = "Pagamentos Financeiros"
+
+    def ready(self):
+        """Inicializa os signals da aplicação."""
+        import apps.pagamentos.receivers  # noqa: F401

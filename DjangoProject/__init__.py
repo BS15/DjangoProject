@@ -1,1 +1,1 @@
-"""Pacote principal da aplicação PaGé — configuração e bootstrap do projeto Django."""
+"""Pacote principal da aplicação GeCap — configuração e bootstrap do projeto Django."""

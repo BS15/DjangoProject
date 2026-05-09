@@ -1,12 +1,12 @@
 # Gestão de Documentos e Armazenamento
 
-Este documento descreve como o PaGé gerencia anexos/documentos no backend: validação, persistência no storage, convenção de pastas, acesso seguro e comportamento no sistema de arquivos.
+Este documento descreve como o GeCap gerencia anexos/documentos no backend: validação, persistência no storage, convenção de pastas, acesso seguro e comportamento no sistema de arquivos.
 
 ## 1. Visão geral técnica
 
 No Django, os anexos são armazenados em `FileField` e o banco salva apenas o caminho relativo do arquivo (por exemplo: `pagamentos/2026/proc_123/nota.pdf`).
 
-No PaGé, o fluxo padrão é:
+No GeCap, o fluxo padrão é:
 
 1. Upload via formulário (`multipart/form-data`) em uma `action` (POST).
 2. Validação de conteúdo binário por MIME real (`magic bytes`) em `validar_arquivo_seguro`.

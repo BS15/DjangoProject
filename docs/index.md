@@ -1,6 +1,6 @@
-# Wiki PaGé
+# Wiki GeCap
 
-Bem-vindo ao portal de documentação do PaGé.
+Bem-vindo ao portal de documentação do GeCap.
 
 Esta wiki foi organizada para atender dois públicos ao mesmo tempo:
 - Negócio e operação: entendimento da esteira de pagamentos e compliance.

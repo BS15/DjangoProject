@@ -1,6 +1,6 @@
 # Missão do Sistema
 
-O PaGé existe para digitalizar a esteira de pagamentos da administração pública com segurança jurídica, rastreabilidade e eficiência operacional.
+O GeCap existe para digitalizar a esteira de pagamentos da administração pública com segurança jurídica, rastreabilidade e eficiência operacional.
 
 ## Objetivos de negócio
 - Reduzir retrabalho na tramitação de processos financeiros.

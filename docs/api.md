@@ -134,9 +134,9 @@ Fluxos de formulário HTML surfaceiam erros de negócio via sistema de mensagens
 
 ::: commons
 
-::: cadastros
+::: apps.cadastros
 
-::: retencoes
+::: apps.retencoes
 
 ::: apps.pagamentos
 

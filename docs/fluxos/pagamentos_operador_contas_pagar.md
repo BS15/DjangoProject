@@ -1,6 +1,6 @@
 # Guia de Interface: Pagamentos (Operador de Contas a Pagar)
 
-Este guia descreve a tramitação completa do processo de pagamento no PaGé, com foco no perfil **Operador de Contas a Pagar**: da criação até o arquivamento.
+Este guia descreve a tramitação completa do processo de pagamento no GeCap, com foco no perfil **Operador de Contas a Pagar**: da criação até o arquivamento.
 
 Use este documento como roteiro prático de execução diária, incluindo as telas envolvidas, as ações esperadas e os status de entrada e saída de cada etapa.
 

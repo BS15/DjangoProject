@@ -13,7 +13,8 @@ from django.views.decorators.http import require_POST
 from django.core.exceptions import PermissionDenied
 from apps.suprimentos.forms import DespesaSuprimentoForm, EnviarPrestacaoSuprimentoForm
 from apps.suprimentos.models import PrestacaoContasSuprimento, SuprimentoDeFundos
-from apps.pagamentos.services.cancelamentos import cancelar_suprimento, extrair_dados_devolucao_do_post
+from apps.suprimentos.services.cancelamentos import cancelar_suprimento
+from commons.shared.views import extrair_dados_devolucao_do_post
 from apps.suprimentos.services.prestacao import (
     encerrar_prestacao_suprimento,
     enviar_prestacao_suprimento,

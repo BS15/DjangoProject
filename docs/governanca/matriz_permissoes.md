@@ -1,6 +1,6 @@
 # Matriz de Permissões (RBAC)
 
-O PaGé adota controle de acesso por permissões explícitas por domínio funcional.
+O GeCap adota controle de acesso por permissões explícitas por domínio funcional.
 
 Consulte também o [Catálogo de Permissões e Grupos](catalogo_permissoes_grupos.md) para o inventário atual de permissões disponíveis, grupos canônicos e observações de implementação.
 

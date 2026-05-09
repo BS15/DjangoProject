@@ -13,7 +13,7 @@ A solução foi **quebrar o monolito** em domínios isolados, cada um com respon
 
 ## Arquitetura modular: Domínios atuais
 
-O PaGé é organizado em apps Django com boundaries de domínio bem definidos:
+O GeCap é organizado em apps Django com boundaries de domínio bem definidos:
 
 ```
 DjangoProject/

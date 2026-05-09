@@ -1,8 +1,8 @@
-# PaGé — Sistema de Backoffice Financeiro e Administrativo
+# GeCap — Sistema de Backoffice Financeiro e Administrativo
 
 > **Status:** Pré-V1 — desenvolvimento ativo, base de dados em Clean Slate Protocol.
 
-PaGé é um ERP de backoffice financeiro e administrativo desenvolvido para entidades de administração pública brasileira (Conselhos). Centraliza a esteira completa de pagamentos, verbas indenizatórias, suprimentos de fundos, retenção de impostos e gestão de credores, com rastreabilidade e conformidade como requisitos de primeira classe.
+GeCap é um ERP de backoffice financeiro e administrativo desenvolvido para entidades de administração pública brasileira (Conselhos). Centraliza a esteira completa de pagamentos, verbas indenizatórias, suprimentos de fundos, retenção de impostos e gestão de credores, com rastreabilidade e conformidade como requisitos de primeira classe.
 
 ---
 
@@ -46,7 +46,7 @@ Consulte o [Guia do Desenvolvedor](docs/desenvolvedor/setup_ambiente.md) para op
 
 ## Arquitetura
 
-O PaGé adota dois padrões arquiteturais centrais:
+O GeCap adota dois padrões arquiteturais centrais:
 
 - **Manager-Worker:** Views separadas por método HTTP — `panels.py` (GET, leitura) e `actions.py` (POST, mutação). Toda lógica de negócio vive em `services/`.
 - **Hub-and-Spoke:** Páginas de detalhe são centros de comando somente leitura; mutações ocorrem em endpoints dedicados que redirecionam de volta ao hub.

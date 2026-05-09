@@ -2,7 +2,7 @@
 
 ## Escopo
 
-O PaGé é um sistema de backoffice financeiro e administrativo para uso interno por entidades de administração pública brasileira. Vulnerabilidades que afetam a confidencialidade, integridade ou disponibilidade de dados financeiros e de pagamentos são consideradas críticas, independentemente da fase de desenvolvimento.
+O GeCap é um sistema de backoffice financeiro e administrativo para uso interno por entidades de administração pública brasileira. Vulnerabilidades que afetam a confidencialidade, integridade ou disponibilidade de dados financeiros e de pagamentos são consideradas críticas, independentemente da fase de desenvolvimento.
 
 ---
 
@@ -66,4 +66,4 @@ Mutações financeiras são executadas dentro de `transaction.atomic()` com `sel
 
 - Engenharia social e phishing direcionado a usuários.
 - Vulnerabilidades em infraestrutura/hospedagem fora do controle da aplicação.
-- Problemas de segurança em dependências de terceiros sem vetor de exploração demonstrado no contexto do PaGé.
+- Problemas de segurança em dependências de terceiros sem vetor de exploração demonstrado no contexto do GeCap.

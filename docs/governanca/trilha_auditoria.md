@@ -1,6 +1,6 @@
 # Trilha de Auditoria
 
-No contexto de administração pública, o PaGé prioriza integridade histórica e prestação de contas.
+No contexto de administração pública, o GeCap prioriza integridade histórica e prestação de contas.
 
 ## Princípios
 - Não exclusão de registros de negócio críticos.

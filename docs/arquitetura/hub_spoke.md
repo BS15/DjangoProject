@@ -4,7 +4,7 @@
 
 Sistemas de backoffice financeiro costumam crescer em direção a formulários gigantes: uma tela com dezenas de campos, múltiplas seções colapsáveis, e lógica de salvamento que tenta cobrir todos os casos de uma única vez. O resultado é complexidade de renderização, risco de inconsistência transacional e interfaces difíceis de operar.
 
-O PaGé adota o padrão Hub-and-Spoke para evitar esse crescimento. A premissa é simples: separar *leitura e visibilidade* (o Hub) de *execução de tarefas* (os Spokes).
+O GeCap adota o padrão Hub-and-Spoke para evitar esse crescimento. A premissa é simples: separar *leitura e visibilidade* (o Hub) de *execução de tarefas* (os Spokes).
 
 ## O Hub — Painel de Comando
 

@@ -16,7 +16,7 @@ Isso garante que qualquer tela do sistema pode ser recarregada quantas vezes for
 
 O arquivo `actions.py` responde exclusivamente a requisições POST. Sua responsabilidade é estreita: validar a entrada via formulário Django e, se válida, delegar a operação ao Service correspondente. Após a execução, a Action redireciona — nunca renderiza um template.
 
-No projeto PaGé, Actions devem usar `@permission_required(..., raise_exception=True)` para RBAC e, quando aplicável, `@require_POST` como primeira barreira de método. Consulte também [Controle de Acesso Contextual](controle_acesso_contextual.md) e [Matriz de Permissões](../governanca/matriz_permissoes.md).
+No projeto GeCap, Actions devem usar `@permission_required(..., raise_exception=True)` para RBAC e, quando aplicável, `@require_POST` como primeira barreira de método. Consulte também [Controle de Acesso Contextual](controle_acesso_contextual.md) e [Matriz de Permissões](../governanca/matriz_permissoes.md).
 
 A Action não contém regras de negócio. Ela sabe *quem* deve executar a operação, mas não *como* executá-la. Essa separação permite que a mesma lógica de domínio seja reutilizada por diferentes pontos de entrada (interface web, importação em lote, tarefa agendada) sem duplicação.
 

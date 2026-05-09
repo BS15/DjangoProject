@@ -1,4 +1,4 @@
-# Funcionalidades Transversais do PaGé
+# Funcionalidades Transversais do GeCap
 
 Este documento consolida funcionalidades transversais que já existem no sistema, mas que hoje estão espalhadas entre código-fonte e documentação parcial.
 
@@ -16,7 +16,7 @@ Ele cobre cinco frentes:
 
 A gestão de documentos é a infraestrutura que recebe, valida, organiza, armazena e vincula arquivos aos objetos de negócio do sistema, como [processos](/negocio/glossario_conselho.md#processo), [diárias](/negocio/glossario_conselho.md#diaria), [reembolsos](/negocio/glossario_conselho.md#reembolso), [jetons](/negocio/glossario_conselho.md#jeton), [auxílios](/negocio/glossario_conselho.md#auxilio), suprimentos e retenções.
 
-No PaGé, documentos não são um detalhe periférico. Eles são parte do próprio fluxo administrativo: comprovam etapas, habilitam avanços de status, alimentam auditoria e materializam saídas do sistema, como PDFs e anexos finais.
+No GeCap, documentos não são um detalhe periférico. Eles são parte do próprio fluxo administrativo: comprovam etapas, habilitam avanços de status, alimentam auditoria e materializam saídas do sistema, como PDFs e anexos finais.
 
 ### O que faz e para que serve
 
@@ -190,7 +190,7 @@ Arquivos centrais:
 
 ### O que é
 
-As funcionalidades de sync sincronizam o estado interno do PaGé com artefatos ou eventos externos e também propagam efeitos entre domínios internos quando um processo muda de etapa.
+As funcionalidades de sync sincronizam o estado interno do GeCap com artefatos ou eventos externos e também propagam efeitos entre domínios internos quando um processo muda de etapa.
 
 Há dois eixos principais:
 

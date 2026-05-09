@@ -1,6 +1,6 @@
 # Estado de Desenvolvimento: FULL DEV MODE (Pré-V1)
 
-O PaGé está em fase ativa de desenvolvimento pré-produção. Durante este estado, todos os decisões arquiteturais priorizam **velocidade iterativa** e **clareza de intenção** sobre compatibilidade com versões anteriores.
+O GeCap está em fase ativa de desenvolvimento pré-produção. Durante este estado, todos os decisões arquiteturais priorizam **velocidade iterativa** e **clareza de intenção** sobre compatibilidade com versões anteriores.
 
 ## Canonical Changes Only
 

@@ -1,8 +1,8 @@
 # Catálogo de Permissões e Grupos
 
-Esta página concentra o inventário operacional atual de controle de acesso do PaGé: como as permissões são aplicadas, quais permissões estão disponíveis e quais grupos canônicos já são provisionados pelo projeto.
+Esta página concentra o inventário operacional atual de controle de acesso do GeCap: como as permissões são aplicadas, quais permissões estão disponíveis e quais grupos canônicos já são provisionados pelo projeto.
 
-## Como o RBAC funciona no PaGé
+## Como o RBAC funciona no GeCap
 
 - O controle de acesso é feito por permissão explícita nos endpoints, com `@permission_required("app_label.codename", raise_exception=True)`.
 - O nome do grupo não libera acesso por si só. O que efetivamente autoriza uma operação é a permissão vinculada ao usuário, normalmente herdada via grupo.

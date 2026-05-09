@@ -1,6 +1,6 @@
 # Fluxo: Pagamentos
 
-Este documento descreve a esteira completa de um [processo de pagamento](/negocio/glossario_conselho.md#processo) no PaGé — da criação até o arquivamento — incluindo as filas operacionais, transições de status e pontos de controle ([turnpikes](/negocio/glossario_conselho.md#turnpike)).
+Este documento descreve a esteira completa de um [processo de pagamento](/negocio/glossario_conselho.md#processo) no GeCap — da criação até o arquivamento — incluindo as filas operacionais, transições de status e pontos de controle ([turnpikes](/negocio/glossario_conselho.md#turnpike)).
 
 !!! tip "Atalho para operação diária"
     Se você atua como **Operador de Contas a Pagar**, use primeiro o guia de interface orientado por tela e ação: [Pagamentos (Operador Contas a Pagar)](pagamentos_operador_contas_pagar.md).

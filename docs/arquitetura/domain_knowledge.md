@@ -1,6 +1,6 @@
 # Domain Knowledge: Public Administration Compliance
 
-O PaGé executa conformidade com rigorosas exigências de administração pública brasileira. Esta seção documenta os padrões arquiteturais que garantem legalidade, rastreabilidade e imutabilidade.
+O GeCap executa conformidade com rigorosas exigências de administração pública brasileira. Esta seção documenta os padrões arquiteturais que garantem legalidade, rastreabilidade e imutabilidade.
 
 ## 1. Máquina de Estado Rígida
 

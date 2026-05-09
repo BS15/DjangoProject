@@ -1,6 +1,6 @@
 # Fluxo: Diárias
 
-Este documento descreve o ciclo operacional completo de uma [diária](/negocio/glossario_conselho.md#diaria) no PaGé — do cadastro ao encerramento da prestação de contas — incluindo vínculo com processo de pagamento, assinatura eletrônica, devolução e contingência.
+Este documento descreve o ciclo operacional completo de uma [diária](/negocio/glossario_conselho.md#diaria) no GeCap — do cadastro ao encerramento da prestação de contas — incluindo vínculo com processo de pagamento, assinatura eletrônica, devolução e contingência.
 
 Para o padrão arquitetural aplicado nas views deste fluxo, consulte [Padrão Manager-Worker](../arquitetura/manager_worker.md) e [Interface Hub-and-Spoke](../arquitetura/hub_spoke.md).
 

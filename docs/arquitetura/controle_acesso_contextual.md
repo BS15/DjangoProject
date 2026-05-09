@@ -1,6 +1,6 @@
 # Controle de Acesso Contextual
 
-O PaGé utiliza duas camadas complementares de controle de acesso:
+O GeCap utiliza duas camadas complementares de controle de acesso:
 
 1. **[RBAC](/governanca/catalogo_permissoes_grupos.md) declarativo** — `@permission_required` decorando cada view, definindo *o que* um perfil pode fazer.
 2. **Acesso contextual** — verificações imperativas dentro da view/helper, definindo *sobre qual registro* o usuário pode agir.

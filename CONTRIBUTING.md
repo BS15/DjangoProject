@@ -1,6 +1,6 @@
 # Guia de Contribuição
 
-Obrigado por contribuir com o PaGé. Este guia define os padrões que todos os colaboradores devem seguir.
+Obrigado por contribuir com o GeCap. Este guia define os padrões que todos os colaboradores devem seguir.
 
 ---
 

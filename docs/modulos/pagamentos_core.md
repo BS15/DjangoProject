@@ -1,6 +1,6 @@
 # Pagamentos Core
 
-O módulo `pagamentos` é o núcleo da gestão dos [processos de pagamento](/negocio/glossario_conselho.md#processo) no PaGé.
+O módulo `pagamentos` é o núcleo da gestão dos [processos de pagamento](/negocio/glossario_conselho.md#processo) no GeCap.
 
 ## Papel no sistema
 - Orquestrar o ciclo de vida do processo administrativo-financeiro.

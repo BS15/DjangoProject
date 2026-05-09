@@ -1,11 +1,11 @@
 # Glossário do Conselho
 
-Este glossário está organizado pela sequência lógica do workflow operacional do PaGé.
+Este glossário está organizado pela sequência lógica do workflow operacional do GeCap.
 
 ## 1. Fundamentos do processo
 
 ### Processo
-Unidade administrativa e financeira central do PaGé que consolida credor, documentos, valores, status e trilha de auditoria da criação ao arquivamento.
+Unidade administrativa e financeira central do GeCap que consolida credor, documentos, valores, status e trilha de auditoria da criação ao arquivamento.
 
 ### Credor
 Pessoa física ou jurídica beneficiária do pagamento, identificada por CPF ou CNPJ, com dados bancários e de representação registrados no sistema.
@@ -31,7 +31,7 @@ Documento comprobatório de lastro orçamentário usado na fase de empenho para 
 Etapa de conferência da despesa executada, com validação documental e fiscal.
 
 ### Nota Fiscal
-Documento fiscal emitido pelo credor que formaliza a prestação de serviço ou fornecimento de bem. No PaGé, é base para cálculo de retenções e requisito documental para avanço do processo.
+Documento fiscal emitido pelo credor que formaliza a prestação de serviço ou fornecimento de bem. No GeCap, é base para cálculo de retenções e requisito documental para avanço do processo.
 
 ### Ateste de Nota Fiscal
 Confirmação formal de que a nota fiscal foi validada quanto à execução do objeto e conformidade mínima. É requisito para avançar da liquidação para autorização de pagamento.

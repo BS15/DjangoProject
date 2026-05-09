@@ -1,6 +1,6 @@
 # Fluxo: Retenções de Impostos
 
-Este documento descreve o fluxo canônico de [retenções de impostos](/negocio/glossario_conselho.md#retencao-de-imposto) no PaGé: criação dentro da gestão de [nota fiscal](/negocio/glossario_conselho.md#nota-fiscal), revisão e agrupamento confirmado para recolhimento, e validações de [turnpike](/negocio/glossario_conselho.md#turnpike) no avanço da esteira de pagamento.
+Este documento descreve o fluxo canônico de [retenções de impostos](/negocio/glossario_conselho.md#retencao-de-imposto) no GeCap: criação dentro da gestão de [nota fiscal](/negocio/glossario_conselho.md#nota-fiscal), revisão e agrupamento confirmado para recolhimento, e validações de [turnpike](/negocio/glossario_conselho.md#turnpike) no avanço da esteira de pagamento.
 
 ---
 
