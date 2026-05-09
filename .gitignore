@@ -34,6 +34,10 @@ staticfiles/
 # Hypothesis internal cache (gerado automaticamente pelos testes de fuzzing)
 .hypothesis/
 
+# Dev Container cache e arquivos locais
+.devcontainer/cache/
+.devcontainer/.env.local
+
 # Arquivos de credenciais e artefatos de depuração (nunca versionar)
 usuarios_teste_credenciais.txt
 traceback_audit_report.json
