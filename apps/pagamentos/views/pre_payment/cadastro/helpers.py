@@ -3,9 +3,9 @@
 import re
 from typing import Optional
 
-from pypdf import PdfReader
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404
+from pypdf import PdfReader
 
 from apps.pagamentos.domain_models import Processo
 

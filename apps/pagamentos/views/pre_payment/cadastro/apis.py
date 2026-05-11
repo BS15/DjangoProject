@@ -5,28 +5,37 @@ import logging
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 
-from pypdf import PdfReadError
-from django.db import DatabaseError
+from django.contrib.auth.decorators import permission_required
+from django.db import DatabaseError, transaction
 from django.db.models import Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from django.db import transaction
-from django.contrib.auth.decorators import permission_required
 from django.views.decorators.http import require_POST
+from pypdf import PdfReadError
 
-from .helpers import processar_pdf_boleto
 from .actions import (
-    toggle_documento_fiscal_action as api_toggle_documento_fiscal,
     salvar_nota_fiscal_action as api_salvar_nota_fiscal,
 )
+from .actions import (
+    toggle_documento_fiscal_action as api_toggle_documento_fiscal,
+)
+from .helpers import processar_pdf_boleto
 
 logger = logging.getLogger(__name__)
 
-from apps.cadastros.models import Credor
-from apps.retencoes.models import DocumentoFiscal, RetencaoImposto
-from apps.pagamentos.domain_models import Boleto_Bancario, Pendencia, Processo, StatusChoicesPendencias, TiposDeDocumento, TiposDePendencias
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+
+from apps.cadastros.models import Credor
+from apps.pagamentos.domain_models import (
+    Boleto_Bancario,
+    Pendencia,
+    Processo,
+    StatusChoicesPendencias,
+    TiposDeDocumento,
+    TiposDePendencias,
+)
+from apps.retencoes.models import DocumentoFiscal, RetencaoImposto
 
 from .actions import _status_bloqueia_gestao_fiscal
 

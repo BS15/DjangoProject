@@ -2,12 +2,11 @@
 
 import logging
 
-from pypdf import PdfReadError
 from django.contrib.auth.decorators import permission_required
 from django.http import JsonResponse
+from pypdf import PdfReadError
 
 from .helpers import extract_siscac_data
-
 
 logger = logging.getLogger(__name__)
 

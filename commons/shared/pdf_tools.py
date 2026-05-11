@@ -14,14 +14,13 @@ import textwrap
 import uuid
 from datetime import date
 
-from pypdf import PdfReader, PdfWriter, PdfReadError
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
+from pypdf import PdfReader, PdfReadError, PdfWriter
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.pdfgen import canvas
-
 
 logger = logging.getLogger(__name__)
 _CHAR_WIDTH_RATIO = 0.55

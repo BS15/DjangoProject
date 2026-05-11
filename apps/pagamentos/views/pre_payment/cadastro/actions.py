@@ -1,39 +1,49 @@
 """Acoes POST da etapa de documentos fiscais do cadastro."""
 
+import json
 import logging
 from datetime import date, datetime
-from pypdf import PdfReadError
+from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
+from django.contrib.contenttypes.models import ContentType
 from django.db import DatabaseError, transaction
+from django.db.models import Sum
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
+from pypdf import PdfReadError
 
-from decimal import Decimal, InvalidOperation
-import json
-from django.db.models import Sum
-from django.contrib.contenttypes.models import ContentType
-from apps.retencoes.models import DocumentoFiscal, LiquidacaoDocumentoFiscal, RetencaoImposto, StatusChoicesRetencoes
-from commons.shared.text_tools import normalize_text
 from apps.pagamentos.domain_models import (
     Boleto_Bancario,
     DocumentoProcesso,
-    TiposDePendencias,
-    StatusChoicesPendencias,
     Pendencia,
     Processo,
     ProcessoStatus,
+    StatusChoicesPendencias,
+    TiposDePendencias,
 )
-from .helpers import processar_pdf_boleto
-from .helpers import obter_contexto_edicao
-from .forms import DocumentoFormSet, DocumentoOrcamentarioFormSet, PendenciaFormSet, ProcessoCapaEdicaoForm, ProcessoForm
+from apps.retencoes.models import (
+    DocumentoFiscal,
+    LiquidacaoDocumentoFiscal,
+    RetencaoImposto,
+    StatusChoicesRetencoes,
+)
+from commons.shared.text_tools import normalize_text
+
 from ..helpers import (
     _redirect_seguro_ou_fallback,
     _salvar_processo_completo,
 )
-
+from .forms import (
+    DocumentoFormSet,
+    DocumentoOrcamentarioFormSet,
+    PendenciaFormSet,
+    ProcessoCapaEdicaoForm,
+    ProcessoForm,
+)
+from .helpers import obter_contexto_edicao, processar_pdf_boleto
 
 logger = logging.getLogger(__name__)
 

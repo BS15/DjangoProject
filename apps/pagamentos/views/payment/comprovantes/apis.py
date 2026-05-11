@@ -3,7 +3,6 @@
 import json
 import logging
 
-from pypdf import PdfReadError
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
@@ -12,13 +11,19 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
+from pypdf import PdfReadError
 
+from apps.pagamentos.domain_models import (
+    DocumentoProcesso,
+    Processo,
+    ProcessoStatus,
+    TiposDeDocumento,
+)
 from apps.pagamentos.domain_models.documentos import ComprovanteDePagamento
-from apps.pagamentos.domain_models import DocumentoProcesso, Processo, ProcessoStatus, TiposDeDocumento
 from commons.shared.pdf_tools import split_pdf_to_temp_pages
-from .helpers import processar_pdf_comprovantes
-from .actions import vincular_comprovantes_action as api_vincular_comprovantes
 
+from .actions import vincular_comprovantes_action as api_vincular_comprovantes
+from .helpers import processar_pdf_comprovantes
 
 logger = logging.getLogger(__name__)
 
