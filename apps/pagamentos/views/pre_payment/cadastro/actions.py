@@ -2,7 +2,7 @@
 
 import logging
 from datetime import date, datetime
-import PyPDF2
+from pypdf import PdfReadError
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
@@ -301,7 +301,7 @@ def extrair_codigo_barras_documento_action(request: HttpRequest, pk: int, docume
                 boleto.save(update_fields=["codigo_barras"])
 
         messages.success(request, "Código de barras extraído com sucesso.")
-    except (PyPDF2.errors.PdfReadError, OSError, TypeError, ValueError):
+    except (PdfReadError, OSError, TypeError, ValueError):
         logger.exception(
             "Erro ao extrair código de barras do documento %s do processo %s",
             documento_id,
@@ -344,7 +344,7 @@ def _extrair_e_persistir_barcode(documento: DocumentoProcesso) -> bool:
                 boleto.codigo_barras = codigo_barras
                 boleto.save(update_fields=["codigo_barras"])
         return True
-    except (PyPDF2.errors.PdfReadError, OSError, TypeError, ValueError):
+    except (PdfReadError, OSError, TypeError, ValueError):
         logger.exception("Falha ao extrair código de barras do documento %s", documento.pk)
         return False
 

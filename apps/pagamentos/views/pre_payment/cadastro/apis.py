@@ -5,7 +5,7 @@ import logging
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 
-import PyPDF2
+from pypdf import PdfReadError
 from django.db import DatabaseError
 from django.db.models import Sum
 from django.http import JsonResponse
@@ -78,7 +78,7 @@ def api_extrair_codigos_barras_upload(request):
     if len(files) == 1:
         try:
             dados = processar_pdf_boleto(files[0]) or {}
-        except (PyPDF2.errors.PdfReadError, OSError, TypeError, ValueError):
+        except (PdfReadError, OSError, TypeError, ValueError):
             logger.exception(
                 "Erro ao processar boleto no upload %s", getattr(files[0], "name", "")
             )
@@ -105,7 +105,7 @@ def api_extrair_codigos_barras_upload(request):
             else:
                 barcodes.append(None)
                 n_falhas += 1
-        except (PyPDF2.errors.PdfReadError, OSError, TypeError, ValueError):
+        except (PdfReadError, OSError, TypeError, ValueError):
             logger.exception(
                 "Erro ao extrair código de barras de '%s'", getattr(pdf_file, "name", "arquivo")
             )

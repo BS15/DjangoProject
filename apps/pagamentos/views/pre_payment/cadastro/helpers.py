@@ -3,7 +3,7 @@
 import re
 from typing import Optional
 
-import PyPDF2
+from pypdf import PdfReader
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404
 
@@ -30,7 +30,7 @@ def obter_contexto_edicao(
 
 def processar_pdf_boleto(pdf_file):
     """Localiza linha digitável válida em PDF de boleto/arrecadação."""
-    leitor = PyPDF2.PdfReader(pdf_file)
+    leitor = PdfReader(pdf_file)
     texto = " ".join([pagina.extract_text() for pagina in leitor.pages if pagina.extract_text()])
     texto = re.sub(r"\s+", " ", texto)
 

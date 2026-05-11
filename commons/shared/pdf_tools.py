@@ -14,11 +14,10 @@ import textwrap
 import uuid
 from datetime import date
 
-import PyPDF2
+from pypdf import PdfReader, PdfWriter, PdfReadError
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from pypdf import PdfReader, PdfWriter
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.pdfgen import canvas
@@ -189,7 +188,7 @@ def mesclar_pdfs_em_memoria(lista_arquivos):
 		merger.close()
 		output_pdf.seek(0)
 		return output_pdf
-	except (PyPDF2.errors.PdfReadError, OSError, TypeError, ValueError) as exc:
+	except (PdfReadError, OSError, TypeError, ValueError) as exc:
 		logger.exception("Erro na mesclagem de PDFs em memória: %s", exc)
 		raise PdfMergeError("Falha técnica ao mesclar PDFs em memória.") from exc
 	finally:

@@ -2,7 +2,7 @@
 
 import logging
 
-import PyPDF2
+from pypdf import PdfReadError
 from django.contrib.auth.decorators import permission_required
 from django.http import JsonResponse
 
@@ -24,7 +24,7 @@ def api_extrair_dados_empenho(request):
 
     try:
         data = extract_siscac_data(siscac_file)
-    except (PyPDF2.errors.PdfReadError, OSError, TypeError, ValueError):
+    except (PdfReadError, OSError, TypeError, ValueError):
         logger.exception(
             "Erro ao extrair dados de empenho do arquivo %s", getattr(siscac_file, "name", "")
         )

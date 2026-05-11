@@ -3,7 +3,7 @@
 import json
 import logging
 
-import PyPDF2
+from pypdf import PdfReadError
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
@@ -56,7 +56,7 @@ def api_fatiar_comprovantes(request):
 
             resultados_json = [serializar_comprovante(resultado) for resultado in resultados]
             return JsonResponse({"sucesso": True, "comprovantes": resultados_json, "modo": modo})
-        except (PyPDF2.errors.PdfReadError, OSError, TypeError, ValueError) as exc:
+        except (PdfReadError, OSError, TypeError, ValueError) as exc:
             logger.exception("Erro ao fatiar comprovantes (modo=%s)", modo)
             return JsonResponse({"sucesso": False, "erro": str(exc)})
     return JsonResponse({"sucesso": False, "erro": "Arquivo não enviado."})

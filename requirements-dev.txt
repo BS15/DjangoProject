@@ -1,0 +1,14 @@
+# Development and testing dependencies
+
+# Faker is for generating test data only — not for production
+Faker>=20.0.0
+
+# Documentation tools
+mkdocs>=1.6.0
+mkdocs-material>=9.5.0
+mkdocstrings[python]>=0.27.0
+pymdown-extensions>=10.14
+
+# Security scanning
+bandit>=1.7.5
+pip-audit>=2.6.0
