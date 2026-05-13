@@ -1,18 +1,2682 @@
+
 <!doctype html>
-<html lang="pt">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Domain Knowledge - Wiki PaGé</title>
-    <meta name="generator" content="mkdocs-material">
-    <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
-</head>
-<body>
-    <div class="md-content">
-        <h1>Domain Knowledge: Public Administration Compliance</h1>
-        <p><strong>Navegação Relacionada:</strong> <a href="../backend_architecture/">Arquitetura de Backend</a>, <a href="../manager_worker/">Padrão Manager-Worker</a>, <a href="../hub_spoke/">Interface Hub-and-Spoke</a>, <a href="../../fluxos/pagamentos/">Fluxo de Pagamentos</a>, <a href="../../fluxos/cancelamento/">Fluxo de Cancelamento</a>.</p>
-        <p>Este conteúdo é gerado por mkdocs build. Para atualizar, rode: <code>mkdocs build</code></p>
-        <p>Ver: <a href="../../arquitetura/domain_knowledge.md">domain_knowledge.md</a></p>
+<html lang="pt" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentação de negócio, arquitetura e operação do GeCap">
+      
+      
+      
+      
+        <link rel="prev" href="../template_tiers/">
+      
+      
+        <link rel="next" href="../controle_acesso_contextual/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Domain Knowledge - Wiki GeCap</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#domain-knowledge-public-administration-compliance" class="md-skip">
+          Pular para conteúdo
+        </a>
+      
     </div>
-</body>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabeçalho">
+    <a href="../.." title="Wiki GeCap" class="md-header__button md-logo" aria-label="Wiki GeCap" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Wiki GeCap
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Domain Knowledge
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Buscar" placeholder="Buscar" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Pesquisar">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpar" aria-label="Limpar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando busca
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navegação" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Wiki GeCap" class="md-nav__button md-logo" aria-label="Wiki GeCap" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Wiki GeCap
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Início
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visão Geral e Negócio
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Visão Geral e Negócio
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../negocio/missao_sistema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Missão do Sistema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../negocio/glossario_conselho/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossário do Conselho
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arquitetura de Software
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Arquitetura de Software
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development_state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Estado de Desenvolvimento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../backend_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arquitetura de Backend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../manager_worker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Padrão Manager-Worker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hub_spoke/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hub-and-Spoke
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../template_tiers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Template Tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Domain Knowledge
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Domain Knowledge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-maquina-de-estado-rigida" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Máquina de Estado Rígida
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Máquina de Estado Rígida">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#exemplo-processo-de-pagamento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exemplo: Processo de Pagamento
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transicoes-permitidas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transições permitidas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementação
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-o-padrao-turnpike-validacoes-de-pre-condicao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. O Padrão Turnpike: Validações de Pré-Condição
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. O Padrão Turnpike: Validações de Pré-Condição">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#exemplos-de-turnpikes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exemplos de turnpikes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementacao_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementação
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-imutabilidade-auditoria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Imutabilidade &amp; Auditoria
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Imutabilidade &amp; Auditoria">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#never-delete-use-flags-instead" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Never Delete: Use flags instead
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#auditoria-com-django-simple-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Auditoria com django-simple-history
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#excecoes-contingencia-devolucao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exceções: Contingência &amp; Devolução
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-security-rbac-com-permission_required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Security: RBAC com @permission_required
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Security: RBAC com @permission_required">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#protecao-global" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proteção global
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#permissoes-no-modelo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Permissões no modelo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#contexto-acesso-contextual" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contexto: Acesso Contextual
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-data-types-decimaldecimal-para-dinheiro" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Data Types: decimal.Decimal para dinheiro
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checklist-conformidade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checklist: Conformidade
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../controle_acesso_contextual/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Controle de Acesso Contextual
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gestao_documentos_armazenamento/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestão de Documentos e Armazenamento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integracao_processos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integração de Processos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inversao_controle_signals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inversão de Controle com Signals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manual de Módulos
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Manual de Módulos
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modulos/pagamentos_core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pagamentos Core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modulos/verbas_indenizatorias/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verbas Indenizatórias
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modulos/suprimento_fundos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Suprimento de Fundos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modulos/modulo_fiscal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Módulo Fiscal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fluxos Operacionais
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Fluxos Operacionais
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/pagamentos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pagamentos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/pagamentos_operador_contas_pagar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pagamentos (Operador Contas a Pagar)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/retencoes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retenções
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/diarias/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diárias
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/suprimento_fundos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Suprimento de Fundos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/cancelamento/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cancelamento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segurança e Governança
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Segurança e Governança
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../governanca/trilha_auditoria/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trilha de Auditoria
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../governanca/catalogo_permissoes_grupos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catálogo de Permissões e Grupos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../governanca/matriz_permissoes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Matriz de Permissões
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operações
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operações
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operacoes/deploy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deploy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operacoes/backup_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Backup e Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operacoes/monitoramento/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitoramento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operacoes/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guia do Desenvolvedor
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guia do Desenvolvedor
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/setup_ambiente/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setup do Ambiente
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/padroes_codigo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Padrões de Código
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/dicionarios_operacionais/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dicionários Operacionais
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_pagamentos_pre_payment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Pagamentos / Pré-pagamento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_pagamentos_payment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Pagamentos / Payment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_pagamentos_post_payment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Pagamentos / Pós-pagamento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_pagamentos_support/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Pagamentos / Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_verbas_processo_diarias/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Verbas / Processo e Diárias
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_verbas_demais/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Verbas / Demais trilhas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_fiscal_suprimentos_credores/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Fiscal, Suprimentos e Credores
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/funcionalidades_transversais/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Funcionalidades Transversais
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Referência de API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-maquina-de-estado-rigida" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Máquina de Estado Rígida
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Máquina de Estado Rígida">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#exemplo-processo-de-pagamento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exemplo: Processo de Pagamento
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transicoes-permitidas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transições permitidas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementação
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-o-padrao-turnpike-validacoes-de-pre-condicao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. O Padrão Turnpike: Validações de Pré-Condição
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. O Padrão Turnpike: Validações de Pré-Condição">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#exemplos-de-turnpikes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exemplos de turnpikes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementacao_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementação
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-imutabilidade-auditoria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Imutabilidade &amp; Auditoria
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Imutabilidade &amp; Auditoria">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#never-delete-use-flags-instead" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Never Delete: Use flags instead
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#auditoria-com-django-simple-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Auditoria com django-simple-history
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#excecoes-contingencia-devolucao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exceções: Contingência &amp; Devolução
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-security-rbac-com-permission_required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Security: RBAC com @permission_required
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Security: RBAC com @permission_required">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#protecao-global" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proteção global
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#permissoes-no-modelo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Permissões no modelo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#contexto-acesso-contextual" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contexto: Acesso Contextual
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-data-types-decimaldecimal-para-dinheiro" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Data Types: decimal.Decimal para dinheiro
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checklist-conformidade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checklist: Conformidade
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="domain-knowledge-public-administration-compliance">Domain Knowledge: Public Administration Compliance<a class="headerlink" href="#domain-knowledge-public-administration-compliance" title="Permanent link">&para;</a></h1>
+<p>O GeCap executa conformidade com rigorosas exigências de administração pública brasileira. Esta seção documenta os padrões arquiteturais que garantem legalidade, rastreabilidade e imutabilidade.</p>
+<h2 id="1-maquina-de-estado-rigida">1. Máquina de Estado Rígida<a class="headerlink" href="#1-maquina-de-estado-rigida" title="Permanent link">&para;</a></h2>
+<p><a href="/negocio/glossario_conselho.md#processo">Processos financeiros</a> no setor público não evoluem "como querem". Seguem uma máquina de estado estrita, onde cada transição é permitida apenas sob certos pré-requisitos.</p>
+<h3 id="exemplo-processo-de-pagamento">Exemplo: Processo de Pagamento<a class="headerlink" href="#exemplo-processo-de-pagamento" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>A EMPENHAR
+    ▼
+AGUARDANDO LIQUIDAÇÃO
+    ▼
+A PAGAR - PENDENTE AUTORIZAÇÃO
+    ▼
+A PAGAR - PENDENTE ASSINATURA
+    ▼
+PAGO
+    ▼
+ARQUIVADO
+</code></pre></div>
+<p>Cada flecha é uma <strong>transição validada</strong> por regras de negócio.</p>
+<h3 id="transicoes-permitidas">Transições permitidas<a class="headerlink" href="#transicoes-permitidas" title="Permanent link">&para;</a></h3>
+<ul>
+<li>De <code>A EMPENHAR</code> → <code>AGUARDANDO LIQUIDAÇÃO</code>: exige <a href="/negocio/glossario_conselho.md#empenho">Empenho</a> + contrato + <a href="/negocio/glossario_conselho.md#nota-fiscal">Nota Fiscal</a></li>
+<li>De <code>AGUARDANDO LIQUIDAÇÃO</code> → <code>A PAGAR - PENDENTE AUTORIZAÇÃO</code>: exige <a href="/negocio/glossario_conselho.md#liquidacao">liquidação</a> formal</li>
+<li>De <code>A PAGAR - PENDENTE AUTORIZAÇÃO</code> → <code>A PAGAR - PENDENTE ASSINATURA</code>: exige aprovação de líder</li>
+<li>De <code>A PAGAR - PENDENTE ASSINATURA</code> → <code>PAGO</code>: exige assinatura eletrônica válida</li>
+<li>De qualquer estado → <code>CANCELADO</code>: se cumpridas regras de devolução</li>
+</ul>
+<h3 id="implementacao">Implementação<a class="headerlink" href="#implementacao" title="Permanent link">&para;</a></h3>
+<p>Transições são orquestradas via <code>Services</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># apps/verbas_indenizatorias/services/transicoes_service.py</span>
+<span class="k">def</span> <span class="nf">transicionar_diaria_para_prestacao</span><span class="p">(</span><span class="n">diaria</span><span class="p">:</span> <span class="n">Diaria</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Passa diária de EMITIDA para PRESTACAO se pré-condições OK&quot;&quot;&quot;</span>
+
+    <span class="c1"># 1. Validate preconditions (turnpikes)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">diaria</span><span class="o">.</span><span class="n">beneficiario</span><span class="o">.</span><span class="n">usuario</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">PrecondicaoNaoAtendida</span><span class="p">(</span><span class="s2">&quot;Beneficiário sem usuário&quot;</span><span class="p">)</span>
+
+    <span class="c1"># 2. Execute mutation</span>
+    <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">atomic</span><span class="p">():</span>
+        <span class="n">diaria</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">Diaria</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">PRESTACAO</span>
+        <span class="n">diaria</span><span class="o">.</span><span class="n">data_status</span> <span class="o">=</span> <span class="n">now</span><span class="p">()</span>
+        <span class="n">diaria</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;data_status&#39;</span><span class="p">])</span>
+
+        <span class="c1"># 3. Emit audit event</span>
+        <span class="n">registrar_auditoria</span><span class="p">(</span>
+            <span class="n">usuario</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">acao</span><span class="o">=</span><span class="s2">&quot;TRANSICIONAR_PARA_PRESTACAO&quot;</span><span class="p">,</span>
+            <span class="n">objeto</span><span class="o">=</span><span class="n">diaria</span><span class="p">,</span>
+            <span class="n">dados_antes</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">},</span>
+            <span class="n">dados_depois</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">}</span>
+        <span class="p">)</span>
+</code></pre></div>
+<h2 id="2-o-padrao-turnpike-validacoes-de-pre-condicao">2. O Padrão Turnpike: Validações de Pré-Condição<a class="headerlink" href="#2-o-padrao-turnpike-validacoes-de-pre-condicao" title="Permanent link">&para;</a></h2>
+<p>Um <strong><a href="/negocio/glossario_conselho.md#turnpike">Turnpike</a></strong> é uma validação que bloqueia uma transição até que todas as condições sejam atendidas. Sem documentação obrigatória = sem avanço.</p>
+<h3 id="exemplos-de-turnpikes">Exemplos de turnpikes<a class="headerlink" href="#exemplos-de-turnpikes" title="Permanent link">&para;</a></h3>
+<p><strong>Processo de Pagamento:</strong>
+- ✅ Existe empenho válido?
+- ✅ Existe liquidação com nota fiscal?
+- ✅ Valor liquidado ≤ valor empenho?
+- ✅ Todos os documentos de comprovação foram juntados?
+- ✅ Assinaturas eletrônicas recolhidas?</p>
+<p><strong>Prestação de Contas de Diária:</strong>
+- ✅ Beneficiário anexou comprovantes (notas, recibos)?
+- ✅ Comprovantes justificam as despesas realizadas?
+- ✅ Documentos estão em PDF válido?</p>
+<p><strong>Suprimento de Fundos:</strong>
+- ✅ Suprido juntou todas as notas fiscais?
+- ✅ Valor total de despesas ≤ limite autorizado?
+- ✅ Não há despesas duplicadas?</p>
+<h3 id="implementacao_1">Implementação<a class="headerlink" href="#implementacao_1" title="Permanent link">&para;</a></h3>
+<p>Turnpikes são validadores reutilizáveis:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># commons/services/turnpike_validators.py</span>
+
+<span class="k">class</span> <span class="nc">TurnpikeValidator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base para validadores de pré-condição&quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">validar_documentos_obrigatorios</span><span class="p">(</span><span class="n">processo</span><span class="p">,</span> <span class="n">tipos_obrigatorios</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Verifica se todos os tipos de doc foram juntados&quot;&quot;&quot;</span>
+        <span class="n">anexados</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">processo</span><span class="o">.</span><span class="n">documentos</span><span class="o">.</span><span class="n">values_list</span><span class="p">(</span><span class="s1">&#39;tipo&#39;</span><span class="p">,</span> <span class="n">flat</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+        <span class="n">faltantes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">tipos_obrigatorios</span><span class="p">)</span> <span class="o">-</span> <span class="n">anexados</span>
+
+        <span class="k">if</span> <span class="n">faltantes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TurnpikeNaoAtendido</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Documentos faltantes: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">faltantes</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">validar_assinaturas_necessarias</span><span class="p">(</span><span class="n">documento</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Verifica se todas as assinaturas foram coletadas&quot;&quot;&quot;</span>
+        <span class="n">assinantes_necessarios</span> <span class="o">=</span> <span class="n">documento</span><span class="o">.</span><span class="n">definir_assinantes</span><span class="p">()</span>
+        <span class="n">assinantes_presentes</span> <span class="o">=</span> <span class="n">documento</span><span class="o">.</span><span class="n">assinaturas</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">Assinatura</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">ASSINADO</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">assinantes_presentes</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">assinantes_necessarios</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">TurnpikeNaoAtendido</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Faltam </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">assinantes_necessarios</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">assinantes_presentes</span><span class="si">}</span><span class="s2"> assinaturas&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+</code></pre></div>
+<p>Antes de qualquer transição, o Service chama os Turnpikes:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Simples mas explícito</span>
+<span class="k">def</span> <span class="nf">avancar_processo</span><span class="p">(</span><span class="n">processo</span><span class="p">,</span> <span class="n">usuario</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">commons.services</span> <span class="kn">import</span> <span class="n">TurnpikeValidator</span>
+
+    <span class="n">TurnpikeValidator</span><span class="o">.</span><span class="n">validar_documentos_obrigatorios</span><span class="p">(</span>
+        <span class="n">processo</span><span class="p">,</span>
+        <span class="n">tipos_obrigatorios</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;EMPENHO&quot;</span><span class="p">,</span> <span class="s2">&quot;NOTA_FISCAL&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">TurnpikeValidator</span><span class="o">.</span><span class="n">validar_assinaturas_necessarias</span><span class="p">(</span><span class="n">processo</span><span class="o">.</span><span class="n">assinatura</span><span class="p">)</span>
+
+    <span class="n">processo</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">ProcessoStatus</span><span class="o">.</span><span class="n">PRONTO_PARA_PAGAMENTO</span>
+    <span class="n">processo</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</code></pre></div>
+<h2 id="3-imutabilidade-auditoria">3. Imutabilidade &amp; Auditoria<a class="headerlink" href="#3-imutabilidade-auditoria" title="Permanent link">&para;</a></h2>
+<p>Dinheiro público é sagrado. Nenhum registro é jamais <strong>deletado</strong>. Alterações são <strong>registradas</strong> e rastreáveis.</p>
+<h3 id="never-delete-use-flags-instead">Never Delete: Use flags instead<a class="headerlink" href="#never-delete-use-flags-instead" title="Permanent link">&para;</a></h3>
+<p>❌ <strong>Errado:</strong>
+<div class="highlight"><pre><span></span><code><span class="n">documento</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+</code></pre></div></p>
+<p>✅ <strong>Correto:</strong>
+<div class="highlight"><pre><span></span><code><span class="n">documento</span><span class="o">.</span><span class="n">data_revogacao</span> <span class="o">=</span> <span class="n">now</span><span class="p">()</span>
+<span class="n">documento</span><span class="o">.</span><span class="n">revogado_por</span> <span class="o">=</span> <span class="n">usuario</span>
+<span class="n">documento</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;data_revogacao&#39;</span><span class="p">,</span> <span class="s1">&#39;revogado_por&#39;</span><span class="p">])</span>
+</code></pre></div></p>
+<h3 id="auditoria-com-django-simple-history">Auditoria com <code>django-simple-history</code><a class="headerlink" href="#auditoria-com-django-simple-history" title="Permanent link">&para;</a></h3>
+<p>Toda alteração é rastreada automaticamente:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">simple_history.models</span> <span class="kn">import</span> <span class="n">HistoricalRecords</span>
+
+<span class="k">class</span> <span class="nc">Processo</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">valor</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DecimalField</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">history</span> <span class="o">=</span> <span class="n">HistoricalRecords</span><span class="p">()</span>
+</code></pre></div>
+<p>Quando você faz:
+<div class="highlight"><pre><span></span><code><span class="n">processo</span><span class="o">.</span><span class="n">valor</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">&quot;5000.00&quot;</span><span class="p">)</span>
+<span class="n">processo</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</code></pre></div></p>
+<p>Django-simple-history cria automaticamente um registro de histórico da entidade <code>Processo</code>:</p>
+<div class="highlight"><pre><span></span><code>| id  | valor     | status                                | changed_by | changed_at          |
+|-----|-----------|---------------------------------------|------------|---------------------|
+| 1   | 1000.00   | A EMPENHAR                            | user@...   | 2026-04-24 10:15:00 |
+| 2   | 5000.00   | AGUARDANDO LIQUIDAÇÃO                 | admin@...  | 2026-04-24 11:30:00 |
+</code></pre></div>
+<h3 id="excecoes-contingencia-devolucao">Exceções: Contingência &amp; Devolução<a class="headerlink" href="#excecoes-contingencia-devolucao" title="Permanent link">&para;</a></h3>
+<p>Quando uma operação falha ou precisa ser "desfeita", não se deleta. Usa-se modelos de exceção:</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">ContingenciaDiaria</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Quando uma diária autorizada é cancelada antes de ser paga&quot;&quot;&quot;</span>
+    <span class="n">diaria</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Diaria</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">PROTECT</span><span class="p">)</span>
+    <span class="n">motivo</span> <span class="o">=</span> <span class="n">TextField</span><span class="p">()</span>
+    <span class="n">data_contingencia</span> <span class="o">=</span> <span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">autorizado_por</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">PROTECT</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">DevolucaoSuprimento</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Quando um suprimento de fundos é devolvido antes de pago&quot;&quot;&quot;</span>
+    <span class="n">suprimento</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Suprimento</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">PROTECT</span><span class="p">)</span>
+    <span class="n">valor_devolvido</span> <span class="o">=</span> <span class="n">DecimalField</span><span class="p">()</span>
+    <span class="n">data_devolucao</span> <span class="o">=</span> <span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">comprovante</span> <span class="o">=</span> <span class="n">FileField</span><span class="p">()</span>
+</code></pre></div>
+<p>Fluxo:
+1. Diária criada (status: EMITIDA)
+2. Beneficiário faz prestação (status: PRESTACAO)
+3. Se houver problema: criar <code>ContingenciaDiaria</code> em vez de deletar
+4. Histórico preservado; auditoria rastreável</p>
+<h2 id="4-security-rbac-com-permission_required">4. Security: RBAC com <code>@permission_required</code><a class="headerlink" href="#4-security-rbac-com-permission_required" title="Permanent link">&para;</a></h2>
+<p>O Django admin (<code>/admin/</code>) é <strong>proibido</strong> para usuários operacionais. </p>
+<h3 id="protecao-global">Proteção global<a class="headerlink" href="#protecao-global" title="Permanent link">&para;</a></h3>
+<p>Todo endpoint deve ser protegido:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">django.contrib.auth.decorators</span> <span class="kn">import</span> <span class="n">permission_required</span>
+<span class="kn">from</span> <span class="nn">django.views.decorators.http</span> <span class="kn">import</span> <span class="n">require_POST</span>
+
+<span class="nd">@require_POST</span>  <span class="c1"># Rejeita GET antes de checkar permissão</span>
+<span class="nd">@permission_required</span><span class="p">(</span><span class="s1">&#39;pagamentos.operador_contas_a_pagar&#39;</span><span class="p">,</span> <span class="n">raise_exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">avancar_processo_action</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
+    <span class="c1"># Código aqui só roda se usuário tem permissão</span>
+    <span class="k">pass</span>
+</code></pre></div>
+<p><strong>Não use:</strong>
+- ❌ <code>@login_required</code> (muito permissivo)
+- ❌ <code>@user_passes_test</code> (difícil de auditar)
+- ❌ <code>if not user.has_perm(...)</code> no corpo da função (fácil esquecer)</p>
+<h3 id="permissoes-no-modelo">Permissões no modelo<a class="headerlink" href="#permissoes-no-modelo" title="Permanent link">&para;</a></h3>
+<p>Defina em <code>models.py</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+    <span class="n">permissions</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;operador_contas_a_pagar&quot;</span><span class="p">,</span> <span class="s2">&quot;Pode operar contas a pagar&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;pode_analisar_prestacao_contas&quot;</span><span class="p">,</span> <span class="s2">&quot;Pode analisar prestação de contas&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;pode_autorizar_pagamento&quot;</span><span class="p">,</span> <span class="s2">&quot;Pode autorizar pagamento&quot;</span><span class="p">),</span>
+    <span class="p">]</span>
+</code></pre></div>
+<h3 id="contexto-acesso-contextual">Contexto: Acesso Contextual<a class="headerlink" href="#contexto-acesso-contextual" title="Permanent link">&para;</a></h3>
+<p>Mesmo com permissão global, um usuário pode não ter acesso a um <strong>registro específico</strong>. Exemplo:</p>
+<ul>
+<li>Usuário A é "operador backoffice" e pode ver todos os processos</li>
+<li>Usuário B é "beneficiário de diária" e só pode ver sua própia diária</li>
+</ul>
+<p>Validators contextuais vivem em <code>helpers.py</code> de cada módulo:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># apps/verbas_indenizatorias/views/diarias/helpers.py</span>
+<span class="k">def</span> <span class="nf">pode_acessar_prestacao</span><span class="p">(</span><span class="n">usuario</span><span class="p">,</span> <span class="n">diaria</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Valida acesso contextual a uma diária&quot;&quot;&quot;</span>
+
+    <span class="c1"># Case 1: Próprio beneficiário</span>
+    <span class="k">if</span> <span class="n">diaria</span><span class="o">.</span><span class="n">beneficiario</span><span class="o">.</span><span class="n">usuario_id</span> <span class="o">==</span> <span class="n">usuario</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="c1"># Case 2: Backoffice com permissão</span>
+    <span class="k">if</span> <span class="n">usuario</span><span class="o">.</span><span class="n">has_perm</span><span class="p">(</span><span class="s1">&#39;verbas_indenizatorias.analisar_prestacao_contas&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">return</span> <span class="kc">False</span>
+</code></pre></div>
+<p>Panel/Action chama:</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">detalhe_prestacao_panel</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">diaria_id</span><span class="p">):</span>
+    <span class="n">diaria</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">Diaria</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">diaria_id</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pode_acessar_prestacao</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">diaria</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">PermissionDenied</span><span class="p">(</span><span class="s2">&quot;Acesso negado a esta diária&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;template.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;diaria&#39;</span><span class="p">:</span> <span class="n">diaria</span><span class="p">})</span>
+</code></pre></div>
+<h2 id="5-data-types-decimaldecimal-para-dinheiro">5. Data Types: <code>decimal.Decimal</code> para dinheiro<a class="headerlink" href="#5-data-types-decimaldecimal-para-dinheiro" title="Permanent link">&para;</a></h2>
+<p><strong>Jamais use <code>float</code> para dinheiro.</strong></p>
+<ul>
+<li>❌ <code>valor = 1000.50</code> (float, impreciso)</li>
+<li>✅ <code>valor = Decimal("1000.50")</code> (preciso)</li>
+</ul>
+<p>Razão: Float tem erros de arredondamento:
+<div class="highlight"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="mf">0.1</span> <span class="o">+</span> <span class="mf">0.2</span>
+<span class="mf">0.30000000000000004</span>  <span class="c1"># ❌ Errado!</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">Decimal</span><span class="p">(</span><span class="s1">&#39;0.1&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">Decimal</span><span class="p">(</span><span class="s1">&#39;0.2&#39;</span><span class="p">)</span>
+<span class="n">Decimal</span><span class="p">(</span><span class="s1">&#39;0.3&#39;</span><span class="p">)</span>  <span class="c1"># ✅ Correto</span>
+</code></pre></div></p>
+<p>Modelos:
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">Processo</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">valor</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DecimalField</span><span class="p">(</span><span class="n">max_digits</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">decimal_places</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="c1"># max_digits=12 = até R$ 9.999.999.999,99</span>
+    <span class="c1"># decimal_places=2 = sempre dois dígitos centavos</span>
+</code></pre></div></p>
+<p>Servicers e templates:
+<div class="highlight"><pre><span></span><code><span class="c1"># Sem conversão automática</span>
+<span class="n">processo</span><span class="o">.</span><span class="n">valor</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">&quot;1000.00&quot;</span><span class="p">)</span>
+<span class="n">processo</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+<span class="c1"># Template: Django formata automaticamente</span>
+<span class="p">{{</span> <span class="n">processo</span><span class="o">.</span><span class="n">valor</span><span class="o">|</span><span class="n">floatformat</span><span class="p">:</span><span class="mi">2</span> <span class="p">}}</span>  <span class="c1"># Saída: 1.000,00</span>
+</code></pre></div></p>
+<h2 id="checklist-conformidade">Checklist: Conformidade<a class="headerlink" href="#checklist-conformidade" title="Permanent link">&para;</a></h2>
+<p>Antes de submeter qualquer mudança que toque fluxo financeiro:</p>
+<ul>
+<li>✅ Máquina de estado: todas transições no Service, não em Panel/Action</li>
+<li>✅ Turnpikes: validações explícitas antes de transição</li>
+<li>✅ Imutabilidade: nenhum <code>.delete()</code>; use flags <code>revogado</code>, <code>cancelado</code></li>
+<li>✅ Auditoria: fields timestamp + <code>django-simple-history</code> presentes</li>
+<li>✅ RBAC: decorator <code>@permission_required</code> + contexto se necessário</li>
+<li>✅ Decimal: todos valores monetários usam <code>Decimal('...')</code></li>
+<li>✅ Transactions: <code>transaction.atomic()</code> em operações multi-step</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.sections", "navigation.expand", "toc.follow", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado para \u00e1rea de transfer\u00eancia", "clipboard.copy": "Copiar para \u00e1rea de transfer\u00eancia", "search.result.more.one": "mais 1 nesta p\u00e1gina", "search.result.more.other": "# mais nesta p\u00e1gina", "search.result.none": "Nenhum documento encontrado", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Digite para iniciar a busca", "search.result.term.missing": "Ausente", "select.version": "Selecione a vers\u00e3o"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
+      
+        <script src="../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
 </html>

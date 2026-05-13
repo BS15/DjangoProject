@@ -6,15 +6,15 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Documentação de negócio, arquitetura e operação do PaGé">
+        <meta name="description" content="Documentação de negócio, arquitetura e operação do GeCap">
       
       
       
       
-        <link rel="prev" href="../../negocio/glossario_conselho/">
+        <link rel="prev" href="../backend_architecture/">
       
       
-        <link rel="next" href="../camada_services/">
+        <link rel="next" href="../hub_spoke/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Padrão Manager-Worker - Wiki PaGé</title>
+        <title>Padrão Manager-Worker - Wiki GeCap</title>
       
     
     
@@ -94,7 +94,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Cabeçalho">
-    <a href="../.." title="Wiki PaGé" class="md-header__button md-logo" aria-label="Wiki PaGé" data-md-component="logo">
+    <a href="../.." title="Wiki GeCap" class="md-header__button md-logo" aria-label="Wiki GeCap" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -108,7 +108,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            Wiki PaGé
+            Wiki GeCap
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -206,13 +206,13 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navegação" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="Wiki PaGé" class="md-nav__button md-logo" aria-label="Wiki PaGé" data-md-component="logo">
+    <a href="../.." title="Wiki GeCap" class="md-nav__button md-logo" aria-label="Wiki GeCap" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    Wiki PaGé
+    Wiki GeCap
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -419,6 +419,62 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../development_state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Estado de Desenvolvimento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../backend_architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arquitetura de Backend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -535,10 +591,38 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Service/Helper — o Worker">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#garantias-de-consistencia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Garantias de consistência
+      
+    </span>
+  </a>
+  
 </li>
         
       </ul>
     </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fronteiras-obrigatorias" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fronteiras obrigatórias
+      
+    </span>
+  </a>
   
 </li>
       
@@ -580,14 +664,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../camada_services/" class="md-nav__link">
+      <a href="../hub_spoke/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Camada de Services
+    Hub-and-Spoke
   
 
     
@@ -608,14 +692,154 @@
   
   
     <li class="md-nav__item">
-      <a href="../hub_spoke/" class="md-nav__link">
+      <a href="../template_tiers/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Hub-and-Spoke
+    Template Tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../domain_knowledge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Domain Knowledge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../controle_acesso_contextual/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Controle de Acesso Contextual
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gestao_documentos_armazenamento/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestão de Documentos e Armazenamento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integracao_processos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integração de Processos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inversao_controle_signals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inversão de Controle com Signals
   
 
     
@@ -898,6 +1122,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../fluxos/pagamentos_operador_contas_pagar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pagamentos (Operador Contas a Pagar)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../fluxos/retencoes/" class="md-nav__link">
         
   
@@ -962,6 +1214,34 @@
     
   
     Suprimento de Fundos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/cancelamento/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cancelamento
   
 
     
@@ -1071,6 +1351,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../governanca/catalogo_permissoes_grupos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catálogo de Permissões e Grupos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../governanca/matriz_permissoes/" class="md-nav__link">
         
   
@@ -1131,7 +1439,7 @@
   <span class="md-ellipsis">
     
   
-    Guia do Desenvolvedor
+    Operações
   
 
     
@@ -1144,6 +1452,179 @@
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operações
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operacoes/deploy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deploy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operacoes/backup_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Backup e Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operacoes/monitoramento/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitoramento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operacoes/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guia do Desenvolvedor
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1244,14 +1725,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../desenvolvedor/funcionalidades_transversais/" class="md-nav__link">
+      <a href="../../desenvolvedor/inventario_actions/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Funcionalidades Transversais
+    Inventário de Actions
   
 
     
@@ -1272,14 +1753,210 @@
   
   
     <li class="md-nav__item">
-      <a href="../../instalacao/" class="md-nav__link">
+      <a href="../../desenvolvedor/inventario_actions_pagamentos_pre_payment/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Guia de Instalação
+    Inventário de Actions — Pagamentos / Pré-pagamento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_pagamentos_payment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Pagamentos / Payment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_pagamentos_post_payment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Pagamentos / Pós-pagamento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_pagamentos_support/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Pagamentos / Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_verbas_processo_diarias/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Verbas / Processo e Diárias
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_verbas_demais/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Verbas / Demais trilhas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_fiscal_suprimentos_credores/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Fiscal, Suprimentos e Credores
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/funcionalidades_transversais/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Funcionalidades Transversais
   
 
     
@@ -1408,10 +2085,38 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Service/Helper — o Worker">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#garantias-de-consistencia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Garantias de consistência
+      
+    </span>
+  </a>
+  
 </li>
         
       </ul>
     </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fronteiras-obrigatorias" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fronteiras obrigatórias
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1460,19 +2165,18 @@
 <h2 id="as-tres-camadas">As três camadas<a class="headerlink" href="#as-tres-camadas" title="Permanent link">&para;</a></h2>
 <h3 id="panel-o-manager">Panel — o Manager<a class="headerlink" href="#panel-o-manager" title="Permanent link">&para;</a></h3>
 <p>O arquivo <code>panels.py</code> de cada módulo responde exclusivamente a requisições GET. Seu trabalho é reunir informações já existentes no banco e montá-las em um dicionário de contexto para que o template possa renderizar a tela. Um Panel não toma decisões, não valida regras e não altera nenhum dado. É um leitor somente-leitura.</p>
-<p><strong>Navegação Relacionada:</strong> <a href="../backend_architecture/">Arquitetura de Backend</a> | <a href="../camada_services/">Camada de Services</a> | <a href="../hub_spoke/">Hub-and-Spoke</a> | <a href="../../desenvolvedor/padroes_codigo/">Padrões de Código</a> | <a href="../../governanca/matriz_permissoes/">Matriz de Permissões</a></p>
 <p>Isso garante que qualquer tela do sistema pode ser recarregada quantas vezes for necessário sem efeitos colaterais — propriedade importante em ambientes com múltiplos usuários simultâneos operando sobre os mesmos processos.</p>
 <h3 id="action-o-roteador">Action — o Roteador<a class="headerlink" href="#action-o-roteador" title="Permanent link">&para;</a></h3>
 <p>O arquivo <code>actions.py</code> responde exclusivamente a requisições POST. Sua responsabilidade é estreita: validar a entrada via formulário Django e, se válida, delegar a operação ao Service correspondente. Após a execução, a Action redireciona — nunca renderiza um template.</p>
-<p>No projeto PaGé, Actions devem usar <code>@permission_required(..., raise_exception=True)</code> para RBAC e, quando aplicável, <code>@require_POST</code> como primeira barreira de método. Consulte também <a href="../controle_acesso_contextual/">Controle de Acesso Contextual</a> e <a href="../../governanca/matriz_permissoes/">Matriz de Permissões</a>.</p>
+<p>No projeto GeCap, Actions devem usar <code>@permission_required(..., raise_exception=True)</code> para RBAC e, quando aplicável, <code>@require_POST</code> como primeira barreira de método. Consulte também <a href="../controle_acesso_contextual/">Controle de Acesso Contextual</a> e <a href="../../governanca/matriz_permissoes/">Matriz de Permissões</a>.</p>
 <p>A Action não contém regras de negócio. Ela sabe <em>quem</em> deve executar a operação, mas não <em>como</em> executá-la. Essa separação permite que a mesma lógica de domínio seja reutilizada por diferentes pontos de entrada (interface web, importação em lote, tarefa agendada) sem duplicação.</p>
 <h3 id="servicehelper-o-worker">Service/Helper — o Worker<a class="headerlink" href="#servicehelper-o-worker" title="Permanent link">&para;</a></h3>
-<p>O diretório <code>services/</code> concentra toda a lógica que muta estado: transições de status na máquina de processos, cálculos financeiros usando exclusivamente <code>decimal.Decimal</code>, validações de elegibilidade, turnpikes (validações de pré-condição que bloqueiam avanço de etapa) e integrações com sistemas externos como EFD-Reinf, isolando os pontos de falha. Para contexto de máquina de estados e turnpikes, veja <a href="../domain_knowledge/">Domain Knowledge</a>.</p>
+<p>O diretório <code>services/</code> de cada módulo concentra toda a lógica que muta estado: transições de status na máquina de processos, cálculos financeiros usando exclusivamente <code>decimal.Decimal</code>, validações de elegibilidade, turnpikes (validações de pré-condição que bloqueiam avanço de etapa) e integrações com sistemas externos como EFD-Reinf, isolando os pontos de falha. Para contexto de máquina de estados e turnpikes, veja <a href="../domain_knowledge/">Domain Knowledge</a>.</p>
 <p>A camada de services é chamada principalmente pelas Actions após validação de formulário, e também por rotinas de importação/lote/comandos quando necessário. Ela nunca deve ser acionada por templates e não deve depender de <code>request</code>. Services não conhecem HTTP, não retornam <code>HttpResponse</code> e não fazem renderização. Essa independência permite testá-la de forma isolada sem precisar simular uma requisição web.</p>
 <h4 id="garantias-de-consistencia">Garantias de consistência<a class="headerlink" href="#garantias-de-consistencia" title="Permanent link">&para;</a></h4>
 <p><strong><code>transaction.atomic()</code></strong> deve envolver mutações compostas que precisam ter sucesso/falha em bloco (ex.: avançar status + registrar documento + emitir evento de auditoria). Se qualquer etapa falhar, o banco retorna ao estado anterior.</p>
 <p><strong><code>select_for_update()</code></strong> deve ser aplicado quando houver risco de concorrência em fluxo de leitura-antes-da-escrita sobre os mesmos registros. Não é obrigatório em operações puramente append-only sem disputa de estado.</p>
-<p>Erros de domínio (dados fiscais inválidos, processo em estado incompatível, valor inconsistente) são levantados imediatamente como exceções — nunca silenciados ou compensados parcialmente.</p>
+<p>Erros de domínio são levantados imediatamente como exceções — nunca absorvidos silenciosamente. Um dado fiscal inválido, um processo em estado incompatível ou um valor inconsistente interrompem a operação antes que qualquer dado seja persistido.</p>
 <h2 id="fronteiras-obrigatorias">Fronteiras obrigatórias<a class="headerlink" href="#fronteiras-obrigatorias" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Panels: somente leitura + contexto + renderização.</li>

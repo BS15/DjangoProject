@@ -100,7 +100,7 @@ Importante: no lote, o switch altera o modo de criação da diária, mas não an
 ## 3. Hub de gerenciamento
 
 **View:** `gerenciar_diaria_view`  
-**Permissão:** `pagamentos.pode_gerenciar_diarias`
+**Permissão:** `verbas_indenizatorias.pode_gerenciar_diarias`
 
 Exibe:
 - Dados da diária (status, beneficiário, datas, valor calculado).
@@ -204,7 +204,7 @@ Ao aprovar, `_aplicar_contingencia_diaria` usa `_bypass_domain_seal = True` para
 
 **Spoke (GET):** `cancelar_diaria_spoke_view`  
 **Action (POST):** `cancelar_diaria_action`  
-**Permissão:** `pagamentos.pode_gerenciar_diarias`  
+**Permissão:** `verbas_indenizatorias.pode_gerenciar_diarias`  
 **Serviço:** `cancelar_verba` (`apps/pagamentos/services/cancelamentos.py`)
 
 - Justificativa é sempre obrigatória.

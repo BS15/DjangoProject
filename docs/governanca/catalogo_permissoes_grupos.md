@@ -13,8 +13,9 @@ Esta página concentra o inventário operacional atual de controle de acesso do 
 
 As permissões abaixo vêm de três fontes do código:
 
-- Permissões declaradas no modelo financeiro principal (`apps/pagamentos/domain_models/processos.py`), que concentra tanto permissões do fluxo de pagamentos quanto de verbas indenizatórias.
+- Permissões declaradas no modelo financeiro principal (`apps/pagamentos/domain_models/processos.py`) para o fluxo core de pagamentos.
 - Permissões declaradas nos modelos próprios de verbas (`apps/verbas_indenizatorias/models.py`) e suprimentos (`apps/suprimentos/models.py`).
+- Permissões legadas no namespace `pagamentos.*` usadas por verbas em runtime e mantidas por migrações históricas do app `pagamentos`.
 - Grupos canônicos provisionados pelo comando `setup_headstart` (`apps/pagamentos/management/commands/setup_headstart.py`).
 
 ## Permissões disponíveis
@@ -38,9 +39,9 @@ Estas permissões estão declaradas em `apps/pagamentos/domain_models/processos.
 | `pagamentos.pode_auditar_conselho` | Conselho fiscal e reuniões | Deliberação final e acesso ampliado de auditoria. |
 | `pagamentos.pode_arquivar` | Pós-pagamento | Arquivamento definitivo do processo. |
 
-## Verbas indenizatórias — escopo pagamentos
+## Verbas indenizatórias — escopo operacional (prefixos mistos)
 
-Estas permissões estão declaradas junto ao modelo financeiro principal em `apps/pagamentos/domain_models/processos.py` e são consumidas em runtime com o prefixo `pagamentos.` nas views e templates de verbas.
+As permissões de verbas em runtime usam prefixos mistos (`pagamentos.*` e `verbas_indenizatorias.*`) conforme decorators ativos nas views.
 
 | Codename | Escopo em runtime | Finalidade operacional |
 |---|---|---|
@@ -48,7 +49,7 @@ Estas permissões estão declaradas junto ao modelo financeiro principal em `app
 | `verbas_indenizatorias.pode_criar_diarias` | Diárias | Cadastro inicial de solicitações de diárias. |
 | `pagamentos.pode_importar_diarias` | Diárias | Importação em lote. |
 | `verbas_indenizatorias.pode_gerenciar_diarias` | Diárias | Edição, documentos, assinaturas e PDFs. |
-| `pagamentos.pode_autorizar_diarias` | Diárias | Aprovação de diárias pendentes, restrita às diárias em que o usuário é o proponente vinculado. |
+| `verbas_indenizatorias.pode_gerenciar_diarias` | Diárias | Gestão operacional e autorização de diárias pendentes (com guarda contextual de proponente na autorização). |
 | `pagamentos.pode_gerenciar_reembolsos` | Reembolsos | Cadastro e gestão operacional de reembolsos. |
 | `pagamentos.pode_gerenciar_jetons` | Jetons | Cadastro e gestão operacional de jetons. |
 | `pagamentos.pode_gerenciar_auxilios` | Auxílios | Cadastro e gestão operacional de auxílios. |
