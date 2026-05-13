@@ -25,7 +25,7 @@ Campos usados em cada entrada:
 |---|---|
 | Action | `agrupar_retencoes_action` |
 | Arquivo | `retencoes/views/impostos/actions.py` |
-| Rota | `agrupar_retencoes_action` (`/impostos/agrupar/`) |
+| Rota | `agrupar_retencoes_action` (`/retencoes/impostos/agrupar/action/`) |
 | Permissão | `retencoes.acesso_backoffice` |
 | Método | `POST` |
 | Entrada | `retencao_ids` (fallback: `itens_selecionados`) |
@@ -41,7 +41,7 @@ Campos usados em cada entrada:
 |---|---|
 | Action | `anexar_documentos_retencoes_action` |
 | Arquivo | `retencoes/views/impostos/actions.py` |
-| Rota | `anexar_documentos_retencoes_action` (`/impostos/anexar-documentos/`) |
+| Rota | `anexar_documentos_retencoes_action` (`/retencoes/impostos/anexar-documentos/action/`) |
 | Permissão | `retencoes.acesso_backoffice` |
 | Método | `POST` |
 | Entrada | `retencao_ids`, `guia_arquivo`, `comprovante_arquivo`, `mes_referencia`, `ano_referencia` |
@@ -57,7 +57,7 @@ Campos usados em cada entrada:
 |---|---|
 | Action | `gerar_lote_reinf_action` |
 | Arquivo | `retencoes/views/reinf/actions.py` |
-| Rota | `gerar_lote_reinf_action` (`/reinf/gerar-lotes/`) |
+| Rota | `gerar_lote_reinf_action` (`/retencoes/reinf/gerar-lotes/action/`) |
 | Permissão | `retencoes.acesso_backoffice` |
 | Método | `POST` |
 | Entrada | `competencia` (formatos `MM/AAAA` ou `AAAA-MM`) |
@@ -73,7 +73,7 @@ Campos usados em cada entrada:
 |---|---|
 | Action | `transmitir_lote_reinf_action` |
 | Arquivo | `retencoes/views/reinf/actions.py` |
-| Rota | `transmitir_lote_reinf_action` (`/reinf/transmitir-lotes/`) |
+| Rota | `transmitir_lote_reinf_action` (`/retencoes/reinf/transmitir-lotes/action/`) |
 | Permissão | `retencoes.acesso_backoffice` |
 | Método | `POST` |
 | Entrada | sem payload obrigatório |
@@ -107,7 +107,7 @@ Campos usados em cada entrada:
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `alternar_ateste_nota_action` | `apps/pagamentos/views/pre_payment/liquidacoes/actions.py` | `alternar_ateste_nota` (`/liquidacoes/atestar/<int:pk>/`) | acesso contextual: fiscal da liquidação (`liquidacao.fiscal_contrato`) ou `pagamentos.operador_contas_a_pagar` | `POST` | identificação da nota | valida vínculo do fiscal com a liquidação (ou papel de backoffice) e estado alvo de ateste | sem worker dedicado (mutação local na action) | alterna estado de ateste | painel de liquidações | `messages` success/error |
-| `avancar_para_pagamento_action` | `apps/pagamentos/views/pre_payment/liquidacoes/actions.py` | `avancar_para_pagamento` (`/processo/<int:pk>/avancar-para-pagamento/`) | `pagamentos.operador_contas_a_pagar` | `POST` | processo alvo | turnpikes de liquidação e obrigatoriedades | `processo.avancar_status(...)` (método de domínio) | avança processo para pagamento | hub do processo/painel | `messages` success/error |
+| `avancar_para_pagamento_action` | `apps/pagamentos/views/pre_payment/liquidacoes/actions.py` | `avancar_para_pagamento` (`/processo/<int:pk>/avancar-para-pagamento/action/`) | `pagamentos.operador_contas_a_pagar` | `POST` | processo alvo | turnpikes de liquidação e obrigatoriedades | `processo.avancar_status(...)` (método de domínio) | avança processo para pagamento | hub do processo/painel | `messages` success/error |
 
 ### Namespace `payment`
 
@@ -121,7 +121,7 @@ Campos usados em cada entrada:
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `autorizar_pagamento` | `apps/pagamentos/views/payment/autorizacao/actions.py` | `autorizar_pagamento` (`/processos/autorizar-pagamento/`) | `pagamentos.pode_autorizar_pagamento` | `POST` | seleção de processos para autorização | valida permissão e critérios de autorização | `_processar_acao_lote` | autoriza pagamento de processos | painel de autorização | `messages` success/error |
+| `autorizar_pagamento` | `apps/pagamentos/views/payment/autorizacao/actions.py` | `autorizar_pagamento` (`/processos/autorizar-pagamento/action/`) | `pagamentos.pode_autorizar_pagamento` | `POST` | seleção de processos para autorização | valida permissão e critérios de autorização | `_processar_acao_lote` | autoriza pagamento de processos | painel de autorização | `messages` success/error |
 | `recusar_autorizacao_action` | `apps/pagamentos/views/payment/autorizacao/actions.py` | `recusar_autorizacao` (`/processos/autorizacao/<int:pk>/recusar/`) | `pagamentos.pode_autorizar_pagamento` | `POST` | processo e motivo de recusa | validação de estado e permissão | `_recusar_processo_view` | registra recusa e atualiza estado | painel de autorização | `messages` success/error |
 
 #### Etapa `lancamento`
@@ -188,8 +188,8 @@ Campos usados em cada entrada:
 
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `add_contingencia_action` | `apps/pagamentos/views/support/contingencia/actions.py` | `add_contingencia_action` (`/contingencias/nova/enviar/`) | `pagamentos.operador_contas_a_pagar` | `POST` | dados de contingência | validação de elegibilidade e campos obrigatórios | `normalizar_dados_propostos_contingencia` + `determinar_requisitos_contingencia` | cria contingência vinculada ao processo | painel de contingências | `messages` success/error |
-| `analisar_contingencia_action` | `apps/pagamentos/views/support/contingencia/actions.py` | `analisar_contingencia` (`/contingencias/<int:pk>/analisar/`) | `pagamentos.operador_contas_a_pagar` + permissão da etapa (`pode_aprovar_contingencia_supervisor`, `pode_aprovar_contingencia_ordenador`, `pode_aprovar_contingencia_conselho`, `pode_revisar_contingencia_contadora`) | `POST` | decisão sobre contingência | validação de estado, etapa corrente e permissão específica da etapa | `processar_aprovacao_contingencia` + `processar_revisao_contadora_contingencia` | aprova/recusa contingência e atualiza estado | painel de contingências | `messages` success/error |
+| `add_contingencia_action` | `apps/pagamentos/views/support/contingencia/actions.py` | `add_contingencia_action` (`/contingencias/nova/enviar/action/`) | `pagamentos.operador_contas_a_pagar` | `POST` | dados de contingência | validação de elegibilidade e campos obrigatórios | `normalizar_dados_propostos_contingencia` + `determinar_requisitos_contingencia` | cria contingência vinculada ao processo | painel de contingências | `messages` success/error |
+| `analisar_contingencia_action` | `apps/pagamentos/views/support/contingencia/actions.py` | `analisar_contingencia` (`/contingencias/<int:pk>/analisar/action/`) | `pagamentos.operador_contas_a_pagar` + permissão da etapa (`pode_aprovar_contingencia_supervisor`, `pode_aprovar_contingencia_ordenador`, `pode_aprovar_contingencia_conselho`, `pode_revisar_contingencia_contadora`) | `POST` | decisão sobre contingência | validação de estado, etapa corrente e permissão específica da etapa | `processar_aprovacao_contingencia` + `processar_revisao_contadora_contingencia` | aprova/recusa contingência e atualiza estado | painel de contingências | `messages` success/error |
 
 #### Etapa `contas_fixas`
 
@@ -209,8 +209,8 @@ Campos usados em cada entrada:
 | `editar_processo_verbas_documentos_action` | `apps/verbas_indenizatorias/views/processo/actions.py` | `editar_processo_verbas_documentos_action` (`/processo/<int:pk>/editar-verbas/documentos/action/`) | `verbas_indenizatorias.pode_gerenciar_processos_verbas` | `POST` | dados documentais e anexos | regras documentais da etapa | `DocumentoFormSet.save()` | cria/atualiza documentos | tela de edição de verbas | `messages` success/error |
 | `agrupar_verbas_view` | `apps/verbas_indenizatorias/views/processo/actions.py` | `agrupar_verbas` (`/verbas/agrupar/<str:tipo_verba>/`) | `verbas_indenizatorias.pode_agrupar_verbas` | `POST` | tipo de verba + seleção de itens | validação por tipo de verba | `criar_processo_e_vincular_verbas` | agrupa verbas em processo de pagamento | painel de verbas | `messages` success/error |
 | `add_diaria_action` | `apps/verbas_indenizatorias/views/diarias/actions.py` | `add_diaria_action` (`/verbas/diarias/nova/action/`) | `verbas_indenizatorias.pode_criar_diarias` | `POST` | dados de diária | validações de beneficiário e período | `_salvar_diaria_base` | cria diária e estado inicial | listas/gerência de diárias | `messages` success/error |
-| `registrar_comprovante_action` | `apps/verbas_indenizatorias/views/diarias/actions.py` | `registrar_comprovante_action` (`/verbas/diarias/<int:pk>/comprovantes/registrar/`) | `pagamentos.pode_gerenciar_diarias` | `POST` | comprovante e diária alvo | validação de arquivo e estado | `_salvar_documento_upload` | anexa comprovante e ajusta estado | gerência da diária | `messages` success/error |
-| `cancelar_diaria_action` | `apps/verbas_indenizatorias/views/diarias/actions.py` | `cancelar_diaria_action` (`/verbas/diarias/<int:pk>/cancelar/`) | `pagamentos.pode_gerenciar_diarias` | `POST` | diária alvo | validação de cancelamento permitido | `diaria.avancar_status(...)` + `_set_status_case_insensitive` | cancela diária | listas/gerência de diárias | `messages` success/error |
+| `registrar_comprovante_action` | `apps/verbas_indenizatorias/views/diarias/actions.py` | `registrar_comprovante_action` (`/verbas/diarias/<int:pk>/comprovantes/registrar/`) | `pagamentos.pode_visualizar_verbas` | `POST` | comprovante e diária alvo | validação de arquivo e estado | `_salvar_documento_upload` | anexa comprovante e ajusta estado | gerência da diária | `messages` success/error |
+| `cancelar_diaria_action` | `apps/verbas_indenizatorias/views/diarias/actions.py` | `cancelar_diaria_action` (`/verbas/diarias/<int:pk>/cancelar/action/`) | `verbas_indenizatorias.pode_gerenciar_diarias` | `POST` | diária alvo | validação de cancelamento permitido | `diaria.avancar_status(...)` + `_set_status_case_insensitive` | cancela diária | listas/gerência de diárias | `messages` success/error |
 | `add_reembolso_action` | `apps/verbas_indenizatorias/views/reembolsos/actions.py` | `add_reembolso_action` (`/verbas/reembolsos/novo/action/`) | `pagamentos.pode_gerenciar_reembolsos` | `POST` | dados de reembolso | validações de campos e valores | `ReembolsoForm.save()` | cria reembolso | listas/gerência de reembolsos | `messages` success/error |
 | `solicitar_autorizacao_reembolso_action` | `apps/verbas_indenizatorias/views/reembolsos/actions.py` | `solicitar_autorizacao_reembolso_action` (`/verbas/reembolsos/<int:pk>/solicitar-autorizacao/`) | `pagamentos.pode_gerenciar_reembolsos` | `POST` | reembolso alvo | validações de elegibilidade | `_set_status_case_insensitive` | altera status para solicitação de autorização | gerência de reembolso | `messages` success/error |
 | `autorizar_reembolso_action` | `apps/verbas_indenizatorias/views/reembolsos/actions.py` | `autorizar_reembolso_action` (`/verbas/reembolsos/<int:pk>/autorizar/`) | `pagamentos.pode_gerenciar_reembolsos` | `POST` | reembolso alvo | validações de autorização | `_set_status_case_insensitive` | autoriza reembolso | gerência de reembolso | `messages` success/error |
@@ -230,8 +230,8 @@ Campos usados em cada entrada:
 | Action | Arquivo | Rota | Permissão | Método | Entrada | Validações | Worker | Efeitos | Redirect | Feedback |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `add_suprimento_action` | `apps/suprimentos/views/cadastro/actions.py` | `add_suprimento_action` (`/suprimentos/novo/action/`) | `suprimentos.acesso_backoffice` | `POST` | dados cadastrais de suprimento | validação de formulário e limites | `_persistir_suprimento_com_processo` | cria suprimento e processo associado | painel/lista de suprimentos | `messages` success/error |
-| `adicionar_despesa_action` | `apps/suprimentos/views/prestacao_contas/actions.py` | `registrar_despesa_action` (`/suprimentos/<int:pk>/despesas/adicionar/`) | `suprimentos.pode_adicionar_despesas_suprimento` | `POST` | despesa e suprimento alvo | validação de prestação e documentos | `DespesaSuprimentoForm.save()` | registra despesa do suprimento | gerência de suprimento | `messages` success/error |
-| `fechar_suprimento_action` | `apps/suprimentos/views/prestacao_contas/actions.py` | `concluir_prestacao_action` (`/suprimentos/<int:pk>/fechar/`) | `suprimentos.pode_encerrar_suprimento` | `POST` | suprimento alvo | validação de fechamento e pendências | `_atualizar_status_apos_fechamento` | conclui prestação do suprimento | gerência/painel de suprimentos | `messages` success/error |
+| `adicionar_despesa_action` | `apps/suprimentos/views/prestacao_contas/actions.py` | `registrar_despesa_action` (`/suprimentos/<int:pk>/despesas/adicionar/action/`) | `suprimentos.pode_adicionar_despesas_suprimento` | `POST` | despesa e suprimento alvo | validação de prestação e documentos | `DespesaSuprimentoForm.save()` | registra despesa do suprimento | gerência de suprimento | `messages` success/error |
+| `fechar_suprimento_action` | `apps/suprimentos/views/prestacao_contas/actions.py` | `concluir_prestacao_action` (`/suprimentos/<int:pk>/fechar/action/`) | `suprimentos.pode_encerrar_suprimento` | `POST` | suprimento alvo | validação de fechamento e pendências | `_atualizar_status_apos_fechamento` | conclui prestação do suprimento | gerência/painel de suprimentos | `messages` success/error |
 
 ## Dicionário de Workers/Helpers Fiscais
 

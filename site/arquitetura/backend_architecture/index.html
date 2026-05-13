@@ -1,18 +1,2457 @@
+
 <!doctype html>
-<html lang="pt">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Arquitetura de Backend - Wiki PaGé</title>
-    <meta name="generator" content="mkdocs-material">
-    <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
-</head>
-<body>
-    <div class="md-content">
-        <h1>Arquitetura de Backend: Domínios Isolados e Dependências One-Way</h1>
-        <p><strong>Navegação Relacionada:</strong> <a href="../development_state/">Estado de Desenvolvimento</a>, <a href="../manager_worker/">Padrão Manager-Worker</a>, <a href="../hub_spoke/">Interface Hub-and-Spoke</a>, <a href="../domain_knowledge/">Domain Knowledge</a>, <a href="../../governanca/matriz_permissoes/">Matriz de Permissões</a>.</p>
-        <p>Este conteúdo é gerado por mkdocs build. Para atualizar, rode: <code>mkdocs build</code></p>
-        <p>Ver: <a href="../../arquitetura/backend_architecture.md">backend_architecture.md</a></p>
+<html lang="pt" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentação de negócio, arquitetura e operação do GeCap">
+      
+      
+      
+      
+        <link rel="prev" href="../development_state/">
+      
+      
+        <link rel="next" href="../manager_worker/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Arquitetura de Backend - Wiki GeCap</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#arquitetura-de-backend-dominios-isolados-e-dependencias-one-way" class="md-skip">
+          Pular para conteúdo
+        </a>
+      
     </div>
-</body>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabeçalho">
+    <a href="../.." title="Wiki GeCap" class="md-header__button md-logo" aria-label="Wiki GeCap" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Wiki GeCap
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Arquitetura de Backend
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Buscar" placeholder="Buscar" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Pesquisar">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpar" aria-label="Limpar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando busca
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navegação" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Wiki GeCap" class="md-nav__button md-logo" aria-label="Wiki GeCap" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Wiki GeCap
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Início
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visão Geral e Negócio
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Visão Geral e Negócio
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../negocio/missao_sistema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Missão do Sistema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../negocio/glossario_conselho/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossário do Conselho
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arquitetura de Software
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Arquitetura de Software
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development_state/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Estado de Desenvolvimento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arquitetura de Backend
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arquitetura de Backend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#por-que-o-processos-foi-shattered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Por que o processos foi shattered
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arquitetura-modular-dominios-atuais" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arquitetura modular: Domínios atuais
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Arquitetura modular: Domínios atuais">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pagamentos-o-coracao-do-fluxo-financeiro" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pagamentos/ — O Coração do fluxo financeiro
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verbas_indenizatorias-suprimentos-aplicacoes-satelites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        verbas_indenizatorias/, suprimentos/ — Aplicações satélites
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retencoes-integracao-com-orgaos-externos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        retencoes/ — Integração com órgãos externos
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cadastros-dados-mestres" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cadastros/ — Dados mestres
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commons-infraestrutura-compartilhada" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        commons/ — Infraestrutura compartilhada
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#regra-de-dependencias-one-way" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regra de Dependências: One-Way
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Regra de Dependências: One-Way">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#por-que-one-way" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Por que one-way?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementacao-de-shared-logic-sem-breaking-one-way" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementação de shared logic sem breaking one-way
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#import-chains-e-como-evitar-ciclos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Import chains e como evitar ciclos
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#estrutura-recomendada-por-app-satelite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estrutura recomendada por app satélite
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checklist-validando-isolamento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checklist: Validando isolamento
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../manager_worker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Padrão Manager-Worker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hub_spoke/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hub-and-Spoke
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../template_tiers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Template Tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../domain_knowledge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Domain Knowledge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../controle_acesso_contextual/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Controle de Acesso Contextual
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gestao_documentos_armazenamento/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestão de Documentos e Armazenamento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integracao_processos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integração de Processos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inversao_controle_signals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inversão de Controle com Signals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manual de Módulos
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Manual de Módulos
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modulos/pagamentos_core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pagamentos Core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modulos/verbas_indenizatorias/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verbas Indenizatórias
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modulos/suprimento_fundos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Suprimento de Fundos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modulos/modulo_fiscal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Módulo Fiscal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fluxos Operacionais
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Fluxos Operacionais
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/pagamentos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pagamentos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/pagamentos_operador_contas_pagar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pagamentos (Operador Contas a Pagar)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/retencoes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retenções
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/diarias/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diárias
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/suprimento_fundos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Suprimento de Fundos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../fluxos/cancelamento/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cancelamento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segurança e Governança
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Segurança e Governança
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../governanca/trilha_auditoria/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trilha de Auditoria
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../governanca/catalogo_permissoes_grupos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catálogo de Permissões e Grupos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../governanca/matriz_permissoes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Matriz de Permissões
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operações
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operações
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operacoes/deploy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deploy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operacoes/backup_restore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Backup e Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operacoes/monitoramento/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitoramento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operacoes/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guia do Desenvolvedor
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guia do Desenvolvedor
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/setup_ambiente/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setup do Ambiente
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/padroes_codigo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Padrões de Código
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/dicionarios_operacionais/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dicionários Operacionais
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_pagamentos_pre_payment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Pagamentos / Pré-pagamento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_pagamentos_payment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Pagamentos / Payment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_pagamentos_post_payment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Pagamentos / Pós-pagamento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_pagamentos_support/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Pagamentos / Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_verbas_processo_diarias/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Verbas / Processo e Diárias
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_verbas_demais/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Verbas / Demais trilhas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/inventario_actions_fiscal_suprimentos_credores/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inventário de Actions — Fiscal, Suprimentos e Credores
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desenvolvedor/funcionalidades_transversais/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Funcionalidades Transversais
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Referência de API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#por-que-o-processos-foi-shattered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Por que o processos foi shattered
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#arquitetura-modular-dominios-atuais" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arquitetura modular: Domínios atuais
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Arquitetura modular: Domínios atuais">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pagamentos-o-coracao-do-fluxo-financeiro" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pagamentos/ — O Coração do fluxo financeiro
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verbas_indenizatorias-suprimentos-aplicacoes-satelites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        verbas_indenizatorias/, suprimentos/ — Aplicações satélites
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retencoes-integracao-com-orgaos-externos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        retencoes/ — Integração com órgãos externos
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cadastros-dados-mestres" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cadastros/ — Dados mestres
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commons-infraestrutura-compartilhada" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        commons/ — Infraestrutura compartilhada
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#regra-de-dependencias-one-way" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regra de Dependências: One-Way
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Regra de Dependências: One-Way">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#por-que-one-way" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Por que one-way?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementacao-de-shared-logic-sem-breaking-one-way" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementação de shared logic sem breaking one-way
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#import-chains-e-como-evitar-ciclos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Import chains e como evitar ciclos
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#estrutura-recomendada-por-app-satelite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estrutura recomendada por app satélite
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checklist-validando-isolamento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checklist: Validando isolamento
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="arquitetura-de-backend-dominios-isolados-e-dependencias-one-way">Arquitetura de Backend: Domínios Isolados e Dependências One-Way<a class="headerlink" href="#arquitetura-de-backend-dominios-isolados-e-dependencias-one-way" title="Permanent link">&para;</a></h1>
+<h2 id="por-que-o-processos-foi-shattered">Por que o <code>processos</code> foi shattered<a class="headerlink" href="#por-que-o-processos-foi-shattered" title="Permanent link">&para;</a></h2>
+<p>Historicamente, o sistema era construído como um único aplicativo Django monolítico chamado <code>processos</code>. Este design criou problemas:</p>
+<ol>
+<li><strong>Acoplamento espaguete:</strong> toda lógica de pagamentos, retenções, verbas e suprimentos vivia no mesmo app</li>
+<li><strong>Ciclos de import:</strong> utilitários importavam modelos que importavam validators que importavam utils</li>
+<li><strong>Falta de boundary:</strong> era impossível entender "isto é responsabilidade de quem?"</li>
+<li><strong>Testes frágeis:</strong> mudar uma coisa quebrava testes não relacionados</li>
+</ol>
+<p>A solução foi <strong>quebrar o monolito</strong> em domínios isolados, cada um com responsabilidade clara.</p>
+<h2 id="arquitetura-modular-dominios-atuais">Arquitetura modular: Domínios atuais<a class="headerlink" href="#arquitetura-modular-dominios-atuais" title="Permanent link">&para;</a></h2>
+<p>O GeCap é organizado em apps Django com boundaries de domínio bem definidos:</p>
+<div class="highlight"><pre><span></span><code>DjangoProject/
+├── pagamentos/             # Core do fluxo financeiro (Processo, status, etapas)
+├── verbas_indenizatorias/  # Diárias, Jetons, Reembolsos, etc
+├── suprimentos/            # Suprimento de fundos
+├── retencoes/                 # NF-e, retenções, EFD-Reinf
+├── cadastros/               # Cadastro e dados mestres de fornecedores
+└── commons/                # Utilitários compartilhados, PDF, assinaturas
+</code></pre></div>
+<h3 id="pagamentos-o-coracao-do-fluxo-financeiro"><code>pagamentos/</code> — O Coração do fluxo financeiro<a class="headerlink" href="#pagamentos-o-coracao-do-fluxo-financeiro" title="Permanent link">&para;</a></h3>
+<p>Contém:
+- <strong>Modelos centrais:</strong> <code>Processo</code> (em <code>apps/pagamentos/domain_models/processos.py</code>) e entidades correlatas de documentos/status
+- <strong>Máquina de estado:</strong> transições bem definidas (A EMPENHAR → AGUARDANDO LIQUIDAÇÃO → A PAGAR → PAGO, etc)
+- <strong>Auditoria:</strong> integração com <code>django-simple-history</code>
+- <strong>Validadores de domínio:</strong> regras que aplicações satélites consultam</p>
+<p>O domínio financeiro em <code>pagamentos/</code> é o coração do sistema. <strong>Toda</strong> operação passa por ele.</p>
+<h3 id="verbas_indenizatorias-suprimentos-aplicacoes-satelites"><code>verbas_indenizatorias/</code>, <code>suprimentos/</code> — Aplicações satélites<a class="headerlink" href="#verbas_indenizatorias-suprimentos-aplicacoes-satelites" title="Permanent link">&para;</a></h3>
+<p>Contêm:
+- <strong>Modelos específicos:</strong> <a href="/negocio/glossario_conselho.md#diaria">Diária</a>, <a href="/negocio/glossario_conselho.md#jeton">Jeton</a>, <a href="/negocio/glossario_conselho.md#suprimento-de-fundos">Suprimento de Fundos</a>, etc
+- <strong>Views isoladas:</strong> estrutura <a href="/arquitetura/manager_worker.md">Manager-Worker</a> própria
+- <strong>Lógica de negócio própria:</strong> regras de elegibilidade, cálculos, transições</p>
+<p>Estas apps consomem o domínio financeiro central em <code>pagamentos/</code> e mantêm regras próprias.</p>
+<h3 id="retencoes-integracao-com-orgaos-externos"><code>retencoes/</code> — Integração com órgãos externos<a class="headerlink" href="#retencoes-integracao-com-orgaos-externos" title="Permanent link">&para;</a></h3>
+<p>Contém:
+- <strong>Sincronização de NF-e:</strong> integração com sistema fiscal
+- <strong><a href="/negocio/glossario_conselho.md#retencao-de-imposto">Retenções</a>:</strong> cálculo de impostos e repasse
+- <strong>EFD-Reinf:</strong> geração de escrituração fiscal</p>
+<h3 id="cadastros-dados-mestres"><code>cadastros/</code> — Dados mestres<a class="headerlink" href="#cadastros-dados-mestres" title="Permanent link">&para;</a></h3>
+<p>Contém:
+- <strong>Cadastro de fornecedores</strong>
+- <strong>Dados fiscais:</strong> CNPJ, inscrição estadual, tipo de pessoa
+- <strong>Contas correntes:</strong> dados de TED</p>
+<h3 id="commons-infraestrutura-compartilhada"><code>commons/</code> — Infraestrutura compartilhada<a class="headerlink" href="#commons-infraestrutura-compartilhada" title="Permanent link">&para;</a></h3>
+<p>Contém:
+- <strong>Utilitários de PDF:</strong> geração, extração, merge
+- <strong>Serviços de assinatura:</strong> integração com Autentique
+- <strong>Storage e arquivo:</strong> upload/download seguro
+- <strong>Ferramentas de texto:</strong> normalização, formatação</p>
+<h2 id="regra-de-dependencias-one-way">Regra de Dependências: One-Way<a class="headerlink" href="#regra-de-dependencias-one-way" title="Permanent link">&para;</a></h2>
+<p><strong>Dependências permitidas (alto nível):</strong></p>
+<div class="highlight"><pre><span></span><code>verbas_indenizatorias ──┐
+suprimentos ────────────┼──&gt; pagamentos (core financeiro)
+fiscal ─────────────────┤
+credores ───────────────┘
+
+Todos: commons (infraestrutura)
+</code></pre></div>
+<p><strong>Dependências proibidas:</strong></p>
+<ul>
+<li>❌ <code>pagamentos/</code> importar lógicas específicas de <code>verbas_indenizatorias/</code> ou <code>suprimentos/</code> (ciclo de domínio)</li>
+<li>❌ <code>verbas_indenizatorias/</code> importa de <code>suprimentos/</code> (cruzamento)</li>
+<li>❌ acoplamentos cruzados sem necessidade de domínio (ex.: app satélite importando service interno de outro satélite)</li>
+</ul>
+<h3 id="por-que-one-way">Por que one-way?<a class="headerlink" href="#por-que-one-way" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Evita ciclos:</strong> o core financeiro não deve acoplar regras satélites</li>
+<li><strong>Facilita testes:</strong> você testa cada domínio com menor superfície de dependências</li>
+<li><strong>Clareza de boundary:</strong> "satélite depende do core, nunca o contrário"</li>
+</ol>
+<h2 id="implementacao-de-shared-logic-sem-breaking-one-way">Implementação de shared logic sem breaking one-way<a class="headerlink" href="#implementacao-de-shared-logic-sem-breaking-one-way" title="Permanent link">&para;</a></h2>
+<p>Se você precisa de lógica compartilhada entre satélites sem inserir no core:</p>
+<p>✅ <strong>Correto:</strong> Coloque em <code>commons/shared/</code> (infrastructure)
+<div class="highlight"><pre><span></span><code><span class="c1"># commons/shared/document_services.py</span>
+<span class="k">def</span> <span class="nf">anexar_documento_generico</span><span class="p">(</span><span class="n">modelo</span><span class="p">,</span> <span class="n">arquivo</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Usado por diarias, suprimentos, fiscal, etc&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</code></pre></div></p>
+<p>❌ <strong>Errado:</strong> Coloque no core financeiro sem necessidade de compartilhamento real
+<div class="highlight"><pre><span></span><code><span class="c1"># apps/pagamentos/services/document_services.py — NÃO FAÇA ISTO</span>
+<span class="k">def</span> <span class="nf">anexar_documento_generico</span><span class="p">(</span><span class="o">...</span><span class="p">):</span>
+    <span class="k">pass</span>
+</code></pre></div></p>
+<h2 id="import-chains-e-como-evitar-ciclos">Import chains e como evitar ciclos<a class="headerlink" href="#import-chains-e-como-evitar-ciclos" title="Permanent link">&para;</a></h2>
+<p>Monitorar cycles com:
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>manage.py<span class="w"> </span>check
+</code></pre></div></p>
+<p>Se vir:
+<div class="highlight"><pre><span></span><code>SystemCheckError: System check identified some issues:
+E001 … circular import detected between pagamentos and verbas_indenizatorias
+</code></pre></div></p>
+<p><strong>Estratégia de resolução:</strong></p>
+<ol>
+<li>Procure imports em nível de módulo (<code>from ... import ...</code> no topo do arquivo)</li>
+<li>Mova-os para imports locais (dentro de funções)</li>
+<li>Exemplo:</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="c1"># models.py — ❌ ERRADO</span>
+<span class="kn">from</span> <span class="nn">..services.transicoes</span> <span class="kn">import</span> <span class="n">transicion_pode_avancar</span>
+
+<span class="k">class</span> <span class="nc">Processo</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">avanca</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">transicion_pode_avancar</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+<span class="c1"># models.py — ✅ CORRETO</span>
+<span class="k">class</span> <span class="nc">Processo</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">avanca</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">..services.transicoes</span> <span class="kn">import</span> <span class="n">transicion_pode_avancar</span>
+        <span class="n">transicion_pode_avancar</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="estrutura-recomendada-por-app-satelite">Estrutura recomendada por app satélite<a class="headerlink" href="#estrutura-recomendada-por-app-satelite" title="Permanent link">&para;</a></h2>
+<p>Cada app satélite deveria ter:</p>
+<div class="highlight"><pre><span></span><code>meu_app/
+├── models.py           # Modelos específicos
+├── apps.py
+├── forms.py
+├── filters.py
+├── admin.py
+├── migrations/
+├── views/              # Manager-Worker structure
+│   ├── modulo1/
+│   │   ├── panels.py
+│   │   ├── actions.py
+│   │   ├── forms.py
+│   │   ├── helpers.py
+│   │   └── services/
+│   └── modulo2/
+│       └── ...
+├── services/           # Serviços de negócio
+│   ├── criacao_service.py
+│   ├── transicoes_service.py
+│   └── validacoes_service.py
+├── migrations/
+├── templates/
+│   └── meu_app/
+└── tests/
+    └── test_views.py
+</code></pre></div>
+<h2 id="checklist-validando-isolamento">Checklist: Validando isolamento<a class="headerlink" href="#checklist-validando-isolamento" title="Permanent link">&para;</a></h2>
+<p>Antes de submeter PR:</p>
+<ul>
+<li>✅ Evite import recíproco entre domínios (core ↔ satélite)</li>
+<li>✅ Prefira integrações via serviços explícitos e imports locais quando necessário</li>
+<li>✅ Circulares detectados? Use imports locais</li>
+<li>✅ <code>python manage.py check</code> passa</li>
+<li>✅ Urls estão em <code>urlconf/</code> centralizado, não em app</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.sections", "navigation.expand", "toc.follow", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado para \u00e1rea de transfer\u00eancia", "clipboard.copy": "Copiar para \u00e1rea de transfer\u00eancia", "search.result.more.one": "mais 1 nesta p\u00e1gina", "search.result.more.other": "# mais nesta p\u00e1gina", "search.result.none": "Nenhum documento encontrado", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Digite para iniciar a busca", "search.result.term.missing": "Ausente", "select.version": "Selecione a vers\u00e3o"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
+      
+        <script src="../../javascripts/mermaid-init.js"></script>
+      
+    
+  </body>
 </html>

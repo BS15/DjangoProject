@@ -41,14 +41,14 @@ python manage.py createsuperuser
 O projeto usa pytest com o plugin Django.
 
 ```bash
-pytest
+python3 -m pytest -q
 ```
 
 A configuração está em `pytest.ini` na raiz do projeto. Para executar um módulo específico:
 
 ```bash
-pytest retencoes/
-pytest pagamentos/
+python3 -m pytest -q apps/retencoes/tests
+python3 -m pytest -q apps/pagamentos/tests
 ```
 
 ## Seed e dados de apoio

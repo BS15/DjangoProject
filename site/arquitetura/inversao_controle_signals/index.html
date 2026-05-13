@@ -11,10 +11,10 @@
       
       
       
-        <link rel="prev" href="../monitoramento/">
+        <link rel="prev" href="../integracao_processos/">
       
       
-        <link rel="next" href="../../desenvolvedor/setup_ambiente/">
+        <link rel="next" href="../../modulos/pagamentos_core/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Troubleshooting - Wiki GeCap</title>
+        <title>Inversão de Controle com Signals - Wiki GeCap</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#troubleshooting" class="md-skip">
+        <a href="#inversao-de-controle-com-signals-event-driven-architecture" class="md-skip">
           Pular para conteúdo
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Troubleshooting
+              Inversão de Controle com Signals
             
           </span>
         </div>
@@ -365,8 +365,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -377,13 +379,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
@@ -404,7 +404,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -422,7 +422,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../arquitetura/development_state/" class="md-nav__link">
+      <a href="../development_state/" class="md-nav__link">
         
   
   
@@ -450,7 +450,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../arquitetura/backend_architecture/" class="md-nav__link">
+      <a href="../backend_architecture/" class="md-nav__link">
         
   
   
@@ -478,7 +478,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../arquitetura/manager_worker/" class="md-nav__link">
+      <a href="../manager_worker/" class="md-nav__link">
         
   
   
@@ -506,7 +506,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../arquitetura/hub_spoke/" class="md-nav__link">
+      <a href="../hub_spoke/" class="md-nav__link">
         
   
   
@@ -534,7 +534,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../arquitetura/template_tiers/" class="md-nav__link">
+      <a href="../template_tiers/" class="md-nav__link">
         
   
   
@@ -562,7 +562,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../arquitetura/domain_knowledge/" class="md-nav__link">
+      <a href="../domain_knowledge/" class="md-nav__link">
         
   
   
@@ -590,7 +590,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../arquitetura/controle_acesso_contextual/" class="md-nav__link">
+      <a href="../controle_acesso_contextual/" class="md-nav__link">
         
   
   
@@ -618,7 +618,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../arquitetura/gestao_documentos_armazenamento/" class="md-nav__link">
+      <a href="../gestao_documentos_armazenamento/" class="md-nav__link">
         
   
   
@@ -646,7 +646,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../arquitetura/integracao_processos/" class="md-nav__link">
+      <a href="../integracao_processos/" class="md-nav__link">
         
   
   
@@ -671,10 +671,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../arquitetura/inversao_controle_signals/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inversão de Controle com Signals
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -690,6 +717,98 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#o-problema-que-os-signals-resolvem-anti-corruption-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O Problema que os Signals Resolvem (Anti-Corruption Layer)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#padrao-adotado-message-bus-interno" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Padrão Adotado (Message Bus Interno)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Padrão Adotado (Message Bus Interno)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-o-barramento-base-commonssharedsignalspy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. O Barramento Base (commons/shared/signals.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-emissao-repatriacao-da-logica-no-dominio-satelite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Emissão (Repatriação da Lógica no Domínio Satélite)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-recepcao-restrita-appspagamentosreceiverspy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Recepção Restrita (apps/pagamentos/receivers.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#beneficios-deste-ajuste" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benefícios Deste Ajuste
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1253,8 +1372,6 @@
       
   
   
-    
-  
   
   
     
@@ -1267,11 +1384,13 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
         
           
           <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
@@ -1292,7 +1411,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1310,7 +1429,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../deploy/" class="md-nav__link">
+      <a href="../../operacoes/deploy/" class="md-nav__link">
         
   
   
@@ -1338,7 +1457,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../backup_restore/" class="md-nav__link">
+      <a href="../../operacoes/backup_restore/" class="md-nav__link">
         
   
   
@@ -1366,7 +1485,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../monitoramento/" class="md-nav__link">
+      <a href="../../operacoes/monitoramento/" class="md-nav__link">
         
   
   
@@ -1391,37 +1510,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Troubleshooting
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../operacoes/troubleshooting/" class="md-nav__link">
         
   
   
@@ -1437,92 +1529,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Índice">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Índice
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#problemas-de-fluxo-operacional" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Problemas de Fluxo Operacional
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#problemas-de-permissao" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Problemas de Permissão
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#problemas-de-upload" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Problemas de Upload
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#integracoes-externas" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Integrações Externas
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#problemas-de-ambiente" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Problemas de Ambiente
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#problemas-de-auditoria" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Problemas de Auditoria
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1987,10 +1993,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#problemas-de-fluxo-operacional" class="md-nav__link">
+  <a href="#o-problema-que-os-signals-resolvem-anti-corruption-layer" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Problemas de Fluxo Operacional
+        O Problema que os Signals Resolvem (Anti-Corruption Layer)
       
     </span>
   </a>
@@ -1998,54 +2004,60 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#problemas-de-permissao" class="md-nav__link">
+  <a href="#padrao-adotado-message-bus-interno" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Problemas de Permissão
+        Padrão Adotado (Message Bus Interno)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Padrão Adotado (Message Bus Interno)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-o-barramento-base-commonssharedsignalspy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. O Barramento Base (commons/shared/signals.py)
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#problemas-de-upload" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#2-emissao-repatriacao-da-logica-no-dominio-satelite" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Problemas de Upload
+        2. Emissão (Repatriação da Lógica no Domínio Satélite)
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#integracoes-externas" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#3-recepcao-restrita-appspagamentosreceiverspy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Integrações Externas
+        3. Recepção Restrita (apps/pagamentos/receivers.py)
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#problemas-de-ambiente" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Problemas de Ambiente
-      
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#problemas-de-auditoria" class="md-nav__link">
+  <a href="#beneficios-deste-ajuste" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Problemas de Auditoria
+        Benefícios Deste Ajuste
       
     </span>
   </a>
@@ -2069,191 +2081,42 @@
 
 
 
-<h1 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h1>
-<p>Tabela de problemas comuns, causas prováveis e ações corretivas.</p>
-<hr />
-<h2 id="problemas-de-fluxo-operacional">Problemas de Fluxo Operacional<a class="headerlink" href="#problemas-de-fluxo-operacional" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Sintoma</th>
-<th>Causa Provável</th>
-<th>Solução</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Processo não avança de etapa (Turnpike bloqueado)</td>
-<td>Documento obrigatório ausente (ex: Nota Fiscal, Documento Orçamentário, guia de imposto)</td>
-<td>Acessar o detalhe do processo; verificar a seção de pendências; anexar o documento do tipo exigido e tentar avançar novamente</td>
-</tr>
-<tr>
-<td>Verba não aparece para agrupamento</td>
-<td>Item não está em status <code>REVISADA</code></td>
-<td>Operador de contas a pagar deve revisar o item antes do agrupamento</td>
-</tr>
-<tr>
-<td>Diária não pode ser solicitada</td>
-<td>Status ainda em <code>RASCUNHO</code> sem dados obrigatórios</td>
-<td>Completar o cadastro da diária e utilizar a ação "Solicitar"</td>
-</tr>
-<tr>
-<td>Suprimento não encerra</td>
-<td>Prestação de contas não aprovada</td>
-<td>Aprovar a <code>PrestacaoContasSuprimento</code> antes de encerrar o suprimento</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="problemas-de-permissao">Problemas de Permissão<a class="headerlink" href="#problemas-de-permissao" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Sintoma</th>
-<th>Causa Provável</th>
-<th>Solução</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>HTTP 403 ao acessar qualquer ação</td>
-<td>Usuário não possui o codename de permissão necessário</td>
-<td>Validar o codename exigido na <a href="../../governanca/matriz_permissoes/">Matriz de Permissões</a>, revisar os grupos/permissões provisionados no banco e conferir o painel RBAC de desenvolvedor (sem depender de operação via <code>/admin/</code>)</td>
-</tr>
-<tr>
-<td>HTTP 403 mesmo sendo superusuário</td>
-<td>Improvável — superusuários têm todas as permissões</td>
-<td>Verificar se <code>raise_exception=True</code> está correto; checar se o usuário está de fato ativo (<code>is_active=True</code>)</td>
-</tr>
-<tr>
-<td>Usuário redireciona para login ao invés de 403</td>
-<td><code>raise_exception=False</code> em algum decorator</td>
-<td>Todos os decorators do projeto devem usar <code>raise_exception=True</code>; corrigir na view afetada</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="problemas-de-upload">Problemas de Upload<a class="headerlink" href="#problemas-de-upload" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Sintoma</th>
-<th>Causa Provável</th>
-<th>Solução</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>"Tipo de arquivo não permitido"</td>
-<td>Arquivo não é PDF, JPEG ou PNG (validado por magic bytes, não pela extensão)</td>
-<td>Converter o arquivo para um formato aceito</td>
-</tr>
-<tr>
-<td>"Arquivo muito grande" / erro 413 do Nginx</td>
-<td>Arquivo excede 20 MB</td>
-<td>Comprimir o arquivo ou dividir em partes menores</td>
-</tr>
-<tr>
-<td>Upload aceito mas arquivo não abre</td>
-<td>Arquivo corrompido antes do upload</td>
-<td>Verificar integridade do arquivo original</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="integracoes-externas">Integrações Externas<a class="headerlink" href="#integracoes-externas" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Sintoma</th>
-<th>Causa Provável</th>
-<th>Solução</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Envio de documento à Autentique falha</td>
-<td><code>AUTENTIQUE_API_TOKEN</code> ausente ou inválido no <code>.env</code></td>
-<td>Verificar e atualizar o token no <code>.env</code>; reiniciar o container <code>web</code></td>
-</tr>
-<tr>
-<td>Autentique retorna erro de timeout</td>
-<td>Indisponibilidade temporária da API externa</td>
-<td>Aguardar e tentar novamente; consultar o status da Autentique</td>
-</tr>
-<tr>
-<td>SISCAC mostra divergências no sync</td>
-<td>Número do comprovante bancário não corresponde ao registrado no sistema</td>
-<td>Usar a funcionalidade de seleção manual de comprovante na interface de conciliação</td>
-</tr>
-<tr>
-<td>Transmissão EFD-Reinf falha</td>
-<td>Sem conectividade com o servidor da Receita Federal, ou XML malformado</td>
-<td>Verificar conectividade de rede; revisar os XMLs gerados em <code>/retencoes/reinf/gerar-lotes/action/</code> antes de transmitir</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="problemas-de-ambiente">Problemas de Ambiente<a class="headerlink" href="#problemas-de-ambiente" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Sintoma</th>
-<th>Causa Provável</th>
-<th>Solução</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Container <code>web</code> reinicia em loop</td>
-<td>Erro de configuração no <code>.env</code> ou falha na migração</td>
-<td>Executar <code>docker compose logs web</code> para ver o erro; verificar variáveis obrigatórias</td>
-</tr>
-<tr>
-<td>Container <code>db</code> em <code>unhealthy</code></td>
-<td>PostgreSQL não iniciou corretamente</td>
-<td>Executar <code>docker compose logs db</code>; verificar se as variáveis <code>POSTGRES_*</code> estão corretas</td>
-</tr>
-<tr>
-<td>Arquivos estáticos não carregam (CSS/JS sumindo)</td>
-<td><code>collectstatic</code> não foi executado ou volume não montado corretamente</td>
-<td>Executar <code>docker compose exec web python manage.py collectstatic --noinput</code></td>
-</tr>
-<tr>
-<td><code>migrate</code> falha com erro de schema</td>
-<td>Mudança incompatível de modelo (pré-V1)</td>
-<td>Aplicar o Clean Slate Protocol — ver <a href="../backup_restore/">Backup e Restore</a></td>
-</tr>
-<tr>
-<td>Página retorna 502 Bad Gateway</td>
-<td>Container <code>web</code> parado ou lento</td>
-<td>Verificar <code>docker compose ps</code>; reiniciar com <code>docker compose restart web</code></td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="problemas-de-auditoria">Problemas de Auditoria<a class="headerlink" href="#problemas-de-auditoria" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Sintoma</th>
-<th>Causa Provável</th>
-<th>Solução</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Histórico de um objeto não aparece</td>
-<td><code>django-simple-history</code> não instalado/migrado corretamente</td>
-<td>Verificar se as migrações de <code>simple_history</code> foram aplicadas</td>
-</tr>
-<tr>
-<td>Registro deletado acidentalmente</td>
-<td>Violação do princípio de imutabilidade</td>
-<td>No pré-V1, restaurar via backup. Em produção, usar modelos <code>Contingência</code> ou <code>Devolução</code> para reverter efeitos sem deletar</td>
-</tr>
-</tbody>
-</table>
+<h1 id="inversao-de-controle-com-signals-event-driven-architecture">Inversão de Controle com Signals (Event-Driven Architecture)<a class="headerlink" href="#inversao-de-controle-com-signals-event-driven-architecture" title="Permanent link">&para;</a></h1>
+<p>Para manter a integridade do <strong>Monolito Modular</strong> e garantir que o app <code>pagamentos</code> e os domínios satélites (<code>suprimentos</code>, <code>verbas_indenizatorias</code>, etc.) operem de forma desacoplada, o <strong>GeCap</strong> adota o padrão de eventos de domínio utilizando os Signals nativos do Django.</p>
+<h2 id="o-problema-que-os-signals-resolvem-anti-corruption-layer">O Problema que os Signals Resolvem (Anti-Corruption Layer)<a class="headerlink" href="#o-problema-que-os-signals-resolvem-anti-corruption-layer" title="Permanent link">&para;</a></h2>
+<p>Em uma arquitetura sem eventos, é comum que a lógica central (como o cancelamento de pagamentos) importe funções diretamente de módulos satélites ou vice-versa, criando "God Objects" (arquivos inchados que centralizam todo o negócio).</p>
+<p>O uso imperativo causava <strong>Vazamento de Padrões (Pattern Bleed)</strong>. Exemplo: Para cancelar uma verba, a view de verbas importava um serviço hard-coded de pagamentos. Se o sistema ganhasse o módulo de <em>Licitações</em>, o módulo de pagamentos precisaria ser alterado para conhecer licitações, violando o princípio de <em>Open-Closed</em>.</p>
+<h2 id="padrao-adotado-message-bus-interno">Padrão Adotado (Message Bus Interno)<a class="headerlink" href="#padrao-adotado-message-bus-interno" title="Permanent link">&para;</a></h2>
+<p>A arquitetura resolve esse acoplamento delegando ao emissor a responsabilidade de anunciar ocorrências por meio do Barramento de Eventos.</p>
+<h3 id="1-o-barramento-base-commonssharedsignalspy">1. O Barramento Base (<code>commons/shared/signals.py</code>)<a class="headerlink" href="#1-o-barramento-base-commonssharedsignalspy" title="Permanent link">&para;</a></h3>
+<p>Todos os eventos transversais ficam tipados na app fundacional <code>commons</code>. Exemplo:
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">django.dispatch</span>
+
+<span class="n">solicitacao_cancelamento_processo</span> <span class="o">=</span> <span class="n">django</span><span class="o">.</span><span class="n">dispatch</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
+</code></pre></div></p>
+<h3 id="2-emissao-repatriacao-da-logica-no-dominio-satelite">2. Emissão (Repatriação da Lógica no Domínio Satélite)<a class="headerlink" href="#2-emissao-repatriacao-da-logica-no-dominio-satelite" title="Permanent link">&para;</a></h3>
+<p>As classes satélites são donas das suas próprias lógicas de alteração e encerramento. No caso das Diárias ou Suprimentos, seus próprios serviços de cancelamento atômicos (<code>apps/suprimentos/services/cancelamentos.py</code>) validam e alteram internamente seu modelo para "Cancelado".
+Em seguida, lançam a mensagem ao barramento:
+<div class="highlight"><pre><span></span><code><span class="n">solicitacao_cancelamento_processo</span><span class="o">.</span><span class="n">send</span><span class="p">(</span>
+    <span class="n">sender</span><span class="o">=</span><span class="n">suprimento</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span>
+    <span class="n">instance</span><span class="o">=</span><span class="n">suprimento</span><span class="p">,</span>
+    <span class="n">processo</span><span class="o">=</span><span class="n">suprimento</span><span class="o">.</span><span class="n">processo</span><span class="p">,</span>
+    <span class="n">justificativa</span><span class="o">=</span><span class="s2">&quot;Motivo cancelamento...&quot;</span><span class="p">,</span>
+    <span class="n">usuario</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+    <span class="n">dados_devolucao</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">},</span>
+    <span class="n">tipo_cancelamento_relacional</span><span class="o">=</span><span class="s2">&quot;suprimento_fundos&quot;</span><span class="p">,</span>
+    <span class="n">kwargs_relacional</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;suprimento&quot;</span><span class="p">:</span> <span class="n">suprimento</span><span class="p">},</span>
+<span class="p">)</span>
+</code></pre></div></p>
+<h3 id="3-recepcao-restrita-appspagamentosreceiverspy">3. Recepção Restrita (<code>apps/pagamentos/receivers.py</code>)<a class="headerlink" href="#3-recepcao-restrita-appspagamentosreceiverspy" title="Permanent link">&para;</a></h3>
+<p>O sistema financeiro, operando de maneira reativa, escuta esse canal por meio de Receivers conectados durante o boot inicial (<code>AppConfig.ready()</code> em <code>apps/pagamentos/apps.py</code>).
+O receiver reage interceptando o objeto <code>processo</code> transmitido. De forma autônoma e transacionada, apropria a etapa de Pagamentos: ele cancela a esteira do fluxo, gera os recibos de devolução sistêmica (<code>DevolucaoProcessual</code>) e lança as auditorias sem nunca precisar invadir o escopo do disparador. </p>
+<h2 id="beneficios-deste-ajuste">Benefícios Deste Ajuste<a class="headerlink" href="#beneficios-deste-ajuste" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Escalablidade Sem Modificar Regras Existentes:</strong> Qualquer app recém-criado capaz de emitir o Signal será automaticamente compreendido pelo sistema financeiro, sem alterar uma vírgula em <code>pagamentos</code>.</li>
+<li><strong>Manutenção do Isolamento:</strong> Apps ganham total autonomia para rodar testes atômicos locais em seus bancos de dados isolados.</li>
+<li><strong>Limpeza Funcional:</strong> Ajuda a retirar helpers visuais (classes filtrantes, componentes HTML importados entre apps) e lógicas mistas do domínio transacional e reorientá-los para bibliotecas adequadas como o <code>commons/shared</code>.</li>
+</ol>
 
 
 

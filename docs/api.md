@@ -38,23 +38,23 @@ Fluxos de formulário HTML surfaceiam erros de negócio via sistema de mensagens
 
 | Método | Path | Permissão | Descrição | Redirect sucesso |
 |---|---|---|---|---|
-| `POST` | `/impostos/agrupar/` | `retencoes.acesso_backoffice` | Agrupa `RetencaoImposto` selecionadas em um `Processo` de recolhimento | `editar_processo(pk)` |
-| `POST` | `/impostos/anexar-documentos/` | `retencoes.acesso_backoffice` | Anexa guia, comprovante e relatório mensal a processos de recolhimento | `painel_impostos_view` |
+| `POST` | `/retencoes/impostos/agrupar/action/` | `retencoes.acesso_backoffice` | Agrupa `RetencaoImposto` selecionadas em um `Processo` de recolhimento | `editar_processo(pk)` |
+| `POST` | `/retencoes/impostos/anexar-documentos/action/` | `retencoes.acesso_backoffice` | Anexa guia, comprovante e relatório mensal a processos de recolhimento | `painel_impostos_view` |
 
 ### Endpoints JSON / File Response
 
 | Método | Path | Permissão | Descrição | Resposta sucesso |
 |---|---|---|---|---|
-| `POST` | `/reinf/gerar-lotes/` | `retencoes.acesso_backoffice` | Gera XMLs de lotes EFD-Reinf para a competência informada | `200` + arquivo ZIP |
-| `POST` | `/reinf/transmitir-lotes/` | `retencoes.acesso_backoffice` | Transmite lotes EFD-Reinf pendentes | `200` JSON |
+| `POST` | `/retencoes/reinf/gerar-lotes/action/` | `retencoes.acesso_backoffice` | Gera XMLs de lotes EFD-Reinf para a competência informada | `200` + arquivo ZIP |
+| `POST` | `/retencoes/reinf/transmitir-lotes/action/` | `retencoes.acesso_backoffice` | Placeholder de transmissão EFD-Reinf (retorna aviso e redirect para painel) | Redirect `painel_reinf_view` |
 
-**Parâmetros — `/reinf/gerar-lotes/`:**
+**Parâmetros — `/retencoes/reinf/gerar-lotes/action/`:**
 
 | Campo | Tipo | Obrigatório | Formato |
 |---|---|---|---|
-| `competencia` | string | sim | `MM/AAAA` ou `AAAA-MM` |
+| `competencia` | string | sim | `AAAA-MM` |
 
-**Erros — `/reinf/gerar-lotes/`:** `400` quando competência ausente ou inválida; `404` quando não há lotes elegíveis.
+**Erros — `/retencoes/reinf/gerar-lotes/action/`:** `400` quando competência ausente ou inválida; `404` quando não há lotes elegíveis.
 
 ---
 
@@ -67,8 +67,8 @@ Fluxos de formulário HTML surfaceiam erros de negócio via sistema de mensagens
 | Método | Path | Permissão | Descrição | Redirect sucesso |
 |---|---|---|---|---|
 | `POST` | `/verbas/diarias/nova/action/` | `verbas_indenizatorias.pode_criar_diarias` | Cria diária em status `RASCUNHO` | `gerenciar_diaria(pk)` |
-| `POST` | `/verbas/diarias/<pk>/solicitar-autorizacao/` | `pagamentos.pode_gerenciar_diarias` | Avança diária para `SOLICITADA` | `gerenciar_diaria(pk)` |
-| `POST` | `/verbas/diarias/<pk>/autorizar/` | `pagamentos.pode_autorizar_diarias` | Avança diária para `APROVADA` apenas quando o usuário é o proponente vinculado da diária | `gerenciar_diaria(pk)` |
+| `POST` | `/verbas/diarias/<pk>/solicitar-autorizacao/` | `verbas_indenizatorias.pode_gerenciar_diarias` | Avança diária para `SOLICITADA` | `gerenciar_diaria(pk)` |
+| `POST` | `/verbas/diarias/<pk>/autorizar/` | `verbas_indenizatorias.pode_gerenciar_diarias` | Avança diária para `APROVADA` apenas quando o usuário é o proponente vinculado da diária | `gerenciar_diaria(pk)` |
 | `POST` | `/verbas/agrupar/<tipo_verba>/` | `verbas_indenizatorias.pode_agrupar_verbas` | Agrupa itens elegíveis em processo de pagamento | `editar_processo_verbas(pk)` |
 
 ---
@@ -82,10 +82,10 @@ Fluxos de formulário HTML surfaceiam erros de negócio via sistema de mensagens
 | Método | Path | Permissão | Descrição | Redirect sucesso |
 |---|---|---|---|---|
 | `POST` | `/suprimentos/novo/action/` | `suprimentos.acesso_backoffice` | Cria `SuprimentoDeFundos` (status `ABERTO`) e `Processo` em `A EMPENHAR` | `gerenciar_suprimento_view(pk)` |
-| `POST` | `/suprimentos/<pk>/despesas/adicionar/` | `suprimentos.pode_adicionar_despesas_suprimento` | Registra despesa e anexo de comprovante no suprimento | `gerenciar_suprimento_view(pk)` |
-| `POST` | `/suprimentos/<pk>/fechar/` | `suprimentos.pode_encerrar_suprimento` | Encerra suprimento; Processo vai para `PAGO - EM CONFERÊNCIA` | `suprimentos_list` |
-| `POST` | `/suprimentos/<pk>/prestacao/enviar/` | `suprimentos.pode_gerir_prestacao_contas_suprimento` | Suprido envia prestação para revisão (status `ENVIADA`) | `gerenciar_suprimento_view(pk)` |
-| `POST` | `/suprimentos/prestacoes/<pk>/aprovar/` | `suprimentos.pode_gerir_prestacao_contas_suprimento` | Operador aprova prestação; gera devolução do saldo remanescente | `revisar_prestacoes_suprimento` |
+| `POST` | `/suprimentos/<pk>/despesas/adicionar/action/` | `suprimentos.pode_adicionar_despesas_suprimento` | Registra despesa e anexo de comprovante no suprimento | `gerenciar_suprimento_view(pk)` |
+| `POST` | `/suprimentos/<pk>/fechar/action/` | `suprimentos.pode_encerrar_suprimento` | Encerra suprimento; Processo vai para `PAGO - EM CONFERÊNCIA` | `suprimentos_list` |
+| `POST` | `/suprimentos/<pk>/prestacao/enviar/action/` | `suprimentos.pode_gerir_prestacao_contas_suprimento` | Suprido envia prestação para revisão (status `ENVIADA`) | `gerenciar_suprimento_view(pk)` |
+| `POST` | `/suprimentos/prestacoes/<pk>/aprovar/action/` | `suprimentos.pode_gerir_prestacao_contas_suprimento` | Operador aprova prestação; gera devolução do saldo remanescente | `revisar_prestacoes_suprimento` |
 
 ---
 
@@ -100,20 +100,20 @@ Fluxos de formulário HTML surfaceiam erros de negócio via sistema de mensagens
 | Método | Path | Permissão | Descrição |
 |---|---|---|---|
 | `POST` | `/adicionar/action/` | `pagamentos.pode_editar_processos_pagamento` | Cria novo processo financeiro |
-| `POST` | `/api/processo/<processo_pk>/salvar-nota-fiscal/<nota_pk>/` | `pagamentos.operador_contas_a_pagar` | Cria/edita nota fiscal e retenções do processo |
-| `POST` | `/processo/<pk>/avancar-para-pagamento/` | `pagamentos.operador_contas_a_pagar` | Avança processo para próxima etapa (turnpike aplicado) |
-| `POST` | `/processos/autorizar-pagamento/` | `pagamentos.pode_autorizar_pagamento` | Autoriza processos em lote |
+| `POST` | `/processos/enviar-autorizacao/action/` | `pagamentos.operador_contas_a_pagar` | Envia processos elegíveis para a etapa de autorização |
+| `POST` | `/processo/<pk>/avancar-para-pagamento/action/` | `pagamentos.operador_contas_a_pagar` | Avança processo para próxima etapa (turnpike aplicado) |
+| `POST` | `/processos/autorizar-pagamento/action/` | `pagamentos.pode_autorizar_pagamento` | Autoriza processos em lote |
 | `POST` | `/liquidacoes/atestar/<pk>/` | acesso contextual: fiscal da liquidação (`liquidacao.fiscal_contrato`) ou backoffice com `pagamentos.operador_contas_a_pagar` | Alterna ateste da nota fiscal |
-| `POST` | `/processos/contabilizacao/<pk>/aprovar/` | `pagamentos.pode_contabilizar` | Registro contábil pós-pagamento |
-| `POST` | `/processos/arquivamento/<pk>/executar/` | `pagamentos.pode_arquivar` | Arquivamento definitivo |
-| `POST` | `/contingencias/nova/enviar/` | `pagamentos.operador_contas_a_pagar` | Abre contingência processual |
-| `POST` | `/contingencias/<pk>/analisar/` | `pagamentos.operador_contas_a_pagar` + permissão da etapa (`pode_aprovar_contingencia_supervisor`, `pode_aprovar_contingencia_ordenador`, `pode_aprovar_contingencia_conselho`, `pode_revisar_contingencia_contadora`) | Aprova/recusa contingência conforme etapa |
+| `POST` | `/processos/contabilizacao/<pk>/aprovar/action/` | `pagamentos.pode_contabilizar` | Registro contábil pós-pagamento |
+| `POST` | `/processos/arquivamento/<pk>/executar/action/` | `pagamentos.pode_arquivar` | Arquivamento definitivo |
+| `POST` | `/contingencias/nova/enviar/action/` | `pagamentos.operador_contas_a_pagar` | Abre contingência processual |
+| `POST` | `/contingencias/<pk>/analisar/action/` | `pagamentos.operador_contas_a_pagar` + permissão da etapa (`pode_aprovar_contingencia_supervisor`, `pode_aprovar_contingencia_ordenador`, `pode_aprovar_contingencia_conselho`, `pode_revisar_contingencia_contadora`) | Aprova/recusa contingência conforme etapa |
 
 ### Endpoints JSON
 
 | Método | Path | Permissão | Descrição | Resposta sucesso |
 |---|---|---|---|---|
-| `POST` | `/api/comprovantes/vincular/` | `pagamentos.operador_contas_a_pagar` | Vinculação de comprovantes de pagamento a processos | `200` JSON |
+| `POST` | `/api/detalhes-pagamento/` | `pagamentos.operador_contas_a_pagar` | Retorna resumo de detalhes de pagamento para processos selecionados | `200` JSON |
 
 ---
 
@@ -125,8 +125,8 @@ Fluxos de formulário HTML surfaceiam erros de negócio via sistema de mensagens
 
 | Método | Path | Permissão | Descrição | Redirect sucesso |
 |---|---|---|---|---|
-| `POST` | `/adicionar-credor/action/` | `pagamentos.operador_contas_a_pagar` | Cadastra novo credor | `gerenciar_credor_view(pk)` |
-| `POST` | `/credores/<pk>/editar/action/` | `pagamentos.operador_contas_a_pagar` | Atualiza dados cadastrais e bancários | `gerenciar_credor_view(pk)` |
+| `POST` | `/cadastros/credores/novo/action/` | `pagamentos.operador_contas_a_pagar` | Cadastra novo credor | `gerenciar_credor_view(pk)` |
+| `POST` | `/cadastros/credores/<pk>/editar/action/` | `pagamentos.operador_contas_a_pagar` | Atualiza dados cadastrais e bancários | `gerenciar_credor_view(pk)` |
 
 ---
 

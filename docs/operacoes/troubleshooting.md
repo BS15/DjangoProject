@@ -43,7 +43,7 @@ Tabela de problemas comuns, causas prováveis e ações corretivas.
 | Envio de documento à Autentique falha | `AUTENTIQUE_API_TOKEN` ausente ou inválido no `.env` | Verificar e atualizar o token no `.env`; reiniciar o container `web` |
 | Autentique retorna erro de timeout | Indisponibilidade temporária da API externa | Aguardar e tentar novamente; consultar o status da Autentique |
 | SISCAC mostra divergências no sync | Número do comprovante bancário não corresponde ao registrado no sistema | Usar a funcionalidade de seleção manual de comprovante na interface de conciliação |
-| Transmissão EFD-Reinf falha | Sem conectividade com o servidor da Receita Federal, ou XML malformado | Verificar conectividade de rede; revisar os XMLs gerados em `/reinf/gerar-lotes/` antes de transmitir |
+| Transmissão EFD-Reinf falha | Sem conectividade com o servidor da Receita Federal, ou XML malformado | Verificar conectividade de rede; revisar os XMLs gerados em `/retencoes/reinf/gerar-lotes/action/` antes de transmitir |
 
 ---
 
