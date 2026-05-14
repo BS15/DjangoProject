@@ -1,5 +1,7 @@
 """Download seguro de arquivos com validação de acesso por contexto de negócio."""
 
+import os
+
 from django.http import Http404, HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from django.views.decorators.clickjacking import xframe_options_sameorigin
@@ -129,8 +131,12 @@ def download_arquivo_seguro(request, tipo_documento, documento_id):
         ip_address=request.META.get("REMOTE_ADDR"),
     )
 
+    safe_name = os.path.normpath(arquivo.name)
+    if safe_name.startswith("..") or os.path.isabs(safe_name):
+        raise Http404("Caminho de arquivo inválido.")
+
     response = HttpResponse()
-    response["X-Accel-Redirect"] = f"/media/{arquivo.name}"
+    response["X-Accel-Redirect"] = f"/media/{safe_name}"
     response["Content-Disposition"] = f'inline; filename="{nome_arquivo}"'
     response["X-Content-Type-Options"] = "nosniff"
     return response
