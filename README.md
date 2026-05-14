@@ -24,7 +24,11 @@ GeCap é um ERP de backoffice financeiro e administrativo desenvolvido para enti
 ```bash
 # 1. Clonar e configurar variáveis de ambiente
 cp .env.example .env
-# Editar .env com SECRET_KEY, credenciais do banco e demais variáveis obrigatórias
+# Editar .env e preencher obrigatoriamente:
+#   SECRET_KEY      — chave secreta Django (gere uma nova, não use o placeholder)
+#   POSTGRES_PASSWORD / DB_PASSWORD  — mesma senha para o banco
+#   ALLOWED_HOSTS   — ex: localhost (já configurado por padrão)
+#   CSRF_TRUSTED_ORIGINS — ex: http://localhost (já configurado por padrão)
 
 # 2. Subir o ambiente
 docker compose up --build
@@ -32,7 +36,7 @@ docker compose up --build
 # 3. A aplicação estará disponível em http://localhost
 ```
 
-O `docker compose up` executa automaticamente `migrate`, `collectstatic`, `setup_grupos` e `setup_baselines` antes de iniciar o Gunicorn.
+O `docker compose up` executa automaticamente `migrate`, `collectstatic` e `setup_headstart` (catálogos financeiros e grupos/permissões) antes de iniciar o Gunicorn.
 
 Para criar o superusuário inicial:
 
