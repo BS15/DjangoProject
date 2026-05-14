@@ -9,4 +9,6 @@ from django.apps import AppConfig
 
 class RetencoesConfig(AppConfig):
     """Configuração do aplicativo de retenções."""
+    default_auto_field = "django.db.models.BigAutoField"
     name = "apps.retencoes"
+    verbose_name = "Retenções"
