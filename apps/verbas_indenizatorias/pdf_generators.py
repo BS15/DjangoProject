@@ -21,716 +21,716 @@ _PCD_SIG_HALF_WIDTH = 130
 
 
 def _safe_text(value, fallback="Não informado"):
-	"""Retorna texto normalizado para exibição."""
-	if value is None:
-		return fallback
-	text = str(value).strip()
-	return text or fallback
+    """Retorna texto normalizado para exibição."""
+    if value is None:
+        return fallback
+    text = str(value).strip()
+    return text or fallback
 
 
 def _format_date(value, fallback="Não informado"):
-	"""Formata datas no padrão brasileiro."""
-	return value.strftime('%d/%m/%Y') if value else fallback
+    """Formata datas no padrão brasileiro."""
+    return value.strftime('%d/%m/%Y') if value else fallback
 
 
 def _get_cargo_funcao(beneficiario):
-	"""Obtém cargo/função do beneficiário."""
-	return _safe_text(getattr(beneficiario, "cargo_funcao", None))
+    """Obtém cargo/função do beneficiário."""
+    return _safe_text(getattr(beneficiario, "cargo_funcao", None))
 
 
 def _get_data_evento(obj):
-	"""Resolve data de evento por campo próprio ou por contexto do processo."""
-	data_evento = getattr(obj, "data_evento", None)
-	if data_evento:
-		return _format_date(data_evento)
-	processo = getattr(obj, "processo", None)
-	reuniao_conselho = getattr(processo, "reuniao_conselho", None) if processo else None
-	return _format_date(getattr(reuniao_conselho, "data_reuniao", None))
+    """Resolve data de evento por campo próprio ou por contexto do processo."""
+    data_evento = getattr(obj, "data_evento", None)
+    if data_evento:
+        return _format_date(data_evento)
+    processo = getattr(obj, "processo", None)
+    reuniao_conselho = getattr(processo, "reuniao_conselho", None) if processo else None
+    return _format_date(getattr(reuniao_conselho, "data_reuniao", None))
 
 
 class PCDDocument(BasePDFDocument):
-	"""Gera o PDF da Proposta de Concessão de Diárias (PCD)."""
+    """Gera o PDF da Proposta de Concessão de Diárias (PCD)."""
 
-	def draw_content(self):
-		"""Desenha corpo da PCD no canvas."""
-		diaria = self.obj
-		c = self.canvas
-		width = self.page_width
-		height = self.page_height
+    def draw_content(self):
+        """Desenha corpo da PCD no canvas."""
+        diaria = self.obj
+        c = self.canvas
+        width = self.page_width
+        height = self.page_height
 
-		margin_left = 70
-		margin_right = 70
-		text_width = width - margin_left - margin_right
+        margin_left = 70
+        margin_right = 70
+        text_width = width - margin_left - margin_right
 
-		y = height - 160
+        y = height - 160
 
-		c.setFont("Helvetica-Bold", 13)
-		c.drawCentredString(width / 2.0, y, "PROPOSTA DE CONCESSÃO DE DIÁRIAS (PCD)")
-		y -= 18
-		c.setFont("Helvetica-Bold", 11)
-		c.drawCentredString(width / 2.0, y, f"Nº {diaria.numero_siscac}")
-		y -= 16
-		c.setFont("Helvetica", 10)
-		c.drawCentredString(width / 2.0, y, f"Tipo: {diaria.get_tipo_solicitacao_display()}")
-		y -= 28
+        c.setFont("Helvetica-Bold", 13)
+        c.drawCentredString(width / 2.0, y, "PROPOSTA DE CONCESSÃO DE DIÁRIAS (PCD)")
+        y -= 18
+        c.setFont("Helvetica-Bold", 11)
+        c.drawCentredString(width / 2.0, y, f"Nº {diaria.numero_siscac}")
+        y -= 16
+        c.setFont("Helvetica", 10)
+        c.drawCentredString(width / 2.0, y, f"Tipo: {diaria.get_tipo_solicitacao_display()}")
+        y -= 28
 
-		c.setLineWidth(0.5)
-		c.line(margin_left, y, width - margin_right, y)
-		y -= 20
+        c.setLineWidth(0.5)
+        c.line(margin_left, y, width - margin_right, y)
+        y -= 20
 
-		nome = str(diaria.beneficiario.nome) if diaria.beneficiario and diaria.beneficiario.nome else "Não informado"
-		cargo = _get_cargo_funcao(diaria.beneficiario)
-		nome_p = "Não informado"
-		cargo_p = "Não informado"
-		if diaria.proponente:
-			nome_p = diaria.proponente.get_full_name() or diaria.proponente.username
-			if diaria.proponente.groups.exists():
-				cargo_p = diaria.proponente.groups.first().name
+        nome = str(diaria.beneficiario.nome) if diaria.beneficiario and diaria.beneficiario.nome else "Não informado"
+        cargo = _get_cargo_funcao(diaria.beneficiario)
+        nome_p = "Não informado"
+        cargo_p = "Não informado"
+        if diaria.proponente:
+            nome_p = diaria.proponente.get_full_name() or diaria.proponente.username
+            if diaria.proponente.groups.exists():
+                cargo_p = diaria.proponente.groups.first().name
 
-		column_gap = 28
-		column_width = (text_width - column_gap) / 2
-		left_x = margin_left
-		right_x = margin_left + column_width + column_gap
+        column_gap = 28
+        column_width = (text_width - column_gap) / 2
+        left_x = margin_left
+        right_x = margin_left + column_width + column_gap
 
-		c.setFont("Helvetica-Bold", 11)
-		c.drawString(left_x, y, "BENEFICIÁRIO:")
-		c.drawString(right_x, y, "PROPONENTE:")
-		y -= 16
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(left_x, y, "BENEFICIÁRIO:")
+        c.drawString(right_x, y, "PROPONENTE:")
+        y -= 16
 
-		c.setFont("Helvetica", 11)
-		left_y = y
-		right_y = y
+        c.setFont("Helvetica", 11)
+        left_y = y
+        right_y = y
 
-		left_y = _draw_wrapped_text(
-			c,
-			f"Nome: {nome}",
-			left_x,
-			left_y,
-			column_width,
-			font_name="Helvetica",
-			font_size=11,
-			leading=15,
-			justify=False,
-		)
-		left_y = _draw_wrapped_text(
-			c,
-			f"Cargo / Função: {cargo}",
-			left_x,
-			left_y - 2,
-			column_width,
-			font_name="Helvetica",
-			font_size=11,
-			leading=15,
-			justify=False,
-		)
+        left_y = _draw_wrapped_text(
+            c,
+            f"Nome: {nome}",
+            left_x,
+            left_y,
+            column_width,
+            font_name="Helvetica",
+            font_size=11,
+            leading=15,
+            justify=False,
+        )
+        left_y = _draw_wrapped_text(
+            c,
+            f"Cargo / Função: {cargo}",
+            left_x,
+            left_y - 2,
+            column_width,
+            font_name="Helvetica",
+            font_size=11,
+            leading=15,
+            justify=False,
+        )
 
-		right_y = _draw_wrapped_text(
-			c,
-			f"Nome: {nome_p}",
-			right_x,
-			right_y,
-			column_width,
-			font_name="Helvetica",
-			font_size=11,
-			leading=15,
-			justify=False,
-		)
-		right_y = _draw_wrapped_text(
-			c,
-			f"Cargo / Função: {cargo_p}",
-			right_x,
-			right_y - 2,
-			column_width,
-			font_name="Helvetica",
-			font_size=11,
-			leading=15,
-			justify=False,
-		)
+        right_y = _draw_wrapped_text(
+            c,
+            f"Nome: {nome_p}",
+            right_x,
+            right_y,
+            column_width,
+            font_name="Helvetica",
+            font_size=11,
+            leading=15,
+            justify=False,
+        )
+        right_y = _draw_wrapped_text(
+            c,
+            f"Cargo / Função: {cargo_p}",
+            right_x,
+            right_y - 2,
+            column_width,
+            font_name="Helvetica",
+            font_size=11,
+            leading=15,
+            justify=False,
+        )
 
-		y = min(left_y, right_y) - 14
+        y = min(left_y, right_y) - 14
 
-		c.setFont("Helvetica-Bold", 11)
-		c.drawString(margin_left, y, "DADOS DA VIAGEM:")
-		y -= 16
-		c.setFont("Helvetica", 11)
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(margin_left, y, "DADOS DA VIAGEM:")
+        y -= 16
+        c.setFont("Helvetica", 11)
 
-		data_saida = diaria.data_saida.strftime('%d/%m/%Y') if diaria.data_saida else "Não informado"
-		data_retorno = diaria.data_retorno.strftime('%d/%m/%Y') if diaria.data_retorno else "Não informado"
+        data_saida = diaria.data_saida.strftime('%d/%m/%Y') if diaria.data_saida else "Não informado"
+        data_retorno = diaria.data_retorno.strftime('%d/%m/%Y') if diaria.data_retorno else "Não informado"
 
-		c.drawString(margin_left, y, f"Data de Saída: {data_saida} | Data de Retorno: {data_retorno}")
-		y -= 16
-		y = _draw_wrapped_text(
-			c,
-			f"Origem / Destino: {diaria.cidade_origem or 'Não informado'} -> {diaria.cidade_destino or 'Não informado'}",
-			margin_left,
-			y,
-			text_width,
-			font_name="Helvetica",
-			font_size=11,
-			leading=16,
-			justify=True,
-		)
-		if diaria.meio_de_transporte:
-			c.drawString(margin_left, y, f"Meio de Transporte:      {diaria.meio_de_transporte}")
-			y -= 16
-		y -= 8
+        c.drawString(margin_left, y, f"Data de Saída: {data_saida} | Data de Retorno: {data_retorno}")
+        y -= 16
+        y = _draw_wrapped_text(
+            c,
+            f"Origem / Destino: {diaria.cidade_origem or 'Não informado'} -> {diaria.cidade_destino or 'Não informado'}",
+            margin_left,
+            y,
+            text_width,
+            font_name="Helvetica",
+            font_size=11,
+            leading=16,
+            justify=True,
+        )
+        if diaria.meio_de_transporte:
+            c.drawString(margin_left, y, f"Meio de Transporte:      {diaria.meio_de_transporte}")
+            y -= 16
+        y -= 8
 
-		c.setFont("Helvetica-Bold", 11)
-		c.drawString(margin_left, y, "OBJETIVO DA VIAGEM:")
-		y -= 16
-		y = _draw_wrapped_text(
-			c,
-			diaria.objetivo or "Não informado.",
-			margin_left,
-			y,
-			text_width,
-			font_name="Helvetica",
-			font_size=11,
-			justify=True,
-		)
-		y -= 20
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(margin_left, y, "OBJETIVO DA VIAGEM:")
+        y -= 16
+        y = _draw_wrapped_text(
+            c,
+            diaria.objetivo or "Não informado.",
+            margin_left,
+            y,
+            text_width,
+            font_name="Helvetica",
+            font_size=11,
+            justify=True,
+        )
+        y -= 20
 
-		c.setFont("Helvetica-Bold", 11)
-		c.drawString(margin_left, y, "VALORES:")
-		y -= 16
-		c.setFont("Helvetica", 11)
-		valor_unitario = None
-		if diaria.quantidade_diarias and diaria.valor_total:
-			try:
-				valor_unitario = diaria.valor_total / diaria.quantidade_diarias
-			except Exception as exc:
-				logger.warning(
-					"evento=erro_calculo_valor_unitario_diaria diaria_id=%s erro=%s",
-					getattr(diaria, "id", None),
-					exc,
-				)
-				valor_unitario = None
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(margin_left, y, "VALORES:")
+        y -= 16
+        c.setFont("Helvetica", 11)
+        valor_unitario = None
+        if diaria.quantidade_diarias and diaria.valor_total:
+            try:
+                valor_unitario = diaria.valor_total / diaria.quantidade_diarias
+            except Exception as exc:
+                logger.warning(
+                    "evento=erro_calculo_valor_unitario_diaria diaria_id=%s erro=%s",
+                    getattr(diaria, "id", None),
+                    exc,
+                )
+                valor_unitario = None
 
-		qtd = diaria.quantidade_diarias or 0
-		valor_unitario_texto = format_brl_currency(valor_unitario) if valor_unitario is not None else "Não informado"
-		c.drawString(margin_left, y, f"Qtd. Diárias: {qtd} | Valor Unitário: {valor_unitario_texto} | Valor Total: {format_brl_currency(diaria.valor_total)}")
-		y -= 16
-		y -= 12
+        qtd = diaria.quantidade_diarias or 0
+        valor_unitario_texto = format_brl_currency(valor_unitario) if valor_unitario is not None else "Não informado"
+        c.drawString(margin_left, y, f"Qtd. Diárias: {qtd} | Valor Unitário: {valor_unitario_texto} | Valor Total: {format_brl_currency(diaria.valor_total)}")
+        y -= 16
+        y -= 12
 
-		c.setLineWidth(0.5)
-		c.line(margin_left, y, width - margin_right, y)
-		y -= 14
-		boilerplate = (
-			"Proposta de concessão de diárias elaborada nos termos da legislação e regulamento interno vigentes, "
-			"para fins de autorização pelo Presidente."
-		)
-		_draw_wrapped_text(
-			c,
-			boilerplate,
-			margin_left,
-			y,
-			text_width,
-			font_name="Helvetica-Oblique",
-			font_size=10,
-			justify=True,
-		)
+        c.setLineWidth(0.5)
+        c.line(margin_left, y, width - margin_right, y)
+        y -= 14
+        boilerplate = (
+            "Proposta de concessão de diárias elaborada nos termos da legislação e regulamento interno vigentes, "
+            "para fins de autorização pelo Presidente."
+        )
+        _draw_wrapped_text(
+            c,
+            boilerplate,
+            margin_left,
+            y,
+            text_width,
+            font_name="Helvetica-Oblique",
+            font_size=10,
+            justify=True,
+        )
 
-		sig_left_x = margin_left + _PCD_SIG_HALF_WIDTH
-		sig_right_x = width - margin_right - _PCD_SIG_HALF_WIDTH
+        sig_left_x = margin_left + _PCD_SIG_HALF_WIDTH
+        sig_right_x = width - margin_right - _PCD_SIG_HALF_WIDTH
 
-		c.setFont("Helvetica", 9)
+        c.setFont("Helvetica", 9)
 
-		c.drawCentredString(sig_left_x, _PCD_SIG_Y + 26, nome)
-		c.drawCentredString(sig_left_x, _PCD_SIG_Y + 14, cargo)
-		c.line(sig_left_x - _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y,
-			   sig_left_x + _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y)
-		c.drawCentredString(sig_left_x, _PCD_SIG_Y - 12, "Assinatura do(a) Beneficiário(a)")
+        c.drawCentredString(sig_left_x, _PCD_SIG_Y + 26, nome)
+        c.drawCentredString(sig_left_x, _PCD_SIG_Y + 14, cargo)
+        c.line(sig_left_x - _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y,
+               sig_left_x + _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y)
+        c.drawCentredString(sig_left_x, _PCD_SIG_Y - 12, "Assinatura do(a) Beneficiário(a)")
 
-		c.line(sig_right_x - _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y,
-			   sig_right_x + _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y)
-		c.drawCentredString(sig_right_x, _PCD_SIG_Y - 12, "Presidente")
+        c.line(sig_right_x - _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y,
+               sig_right_x + _PCD_SIG_HALF_WIDTH, _PCD_SIG_Y)
+        c.drawCentredString(sig_right_x, _PCD_SIG_Y - 12, "Presidente")
 
 
 class SCDDocument(BasePDFDocument):
-	"""Gera o PDF da Solicitação de Concessão de Diárias (SCD)."""
+    """Gera o PDF da Solicitação de Concessão de Diárias (SCD)."""
 
-	def draw_content(self):
-		"""Desenha corpo da SCD no canvas."""
-		diaria = self.obj
-		c = self.canvas
-		width = self.page_width
-		height = self.page_height
+    def draw_content(self):
+        """Desenha corpo da SCD no canvas."""
+        diaria = self.obj
+        c = self.canvas
+        width = self.page_width
+        height = self.page_height
 
-		margin_left = 70
-		margin_right = 70
-		text_width = width - margin_left - margin_right
+        margin_left = 70
+        margin_right = 70
+        text_width = width - margin_left - margin_right
 
-		y = height - 160
+        y = height - 160
 
-		c.setFont("Helvetica-Bold", 13)
-		c.drawCentredString(width / 2.0, y, "SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS (SCD)")
-		y -= 18
-		c.setFont("Helvetica-Bold", 11)
-		c.drawCentredString(width / 2.0, y, f"Nº {diaria.numero_siscac or diaria.id}")
-		y -= 16
-		c.setFont("Helvetica", 10)
-		c.drawCentredString(width / 2.0, y, f"Tipo: {diaria.get_tipo_solicitacao_display()}")
-		y -= 28
+        c.setFont("Helvetica-Bold", 13)
+        c.drawCentredString(width / 2.0, y, "SOLICITAÇÃO DE CONCESSÃO DE DIÁRIAS (SCD)")
+        y -= 18
+        c.setFont("Helvetica-Bold", 11)
+        c.drawCentredString(width / 2.0, y, f"Nº {diaria.numero_siscac or diaria.id}")
+        y -= 16
+        c.setFont("Helvetica", 10)
+        c.drawCentredString(width / 2.0, y, f"Tipo: {diaria.get_tipo_solicitacao_display()}")
+        y -= 28
 
-		c.setLineWidth(0.5)
-		c.line(margin_left, y, width - margin_right, y)
-		y -= 20
+        c.setLineWidth(0.5)
+        c.line(margin_left, y, width - margin_right, y)
+        y -= 20
 
-		nome_beneficiario = _safe_text(getattr(diaria.beneficiario, "nome", None))
-		cargo_beneficiario = _get_cargo_funcao(diaria.beneficiario)
+        nome_beneficiario = _safe_text(getattr(diaria.beneficiario, "nome", None))
+        cargo_beneficiario = _get_cargo_funcao(diaria.beneficiario)
 
-		nome_proponente = "Não informado"
-		cargo_proponente = "Não informado"
-		if diaria.proponente:
-			nome_proponente = diaria.proponente.get_full_name() or diaria.proponente.username
-			if diaria.proponente.groups.exists():
-				cargo_proponente = diaria.proponente.groups.first().name
+        nome_proponente = "Não informado"
+        cargo_proponente = "Não informado"
+        if diaria.proponente:
+            nome_proponente = diaria.proponente.get_full_name() or diaria.proponente.username
+            if diaria.proponente.groups.exists():
+                cargo_proponente = diaria.proponente.groups.first().name
 
-		column_gap = 28
-		column_width = (text_width - column_gap) / 2
-		left_x = margin_left
-		right_x = margin_left + column_width + column_gap
+        column_gap = 28
+        column_width = (text_width - column_gap) / 2
+        left_x = margin_left
+        right_x = margin_left + column_width + column_gap
 
-		c.setFont("Helvetica-Bold", 11)
-		c.drawString(left_x, y, "BENEFICIÁRIO:")
-		c.drawString(right_x, y, "PROPONENTE:")
-		y -= 16
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(left_x, y, "BENEFICIÁRIO:")
+        c.drawString(right_x, y, "PROPONENTE:")
+        y -= 16
 
-		c.setFont("Helvetica", 11)
-		left_y = y
-		right_y = y
+        c.setFont("Helvetica", 11)
+        left_y = y
+        right_y = y
 
-		left_y = _draw_wrapped_text(
-			c,
-			f"Nome: {nome_beneficiario}",
-			left_x,
-			left_y,
-			column_width,
-			font_name="Helvetica",
-			font_size=11,
-			leading=15,
-			justify=False,
-		)
-		left_y = _draw_wrapped_text(
-			c,
-			f"Cargo / Função: {cargo_beneficiario}",
-			left_x,
-			left_y - 2,
-			column_width,
-			font_name="Helvetica",
-			font_size=11,
-			leading=15,
-			justify=False,
-		)
+        left_y = _draw_wrapped_text(
+            c,
+            f"Nome: {nome_beneficiario}",
+            left_x,
+            left_y,
+            column_width,
+            font_name="Helvetica",
+            font_size=11,
+            leading=15,
+            justify=False,
+        )
+        left_y = _draw_wrapped_text(
+            c,
+            f"Cargo / Função: {cargo_beneficiario}",
+            left_x,
+            left_y - 2,
+            column_width,
+            font_name="Helvetica",
+            font_size=11,
+            leading=15,
+            justify=False,
+        )
 
-		right_y = _draw_wrapped_text(
-			c,
-			f"Nome: {nome_proponente}",
-			right_x,
-			right_y,
-			column_width,
-			font_name="Helvetica",
-			font_size=11,
-			leading=15,
-			justify=False,
-		)
-		right_y = _draw_wrapped_text(
-			c,
-			f"Cargo / Função: {cargo_proponente}",
-			right_x,
-			right_y - 2,
-			column_width,
-			font_name="Helvetica",
-			font_size=11,
-			leading=15,
-			justify=False,
-		)
+        right_y = _draw_wrapped_text(
+            c,
+            f"Nome: {nome_proponente}",
+            right_x,
+            right_y,
+            column_width,
+            font_name="Helvetica",
+            font_size=11,
+            leading=15,
+            justify=False,
+        )
+        right_y = _draw_wrapped_text(
+            c,
+            f"Cargo / Função: {cargo_proponente}",
+            right_x,
+            right_y - 2,
+            column_width,
+            font_name="Helvetica",
+            font_size=11,
+            leading=15,
+            justify=False,
+        )
 
-		y = min(left_y, right_y) - 14
+        y = min(left_y, right_y) - 14
 
-		c.setFont("Helvetica-Bold", 11)
-		c.drawString(margin_left, y, "DADOS DA VIAGEM:")
-		y -= 16
-		c.setFont("Helvetica", 11)
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(margin_left, y, "DADOS DA VIAGEM:")
+        y -= 16
+        c.setFont("Helvetica", 11)
 
-		data_solicitacao = _format_date(getattr(diaria, "data_solicitacao", None))
-		data_saida = _format_date(getattr(diaria, "data_saida", None))
-		data_retorno = _format_date(getattr(diaria, "data_retorno", None))
-		cidade_origem = _safe_text(getattr(diaria, "cidade_origem", None))
-		cidade_destino = _safe_text(getattr(diaria, "cidade_destino", None))
-		meio_transporte = _safe_text(getattr(diaria, "meio_de_transporte", None))
+        data_solicitacao = _format_date(getattr(diaria, "data_solicitacao", None))
+        data_saida = _format_date(getattr(diaria, "data_saida", None))
+        data_retorno = _format_date(getattr(diaria, "data_retorno", None))
+        cidade_origem = _safe_text(getattr(diaria, "cidade_origem", None))
+        cidade_destino = _safe_text(getattr(diaria, "cidade_destino", None))
+        meio_transporte = _safe_text(getattr(diaria, "meio_de_transporte", None))
 
-		c.drawString(margin_left, y, f"Data da Solicitação: {data_solicitacao}")
-		y -= 16
-		c.drawString(margin_left, y, f"Data de Saída: {data_saida} | Data de Retorno: {data_retorno}")
-		y -= 16
-		y = _draw_wrapped_text(
-			c,
-			f"Origem / Destino: {cidade_origem} -> {cidade_destino}",
-			margin_left,
-			y,
-			text_width,
-			font_name="Helvetica",
-			font_size=11,
-			leading=16,
-			justify=True,
-		)
-		c.drawString(margin_left, y, f"Meio de Transporte: {meio_transporte}")
-		y -= 24
+        c.drawString(margin_left, y, f"Data da Solicitação: {data_solicitacao}")
+        y -= 16
+        c.drawString(margin_left, y, f"Data de Saída: {data_saida} | Data de Retorno: {data_retorno}")
+        y -= 16
+        y = _draw_wrapped_text(
+            c,
+            f"Origem / Destino: {cidade_origem} -> {cidade_destino}",
+            margin_left,
+            y,
+            text_width,
+            font_name="Helvetica",
+            font_size=11,
+            leading=16,
+            justify=True,
+        )
+        c.drawString(margin_left, y, f"Meio de Transporte: {meio_transporte}")
+        y -= 24
 
-		c.setFont("Helvetica-Bold", 11)
-		c.drawString(margin_left, y, "OBJETIVO DA VIAGEM:")
-		y -= 16
-		y = _draw_wrapped_text(
-			c,
-			_safe_text(getattr(diaria, "objetivo", None)),
-			margin_left,
-			y,
-			text_width,
-			font_name="Helvetica",
-			font_size=11,
-			justify=True,
-		)
-		y -= 14
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(margin_left, y, "OBJETIVO DA VIAGEM:")
+        y -= 16
+        y = _draw_wrapped_text(
+            c,
+            _safe_text(getattr(diaria, "objetivo", None)),
+            margin_left,
+            y,
+            text_width,
+            font_name="Helvetica",
+            font_size=11,
+            justify=True,
+        )
+        y -= 14
 
-		c.setLineWidth(0.5)
-		c.line(margin_left, y, width - margin_right, y)
-		y -= 14
-		boilerplate = (
-			"Solicitação de concessão de diárias elaborada nos termos da legislação e regulamento interno vigentes, "
-			"para fins de autorização pelo Presidente."
-		)
-		y = _draw_wrapped_text(
-			c,
-			boilerplate,
-			margin_left,
-			y,
-			text_width,
-			font_name="Helvetica-Oblique",
-			font_size=10,
-			justify=True,
-		)
+        c.setLineWidth(0.5)
+        c.line(margin_left, y, width - margin_right, y)
+        y -= 14
+        boilerplate = (
+            "Solicitação de concessão de diárias elaborada nos termos da legislação e regulamento interno vigentes, "
+            "para fins de autorização pelo Presidente."
+        )
+        y = _draw_wrapped_text(
+            c,
+            boilerplate,
+            margin_left,
+            y,
+            text_width,
+            font_name="Helvetica-Oblique",
+            font_size=10,
+            justify=True,
+        )
 
-		sig_left_x = margin_left + _PCD_SIG_HALF_WIDTH
-		sig_right_x = width - margin_right - _PCD_SIG_HALF_WIDTH
-		sig_y = max(120, y - 70)
+        sig_left_x = margin_left + _PCD_SIG_HALF_WIDTH
+        sig_right_x = width - margin_right - _PCD_SIG_HALF_WIDTH
+        sig_y = max(120, y - 70)
 
-		c.setFont("Helvetica", 9)
-		c.drawCentredString(sig_left_x, sig_y + 26, nome_beneficiario)
-		c.drawCentredString(sig_left_x, sig_y + 14, cargo_beneficiario)
-		c.line(sig_left_x - _PCD_SIG_HALF_WIDTH, sig_y,
-			   sig_left_x + _PCD_SIG_HALF_WIDTH, sig_y)
-		c.drawCentredString(sig_left_x, sig_y - 12, "Assinatura do(a) Beneficiário(a)")
+        c.setFont("Helvetica", 9)
+        c.drawCentredString(sig_left_x, sig_y + 26, nome_beneficiario)
+        c.drawCentredString(sig_left_x, sig_y + 14, cargo_beneficiario)
+        c.line(sig_left_x - _PCD_SIG_HALF_WIDTH, sig_y,
+               sig_left_x + _PCD_SIG_HALF_WIDTH, sig_y)
+        c.drawCentredString(sig_left_x, sig_y - 12, "Assinatura do(a) Beneficiário(a)")
 
-		c.drawCentredString(sig_right_x, sig_y + 26, nome_proponente)
-		c.drawCentredString(sig_right_x, sig_y + 14, cargo_proponente)
-		c.line(sig_right_x - _PCD_SIG_HALF_WIDTH, sig_y,
-			   sig_right_x + _PCD_SIG_HALF_WIDTH, sig_y)
-		c.drawCentredString(sig_right_x, sig_y - 12, "Presidente")
+        c.drawCentredString(sig_right_x, sig_y + 26, nome_proponente)
+        c.drawCentredString(sig_right_x, sig_y + 14, cargo_proponente)
+        c.line(sig_right_x - _PCD_SIG_HALF_WIDTH, sig_y,
+               sig_right_x + _PCD_SIG_HALF_WIDTH, sig_y)
+        c.drawCentredString(sig_right_x, sig_y - 12, "Presidente")
 
 
 class ReciboDocument(BasePDFDocument):
-	"""Gera PDF de recibo para reembolso, auxílio e jeton."""
+    """Gera PDF de recibo para reembolso, auxílio e jeton."""
 
-	def _draw_reembolso_combustivel(self, obj, beneficiario, valor_formatado):
-		"""Renderiza requerimento de reembolso de combustível."""
-		c = self.canvas
-		page_width = self.page_width
-		margin_left = 72
-		text_width = page_width - 2 * margin_left
+    def _draw_reembolso_combustivel(self, obj, beneficiario, valor_formatado):
+        """Renderiza requerimento de reembolso de combustível."""
+        c = self.canvas
+        page_width = self.page_width
+        margin_left = 72
+        text_width = page_width - 2 * margin_left
 
-		nome = _safe_text(getattr(beneficiario, "nome", None), "N/A")
-		cargo = _get_cargo_funcao(beneficiario)
-		cidade_origem = _safe_text(getattr(obj, "cidade_origem", None))
-		cidade_destino = _safe_text(getattr(obj, "cidade_destino", None))
-		periodo = f"{_format_date(getattr(obj, 'data_saida', None))} a {_format_date(getattr(obj, 'data_retorno', None))}"
-		objetivo = _safe_text(getattr(obj, "objetivo", None), "atividade não informada")
+        nome = _safe_text(getattr(beneficiario, "nome", None), "N/A")
+        cargo = _get_cargo_funcao(beneficiario)
+        cidade_origem = _safe_text(getattr(obj, "cidade_origem", None))
+        cidade_destino = _safe_text(getattr(obj, "cidade_destino", None))
+        periodo = f"{_format_date(getattr(obj, 'data_saida', None))} a {_format_date(getattr(obj, 'data_retorno', None))}"
+        objetivo = _safe_text(getattr(obj, "objetivo", None), "atividade não informada")
 
-		c.setFont("Helvetica-Bold", 14)
-		c.drawCentredString(page_width / 2, 620, "REQUERIMENTO DE REEMBOLSO DE COMBUSTÍVEL")
+        c.setFont("Helvetica-Bold", 14)
+        c.drawCentredString(page_width / 2, 620, "REQUERIMENTO DE REEMBOLSO DE COMBUSTÍVEL")
 
-		declaration = (
-			f"Eu, {nome}, {cargo}, venho por meio deste requerer o reembolso de combustível "
-			f"utilizado no deslocamento entre {cidade_origem} e {cidade_destino}, no período de {periodo}, "
-			f"referente a {objetivo}."
-		)
-		y = _draw_wrapped_text(
-			c,
-			declaration,
-			margin_left,
-			560,
-			text_width,
-			font_name="Helvetica",
-			font_size=12,
-			justify=True,
-		)
+        declaration = (
+            f"Eu, {nome}, {cargo}, venho por meio deste requerer o reembolso de combustível "
+            f"utilizado no deslocamento entre {cidade_origem} e {cidade_destino}, no período de {periodo}, "
+            f"referente a {objetivo}."
+        )
+        y = _draw_wrapped_text(
+            c,
+            declaration,
+            margin_left,
+            560,
+            text_width,
+            font_name="Helvetica",
+            font_size=12,
+            justify=True,
+        )
 
-		y -= 24
-		c.setFont("Helvetica", 11)
-		c.drawString(margin_left, y, f"Requerente: {nome}")
-		y -= 16
-		c.drawString(margin_left, y, f"Cargo / Função: {cargo}")
-		y -= 16
-		c.drawString(margin_left, y, f"Período do Deslocamento: {periodo}")
-		y -= 16
-		y = _draw_wrapped_text(
-			c,
-			f"Trajeto: {cidade_origem} -> {cidade_destino}",
-			margin_left,
-			y,
-			text_width,
-			font_name="Helvetica",
-			font_size=11,
-			justify=True,
-		)
-		y -= 4
-		y = _draw_wrapped_text(
-			c,
-			f"Objetivo: {objetivo}",
-			margin_left,
-			y,
-			text_width,
-			font_name="Helvetica",
-			font_size=11,
-			justify=True,
-		)
-		y -= 16
-		c.drawString(margin_left, y, f"Valor Requerido: {valor_formatado}")
+        y -= 24
+        c.setFont("Helvetica", 11)
+        c.drawString(margin_left, y, f"Requerente: {nome}")
+        y -= 16
+        c.drawString(margin_left, y, f"Cargo / Função: {cargo}")
+        y -= 16
+        c.drawString(margin_left, y, f"Período do Deslocamento: {periodo}")
+        y -= 16
+        y = _draw_wrapped_text(
+            c,
+            f"Trajeto: {cidade_origem} -> {cidade_destino}",
+            margin_left,
+            y,
+            text_width,
+            font_name="Helvetica",
+            font_size=11,
+            justify=True,
+        )
+        y -= 4
+        y = _draw_wrapped_text(
+            c,
+            f"Objetivo: {objetivo}",
+            margin_left,
+            y,
+            text_width,
+            font_name="Helvetica",
+            font_size=11,
+            justify=True,
+        )
+        y -= 16
+        c.drawString(margin_left, y, f"Valor Requerido: {valor_formatado}")
 
-		sig_x = page_width / 2
-		c.setFont("Helvetica", 11)
-		c.drawCentredString(sig_x, 258, nome)
-		c.drawCentredString(sig_x, 244, cargo)
-		c.line(sig_x - 130, 232, sig_x + 130, 232)
-		c.drawCentredString(sig_x, 218, "Requerente")
+        sig_x = page_width / 2
+        c.setFont("Helvetica", 11)
+        c.drawCentredString(sig_x, 258, nome)
+        c.drawCentredString(sig_x, 244, cargo)
+        c.line(sig_x - 130, 232, sig_x + 130, 232)
+        c.drawCentredString(sig_x, 218, "Requerente")
 
-	def _draw_recibo_evento(self, obj, beneficiario, valor_formatado, tipo_verba):
-		"""Renderiza recibo de jeton ou auxílio com informações do evento."""
-		orgao_nome = getattr(settings, 'ORGAO_NOME_COMPLETO', '')
-		if not orgao_nome:
-			raise ImproperlyConfigured(
-				"ORGAO_NOME_COMPLETO não está configurado. "
-				"Defina a variável de ambiente ORGAO_NOME_COMPLETO antes de gerar recibos de pagamento."
-			)
-		c = self.canvas
-		page_width = self.page_width
-		margin_left = 72
-		text_width = page_width - 2 * margin_left
+    def _draw_recibo_evento(self, obj, beneficiario, valor_formatado, tipo_verba):
+        """Renderiza recibo de jeton ou auxílio com informações do evento."""
+        orgao_nome = getattr(settings, 'ORGAO_NOME_COMPLETO', '')
+        if not orgao_nome:
+            raise ImproperlyConfigured(
+                "ORGAO_NOME_COMPLETO não está configurado. "
+                "Defina a variável de ambiente ORGAO_NOME_COMPLETO antes de gerar recibos de pagamento."
+            )
+        c = self.canvas
+        page_width = self.page_width
+        margin_left = 72
+        text_width = page_width - 2 * margin_left
 
-		nome = _safe_text(getattr(beneficiario, "nome", None), "N/A")
-		cargo = _get_cargo_funcao(beneficiario)
-		data_evento = _get_data_evento(obj)
-		local_evento = _safe_text(getattr(obj, "local_evento", None))
+        nome = _safe_text(getattr(beneficiario, "nome", None), "N/A")
+        cargo = _get_cargo_funcao(beneficiario)
+        data_evento = _get_data_evento(obj)
+        local_evento = _safe_text(getattr(obj, "local_evento", None))
 
-		if obj.__class__.__name__ == 'Jeton':
-			evento = _safe_text(getattr(obj, "reuniao", None))
-			declaration = (
-				f"Recebi do {orgao_nome}, "
-				f"a importância líquida de {valor_formatado}, referente ao pagamento de Jeton pela participação em "
-				f"{evento}, realizada em {data_evento}, no local {local_evento}, na qualidade de {cargo}."
-			)
-		else:
-			evento = _safe_text(getattr(obj, "objetivo", None), "atividade de representação não informada")
-			declaration = (
-				f"Recebi do {orgao_nome}, "
-				f"a importância líquida de {valor_formatado}, referente ao pagamento de Auxílio Representação para "
-				f"{evento}, realizado em {data_evento}, no local {local_evento}, na qualidade de {cargo}."
-			)
+        if obj.__class__.__name__ == 'Jeton':
+            evento = _safe_text(getattr(obj, "reuniao", None))
+            declaration = (
+                f"Recebi do {orgao_nome}, "
+                f"a importância líquida de {valor_formatado}, referente ao pagamento de Jeton pela participação em "
+                f"{evento}, realizada em {data_evento}, no local {local_evento}, na qualidade de {cargo}."
+            )
+        else:
+            evento = _safe_text(getattr(obj, "objetivo", None), "atividade de representação não informada")
+            declaration = (
+                f"Recebi do {orgao_nome}, "
+                f"a importância líquida de {valor_formatado}, referente ao pagamento de Auxílio Representação para "
+                f"{evento}, realizado em {data_evento}, no local {local_evento}, na qualidade de {cargo}."
+            )
 
-		c.setFont("Helvetica-Bold", 14)
-		c.drawCentredString(page_width / 2, 620, "RECIBO DE PAGAMENTO")
+        c.setFont("Helvetica-Bold", 14)
+        c.drawCentredString(page_width / 2, 620, "RECIBO DE PAGAMENTO")
 
-		c.setFont("Helvetica-Bold", 12)
-		c.drawCentredString(page_width / 2, 590, tipo_verba.upper())
+        c.setFont("Helvetica-Bold", 12)
+        c.drawCentredString(page_width / 2, 590, tipo_verba.upper())
 
-		y = _draw_wrapped_text(
-			c,
-			declaration,
-			margin_left,
-			540,
-			text_width,
-			font_name="Helvetica",
-			font_size=12,
-			justify=True,
-		)
+        y = _draw_wrapped_text(
+            c,
+            declaration,
+            margin_left,
+            540,
+            text_width,
+            font_name="Helvetica",
+            font_size=12,
+            justify=True,
+        )
 
-		y -= 20
-		c.setFont("Helvetica", 11)
-		c.drawString(margin_left, y, f"Beneficiário / Recebedor: {nome}")
-		y -= 16
-		c.drawString(margin_left, y, f"Cargo / Função: {cargo}")
-		y -= 16
-		y = _draw_wrapped_text(
-			c,
-			f"Evento: {evento}",
-			margin_left,
-			y,
-			text_width,
-			font_name="Helvetica",
-			font_size=11,
-			justify=True,
-		)
-		y -= 4
-		c.drawString(margin_left, y, f"Data do Evento: {data_evento}")
-		y -= 16
-		y = _draw_wrapped_text(
-			c,
-			f"Local do Evento: {local_evento}",
-			margin_left,
-			y,
-			text_width,
-			font_name="Helvetica",
-			font_size=11,
-			justify=True,
-		)
+        y -= 20
+        c.setFont("Helvetica", 11)
+        c.drawString(margin_left, y, f"Beneficiário / Recebedor: {nome}")
+        y -= 16
+        c.drawString(margin_left, y, f"Cargo / Função: {cargo}")
+        y -= 16
+        y = _draw_wrapped_text(
+            c,
+            f"Evento: {evento}",
+            margin_left,
+            y,
+            text_width,
+            font_name="Helvetica",
+            font_size=11,
+            justify=True,
+        )
+        y -= 4
+        c.drawString(margin_left, y, f"Data do Evento: {data_evento}")
+        y -= 16
+        y = _draw_wrapped_text(
+            c,
+            f"Local do Evento: {local_evento}",
+            margin_left,
+            y,
+            text_width,
+            font_name="Helvetica",
+            font_size=11,
+            justify=True,
+        )
 
-		sig_x = page_width / 2
-		c.setFont("Helvetica", 11)
-		c.drawCentredString(sig_x, 258, nome)
-		c.drawCentredString(sig_x, 244, cargo)
-		c.line(sig_x - 130, 232, sig_x + 130, 232)
-		c.drawCentredString(sig_x, 218, "Beneficiário(a) / Recebedor(a)")
+        sig_x = page_width / 2
+        c.setFont("Helvetica", 11)
+        c.drawCentredString(sig_x, 258, nome)
+        c.drawCentredString(sig_x, 244, cargo)
+        c.line(sig_x - 130, 232, sig_x + 130, 232)
+        c.drawCentredString(sig_x, 218, "Beneficiário(a) / Recebedor(a)")
 
-	def draw_content(self):
-		"""Desenha corpo do recibo com dispatch por tipo de objeto."""
-		obj = self.obj
+    def draw_content(self):
+        """Desenha corpo do recibo com dispatch por tipo de objeto."""
+        obj = self.obj
 
-		_RECIBO_DISPATCH = {
-			'ReembolsoCombustivel': (
-				"Reembolso de Combustível",
-				lambda o: o.beneficiario,
-				lambda o: o.valor_total,
-			),
-			'AuxilioRepresentacao': (
-				"Auxílio Representação",
-				lambda o: o.beneficiario,
-				lambda o: o.valor_total,
-			),
-			'Jeton': (
-				"Jeton",
-				lambda o: o.beneficiario,
-				lambda o: o.valor_total,
-			),
-		}
+        _RECIBO_DISPATCH = {
+            'ReembolsoCombustivel': (
+                "Reembolso de Combustível",
+                lambda o: o.beneficiario,
+                lambda o: o.valor_total,
+            ),
+            'AuxilioRepresentacao': (
+                "Auxílio Representação",
+                lambda o: o.beneficiario,
+                lambda o: o.valor_total,
+            ),
+            'Jeton': (
+                "Jeton",
+                lambda o: o.beneficiario,
+                lambda o: o.valor_total,
+            ),
+        }
 
-		class_name = obj.__class__.__name__
-		dispatch = _RECIBO_DISPATCH.get(class_name)
-		if dispatch is None:
-			raise ValueError(
-				f"ReciboDocument não suporta o tipo '{class_name}'. "
-				f"Tipos aceitos: {', '.join(_RECIBO_DISPATCH)}."
-			)
-		tipo_verba, get_beneficiario, get_valor = dispatch
-		beneficiario = get_beneficiario(obj)
-		valor = get_valor(obj)
+        class_name = obj.__class__.__name__
+        dispatch = _RECIBO_DISPATCH.get(class_name)
+        if dispatch is None:
+            raise ValueError(
+                f"ReciboDocument não suporta o tipo '{class_name}'. "
+                f"Tipos aceitos: {', '.join(_RECIBO_DISPATCH)}."
+            )
+        tipo_verba, get_beneficiario, get_valor = dispatch
+        beneficiario = get_beneficiario(obj)
+        valor = get_valor(obj)
 
-		valor_formatado = format_brl_currency(valor)
+        valor_formatado = format_brl_currency(valor)
 
-		if class_name == 'ReembolsoCombustivel':
-			self._draw_reembolso_combustivel(obj, beneficiario, valor_formatado)
-			return
+        if class_name == 'ReembolsoCombustivel':
+            self._draw_reembolso_combustivel(obj, beneficiario, valor_formatado)
+            return
 
-		self._draw_recibo_evento(obj, beneficiario, valor_formatado, tipo_verba)
+        self._draw_recibo_evento(obj, beneficiario, valor_formatado, tipo_verba)
 
 
 class TermoPrestacaoContasDocument(BasePDFDocument):
-	"""Gera termo de veracidade para prestação de contas de diária."""
+    """Gera termo de veracidade para prestação de contas de diária."""
 
-	def draw_content(self):
-		"""Desenha o termo de prestação de contas da diária no canvas."""
-		diaria = self.obj
-		c = self.canvas
-		width = self.page_width
-		height = self.page_height
+    def draw_content(self):
+        """Desenha o termo de prestação de contas da diária no canvas."""
+        diaria = self.obj
+        c = self.canvas
+        width = self.page_width
+        height = self.page_height
 
-		margin_left = 70
-		margin_right = 70
-		text_width = width - margin_left - margin_right
-		y = height - 160
+        margin_left = 70
+        margin_right = 70
+        text_width = width - margin_left - margin_right
+        y = height - 160
 
-		c.setFont("Helvetica-Bold", 13)
-		c.drawCentredString(width / 2.0, y, "TERMO DE PRESTAÇÃO DE CONTAS — DIÁRIA")
-		y -= 24
+        c.setFont("Helvetica-Bold", 13)
+        c.drawCentredString(width / 2.0, y, "TERMO DE PRESTAÇÃO DE CONTAS — DIÁRIA")
+        y -= 24
 
-		numero = diaria.numero_siscac or diaria.id
-		beneficiario = _safe_text(getattr(diaria.beneficiario, "nome", None), "Não informado")
-		c.setFont("Helvetica", 10)
-		c.drawString(margin_left, y, f"Diária: {numero}")
-		y -= 14
-		c.drawString(margin_left, y, f"Beneficiário: {beneficiario}")
-		y -= 24
+        numero = diaria.numero_siscac or diaria.id
+        beneficiario = _safe_text(getattr(diaria.beneficiario, "nome", None), "Não informado")
+        c.setFont("Helvetica", 10)
+        c.drawString(margin_left, y, f"Diária: {numero}")
+        y -= 14
+        c.drawString(margin_left, y, f"Beneficiário: {beneficiario}")
+        y -= 24
 
-		c.setFont("Helvetica-Bold", 11)
-		c.drawString(margin_left, y, "Documentos anexados:")
-		y -= 16
-		c.setFont("Helvetica", 10)
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(margin_left, y, "Documentos anexados:")
+        y -= 16
+        c.setFont("Helvetica", 10)
 
-		prestacao = getattr(diaria, 'prestacao_contas', None)
-		documentos = prestacao.documentos.select_related("tipo").all().order_by("id") if prestacao else []
-		if not documentos:
-			c.drawString(margin_left, y, "- Nenhum documento anexado.")
-			y -= 14
-		else:
-			for indice, documento in enumerate(documentos, start=1):
-				nome_arquivo = _safe_text(getattr(getattr(documento, "arquivo", None), "name", None), "Sem arquivo")
-				tipo = _safe_text(getattr(documento.tipo, "tipo", None), "Sem tipo")
-				y = _draw_wrapped_text(
-					c,
-					f"{indice}. {nome_arquivo} ({tipo})",
-					margin_left,
-					y,
-					text_width,
-					font_name="Helvetica",
-					font_size=10,
-					leading=14,
-					justify=False,
-				)
+        prestacao = getattr(diaria, 'prestacao_contas', None)
+        documentos = prestacao.documentos.select_related("tipo").all().order_by("id") if prestacao else []
+        if not documentos:
+            c.drawString(margin_left, y, "- Nenhum documento anexado.")
+            y -= 14
+        else:
+            for indice, documento in enumerate(documentos, start=1):
+                nome_arquivo = _safe_text(getattr(getattr(documento, "arquivo", None), "name", None), "Sem arquivo")
+                tipo = _safe_text(getattr(documento.tipo, "tipo", None), "Sem tipo")
+                y = _draw_wrapped_text(
+                    c,
+                    f"{indice}. {nome_arquivo} ({tipo})",
+                    margin_left,
+                    y,
+                    text_width,
+                    font_name="Helvetica",
+                    font_size=10,
+                    leading=14,
+                    justify=False,
+                )
 
-		y -= 20
-		boilerplate = (
-			"Declaro, para os devidos fins, que os comprovantes anexados a esta prestação de contas "
-			"são autênticos, íntegros e correspondem às despesas efetivamente realizadas no contexto "
-			"da diária informada."
-		)
-		y = _draw_wrapped_text(
-			c,
-			boilerplate,
-			margin_left,
-			y,
-			text_width,
-			font_name="Helvetica",
-			font_size=10,
-			leading=14,
-			justify=True,
-		)
+        y -= 20
+        boilerplate = (
+            "Declaro, para os devidos fins, que os comprovantes anexados a esta prestação de contas "
+            "são autênticos, íntegros e correspondem às despesas efetivamente realizadas no contexto "
+            "da diária informada."
+        )
+        y = _draw_wrapped_text(
+            c,
+            boilerplate,
+            margin_left,
+            y,
+            text_width,
+            font_name="Helvetica",
+            font_size=10,
+            leading=14,
+            justify=True,
+        )
 
-		sig_y = max(120, y - 80)
-		sig_left_x = margin_left + _PCD_SIG_HALF_WIDTH
-		sig_right_x = width - margin_right - _PCD_SIG_HALF_WIDTH
+        sig_y = max(120, y - 80)
+        sig_left_x = margin_left + _PCD_SIG_HALF_WIDTH
+        sig_right_x = width - margin_right - _PCD_SIG_HALF_WIDTH
 
-		c.setFont("Helvetica", 9)
-		c.line(sig_left_x - _PCD_SIG_HALF_WIDTH, sig_y, sig_left_x + _PCD_SIG_HALF_WIDTH, sig_y)
-		c.drawCentredString(sig_left_x, sig_y - 12, "Beneficiário")
+        c.setFont("Helvetica", 9)
+        c.line(sig_left_x - _PCD_SIG_HALF_WIDTH, sig_y, sig_left_x + _PCD_SIG_HALF_WIDTH, sig_y)
+        c.drawCentredString(sig_left_x, sig_y - 12, "Beneficiário")
 
-		c.line(sig_right_x - _PCD_SIG_HALF_WIDTH, sig_y, sig_right_x + _PCD_SIG_HALF_WIDTH, sig_y)
-		c.drawCentredString(sig_right_x, sig_y - 12, "Operador / Fiscal")
+        c.line(sig_right_x - _PCD_SIG_HALF_WIDTH, sig_y, sig_right_x + _PCD_SIG_HALF_WIDTH, sig_y)
+        c.drawCentredString(sig_right_x, sig_y - 12, "Operador / Fiscal")
 
 
 # Registry de documentos específicos de Verbas Indenizatórias
 VERBAS_DOCUMENT_REGISTRY = {
-	'scd': SCDDocument,
-	'pcd': PCDDocument,
-	'termo_prestacao_contas': TermoPrestacaoContasDocument,
-	'recibo_reembolso': ReciboDocument,
-	'recibo_auxilio': ReciboDocument,
-	'recibo_jeton': ReciboDocument,
+    'scd': SCDDocument,
+    'pcd': PCDDocument,
+    'termo_prestacao_contas': TermoPrestacaoContasDocument,
+    'recibo_reembolso': ReciboDocument,
+    'recibo_auxilio': ReciboDocument,
+    'recibo_jeton': ReciboDocument,
 }
 
 
 __all__ = [
-	"PCDDocument",
-	"SCDDocument",
-	"ReciboDocument",
-	"TermoPrestacaoContasDocument",
-	"VERBAS_DOCUMENT_REGISTRY",
+    "PCDDocument",
+    "SCDDocument",
+    "ReciboDocument",
+    "TermoPrestacaoContasDocument",
+    "VERBAS_DOCUMENT_REGISTRY",
 ]
