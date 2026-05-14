@@ -1,7 +1,10 @@
 """Download seguro de arquivos com validação de acesso por contexto de negócio."""
 
 import os
+import re
+from urllib.parse import quote
 
+from django.conf import settings
 from django.http import Http404, HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from django.views.decorators.clickjacking import xframe_options_sameorigin
@@ -131,13 +134,25 @@ def download_arquivo_seguro(request, tipo_documento, documento_id):
         ip_address=request.META.get("REMOTE_ADDR"),
     )
 
-    safe_name = os.path.normpath(arquivo.name)
-    if safe_name.startswith("..") or os.path.isabs(safe_name):
+    # Validate that the resolved absolute path stays inside MEDIA_ROOT to
+    # prevent path traversal via manipulated FileField values.
+    media_root = os.path.abspath(settings.MEDIA_ROOT)
+    abs_path = os.path.abspath(os.path.join(media_root, arquivo.name))
+    if not abs_path.startswith(media_root + os.sep) and abs_path != media_root:
         raise Http404("Caminho de arquivo inválido.")
 
+    # Build a safe relative path (forward slashes, percent-encoded) for the
+    # X-Accel-Redirect header that nginx will serve.
+    relative = os.path.relpath(abs_path, media_root).replace(os.sep, "/")
+    accel_path = "/media/" + quote(relative, safe="/")
+
+    # Sanitize the filename for the Content-Disposition header to prevent
+    # header injection (strip control chars and double-quotes).
+    safe_filename = re.sub(r'[\x00-\x1f"\r\n]', "_", nome_arquivo)
+
     response = HttpResponse()
-    response["X-Accel-Redirect"] = f"/media/{safe_name}"
-    response["Content-Disposition"] = f'inline; filename="{nome_arquivo}"'
+    response["X-Accel-Redirect"] = accel_path
+    response["Content-Disposition"] = f"inline; filename*=UTF-8''{quote(safe_filename)}"
     response["X-Content-Type-Options"] = "nosniff"
     return response
 
