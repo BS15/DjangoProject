@@ -11,12 +11,14 @@ urlpatterns = [
     path('verbas/', include('apps.verbas_indenizatorias.urls')),
     path('suprimentos/', include('apps.suprimentos.urls')),
     path('cadastros/', include('apps.cadastros.urls')),
-    path('desenvolvedor/', include('apps.desenvolvedor.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
 ]
 
 if settings.DEBUG:
     import debug_toolbar
-    urlpatterns += [path('__debug__/', include(debug_toolbar.urls))]
+    urlpatterns += [
+        path('desenvolvedor/', include('apps.desenvolvedor.urls')),
+        path('__debug__/', include(debug_toolbar.urls)),
+    ]
 
 handler403 = 'django.views.defaults.permission_denied'

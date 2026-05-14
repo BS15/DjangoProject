@@ -3,6 +3,9 @@
 # Faker is for generating test data only — not for production
 Faker>=20.0.0
 
+# Debug toolbar for local development
+django-debug-toolbar>=6.3.0
+
 # Documentation tools
 mkdocs>=1.6.0
 mkdocs-material>=9.5.0

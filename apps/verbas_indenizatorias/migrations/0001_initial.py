@@ -5,8 +5,6 @@ import django.db.models.deletion
 import django.utils.timezone
 import commons.shared.file_validators
 from commons.shared.storage_utils import caminho_documento
-import apps.pagamentos as pagamentos
-import apps.pagamentos.validators
 import simple_history.models
 from decimal import Decimal
 from django.conf import settings
@@ -363,7 +361,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.FileField(
                         upload_to=caminho_documento,
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -409,7 +407,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.FileField(
                         upload_to=caminho_documento,
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -452,7 +450,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.TextField(
                         max_length=100,
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -524,7 +522,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.TextField(
                         max_length=100,
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -678,7 +676,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.TextField(
                         max_length=100,
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -753,7 +751,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.FileField(
                         upload_to=caminho_documento,
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -910,7 +908,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.TextField(
                         max_length=100,
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -985,7 +983,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.FileField(
                         upload_to=caminho_documento,
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                     ),
                 ),
                 (

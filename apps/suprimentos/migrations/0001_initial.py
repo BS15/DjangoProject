@@ -2,9 +2,8 @@
 
 import django.core.validators
 import django.db.models.deletion
+import commons.shared.file_validators
 from commons.shared.storage_utils import caminho_documento
-import apps.pagamentos as pagamentos
-import apps.pagamentos.validators
 import simple_history.models
 from django.conf import settings
 from django.db import migrations, models
@@ -304,7 +303,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.TextField(
                         max_length=100,
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -412,7 +411,7 @@ class Migration(migrations.Migration):
                         blank=True,
                         max_length=100,
                         null=True,
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                         verbose_name="Arquivo Único (Solicitação + NF)",
                     ),
                 ),
@@ -471,7 +470,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.FileField(
                         upload_to=caminho_documento,
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -553,7 +552,7 @@ class Migration(migrations.Migration):
                         blank=True,
                         null=True,
                         upload_to=caminho_documento,
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                         verbose_name="Arquivo Único (Solicitação + NF)",
                     ),
                 ),

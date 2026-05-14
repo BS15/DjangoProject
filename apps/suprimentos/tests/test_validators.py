@@ -6,7 +6,7 @@ from datetime import date, timedelta
 import pytest
 from django.core.exceptions import ValidationError
 
-from apps.suprimentos.validators import validate_periodo_suprimento
+from apps.suprimentos.validators import validar_regras_suprimento
 
 
 class TestValidadores:
