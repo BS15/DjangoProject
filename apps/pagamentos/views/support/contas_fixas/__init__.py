@@ -1,7 +1,6 @@
-"""Namespace de contas fixas (painel, ações e importações)."""
+"""Namespace de contas fixas (painel e ações)."""
 
 from .actions import *  # noqa: F401, F403
-from .imports import *  # noqa: F401, F403
 from .panels import *  # noqa: F401, F403
 
 __all__ = [
@@ -12,5 +11,4 @@ __all__ = [
     "edit_conta_fixa_action",
     "excluir_conta_fixa_action",
     "vincular_processo_fatura_action",
-    "download_template_csv_contas",
 ]

@@ -6,9 +6,8 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
-from apps.cadastros.models import ContaFixa, FaturaMensal, gerar_faturas_do_mes
-
-from .forms import ContaFixaForm
+from apps.pagamentos.domain_models import ContaFixa, FaturaMensal, gerar_faturas_do_mes
+from apps.pagamentos.forms import ContaFixaForm
 
 
 def _mes_ano(request):
@@ -41,7 +40,7 @@ def painel_contas_fixas_view(request):
     contas_fixas = ContaFixa.objects.select_related("credor").order_by("-ativa", "credor__nome", "referencia")
     return render(
         request,
-        "contas/painel_contas_fixas.html",
+        "pagamentos/contas_fixas/painel_contas_fixas.html",
         {"mes": mes, "ano": ano, "faturas": faturas, "contas_fixas": contas_fixas},
     )
 
@@ -49,7 +48,7 @@ def painel_contas_fixas_view(request):
 @require_GET
 @permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
 def add_conta_fixa_view(request):
-    return render(request, "contas/add_conta_fixa.html", {"form": ContaFixaForm()})
+    return render(request, "pagamentos/contas_fixas/add_conta_fixa.html", {"form": ContaFixaForm()})
 
 
 @require_GET
@@ -58,7 +57,7 @@ def edit_conta_fixa_view(request, pk):
     conta = get_object_or_404(ContaFixa, pk=pk)
     return render(
         request,
-        "contas/edit_conta_fixa.html",
+        "pagamentos/contas_fixas/edit_conta_fixa.html",
         {"conta": conta, "form": ContaFixaForm(instance=conta)},
     )
 
