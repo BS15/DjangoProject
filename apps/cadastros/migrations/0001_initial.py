@@ -274,6 +274,38 @@ class Migration(migrations.Migration):
                         max_length=1,
                     ),
                 ),
+                (
+                    "conta",
+                    models.ForeignKey(
+                        blank=True,
+                        db_constraint=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        related_name="+",
+                        to="cadastros.contasbancarias",
+                        verbose_name="Conta Credor",
+                    ),
+                ),
+                (
+                    "history_user",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "usuario",
+                    models.ForeignKey(
+                        blank=True,
+                        db_constraint=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        related_name="+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
                 "verbose_name": "historical credor",
@@ -301,6 +333,15 @@ class Migration(migrations.Migration):
                     models.CharField(
                         choices=[("+", "Created"), ("~", "Changed"), ("-", "Deleted")],
                         max_length=1,
+                    ),
+                ),
+                (
+                    "history_user",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="+",
+                        to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
@@ -341,6 +382,18 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "Cargos e Funções",
                 "unique_together": {("grupo", "cargo_funcao")},
             },
+        ),
+        migrations.AddField(
+            model_name="historicalcredor",
+            name="cargo_funcao",
+            field=models.ForeignKey(
+                blank=True,
+                db_constraint=False,
+                null=True,
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                related_name="+",
+                to="cadastros.cargosfuncoes",
+            ),
         ),
         migrations.CreateModel(
             name="Credor",
@@ -433,6 +486,17 @@ class Migration(migrations.Migration):
                         verbose_name="Conta Credor",
                     ),
                 ),
+                (
+                    "usuario",
+                    models.OneToOneField(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="credor_vinculado",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Usuário do Portal",
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
@@ -500,6 +564,46 @@ class Migration(migrations.Migration):
             options={
                 "verbose_name": "Conta Fixa",
                 "verbose_name_plural": "Contas Fixas",
+            },
+        ),
+        migrations.AddField(
+            model_name="historicalfaturamensal",
+            name="conta_fixa",
+            field=models.ForeignKey(
+                blank=True,
+                db_constraint=False,
+                null=True,
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                related_name="+",
+                to="cadastros.contafixa",
+            ),
+        ),
+        migrations.CreateModel(
+            name="FaturaMensal",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("mes_referencia", models.DateField(verbose_name="Mês de Referência")),
+                (
+                    "conta_fixa",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="faturas",
+                        to="cadastros.contafixa",
+                    ),
+                ),
+            ],
+            options={
+                "verbose_name": "Fatura Mensal",
+                "verbose_name_plural": "Faturas Mensais",
+                "unique_together": {("conta_fixa", "mes_referencia")},
             },
         ),
     ]

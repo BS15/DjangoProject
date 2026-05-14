@@ -4,8 +4,6 @@ import django.core.validators
 import django.db.models.deletion
 import commons.shared.file_validators
 from commons.shared.storage_utils import caminho_documento
-import apps.pagamentos as pagamentos
-import apps.pagamentos.validators
 import simple_history.models
 from django.conf import settings
 from django.db import migrations, models
@@ -526,7 +524,7 @@ class Migration(migrations.Migration):
                         blank=True,
                         null=True,
                         upload_to="processos_arquivados/",
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                         verbose_name="Processo Consolidado",
                     ),
                 ),
@@ -702,7 +700,7 @@ class Migration(migrations.Migration):
                     models.TextField(
                         help_text="Comprovante de depósito/GRU",
                         max_length=100,
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                     ),
                 ),
                 ("criado_em", models.DateTimeField(blank=True, editable=False)),
@@ -924,7 +922,7 @@ class Migration(migrations.Migration):
                     models.FileField(
                         help_text="Comprovante de depósito/GRU",
                         upload_to="devolucoes/",
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                     ),
                 ),
                 ("criado_em", models.DateTimeField(auto_now_add=True)),
@@ -1211,7 +1209,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.TextField(
                         max_length=100,
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -1291,7 +1289,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.TextField(
                         max_length=100,
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -1408,7 +1406,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.FileField(
                         upload_to=caminho_documento,
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -1476,7 +1474,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.FileField(
                         upload_to=caminho_documento,
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -1558,7 +1556,7 @@ class Migration(migrations.Migration):
                     "arquivo",
                     models.FileField(
                         upload_to=caminho_documento,
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                     ),
                 ),
                 (
@@ -1688,7 +1686,7 @@ class Migration(migrations.Migration):
                         blank=True,
                         max_length=100,
                         null=True,
-                        validators=[pagamentos.validators.validar_arquivo_seguro],
+                        validators=[commons.shared.file_validators.validar_arquivo_seguro],
                         verbose_name="Processo Consolidado",
                     ),
                 ),

@@ -1,11 +1,12 @@
 """Download seguro de arquivos com validação de acesso por contexto de negócio."""
 
-from django.http import FileResponse, Http404, HttpResponseForbidden
+from django.http import Http404, HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from commons.shared.access_utils import user_is_entity_owner
 from apps.pagamentos.models import (
+    AssinaturaEletronica,
     ComprovantePagamento,
     DevolucaoProcessual,
     DocumentoOrcamentarioProcessual,
@@ -65,6 +66,9 @@ def _resolve_documento(tipo_documento, documento_id):
     if tipo_documento == "verba_auxilio_doc":
         documento = get_object_or_404(DocumentoAuxilio, id=documento_id)
         return documento, documento.auxilio
+    if tipo_documento in ("assinatura_rascunho", "assinatura_assinado"):
+        assinatura = get_object_or_404(AssinaturaEletronica, id=documento_id)
+        return assinatura, assinatura
     raise Http404("Tipo de documento inválido.")
 
 
@@ -81,18 +85,40 @@ def _has_access(user, tipo_documento, objeto_pai):
 
         return _pode_acessar_prestacao(user, objeto_pai)
 
+    if tipo_documento in ("assinatura_rascunho", "assinatura_assinado"):
+        assinatura = objeto_pai
+        return assinatura.criador == user or user.has_perm("pagamentos.operador_contas_a_pagar")
+
     return user_is_entity_owner(user, objeto_pai)
+
+
+def _get_arquivo(documento, tipo_documento):
+    """Retorna o campo de arquivo correspondente ao tipo de documento."""
+    if tipo_documento == "assinatura_rascunho":
+        return getattr(documento, "arquivo", None)
+    if tipo_documento == "assinatura_assinado":
+        return getattr(documento, "arquivo_assinado", None)
+    return (
+        getattr(documento, "arquivo", None)
+        or getattr(documento, "comprovante", None)
+        or getattr(documento, "comprovante_devolucao", None)
+    )
 
 
 @xframe_options_sameorigin
 def download_arquivo_seguro(request, tipo_documento, documento_id):
-    """Faz download do arquivo quando usuário possui autorização contextual."""
+    """Faz download do arquivo quando usuário possui autorização contextual.
+
+    Delega a entrega do arquivo ao nginx via X-Accel-Redirect para que o
+    processo Django não bloqueie durante a transferência. O nginx deve ter a
+    diretiva ``internal`` configurada no location /media/.
+    """
     documento, objeto_pai = _resolve_documento(tipo_documento, documento_id)
 
     if not _has_access(request.user, tipo_documento, objeto_pai):
         return HttpResponseForbidden("Acesso negado a este arquivo.")
 
-    arquivo = getattr(documento, "arquivo", None) or getattr(documento, "comprovante", None) or getattr(documento, "comprovante_devolucao", None)
+    arquivo = _get_arquivo(documento, tipo_documento)
     if not arquivo:
         raise Http404("Arquivo não encontrado.")
 
@@ -103,8 +129,12 @@ def download_arquivo_seguro(request, tipo_documento, documento_id):
         ip_address=request.META.get("REMOTE_ADDR"),
     )
 
-    arquivo.open("rb")
-    return FileResponse(arquivo, as_attachment=False, filename=nome_arquivo)
+    response = HttpResponse()
+    response["X-Accel-Redirect"] = f"/media/{arquivo.name}"
+    response["Content-Disposition"] = f'inline; filename="{nome_arquivo}"'
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
 
 
 __all__ = ["download_arquivo_seguro"]
+

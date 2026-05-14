@@ -98,11 +98,11 @@
 						</td>
 						<td class="text-center">
 							{% if assinatura.arquivo_assinado %}
-							<a href="{{ assinatura.arquivo_assinado.url }}" target="_blank" class="btn btn-sm btn-outline-success">
+							<a href="{% url 'arquivo_seguro_detail' 'assinatura_assinado' assinatura.id %}" target="_blank" class="btn btn-sm btn-outline-success">
 								<i class="bi bi-file-earmark-check"></i>
 							</a>
 							{% elif assinatura.arquivo %}
-							<a href="{{ assinatura.arquivo.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+							<a href="{% url 'arquivo_seguro_detail' 'assinatura_rascunho' assinatura.id %}" target="_blank" class="btn btn-sm btn-outline-secondary">
 								<i class="bi bi-file-earmark"></i>
 							</a>
 							{% else %}-{% endif %}
