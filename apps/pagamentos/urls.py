@@ -49,7 +49,7 @@ from apps.pagamentos.views.pre_payment.empenho import actions as pre_payment_act
 from apps.pagamentos.views.pre_payment.empenho import apis as pre_payment_empenho_apis
 from apps.pagamentos.views.pre_payment.empenho import panels as pre_payment_panels
 from apps.pagamentos.views.pre_payment.liquidacoes import actions as pre_payment_liquidacoes_actions
-from apps.pagamentos.views.support.contas_fixas import imports as conta_fixa_imports
+from apps.pagamentos import imports as pagamentos_imports
 from apps.pagamentos.views.support.contas_fixas import actions as conta_actions
 from apps.pagamentos.views.support.contas_fixas import panels as conta_panels
 from apps.pagamentos.views.support import reports as relatorio_views
@@ -87,7 +87,7 @@ urlpatterns = [
     path('processo/<int:pk>/avancar-para-pagamento/action/', pre_payment_liquidacoes_actions.avancar_para_pagamento_action, name='avancar_para_pagamento_action'),
 
     # Contas fixas (do antigo backoffice)
-    path('importar-siscac/template-contas/', conta_fixa_imports.download_template_csv_contas, name='template_csv_contas_detail'),
+    path('importar-siscac/template-contas/', pagamentos_imports.download_template_csv_contas, name='template_csv_contas_detail'),
     path('contas-fixas/', conta_panels.painel_contas_fixas_view, name='contas_fixas_list'),
     path('contas-fixas/nova/', conta_panels.add_conta_fixa_view, name='conta_fixa_create'),
     path('contas-fixas/nova/action/', conta_actions.add_conta_fixa_action, name='add_conta_fixa_action'),

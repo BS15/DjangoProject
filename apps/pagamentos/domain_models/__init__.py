@@ -14,6 +14,7 @@ from .catalogos import (
     TiposPendencia,
 )
 from .documentos import BoletoBancario, ComprovantePagamento, DocumentoOrcamentarioProcessual, DocumentoProcesso
+from .contas_fixas import ContaFixa, FaturaMensal, gerar_faturas_do_mes
 from .processos import (
     STATUS_PROCESSO_BLOQUEADOS_FORM,
     STATUS_PROCESSO_BLOQUEADOS_TOTAL,
@@ -71,8 +72,11 @@ __all__ = [
     "AssinaturaEletronica",
     "CancelamentoProcessual",
     "ComprovantePagamento",
+    "ContaFixa",
     "ContingenciaProcessual",
     "DevolucaoProcessual",
+    "FaturaMensal",
+    "gerar_faturas_do_mes",
     "BoletoBancario",
     "DocumentoOrcamentarioProcessual",
     "DocumentoProcesso",

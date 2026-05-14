@@ -6,7 +6,7 @@ Este módulo define formulários para entrada, edição e validação de dados d
 from django import forms
 from django.contrib.auth import get_user_model
 
-from apps.cadastros.models import Credor, ContaFixa, ContasBancarias
+from apps.cadastros.models import Credor, ContasBancarias
 
 User = get_user_model()
 
@@ -143,4 +143,4 @@ class CredorEditForm(forms.ModelForm):
 
 
 
-# Formulário ContaFixaForm migrado para pagamentos.support.conta_fixa_forms
+# Formulário ContaFixaForm migrado para apps.pagamentos.forms

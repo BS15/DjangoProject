@@ -13,7 +13,8 @@ from apps.pagamentos.models import (
     TiposDePagamento,
 )
 from apps.retencoes.models import DadosContribuinte
-from apps.cadastros.models import ContasBancarias, ContaFixa
+from apps.cadastros.models import ContasBancarias
+from apps.pagamentos.domain_models import ContaFixa
 from apps.pagamentos.validators import validar_regras_processo, STATUS_BLOQUEADOS_FORM
 
 SUPRIMENTO_DE_FUNDOS = 'SUPRIMENTO DE FUNDOS'
@@ -311,4 +312,19 @@ class DevolucaoForm(forms.ModelForm):
             'data_devolucao': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date', 'class': 'form-control'}),
             'motivo': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'comprovante': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }
+
+
+class ContaFixaForm(forms.ModelForm):
+    """Formulário de conta fixa."""
+
+    class Meta:
+        model = ContaFixa
+        fields = ["credor", "referencia", "dia_vencimento", "data_inicio", "ativa"]
+        widgets = {
+            "credor": forms.Select(attrs={"class": "form-select"}),
+            "referencia": forms.TextInput(attrs={"class": "form-control"}),
+            "dia_vencimento": forms.NumberInput(attrs={"class": "form-control", "min": 1, "max": 31}),
+            "data_inicio": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "ativa": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
