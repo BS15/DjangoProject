@@ -11,12 +11,23 @@ Copie `.env.example` para `.env` e preencha as variáveis obrigatórias:
 cp .env.example .env
 ```
 
-Consulte os comentários em `.env.example` para descrição de cada variável. As variáveis essenciais incluem configuração do banco de dados PostgreSQL, chave secreta Django (`SECRET_KEY`), modo de debug e, quando aplicável, token da API Autentique.
+As variáveis que **devem** ser preenchidas antes do primeiro `docker compose up`:
+
+| Variável | Descrição |
+|---|---|
+| `SECRET_KEY` | Chave secreta Django — gere uma nova com `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"` |
+| `POSTGRES_PASSWORD` / `DB_PASSWORD` | Senha do banco — use o mesmo valor em ambas |
+| `ALLOWED_HOSTS` | Hosts permitidos (padrão: `127.0.0.1,localhost`) |
+| `CSRF_TRUSTED_ORIGINS` | Origens confiáveis para CSRF (padrão: `http://localhost,http://127.0.0.1`) |
+
+As demais variáveis (`DB_ENGINE`, `DB_NAME`, `DB_HOST`, `DB_PORT`, `DB_USER`, `STATIC_ROOT`) já estão pré-configuradas para o stack Docker em `.env.example` e não precisam ser alteradas para um primeiro boot.
 
 ## Subida do ambiente
 ```bash
 docker compose up --build
 ```
+
+O `docker compose up` executa automaticamente `migrate`, `collectstatic` e `setup_headstart` (inicializa catálogos financeiros e grupos/permissões) antes de iniciar o Gunicorn.
 
 ## Banco de dados em modo de desenvolvimento
 Projeto em modo pré-V1 com protocolo de base limpa (Clean Slate Protocol).
@@ -60,11 +71,12 @@ Para viabilizar cenários de teste funcional, execute os scripts de carga após 
    ```bash
    pip install -r requirements.txt
    ```
-2. Prepare o banco:
+2. Ajuste o bloco de banco no `.env` para SQLite (veja o bloco comentado "Local-only" em `.env.example`).
+3. Prepare o banco:
    ```bash
    python manage.py migrate
    ```
-3. Inicie o servidor:
+4. Inicie o servidor:
    ```bash
    python manage.py runserver
    ```

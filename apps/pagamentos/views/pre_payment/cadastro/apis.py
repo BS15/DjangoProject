@@ -11,7 +11,7 @@ from django.db.models import Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
-from pypdf import PdfReadError
+from pypdf.errors import PdfReadError
 
 from .actions import (
     salvar_nota_fiscal_action as api_salvar_nota_fiscal,
