@@ -25,12 +25,11 @@ __pycache__/
 # Arquivos temporários gerais
 temp/
 
-/verbas/
-verbasindenizatorias/
-suprimentosdefundos/
-
 # Arquivos estáticos coletados (gerados pelo collectstatic, não devem ser versionados)
 staticfiles/
+
+# Documentação gerada por mkdocs (não versionar o build — gerar em CI)
+site/
 
 # Hypothesis internal cache (gerado automaticamente pelos testes de fuzzing)
 .hypothesis/
@@ -39,12 +38,6 @@ staticfiles/
 .devcontainer/cache/
 .devcontainer/.env.local
 
-# Arquivos de credenciais e artefatos de depuração (nunca versionar)
-usuarios_teste_credenciais.txt
-traceback_audit_report.json
-test_all_connections.py
-test_connections_simple.py
-QUICK_CONNECTION_TEST.md
-CONNECTION_ANALYSIS_REPORT.md
-CONNECTION_TESTING_SUMMARY.md
-ARCHITECTURE_DOC_SYNC_STATUS.md
+# Arquivos pessoais de rascunho / artefatos locais de depuração (nunca versionar)
+# Coloque qualquer arquivo temporário pessoal dentro de local/ — toda a pasta é ignorada.
+local/

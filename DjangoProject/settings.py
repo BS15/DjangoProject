@@ -65,11 +65,6 @@ INSTALLED_APPS = [
     'apps.retencoes.apps.RetencoesConfig',
 ]
 
-MIGRATION_MODULES = {
-    'cadastros': 'apps.cadastros.migrations',
-    'retencoes': 'apps.retencoes.migrations',
-}
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
