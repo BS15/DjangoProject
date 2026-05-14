@@ -2,14 +2,15 @@
 
 import datetime
 
-from apps.cadastros.models import FaturaMensal
+from apps.pagamentos.domain_models import FaturaMensal
 
 
 def navbar_alerts(request):
     """Retorna total de faturas pendentes com vencimento nos proximos 5 dias."""
     # Dependência intencional de app de domínio: o agregador de alertas da navbar
-    # consome dados de módulos de negócio (hoje cadastros/FaturaMensal). Futuras
-    # expansões (verbas, suprimentos, etc.) devem ser adicionadas aqui.
+    # consome dados de módulos de negócio (hoje pagamentos/FaturaMensal; PR4
+    # atualizará o alvo quando FaturaMensal migrar). Futuras expansões (verbas,
+    # suprimentos, etc.) devem ser adicionadas aqui.
     if not request.user.is_authenticated:
         return {}
 
