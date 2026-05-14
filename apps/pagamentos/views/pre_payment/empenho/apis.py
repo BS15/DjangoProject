@@ -4,7 +4,7 @@ import logging
 
 from django.contrib.auth.decorators import permission_required
 from django.http import JsonResponse
-from pypdf import PdfReadError
+from pypdf.errors import PdfReadError
 
 from .helpers import extract_siscac_data
 

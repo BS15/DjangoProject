@@ -13,7 +13,7 @@ from django.db.models import Sum
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
-from pypdf import PdfReadError
+from pypdf.errors import PdfReadError
 
 from apps.pagamentos.domain_models import (
     Boleto_Bancario,
