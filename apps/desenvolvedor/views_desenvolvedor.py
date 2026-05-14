@@ -39,7 +39,7 @@ from apps.pagamentos.domain_models import (
     TiposDeDocumento,
     TiposDePagamento,
 )
-from apps.pagamentos.views.support.contas_fixas.imports import download_template_csv_contas
+from apps.pagamentos.imports import download_template_csv_contas
 from commons.shared.text_tools import format_brl_currency
 from commons.shared.pdf_tools import gerar_documento_pdf
 from apps.pagamentos.pdf_generators import FLUXO_DOCUMENT_REGISTRY
