@@ -1,16 +1,15 @@
-"""Context processors customizados para o domínio de fluxo financeiro e documental.
-
-Este módulo define funções para injetar variáveis globais em templates do fluxo financeiro.
-"""
-
+"""Context processors globais do projeto."""
 
 import datetime
 
-from apps.pagamentos.domain_models import FaturaMensal
+from apps.cadastros.models import FaturaMensal
 
 
-def alertas_contas_fixas(request):
+def navbar_alerts(request):
     """Retorna total de faturas pendentes com vencimento nos proximos 5 dias."""
+    # Dependência intencional de app de domínio: o agregador de alertas da navbar
+    # consome dados de módulos de negócio (hoje cadastros/FaturaMensal). Futuras
+    # expansões (verbas, suprimentos, etc.) devem ser adicionadas aqui.
     if not request.user.is_authenticated:
         return {}
 
