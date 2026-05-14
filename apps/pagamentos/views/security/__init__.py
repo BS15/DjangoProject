@@ -138,7 +138,7 @@ def download_arquivo_seguro(request, tipo_documento, documento_id):
     # prevent path traversal via manipulated FileField values.
     media_root = os.path.abspath(settings.MEDIA_ROOT)
     abs_path = os.path.abspath(os.path.join(media_root, arquivo.name))
-    if not abs_path.startswith(media_root + os.sep) and abs_path != media_root:
+    if not abs_path.startswith(media_root + os.sep):
         raise Http404("Caminho de arquivo inválido.")
 
     # Build a safe relative path (forward slashes, percent-encoded) for the
@@ -148,7 +148,7 @@ def download_arquivo_seguro(request, tipo_documento, documento_id):
 
     # Sanitize the filename for the Content-Disposition header to prevent
     # header injection (strip control chars and double-quotes).
-    safe_filename = re.sub(r'[\x00-\x1f"\r\n]', "_", nome_arquivo)
+    safe_filename = re.sub(r'[\x00-\x1f"]', "_", nome_arquivo)
 
     response = HttpResponse()
     response["X-Accel-Redirect"] = accel_path
