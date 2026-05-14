@@ -28,244 +28,244 @@ _CHAR_WIDTH_RATIO = 0.55
 
 
 class PdfMergeError(Exception):
-	"""Erro ao mesclar arquivos PDF em memória."""
+    """Erro ao mesclar arquivos PDF em memória."""
 
 
 def extract_text_between(full_text, start_anchor, end_anchor):
-	"""Extrai texto entre âncoras, com fallback para fim de linha."""
-	if full_text is None:
-		return ""
+    """Extrai texto entre âncoras, com fallback para fim de linha."""
+    if full_text is None:
+        return ""
 
-	start_idx = full_text.find(start_anchor)
-	if start_idx == -1:
-		return ""
+    start_idx = full_text.find(start_anchor)
+    if start_idx == -1:
+        return ""
 
-	start_idx += len(start_anchor)
-	end_idx = full_text.find(end_anchor, start_idx)
-	if end_idx == -1:
-		end_idx = full_text.find("\n", start_idx)
+    start_idx += len(start_anchor)
+    end_idx = full_text.find(end_anchor, start_idx)
+    if end_idx == -1:
+        end_idx = full_text.find("\n", start_idx)
 
-	return full_text[start_idx:end_idx].replace("\n", "").strip()
+    return full_text[start_idx:end_idx].replace("\n", "").strip()
 
 
 def _draw_wrapped_text(
-	p,
-	text,
-	x,
-	y,
-	max_width,
-	font_name="Helvetica",
-	font_size=11,
-	leading=16,
-	justify=False,
+    p,
+    text,
+    x,
+    y,
+    max_width,
+    font_name="Helvetica",
+    font_size=11,
+    leading=16,
+    justify=False,
 ):
-	"""
-	Desenha texto com quebra automática de linha no canvas ReportLab.
-	Retorna a posição Y após o último texto desenhado.
-	"""
-	if not text:
-		return y
-	p.setFont(font_name, font_size)
-	chars_per_line = max(1, int(max_width / (font_size * _CHAR_WIDTH_RATIO)))
-	lines = textwrap.wrap(str(text), width=chars_per_line)
-	if not lines:
-		lines = [str(text)]
-	for index, line in enumerate(lines):
-		should_justify = justify and index < len(lines) - 1 and " " in line
-		if should_justify:
-			words = line.split()
-			if len(words) > 1:
-				text_width = sum(stringWidth(word, font_name, font_size) for word in words)
-				extra_space = max_width - text_width
-				space_slots = len(words) - 1
-				space_width = max(0, extra_space / space_slots)
-				cursor_x = x
-				for word in words[:-1]:
-					p.drawString(cursor_x, y, word)
-					cursor_x += stringWidth(word, font_name, font_size) + space_width
-				p.drawString(cursor_x, y, words[-1])
-			else:
-				p.drawString(x, y, line)
-		else:
-			p.drawString(x, y, line)
-		y -= leading
-	return y
+    """
+    Desenha texto com quebra automática de linha no canvas ReportLab.
+    Retorna a posição Y após o último texto desenhado.
+    """
+    if not text:
+        return y
+    p.setFont(font_name, font_size)
+    chars_per_line = max(1, int(max_width / (font_size * _CHAR_WIDTH_RATIO)))
+    lines = textwrap.wrap(str(text), width=chars_per_line)
+    if not lines:
+        lines = [str(text)]
+    for index, line in enumerate(lines):
+        should_justify = justify and index < len(lines) - 1 and " " in line
+        if should_justify:
+            words = line.split()
+            if len(words) > 1:
+                text_width = sum(stringWidth(word, font_name, font_size) for word in words)
+                extra_space = max_width - text_width
+                space_slots = len(words) - 1
+                space_width = max(0, extra_space / space_slots)
+                cursor_x = x
+                for word in words[:-1]:
+                    p.drawString(cursor_x, y, word)
+                    cursor_x += stringWidth(word, font_name, font_size) + space_width
+                p.drawString(cursor_x, y, words[-1])
+            else:
+                p.drawString(x, y, line)
+        else:
+            p.drawString(x, y, line)
+        y -= leading
+    return y
 
 
 def _contar_paginas_documentos(processo):
-	"""
-	Conta o número total de documentos e páginas nos Boleto_Bancario em PDF.
-	Retorna uma tupla (total_documentos, total_paginas).
-	"""
-	total_docs = 0
-	total_pages = 0
+    """
+    Conta o número total de documentos e páginas nos Boleto_Bancario em PDF.
+    Retorna uma tupla (total_documentos, total_paginas).
+    """
+    total_docs = 0
+    total_pages = 0
 
-	for doc in processo.documentos.all():
-		total_docs += 1
-		try:
-			with doc.arquivo.open('rb') as f:
-				reader = PdfReader(f)
-				total_pages += len(reader.pages)
-		except (FileNotFoundError, OSError, ValueError) as exc:
-			logger.warning(
-				"Não foi possível contar páginas do documento %s do processo %s: %s",
-				getattr(doc, "id", None),
-				processo.id,
-				exc,
-			)
+    for doc in processo.documentos.all():
+        total_docs += 1
+        try:
+            with doc.arquivo.open('rb') as f:
+                reader = PdfReader(f)
+                total_pages += len(reader.pages)
+        except (FileNotFoundError, OSError, ValueError) as exc:
+            logger.warning(
+                "Não foi possível contar páginas do documento %s do processo %s: %s",
+                getattr(doc, "id", None),
+                processo.id,
+                exc,
+            )
 
-	return total_docs, total_pages
+    return total_docs, total_pages
 
 
 def merge_canvas_with_template(canvas_io, template_path):
-	"""
-	Mescla canvas renderizado com timbrado (template) PDF.
-	Retorna BytesIO com PDF final.
-	"""
-	canvas_io.seek(0)
-	canvas_reader = PdfReader(canvas_io)
-	canvas_page = canvas_reader.pages[0]
+    """
+    Mescla canvas renderizado com timbrado (template) PDF.
+    Retorna BytesIO com PDF final.
+    """
+    canvas_io.seek(0)
+    canvas_reader = PdfReader(canvas_io)
+    canvas_page = canvas_reader.pages[0]
 
-	writer = PdfWriter()
-	if template_path:
-		try:
-			with open(template_path, "rb") as template_file:
-				template_reader = PdfReader(template_file)
-				template_page = template_reader.pages[0]
-				template_page.merge_page(canvas_page)
-				writer.add_page(template_page)
-		except FileNotFoundError:
-			writer.add_page(canvas_page)
-	else:
-		writer.add_page(canvas_page)
+    writer = PdfWriter()
+    if template_path:
+        try:
+            with open(template_path, "rb") as template_file:
+                template_reader = PdfReader(template_file)
+                template_page = template_reader.pages[0]
+                template_page.merge_page(canvas_page)
+                writer.add_page(template_page)
+        except FileNotFoundError:
+            writer.add_page(canvas_page)
+    else:
+        writer.add_page(canvas_page)
 
-	output = io.BytesIO()
-	writer.write(output)
-	output.seek(0)
-	return output
+    output = io.BytesIO()
+    writer.write(output)
+    output.seek(0)
+    return output
 
 
 def split_pdf_to_temp_pages(arquivo_pdf):
-	"""Divide um PDF em páginas e salva cada página em arquivo temporário."""
-	pdf = PdfReader(arquivo_pdf)
-	paginas = []
+    """Divide um PDF em páginas e salva cada página em arquivo temporário."""
+    pdf = PdfReader(arquivo_pdf)
+    paginas = []
 
-	for numero_pagina in range(len(pdf.pages)):
-		writer = PdfWriter()
-		writer.add_page(pdf.pages[numero_pagina])
+    for numero_pagina in range(len(pdf.pages)):
+        writer = PdfWriter()
+        writer.add_page(pdf.pages[numero_pagina])
 
-		buffer = io.BytesIO()
-		writer.write(buffer)
-		buffer.seek(0)
+        buffer = io.BytesIO()
+        writer.write(buffer)
+        buffer.seek(0)
 
-		nome_temp = f"temp_comprovante_{uuid.uuid4().hex[:8]}_pag{numero_pagina + 1}.pdf"
-		caminho_salvo = default_storage.save(f"temp/{nome_temp}", ContentFile(buffer.read()))
+        nome_temp = f"temp_comprovante_{uuid.uuid4().hex[:8]}_pag{numero_pagina + 1}.pdf"
+        caminho_salvo = default_storage.save(f"temp/{nome_temp}", ContentFile(buffer.read()))
 
-		paginas.append({
-			"temp_path": caminho_salvo,
-			"url": default_storage.url(caminho_salvo),
-			"pagina": numero_pagina + 1,
-		})
+        paginas.append({
+            "temp_path": caminho_salvo,
+            "url": default_storage.url(caminho_salvo),
+            "pagina": numero_pagina + 1,
+        })
 
-	return paginas
+    return paginas
 
 
 def mesclar_pdfs_em_memoria(lista_arquivos):
-	"""Mescla PDFs em memória a partir de bytes, streams ou arquivos e retorna buffer no início."""
-	merger = PdfWriter()
-	streams_temporarios = []
+    """Mescla PDFs em memória a partir de bytes, streams ou arquivos e retorna buffer no início."""
+    merger = PdfWriter()
+    streams_temporarios = []
 
-	try:
-		for arquivo in lista_arquivos:
-			if arquivo:
-				if isinstance(arquivo, (bytes, bytearray)):
-					arquivo = io.BytesIO(arquivo)
-					streams_temporarios.append(arquivo)
-				merger.append(arquivo)
+    try:
+        for arquivo in lista_arquivos:
+            if arquivo:
+                if isinstance(arquivo, (bytes, bytearray)):
+                    arquivo = io.BytesIO(arquivo)
+                    streams_temporarios.append(arquivo)
+                merger.append(arquivo)
 
-		output_pdf = io.BytesIO()
-		merger.write(output_pdf)
-		merger.close()
-		output_pdf.seek(0)
-		return output_pdf
-	except (PdfReadError, OSError, TypeError, ValueError) as exc:
-		logger.exception("Erro na mesclagem de PDFs em memória: %s", exc)
-		raise PdfMergeError("Falha técnica ao mesclar PDFs em memória.") from exc
-	finally:
-		for stream in streams_temporarios:
-			stream.close()
+        output_pdf = io.BytesIO()
+        merger.write(output_pdf)
+        merger.close()
+        output_pdf.seek(0)
+        return output_pdf
+    except (PdfReadError, OSError, TypeError, ValueError) as exc:
+        logger.exception("Erro na mesclagem de PDFs em memória: %s", exc)
+        raise PdfMergeError("Falha técnica ao mesclar PDFs em memória.") from exc
+    finally:
+        for stream in streams_temporarios:
+            stream.close()
 
 
 class BasePDFDocument:
-	"""
-	Classe base para geração de documentos PDF no padrão Strategy.
+    """
+    Classe base para geração de documentos PDF no padrão Strategy.
 
-	Subclasses devem sobrescrever ``draw_content`` para desenhar o layout no
-	canvas e usar ``generate`` para obter o PDF final em bytes.
-	"""
+    Subclasses devem sobrescrever ``draw_content`` para desenhar o layout no
+    canvas e usar ``generate`` para obter o PDF final em bytes.
+    """
 
-	def __init__(self, obj, letterhead_path=None, **kwargs):
-		"""Inicializa contexto de renderização para a entidade informada."""
-		self.obj = obj
-		self.packet = io.BytesIO()
-		self.canvas = canvas.Canvas(self.packet, pagesize=A4)
-		self.page_width, self.page_height = A4
-		self.letterhead_path = letterhead_path or getattr(settings, 'LETTERHEAD_PATH', None) or getattr(settings, 'CRECI_LETTERHEAD_PATH', None)
-		self.kwargs = kwargs
+    def __init__(self, obj, letterhead_path=None, **kwargs):
+        """Inicializa contexto de renderização para a entidade informada."""
+        self.obj = obj
+        self.packet = io.BytesIO()
+        self.canvas = canvas.Canvas(self.packet, pagesize=A4)
+        self.page_width, self.page_height = A4
+        self.letterhead_path = letterhead_path or getattr(settings, 'LETTERHEAD_PATH', None) or getattr(settings, 'CRECI_LETTERHEAD_PATH', None)
+        self.kwargs = kwargs
 
-	def draw_content(self):
-		"""Desenha o conteúdo específico do documento no canvas atual."""
-		raise NotImplementedError("Subclasses must implement draw_content()")
+    def draw_content(self):
+        """Desenha o conteúdo específico do documento no canvas atual."""
+        raise NotImplementedError("Subclasses must implement draw_content()")
 
-	def generate(self):
-		"""Renderiza o conteúdo e retorna o PDF final mesclado ao timbrado."""
-		self.draw_content()
-		self.canvas.save()
-		template_path = None
-		if self.letterhead_path:
-			template_path = os.path.join(settings.BASE_DIR, self.letterhead_path)
-			if not os.path.exists(template_path):
-				logger.warning(
-					"Letterhead file not found at '%s'. Generating PDF without letterhead.",
-					template_path,
-				)
-				template_path = None
+    def generate(self):
+        """Renderiza o conteúdo e retorna o PDF final mesclado ao timbrado."""
+        self.draw_content()
+        self.canvas.save()
+        template_path = None
+        if self.letterhead_path:
+            template_path = os.path.join(settings.BASE_DIR, self.letterhead_path)
+            if not os.path.exists(template_path):
+                logger.warning(
+                    "Letterhead file not found at '%s'. Generating PDF without letterhead.",
+                    template_path,
+                )
+                template_path = None
 
-		merged_packet = merge_canvas_with_template(self.packet, template_path)
-		return merged_packet.getvalue()
+        merged_packet = merge_canvas_with_template(self.packet, template_path)
+        return merged_packet.getvalue()
 
 
 def gerar_documento_pdf(doc_type, obj, document_registry, **kwargs):
-	"""
-	Factory genérica: instancia a classe de documento adequada e retorna o PDF em bytes.
-	
-	Args:
-		doc_type: tipo de documento (string, ex: 'scd', 'pcd')
-		obj: objeto de domínio (Diaria, Processo, etc)
-		document_registry: dicionário mapeando tipos para classes de documento
-		**kwargs: argumentos adicionais passados ao construtor do documento
-	
-	Returns:
-		bytes: conteúdo do PDF
-		
-	Raises:
-		ValueError: se doc_type não estiver no registry
-	"""
-	doc_class = document_registry.get(doc_type.lower())
-	if not doc_class:
-		raise ValueError(f"Tipo de documento '{doc_type}' não reconhecido.")
-	documento = doc_class(obj, **kwargs)
-	return documento.generate()
+    """
+    Factory genérica: instancia a classe de documento adequada e retorna o PDF em bytes.
+    
+    Args:
+        doc_type: tipo de documento (string, ex: 'scd', 'pcd')
+        obj: objeto de domínio (Diaria, Processo, etc)
+        document_registry: dicionário mapeando tipos para classes de documento
+        **kwargs: argumentos adicionais passados ao construtor do documento
+    
+    Returns:
+        bytes: conteúdo do PDF
+        
+    Raises:
+        ValueError: se doc_type não estiver no registry
+    """
+    doc_class = document_registry.get(doc_type.lower())
+    if not doc_class:
+        raise ValueError(f"Tipo de documento '{doc_type}' não reconhecido.")
+    documento = doc_class(obj, **kwargs)
+    return documento.generate()
 
 
 __all__ = [
-	"extract_text_between",
-	"_draw_wrapped_text",
-	"_contar_paginas_documentos",
-	"merge_canvas_with_template",
-	"split_pdf_to_temp_pages",
-	"mesclar_pdfs_em_memoria",
-	"PdfMergeError",
-	"BasePDFDocument",
-	"gerar_documento_pdf",
+    "extract_text_between",
+    "_draw_wrapped_text",
+    "_contar_paginas_documentos",
+    "merge_canvas_with_template",
+    "split_pdf_to_temp_pages",
+    "mesclar_pdfs_em_memoria",
+    "PdfMergeError",
+    "BasePDFDocument",
+    "gerar_documento_pdf",
 ]
