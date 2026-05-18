@@ -4,10 +4,10 @@
 {% block page_subtitle %}A ação altera o status do processo para Cancelado / Anulado. Esta operação não pode ser desfeita.{% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'process_detail' pk=processo.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Processo</a>
+<a href="{% url 'pagamentos:process_detail' pk=processo.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Processo</a>
 {% endblock %}
 
-{% block form_action %}{% url 'cancelar_processo_action' pk=processo.id %}{% endblock %}
+{% block form_action %}{% url 'pagamentos:cancelar_processo_action' pk=processo.id %}{% endblock %}
 {% block form_enctype %}multipart/form-data{% endblock %}
 
 {% block form_fields %}
@@ -28,6 +28,6 @@
 {% endblock %}
 
 {% block form_actions %}
-<a href="{% url 'process_detail' pk=processo.id %}" class="btn btn-secondary px-4">Voltar</a>
+<a href="{% url 'pagamentos:process_detail' pk=processo.id %}" class="btn btn-secondary px-4">Voltar</a>
 <button type="submit" class="btn btn-danger px-4 fw-bold"><i class="bi bi-x-circle"></i> Confirmar Cancelamento</button>
 {% endblock %}

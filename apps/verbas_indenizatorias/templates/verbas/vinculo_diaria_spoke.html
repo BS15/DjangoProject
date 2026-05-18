@@ -7,7 +7,7 @@
 <a href="{% url 'gerenciar_diaria' pk=diaria.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
 {% endblock %}
 
-{% block form_action %}{% url 'vincular_diaria_processo_action' pk=diaria.id %}{% endblock %}
+{% block form_action %}{% url 'verbas_indenizatorias:vincular_diaria_processo_action' pk=diaria.id %}{% endblock %}
 
 {% block form_fields %}
 <div class="mb-3">
@@ -29,7 +29,7 @@
     <button
         type="submit"
         class="btn btn-outline-danger btn-sm"
-        formaction="{% url 'desvincular_diaria_processo_action' pk=diaria.id %}"
+        formaction="{% url 'verbas_indenizatorias:desvincular_diaria_processo_action' pk=diaria.id %}"
         formnovalidate
         onclick="return confirm('Deseja desvincular esta diária do processo atual?');"
     >

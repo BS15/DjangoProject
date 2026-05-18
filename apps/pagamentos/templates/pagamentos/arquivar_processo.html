@@ -48,7 +48,7 @@
 
 {% block detail_actions %}
 {% if elegivel_para_arquivamento and pode_interagir %}
-<form method="post" action="{% url 'arquivar_processo_action' pk=processo.id %}">
+<form method="post" action="{% url 'pagamentos:arquivar_processo_action' pk=processo.id %}">
 	{% csrf_token %}
 	<button type="submit" class="btn btn-danger fw-bold" onclick="return confirm('Confirma o arquivamento definitivo do Processo #{{ processo.id }}?')">
 		<i class="bi bi-archive-fill"></i> Arquivar Definitivamente

@@ -25,7 +25,7 @@
                     <h5 class="fw-bold">Diárias</h5>
                     <p class="text-muted small">Diárias de viagem para deslocamento a serviço.</p>
                     <div class="d-flex flex-column gap-2 mt-3">
-                        <a href="{% url 'diarias_list' %}" class="btn btn-primary btn-sm fw-bold shadow-sm">
+                        <a href="{% url 'verbas_indenizatorias:diarias_list' %}" class="btn btn-primary btn-sm fw-bold shadow-sm">
                             <i class="bi bi-list-ul"></i> Listar Diárias
                         </a>
                         <a href="{% url 'add_diaria' %}" class="btn btn-outline-primary btn-sm fw-bold shadow-sm">
@@ -46,7 +46,7 @@
                     <h5 class="fw-bold">Reembolsos</h5>
                     <p class="text-muted small">Reembolsos de combustível por uso de veículo próprio.</p>
                     <div class="d-flex flex-column gap-2 mt-3">
-                        <a href="{% url 'reembolsos_list' %}" class="btn btn-success btn-sm fw-bold shadow-sm">
+                        <a href="{% url 'verbas_indenizatorias:reembolsos_list' %}" class="btn btn-success btn-sm fw-bold shadow-sm">
                             <i class="bi bi-list-ul"></i> Listar Reembolsos
                         </a>
                         <a href="{% url 'add_reembolso' %}" class="btn btn-outline-success btn-sm fw-bold shadow-sm">
@@ -64,7 +64,7 @@
                     <h5 class="fw-bold">Jetons</h5>
                     <p class="text-muted small">Jetons de presença em reuniões e sessões do conselho.</p>
                     <div class="d-flex flex-column gap-2 mt-3">
-                        <a href="{% url 'jetons_list' %}" class="btn btn-warning btn-sm fw-bold shadow-sm">
+                        <a href="{% url 'verbas_indenizatorias:jetons_list' %}" class="btn btn-warning btn-sm fw-bold shadow-sm">
                             <i class="bi bi-list-ul"></i> Listar Jetons
                         </a>
                         <a href="{% url 'add_jeton' %}" class="btn btn-outline-warning btn-sm fw-bold shadow-sm">
@@ -82,7 +82,7 @@
                     <h5 class="fw-bold">Auxílios</h5>
                     <p class="text-muted small">Auxílios de representação em eventos e solenidades.</p>
                     <div class="d-flex flex-column gap-2 mt-3">
-                        <a href="{% url 'auxilios_list' %}" class="btn btn-info btn-sm fw-bold shadow-sm text-white">
+                        <a href="{% url 'verbas_indenizatorias:auxilios_list' %}" class="btn btn-info btn-sm fw-bold shadow-sm text-white">
                             <i class="bi bi-list-ul"></i> Listar Auxílios
                         </a>
                         <a href="{% url 'add_auxilio' %}" class="btn btn-outline-info btn-sm fw-bold shadow-sm">
@@ -103,7 +103,7 @@
                         <i class="bi bi-lightning-charge text-warning"></i> Ações Rápidas
                     </h6>
                     <div class="d-flex flex-wrap gap-2">
-                        <a href="{% url 'minha_prestacao_list' %}" class="btn btn-outline-primary btn-sm">
+                        <a href="{% url 'verbas_indenizatorias:minha_prestacao_list' %}" class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-wallet2"></i> Minhas Prestações
                         </a>
                         {% if perms.verbas_indenizatorias.pode_autorizar_diarias %}
@@ -122,7 +122,7 @@
                         </a>
                         {% endif %}
                         {% if perms.verbas_indenizatorias.pode_visualizar_tabela_valores_unitarios or perms.verbas_indenizatorias.pode_gerenciar_tabela_valores_unitarios %}
-                        <a href="{% url 'tabela_valores_unitarios_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <a href="{% url 'verbas_indenizatorias:tabela_valores_unitarios_list' %}" class="btn btn-outline-secondary btn-sm">
                             <i class="bi bi-table"></i> Tabela de Valores Unitários
                         </a>
                         {% endif %}

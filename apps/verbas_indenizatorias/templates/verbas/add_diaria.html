@@ -21,11 +21,11 @@ Preencha os dados da viagem. A solicitação será encaminhada para autorizaçã
 {% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'diarias_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+<a href="{% url 'verbas_indenizatorias:diarias_list' %}" class="btn btn-outline-secondary">Cancelar</a>
 {% endblock %}
 
 {% block form_action %}
-{% if form_action_url %}{% url form_action_url %}{% else %}{% url 'add_diaria_action' %}{% endif %}
+{% if form_action_url %}{% url form_action_url %}{% else %}{% url 'verbas_indenizatorias:add_diaria_action' %}{% endif %}
 {% endblock %}
 {% block form_enctype %}{% if modo_solicitacao_assinada %}multipart/form-data{% else %}application/x-www-form-urlencoded{% endif %}{% endblock %}
 
@@ -120,7 +120,7 @@ Preencha os dados da viagem. A solicitação será encaminhada para autorizaçã
 {% endblock %}
 
 {% block form_actions %}
-<a href="{% url 'diarias_list' %}" class="btn btn-outline-secondary me-2">Cancelar</a>
+<a href="{% url 'verbas_indenizatorias:diarias_list' %}" class="btn btn-outline-secondary me-2">Cancelar</a>
 <button type="submit" class="btn btn-primary">
     {% if modo_solicitacao_assinada %}
     <i class="bi bi-check2-square"></i> Confirmar Inclusão

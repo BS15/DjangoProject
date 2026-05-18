@@ -19,7 +19,7 @@
 	</div>
 	<div class="d-flex gap-2 align-items-center flex-wrap">
 		<span class="badge bg-primary fs-6">{{ processo.status.opcao_status|default:"Sem status" }}</span>
-		<a href="{% url 'process_detail' pk=processo.id %}" class="btn btn-sm btn-outline-secondary">
+		<a href="{% url 'pagamentos:process_detail' pk=processo.id %}" class="btn btn-sm btn-outline-secondary">
 			<i class="bi bi-eye"></i> Visualizar
 		</a>
 	</div>

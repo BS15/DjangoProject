@@ -51,7 +51,7 @@ Listagem e controle de devolucoes registradas nos processos.
 {% for devolucao in devolucoes %}
 <tr>
     <td>
-        <a href="{% url 'process_detail' devolucao.processo.id %}" class="btn btn-sm btn-outline-secondary py-0">
+        <a href="{% url 'pagamentos:process_detail' devolucao.processo.id %}" class="btn btn-sm btn-outline-secondary py-0">
             <i class="bi bi-folder2-open"></i> #{{ devolucao.processo.id }}
         </a>
     </td>

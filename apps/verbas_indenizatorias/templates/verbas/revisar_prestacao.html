@@ -114,13 +114,13 @@ document.addEventListener('DOMContentLoaded', function () {
     </form>
     {% endif %}
     {% if pode_aceitar %}
-    <form method="post" action="{% url 'aceitar_prestacao_action' prestacao.id %}" onsubmit="return confirm('Aceitar prestação e anexar comprovantes ao processo?');">
+    <form method="post" action="{% url 'verbas_indenizatorias:aceitar_prestacao_action' prestacao.id %}" onsubmit="return confirm('Aceitar prestação e anexar comprovantes ao processo?');">
         {% csrf_token %}
         <button type="submit" class="btn btn-success fw-bold">
             <i class="bi bi-check-circle"></i> Aceitar Prestação
         </button>
     </form>
-    <form method="post" action="{% url 'encerrar_prestacao_action' diaria.id %}" onsubmit="return confirm('Encerrar sem aceitar anexação ao processo?');">
+    <form method="post" action="{% url 'verbas_indenizatorias:encerrar_prestacao_action' diaria.id %}" onsubmit="return confirm('Encerrar sem aceitar anexação ao processo?');">
         {% csrf_token %}
         <input type="hidden" name="next" value="{% if next_pk %}{% url 'revisar_prestacao' next_pk %}{% else %}{{ request.get_full_path }}{% endif %}">
         <button type="submit" class="btn btn-outline-danger fw-bold">

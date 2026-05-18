@@ -8,7 +8,7 @@
 {% block page_actions %}
 <div class="d-flex gap-2">
 {% if pode_interagir %}
-<form method="post" action="{% url 'extrair_codigos_barras_lote_action' pk=processo.id %}">
+<form method="post" action="{% url 'pagamentos:extrair_codigos_barras_lote_action' pk=processo.id %}">
     {% csrf_token %}
     <button type="submit" class="btn btn-outline-primary btn-sm">
         <i class="bi bi-upc-scan"></i> Extrair todos os boletos
@@ -21,7 +21,7 @@
 </div>
 {% endblock %}
 
-{% block form_action %}{% url 'editar_processo_documentos_action' pk=processo.id %}{% endblock %}
+{% block form_action %}{% url 'pagamentos:editar_processo_documentos_action' pk=processo.id %}{% endblock %}
 
 {% block form_fields %}
 <input type="hidden" name="next" value="{{ next_url }}">

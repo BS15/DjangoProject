@@ -102,7 +102,7 @@ def test_editar_processo_documentos_action_ignora_linha_vazia_sem_arquivo(client
     # Simula o POST com TOTAL_FORMS=3 (N+1 do extra=1 + 1 adicionado pelo JS),
     # uma linha fantasma (index 1) com tipo e ordem preenchidos pelo JS, mas sem arquivo.
     response = client.post(
-        reverse("editar_processo_documentos_action", kwargs={"pk": processo.id}),
+        reverse("pagamentos:editar_processo_documentos_action", kwargs={"pk": processo.id}),
         data={
             "documento-TOTAL_FORMS": "3",
             "documento-INITIAL_FORMS": "1",
@@ -138,7 +138,7 @@ def test_editar_processo_documentos_action_salva_ordem_e_tipo_em_lote(client):
     user = _create_backoffice_user()
     client.force_login(user)
     response = client.post(
-        reverse("editar_processo_documentos_action", kwargs={"pk": processo.id}),
+        reverse("pagamentos:editar_processo_documentos_action", kwargs={"pk": processo.id}),
         data={
             "documento-TOTAL_FORMS": "2",
             "documento-INITIAL_FORMS": "2",
@@ -178,8 +178,7 @@ def test_extrair_codigo_barras_documento_action_persiste_boleto(client, monkeypa
         lambda _arquivo: {"codigo_barras": "34191790010104351004791020150008291070000010000"},
     )
     response = client.post(
-        reverse(
-            "extrair_codigo_barras_documento_action",
+        reverse("pagamentos:extrair_codigo_barras_documento_action",
             kwargs={"pk": processo.id, "documento_id": documento.id},
         ),
         secure=True,
@@ -204,8 +203,7 @@ def test_extrair_codigo_barras_documento_action_ignora_documento_nao_boleto(clie
         lambda _arquivo: {"codigo_barras": "34191790010104351004791020150008291070000010000"},
     )
     response = client.post(
-        reverse(
-            "extrair_codigo_barras_documento_action",
+        reverse("pagamentos:extrair_codigo_barras_documento_action",
             kwargs={"pk": processo.id, "documento_id": documento.id},
         ),
         follow=True,
@@ -268,7 +266,7 @@ def test_extrair_codigos_barras_lote_processa_todos_boletos(client, monkeypatch)
         lambda _arquivo: {"codigo_barras": "34191790010104351004791020150008291070000010000"},
     )
     response = client.post(
-        reverse("extrair_codigos_barras_lote_action", kwargs={"pk": processo.id}),
+        reverse("pagamentos:extrair_codigos_barras_lote_action", kwargs={"pk": processo.id}),
         follow=True,
         secure=True,
     )
@@ -290,7 +288,7 @@ def test_extrair_codigos_barras_lote_sem_boletos_emite_aviso(client):
     client.force_login(user)
 
     response = client.post(
-        reverse("extrair_codigos_barras_lote_action", kwargs={"pk": processo.id}),
+        reverse("pagamentos:extrair_codigos_barras_lote_action", kwargs={"pk": processo.id}),
         follow=True,
         secure=True,
     )
@@ -319,7 +317,7 @@ def test_extrair_codigos_barras_lote_contabiliza_falhas(client, monkeypatch):
     monkeypatch.setattr(cadastro_actions, "processar_pdf_boleto", extrator_parcial)
 
     response = client.post(
-        reverse("extrair_codigos_barras_lote_action", kwargs={"pk": processo.id}),
+        reverse("pagamentos:extrair_codigos_barras_lote_action", kwargs={"pk": processo.id}),
         follow=True,
         secure=True,
     )

@@ -111,7 +111,7 @@
 							<a href="{% url 'arquivar_processo' pk=processo.id %}" class="btn btn-sm btn-outline-secondary fw-bold shadow-sm">
 								<i class="bi bi-search"></i> Revisar
 							</a>
-							<form method="POST" action="{% url 'arquivar_processo_action' pk=processo.id %}" onsubmit="return confirm('ATENÇÃO: O processo será unificado em um PDF blindado. Confirmar o arquivamento definitivo?');">
+							<form method="POST" action="{% url 'pagamentos:arquivar_processo_action' pk=processo.id %}" onsubmit="return confirm('ATENÇÃO: O processo será unificado em um PDF blindado. Confirmar o arquivamento definitivo?');">
 								{% csrf_token %}
 								<button type="submit" class="btn btn-sm btn-dark fw-bold shadow-sm"><i class="bi bi-folder-check"></i> Arquivar e Unificar</button>
 							</form>

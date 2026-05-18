@@ -5,7 +5,7 @@
 {% block detail_header %}
 <div class="d-flex justify-content-between align-items-center">
     <h4><i class="bi bi-file-earmark-arrow-up"></i> Importar Diárias em Lote</h4>
-    <a href="{% url 'diarias_list' %}" class="btn btn-outline-secondary btn-sm">
+    <a href="{% url 'verbas_indenizatorias:diarias_list' %}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-arrow-left"></i> Voltar
     </a>
 </div>
@@ -39,7 +39,7 @@
                     <a href="{% url 'importar_diarias' %}" class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-arrow-repeat"></i> Importar outro arquivo
                     </a>
-                    <a href="{% url 'diarias_list' %}" class="btn btn-primary btn-sm ms-2">
+                    <a href="{% url 'verbas_indenizatorias:diarias_list' %}" class="btn btn-primary btn-sm ms-2">
                         <i class="bi bi-list-ul"></i> Ver lista de Diárias
                     </a>
                 </div>
@@ -103,7 +103,7 @@
             </div>
 
             <div class="d-flex gap-2">
-                <form method="POST" action="{% url 'importar_diarias_action' %}">
+                <form method="POST" action="{% url 'verbas_indenizatorias:importar_diarias_action' %}">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="confirmar">
                     {% if modo_solicitacao_assinada %}
@@ -113,7 +113,7 @@
                         <i class="bi bi-check-lg"></i> Confirmar Importação
                     </button>
                 </form>
-                <form method="POST" action="{% url 'importar_diarias_action' %}">
+                <form method="POST" action="{% url 'verbas_indenizatorias:importar_diarias_action' %}">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="cancelar">
                     <button type="submit" class="btn btn-outline-secondary">
@@ -138,7 +138,7 @@
                     <i class="bi bi-download"></i> Baixar Planilha Modelo (.xlsx)
                 </a>
 
-                <form method="POST" enctype="multipart/form-data" action="{% url 'importar_diarias_action' %}">
+                <form method="POST" enctype="multipart/form-data" action="{% url 'verbas_indenizatorias:importar_diarias_action' %}">
                     {% csrf_token %}
                     <div class="mb-3">
                         <label for="planilha_file" class="form-label fw-bold">Arquivo XLSX (ou CSV)</label>

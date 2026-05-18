@@ -24,7 +24,7 @@ Estado atual do sistema ao final da fase de bootstrapping.
 - Esteira completa de processos financeiros: A EMPENHAR → AGUARDANDO LIQUIDAÇÃO → EM LIQUIDAÇÃO → AGUARDANDO PAGAMENTO → PAGO → PAGO - EM CONFERÊNCIA → CONTABILIZADO → ARQUIVADO.
 - Cadastro e edição de processos com Nota Fiscal, retenções de impostos e documentos anexos.
 - Devoluções processuais e Contingências com fluxo de aprovação hierárquica.
-- Integração com SISCAC para conciliação de comprovantes bancários.
+- Integração com SISCAC para conciliação de número serial de processos.
 - Integração com API Autentique para assinatura digital de documentos.
 - Painel de Contas a Pagar com empenho, autorização e lançamento bancário.
 - Painel de Conferência e Contabilização pós-pagamento.

@@ -40,7 +40,7 @@
 {% for pendencia in pendencias %}
 <tr>
 	<td class="fw-bold text-muted">#{{ pendencia.id }}</td>
-	<td><a href="{% url 'process_detail' pk=pendencia.processo.id %}">#{{ pendencia.processo.id }}</a></td>
+	<td><a href="{% url 'pagamentos:process_detail' pk=pendencia.processo.id %}">#{{ pendencia.processo.id }}</a></td>
 	<td>{{ pendencia.descricao|default:"-"|truncatechars:80 }}</td>
 	<td>{{ pendencia.responsavel.get_full_name|default:"-" }}</td>
 	<td>

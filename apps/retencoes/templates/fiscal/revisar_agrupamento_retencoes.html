@@ -95,7 +95,7 @@
     </div>
 
     <!-- Confirmation form -->
-    <form method="post" action="{% url 'agrupar_retencoes_action' %}" id="formConfirmarAgrupamento">
+    <form method="post" action="{% url 'retencoes:agrupar_retencoes_action' %}" id="formConfirmarAgrupamento">
         {% csrf_token %}
         {% for retencao in retencoes %}
         <input type="hidden" name="retencao_ids" value="{{ retencao.id }}">

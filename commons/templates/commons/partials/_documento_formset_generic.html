@@ -148,7 +148,7 @@
                         <button
                             type="submit"
                             class="btn btn-sm btn-outline-primary"
-                            formaction="{% url 'extrair_codigo_barras_documento_action' pk=doc_f.instance.processo_id|default:processo.id documento_id=doc_f.instance.id %}"
+                            formaction="{% url 'pagamentos:extrair_codigo_barras_documento_action' pk=doc_f.instance.processo_id|default:processo.id documento_id=doc_f.instance.id %}"
                             formnovalidate
                             title="Extrair código de barras"
                         >

@@ -17,7 +17,7 @@ A alteração somente será aplicada após aprovação do supervisor.
 </a>
 {% endblock %}
 
-{% block form_action %}{% url 'add_contingencia_diaria_action' pk=diaria.pk %}{% endblock %}
+{% block form_action %}{% url 'verbas_indenizatorias:add_contingencia_diaria_action' pk=diaria.pk %}{% endblock %}
 
 {% block form_fields %}
 {% if form.non_field_errors %}

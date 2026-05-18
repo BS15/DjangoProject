@@ -45,7 +45,7 @@
 			<h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-plus-circle"></i> Adicionar à Pauta</h6>
 		</div>
 		<div class="card-body p-0">
-			<form method="post" action="{% url 'montar_pauta_reuniao_action' reuniao_id=reuniao.id %}">
+			<form method="post" action="{% url 'pagamentos:montar_pauta_reuniao_action' reuniao_id=reuniao.id %}">
 				{% csrf_token %}
 				<table class="table table-hover align-middle mb-0">
 					<thead class="table-dark">

@@ -86,7 +86,7 @@
                         </td>
                         <td class="px-3 py-3">
                             {% if fatura.processo_vinculado %}
-                                <a href="{% url 'process_detail' fatura.processo_vinculado.pk %}" class="btn btn-sm btn-outline-success">
+                                <a href="{% url 'pagamentos:process_detail' fatura.processo_vinculado.pk %}" class="btn btn-sm btn-outline-success">
                                     <i class="bi bi-box-arrow-up-right"></i> Processo #{{ fatura.processo_vinculado.pk }}
                                 </a>
                             {% else %}

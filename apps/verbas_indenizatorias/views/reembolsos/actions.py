@@ -57,14 +57,14 @@ def cancelar_reembolso_action(request, pk):
     justificativa = (request.POST.get("justificativa") or "").strip()
     if not justificativa:
         messages.error(request, "A justificativa do cancelamento é obrigatória.")
-        return redirect("cancelar_reembolso_spoke", pk=pk)
+        return redirect("verbas_indenizatorias:cancelar_reembolso_spoke", pk=pk)
 
     reembolso = get_object_or_404(ReembolsoCombustivel.objects.select_related("processo__status", "diaria__processo__status"), id=pk)
     try:
         cancelar_verba(reembolso, justificativa, request.user, dados_devolucao=extrair_dados_devolucao_do_post(request))
     except ValidationError as exc:
         messages.error(request, " ".join(exc.messages))
-        return redirect("cancelar_reembolso_spoke", pk=pk)
+        return redirect("verbas_indenizatorias:cancelar_reembolso_spoke", pk=pk)
 
     logger.info("mutation=cancelar_reembolso reembolso_id=%s user_id=%s", reembolso.id, request.user.pk)
     messages.warning(request, "Reembolso cancelado.")

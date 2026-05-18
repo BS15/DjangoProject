@@ -60,7 +60,7 @@
 {% endblock %}
 
 {% block detail_actions %}
-<form method="post" action="{% url 'gerar_lote_reinf_action' %}">
+<form method="post" action="{% url 'retencoes:gerar_lote_reinf_action' %}">
     {% csrf_token %}
     <input type="hidden" name="competencia" value="{{ competencia_atual }}">
     <button type="submit" class="btn btn-dark w-100">
@@ -68,7 +68,7 @@
     </button>
 </form>
 
-<form method="post" action="{% url 'transmitir_lote_reinf_action' %}" onsubmit="return confirm('Deseja transmitir os eventos gerados para o ambiente da Receita Federal?');">
+<form method="post" action="{% url 'retencoes:transmitir_lote_reinf_action' %}" onsubmit="return confirm('Deseja transmitir os eventos gerados para o ambiente da Receita Federal?');">
     {% csrf_token %}
     <button type="submit" class="btn btn-outline-danger w-100 btn-sm mt-2">
         <i class="bi bi-cloud-upload"></i> Transmitir para o e-CAC

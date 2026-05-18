@@ -28,7 +28,7 @@
 					<i class="bi bi-upload fs-1 text-primary mb-3 d-block"></i>
 					<h5 class="fw-bold">Sincronização Manual</h5>
 					<p class="text-muted small">Importa dados a partir de arquivo CSV</p>
-					<form method="post" action="{% url 'sincronizar_siscac_manual_action' %}" enctype="multipart/form-data">
+					<form method="post" action="{% url 'pagamentos:sincronizar_siscac_manual_action' %}" enctype="multipart/form-data">
 						{% csrf_token %}
 						<div class="mb-3">
 							<input type="file" name="arquivo_csv" accept=".csv" class="form-control" required>
@@ -46,7 +46,7 @@
 					<i class="bi bi-cloud-download fs-1 text-success mb-3 d-block"></i>
 					<h5 class="fw-bold">Conciliação Automática</h5>
 					<p class="text-muted small">Importa relatório PDF exportado do SISCAC e concilia com os processos internos automaticamente</p>
-					<form method="post" action="{% url 'sincronizar_siscac_auto_action' %}" enctype="multipart/form-data">
+					<form method="post" action="{% url 'pagamentos:sincronizar_siscac_auto_action' %}" enctype="multipart/form-data">
 						{% csrf_token %}
 						<div class="mb-3">
 							<input type="file" name="siscac_pdf" accept=".pdf" class="form-control" required>

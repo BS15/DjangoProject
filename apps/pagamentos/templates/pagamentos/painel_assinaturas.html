@@ -36,7 +36,7 @@
 						<td>{{ assinatura.tipo_documento }}</td>
 						<td>
 							{% if assinatura.entidade_relacionada %}
-							<a href="{% url 'process_detail' pk=assinatura.entidade_relacionada.id %}">#{{ assinatura.entidade_relacionada.id }}</a>
+							<a href="{% url 'pagamentos:process_detail' pk=assinatura.entidade_relacionada.id %}">#{{ assinatura.entidade_relacionada.id }}</a>
 							{% else %}-{% endif %}
 						</td>
 						<td>{{ assinatura.criado_em|date:"d/m/Y H:i" }}</td>
@@ -86,7 +86,7 @@
 						<td>{{ assinatura.tipo_documento }}</td>
 						<td>
 							{% if assinatura.entidade_relacionada %}
-							<a href="{% url 'process_detail' pk=assinatura.entidade_relacionada.id %}">#{{ assinatura.entidade_relacionada.id }}</a>
+							<a href="{% url 'pagamentos:process_detail' pk=assinatura.entidade_relacionada.id %}">#{{ assinatura.entidade_relacionada.id }}</a>
 							{% else %}-{% endif %}
 						</td>
 						<td>{{ assinatura.criado_em|date:"d/m/Y H:i" }}</td>
@@ -98,11 +98,11 @@
 						</td>
 						<td class="text-center">
 							{% if assinatura.arquivo_assinado %}
-							<a href="{% url 'arquivo_seguro_detail' 'assinatura_assinado' assinatura.id %}" target="_blank" class="btn btn-sm btn-outline-success">
+							<a href="{% url 'pagamentos:arquivo_seguro_detail' 'assinatura_assinado' assinatura.id %}" target="_blank" class="btn btn-sm btn-outline-success">
 								<i class="bi bi-file-earmark-check"></i>
 							</a>
 							{% elif assinatura.arquivo %}
-							<a href="{% url 'arquivo_seguro_detail' 'assinatura_rascunho' assinatura.id %}" target="_blank" class="btn btn-sm btn-outline-secondary">
+							<a href="{% url 'pagamentos:arquivo_seguro_detail' 'assinatura_rascunho' assinatura.id %}" target="_blank" class="btn btn-sm btn-outline-secondary">
 								<i class="bi bi-file-earmark"></i>
 							</a>
 							{% else %}-{% endif %}

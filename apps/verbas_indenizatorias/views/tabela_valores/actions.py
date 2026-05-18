@@ -25,7 +25,7 @@ def add_tabela_valor_unitario_action(request):
     item = form.save()
     logger.info("mutation=add_tabela_valor_unitario tabela_id=%s user_id=%s", item.id, request.user.pk)
     messages.success(request, "Valor unitário cadastrado com sucesso.")
-    return redirect("tabela_valores_unitarios_list")
+    return redirect("verbas_indenizatorias:tabela_valores_unitarios_list")
 
 
 @require_POST
@@ -42,4 +42,4 @@ def edit_tabela_valor_unitario_action(request, pk):
     form.save()
     logger.info("mutation=edit_tabela_valor_unitario tabela_id=%s user_id=%s", item.id, request.user.pk)
     messages.success(request, "Valor unitário atualizado com sucesso.")
-    return redirect("tabela_valores_unitarios_list")
+    return redirect("verbas_indenizatorias:tabela_valores_unitarios_list")

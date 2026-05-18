@@ -272,14 +272,14 @@ def vincular_diaria_processo_action(request, pk):
     processo_id = request.POST.get('processo_id')
     if not processo_id:
         messages.error(request, 'Informe o processo para vincular a diária.')
-        return redirect('vinculo_diaria_spoke', pk=pk)
+        return redirect('verbas_indenizatorias:vinculo_diaria_spoke', pk=pk)
 
     with transaction.atomic():
         diaria = get_object_or_404(Diaria.objects.select_for_update().select_related('processo__status'), id=pk)
         processo = get_object_or_404(Processo.objects.select_for_update().select_related('status'), id=processo_id)
         if not processo_em_pre_autorizacao(processo):
             messages.error(request, 'O processo selecionado já passou da etapa de autorização.')
-            return redirect('vinculo_diaria_spoke', pk=pk)
+            return redirect('verbas_indenizatorias:vinculo_diaria_spoke', pk=pk)
         try:
             vincular_diaria_em_processo_existente(diaria, processo)
             logger.info(
@@ -305,7 +305,7 @@ def desvincular_diaria_processo_action(request, pk):
         diaria = get_object_or_404(Diaria.objects.select_for_update().select_related('processo__status'), id=pk)
         if not diaria.processo_id:
             messages.info(request, 'A diária já está sem processo vinculado.')
-            return redirect('vinculo_diaria_spoke', pk=pk)
+            return redirect('verbas_indenizatorias:vinculo_diaria_spoke', pk=pk)
         try:
             processo_id = diaria.processo_id
             desvincular_diaria_do_processo(diaria)
@@ -373,7 +373,7 @@ def cancelar_diaria_action(request, pk):
     justificativa = (request.POST.get("justificativa") or "").strip()
     if not justificativa:
         messages.error(request, "A justificativa do cancelamento é obrigatória.")
-        return redirect("cancelar_diaria_spoke", pk=pk)
+        return redirect("verbas_indenizatorias:cancelar_diaria_spoke", pk=pk)
 
     with transaction.atomic():
         diaria = get_object_or_404(Diaria.objects.select_for_update().select_related("processo__status"), id=pk)
@@ -382,7 +382,7 @@ def cancelar_diaria_action(request, pk):
             cancelar_verba(diaria, justificativa, request.user, dados_devolucao=extrair_dados_devolucao_do_post(request))
         except ValidationError as exc:
             messages.error(request, " ".join(exc.messages))
-            return redirect("cancelar_diaria_spoke", pk=pk)
+            return redirect("verbas_indenizatorias:cancelar_diaria_spoke", pk=pk)
         logger.info("mutation=cancelar_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
 
     messages.warning(request, f'Diária #{diaria.numero_siscac} cancelada.')

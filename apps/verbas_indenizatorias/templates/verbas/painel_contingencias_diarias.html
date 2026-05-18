@@ -76,7 +76,7 @@
                         <p><strong>Valor anterior:</strong> {{ cont.valor_anterior|default:"—" }}</p>
                         <p><strong>Novo valor:</strong> {{ cont.valor_proposto }}</p>
                         <p><strong>Justificativa:</strong> {{ cont.justificativa }}</p>
-                        <form method="post" action="{% url 'analisar_contingencia_diaria_action' cont.pk %}" id="form-analisar-{{ cont.pk }}">
+                        <form method="post" action="{% url 'verbas_indenizatorias:analisar_contingencia_diaria_action' cont.pk %}" id="form-analisar-{{ cont.pk }}">
                             {% csrf_token %}
                             <div class="mb-3">
                                 <label class="form-label">Parecer <small class="text-muted">(obrigatório para rejeitar)</small></label>

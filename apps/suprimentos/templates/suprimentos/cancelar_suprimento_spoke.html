@@ -7,7 +7,7 @@
 <a href="{% url 'gerenciar_suprimento_view' pk=suprimento.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
 {% endblock %}
 
-{% block form_action %}{% url 'cancelar_suprimento_action' pk=suprimento.id %}{% endblock %}
+{% block form_action %}{% url 'suprimentos:cancelar_suprimento_action' pk=suprimento.id %}{% endblock %}
 {% block form_enctype %}multipart/form-data{% endblock %}
 
 {% block form_fields %}

@@ -162,7 +162,7 @@
                 Saldo zerado. Ao aprovar, o suprimento será encerrado sem devolução automática.
             </div>
             {% endif %}
-            <form method="post" action="{% url 'aprovar_prestacao_suprimento_action' prestacao.id %}"
+            <form method="post" action="{% url 'suprimentos:aprovar_prestacao_suprimento_action' prestacao.id %}"
                   onsubmit="return confirm('Confirma a aprovação desta prestação? A ação não poderá ser desfeita.');">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-success fw-bold w-100">

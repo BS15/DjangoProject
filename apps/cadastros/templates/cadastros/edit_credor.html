@@ -9,7 +9,7 @@
         <p class="text-muted mb-0"><strong class="mask-cpf-cnpj">{{ credor.cpf_cnpj }}</strong> • {{ credor.get_tipo_display }}</p>
     </div>
     <div>
-        <a href="{% url 'credores_list' %}" class="btn btn-outline-secondary">Voltar</a>
+        <a href="{% url 'cadastros:credores_list' %}" class="btn btn-outline-secondary">Voltar</a>
     </div>
 </div>
 {% endblock %}
@@ -23,7 +23,7 @@
                 <h5 class="card-title mb-0"><i class="bi bi-pencil-square"></i> Dados Cadastrais</h5>
             </div>
             <div class="card-body">
-                <form method="post" action="{% url 'edit_credor_action' credor.id %}">
+                <form method="post" action="{% url 'cadastros:edit_credor_action' credor.id %}">
                     {% csrf_token %}
                     
                     <div class="row">
@@ -39,7 +39,7 @@
 
                     <hr class="my-4">
                     <div class="d-flex justify-content-end gap-2">
-                        <a href="{% url 'credores_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+                        <a href="{% url 'cadastros:credores_list' %}" class="btn btn-outline-secondary">Cancelar</a>
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-save"></i> Atualizar
                         </button>
@@ -66,7 +66,7 @@
                 {% endif %}
             </div>
             <div class="card-footer bg-white">
-                <form method="post" action="{% url 'toggle_status_credor_action' credor.id %}">
+                <form method="post" action="{% url 'cadastros:toggle_status_credor_action' credor.id %}">
                     {% csrf_token %}
                     {% if credor.ativo %}
                     <button type="submit" class="btn btn-sm btn-outline-danger w-100" onclick="return confirm('Bloquear este credor?');">
@@ -88,7 +88,7 @@
             </div>
             <div class="list-group list-group-flush">
                 {% for processo in historico_processos %}
-                <a href="{% url 'process_detail' processo.id %}" class="list-group-item list-group-item-action small">
+                <a href="{% url 'pagamentos:process_detail' processo.id %}" class="list-group-item list-group-item-action small">
                     <strong>#{{ processo.id }}</strong>
                     {% if processo.status %}
                     <span class="badge bg-info float-end">{{ processo.status }}</span>
@@ -106,5 +106,5 @@
 {% endblock %}
 
 {% block detail_actions %}
-<a href="{% url 'credores_list' %}" class="btn btn-outline-secondary w-100">Voltar para Diretório</a>
+<a href="{% url 'cadastros:credores_list' %}" class="btn btn-outline-secondary w-100">Voltar para Diretório</a>
 {% endblock %}

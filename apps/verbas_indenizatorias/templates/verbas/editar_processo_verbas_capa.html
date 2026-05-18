@@ -7,7 +7,7 @@
 <a href="{% url 'editar_processo_verbas' pk=processo.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
 {% endblock %}
 
-{% block form_action %}{% url 'editar_processo_verbas_capa_action' pk=processo.id %}{% endblock %}
+{% block form_action %}{% url 'verbas_indenizatorias:editar_processo_verbas_capa_action' pk=processo.id %}{% endblock %}
 
 {% block form_fields %}
 <div class="row g-3 mb-3">

@@ -107,7 +107,7 @@
                 <h5 class="modal-title"><i class="bi bi-link-45deg"></i> Vincular Diária #{{ reg.id }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="post" action="{% url 'vincular_diaria_processo_action' reg.id %}">
+            <form method="post" action="{% url 'verbas_indenizatorias:vincular_diaria_processo_action' reg.id %}">
                 {% csrf_token %}
                 <div class="modal-body">
                     <label class="form-label fw-bold">Processo</label>

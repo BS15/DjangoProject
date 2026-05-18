@@ -9,7 +9,7 @@
         <p class="text-muted mb-0">Beneficiário: <strong>{{ auxilio.beneficiario.nome|upper }}</strong> | Status: <span class="badge bg-secondary">{{ auxilio.status|default:"RASCUNHO" }}</span></p>
     </div>
     <div>
-        <a href="{% url 'auxilios_list' %}" class="btn btn-outline-secondary">Voltar</a>
+        <a href="{% url 'verbas_indenizatorias:auxilios_list' %}" class="btn btn-outline-secondary">Voltar</a>
     </div>
 </div>
 {% endblock %}
@@ -33,20 +33,20 @@
 
 {% block detail_actions %}
 {% if not auxilio.status or auxilio.status.status_choice == 'RASCUNHO' %}
-<form method="post" action="{% url 'solicitar_autorizacao_auxilio_action' auxilio.id %}">
+<form method="post" action="{% url 'verbas_indenizatorias:solicitar_autorizacao_auxilio_action' auxilio.id %}">
     {% csrf_token %}
     <button type="submit" class="btn btn-primary w-100"><i class="bi bi-send"></i> Solicitar Autorização</button>
 </form>
 {% endif %}
 
 {% if auxilio.status and auxilio.status.status_choice == 'SOLICITADA' and pode_autorizar %}
-<form method="post" action="{% url 'autorizar_auxilio_action' auxilio.id %}">
+<form method="post" action="{% url 'verbas_indenizatorias:autorizar_auxilio_action' auxilio.id %}">
     {% csrf_token %}
     <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-circle"></i> Autorizar Pagamento</button>
 </form>
 {% endif %}
 
 {% if not auxilio.status or auxilio.status.status_choice != 'PAGA' and auxilio.status.status_choice != 'CANCELADO / ANULADO' %}
-<a href="{% url 'cancelar_auxilio_spoke' auxilio.id %}" class="btn btn-outline-danger w-100 btn-sm mt-2"><i class="bi bi-x-circle"></i> Cancelar</a>
+<a href="{% url 'verbas_indenizatorias:cancelar_auxilio_spoke' auxilio.id %}" class="btn btn-outline-danger w-100 btn-sm mt-2"><i class="bi bi-x-circle"></i> Cancelar</a>
 {% endif %}
 {% endblock %}

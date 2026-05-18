@@ -10,10 +10,10 @@ Prestação: <span class="badge {% if prestacao.status == 'ENCERRADA' %}bg-succe
 {% block form_enctype %}multipart/form-data{% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'minha_prestacao_list' %}" class="btn btn-outline-secondary">Voltar</a>
+<a href="{% url 'verbas_indenizatorias:minha_prestacao_list' %}" class="btn btn-outline-secondary">Voltar</a>
 {% endblock %}
 
-{% block form_action %}{% url 'registrar_comprovante_action' diaria.id %}{% endblock %}
+{% block form_action %}{% url 'verbas_indenizatorias:registrar_comprovante_action' diaria.id %}{% endblock %}
 
 {% block form_fields %}
 <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -50,7 +50,7 @@ Prestação: <span class="badge {% if prestacao.status == 'ENCERRADA' %}bg-succe
     <i class="bi bi-file-earmark-text"></i> Termo de Prestação de Contas
 </a>
 {% if pode_editar %}
-<button type="submit" formaction="{% url 'encerrar_prestacao_action' diaria.id %}" formmethod="post" class="btn btn-outline-danger" onclick="return confirm('Deseja encerrar a prestação de contas desta diária?');">
+<button type="submit" formaction="{% url 'verbas_indenizatorias:encerrar_prestacao_action' diaria.id %}" formmethod="post" class="btn btn-outline-danger" onclick="return confirm('Deseja encerrar a prestação de contas desta diária?');">
     <i class="bi bi-lock"></i> Encerrar Prestação
 </button>
 {% endif %}

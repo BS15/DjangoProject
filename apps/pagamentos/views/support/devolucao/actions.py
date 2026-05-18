@@ -22,7 +22,7 @@ def registrar_devolucao_action(request: HttpRequest, processo_id: int) -> HttpRe
         devolucao.processo = processo
         devolucao.save()
         messages.success(request, "Devolução registrada com sucesso.")
-        return redirect("process_detail", processo.id)
+        return redirect("pagamentos:process_detail", processo.id)
 
     messages.error(request, "Não foi possível registrar a devolução. Verifique os dados informados.")
     return redirect("registrar_devolucao", processo_id=processo.id)

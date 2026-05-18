@@ -13,7 +13,7 @@
         </p>
     </div>
     <div>
-        <a href="{% url 'diarias_list' %}" class="btn btn-outline-secondary">Voltar</a>
+        <a href="{% url 'verbas_indenizatorias:diarias_list' %}" class="btn btn-outline-secondary">Voltar</a>
         {% if prestacao %}
         <a href="{% url 'revisar_prestacao' prestacao.id %}" class="btn btn-outline-primary">Revisar Prestação</a>
         {% endif %}
@@ -74,7 +74,7 @@
         <h5 class="card-title mb-0"><i class="bi bi-pencil-square"></i> Ajustes</h5>
     </div>
     <div class="card-body d-flex flex-column gap-2">
-        <a href="{% url 'vinculo_diaria_spoke' diaria.id %}" class="btn btn-outline-primary btn-sm">
+        <a href="{% url 'verbas_indenizatorias:vinculo_diaria_spoke' diaria.id %}" class="btn btn-outline-primary btn-sm">
             <i class="bi bi-link-45deg"></i> Gerenciar Vínculo com Processo
         </a>
     </div>
@@ -85,7 +85,7 @@
 {% block detail_actions %}
 {% if perms.verbas_indenizatorias.pode_gerenciar_diarias %}
 {% if not diaria.status or diaria.status.status_choice == 'RASCUNHO' %}
-<form method="post" action="{% url 'solicitar_autorizacao_diaria_action' diaria.id %}" data-csrf-sync="true">
+<form method="post" action="{% url 'verbas_indenizatorias:solicitar_autorizacao_diaria_action' diaria.id %}" data-csrf-sync="true">
     {% csrf_token %}
     <button type="submit" class="btn btn-primary w-100"><i class="bi bi-send"></i> Solicitar Autorização</button>
 </form>
@@ -95,7 +95,7 @@
 {% if perms.verbas_indenizatorias.pode_gerenciar_diarias %}
 {% with status_choice=diaria.status.status_choice|default:'' %}
 {% if status_choice != 'PAGA' and status_choice != 'REJEITADA' and status_choice != 'CANCELADO / ANULADO' %}
-<a href="{% url 'cancelar_diaria_spoke' diaria.id %}" class="btn btn-outline-danger w-100 btn-sm mt-2"><i class="bi bi-x-circle"></i> Cancelar Diária</a>
+<a href="{% url 'verbas_indenizatorias:cancelar_diaria_spoke' diaria.id %}" class="btn btn-outline-danger w-100 btn-sm mt-2"><i class="bi bi-x-circle"></i> Cancelar Diária</a>
 {% endif %}
 {% endwith %}
 {% endif %}

@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <i class="bi bi-arrow-left"></i> Voltar
     </a>
     {% if pode_revisar %}
-    <form method="post" action="{% url 'aprovar_revisao_solicitacao_action' solicitacao.tipo_verba solicitacao.id %}" onsubmit="return confirm('Confirmar revisão? Para diária, o sistema emitirá o PCD e enviará para assinatura do beneficiário.');">
+    <form method="post" action="{% url 'verbas_indenizatorias:aprovar_revisao_solicitacao_action' solicitacao.tipo_verba solicitacao.id %}" onsubmit="return confirm('Confirmar revisão? Para diária, o sistema emitirá o PCD e enviará para assinatura do beneficiário.');">
         {% csrf_token %}
         <button type="submit" class="btn btn-success fw-bold">
             <i class="bi bi-check-circle"></i> Revisar e Liberar

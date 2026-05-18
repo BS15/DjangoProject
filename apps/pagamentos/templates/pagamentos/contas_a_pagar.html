@@ -237,7 +237,7 @@ const sortOrdemAtual    = "{{ ordem }}";
 const sortDirecaoAtual  = "{{ direcao }}";
 
 document.addEventListener('DOMContentLoaded', function () {
-	const barcodeApiBase = "{% url 'api_extrair_codigos_barras_processo' pk=0 %}".replace('/0/', '/');
+	const barcodeApiBase = "{% url 'pagamentos:api_extrair_codigos_barras_processo' pk=0 %}".replace('/0/', '/');
 
 	// ------------------------------------------------------------------
 	// 1. SORTABLE HEADERS
@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			const tbody = document.getElementById('pagamentos-tbody');
 			tbody.innerHTML = '';
 
-			fetch("{% url 'api_detalhes_pagamento' %}", {
+			fetch("{% url 'pagamentos:api_detalhes_pagamento' %}", {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',

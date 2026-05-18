@@ -52,7 +52,7 @@ def add_suprimento_action(request: HttpRequest) -> HttpResponse:
         logger.exception("Erro ao cadastrar suprimento de fundos")
         messages.error(request, "Erro interno ao salvar suprimento. Tente novamente.")
 
-    return redirect("suprimentos_list")
+    return redirect("suprimentos:suprimentos_list")
 
 
 __all__ = ["add_suprimento_action"]

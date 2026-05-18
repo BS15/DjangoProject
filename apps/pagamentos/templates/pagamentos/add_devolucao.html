@@ -5,10 +5,10 @@
 {% block page_subtitle %}Processo #{{ processo.id }} — {{ processo.credor|default:"-" }}{% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'process_detail' pk=processo.id %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+<a href="{% url 'pagamentos:process_detail' pk=processo.id %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
 {% endblock %}
 
-{% block form_action %}{% url 'registrar_devolucao_action' processo_id=processo.id %}{% endblock %}
+{% block form_action %}{% url 'pagamentos:registrar_devolucao_action' processo_id=processo.id %}{% endblock %}
 
 {% block form_fields %}
 {% for field in form %}

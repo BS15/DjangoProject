@@ -36,13 +36,13 @@
 {% for nota in notas %}
 <tr>
 	<td class="fw-bold text-muted">{{ nota.numero_nota_fiscal|default:"-" }}</td>
-	<td><a href="{% url 'process_detail' pk=nota.processo.id %}">#{{ nota.processo.id }}</a></td>
+	<td><a href="{% url 'pagamentos:process_detail' pk=nota.processo.id %}">#{{ nota.processo.id }}</a></td>
 	<td>{{ nota.processo.credor|default:"-" }}</td>
 	<td class="fw-bold">R$ {{ nota.valor_bruto|default:"0,00" }}</td>
 	<td>{{ nota.data_emissao|date:"d/m/Y"|default:"-" }}</td>
 	<td class="text-center">
 		{% if pode_interagir %}
-		<a href="{% url 'process_detail' pk=nota.processo.id %}" class="btn btn-sm btn-primary">
+		<a href="{% url 'pagamentos:process_detail' pk=nota.processo.id %}" class="btn btn-sm btn-primary">
 			<i class="bi bi-arrow-right-circle"></i> Processar
 		</a>
 		{% endif %}

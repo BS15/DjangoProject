@@ -10,7 +10,7 @@
                 Status: <span class="badge bg-secondary">{{ suprimento.status }}</span>
             </p>
         </div>
-        <a href="{% url 'suprimentos_list' %}" class="btn btn-outline-secondary btn-sm">Voltar para Lista</a>
+        <a href="{% url 'suprimentos:suprimentos_list' %}" class="btn btn-outline-secondary btn-sm">Voltar para Lista</a>
     </div>
 {% endblock %}
 
@@ -152,7 +152,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <form method="post" enctype="multipart/form-data"
-                  action="{% url 'enviar_prestacao_suprimento_action' suprimento.id %}">
+                  action="{% url 'suprimentos:enviar_prestacao_suprimento_action' suprimento.id %}">
                 {% csrf_token %}
                 <div class="modal-header bg-warning bg-opacity-25">
                     <h5 class="modal-title fw-bold" id="modalEnviarPrestacaoLabel">

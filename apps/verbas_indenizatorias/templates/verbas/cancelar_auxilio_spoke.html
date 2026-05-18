@@ -7,7 +7,7 @@
 <a href="{% url 'gerenciar_auxilio' pk=auxilio.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
 {% endblock %}
 
-{% block form_action %}{% url 'cancelar_auxilio_action' pk=auxilio.id %}{% endblock %}
+{% block form_action %}{% url 'verbas_indenizatorias:cancelar_auxilio_action' pk=auxilio.id %}{% endblock %}
 {% block form_enctype %}multipart/form-data{% endblock %}
 
 {% block form_fields %}

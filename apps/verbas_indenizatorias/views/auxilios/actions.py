@@ -52,14 +52,14 @@ def cancelar_auxilio_action(request, pk):
     justificativa = (request.POST.get("justificativa") or "").strip()
     if not justificativa:
         messages.error(request, "A justificativa do cancelamento é obrigatória.")
-        return redirect("cancelar_auxilio_spoke", pk=pk)
+        return redirect("verbas_indenizatorias:cancelar_auxilio_spoke", pk=pk)
 
     auxilio = get_object_or_404(AuxilioRepresentacao.objects.select_related("processo__status"), id=pk)
     try:
         cancelar_verba(auxilio, justificativa, request.user, dados_devolucao=extrair_dados_devolucao_do_post(request))
     except ValidationError as exc:
         messages.error(request, " ".join(exc.messages))
-        return redirect("cancelar_auxilio_spoke", pk=pk)
+        return redirect("verbas_indenizatorias:cancelar_auxilio_spoke", pk=pk)
 
     logger.info("mutation=cancelar_auxilio auxilio_id=%s user_id=%s", auxilio.id, request.user.pk)
     messages.warning(request, "Auxílio cancelado.")

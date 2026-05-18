@@ -16,7 +16,7 @@ Registre a devolução de valores da Diária #{{ diaria.pk }} — {{ diaria.bene
 </a>
 {% endblock %}
 
-{% block form_action %}{% url 'registrar_devolucao_diaria_action' pk=diaria.pk %}{% endblock %}
+{% block form_action %}{% url 'verbas_indenizatorias:registrar_devolucao_diaria_action' pk=diaria.pk %}{% endblock %}
 
 {% block form_fields %}
 {% if form.non_field_errors %}

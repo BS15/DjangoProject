@@ -9,7 +9,7 @@
         <p class="text-muted mb-0">Beneficiário: <strong>{{ reembolso.beneficiario.nome|upper }}</strong> | Status: <span class="badge bg-secondary">{{ reembolso.status|default:"RASCUNHO" }}</span></p>
     </div>
     <div>
-        <a href="{% url 'reembolsos_list' %}" class="btn btn-outline-secondary">Voltar</a>
+        <a href="{% url 'verbas_indenizatorias:reembolsos_list' %}" class="btn btn-outline-secondary">Voltar</a>
     </div>
 </div>
 {% endblock %}
@@ -37,7 +37,7 @@
             </div>
             <div class="card-body">
                 {% if not reembolso.status or reembolso.status.status_choice == 'RASCUNHO' %}
-                <form method="post" action="{% url 'registrar_comprovante_reembolso_action' reembolso.id %}" enctype="multipart/form-data" class="mb-4 bg-light p-3 rounded">
+                <form method="post" action="{% url 'verbas_indenizatorias:registrar_comprovante_reembolso_action' reembolso.id %}" enctype="multipart/form-data" class="mb-4 bg-light p-3 rounded">
                     {% csrf_token %}
                     <div class="row align-items-end">
                         <div class="col-md-7">
@@ -77,20 +77,20 @@
 
 {% block detail_actions %}
 {% if not reembolso.status or reembolso.status.status_choice == 'RASCUNHO' %}
-<form method="post" action="{% url 'solicitar_autorizacao_reembolso_action' reembolso.id %}">
+<form method="post" action="{% url 'verbas_indenizatorias:solicitar_autorizacao_reembolso_action' reembolso.id %}">
     {% csrf_token %}
     <button type="submit" class="btn btn-info w-100 text-white"><i class="bi bi-send"></i> Solicitar Autorização</button>
 </form>
 {% endif %}
 
 {% if reembolso.status and reembolso.status.status_choice == 'SOLICITADA' and pode_autorizar %}
-<form method="post" action="{% url 'autorizar_reembolso_action' reembolso.id %}">
+<form method="post" action="{% url 'verbas_indenizatorias:autorizar_reembolso_action' reembolso.id %}">
     {% csrf_token %}
     <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-circle"></i> Autorizar Pagamento</button>
 </form>
 {% endif %}
 
 {% if not reembolso.status or reembolso.status.status_choice != 'PAGA' and reembolso.status.status_choice != 'CANCELADO / ANULADO' %}
-<a href="{% url 'cancelar_reembolso_spoke' reembolso.id %}" class="btn btn-outline-danger w-100 btn-sm mt-2"><i class="bi bi-x-circle"></i> Cancelar</a>
+<a href="{% url 'verbas_indenizatorias:cancelar_reembolso_spoke' reembolso.id %}" class="btn btn-outline-danger w-100 btn-sm mt-2"><i class="bi bi-x-circle"></i> Cancelar</a>
 {% endif %}
 {% endblock %}

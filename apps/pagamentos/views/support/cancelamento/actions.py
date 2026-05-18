@@ -43,7 +43,7 @@ def cancelar_processo_action(request: HttpRequest, pk: int) -> HttpResponse:
 
     logger.info("mutation=cancelar_processo processo_id=%s user_id=%s", processo.id, request.user.pk)
     messages.warning(request, f"Processo #{processo.id} cancelado.")
-    return redirect("process_detail", pk=processo.id)
+    return redirect("pagamentos:process_detail", pk=processo.id)
 
 
 __all__ = ["cancelar_processo_action"]

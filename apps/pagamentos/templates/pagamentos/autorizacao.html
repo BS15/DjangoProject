@@ -33,7 +33,7 @@
 	</td>
 	<td class="text-center">
 		{% if pode_interagir %}
-		<a href="{% url 'process_detail' pk=processo.id %}" class="btn btn-sm btn-primary fw-bold">
+		<a href="{% url 'pagamentos:process_detail' pk=processo.id %}" class="btn btn-sm btn-primary fw-bold">
 			<i class="bi bi-eye"></i> Detalhar
 		</a>
 		{% endif %}

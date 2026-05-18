@@ -1,7 +1,7 @@
 <div class="card shadow-sm border-0 mb-3">
 	<div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
 		<h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-list-check"></i> Verificação do Processo</h6>
-		<a href="{% url 'process_detail' pk=processo.id %}" class="btn btn-sm btn-outline-secondary">
+		<a href="{% url 'pagamentos:process_detail' pk=processo.id %}" class="btn btn-sm btn-outline-secondary">
 			<i class="bi bi-box-arrow-up-right"></i> Abrir detalhe
 		</a>
 	</div>

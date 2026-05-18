@@ -7,7 +7,7 @@
 <a href="{% url 'gerenciar_jeton' pk=jeton.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
 {% endblock %}
 
-{% block form_action %}{% url 'cancelar_jeton_action' pk=jeton.id %}{% endblock %}
+{% block form_action %}{% url 'verbas_indenizatorias:cancelar_jeton_action' pk=jeton.id %}{% endblock %}
 {% block form_enctype %}multipart/form-data{% endblock %}
 
 {% block form_fields %}

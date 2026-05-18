@@ -9,10 +9,10 @@
 {% endblock %}
 
 {% block page_actions %}
-    <a href="{% url 'suprimentos_list' %}" class="btn btn-outline-secondary">Voltar para Lista</a>
+    <a href="{% url 'suprimentos:suprimentos_list' %}" class="btn btn-outline-secondary">Voltar para Lista</a>
 {% endblock %}
 
-{% block form_action %}{% url 'add_suprimento_action' %}{% endblock %}
+{% block form_action %}{% url 'suprimentos:add_suprimento_action' %}{% endblock %}
 
 {% block form_fields %}
     <div class="row g-3">
@@ -48,7 +48,7 @@
 {% endblock %}
 
 {% block form_actions %}
-    <a href="{% url 'suprimentos_list' %}" class="btn btn-outline-secondary px-4">Cancelar</a>
+    <a href="{% url 'suprimentos:suprimentos_list' %}" class="btn btn-outline-secondary px-4">Cancelar</a>
     <button type="submit" class="btn btn-success px-4 fw-bold">
         <i class="bi bi-save"></i> Conceder Suprimento
     </button>

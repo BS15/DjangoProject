@@ -65,7 +65,7 @@ def fechar_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
 
     if _suprimento_encerrado(suprimento):
         messages.warning(request, f"Suprimento #{suprimento.id} já está encerrado.")
-        return redirect("suprimentos_list")
+        return redirect("suprimentos:suprimentos_list")
 
     _atualizar_status_apos_fechamento(suprimento)
     logger.info("mutation=fechar_suprimento suprimento_id=%s user_id=%s", suprimento.id, request.user.pk)
@@ -73,7 +73,7 @@ def fechar_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
         request,
         f"Prestação de contas do suprimento #{suprimento.id} encerrada e enviada para Conferência!",
     )
-    return redirect("suprimentos_list")
+    return redirect("suprimentos:suprimentos_list")
 
 
 @require_POST

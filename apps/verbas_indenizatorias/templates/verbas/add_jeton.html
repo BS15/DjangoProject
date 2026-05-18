@@ -11,17 +11,17 @@ Preencha os dados para solicitação de pagamento de Jeton por comparecimento a 
 {% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'jetons_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+<a href="{% url 'verbas_indenizatorias:jetons_list' %}" class="btn btn-outline-secondary">Cancelar</a>
 {% endblock %}
 
-{% block form_action %}{% url 'add_jeton_action' %}{% endblock %}
+{% block form_action %}{% url 'verbas_indenizatorias:add_jeton_action' %}{% endblock %}
 
 {% block form_fields %}
 {{ form.as_p }}
 {% endblock %}
 
 {% block form_actions %}
-<a href="{% url 'jetons_list' %}" class="btn btn-outline-secondary me-2">Cancelar</a>
+<a href="{% url 'verbas_indenizatorias:jetons_list' %}" class="btn btn-outline-secondary me-2">Cancelar</a>
 <button type="submit" class="btn btn-warning">
     <i class="bi bi-save"></i> Salvar e Continuar
 </button>

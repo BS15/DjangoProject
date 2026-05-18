@@ -22,10 +22,10 @@
     </div>
     <div class="offcanvas-body p-4">
         <h6 class="sidebar-section-title module-cadastros"><i class="bi bi-journal-bookmark-fill"></i> Módulo de Cadastros</h6>
-        <a href="{% url 'credores_list' %}" class="btn sidebar-link module-cadastros w-100 fw-bold shadow-sm"><i class="bi bi-people-fill"></i> Lista de Credores</a>
-        <a href="{% url 'painel_assinaturas' %}" class="btn sidebar-link module-cadastros w-100 fw-bold shadow-sm"><i class="bi bi-pen-fill"></i> Painel de Assinaturas</a>
-        <a href="{% url 'painel_relatorios' %}" class="btn sidebar-link module-cadastros w-100 fw-bold shadow-sm mt-2"><i class="bi bi-bar-chart-line-fill"></i> Relatórios</a>
-        <a href="{% url 'painel_importacao' %}" class="btn sidebar-link module-cadastros w-100 fw-bold shadow-sm mt-2"><i class="bi bi-cloud-arrow-up-fill"></i> Importar Dados SISCAC</a>
+        <a href="{% url 'cadastros:credores_list' %}" class="btn sidebar-link module-cadastros w-100 fw-bold shadow-sm"><i class="bi bi-people-fill"></i> Lista de Credores</a>
+        <a href="{% url 'pagamentos:assinaturas_list' %}" class="btn sidebar-link module-cadastros w-100 fw-bold shadow-sm"><i class="bi bi-pen-fill"></i> Painel de Assinaturas</a>
+        <a href="{% url 'pagamentos:relatorios_list' %}" class="btn sidebar-link module-cadastros w-100 fw-bold shadow-sm mt-2"><i class="bi bi-bar-chart-line-fill"></i> Relatórios</a>
+        <a href="{% url 'cadastros:importacao_siscac_detail' %}" class="btn sidebar-link module-cadastros w-100 fw-bold shadow-sm mt-2"><i class="bi bi-cloud-arrow-up-fill"></i> Importar Dados SISCAC</a>
 
         <hr class="my-4 text-muted">
 
@@ -61,15 +61,15 @@
 
         <h6 class="sidebar-section-title module-verbas"><i class="bi bi-currency-exchange"></i> Módulo de Verbas Indenizatórias</h6>
         <a href="{% url 'verbas_panel' %}" class="btn sidebar-link module-verbas w-100 fw-bold shadow-sm"><i class="bi bi-grid-fill"></i> Painel de Verbas Indenizatórias</a>
-        <a href="{% url 'diarias_list' %}" class="btn sidebar-link module-verbas w-100 fw-bold shadow-sm"><i class="bi bi-airplane-fill"></i> Diárias</a>
-        <a href="{% url 'reembolsos_list' %}" class="btn sidebar-link module-verbas w-100 fw-bold shadow-sm mt-2"><i class="bi bi-cash"></i> Reembolsos</a>
-        <a href="{% url 'jetons_list' %}" class="btn sidebar-link module-verbas w-100 fw-bold shadow-sm mt-2"><i class="bi bi-award-fill"></i> Jetons</a>
-        <a href="{% url 'auxilios_list' %}" class="btn sidebar-link module-verbas w-100 fw-bold shadow-sm mt-2"><i class="bi bi-heart-pulse-fill"></i> Auxílios</a>
+        <a href="{% url 'verbas_indenizatorias:diarias_list' %}" class="btn sidebar-link module-verbas w-100 fw-bold shadow-sm"><i class="bi bi-airplane-fill"></i> Diárias</a>
+        <a href="{% url 'verbas_indenizatorias:reembolsos_list' %}" class="btn sidebar-link module-verbas w-100 fw-bold shadow-sm mt-2"><i class="bi bi-cash"></i> Reembolsos</a>
+        <a href="{% url 'verbas_indenizatorias:jetons_list' %}" class="btn sidebar-link module-verbas w-100 fw-bold shadow-sm mt-2"><i class="bi bi-award-fill"></i> Jetons</a>
+        <a href="{% url 'verbas_indenizatorias:auxilios_list' %}" class="btn sidebar-link module-verbas w-100 fw-bold shadow-sm mt-2"><i class="bi bi-heart-pulse-fill"></i> Auxílios</a>
 
         <hr class="my-4 text-muted">
 
         <h6 class="sidebar-section-title module-suprimentos"><i class="bi bi-box-seam-fill"></i> Módulo de Suprimento de Fundos</h6>
-        <a href="{% url 'suprimentos_list' %}" class="btn sidebar-link module-suprimentos w-100 fw-bold shadow-sm"><i class="bi bi-wallet2"></i> Suprimentos de Fundos</a>
+        <a href="{% url 'suprimentos:suprimentos_list' %}" class="btn sidebar-link module-suprimentos w-100 fw-bold shadow-sm"><i class="bi bi-wallet2"></i> Suprimentos de Fundos</a>
 
         <hr class="my-4 text-muted">
 
