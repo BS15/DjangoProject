@@ -4,7 +4,7 @@
 {% block page_subtitle %}Edição da capa sem campos fiscais/ateste. Campos canônicos são aplicados automaticamente.{% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'editar_processo_verbas' pk=processo.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
+<a href="{% url 'verbas_indenizatorias:processo_verbas_detail' pk=processo.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
 {% endblock %}
 
 {% block form_action %}{% url 'verbas_indenizatorias:editar_processo_verbas_capa_action' pk=processo.id %}{% endblock %}
@@ -79,6 +79,6 @@
 {% endblock %}
 
 {% block form_actions %}
-<a href="{% url 'editar_processo_verbas' pk=processo.id %}" class="btn btn-secondary px-4">Cancelar</a>
+<a href="{% url 'verbas_indenizatorias:processo_verbas_detail' pk=processo.id %}" class="btn btn-secondary px-4">Cancelar</a>
 <button type="submit" class="btn btn-success px-4 fw-bold"><i class="bi bi-check-lg"></i> Salvar Capa</button>
 {% endblock %}

@@ -16,7 +16,7 @@ def iniciar_conferencia_action(request: HttpRequest) -> HttpResponse:
 
     if not process_ids:
         messages.warning(request, "Selecione ao menos um processo para iniciar a revisão.")
-        return redirect("painel_conferencia")
+        return redirect("pagamentos:conferencia_list")
 
     ids_validos = set(
         Processo.objects.filter(
@@ -28,14 +28,14 @@ def iniciar_conferencia_action(request: HttpRequest) -> HttpResponse:
 
     if not fila:
         messages.warning(request, "Nenhum processo selecionado está elegível para conferência.")
-        return redirect("painel_conferencia")
+        return redirect("pagamentos:conferencia_list")
 
     if len(fila) < len(process_ids):
         messages.info(request, "Alguns processos foram ignorados por não estarem mais na etapa de conferência.")
 
     request.session["conferencia_queue"] = fila
     request.session.modified = True
-    return redirect("conferencia_processo", pk=fila[0])
+    return redirect("pagamentos:conferencia_processo_detail", pk=fila[0])
 
 
 @require_POST
@@ -43,7 +43,7 @@ def iniciar_conferencia_action(request: HttpRequest) -> HttpResponse:
 def aprovar_conferencia_action(request: HttpRequest, pk: int) -> HttpResponse:
     """Mantem compatibilidade da rota de aprovacao direta da conferencia."""
     messages.error(request, "A aprovação direta foi desativada. Abra o processo para realizar a conferência.")
-    return redirect("painel_conferencia")
+    return redirect("pagamentos:conferencia_list")
 
 
 __all__ = ["iniciar_conferencia_action", "aprovar_conferencia_action"]

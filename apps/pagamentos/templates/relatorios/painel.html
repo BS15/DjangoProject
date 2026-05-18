@@ -48,7 +48,7 @@
                     <button type="submit" class="btn btn-primary btn-sm fw-bold shadow-sm">
                         <i class="bi bi-search"></i> Filtrar
                     </button>
-                    <a href="{% url 'painel_relatorios' %}?tipo={{ tipo }}" class="btn btn-outline-secondary btn-sm shadow-sm">
+                    <a href="{% url 'pagamentos:relatorios_list' %}?tipo={{ tipo }}" class="btn btn-outline-secondary btn-sm shadow-sm">
                         <i class="bi bi-x-circle"></i> Limpar Filtros
                     </a>
                     <button type="submit" name="exportar" value="csv" class="btn btn-success btn-sm fw-bold shadow-sm ms-auto">

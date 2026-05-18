@@ -15,10 +15,10 @@ def conselho_processo_view(request, pk):
     reuniao = processo.reuniao_conselho
     if not reuniao:
         messages.error(request, f"Processo #{processo.id} não está vinculado a uma reunião do Conselho.")
-        return redirect("painel_conselho")
+        return redirect("pagamentos:conselho_list")
     if reuniao.status not in {ReuniaoConselhoStatus.AGENDADA, ReuniaoConselhoStatus.EM_ANALISE}:
         messages.error(request, f"A reunião {reuniao.numero}ª está concluída e não permite nova análise.")
-        return redirect("painel_conselho")
+        return redirect("pagamentos:conselho_list")
 
     return _processo_fila_detalhe_view(
         request,

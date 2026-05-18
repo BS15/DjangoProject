@@ -35,7 +35,7 @@ def adicionar_despesa_action(request: HttpRequest, pk: int) -> HttpResponse:
         raise PermissionDenied
     if _suprimento_encerrado(suprimento):
         messages.error(request, "Este suprimento já foi encerrado e não pode receber novas despesas.")
-        return redirect("gerenciar_suprimento_view", pk=suprimento.id)
+        return redirect("suprimentos:suprimento_detail", pk=suprimento.id)
 
     form = DespesaSuprimentoForm(request.POST, request.FILES)
     if form.is_valid():
@@ -49,7 +49,7 @@ def adicionar_despesa_action(request: HttpRequest, pk: int) -> HttpResponse:
             request.user.pk,
         )
         messages.success(request, "Despesa e documento anexados com sucesso!")
-        return redirect("gerenciar_suprimento_view", pk=suprimento.id)
+        return redirect("suprimentos:suprimento_detail", pk=suprimento.id)
     else:
         messages.error(request, "Verifique os campos da despesa e tente novamente.")
         return redirect("adicionar_despesa_view", pk=suprimento.id)
@@ -86,24 +86,24 @@ def enviar_prestacao_suprimento_action(request: HttpRequest, pk: int) -> HttpRes
 
     if _suprimento_encerrado(suprimento):
         messages.error(request, "Este suprimento já foi encerrado.")
-        return redirect("gerenciar_suprimento_view", pk=suprimento.id)
+        return redirect("suprimentos:suprimento_detail", pk=suprimento.id)
 
     form = EnviarPrestacaoSuprimentoForm(request.POST, request.FILES)
     if not form.is_valid():
         for field_errors in form.errors.values():
             for err in field_errors:
                 messages.error(request, err)
-        return redirect("gerenciar_suprimento_view", pk=suprimento.id)
+        return redirect("suprimentos:suprimento_detail", pk=suprimento.id)
 
     prestacao = obter_ou_criar_prestacao_suprimento(suprimento)
 
     if prestacao.status == PrestacaoContasSuprimento.STATUS_ENVIADA:
         messages.warning(request, "A prestação de contas já foi enviada e aguarda revisão.")
-        return redirect("gerenciar_suprimento_view", pk=suprimento.id)
+        return redirect("suprimentos:suprimento_detail", pk=suprimento.id)
 
     if prestacao.status == PrestacaoContasSuprimento.STATUS_ENCERRADA:
         messages.warning(request, "A prestação de contas já está encerrada.")
-        return redirect("gerenciar_suprimento_view", pk=suprimento.id)
+        return redirect("suprimentos:suprimento_detail", pk=suprimento.id)
 
     comprovante = form.cleaned_data.get("comprovante_devolucao")
     data_devolucao = form.cleaned_data.get("data_devolucao")
@@ -114,7 +114,7 @@ def enviar_prestacao_suprimento_action(request: HttpRequest, pk: int) -> HttpRes
     except ValidationError as exc:
         for msg in exc.messages:
             messages.error(request, msg)
-        return redirect("gerenciar_suprimento_view", pk=suprimento.id)
+        return redirect("suprimentos:suprimento_detail", pk=suprimento.id)
 
     logger.info(
         "mutation=enviar_prestacao_suprimento suprimento_id=%s user_id=%s",
@@ -125,7 +125,7 @@ def enviar_prestacao_suprimento_action(request: HttpRequest, pk: int) -> HttpRes
         request,
         f"Prestação de contas do suprimento #{suprimento.id} enviada para revisão com sucesso!",
     )
-    return redirect("gerenciar_suprimento_view", pk=suprimento.id)
+    return redirect("suprimentos:suprimento_detail", pk=suprimento.id)
 
 
 @require_POST
@@ -168,7 +168,7 @@ def cancelar_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
     justificativa = (request.POST.get("justificativa") or "").strip()
     if not justificativa:
         messages.error(request, "A justificativa do cancelamento é obrigatória.")
-        return redirect("cancelar_suprimento_spoke_view", pk=pk)
+        return redirect("suprimentos:cancelar_suprimento_action", pk=pk)
 
     suprimento: Any = get_object_or_404(
         SuprimentoDeFundos.objects.select_related("processo__status"),
@@ -180,11 +180,11 @@ def cancelar_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
     except ValidationError as exc:
         for msg in exc.messages:
             messages.error(request, msg)
-        return redirect("cancelar_suprimento_spoke_view", pk=pk)
+        return redirect("suprimentos:cancelar_suprimento_action", pk=pk)
 
     logger.info("mutation=cancelar_suprimento suprimento_id=%s user_id=%s", suprimento.id, request.user.pk)
     messages.warning(request, f"Suprimento #{suprimento.id} cancelado.")
-    return redirect("gerenciar_suprimento_view", pk=suprimento.id)
+    return redirect("suprimentos:suprimento_detail", pk=suprimento.id)
 
 
 __all__ = [

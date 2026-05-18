@@ -11,7 +11,7 @@
 	<button type="submit" class="btn btn-success btn-sm fw-bold"><i class="bi bi-plus-lg"></i> Nova Reunião</button>
 </form>
 {% endif %}
-<a href="{% url 'home_page' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+<a href="{% url 'pagamentos:home_detail' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
 {% endblock %}
 
 {% block filter_card %}{% endblock %}
@@ -40,7 +40,7 @@
 		{% endif %}
 	</td>
 	<td class="text-center">
-		<a href="{% url 'montar_pauta_reuniao' pk=reuniao.id %}" class="btn btn-sm btn-outline-primary">
+		<a href="{% url 'pagamentos:montar_pauta_reuniao_action' pk=reuniao.id %}" class="btn btn-sm btn-outline-primary">
 			<i class="bi bi-list-check"></i> Pauta
 		</a>
 	</td>

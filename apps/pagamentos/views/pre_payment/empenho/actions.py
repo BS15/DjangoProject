@@ -29,7 +29,7 @@ def registrar_empenho_action(request: HttpRequest) -> HttpResponse:
 
     if not (processo_id and n_nota_empenho and data_empenho_str):
         messages.error(request, "Por favor, preencha o número e a data da nota de empenho para avançar.")
-        return redirect("a_empenhar")
+        return redirect("pagamentos:a_empenhar_list")
 
     try:
         with transaction.atomic():
@@ -57,7 +57,7 @@ def registrar_empenho_action(request: HttpRequest) -> HttpResponse:
         logger.exception("Erro inesperado ao salvar empenho do processo %s", processo_id)
         messages.error(request, "Erro interno ao salvar empenho. Tente novamente.")
 
-    return redirect("a_empenhar")
+    return redirect("pagamentos:a_empenhar_list")
 
 
 __all__ = ["registrar_empenho_action"]

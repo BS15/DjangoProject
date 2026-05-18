@@ -19,12 +19,12 @@ def add_credor_action(request):
     form = CredorForm(request.POST)
     if not form.is_valid():
         messages.error(request, "Erro ao cadastrar. Verifique os campos.")
-        return redirect("add_credor_view")
+        return redirect("cadastros:credor_create")
 
     credor = form.save()
     logger.info("mutation=add_credor credor_id=%s user_id=%s", credor.pk, request.user.pk)
     messages.success(request, "Credor cadastrado com sucesso!")
-    return redirect("gerenciar_credor_view", pk=credor.pk)
+    return redirect("cadastros:credor_detail", pk=credor.pk)
 
 
 @require_POST
@@ -36,12 +36,12 @@ def edit_credor_action(request, pk):
 
     if not form.is_valid():
         messages.error(request, "Erro ao atualizar. Verifique os campos.")
-        return redirect("gerenciar_credor_view", pk=credor.pk)
+        return redirect("cadastros:credor_detail", pk=credor.pk)
 
     form.save()
     logger.info("mutation=edit_credor credor_id=%s user_id=%s", credor.pk, request.user.pk)
     messages.success(request, "Dados cadastrais atualizados com sucesso.")
-    return redirect("gerenciar_credor_view", pk=credor.pk)
+    return redirect("cadastros:credor_detail", pk=credor.pk)
 
 
 @require_POST
@@ -58,4 +58,4 @@ def toggle_status_credor_action(request, pk):
     else:
         messages.warning(request, "Credor bloqueado para novos pagamentos.")
 
-    return redirect("gerenciar_credor_view", pk=credor.pk)
+    return redirect("cadastros:credor_detail", pk=credor.pk)

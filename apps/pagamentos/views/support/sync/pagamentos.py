@@ -115,7 +115,7 @@ def sincronizar_siscac_manual_action(request):
         messages.success(request, f"{count} processo(s) sincronizado(s) com sucesso.")
     if errors:
         messages.error(request, f"{errors} item(ns) não puderam ser sincronizados.")
-    return redirect("sincronizar_siscac")
+    return redirect("pagamentos:sincronizar_siscac")
 
 
 @require_POST
@@ -125,7 +125,7 @@ def sincronizar_siscac_auto_action(request):
     pdf_file = request.FILES.get("siscac_pdf")
     if not pdf_file or not pdf_file.name.lower().endswith(".pdf"):
         messages.error(request, "Nenhum arquivo ou PDF inválido enviado.")
-        return redirect("sincronizar_siscac")
+        return redirect("pagamentos:sincronizar_siscac")
 
     try:
         extracted = parse_siscac_report(pdf_file)
@@ -134,5 +134,5 @@ def sincronizar_siscac_auto_action(request):
     except (OSError, TypeError, ValueError):
         logger.exception("Falha ao processar relatório SISCAC no modo automático")
         messages.error(request, "Erro ao processar o relatório SISCAC. Verifique o arquivo e tente novamente.")
-        return redirect("sincronizar_siscac")
+        return redirect("pagamentos:sincronizar_siscac")
 

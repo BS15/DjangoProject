@@ -34,22 +34,22 @@ def arquivar_processo_action(request: HttpRequest, pk: int) -> HttpResponse:
             status_atual = processo.status.opcao_status if processo.status else ""
             if status_atual.upper() != ProcessoStatus.APROVADO_PENDENTE_ARQUIVAMENTO:
                 messages.error(request, f"Processo #{processo.id} não está no status correto para arquivamento.")
-                return redirect("painel_arquivamento")
+                return redirect("pagamentos:arquivamento_list")
 
             executar_arquivamento_definitivo(processo, request.user)
     except ArquivamentoSemDocumentosError:
         messages.error(request, f"Processo #{processo.id} não possui documentos para arquivar.")
-        return redirect("painel_arquivamento")
+        return redirect("pagamentos:arquivamento_list")
     except ArquivamentoDefinitivoError as exc:
         logger.exception("Falha de arquivamento definitivo do processo %s", processo.id)
         messages.error(
             request,
             f"Falha ao arquivar o processo #{processo.id}. Detalhe técnico: {exc}",
         )
-        return redirect("painel_arquivamento")
+        return redirect("pagamentos:arquivamento_list")
 
     messages.success(request, f"Processo #{processo.id} arquivado definitivamente com sucesso!")
-    return redirect("painel_arquivamento")
+    return redirect("pagamentos:arquivamento_list")
 
 
 __all__ = ["arquivar_processo_action"]

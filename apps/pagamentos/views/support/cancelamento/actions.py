@@ -25,7 +25,7 @@ def cancelar_processo_action(request: HttpRequest, pk: int) -> HttpResponse:
     justificativa = (request.POST.get("justificativa") or "").strip()
     if not justificativa:
         messages.error(request, "A justificativa do cancelamento é obrigatória.")
-        return redirect("cancelar_processo_spoke", pk=pk)
+        return redirect("pagamentos:cancelar_processo_spoke_detail", pk=pk)
 
     processo = get_object_or_404(Processo.objects.select_related("status"), id=pk)
 
@@ -39,7 +39,7 @@ def cancelar_processo_action(request: HttpRequest, pk: int) -> HttpResponse:
     except ValidationError as exc:
         for msg in exc.messages:
             messages.error(request, msg)
-        return redirect("cancelar_processo_spoke", pk=pk)
+        return redirect("pagamentos:cancelar_processo_spoke_detail", pk=pk)
 
     logger.info("mutation=cancelar_processo processo_id=%s user_id=%s", processo.id, request.user.pk)
     messages.warning(request, f"Processo #{processo.id} cancelado.")

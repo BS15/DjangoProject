@@ -5,7 +5,7 @@
 {% block detail_breadcrumb %}
 <nav aria-label="breadcrumb">
 	<ol class="breadcrumb small">
-		<li class="breadcrumb-item"><a href="{% url 'home_page' %}">Processos</a></li>
+		<li class="breadcrumb-item"><a href="{% url 'pagamentos:home_detail' %}">Processos</a></li>
 		<li class="breadcrumb-item active">Editar #{{ processo.id }}</li>
 	</ol>
 </nav>
@@ -70,7 +70,7 @@
 <div class="row g-3 mb-4">
 	{% if not somente_documentos %}
 	<div class="col-md-4">
-		<a href="{% url 'editar_processo_capa' pk=processo.id %}" class="card border-0 shadow-sm text-decoration-none h-100">
+		<a href="{% url 'pagamentos:editar_processo_capa_action' pk=processo.id %}" class="card border-0 shadow-sm text-decoration-none h-100">
 			<div class="card-body text-center py-4">
 				<i class="bi bi-card-text fs-2 text-primary mb-2 d-block"></i>
 				<h6 class="fw-bold mb-1">Capa do Processo</h6>
@@ -80,7 +80,7 @@
 	</div>
 	{% endif %}
 	<div class="col-md-4">
-		<a href="{% url 'editar_processo_documentos' pk=processo.id %}" class="card border-0 shadow-sm text-decoration-none h-100">
+		<a href="{% url 'pagamentos:editar_processo_documentos_action' pk=processo.id %}" class="card border-0 shadow-sm text-decoration-none h-100">
 			<div class="card-body text-center py-4">
 				<i class="bi bi-paperclip fs-2 text-success mb-2 d-block"></i>
 				<h6 class="fw-bold mb-1">Documentos</h6>
@@ -90,7 +90,7 @@
 	</div>
 	{% if not somente_documentos %}
 	<div class="col-md-4">
-		<a href="{% url 'editar_processo_pendencias' pk=processo.id %}" class="card border-0 shadow-sm text-decoration-none h-100">
+		<a href="{% url 'pagamentos:editar_processo_pendencias_action' pk=processo.id %}" class="card border-0 shadow-sm text-decoration-none h-100">
 			<div class="card-body text-center py-4">
 				<i class="bi bi-exclamation-triangle fs-2 text-warning mb-2 d-block"></i>
 				<h6 class="fw-bold mb-1">Pendências</h6>
@@ -111,7 +111,7 @@
 	</div>
 	{% endif %}
 	<div class="col-md-4">
-		<a href="{% url 'add_contingencia' %}?processo_id={{ processo.id }}" class="card border-0 shadow-sm text-decoration-none h-100 bg-warning bg-opacity-10">
+		<a href="{% url 'pagamentos:add_contingencia_action' %}?processo_id={{ processo.id }}" class="card border-0 shadow-sm text-decoration-none h-100 bg-warning bg-opacity-10">
 			<div class="card-body text-center py-4">
 				<i class="bi bi-exclamation-triangle fs-2 text-warning mb-2 d-block"></i>
 				<h6 class="fw-bold mb-1 text-dark">Informar Contingência</h6>
@@ -173,5 +173,5 @@
 {% endblock %}
 
 {% block detail_actions %}
-<a href="{% url 'home_page' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Voltar</a>
+<a href="{% url 'pagamentos:home_detail' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Voltar</a>
 {% endblock %}

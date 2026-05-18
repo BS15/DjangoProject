@@ -1,6 +1,7 @@
 """Acoes POST de gerenciamento de reunioes do conselho."""
 
 import logging
+
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.db import IntegrityError
@@ -8,8 +9,12 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
-from apps.pagamentos.domain_models import Processo, ProcessoStatus, ReuniaoConselho, ReuniaoConselhoStatus
-
+from apps.pagamentos.domain_models import (
+    Processo,
+    ProcessoStatus,
+    ReuniaoConselho,
+    ReuniaoConselhoStatus,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +49,7 @@ def gerenciar_reunioes_action(request: HttpRequest) -> HttpResponse:
     else:
         messages.warning(request, "Preencha o número e o trimestre de referência.")
 
-    return redirect("gerenciar_reunioes")
+    return redirect("pagamentos:reunioes_list")
 
 
 @require_POST
@@ -64,7 +69,7 @@ def montar_pauta_reuniao_action(request: HttpRequest, reuniao_id: int) -> HttpRe
         messages.success(request, f"{updated} processo(s) adicionado(s) à pauta.")
     else:
         messages.warning(request, "Nenhum processo selecionado.")
-    return redirect("montar_pauta_reuniao", reuniao_id=reuniao_id)
+    return redirect("pagamentos:montar_pauta_reuniao_detail", reuniao_id=reuniao_id)
 
 
 @require_POST
@@ -74,13 +79,13 @@ def iniciar_conselho_reuniao_action(request: HttpRequest, reuniao_id: int) -> Ht
     reuniao = get_object_or_404(ReuniaoConselho, id=reuniao_id)
     if reuniao.status not in REUNIAO_STATUS_ANALISE:
         messages.error(request, "A reunião selecionada está concluída e não pode iniciar nova análise.")
-        return redirect("analise_reuniao", reuniao_id=reuniao_id)
+        return redirect("pagamentos:analise_reuniao_detail", reuniao_id=reuniao_id)
 
     ids_raw = request.POST.getlist("processo_ids")
     process_ids = [int(pid) for pid in ids_raw if pid.isdigit()]
     if not process_ids:
         messages.warning(request, "Selecione ao menos um processo para iniciar a revisão.")
-        return redirect("analise_reuniao", reuniao_id=reuniao_id)
+        return redirect("pagamentos:analise_reuniao_detail", reuniao_id=reuniao_id)
 
     processos_validos = set(
         Processo.objects.filter(
@@ -92,7 +97,7 @@ def iniciar_conselho_reuniao_action(request: HttpRequest, reuniao_id: int) -> Ht
     fila = [pid for pid in process_ids if pid in processos_validos]
     if not fila:
         messages.error(request, "Nenhum processo selecionado é elegível para análise nesta reunião.")
-        return redirect("analise_reuniao", reuniao_id=reuniao_id)
+        return redirect("pagamentos:analise_reuniao_detail", reuniao_id=reuniao_id)
     if len(fila) < len(process_ids):
         messages.warning(request, "Alguns processos foram ignorados por não pertencerem à reunião ou estágio esperado.")
 
@@ -103,7 +108,7 @@ def iniciar_conselho_reuniao_action(request: HttpRequest, reuniao_id: int) -> Ht
     request.session["conselho_queue"] = fila
     request.session["conselho_reuniao_id"] = reuniao_id
     request.session.modified = True
-    return redirect("conselho_processo", pk=fila[0])
+    return redirect("pagamentos:conselho_processo_detail", pk=fila[0])
 
 
 __all__ = [

@@ -6,9 +6,9 @@
 
 {% block page_actions %}
 {% if perms.verbas_indenizatorias.pode_gerenciar_tabela_valores_unitarios %}
-<a href="{% url 'add_tabela_valor_unitario' %}" class="btn btn-success btn-sm fw-bold"><i class="bi bi-plus-circle"></i> Novo Valor Unitário</a>
+<a href="{% url 'verbas_indenizatorias:add_tabela_valor_unitario_action' %}" class="btn btn-success btn-sm fw-bold"><i class="bi bi-plus-circle"></i> Novo Valor Unitário</a>
 {% endif %}
-<a href="{% url 'verbas_panel' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+<a href="{% url 'verbas_indenizatorias:verbas_list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
 {% endblock %}
 
 {% block filter_form %}
@@ -37,7 +37,7 @@
     <td class="text-end fw-bold text-success">R$ {{ item.valor_unitario|floatformat:2 }}</td>
     <td class="text-center">
         {% if perms.verbas_indenizatorias.pode_gerenciar_tabela_valores_unitarios %}
-        <a href="{% url 'edit_tabela_valor_unitario' pk=item.id %}" class="btn btn-sm btn-outline-primary py-0" title="Editar">
+        <a href="{% url 'verbas_indenizatorias:edit_tabela_valor_unitario_action' pk=item.id %}" class="btn btn-sm btn-outline-primary py-0" title="Editar">
             <i class="bi bi-pencil-square"></i>
         </a>
         {% else %}

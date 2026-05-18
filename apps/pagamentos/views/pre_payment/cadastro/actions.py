@@ -175,7 +175,7 @@ def add_process_action(request: HttpRequest) -> HttpResponse:
             for err in field_errors:
                 messages.error(request, err)
         messages.error(request, "Verifique os erros no formulário da capa do processo.")
-        return redirect("add_process")
+        return redirect("pagamentos:add_process_action")
 
     try:
         def mutator(processo_instancia):
@@ -190,7 +190,7 @@ def add_process_action(request: HttpRequest) -> HttpResponse:
     except (DatabaseError, TypeError, ValueError):
         logger.exception("Erro crítico ao salvar processo na criação")
         messages.error(request, "Ocorreu um erro interno ao salvar no banco de dados.")
-        return redirect("add_process")
+        return redirect("pagamentos:add_process_action")
 
 
 @require_POST
@@ -202,14 +202,14 @@ def editar_processo_capa_action(request: HttpRequest, pk: int) -> HttpResponse:
         return redirecionamento
     if somente_documentos:
         messages.error(request, "Neste status, apenas documentos podem ser alterados. Use a tela específica de documentos.")
-        return redirect("editar_processo_documentos", pk=pk)
+        return redirect("pagamentos:editar_processo_documentos_action", pk=pk)
 
     processo_form = ProcessoCapaEdicaoForm(request.POST, instance=processo, prefix="processo")
     next_url = request.POST.get("next") or ""
 
     if not processo_form.is_valid():
         messages.error(request, "Verifique os erros na capa do processo.")
-        return redirect("editar_processo_capa", pk=pk)
+        return redirect("pagamentos:editar_processo_capa_action", pk=pk)
 
     confirmar_extra = request.POST.get("confirmar_extra_orcamentario") == "on"
     try:
@@ -222,7 +222,7 @@ def editar_processo_capa_action(request: HttpRequest, pk: int) -> HttpResponse:
     except (DatabaseError, TypeError, ValueError):
         logger.exception("Erro ao atualizar capa do processo %s", pk)
         messages.error(request, "Erro interno ao salvar a capa do processo.")
-        return redirect("editar_processo_capa", pk=pk)
+        return redirect("pagamentos:editar_processo_capa_action", pk=pk)
 
 
 @require_POST
@@ -254,7 +254,7 @@ def editar_processo_documentos_action(request: HttpRequest, pk: int) -> HttpResp
             pk,
             documento_formset.errors,
         )
-        return redirect("editar_processo_documentos", pk=pk)
+        return redirect("pagamentos:editar_processo_documentos_action", pk=pk)
 
     try:
         _salvar_formsets_em_transacao(documento_formset)
@@ -263,7 +263,7 @@ def editar_processo_documentos_action(request: HttpRequest, pk: int) -> HttpResp
     except (DatabaseError, TypeError, ValueError, OSError):
         logger.exception("Erro ao atualizar documentos do processo %s", pk)
         messages.error(request, "Erro interno ao salvar os documentos.")
-        return redirect("editar_processo_documentos", pk=pk)
+        return redirect("pagamentos:editar_processo_documentos_action", pk=pk)
 
 
 @require_POST
@@ -278,11 +278,11 @@ def extrair_codigo_barras_documento_action(request: HttpRequest, pk: int, docume
 
     if not _documento_eh_boleto_bancario(documento):
         messages.warning(request, "Extração permitida apenas para documentos do tipo BOLETO BANCÁRIO.")
-        return redirect("editar_processo_documentos", pk=pk)
+        return redirect("pagamentos:editar_processo_documentos_action", pk=pk)
 
     if not documento.arquivo:
         messages.error(request, "Documento sem arquivo para extração de código de barras.")
-        return redirect("editar_processo_documentos", pk=pk)
+        return redirect("pagamentos:editar_processo_documentos_action", pk=pk)
 
     try:
         with documento.arquivo.open("rb") as arquivo_pdf:
@@ -290,7 +290,7 @@ def extrair_codigo_barras_documento_action(request: HttpRequest, pk: int, docume
         codigo_barras = (dados.get("codigo_barras") or "").strip()
         if not codigo_barras:
             messages.warning(request, "Não foi possível localizar linha digitável válida neste documento.")
-            return redirect("editar_processo_documentos", pk=pk)
+            return redirect("pagamentos:editar_processo_documentos_action", pk=pk)
 
         with transaction.atomic():
             boleto = Boleto_Bancario.objects.filter(pk=documento.pk).first()
@@ -319,7 +319,7 @@ def extrair_codigo_barras_documento_action(request: HttpRequest, pk: int, docume
         )
         messages.error(request, "Erro ao processar o PDF para extração do código de barras.")
 
-    return redirect("editar_processo_documentos", pk=pk)
+    return redirect("pagamentos:editar_processo_documentos_action", pk=pk)
 
 
 def _extrair_e_persistir_barcode(documento: DocumentoProcesso) -> bool:
@@ -377,7 +377,7 @@ def extrair_codigos_barras_lote_action(request: HttpRequest, pk: int) -> HttpRes
     total = len(boletos)
     if total == 0:
         messages.warning(request, "Nenhum documento do tipo BOLETO BANCÁRIO com arquivo encontrado neste processo.")
-        return redirect("editar_processo_documentos", pk=pk)
+        return redirect("pagamentos:editar_processo_documentos_action", pk=pk)
 
     sucessos = sum(1 for doc in boletos if _extrair_e_persistir_barcode(doc))
     falhas = total - sucessos
@@ -398,7 +398,7 @@ def extrair_codigos_barras_lote_action(request: HttpRequest, pk: int) -> HttpRes
             f"{total} boleto(s) processado(s): {sucessos} extraído(s) com sucesso, {falhas} falha(s).",
         )
 
-    return redirect("editar_processo_documentos", pk=pk)
+    return redirect("pagamentos:editar_processo_documentos_action", pk=pk)
 
 
 @require_POST
@@ -410,14 +410,14 @@ def editar_processo_pendencias_action(request: HttpRequest, pk: int) -> HttpResp
         return redirecionamento
     if somente_documentos:
         messages.error(request, "Neste status, apenas documentos podem ser alterados.")
-        return redirect("editar_processo_documentos", pk=pk)
+        return redirect("pagamentos:editar_processo_documentos_action", pk=pk)
 
     row_action = (request.POST.get("pendencia_action") or "").strip().lower()
     pendencia_id = request.POST.get("pendencia_id")
 
     if row_action in PENDENCIA_ACAO_STATUS and not pendencia_id:
         messages.error(request, "Não foi possível identificar a pendência selecionada.")
-        return redirect("editar_processo_pendencias", pk=pk)
+        return redirect("pagamentos:editar_processo_pendencias_action", pk=pk)
 
     if row_action in PENDENCIA_ACAO_STATUS and pendencia_id:
         pendencia = get_object_or_400(Pendencia, id=pendencia_id, processo=processo)
@@ -430,14 +430,14 @@ def editar_processo_pendencias_action(request: HttpRequest, pk: int) -> HttpResp
             logger.exception("Erro ao atualizar status da pendência %s do processo %s", pendencia_id, pk)
             messages.error(request, "Erro interno ao atualizar o status da pendência.")
 
-        return redirect("editar_processo_pendencias", pk=pk)
+        return redirect("pagamentos:editar_processo_pendencias_action", pk=pk)
 
     pendencia_formset = PendenciaFormSet(request.POST, instance=processo, prefix="pendencia")
     next_url = request.POST.get("next") or ""
 
     if not pendencia_formset.is_valid():
         messages.error(request, "Verifique os erros nas pendências.")
-        return redirect("editar_processo_pendencias", pk=pk)
+        return redirect("pagamentos:editar_processo_pendencias_action", pk=pk)
 
     try:
         _salvar_formsets_em_transacao(pendencia_formset)
@@ -446,7 +446,7 @@ def editar_processo_pendencias_action(request: HttpRequest, pk: int) -> HttpResp
     except (DatabaseError, TypeError, ValueError):
         logger.exception("Erro ao atualizar pendências do processo %s", pk)
         messages.error(request, "Erro interno ao salvar as pendências.")
-        return redirect("editar_processo_pendencias", pk=pk)
+        return redirect("pagamentos:editar_processo_pendencias_action", pk=pk)
 
 
 @permission_required("pagamentos.pode_editar_processos_pagamento", raise_exception=True)

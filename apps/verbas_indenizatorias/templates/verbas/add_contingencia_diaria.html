@@ -12,7 +12,7 @@ A alteração somente será aplicada após aprovação do supervisor.
 {% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'gerenciar_diaria' pk=diaria.pk %}" class="btn btn-outline-secondary">
+<a href="{% url 'verbas_indenizatorias:diaria_detail' pk=diaria.pk %}" class="btn btn-outline-secondary">
     <i class="bi bi-arrow-left"></i> Voltar
 </a>
 {% endblock %}
@@ -62,7 +62,7 @@ A alteração somente será aplicada após aprovação do supervisor.
 {% endblock %}
 
 {% block form_actions %}
-<a href="{% url 'gerenciar_diaria' pk=diaria.pk %}" class="btn btn-outline-secondary me-2">Cancelar</a>
+<a href="{% url 'verbas_indenizatorias:diaria_detail' pk=diaria.pk %}" class="btn btn-outline-secondary me-2">Cancelar</a>
 <button type="submit" class="btn btn-warning">
     <i class="bi bi-send"></i> Enviar para Aprovação
 </button>

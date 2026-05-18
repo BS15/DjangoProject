@@ -5,7 +5,7 @@
 {% block page_subtitle %}Atualize os dados de referência e vigência da conta recorrente.{% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'painel_contas_fixas' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+<a href="{% url 'pagamentos:contas_fixas_list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
 {% endblock %}
 
 {% block form_action %}{% url 'pagamentos:edit_conta_fixa_action' conta.pk %}{% endblock %}
@@ -46,7 +46,7 @@
 {% endblock %}
 
 {% block form_actions %}
-<a href="{% url 'painel_contas_fixas' %}" class="btn btn-secondary px-4">Cancelar</a>
+<a href="{% url 'pagamentos:contas_fixas_list' %}" class="btn btn-secondary px-4">Cancelar</a>
 <button type="submit" class="btn btn-primary px-4 fw-bold">
     <i class="bi bi-check-lg"></i> Salvar Alterações
 </button>

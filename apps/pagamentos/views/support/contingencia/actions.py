@@ -33,11 +33,11 @@ def add_contingencia_action(request: HttpRequest) -> HttpResponse:
 
     if not processo_id or not justificativa:
         messages.error(request, "Processo e justificativa são obrigatórios.")
-        return redirect("add_contingencia")
+        return redirect("pagamentos:add_contingencia_action")
 
     if not processo_id.isdigit():
         messages.error(request, "ID do Processo inválido.")
-        return redirect("add_contingencia")
+        return redirect("pagamentos:add_contingencia_action")
 
     processo = get_object_or_404(Processo, pk=int(processo_id))
 
@@ -55,7 +55,7 @@ def add_contingencia_action(request: HttpRequest) -> HttpResponse:
             processo_id,
         )
         messages.error(request, "Dados propostos inválidos. Verifique o formato e tente novamente.")
-        return redirect("add_contingencia")
+        return redirect("pagamentos:add_contingencia_action")
 
     status_atual_processo = processo.status.opcao_status if processo.status else ""
     exige_aprovacao_ordenador, exige_aprovacao_conselho, exige_revisao_contadora = determinar_requisitos_contingencia(status_atual_processo)
@@ -86,7 +86,7 @@ def add_contingencia_action(request: HttpRequest) -> HttpResponse:
         f"Contingência #{contingencia.pk} aberta com sucesso para o Processo #{processo.pk}. "
         f"Fluxo exigido: {' -> '.join(cadeia)}.",
     )
-    return redirect("home_page")
+    return redirect("pagamentos:home_detail")
 
 
 
@@ -109,7 +109,7 @@ def analisar_contingencia_action(request: HttpRequest, pk: int) -> HttpResponse:
 
     if contingencia.status in {"APROVADA", "REJEITADA"}:
         messages.error(request, "Esta contingência já foi finalizada e não pode ser alterada.")
-        return redirect("painel_contingencias")
+        return redirect("pagamentos:contingencias_list")
 
     permissao_etapa = _PERMISSAO_POR_STATUS_CONTINGENCIA.get(contingencia.status)
     if permissao_etapa and not request.user.has_perm(permissao_etapa):
@@ -117,7 +117,7 @@ def analisar_contingencia_action(request: HttpRequest, pk: int) -> HttpResponse:
             request,
             f"Você não tem permissão para agir nesta etapa da contingência ({contingencia.get_status_display()}).",
         )
-        return redirect("painel_contingencias")
+        return redirect("pagamentos:contingencias_list")
 
     if acao == "aprovar":
         sucesso, msg_erro = processar_aprovacao_contingencia(contingencia, request.user, parecer)
@@ -149,7 +149,7 @@ def analisar_contingencia_action(request: HttpRequest, pk: int) -> HttpResponse:
     elif acao == "revisar_contadora":
         if contingencia.status != "PENDENTE_CONTADOR":
             messages.error(request, "A revisão contábil só pode ser feita quando a contingência estiver pendente da contadora.")
-            return redirect("painel_contingencias")
+            return redirect("pagamentos:contingencias_list")
         sucesso, msg_erro = processar_revisao_contadora_contingencia(contingencia, request.user, parecer)
         if not sucesso:
             messages.error(request, msg_erro)
@@ -162,7 +162,7 @@ def analisar_contingencia_action(request: HttpRequest, pk: int) -> HttpResponse:
     else:
         messages.error(request, "Ação inválida.")
 
-    return redirect("painel_contingencias")
+    return redirect("pagamentos:contingencias_list")
 
 
 __all__ = [

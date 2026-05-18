@@ -28,13 +28,13 @@
         <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-paperclip"></i> Documentos</h6>
         <div class="d-flex gap-2">
             {% if solicitacao.tipo_verba == 'diaria' %}
-            <a href="{% url 'gerenciar_diaria' pk=solicitacao.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-circle"></i> Adicionar/Editar</a>
+            <a href="{% url 'verbas_indenizatorias:diaria_detail' pk=solicitacao.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-circle"></i> Adicionar/Editar</a>
             {% elif solicitacao.tipo_verba == 'reembolso' %}
-            <a href="{% url 'edit_reembolso' pk=solicitacao.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-circle"></i> Adicionar/Editar</a>
+            <a href="{% url 'verbas_indenizatorias:reembolso_edit' pk=solicitacao.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-circle"></i> Adicionar/Editar</a>
             {% elif solicitacao.tipo_verba == 'jeton' %}
-            <a href="{% url 'gerenciar_jeton' pk=solicitacao.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-circle"></i> Adicionar/Editar</a>
+            <a href="{% url 'verbas_indenizatorias:jeton_detail' pk=solicitacao.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-circle"></i> Adicionar/Editar</a>
             {% elif solicitacao.tipo_verba == 'auxilio' %}
-            <a href="{% url 'gerenciar_auxilio' pk=solicitacao.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-circle"></i> Adicionar/Editar</a>
+            <a href="{% url 'verbas_indenizatorias:auxilio_detail' pk=solicitacao.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-circle"></i> Adicionar/Editar</a>
             {% endif %}
         </div>
     </div>

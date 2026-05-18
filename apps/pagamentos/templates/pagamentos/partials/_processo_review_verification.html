@@ -17,7 +17,7 @@
 				<div id="collapse-pendencias-{{ processo.id }}" class="accordion-collapse collapse show" aria-labelledby="heading-pendencias-{{ processo.id }}" data-bs-parent="#process-review-accordion-{{ processo.id }}">
 					<div class="accordion-body small">
 						<div class="d-flex justify-content-end mb-2">
-							<a href="{% url 'editar_processo_pendencias' pk=processo.id %}" class="btn btn-sm btn-outline-secondary py-0">Gerenciar</a>
+							<a href="{% url 'pagamentos:editar_processo_pendencias_action' pk=processo.id %}" class="btn btn-sm btn-outline-secondary py-0">Gerenciar</a>
 						</div>
 						<ul class="list-group list-group-flush">
 							{% for pendencia in processo_pendencias %}
@@ -43,7 +43,7 @@
 				<div id="collapse-retencoes-{{ processo.id }}" class="accordion-collapse collapse" aria-labelledby="heading-retencoes-{{ processo.id }}" data-bs-parent="#process-review-accordion-{{ processo.id }}">
 					<div class="accordion-body small">
 						<div class="d-flex justify-content-end mb-2">
-							<a href="{% url 'painel_impostos_view' %}" class="btn btn-sm btn-outline-secondary py-0">Painel</a>
+							<a href="{% url 'retencoes:impostos_list' %}" class="btn btn-sm btn-outline-secondary py-0">Painel</a>
 						</div>
 						<ul class="list-group list-group-flush">
 							{% for retencao in processo_retencoes %}
@@ -72,7 +72,7 @@
 				<div id="collapse-contingencias-{{ processo.id }}" class="accordion-collapse collapse" aria-labelledby="heading-contingencias-{{ processo.id }}" data-bs-parent="#process-review-accordion-{{ processo.id }}">
 					<div class="accordion-body small">
 						<div class="d-flex justify-content-end mb-2">
-							<a href="{% url 'painel_contingencias' %}" class="btn btn-sm btn-outline-secondary py-0">Painel</a>
+							<a href="{% url 'pagamentos:contingencias_list' %}" class="btn btn-sm btn-outline-secondary py-0">Painel</a>
 						</div>
 						<ul class="list-group list-group-flush">
 							{% for contingencia in contingencias|slice:":5" %}
@@ -98,7 +98,7 @@
 				<div id="collapse-devolucoes-{{ processo.id }}" class="accordion-collapse collapse" aria-labelledby="heading-devolucoes-{{ processo.id }}" data-bs-parent="#process-review-accordion-{{ processo.id }}">
 					<div class="accordion-body small">
 						<div class="d-flex justify-content-end mb-2">
-							<a href="{% url 'painel_devolucoes' %}" class="btn btn-sm btn-outline-secondary py-0">Painel</a>
+							<a href="{% url 'pagamentos:devolucoes_list' %}" class="btn btn-sm btn-outline-secondary py-0">Painel</a>
 						</div>
 						<ul class="list-group list-group-flush">
 							{% for devolucao in processo_devolucoes %}

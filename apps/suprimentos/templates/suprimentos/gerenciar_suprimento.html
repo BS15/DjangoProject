@@ -119,13 +119,13 @@
     </div>
 
     {% if suprimento.processo %}
-        <a href="{% url 'registrar_devolucao' suprimento.processo.id %}" class="btn btn-outline-success btn-sm fw-bold w-100 mb-2">
+        <a href="{% url 'pagamentos:registrar_devolucao_action' suprimento.processo.id %}" class="btn btn-outline-success btn-sm fw-bold w-100 mb-2">
             <i class="bi bi-arrow-return-left"></i> Registrar Devolução Manual
         </a>
     {% endif %}
 
     {% if not suprimento.status or suprimento.status.status_choice != 'CANCELADO / ANULADO' %}
-        <a href="{% url 'cancelar_suprimento_spoke_view' suprimento.id %}" class="btn btn-outline-danger btn-sm fw-bold w-100 mb-2">
+        <a href="{% url 'suprimentos:cancelar_suprimento_action' suprimento.id %}" class="btn btn-outline-danger btn-sm fw-bold w-100 mb-2">
             <i class="bi bi-x-circle"></i> Cancelar Suprimento
         </a>
     {% endif %}

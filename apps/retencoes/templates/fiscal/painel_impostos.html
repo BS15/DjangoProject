@@ -6,7 +6,7 @@
 {% block page_subtitle %}Visualização e agrupamento de retenções para geração de guias de recolhimento.{% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'painel_reinf_view' %}" class="btn btn-outline-danger">
+<a href="{% url 'retencoes:reinf_list' %}" class="btn btn-outline-danger">
     <i class="bi bi-filetype-xml"></i> Painel EFD-Reinf
 </a>
 {% endblock %}
@@ -85,7 +85,7 @@
     </td>
     <td>
         {% if retencao.nota_fiscal.processo_id %}
-        <a href="{% url 'editar_processo' pk=retencao.nota_fiscal.processo_id %}" class="btn btn-sm btn-outline-primary">
+        <a href="{% url 'pagamentos:processo_detail' pk=retencao.nota_fiscal.processo_id %}" class="btn btn-sm btn-outline-primary">
             <i class="bi bi-box-arrow-up-right"></i> #{{ retencao.nota_fiscal.processo_id }}
         </a>
         {% else %}
@@ -121,7 +121,7 @@
     <td>{{ nota.numero_nota_fiscal|default:"-" }}</td>
     <td>
         {% if nota.processo_id %}
-        <a href="{% url 'editar_processo' pk=nota.processo_id %}" class="btn btn-sm btn-outline-primary">
+        <a href="{% url 'pagamentos:processo_detail' pk=nota.processo_id %}" class="btn btn-sm btn-outline-primary">
             <i class="bi bi-box-arrow-up-right"></i> #{{ nota.processo_id }}
         </a>
         {% else %}
@@ -142,7 +142,7 @@
 {% for processo in processos %}
 <tr>
     <td>
-        <a href="{% url 'editar_processo' pk=processo.id %}" class="btn btn-sm btn-outline-primary">
+        <a href="{% url 'pagamentos:processo_detail' pk=processo.id %}" class="btn btn-sm btn-outline-primary">
             <i class="bi bi-box-arrow-up-right"></i> #{{ processo.id }}
         </a>
     </td>

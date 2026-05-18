@@ -18,10 +18,10 @@ def separar_para_lancamento_bancario_action(request: HttpRequest) -> HttpRespons
 
     if not selecionados:
         messages.warning(request, "Nenhum processo foi selecionado.")
-        return redirect("contas_a_pagar")
+        return redirect("pagamentos:contas_a_pagar_list")
 
     request.session["processos_lancamento"] = [int(pid) for pid in selecionados]
-    return redirect("lancamento_bancario")
+    return redirect("pagamentos:lancamento_bancario_list")
 
 
 @require_POST

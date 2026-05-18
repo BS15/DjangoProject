@@ -54,11 +54,11 @@ def disparar_assinatura_view(request, assinatura_id):
         messages.success(request, "Documento enviado para assinatura com sucesso!")
     except AssinaturaSignatariosError as exc:
         messages.error(request, str(exc))
-        return redirect("painel_assinaturas")
+        return redirect("pagamentos:assinaturas_list")
     except (OSError, RuntimeError, TypeError, ValueError):
         logger.exception("Erro ao disparar assinatura %s para Autentique", assinatura_id)
         assinatura.status = "ERRO"
         assinatura.save(update_fields=["status"])
         messages.error(request, "Erro ao enviar para o Autentique. Tente novamente.")
 
-    return redirect("painel_assinaturas")
+    return redirect("pagamentos:assinaturas_list")

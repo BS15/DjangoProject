@@ -575,7 +575,7 @@ def gerar_dados_fake_view(request):
             n_diarias = max(0, int(request.POST.get("n_diarias") or 0))
         except (ValueError, TypeError):
             messages.error(request, "Valores inválidos. Use apenas números inteiros.")
-            return redirect("gerar_dados_fake")
+            return redirect("desenvolvedor:gerar_dados_fake")
 
         _ensure_fake_lookup_tables()
         usuarios_info = _create_or_update_fake_users_with_permissions()

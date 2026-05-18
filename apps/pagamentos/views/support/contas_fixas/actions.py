@@ -28,8 +28,8 @@ def _redirect_painel_com_periodo(request):
         ano = None
     if mes is not None and ano is not None:
         query = urlencode({"mes": max(1, min(12, mes)), "ano": max(2000, min(2100, ano))})
-        return redirect(f"{reverse('painel_contas_fixas')}?{query}")
-    return redirect("painel_contas_fixas")
+        return redirect(f"{reverse('pagamentos:contas_fixas_list')}?{query}")
+    return redirect("pagamentos:contas_fixas_list")
 
 
 @require_POST
@@ -38,12 +38,12 @@ def add_conta_fixa_action(request):
     form = ContaFixaForm(request.POST)
     if not form.is_valid():
         messages.error(request, "Erro ao cadastrar conta fixa. Verifique os campos.")
-        return redirect("add_conta_fixa")
+        return redirect("pagamentos:add_conta_fixa_action")
 
     conta = form.save()
     logger.info("mutation=add_conta_fixa conta_id=%s user_id=%s", conta.pk, request.user.pk)
     messages.success(request, "Conta fixa cadastrada com sucesso.")
-    return redirect("painel_contas_fixas")
+    return redirect("pagamentos:contas_fixas_list")
 
 
 @require_POST
@@ -53,12 +53,12 @@ def edit_conta_fixa_action(request, pk):
     form = ContaFixaForm(request.POST, instance=conta)
     if not form.is_valid():
         messages.error(request, "Erro ao atualizar conta fixa. Verifique os campos.")
-        return redirect("edit_conta_fixa", pk=pk)
+        return redirect("pagamentos:edit_conta_fixa_action", pk=pk)
 
     form.save()
     logger.info("mutation=edit_conta_fixa conta_id=%s user_id=%s", conta.pk, request.user.pk)
     messages.success(request, "Conta fixa atualizada com sucesso.")
-    return redirect("painel_contas_fixas")
+    return redirect("pagamentos:contas_fixas_list")
 
 
 @require_POST

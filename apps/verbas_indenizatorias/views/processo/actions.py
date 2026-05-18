@@ -34,7 +34,7 @@ def agrupar_verbas_view(request, tipo_verba):
 
     config = _VERBA_CONFIG.get(tipo_verba)
     if not config:
-        return redirect('verbas_panel')
+        return redirect('verbas_indenizatorias:verbas_list')
 
     modelo_verba = config['model']
     url_retorno = config['list_url']
@@ -93,7 +93,7 @@ def agrupar_verbas_view(request, tipo_verba):
     messages.success(request, f"Processo #{novo_processo.id} gerado com sucesso!")
     if not falhas_pcd:
         messages.info(request, 'PCDs gerados! Acesse o Painel de Assinaturas para enviar ao Autentique.')
-    return redirect('editar_processo_verbas', pk=novo_processo.id)
+    return redirect('verbas_indenizatorias:processo_verbas_detail', pk=novo_processo.id)
 
 
 def _montar_post_capa_com_campos_canonicos(request, processo):
@@ -127,12 +127,12 @@ def editar_processo_verbas_capa_action(request, pk):
 
     if not processo_form.is_valid():
         messages.error(request, "Verifique os erros na capa do processo.")
-        return redirect("editar_processo_verbas_capa", pk=pk)
+        return redirect("verbas_indenizatorias:processo_verbas_edit_capa", pk=pk)
 
     processo_form.save()
     _forcar_campos_canonicos_processo_verbas(processo)
     messages.success(request, f"Capa do Processo #{processo.id} atualizada com sucesso!")
-    return redirect("editar_processo_verbas", pk=processo.id)
+    return redirect("verbas_indenizatorias:processo_verbas_detail", pk=processo.id)
 
 
 @require_POST
@@ -147,12 +147,12 @@ def editar_processo_verbas_pendencias_action(request, pk):
 
     if not pendencia_formset.is_valid():
         messages.error(request, "Verifique os erros nas pendências.")
-        return redirect("editar_processo_verbas_pendencias", pk=pk)
+        return redirect("verbas_indenizatorias:processo_verbas_edit_pendencias", pk=pk)
 
     pendencia_formset.save()
     _forcar_campos_canonicos_processo_verbas(processo)
     messages.success(request, f"Pendências do Processo #{processo.id} atualizadas com sucesso!")
-    return redirect("editar_processo_verbas", pk=processo.id)
+    return redirect("verbas_indenizatorias:processo_verbas_detail", pk=processo.id)
 
 
 @require_POST
@@ -167,11 +167,11 @@ def editar_processo_verbas_documentos_action(request, pk):
 
     if not documento_formset.is_valid():
         messages.error(request, "Verifique os erros nos documentos.")
-        return redirect("editar_processo_verbas_documentos", pk=pk)
+        return redirect("verbas_indenizatorias:processo_verbas_edit_documentos", pk=pk)
 
     documento_formset.save()
     messages.success(request, f"Documentos do Processo #{processo.id} atualizados com sucesso!")
-    return redirect("editar_processo_verbas", pk=processo.id)
+    return redirect("verbas_indenizatorias:processo_verbas_detail", pk=processo.id)
 
 
 @require_POST

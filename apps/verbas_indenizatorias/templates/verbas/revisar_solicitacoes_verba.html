@@ -4,7 +4,7 @@
 {% block page_subtitle %}Solicitações aprovadas aguardando revisão do operador de contas a pagar.{% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'verbas_panel' %}" class="btn btn-outline-secondary btn-sm">
+<a href="{% url 'verbas_indenizatorias:verbas_list' %}" class="btn btn-outline-secondary btn-sm">
     <i class="bi bi-arrow-left"></i> Voltar
 </a>
 {% endblock %}
@@ -29,7 +29,7 @@
     <td class="text-end fw-bold">{{ solicitacao.valor_total|floatformat:2 }}</td>
     <td><span class="badge bg-warning text-dark">{{ solicitacao.status|default:"SEM STATUS" }}</span></td>
     <td class="text-center">
-        <a href="{% url 'revisar_solicitacao_verba' solicitacao.tipo_verba solicitacao.id %}" class="btn btn-sm btn-outline-primary">
+        <a href="{% url 'verbas_indenizatorias:revisar_solicitacao_verba_detail' solicitacao.tipo_verba solicitacao.id %}" class="btn btn-sm btn-outline-primary">
             Revisar
         </a>
     </td>

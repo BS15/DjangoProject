@@ -4,7 +4,7 @@
 {% block page_subtitle %}Acompanhe e gerencie os comprovantes das suas diárias.{% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'verbas_panel' %}" class="btn btn-outline-secondary btn-sm">
+<a href="{% url 'verbas_indenizatorias:verbas_list' %}" class="btn btn-outline-secondary btn-sm">
     <i class="bi bi-arrow-left"></i> Voltar
 </a>
 {% endblock %}
@@ -42,7 +42,7 @@
     </td>
     <td class="text-center">
         {% with prest=diaria.prestacao_contas %}
-            <a href="{% url 'gerenciar_prestacao' diaria.id %}" class="btn btn-sm {% if prest and prest.status == status_encerrada %}btn-outline-secondary disabled{% else %}btn-outline-primary{% endif %}">
+            <a href="{% url 'verbas_indenizatorias:prestacao_detail' diaria.id %}" class="btn btn-sm {% if prest and prest.status == status_encerrada %}btn-outline-secondary disabled{% else %}btn-outline-primary{% endif %}">
                 Gerenciar Comprovantes
             </a>
         {% endwith %}

@@ -23,7 +23,7 @@ def alternar_ateste_nota_action(request: HttpRequest, pk: int) -> HttpResponse:
     estado_bruto = (request.POST.get("estado_alvo") or "").strip().lower()
     if estado_bruto not in {"true", "false", "1", "0", "on", "off"}:
         messages.error(request, "Estado alvo de ateste inválido.")
-        return redirect("painel_liquidacoes")
+        return redirect("pagamentos:liquidacoes_list")
 
     estado_alvo = estado_bruto in {"true", "1", "on"}
 
@@ -44,7 +44,7 @@ def alternar_ateste_nota_action(request: HttpRequest, pk: int) -> HttpResponse:
         else:
             messages.warning(request, f"Ateste da Nota Fiscal #{nota.numero_nota_fiscal} foi revogado.")
 
-    return redirect("painel_liquidacoes")
+    return redirect("pagamentos:liquidacoes_list")
 
 
 @require_POST
@@ -62,7 +62,7 @@ def avancar_para_pagamento_action(request: HttpRequest, pk: int) -> HttpResponse
                     f'O processo #{pk} não está em status "Aguardando Liquidação" '
                     f'(status atual: "{processo.status}"). Ação não permitida.',
                 )
-                return redirect("editar_processo", pk=pk)
+                return redirect("pagamentos:processo_detail", pk=pk)
 
             processo.avancar_status(ProcessoStatus.A_PAGAR_PENDENTE_AUTORIZACAO, usuario=request.user)
             logger.info("mutation=avancar_para_pagamento processo_id=%s user_id=%s novo_status=%s", processo.pk, request.user.pk, ProcessoStatus.A_PAGAR_PENDENTE_AUTORIZACAO)
@@ -75,7 +75,7 @@ def avancar_para_pagamento_action(request: HttpRequest, pk: int) -> HttpResponse
         logger.exception("Erro ao avançar processo %s para pagamento", pk)
         messages.error(request, "Erro interno ao avançar o processo. Tente novamente.")
 
-    return redirect("editar_processo", pk=pk)
+    return redirect("pagamentos:processo_detail", pk=pk)
 
 
 __all__ = ["alternar_ateste_nota_action", "avancar_para_pagamento_action"]

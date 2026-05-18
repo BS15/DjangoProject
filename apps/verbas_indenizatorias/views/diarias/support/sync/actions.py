@@ -17,7 +17,7 @@ def sincronizar_diarias_action(request):
     csv_file = request.FILES.get("siscac_csv")
     if not csv_file:
         messages.error(request, "Nenhum arquivo CSV foi enviado.")
-        return redirect("sincronizar_diarias")
+        return redirect("verbas_indenizatorias:sincronizar_diarias")
 
     resultados = sincronizar_numero_siscac_csv(csv_file)
     if resultados["atualizadas"]:
@@ -26,7 +26,7 @@ def sincronizar_diarias_action(request):
         messages.warning(request, f"Sincronizacao concluida com {len(resultados['erros'])} erro(s).")
     request.session[_SYNC_RESULTS_SESSION_KEY] = resultados
 
-    return redirect("sincronizar_diarias")
+    return redirect("verbas_indenizatorias:sincronizar_diarias")
 
 
 __all__ = ["sincronizar_diarias_action"]

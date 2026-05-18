@@ -4,7 +4,7 @@
 {% block page_heading %}<i class="bi bi-database-fill-gear me-2"></i>Gerador de Dados Fake{% endblock %}
 {% block page_subtitle %}Gere lotes de dados fictícios para testes internos de fluxo.{% endblock %}
 
-{% block form_action %}{% url 'gerar_dados_fake' %}{% endblock %}
+{% block form_action %}{% url 'desenvolvedor:gerar_dados_fake' %}{% endblock %}
 
 {% block form_fields %}
 <div class="row g-3">
@@ -41,7 +41,7 @@
 {% endblock %}
 
 {% block form_actions %}
-<a href="{% url 'home_page' %}" class="btn btn-secondary px-4">Cancelar</a>
+<a href="{% url 'pagamentos:home_detail' %}" class="btn btn-secondary px-4">Cancelar</a>
 <button type="submit" class="btn btn-primary px-4 fw-bold">
     <i class="bi bi-play-circle"></i> Gerar Dados
 </button>

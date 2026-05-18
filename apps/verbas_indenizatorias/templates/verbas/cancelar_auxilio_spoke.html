@@ -4,7 +4,7 @@
 {% block page_subtitle %}A ação altera o status do auxílio e do processo vinculado.{% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'gerenciar_auxilio' pk=auxilio.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
+<a href="{% url 'verbas_indenizatorias:auxilio_detail' pk=auxilio.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
 {% endblock %}
 
 {% block form_action %}{% url 'verbas_indenizatorias:cancelar_auxilio_action' pk=auxilio.id %}{% endblock %}
@@ -22,6 +22,6 @@
 {% endblock %}
 
 {% block form_actions %}
-<a href="{% url 'gerenciar_auxilio' pk=auxilio.id %}" class="btn btn-secondary px-4">Voltar</a>
+<a href="{% url 'verbas_indenizatorias:auxilio_detail' pk=auxilio.id %}" class="btn btn-secondary px-4">Voltar</a>
 <button type="submit" class="btn btn-danger px-4 fw-bold"><i class="bi bi-x-circle"></i> Confirmar Cancelamento</button>
 {% endblock %}

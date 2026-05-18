@@ -5,7 +5,7 @@
 {% block page_subtitle %}Processos aguardando contabilização pós-pagamento{% endblock %}
 
 {% block page_actions %}
-<form method="post" action="{% url 'iniciar_contabilizacao' %}" id="iniciar-contabilizacao-form" class="d-flex align-items-center gap-2">
+<form method="post" action="{% url 'pagamentos:iniciar_contabilizacao_action' %}" id="iniciar-contabilizacao-form" class="d-flex align-items-center gap-2">
 	{% csrf_token %}
 	<div id="contabilizacao-hidden-ids"></div>
 	<button type="submit" class="btn btn-primary btn-sm fw-bold" id="contabilizacao-start-btn" disabled>
@@ -13,7 +13,7 @@
 	</button>
 	<span class="badge bg-secondary" id="contabilizacao-selected-count">0</span>
 </form>
-<a href="{% url 'home_page' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+<a href="{% url 'pagamentos:home_detail' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
 {% endblock %}
 
 {% block filter_card %}{% endblock %}
@@ -43,7 +43,7 @@
 	</td>
 	<td class="text-center">
 		{% if pode_interagir %}
-		<a href="{% url 'contabilizacao_processo' pk=processo.id %}" class="btn btn-sm btn-primary fw-bold">
+		<a href="{% url 'pagamentos:contabilizacao_processo_detail' pk=processo.id %}" class="btn btn-sm btn-primary fw-bold">
 			<i class="bi bi-calculator"></i> Contabilizar
 		</a>
 		{% endif %}

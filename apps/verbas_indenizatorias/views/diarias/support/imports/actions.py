@@ -28,7 +28,7 @@ def importar_diarias_action(request):
 
         if not isinstance(preview_items, list) or not preview_items:
             messages.error(request, "Sessao expirada ou previa nao encontrada. Por favor, importe o arquivo novamente.")
-            return redirect("importar_diarias")
+            return redirect("verbas_indenizatorias:importar_diarias")
 
         resultados = confirmar_diarias_lote_com_modo(
             preview_items,
@@ -37,14 +37,14 @@ def importar_diarias_action(request):
         )
         request.session[_RESULTS_SESSION_KEY] = resultados
         request.session[_MODE_SESSION_KEY] = modo_assinado
-        return redirect("importar_diarias")
+        return redirect("verbas_indenizatorias:importar_diarias")
 
     if action == "cancelar":
         request.session.pop(_PREVIEW_SESSION_KEY, None)
         request.session.pop(_PREVIEW_ERRORS_SESSION_KEY, None)
         request.session.pop(_RESULTS_SESSION_KEY, None)
         request.session.pop(_MODE_SESSION_KEY, None)
-        return redirect("importar_diarias")
+        return redirect("verbas_indenizatorias:importar_diarias")
 
     if request.FILES.get("planilha_file"):
         resultado_preview = preview_diarias_lote(request.FILES["planilha_file"])
@@ -53,10 +53,10 @@ def importar_diarias_action(request):
         request.session[_PREVIEW_ERRORS_SESSION_KEY] = resultado_preview["erros"]
         request.session[_MODE_SESSION_KEY] = modo_assinado
         request.session.pop(_RESULTS_SESSION_KEY, None)
-        return redirect("importar_diarias")
+        return redirect("verbas_indenizatorias:importar_diarias")
 
     messages.error(request, "Nenhuma planilha foi enviada para importacao.")
-    return redirect("importar_diarias")
+    return redirect("verbas_indenizatorias:importar_diarias")
 
 
 __all__ = ["importar_diarias_action"]

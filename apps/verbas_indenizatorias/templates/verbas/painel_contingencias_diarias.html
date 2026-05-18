@@ -6,7 +6,7 @@
 {% block page_subtitle %}Solicitações de retificação pendentes e encerradas.{% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'verbas_panel' %}" class="btn btn-outline-secondary btn-sm">
+<a href="{% url 'verbas_indenizatorias:verbas_list' %}" class="btn btn-outline-secondary btn-sm">
     <i class="bi bi-arrow-left"></i> Voltar
 </a>
 {% endblock %}
@@ -39,7 +39,7 @@
 <tr>
     <td class="fw-bold">#{{ cont.pk }}</td>
     <td>
-        <a href="{% url 'gerenciar_diaria' pk=cont.diaria.pk %}" class="text-decoration-none">
+        <a href="{% url 'verbas_indenizatorias:diaria_detail' pk=cont.diaria.pk %}" class="text-decoration-none">
             Diária #{{ cont.diaria.pk }}
             {% if cont.diaria.numero_siscac %}({{ cont.diaria.numero_siscac }}){% endif %}
         </a>

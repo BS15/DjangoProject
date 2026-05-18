@@ -55,7 +55,7 @@ def gerar_lote_reinf_action(request: HttpRequest) -> HttpResponse:
 def transmitir_lote_reinf_action(request: HttpRequest) -> HttpResponse:
     """Placeholder de transmissão para ambiente externo da Receita."""
     messages.warning(request, "Transmissão para e-CAC ainda não está habilitada neste ambiente.")
-    return redirect("painel_reinf_view")
+    return redirect("retencoes:reinf_list")
 
 
 __all__ = ["gerar_lote_reinf_action", "transmitir_lote_reinf_action"]

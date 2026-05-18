@@ -18,12 +18,12 @@ def add_auxilio_action(request):
     form = AuxilioForm(request.POST)
     if not form.is_valid():
         messages.error(request, "Erro ao salvar. Verifique os campos.")
-        return redirect("add_auxilio")
+        return redirect("verbas_indenizatorias:add_auxilio_action")
 
     auxilio = form.save()
     logger.info("mutation=add_auxilio auxilio_id=%s user_id=%s", auxilio.id, request.user.pk)
     messages.success(request, "Auxílio cadastrado com sucesso.")
-    return redirect("gerenciar_auxilio", pk=auxilio.id)
+    return redirect("verbas_indenizatorias:auxilio_detail", pk=auxilio.id)
 
 
 @require_POST
@@ -33,7 +33,7 @@ def solicitar_autorizacao_auxilio_action(request, pk):
     auxilio.definir_status("SOLICITADA")
     logger.info("mutation=solicitar_autorizacao_auxilio auxilio_id=%s user_id=%s", auxilio.id, request.user.pk)
     messages.success(request, "Solicitação de auxílio enviada para autorização.")
-    return redirect("gerenciar_auxilio", pk=auxilio.id)
+    return redirect("verbas_indenizatorias:auxilio_detail", pk=auxilio.id)
 
 
 @require_POST
@@ -43,7 +43,7 @@ def autorizar_auxilio_action(request, pk):
     auxilio.definir_status("APROVADA")
     logger.info("mutation=autorizar_auxilio auxilio_id=%s user_id=%s", auxilio.id, request.user.pk)
     messages.success(request, "Auxílio autorizado com sucesso.")
-    return redirect("gerenciar_auxilio", pk=auxilio.id)
+    return redirect("verbas_indenizatorias:auxilio_detail", pk=auxilio.id)
 
 
 @require_POST
@@ -63,4 +63,4 @@ def cancelar_auxilio_action(request, pk):
 
     logger.info("mutation=cancelar_auxilio auxilio_id=%s user_id=%s", auxilio.id, request.user.pk)
     messages.warning(request, "Auxílio cancelado.")
-    return redirect("gerenciar_auxilio", pk=auxilio.id)
+    return redirect("verbas_indenizatorias:auxilio_detail", pk=auxilio.id)

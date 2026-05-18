@@ -7,7 +7,7 @@
 {% block form_enctype %}multipart/form-data{% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'editar_processo_verbas' pk=processo.id %}" class="btn btn-outline-secondary btn-sm">
+<a href="{% url 'verbas_indenizatorias:processo_verbas_detail' pk=processo.id %}" class="btn btn-outline-secondary btn-sm">
     <i class="bi bi-arrow-left"></i> Voltar ao Hub
 </a>
 {% endblock %}
@@ -66,7 +66,7 @@
 {% endblock %}
 
 {% block form_actions %}
-<a href="{% url 'editar_processo_verbas' pk=processo.id %}" class="btn btn-secondary px-4">Cancelar</a>
+<a href="{% url 'verbas_indenizatorias:processo_verbas_detail' pk=processo.id %}" class="btn btn-secondary px-4">Cancelar</a>
 <button type="submit" class="btn btn-success px-4 fw-bold">
     <i class="bi bi-check-lg"></i> Salvar Documentos
 </button>

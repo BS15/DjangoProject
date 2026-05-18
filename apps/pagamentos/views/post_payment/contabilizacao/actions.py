@@ -19,7 +19,7 @@ def iniciar_contabilizacao_action(request: HttpRequest) -> HttpResponse:
 
     if not process_ids:
         messages.warning(request, "Selecione ao menos um processo para iniciar a revisão.")
-        return redirect("painel_contabilizacao")
+        return redirect("pagamentos:contabilizacao_list")
 
     ids_validos = set(
         Processo.objects.filter(
@@ -31,14 +31,14 @@ def iniciar_contabilizacao_action(request: HttpRequest) -> HttpResponse:
 
     if not fila:
         messages.warning(request, "Nenhum processo selecionado está elegível para contabilização.")
-        return redirect("painel_contabilizacao")
+        return redirect("pagamentos:contabilizacao_list")
 
     if len(fila) < len(process_ids):
         messages.info(request, "Alguns processos foram ignorados por não estarem mais na etapa de contabilização.")
 
     request.session["contabilizacao_queue"] = fila
     request.session.modified = True
-    return redirect("contabilizacao_processo", pk=fila[0])
+    return redirect("pagamentos:contabilizacao_processo_detail", pk=fila[0])
 
 
 @require_POST

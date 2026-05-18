@@ -19,7 +19,7 @@
 			{{ reuniao.trimestre_referencia }}
 		</p>
 	</div>
-	<a href="{% url 'painel_conselho' %}" class="btn btn-outline-secondary">
+	<a href="{% url 'pagamentos:conselho_list' %}" class="btn btn-outline-secondary">
 		<i class="bi bi-arrow-left"></i> Voltar
 	</a>
 </div>
@@ -32,7 +32,7 @@
 	<div id="start-conselho-bar" class="alert alert-info d-flex align-items-center gap-3 mb-3 shadow-sm">
 		<i class="bi bi-check2-square fs-5"></i>
 		<span><strong id="selected-count">0</strong> processo(s) selecionado(s).</span>
-		<form method="POST" action="{% url 'iniciar_conselho_reuniao' reuniao_id=reuniao.id %}"
+		<form method="POST" action="{% url 'pagamentos:iniciar_conselho_reuniao_action' reuniao_id=reuniao.id %}"
 			  id="iniciar-form" class="ms-auto d-flex align-items-center gap-2">
 			{% csrf_token %}
 			<div id="hidden-ids-container"></div>
@@ -81,7 +81,7 @@
 						<td>{{ processo.data_pagamento|br_date }}</td>
 						<td class="text-end pe-4 fw-bold text-dark">{{ processo.valor_liquido|br_currency }}</td>
 						<td class="text-center d-flex justify-content-center gap-1">
-							<a href="{% url 'conselho_processo' pk=processo.id %}"
+							<a href="{% url 'pagamentos:conselho_processo_detail' pk=processo.id %}"
 							   class="btn btn-sm btn-info text-white fw-bold shadow-sm"
 							   title="Revisar este Processo">
 								<i class="bi bi-eye-fill"></i> Revisar

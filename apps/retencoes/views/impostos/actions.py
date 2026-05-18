@@ -28,7 +28,7 @@ def preparar_revisao_agrupamento_action(request: HttpRequest) -> HttpResponse:
 
     if not selecionados:
         messages.warning(request, "Nenhum item selecionado para agrupar.")
-        return redirect("painel_impostos_view")
+        return redirect('retencoes:impostos_list')
 
     ids_param = ",".join(str(i) for i in selecionados)
     url = reverse("revisar_agrupamento_retencoes_view") + f"?ids={ids_param}"
@@ -43,7 +43,7 @@ def agrupar_retencoes_action(request: HttpRequest) -> HttpResponse:
 
     if not selecionados:
         messages.warning(request, "Nenhum item selecionado para agrupar.")
-        return redirect("painel_impostos_view")
+        return redirect('retencoes:impostos_list')
 
     with transaction.atomic():
         retencoes = list(
@@ -59,12 +59,12 @@ def agrupar_retencoes_action(request: HttpRequest) -> HttpResponse:
 
         if not retencoes:
             messages.warning(request, "Nenhuma retenção elegível para agrupamento foi encontrada.")
-            return redirect("painel_impostos_view")
+            return redirect('retencoes:impostos_list')
 
         total_impostos = sum((retencao.valor or 0) for retencao in retencoes)
         if total_impostos <= 0:
             messages.warning(request, "Os itens selecionados não possuem valores válidos.")
-            return redirect("painel_impostos_view")
+            return redirect('retencoes:impostos_list')
 
         status_padrao, _ = StatusChoicesProcesso.objects.get_or_create(
             status_choice__iexact="A PAGAR - PENDENTE AUTORIZAÇÃO",
@@ -101,7 +101,7 @@ def agrupar_retencoes_action(request: HttpRequest) -> HttpResponse:
         )
 
     messages.success(request, f"Processo #{novo_processo.id} para recolhimento gerado com sucesso!")
-    return redirect("editar_processo", pk=novo_processo.id)
+    return redirect("pagamentos:processo_detail", pk=novo_processo.id)
 
 
 @require_POST
@@ -116,21 +116,21 @@ def anexar_documentos_retencoes_action(request: HttpRequest) -> HttpResponse:
 
     if not selecionados:
         messages.warning(request, "Selecione ao menos uma retenção para anexar documentos.")
-        return redirect("painel_impostos_view")
+        return redirect('retencoes:impostos_list')
 
     if not guia_arquivo or not comprovante_arquivo:
         messages.error(request, "É obrigatório anexar a guia e o comprovante para concluir a operação.")
-        return redirect("painel_impostos_view")
+        return redirect('retencoes:impostos_list')
 
     if not mes_raw.isdigit() or not ano_raw.isdigit():
         messages.error(request, "Informe mês e ano de referência válidos para gerar o relatório.")
-        return redirect("painel_impostos_view")
+        return redirect('retencoes:impostos_list')
 
     mes_referencia = int(mes_raw)
     ano_referencia = int(ano_raw)
     if mes_referencia < 1 or mes_referencia > 12:
         messages.error(request, "Mês de referência inválido.")
-        return redirect("painel_impostos_view")
+        return redirect('retencoes:impostos_list')
 
     with transaction.atomic():
         retencoes = list(
@@ -145,7 +145,7 @@ def anexar_documentos_retencoes_action(request: HttpRequest) -> HttpResponse:
                 request,
                 "Nenhuma retenção elegível encontrada para a competência informada. Verifique se as retenções já foram agrupadas.",
             )
-            return redirect("painel_impostos_view")
+            return redirect('retencoes:impostos_list')
 
         total_processos = anexar_guia_comprovante_relatorio_em_processos(
             retencoes=retencoes,
@@ -159,13 +159,13 @@ def anexar_documentos_retencoes_action(request: HttpRequest) -> HttpResponse:
 
     if not total_processos:
         messages.error(request, "Não foi possível identificar processos de recolhimento para anexação dos documentos.")
-        return redirect("painel_impostos_view")
+        return redirect('retencoes:impostos_list')
 
     messages.success(
         request,
         f"Guia, comprovante e relatório mensal anexados com sucesso em {total_processos} processo(s) de recolhimento.",
     )
-    return redirect("painel_impostos_view")
+    return redirect('retencoes:impostos_list')
 
 
 __all__ = [

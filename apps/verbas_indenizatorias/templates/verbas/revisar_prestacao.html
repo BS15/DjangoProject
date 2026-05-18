@@ -25,7 +25,7 @@
 <div class="card shadow-sm border-0">
     <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
         <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-paperclip"></i> Comprovantes</h6>
-        <a href="{% url 'gerenciar_prestacao' pk=prestacao.id %}" class="btn btn-sm btn-outline-primary">
+        <a href="{% url 'verbas_indenizatorias:prestacao_detail' pk=prestacao.id %}" class="btn btn-sm btn-outline-primary">
             <i class="bi bi-plus-circle"></i> Adicionar/Editar
         </a>
     </div>
@@ -97,16 +97,16 @@ document.addEventListener('DOMContentLoaded', function () {
     {% if in_review_queue %}
     <span class="btn btn-light border disabled">Fila {{ queue_position }}/{{ queue_length }}</span>
     {% if prev_pk %}
-    <a href="{% url 'revisar_prestacao' prev_pk %}" class="btn btn-outline-secondary">
+    <a href="{% url 'verbas_indenizatorias:revisar_prestacao_detail' prev_pk %}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left-circle"></i> Anterior
     </a>
     {% endif %}
     {% if next_pk %}
-    <a href="{% url 'revisar_prestacao' next_pk %}" class="btn btn-outline-secondary">
+    <a href="{% url 'verbas_indenizatorias:revisar_prestacao_detail' next_pk %}" class="btn btn-outline-secondary">
         Próxima <i class="bi bi-arrow-right-circle"></i>
     </a>
     {% endif %}
-    <form method="post" action="{% url 'sair_revisao_prestacoes' %}">
+    <form method="post" action="{% url 'verbas_indenizatorias:sair_revisao_prestacoes_action' %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-outline-dark">
             <i class="bi bi-box-arrow-right"></i> Sair da Fila
@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function () {
     </form>
     <form method="post" action="{% url 'verbas_indenizatorias:encerrar_prestacao_action' diaria.id %}" onsubmit="return confirm('Encerrar sem aceitar anexação ao processo?');">
         {% csrf_token %}
-        <input type="hidden" name="next" value="{% if next_pk %}{% url 'revisar_prestacao' next_pk %}{% else %}{{ request.get_full_path }}{% endif %}">
+        <input type="hidden" name="next" value="{% if next_pk %}{% url 'verbas_indenizatorias:revisar_prestacao_detail' next_pk %}{% else %}{{ request.get_full_path }}{% endif %}">
         <button type="submit" class="btn btn-outline-danger fw-bold">
             <i class="bi bi-lock"></i> Encerrar sem Aceitar
         </button>

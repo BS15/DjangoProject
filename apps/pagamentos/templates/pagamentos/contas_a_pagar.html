@@ -21,7 +21,7 @@
 <a href="{% url 'painel_comprovantes' %}" class="btn btn-success fw-bold shadow-sm">
 	<i class="bi bi-file-earmark-break"></i> Baixa em Lote de Comprovantes
 </a>
-<a href="{% url 'home_page' %}" class="btn btn-outline-secondary">Voltar para Home</a>
+<a href="{% url 'pagamentos:home_detail' %}" class="btn btn-outline-secondary">Voltar para Home</a>
 {% endblock %}
 
 {% block filter_form %}
@@ -154,7 +154,7 @@
 				title="Pré-visualizar Documentos">
 			<i class="bi bi-eye"></i> Preview
 		</button>
-		<a href="{% url 'editar_processo' pk=processo.id %}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+		<a href="{% url 'pagamentos:processo_detail' pk=processo.id %}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
 	</td>
 </tr>
 {% empty %}
@@ -171,7 +171,7 @@
 {% block batch_actions %}
 {% if pode_interagir %}
 <button type="submit"
-		formaction="{% url 'enviar_para_autorizacao' %}"
+		formaction="{% url 'pagamentos:enviar_para_autorizacao_action' %}"
 		class="btn btn-primary fw-bold shadow-sm"
 		onclick="return confirm('Enviar os processos selecionados para a mesa do Ordenador de Despesa?');">
 	<i class="bi bi-send-check"></i> Enviar para Autorização
@@ -183,7 +183,7 @@
 </button>
 
 <button type="submit"
-		formaction="{% url 'separar_para_lancamento_bancario' %}"
+		formaction="{% url 'pagamentos:separar_para_lancamento_bancario_action' %}"
 		class="btn btn-warning fw-bold shadow-sm"
 		onclick="return confirm('Separar os processos selecionados para lançamento bancário?');">
 	<i class="bi bi-bank"></i> Separar para Lançamento Bancário

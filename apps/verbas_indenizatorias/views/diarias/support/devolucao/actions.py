@@ -25,13 +25,13 @@ def registrar_devolucao_diaria_action(request, pk):
         for field_errors in form.errors.values():
             for err in field_errors:
                 messages.error(request, err)
-        return redirect("registrar_devolucao_diaria", pk=pk)
+        return redirect("verbas_indenizatorias:registrar_devolucao_diaria_action", pk=pk)
 
     try:
         devolucao = registrar_devolucao_diaria(diaria, form, request.user)
     except Exception as exc:
         messages.error(request, f"Dados invalidos: {exc}")
-        return redirect("registrar_devolucao_diaria", pk=pk)
+        return redirect("verbas_indenizatorias:registrar_devolucao_diaria_action", pk=pk)
 
     logger.info(
         "mutation=registrar_devolucao_diaria diaria_id=%s devolucao_id=%s user_id=%s valor=%s",
@@ -41,7 +41,7 @@ def registrar_devolucao_diaria_action(request, pk):
         devolucao.valor_devolvido,
     )
     messages.success(request, f"Devolucao de R$ {devolucao.valor_devolvido} registrada com sucesso.")
-    return redirect("gerenciar_diaria", pk=pk)
+    return redirect("verbas_indenizatorias:diaria_detail", pk=pk)
 
 
 __all__ = ["registrar_devolucao_diaria_action"]

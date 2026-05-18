@@ -84,7 +84,7 @@ def iniciar_revisao_prestacoes_action(request):
 
     request.session[PRESTACAO_REVIEW_QUEUE_KEY] = fila
     request.session.modified = True
-    return redirect('revisar_prestacao', pk=fila[0])
+    return redirect('verbas_indenizatorias:revisar_prestacao_detail', pk=fila[0])
 
 
 @require_POST
@@ -125,7 +125,7 @@ def add_diaria_action(request):
     form = DiariaForm(request.POST)
     if not form.is_valid():
         messages.error(request, 'Erro ao salvar. Verifique os campos.')
-        return redirect('add_diaria')
+        return redirect('verbas_indenizatorias:diaria_create')
 
     with transaction.atomic():
         diaria = _salvar_diaria_base(form, criador=request.user)
@@ -134,7 +134,7 @@ def add_diaria_action(request):
         logger.info("mutation=add_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
 
     messages.success(request, 'Diária cadastrada com sucesso.')
-    return redirect('gerenciar_diaria', pk=diaria.id)
+    return redirect('verbas_indenizatorias:diaria_detail', pk=diaria.id)
 
 
 @require_POST
@@ -143,7 +143,7 @@ def add_diaria_assinada_action(request):
     form = DiariaComSolicitacaoAssinadaForm(request.POST, request.FILES)
     if not form.is_valid():
         messages.error(request, 'Erro ao salvar diária com solicitação assinada. Verifique os campos.')
-        return redirect('add_diaria_assinada')
+        return redirect('verbas_indenizatorias:add_diaria_assinada_action')
 
     with transaction.atomic():
         diaria = _salvar_diaria_base(form, criador=request.user, solicitacao_assinada=True)
@@ -159,7 +159,7 @@ def add_diaria_assinada_action(request):
         request,
         'Diária cadastrada em modo solicitação já assinada, aprovada automaticamente e com PCD gerado.',
     )
-    return redirect('gerenciar_diaria', pk=diaria.id)
+    return redirect('verbas_indenizatorias:diaria_detail', pk=diaria.id)
 
 
 @require_POST
@@ -169,7 +169,7 @@ def solicitar_autorizacao_diaria_action(request, pk):
     diaria.definir_status(STATUS_VERBA_SOLICITADA, autorizada=False)
     logger.info("mutation=solicitar_autorizacao_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
     messages.success(request, 'Solicitação de diária enviada para autorização.')
-    return redirect('gerenciar_diaria', pk=diaria.id)
+    return redirect('verbas_indenizatorias:diaria_detail', pk=diaria.id)
 
 
 @require_POST
@@ -188,7 +188,7 @@ def autorizar_diaria_action(request, pk):
     diaria.definir_status(STATUS_VERBA_APROVADA, autorizada=True)
     logger.info("mutation=autorizar_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
     messages.success(request, 'Diária autorizada com sucesso.')
-    return redirect('gerenciar_diaria', pk=diaria.id)
+    return redirect('verbas_indenizatorias:diaria_detail', pk=diaria.id)
 
 
 @require_POST
@@ -292,7 +292,7 @@ def vincular_diaria_processo_action(request, pk):
         except ValidationError as exc:
             messages.error(request, ' '.join(exc.messages))
 
-    return redirect('gerenciar_diaria', pk=pk)
+    return redirect('verbas_indenizatorias:diaria_detail', pk=pk)
 
 
 @require_POST
@@ -319,7 +319,7 @@ def desvincular_diaria_processo_action(request, pk):
         except ValidationError as exc:
             messages.error(request, ' '.join(exc.messages))
 
-    return redirect('gerenciar_diaria', pk=pk)
+    return redirect('verbas_indenizatorias:diaria_detail', pk=pk)
 
 
 @require_POST
@@ -334,7 +334,7 @@ def aceitar_prestacao_action(request, pk):
         diaria = prestacao.diaria
         if not diaria.processo:
             messages.error(request, 'A diária precisa estar vinculada a um processo para aceitar a prestação.')
-            return redirect('revisar_prestacao', pk=prestacao.id)
+            return redirect('verbas_indenizatorias:revisar_prestacao_detail', pk=prestacao.id)
 
         try:
             aceitar_prestacao(prestacao, request.user, diaria.processo)
@@ -352,19 +352,19 @@ def aceitar_prestacao_action(request, pk):
             messages.error(request, ' '.join(exc.messages))
 
     if not prestacao_aceita:
-        return redirect('revisar_prestacao', pk=pk)
+        return redirect('verbas_indenizatorias:revisar_prestacao_detail', pk=pk)
 
     fila = _obter_fila_prestacoes_da_sessao(request)
     if pk in fila:
         idx = fila.index(pk)
         proxima_prestacao = fila[idx + 1] if idx < len(fila) - 1 else None
         if proxima_prestacao:
-            return redirect('revisar_prestacao', pk=proxima_prestacao)
+            return redirect('verbas_indenizatorias:revisar_prestacao_detail', pk=proxima_prestacao)
         _limpar_fila_prestacoes_da_sessao(request)
         messages.info(request, 'Não há mais diárias na fila de revisão.')
         return redirect('painel_revisar_prestacoes')
 
-    return redirect('revisar_prestacao', pk=pk)
+    return redirect('verbas_indenizatorias:revisar_prestacao_detail', pk=pk)
 
 
 @require_POST
@@ -386,5 +386,5 @@ def cancelar_diaria_action(request, pk):
         logger.info("mutation=cancelar_diaria diaria_id=%s user_id=%s", diaria.id, request.user.pk)
 
     messages.warning(request, f'Diária #{diaria.numero_siscac} cancelada.')
-    return redirect('gerenciar_diaria', pk=diaria.id)
+    return redirect('verbas_indenizatorias:diaria_detail', pk=diaria.id)
 

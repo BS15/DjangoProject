@@ -92,12 +92,12 @@ def aprovar_revisao_solicitacao_action(request, tipo_verba, pk):
         )
         if solicitacao.processo_id:
             messages.warning(request, "Solicitação já está vinculada a processo.")
-            return redirect("revisar_solicitacao_verba", tipo_verba=tipo_verba, pk=pk)
+            return redirect("verbas_indenizatorias:revisar_solicitacao_verba_detail", tipo_verba=tipo_verba, pk=pk)
 
         status_atual = (solicitacao.status.status_choice if solicitacao.status else "").upper()
         if status_atual != STATUS_VERBA_APROVADA:
             messages.warning(request, "A solicitação precisa estar APROVADA para revisão operacional.")
-            return redirect("revisar_solicitacao_verba", tipo_verba=tipo_verba, pk=pk)
+            return redirect("verbas_indenizatorias:revisar_solicitacao_verba_detail", tipo_verba=tipo_verba, pk=pk)
 
         if tipo_verba == "diaria":
             pcd_enviado_para_assinatura = False
@@ -129,7 +129,7 @@ def aprovar_revisao_solicitacao_action(request, tipo_verba, pk):
                     user_id=request.user.pk,
                 )
                 messages.error(request, "Falha de conexão ao enviar para a Autentique. Tente novamente.")
-                return redirect("revisar_solicitacao_verba", tipo_verba=tipo_verba, pk=pk)
+                return redirect("verbas_indenizatorias:revisar_solicitacao_verba_detail", tipo_verba=tipo_verba, pk=pk)
             except RuntimeError as exc:
                 log_critical(
                     logger,
@@ -139,7 +139,7 @@ def aprovar_revisao_solicitacao_action(request, tipo_verba, pk):
                     user_id=request.user.pk,
                 )
                 messages.error(request, str(exc))
-                return redirect("revisar_solicitacao_verba", tipo_verba=tipo_verba, pk=pk)
+                return redirect("verbas_indenizatorias:revisar_solicitacao_verba_detail", tipo_verba=tipo_verba, pk=pk)
 
         solicitacao.definir_status(STATUS_VERBA_REVISADA)
         log_audit(
@@ -159,4 +159,4 @@ def aprovar_revisao_solicitacao_action(request, tipo_verba, pk):
                 )
         else:
             messages.success(request, "Solicitação revisada e liberada para agrupamento.")
-    return redirect("revisar_solicitacao_verba", tipo_verba=tipo_verba, pk=pk)
+    return redirect("verbas_indenizatorias:revisar_solicitacao_verba_detail", tipo_verba=tipo_verba, pk=pk)

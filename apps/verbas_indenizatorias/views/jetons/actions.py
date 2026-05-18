@@ -20,12 +20,12 @@ def add_jeton_action(request):
     form = JetonForm(request.POST)
     if not form.is_valid():
         messages.error(request, "Erro ao salvar. Verifique os campos.")
-        return redirect("add_jeton")
+        return redirect("verbas_indenizatorias:add_jeton_action")
 
     jeton = form.save()
     logger.info("mutation=add_jeton jeton_id=%s user_id=%s", jeton.id, request.user.pk)
     messages.success(request, "Jeton cadastrado com sucesso.")
-    return redirect("gerenciar_jeton", pk=jeton.id)
+    return redirect("verbas_indenizatorias:jeton_detail", pk=jeton.id)
 
 
 @require_POST
@@ -35,7 +35,7 @@ def solicitar_autorizacao_jeton_action(request, pk):
     jeton.definir_status("SOLICITADA")
     logger.info("mutation=solicitar_autorizacao_jeton jeton_id=%s user_id=%s", jeton.id, request.user.pk)
     messages.success(request, "Solicitação de Jeton enviada para autorização.")
-    return redirect("gerenciar_jeton", pk=jeton.id)
+    return redirect("verbas_indenizatorias:jeton_detail", pk=jeton.id)
 
 
 @require_POST
@@ -45,7 +45,7 @@ def autorizar_jeton_action(request, pk):
     jeton.definir_status("APROVADA")
     logger.info("mutation=autorizar_jeton jeton_id=%s user_id=%s", jeton.id, request.user.pk)
     messages.success(request, "Jeton autorizado com sucesso.")
-    return redirect("gerenciar_jeton", pk=jeton.id)
+    return redirect("verbas_indenizatorias:jeton_detail", pk=jeton.id)
 
 
 @require_POST
@@ -65,4 +65,4 @@ def cancelar_jeton_action(request, pk):
 
     logger.info("mutation=cancelar_jeton jeton_id=%s user_id=%s", jeton.id, request.user.pk)
     messages.warning(request, "Jeton cancelado.")
-    return redirect("gerenciar_jeton", pk=jeton.id)
+    return redirect("verbas_indenizatorias:jeton_detail", pk=jeton.id)

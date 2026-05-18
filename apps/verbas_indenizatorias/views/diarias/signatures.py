@@ -25,7 +25,7 @@ def sincronizar_assinatura_view(request, assinatura_id):
 
     if not assinatura.autentique_id:
         messages.warning(request, "Assinatura ainda não foi enviada para a Autentique.")
-        return redirect("gerenciar_diaria", pk=diaria_id)
+        return redirect("verbas_indenizatorias:diaria_detail", pk=diaria_id)
 
     try:
         status = verificar_e_baixar_documento(assinatura.autentique_id)
@@ -58,7 +58,7 @@ def sincronizar_assinatura_view(request, assinatura_id):
         assinatura.save(update_fields=["status"])
         messages.error(request, f"Falha ao sincronizar assinatura: {exc}")
 
-    return redirect("gerenciar_diaria", pk=diaria_id)
+    return redirect("verbas_indenizatorias:diaria_detail", pk=diaria_id)
 
 
 @permission_required("verbas_indenizatorias.pode_gerenciar_diarias", raise_exception=True)
@@ -69,7 +69,7 @@ def reenviar_assinatura_view(request, diaria_id):
 
     if not assinatura or not assinatura.arquivo:
         messages.warning(request, "Nenhum rascunho de assinatura SCD encontrado para reenvio.")
-        return redirect("gerenciar_diaria", pk=diaria.id)
+        return redirect("verbas_indenizatorias:diaria_detail", pk=diaria.id)
 
     try:
         assinatura.arquivo.open("rb")
@@ -106,7 +106,7 @@ def reenviar_assinatura_view(request, diaria_id):
                 assinatura_id=assinatura.id,
             )
 
-    return redirect("gerenciar_diaria", pk=diaria.id)
+    return redirect("verbas_indenizatorias:diaria_detail", pk=diaria.id)
 
 
 __all__ = ["sincronizar_assinatura_view", "reenviar_assinatura_view"]

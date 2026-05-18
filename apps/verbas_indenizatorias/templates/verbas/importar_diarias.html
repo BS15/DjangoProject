@@ -36,7 +36,7 @@
                     </div>
                 {% endif %}
                 <div class="mt-3">
-                    <a href="{% url 'importar_diarias' %}" class="btn btn-outline-primary btn-sm">
+                    <a href="{% url 'verbas_indenizatorias:importar_diarias' %}" class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-arrow-repeat"></i> Importar outro arquivo
                     </a>
                     <a href="{% url 'verbas_indenizatorias:diarias_list' %}" class="btn btn-primary btn-sm ms-2">
@@ -125,7 +125,7 @@
             <div class="alert alert-warning">
                 <i class="bi bi-exclamation-circle"></i> Nenhuma linha válida encontrada no arquivo. Verifique os erros acima e tente novamente.
             </div>
-            <a href="{% url 'importar_diarias' %}" class="btn btn-outline-secondary btn-sm">
+            <a href="{% url 'verbas_indenizatorias:importar_diarias' %}" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left"></i> Voltar
             </a>
         {% endif %}

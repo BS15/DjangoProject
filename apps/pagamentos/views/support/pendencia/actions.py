@@ -29,11 +29,11 @@ def atualizar_pendencias_lote_action(request: HttpRequest) -> HttpResponse:
 
     if not ids_selecionados:
         messages.warning(request, "Selecione ao menos uma pendência para executar a ação em lote.")
-        return redirect("painel_pendencias")
+        return redirect("pagamentos:pendencias_list")
 
     if acao_lote not in PENDENCIA_ACAO_STATUS:
         messages.error(request, "Ação em lote inválida para pendências.")
-        return redirect("painel_pendencias")
+        return redirect("pagamentos:pendencias_list")
 
     status_destino = PENDENCIA_ACAO_STATUS[acao_lote]
     status_obj, _ = StatusChoicesPendencias.objects.get_or_create(
@@ -58,7 +58,7 @@ def atualizar_pendencias_lote_action(request: HttpRequest) -> HttpResponse:
                 total_atualizadas += 1
     except (DatabaseError, TypeError, ValueError):
         messages.error(request, "Erro interno ao atualizar pendências em lote.")
-        return redirect("painel_pendencias")
+        return redirect("pagamentos:pendencias_list")
 
     if total_atualizadas:
         messages.success(
@@ -70,7 +70,7 @@ def atualizar_pendencias_lote_action(request: HttpRequest) -> HttpResponse:
     if total_nao_encontradas:
         messages.warning(request, f"{total_nao_encontradas} pendência(s) não foram encontradas.")
 
-    return redirect("painel_pendencias")
+    return redirect("pagamentos:pendencias_list")
 
 
 __all__ = ["atualizar_pendencias_lote_action"]

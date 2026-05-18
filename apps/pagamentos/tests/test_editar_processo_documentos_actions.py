@@ -223,7 +223,7 @@ def test_editar_processo_documentos_view_renderiza_widgets_padrao(client):
     user = _create_backoffice_user()
     client.force_login(user)
 
-    response = client.get(reverse("editar_processo_documentos", kwargs={"pk": processo.id}), secure=True)
+    response = client.get(reverse("pagamentos:editar_processo_documentos_action", kwargs={"pk": processo.id}), secure=True)
 
     html = response.content.decode("utf-8")
     assert response.status_code == 200
@@ -242,7 +242,7 @@ def test_editar_processo_documentos_view_mostra_botao_extracao_para_boleto(clien
     user = _create_backoffice_user()
     client.force_login(user)
 
-    response = client.get(reverse("editar_processo_documentos", kwargs={"pk": processo.id}), secure=True)
+    response = client.get(reverse("pagamentos:editar_processo_documentos_action", kwargs={"pk": processo.id}), secure=True)
 
     html = response.content.decode("utf-8")
     assert response.status_code == 200

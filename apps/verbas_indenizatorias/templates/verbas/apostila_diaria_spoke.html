@@ -4,7 +4,7 @@
 {% block page_subtitle %}Registre correções formais da diária com rastreabilidade completa.{% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'gerenciar_diaria' pk=diaria.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
+<a href="{% url 'verbas_indenizatorias:diaria_detail' pk=diaria.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
 {% endblock %}
 
 {% block form_action %}{% url 'registrar_apostila_diaria_action' pk=diaria.id %}{% endblock %}
@@ -29,6 +29,6 @@
 {% endblock %}
 
 {% block form_actions %}
-<a href="{% url 'gerenciar_diaria' pk=diaria.id %}" class="btn btn-secondary px-4">Cancelar</a>
+<a href="{% url 'verbas_indenizatorias:diaria_detail' pk=diaria.id %}" class="btn btn-secondary px-4">Cancelar</a>
 <button type="submit" class="btn btn-secondary px-4 fw-bold"><i class="bi bi-journal-text"></i> Registrar Apostila</button>
 {% endblock %}

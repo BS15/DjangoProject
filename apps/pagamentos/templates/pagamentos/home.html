@@ -10,7 +10,7 @@
 			<p class="text-muted mb-0 ms-4">Acompanhamento de pagamentos e empenhos</p>
 		</div>
 		<div class="d-flex gap-3">
-			<a href="{% url 'add_process' %}" class="btn btn-success btn-lg shadow-sm fw-bold">
+			<a href="{% url 'pagamentos:add_process_action' %}" class="btn btn-success btn-lg shadow-sm fw-bold">
 				<i class="bi bi-plus-lg"></i> Novo Processo
 			</a>
 		</div>
@@ -39,7 +39,7 @@
 					<button type="submit" class="btn btn-primary btn-sm fw-bold shadow-sm">
 						<i class="bi bi-search"></i> Filtrar
 					</button>
-					<a href="{% url 'home_page' %}" class="btn btn-outline-secondary btn-sm shadow-sm">Limpar Filtros</a>
+					<a href="{% url 'pagamentos:home_detail' %}" class="btn btn-outline-secondary btn-sm shadow-sm">Limpar Filtros</a>
 				</div>
 			</form>
 		</div>
@@ -97,7 +97,7 @@
 									title="Pré-visualizar Documentos">
 								<i class="bi bi-eye"></i> Preview
 							</button>
-							<a href="{% url 'editar_processo' pk=processo.id %}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Editar Processo">
+							<a href="{% url 'pagamentos:processo_detail' pk=processo.id %}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Editar Processo">
 								<i class="bi bi-pencil-square"></i>
 							</a>
 						</td>
@@ -109,7 +109,7 @@
 								<i class="bi bi-inbox fs-1 d-block mb-3"></i>
 								Nenhum processo encontrado.
 								<br>
-								<a href="{% url 'add_process' %}" class="btn btn-link">Clique aqui para adicionar um novo</a>
+								<a href="{% url 'pagamentos:add_process_action' %}" class="btn btn-link">Clique aqui para adicionar um novo</a>
 							</div>
 						</td>
 					</tr>

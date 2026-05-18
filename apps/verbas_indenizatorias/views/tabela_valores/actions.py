@@ -20,7 +20,7 @@ def add_tabela_valor_unitario_action(request):
     form = TabelaValoresUnitariosForm(request.POST)
     if not form.is_valid():
         messages.error(request, "Erro ao salvar. Verifique os campos.")
-        return redirect("add_tabela_valor_unitario")
+        return redirect("verbas_indenizatorias:add_tabela_valor_unitario_action")
 
     item = form.save()
     logger.info("mutation=add_tabela_valor_unitario tabela_id=%s user_id=%s", item.id, request.user.pk)
@@ -37,7 +37,7 @@ def edit_tabela_valor_unitario_action(request, pk):
 
     if not form.is_valid():
         messages.error(request, "Erro ao atualizar. Verifique os campos.")
-        return redirect("edit_tabela_valor_unitario", pk=pk)
+        return redirect("verbas_indenizatorias:edit_tabela_valor_unitario_action", pk=pk)
 
     form.save()
     logger.info("mutation=edit_tabela_valor_unitario tabela_id=%s user_id=%s", item.id, request.user.pk)

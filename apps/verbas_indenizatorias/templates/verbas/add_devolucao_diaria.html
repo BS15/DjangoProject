@@ -11,7 +11,7 @@ Registre a devolução de valores da Diária #{{ diaria.pk }} — {{ diaria.bene
 {% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'gerenciar_diaria' pk=diaria.pk %}" class="btn btn-outline-secondary">
+<a href="{% url 'verbas_indenizatorias:diaria_detail' pk=diaria.pk %}" class="btn btn-outline-secondary">
     <i class="bi bi-arrow-left"></i> Voltar
 </a>
 {% endblock %}
@@ -54,7 +54,7 @@ Registre a devolução de valores da Diária #{{ diaria.pk }} — {{ diaria.bene
 {% endblock %}
 
 {% block form_actions %}
-<a href="{% url 'gerenciar_diaria' pk=diaria.pk %}" class="btn btn-outline-secondary me-2">Cancelar</a>
+<a href="{% url 'verbas_indenizatorias:diaria_detail' pk=diaria.pk %}" class="btn btn-outline-secondary me-2">Cancelar</a>
 <button type="submit" class="btn btn-danger">
     <i class="bi bi-save"></i> Registrar Devolução
 </button>

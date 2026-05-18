@@ -17,7 +17,7 @@ def lancamento_bancario(request):
 
     if not ids:
         messages.warning(request, "Nenhum processo foi selecionado.")
-        return redirect("contas_a_pagar")
+        return redirect("pagamentos:contas_a_pagar_list")
 
     status_autorizado = StatusChoicesProcesso.objects.filter(
         status_choice__iexact=ProcessoStatus.A_PAGAR_AUTORIZADO

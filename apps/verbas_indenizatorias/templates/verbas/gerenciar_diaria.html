@@ -15,7 +15,7 @@
     <div>
         <a href="{% url 'verbas_indenizatorias:diarias_list' %}" class="btn btn-outline-secondary">Voltar</a>
         {% if prestacao %}
-        <a href="{% url 'revisar_prestacao' prestacao.id %}" class="btn btn-outline-primary">Revisar Prestação</a>
+        <a href="{% url 'verbas_indenizatorias:revisar_prestacao_detail' prestacao.id %}" class="btn btn-outline-primary">Revisar Prestação</a>
         {% endif %}
     </div>
 </div>

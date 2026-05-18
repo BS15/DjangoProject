@@ -42,7 +42,7 @@ def add_suprimento_action(request: HttpRequest) -> HttpResponse:
 
     if not form.is_valid():
         messages.error(request, "Verifique os erros no formulário.")
-        return redirect("add_suprimento_view")
+        return redirect("suprimentos:suprimento_create")
 
     try:
         suprimento = _persistir_suprimento_com_processo(form)

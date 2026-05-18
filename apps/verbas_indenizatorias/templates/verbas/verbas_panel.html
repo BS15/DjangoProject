@@ -9,7 +9,7 @@
         <p class="text-muted small mb-0">Gerenciamento de diárias, reembolsos, jetons e auxílios de representação.</p>
     </div>
     <div>
-        <a href="{% url 'home_page' %}" class="btn btn-outline-secondary">Voltar para Home</a>
+        <a href="{% url 'pagamentos:home_detail' %}" class="btn btn-outline-secondary">Voltar para Home</a>
     </div>
 </div>
 {% endblock %}
@@ -28,10 +28,10 @@
                         <a href="{% url 'verbas_indenizatorias:diarias_list' %}" class="btn btn-primary btn-sm fw-bold shadow-sm">
                             <i class="bi bi-list-ul"></i> Listar Diárias
                         </a>
-                        <a href="{% url 'add_diaria' %}" class="btn btn-outline-primary btn-sm fw-bold shadow-sm">
+                        <a href="{% url 'verbas_indenizatorias:diaria_create' %}" class="btn btn-outline-primary btn-sm fw-bold shadow-sm">
                             <i class="bi bi-plus-lg"></i> Nova Diária
                         </a>
-                        <a href="{% url 'importar_diarias' %}" class="btn btn-outline-secondary btn-sm fw-bold shadow-sm">
+                        <a href="{% url 'verbas_indenizatorias:importar_diarias_detail' %}" class="btn btn-outline-secondary btn-sm fw-bold shadow-sm">
                             <i class="bi bi-file-earmark-arrow-up"></i> Adicionar Diárias em Lote
                         </a>
                     </div>
@@ -49,7 +49,7 @@
                         <a href="{% url 'verbas_indenizatorias:reembolsos_list' %}" class="btn btn-success btn-sm fw-bold shadow-sm">
                             <i class="bi bi-list-ul"></i> Listar Reembolsos
                         </a>
-                        <a href="{% url 'add_reembolso' %}" class="btn btn-outline-success btn-sm fw-bold shadow-sm">
+                        <a href="{% url 'verbas_indenizatorias:add_reembolso_action' %}" class="btn btn-outline-success btn-sm fw-bold shadow-sm">
                             <i class="bi bi-plus-lg"></i> Novo Reembolso
                         </a>
                     </div>
@@ -67,7 +67,7 @@
                         <a href="{% url 'verbas_indenizatorias:jetons_list' %}" class="btn btn-warning btn-sm fw-bold shadow-sm">
                             <i class="bi bi-list-ul"></i> Listar Jetons
                         </a>
-                        <a href="{% url 'add_jeton' %}" class="btn btn-outline-warning btn-sm fw-bold shadow-sm">
+                        <a href="{% url 'verbas_indenizatorias:add_jeton_action' %}" class="btn btn-outline-warning btn-sm fw-bold shadow-sm">
                             <i class="bi bi-plus-lg"></i> Novo Jeton
                         </a>
                     </div>
@@ -85,7 +85,7 @@
                         <a href="{% url 'verbas_indenizatorias:auxilios_list' %}" class="btn btn-info btn-sm fw-bold shadow-sm text-white">
                             <i class="bi bi-list-ul"></i> Listar Auxílios
                         </a>
-                        <a href="{% url 'add_auxilio' %}" class="btn btn-outline-info btn-sm fw-bold shadow-sm">
+                        <a href="{% url 'verbas_indenizatorias:add_auxilio_action' %}" class="btn btn-outline-info btn-sm fw-bold shadow-sm">
                             <i class="bi bi-plus-lg"></i> Novo Auxílio
                         </a>
                     </div>

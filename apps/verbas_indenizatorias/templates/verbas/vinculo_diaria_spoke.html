@@ -4,7 +4,7 @@
 {% block page_subtitle %}Vincule ou desvincule a diária de um processo em pré-autorização.{% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'gerenciar_diaria' pk=diaria.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
+<a href="{% url 'verbas_indenizatorias:diaria_detail' pk=diaria.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
 {% endblock %}
 
 {% block form_action %}{% url 'verbas_indenizatorias:vincular_diaria_processo_action' pk=diaria.id %}{% endblock %}
@@ -40,6 +40,6 @@
 {% endblock %}
 
 {% block form_actions %}
-<a href="{% url 'gerenciar_diaria' pk=diaria.id %}" class="btn btn-secondary px-4">Cancelar</a>
+<a href="{% url 'verbas_indenizatorias:diaria_detail' pk=diaria.id %}" class="btn btn-secondary px-4">Cancelar</a>
 <button type="submit" class="btn btn-primary px-4 fw-bold"><i class="bi bi-link-45deg"></i> Vincular Diária</button>
 {% endblock %}

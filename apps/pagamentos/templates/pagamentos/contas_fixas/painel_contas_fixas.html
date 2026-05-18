@@ -9,8 +9,8 @@
         <p class="text-muted mb-0">Acompanhamento de contas recorrentes e faturas mensais</p>
     </div>
     <div class="d-flex gap-2">
-        <a href="{% url 'add_conta_fixa' %}" class="btn btn-success"><i class="bi bi-plus-lg"></i> Nova Conta Fixa</a>
-        <a href="{% url 'home_page' %}" class="btn btn-outline-secondary"><i class="bi bi-house"></i> Voltar à Home</a>
+        <a href="{% url 'pagamentos:add_conta_fixa_action' %}" class="btn btn-success"><i class="bi bi-plus-lg"></i> Nova Conta Fixa</a>
+        <a href="{% url 'pagamentos:home_detail' %}" class="btn btn-outline-secondary"><i class="bi bi-house"></i> Voltar à Home</a>
     </div>
 </div>
 {% endblock %}
@@ -141,7 +141,7 @@
                             {% endif %}
                         </td>
                         <td class="px-3 py-3 text-center">
-                            <a href="{% url 'edit_conta_fixa' conta.pk %}" class="btn btn-sm btn-outline-primary" title="Editar">
+                            <a href="{% url 'pagamentos:edit_conta_fixa_action' conta.pk %}" class="btn btn-sm btn-outline-primary" title="Editar">
                                 <i class="bi bi-pencil"></i>
                             </a>
                             <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir"
@@ -183,7 +183,7 @@
                 </p>
                 <p class="text-danger small"><i class="bi bi-exclamation-triangle"></i> Esta ação não pode ser desfeita. As faturas mensais vinculadas também serão removidas.</p>
             </div>
-            <form method="post" action="{% url 'excluir_conta_fixa' conta.pk %}">
+            <form method="post" action="{% url 'pagamentos:excluir_conta_fixa_action' conta.pk %}">
                 {% csrf_token %}
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -207,7 +207,7 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="post" action="{% url 'vincular_processo_fatura' fatura.pk %}">
+            <form method="post" action="{% url 'pagamentos:vincular_processo_fatura_action' fatura.pk %}">
                 {% csrf_token %}
                 <input type="hidden" name="mes" value="{{ mes }}">
                 <input type="hidden" name="ano" value="{{ ano }}">

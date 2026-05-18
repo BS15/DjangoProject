@@ -4,7 +4,7 @@
 
 {% block page_heading %}<i class="bi bi-people-fill text-primary"></i> Entidades e Credores{% endblock %}
 {% block page_actions %}
-    <a href="{% url 'add_credor_view' %}" class="btn btn-primary btn-sm fw-bold">
+    <a href="{% url 'cadastros:credor_create' %}" class="btn btn-primary btn-sm fw-bold">
         <i class="bi bi-plus-circle"></i> Novo Cadastro
     </a>
 {% endblock %}
@@ -52,7 +52,7 @@
         {% endif %}
     </td>
     <td>
-        <a href="{% url 'gerenciar_credor_view' credor.id %}" class="btn btn-sm btn-outline-primary">
+        <a href="{% url 'cadastros:credor_detail' credor.id %}" class="btn btn-sm btn-outline-primary">
             Acessar Hub
         </a>
     </td>

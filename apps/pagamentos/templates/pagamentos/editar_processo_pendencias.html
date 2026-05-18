@@ -5,7 +5,7 @@
 {% block page_heading %}<i class="bi bi-exclamation-triangle text-warning me-2"></i> Pendências — Processo #{{ processo.id }}{% endblock %}
 {% block page_subtitle %}{{ processo.credor|default:"-" }} &mdash; {{ status_inicial }}{% endblock %}
 {% block page_actions %}
-<a href="{% url 'editar_processo' pk=processo.id %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+<a href="{% url 'pagamentos:processo_detail' pk=processo.id %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
 {% endblock %}
 {% block form_action %}{% url 'pagamentos:editar_processo_pendencias_action' pk=processo.id %}{% endblock %}
 {% block form_fields %}

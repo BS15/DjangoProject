@@ -8,15 +8,15 @@
 <button type="submit" form="form-agrupar" class="btn btn-warning btn-sm fw-bold" onclick="return confirm('Gerar um novo processo com as diárias selecionadas?');">
     <i class="bi bi-boxes"></i> Agrupar para Pagamento
 </button>
-<a href="{% url 'add_diaria' %}" class="btn btn-success btn-sm fw-bold"><i class="bi bi-plus-circle"></i> Nova Diária</a>
-<a href="{% url 'add_diaria_assinada' %}" class="btn btn-info btn-sm fw-bold"><i class="bi bi-file-earmark-check"></i> Nova Diária (Solicitação Assinada)</a>
-<a href="{% url 'verbas_panel' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+<a href="{% url 'verbas_indenizatorias:diaria_create' %}" class="btn btn-success btn-sm fw-bold"><i class="bi bi-plus-circle"></i> Nova Diária</a>
+<a href="{% url 'verbas_indenizatorias:add_diaria_assinada_action' %}" class="btn btn-info btn-sm fw-bold"><i class="bi bi-file-earmark-check"></i> Nova Diária (Solicitação Assinada)</a>
+<a href="{% url 'verbas_indenizatorias:verbas_list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
 {% endblock %}
 
 {% block filter_form %}
 <div class="col-md-2">
     <label class="small fw-bold text-secondary mb-1">Nº SISCAC</label>
-    {{ filter.form.numero_siscac__icontains|default:filter.form.numero_siscac }}
+    {{ filter.form.numero_siscac__icontains }}
 </div>
 <div class="col-md-3">
     <label class="small fw-bold text-secondary mb-1">Beneficiário</label>
@@ -24,7 +24,7 @@
 </div>
 <div class="col-md-3">
     <label class="small fw-bold text-secondary mb-1">Destino</label>
-    {{ filter.form.cidade_destino__icontains|default:filter.form.cidade_destino }}
+    {{ filter.form.cidade_destino__icontains }}
 </div>
 <div class="col-md-2">
     <label class="small fw-bold text-secondary mb-1">Status</label>
@@ -33,7 +33,7 @@
 {% endblock %}
 
 {% block batch_form_open %}
-<form id="form-agrupar" method="POST" action="{% url 'agrupar_verbas' 'diaria' %}">
+<form id="form-agrupar" method="POST" action="{% url 'verbas_indenizatorias:agrupar_verbas_detail' 'diaria' %}">
     {% csrf_token %}
 {% endblock %}
 
@@ -70,13 +70,13 @@
     <td class="text-success fw-bold">R$ {{ reg.valor_total }}</td>
     <td class="text-center">
         {% if reg.processo %}
-            <a href="{% url 'editar_processo_verbas' pk=reg.processo.id %}" class="btn btn-sm btn-outline-info"><i class="bi bi-folder2-open"></i> #{{ reg.processo.id }}</a>
+            <a href="{% url 'verbas_indenizatorias:processo_verbas_detail' pk=reg.processo.id %}" class="btn btn-sm btn-outline-info"><i class="bi bi-folder2-open"></i> #{{ reg.processo.id }}</a>
         {% else %}
             <span class="text-warning small"><i class="bi bi-exclamation-triangle"></i> S/ Proc.</span>
         {% endif %}
     </td>
     <td class="text-center">
-        <a href="{% url 'gerenciar_diaria' pk=reg.id %}" class="btn btn-sm btn-outline-primary py-0" title="Gerenciar">
+        <a href="{% url 'verbas_indenizatorias:diaria_detail' pk=reg.id %}" class="btn btn-sm btn-outline-primary py-0" title="Gerenciar">
             <i class="bi bi-gear"></i>
         </a>
         {% if processos_vinculaveis and not reg.processo %}

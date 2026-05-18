@@ -96,7 +96,7 @@ def editar_processo_capa_view(request, pk):
             request,
             "Neste status, apenas documentos podem ser alterados. Use a tela específica de documentos.",
         )
-        return redirect("editar_processo_documentos", pk=pk)
+        return redirect("pagamentos:editar_processo_documentos_action", pk=pk)
 
     return render(
         request,
@@ -158,7 +158,7 @@ def editar_processo_pendencias_view(request, pk):
 
     if somente_documentos:
         messages.error(request, "Neste status, apenas documentos podem ser alterados.")
-        return redirect("editar_processo_documentos", pk=pk)
+        return redirect("pagamentos:editar_processo_documentos_action", pk=pk)
 
     return render(
         request,

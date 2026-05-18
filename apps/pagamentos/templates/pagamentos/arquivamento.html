@@ -6,7 +6,7 @@
 {% block page_subtitle %}Gestão de arquivamento definitivo e acesso a processos consolidados.{% endblock %}
 
 {% block page_actions %}
-<a href="{% url 'home_page' %}" class="btn btn-outline-secondary">Voltar para Home</a>
+<a href="{% url 'pagamentos:home_detail' %}" class="btn btn-outline-secondary">Voltar para Home</a>
 {% endblock %}
 
 {% block filter_title %}Filtrar Processos Arquivados{% endblock %}
@@ -108,7 +108,7 @@
 						<td class="text-end pe-4 fw-bold text-dark">R$ {{ processo.valor_liquido|floatformat:2 }}</td>
 						<td class="text-center d-flex justify-content-center gap-1">
 							{% if pode_interagir %}
-							<a href="{% url 'arquivar_processo' pk=processo.id %}" class="btn btn-sm btn-outline-secondary fw-bold shadow-sm">
+							<a href="{% url 'pagamentos:arquivar_processo_action' pk=processo.id %}" class="btn btn-sm btn-outline-secondary fw-bold shadow-sm">
 								<i class="bi bi-search"></i> Revisar
 							</a>
 							<form method="POST" action="{% url 'pagamentos:arquivar_processo_action' pk=processo.id %}" onsubmit="return confirm('ATENÇÃO: O processo será unificado em um PDF blindado. Confirmar o arquivamento definitivo?');">

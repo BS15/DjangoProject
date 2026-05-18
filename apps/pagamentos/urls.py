@@ -2,58 +2,112 @@
 
 from django.urls import path
 
+from apps.pagamentos import imports as pagamentos_imports
 from apps.pagamentos.views import api_views as pagamentos_api_views
 from apps.pagamentos.views import auditing as pagamentos_auditing_views
 from apps.pagamentos.views import pdf as pagamentos_pdf_views
 from apps.pagamentos.views import security as pagamentos_security_views
-from apps.pagamentos.views.support.core import home_page, process_detail_view
-from apps.pagamentos.views.support.sync import pagamentos as pagamentos_sync_views
-from apps.pagamentos.views.support.pendencia import painel_pendencias_view, atualizar_pendencias_lote_action
-from apps.pagamentos.views.support.contingencia.panels import painel_contingencias_view, add_contingencia_view
-from apps.pagamentos.views.support.contingencia.actions import add_contingencia_action, analisar_contingencia_action
-from apps.pagamentos.views.support.devolucao import (
-    painel_devolucoes_view,
-    registrar_devolucao_view,
-    registrar_devolucao_action,
+from apps.pagamentos.views.payment.autorizacao import (
+    actions as payment_autorizacao_actions,
 )
-from apps.pagamentos.views.support.cancelamento import (
-    cancelar_processo_spoke_view,
-    cancelar_processo_action,
+from apps.pagamentos.views.payment.autorizacao import (
+    panels as payment_autorizacao_panels,
 )
-from apps.pagamentos.views.payment.autorizacao import actions as payment_autorizacao_actions
-from apps.pagamentos.views.payment.autorizacao import panels as payment_autorizacao_panels
-from apps.pagamentos.views.payment.contas_a_pagar import actions as payment_contas_actions
+from apps.pagamentos.views.payment.contas_a_pagar import (
+    actions as payment_contas_actions,
+)
 from apps.pagamentos.views.payment.contas_a_pagar import apis as payment_contas_apis
 from apps.pagamentos.views.payment.contas_a_pagar import panels as payment_contas_panels
-from apps.pagamentos.views.payment.lancamento import actions as payment_lancamento_actions
+from apps.pagamentos.views.payment.lancamento import (
+    actions as payment_lancamento_actions,
+)
 from apps.pagamentos.views.payment.lancamento import panels as payment_lancamento_panels
-from apps.pagamentos.views.post_payment.arquivamento import actions as post_payment_arquivamento_actions
-from apps.pagamentos.views.post_payment.arquivamento import panels as post_payment_arquivamento_panels
-from apps.pagamentos.views.post_payment.arquivamento import reviews as post_payment_arquivamento_reviews
-from apps.pagamentos.views.post_payment.conferencia import actions as post_payment_conferencia_actions
-from apps.pagamentos.views.post_payment.conferencia import panels as post_payment_conferencia_panels
-from apps.pagamentos.views.post_payment.conferencia import reviews as post_payment_conferencia_reviews
-from apps.pagamentos.views.post_payment.conselho import actions as post_payment_conselho_actions
-from apps.pagamentos.views.post_payment.conselho import panels as post_payment_conselho_panels
+from apps.pagamentos.views.post_payment.arquivamento import (
+    actions as post_payment_arquivamento_actions,
+)
+from apps.pagamentos.views.post_payment.arquivamento import (
+    panels as post_payment_arquivamento_panels,
+)
+from apps.pagamentos.views.post_payment.arquivamento import (
+    reviews as post_payment_arquivamento_reviews,
+)
+from apps.pagamentos.views.post_payment.conferencia import (
+    actions as post_payment_conferencia_actions,
+)
+from apps.pagamentos.views.post_payment.conferencia import (
+    panels as post_payment_conferencia_panels,
+)
+from apps.pagamentos.views.post_payment.conferencia import (
+    reviews as post_payment_conferencia_reviews,
+)
+from apps.pagamentos.views.post_payment.conselho import (
+    actions as post_payment_conselho_actions,
+)
+from apps.pagamentos.views.post_payment.conselho import (
+    panels as post_payment_conselho_panels,
+)
 from apps.pagamentos.views.post_payment.conselho import pdf as post_payment_conselho_pdf
-from apps.pagamentos.views.post_payment.conselho import reviews as post_payment_conselho_reviews
-from apps.pagamentos.views.post_payment.contabilizacao import actions as post_payment_contabilizacao_actions
-from apps.pagamentos.views.post_payment.contabilizacao import panels as post_payment_contabilizacao_panels
-from apps.pagamentos.views.post_payment.contabilizacao import reviews as post_payment_contabilizacao_reviews
-from apps.pagamentos.views.post_payment.reunioes import actions as post_payment_reunioes_actions
-from apps.pagamentos.views.post_payment.reunioes import panels as post_payment_reunioes_panels
-from apps.pagamentos.views.pre_payment.cadastro import actions as pre_payment_cadastro_actions
+from apps.pagamentos.views.post_payment.conselho import (
+    reviews as post_payment_conselho_reviews,
+)
+from apps.pagamentos.views.post_payment.contabilizacao import (
+    actions as post_payment_contabilizacao_actions,
+)
+from apps.pagamentos.views.post_payment.contabilizacao import (
+    panels as post_payment_contabilizacao_panels,
+)
+from apps.pagamentos.views.post_payment.contabilizacao import (
+    reviews as post_payment_contabilizacao_reviews,
+)
+from apps.pagamentos.views.post_payment.reunioes import (
+    actions as post_payment_reunioes_actions,
+)
+from apps.pagamentos.views.post_payment.reunioes import (
+    panels as post_payment_reunioes_panels,
+)
+from apps.pagamentos.views.pre_payment.cadastro import (
+    actions as pre_payment_cadastro_actions,
+)
 from apps.pagamentos.views.pre_payment.cadastro import apis as pre_payment_cadastro_apis
-from apps.pagamentos.views.pre_payment.cadastro import panels as pre_payment_cadastro_panels
+from apps.pagamentos.views.pre_payment.cadastro import (
+    panels as pre_payment_cadastro_panels,
+)
 from apps.pagamentos.views.pre_payment.empenho import actions as pre_payment_actions
 from apps.pagamentos.views.pre_payment.empenho import apis as pre_payment_empenho_apis
 from apps.pagamentos.views.pre_payment.empenho import panels as pre_payment_panels
-from apps.pagamentos.views.pre_payment.liquidacoes import actions as pre_payment_liquidacoes_actions
-from apps.pagamentos import imports as pagamentos_imports
-from apps.pagamentos.views.support.contas_fixas import actions as conta_actions
-from apps.pagamentos.views.support.contas_fixas import panels as conta_panels
+from apps.pagamentos.views.pre_payment.liquidacoes import (
+    actions as pre_payment_liquidacoes_actions,
+)
+from apps.pagamentos.views.pre_payment.liquidacoes import (
+    panels as pre_payment_liquidacoes_panels,
+)
 from apps.pagamentos.views.support import reports as relatorio_views
 from apps.pagamentos.views.support import signatures as assinatura_views
+from apps.pagamentos.views.support.cancelamento import (
+    cancelar_processo_action,
+    cancelar_processo_spoke_view,
+)
+from apps.pagamentos.views.support.contas_fixas import actions as conta_actions
+from apps.pagamentos.views.support.contas_fixas import panels as conta_panels
+from apps.pagamentos.views.support.contingencia.actions import (
+    add_contingencia_action,
+    analisar_contingencia_action,
+)
+from apps.pagamentos.views.support.contingencia.panels import (
+    add_contingencia_view,
+    painel_contingencias_view,
+)
+from apps.pagamentos.views.support.core import home_page, process_detail_view
+from apps.pagamentos.views.support.devolucao import (
+    painel_devolucoes_view,
+    registrar_devolucao_action,
+    registrar_devolucao_view,
+)
+from apps.pagamentos.views.support.pendencia import (
+    atualizar_pendencias_lote_action,
+    painel_pendencias_view,
+)
+from apps.pagamentos.views.support.sync import pagamentos as pagamentos_sync_views
 
 # Adicionamos "pagamentos" como app_name (não mandatório na raiz, mas ideal em modularização)
 app_name = 'pagamentos'
@@ -84,6 +138,7 @@ urlpatterns = [
     path('a-empenhar/', pre_payment_panels.a_empenhar_view, name='a_empenhar_list'),
     path('a-empenhar/registrar-empenho/action/', pre_payment_actions.registrar_empenho_action, name='registrar_empenho_action'),
     path('api/extrair-dados-empenho/', pre_payment_empenho_apis.api_extrair_dados_empenho, name='api_extrair_dados_empenho'),
+    path('processos/liquidacoes/', pre_payment_liquidacoes_panels.painel_liquidacoes_view, name='liquidacoes_list'),
     path('processo/<int:pk>/avancar-para-pagamento/action/', pre_payment_liquidacoes_actions.avancar_para_pagamento_action, name='avancar_para_pagamento_action'),
 
     # Contas fixas (do antigo backoffice)
@@ -108,7 +163,7 @@ urlpatterns = [
     path('processos/conferencia/<int:pk>/revisar/', post_payment_conferencia_reviews.conferencia_processo_view, name='conferencia_processo_detail'),
     path('processos/conferencia/<int:pk>/aprovar/action/', post_payment_conferencia_actions.aprovar_conferencia_action, name='aprovar_conferencia_action'),
     path('processos/enviar-autorizacao/action/', payment_contas_actions.enviar_para_autorizacao_action, name='enviar_para_autorizacao_action'),
-    path('processos/autorizacao/', payment_autorizacao_panels.painel_autorizacao_view, name='autorizacao_list'),
+    path('processos/autorizacao/', payment_autorizacao_panels.painel_autorizacao_view, name='painel_autorizacao'),
     path('processos/autorizar-pagamento/action/', payment_autorizacao_actions.autorizar_pagamento, name='autorizar_pagamento_action'),
     path('processos/autorizacao/<int:pk>/recusar/action/', payment_autorizacao_actions.recusar_autorizacao_action, name='recusar_autorizacao_action'),
 
@@ -156,7 +211,7 @@ urlpatterns = [
     path('api/processo_detalhes/', pagamentos_auditing_views.api_processo_detalhes, name='api_processo_detalhes'),
     path('processo/<int:pk>/autorizacao-pagamento/', pagamentos_pdf_views.gerar_autorizacao_pagamento_view, name='autorizacao_pagamento_pdf_detail'),
     path('processo/<int:pk>/parecer-conselho/', post_payment_conselho_pdf.gerar_parecer_conselho_view, name='parecer_conselho_pdf_detail'),
-    path('pagamentos/sincronizar-siscac/', pagamentos_sync_views.sincronizar_siscac, name='sincronizar_siscac_list'),
+    path('pagamentos/sincronizar-siscac/', pagamentos_sync_views.sincronizar_siscac, name='sincronizar_siscac'),
     path('pagamentos/sincronizar-siscac/manual/action/', pagamentos_sync_views.sincronizar_siscac_manual_action, name='sincronizar_siscac_manual_action'),
     path('pagamentos/sincronizar-siscac/auto/action/', pagamentos_sync_views.sincronizar_siscac_auto_action, name='sincronizar_siscac_auto_action'),
     path('documentos/secure/<str:tipo_documento>/<int:documento_id>/', pagamentos_security_views.download_arquivo_seguro, name='arquivo_seguro_detail'),

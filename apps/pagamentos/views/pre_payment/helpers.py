@@ -81,14 +81,14 @@ def _validar_regras_edicao_processo(request, processo, status_inicial):
             f'O processo #{processo.id} está em status "{processo.status}" e não pode ser editado. '
             "Alterações nesses processos devem ser tratadas pela interface de contingência.",
         )
-        return redirect("home_page"), False
+        return redirect("pagamentos:home_detail"), False
 
     if (
         getattr(processo, "tipo_pagamento_id", None)
         and processo.tipo_pagamento
         and (processo.tipo_pagamento.tipo_pagamento or "").upper() == "VERBAS INDENIZATÓRIAS"
     ):
-        return redirect("editar_processo_verbas", pk=processo.id), False
+        return redirect("verbas_indenizatorias:processo_verbas_detail", pk=processo.id), False
 
     return None, status_inicial in STATUS_SOMENTE_DOCUMENTOS
 def _redirect_seguro_ou_fallback(request, next_url, fallback_name, pk):

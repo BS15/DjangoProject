@@ -138,17 +138,17 @@ def revisar_agrupamento_retencoes_view(request):
     ids_raw = (request.GET.get("ids") or "").strip()
     if not ids_raw:
         messages.warning(request, "Nenhum item selecionado para revisão.")
-        return redirect("painel_impostos_view")
+        return redirect('retencoes:impostos_list')
 
     try:
         ids = [int(i) for i in ids_raw.split(",") if i.strip().isdigit()]
     except ValueError:
         messages.warning(request, "Parâmetros de seleção inválidos.")
-        return redirect("painel_impostos_view")
+        return redirect('retencoes:impostos_list')
 
     if not ids:
         messages.warning(request, "Nenhum item selecionado para revisão.")
-        return redirect("painel_impostos_view")
+        return redirect('retencoes:impostos_list')
 
     retencoes = list(
         RetencaoImposto.objects.select_related(
@@ -178,7 +178,7 @@ def revisar_agrupamento_retencoes_view(request):
 
     if not retencoes:
         messages.warning(request, "Nenhuma retenção elegível encontrada para agrupamento.")
-        return redirect("painel_impostos_view")
+        return redirect('retencoes:impostos_list')
 
     return render(
         request,
