@@ -8,7 +8,7 @@
 <a href="{% url 'pagamentos:contas_fixas_list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
 {% endblock %}
 
-{% block form_action %}{% url 'pagamentos:edit_conta_fixa_action' conta.pk %}{% endblock %}
+{% block form_action %}{% url 'pagamentos:edit_conta_fixa_action' pk=conta.pk %}{% endblock %}
 
 {% block form_fields %}
 <h6 class="text-secondary border-bottom pb-2 mb-3">Dados da Conta Fixa</h6>

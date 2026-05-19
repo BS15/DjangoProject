@@ -9,7 +9,7 @@
 			<h3 class="mb-0 fw-bold"><i class="bi bi-list-check text-primary me-2"></i> Pauta — Reunião #{{ reuniao.id }}</h3>
 			<p class="text-muted mb-0">{{ reuniao.data_reuniao|date:"d/m/Y"|default:"Data não informada" }} &mdash; {{ reuniao.trimestre_referencia|default:"Sem referência" }}</p>
 		</div>
-		<a href="{% url 'pagamentos:gerenciar_reunioes_action' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+		<a href="{% url 'pagamentos:reunioes_list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
 	</div>
 
 	{# Processos já na pauta #}
@@ -45,7 +45,7 @@
 			<h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-plus-circle"></i> Adicionar à Pauta</h6>
 		</div>
 		<div class="card-body p-0">
-			<form method="post" action="{% url 'pagamentos:montar_pauta_reuniao_action' reuniao_id=reuniao.id %}">
+			<form method="post" action="{% url 'pagamentos:montar_pauta_reuniao_detail' reuniao_id=reuniao.id %}">
 				{% csrf_token %}
 				<table class="table table-hover align-middle mb-0">
 					<thead class="table-dark">

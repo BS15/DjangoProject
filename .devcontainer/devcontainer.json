@@ -73,7 +73,9 @@
   ],
 
   "containerEnv": {
-    "GIT_AUTHOR_NAME": "Development Container",
-    "GIT_AUTHOR_EMAIL": "dev@example.com"
+    "GIT_AUTHOR_NAME": "BS15",
+    "GIT_AUTHOR_EMAIL": "48460044+BS15@users.noreply.github.com",
+    "GIT_COMMITTER_NAME": "BS15",
+    "GIT_COMMITTER_EMAIL": "48460044+BS15@users.noreply.github.com"
   }
 }

@@ -161,14 +161,14 @@
                             type="button"
                             class="btn btn-sm btn-outline-secondary doc-preview-btn"
                             data-doc-prefix="{{ form_prefix }}"
-                            data-doc-url="{% url 'download_arquivo_seguro' download_tipo_documento|default:'processo' doc_f.instance.id %}"
+                            data-doc-url="{% url 'pagamentos:arquivo_seguro_detail' download_tipo_documento|default:'processo' doc_f.instance.id %}"
                             data-doc-name="{{ doc_f.instance.arquivo.name|default:'' }}"
                             title="Pré-visualizar arquivo"
                         >
                             <i class="bi bi-eye"></i><span class="ms-1 d-none d-md-inline">Pré-visualizar</span>
                         </button>
                         {% endif %}
-                        <a href="{% url 'download_arquivo_seguro' download_tipo_documento|default:'processo' doc_f.instance.id %}"
+                        <a href="{% url 'pagamentos:arquivo_seguro_detail' download_tipo_documento|default:'processo' doc_f.instance.id %}"
                            target="_blank"
                            class="btn btn-sm btn-outline-secondary"
                            title="Abrir em nova aba">

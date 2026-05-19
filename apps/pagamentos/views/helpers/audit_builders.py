@@ -5,17 +5,20 @@ import logging
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
-from commons.shared.text_tools import format_br_date, format_brl_currency, normalize_text
-from apps.pagamentos.domain_models.documentos import ComprovanteDePagamento
-from apps.retencoes.models import DocumentoFiscal, RetencaoImposto
 from apps.pagamentos.domain_models import (
-    Devolucao,
     Boleto_Bancario,
+    Devolucao,
     DocumentoProcesso,
     Pendencia,
     Processo,
 )
-
+from apps.pagamentos.domain_models.documentos import ComprovanteDePagamento
+from apps.retencoes.models import DocumentoFiscal, RetencaoImposto
+from commons.shared.text_tools import (
+    format_br_date,
+    format_brl_currency,
+    normalize_text,
+)
 
 logger = logging.getLogger(__name__)
 TIPO_PAGAMENTO_GERENCIADOR_BOLETO = "GERENCIADOR/BOLETO BANCARIO"
@@ -104,7 +107,7 @@ def _serializar_documentos_processo_auditoria(processo):
                 "ordem": doc.ordem,
                 "tipo": doc.tipo.tipo_documento if doc.tipo else "Documento",
                 "nome": nome,
-                "url": reverse("download_arquivo_seguro", args=["processo", doc.id]),
+                "url": reverse("pagamentos:arquivo_seguro_detail", args=["processo", doc.id]),
             }
         )
     return docs_list

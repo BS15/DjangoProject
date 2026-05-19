@@ -9,8 +9,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from apps.pagamentos.domain_models import ContaFixa, FaturaMensal
-from apps.pagamentos.domain_models import Processo
+from apps.pagamentos.domain_models import ContaFixa, FaturaMensal, Processo
 from apps.pagamentos.forms import ContaFixaForm
 
 logger = logging.getLogger(__name__)
@@ -38,7 +37,7 @@ def add_conta_fixa_action(request):
     form = ContaFixaForm(request.POST)
     if not form.is_valid():
         messages.error(request, "Erro ao cadastrar conta fixa. Verifique os campos.")
-        return redirect("pagamentos:add_conta_fixa_action")
+        return redirect("pagamentos:conta_fixa_create")
 
     conta = form.save()
     logger.info("mutation=add_conta_fixa conta_id=%s user_id=%s", conta.pk, request.user.pk)
@@ -53,7 +52,7 @@ def edit_conta_fixa_action(request, pk):
     form = ContaFixaForm(request.POST, instance=conta)
     if not form.is_valid():
         messages.error(request, "Erro ao atualizar conta fixa. Verifique os campos.")
-        return redirect("pagamentos:edit_conta_fixa_action", pk=pk)
+        return redirect("pagamentos:conta_fixa_edit_detail", pk=pk)
 
     form.save()
     logger.info("mutation=edit_conta_fixa conta_id=%s user_id=%s", conta.pk, request.user.pk)

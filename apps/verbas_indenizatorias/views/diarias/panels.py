@@ -4,16 +4,22 @@ from django.shortcuts import get_object_or_404, render
 from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_GET
 
-from commons.shared.query_tools import resolver_parametros_ordenacao
-from apps.pagamentos.domain_models import Processo, STATUS_PROCESSO_PRE_AUTORIZACAO
+from apps.pagamentos.domain_models import STATUS_PROCESSO_PRE_AUTORIZACAO, Processo
 from apps.pagamentos.views.shared import render_filtered_list
-from apps.verbas_indenizatorias.forms import ComprovanteDiariaFormSet, DiariaComSolicitacaoAssinadaForm, DiariaForm
-from apps.verbas_indenizatorias.models import Diaria, PrestacaoContasDiaria
 from apps.verbas_indenizatorias.filters import DiariaFilter
-from apps.verbas_indenizatorias.services.autorizacao_diarias import listar_diarias_pendentes_para_proponente
-from .access import _pode_acessar_prestacao, _pode_gerenciar_vinculo_diaria
-from ..shared.registry import _get_tipos_documento_verbas
+from apps.verbas_indenizatorias.forms import (
+    ComprovanteDiariaFormSet,
+    DiariaComSolicitacaoAssinadaForm,
+    DiariaForm,
+)
+from apps.verbas_indenizatorias.models import Diaria, PrestacaoContasDiaria
+from apps.verbas_indenizatorias.services.autorizacao_diarias import (
+    listar_diarias_pendentes_para_proponente,
+)
+from commons.shared.query_tools import resolver_parametros_ordenacao
 
+from ..shared.registry import _get_tipos_documento_verbas
+from .access import _pode_acessar_prestacao, _pode_gerenciar_vinculo_diaria
 
 PRESTACAO_REVIEW_QUEUE_KEY = 'prestacoes_review_queue'
 
@@ -71,7 +77,7 @@ def add_diaria_view(request):
         'verbas/add_diaria.html',
         {
             'form': DiariaForm(),
-            'form_action_url': 'add_diaria_action',
+            'form_action_url': 'verbas_indenizatorias:add_diaria_action',
             'modo_solicitacao_assinada': False,
         },
     )
@@ -85,7 +91,7 @@ def add_diaria_assinada_view(request):
         'verbas/add_diaria.html',
         {
             'form': DiariaComSolicitacaoAssinadaForm(),
-            'form_action_url': 'add_diaria_assinada_action',
+            'form_action_url': 'verbas_indenizatorias:add_diaria_assinada_action',
             'modo_solicitacao_assinada': True,
         },
     )

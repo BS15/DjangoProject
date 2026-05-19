@@ -7,10 +7,10 @@ de documentos em itens de verba e, quando aplicavel, na prestacao de contas.
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from django.urls import NoReverseMatch
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
 from django.views.decorators.http import require_POST
 
+from ...services.prestacao import obter_ou_criar_prestacao
 from ..shared.documents import (
     _obter_dados_upload_documento,
     _salvar_documento_upload,
@@ -19,7 +19,6 @@ from ..shared.registry import (
     _VERBA_CONFIG,
     _get_permissao_gestao_verba,
 )
-from ...services.prestacao import obter_ou_criar_prestacao
 
 
 @require_POST
@@ -69,7 +68,7 @@ def api_add_documento_verba(request, tipo_verba, pk):
         return JsonResponse({'ok': False, 'error': erro_api}, status=status)
 
     try:
-        arquivo_url = reverse('download_arquivo_seguro', args=[tipo_doc_seguro, doc.id])
+        arquivo_url = reverse('pagamentos:arquivo_seguro_detail', args=[tipo_doc_seguro, doc.id])
         return JsonResponse({'ok': True, 'doc_id': doc.id, 'arquivo_url': arquivo_url, 'tipo': str(doc.tipo)})
     except NoReverseMatch as e:
         return JsonResponse({'ok': False, 'error': str(e)}, status=500)

@@ -8,11 +8,15 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
-from apps.pagamentos.services.cancelamentos import cancelar_verba, extrair_dados_devolucao_do_post
+from apps.pagamentos.services.cancelamentos import (
+    cancelar_verba,
+    extrair_dados_devolucao_do_post,
+)
 from apps.verbas_indenizatorias.forms import ReembolsoForm
 from apps.verbas_indenizatorias.models import (
     ReembolsoCombustivel,
 )
+
 from ..shared.documents import _salvar_documento_upload
 from ..shared.registry import _get_tipos_documento_verbas
 
@@ -23,7 +27,7 @@ def add_reembolso_action(request):
     form = ReembolsoForm(request.POST)
     if not form.is_valid():
         messages.error(request, "Erro ao salvar. Verifique os campos.")
-        return redirect("verbas_indenizatorias:add_reembolso_action")
+        return redirect("verbas_indenizatorias:reembolso_create")
 
     reembolso = form.save()
     logger.info("mutation=add_reembolso reembolso_id=%s user_id=%s", reembolso.id, request.user.pk)

@@ -6,7 +6,7 @@ Collecting pytest-django
 Collecting pytest-cov
   Downloading pytest_cov-7.1.0-py3-none-any.whl.metadata (32 kB)
 Collecting black
-  Downloading black-26.5.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (94 kB)
+  Downloading black-26.5.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (95 kB)
 Collecting ruff
   Downloading ruff-0.15.13-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (26 kB)
 Collecting ipython
@@ -69,13 +69,13 @@ Downloading pytest-9.0.3-py3-none-any.whl (375 kB)
 Downloading pluggy-1.6.0-py3-none-any.whl (20 kB)
 Downloading pytest_django-4.12.0-py3-none-any.whl (26 kB)
 Downloading pytest_cov-7.1.0-py3-none-any.whl (22 kB)
-Downloading black-26.5.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.9 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.9/1.9 MB 14.5 MB/s  0:00:00
+Downloading black-26.5.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.9/1.9 MB 32.1 MB/s  0:00:00
 Downloading pytokens-0.4.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (269 kB)
 Downloading ruff-0.15.13-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (11.4 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.4/11.4 MB 5.4 MB/s  0:00:02
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.4/11.4 MB 13.7 MB/s  0:00:00
 Downloading ipython-9.13.0-py3-none-any.whl (627 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 627.3/627.3 kB 22.1 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 627.3/627.3 kB 4.7 MB/s  0:00:00
 Downloading prompt_toolkit-3.0.52-py3-none-any.whl (391 kB)
 Downloading django_extensions-4.1-py3-none-any.whl (232 kB)
 Downloading click-8.4.0-py3-none-any.whl (116 kB)
@@ -84,7 +84,7 @@ Downloading decorator-5.3.1-py3-none-any.whl (10 kB)
 Downloading iniconfig-2.3.0-py3-none-any.whl (7.5 kB)
 Downloading ipython_pygments_lexers-1.1.1-py3-none-any.whl (8.1 kB)
 Downloading jedi-0.20.0-py2.py3-none-any.whl (4.9 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.9/4.9 MB 38.1 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.9/4.9 MB 51.2 MB/s  0:00:00
 Downloading parso-0.8.7-py2.py3-none-any.whl (107 kB)
 Downloading matplotlib_inline-0.2.2-py3-none-any.whl (9.5 kB)
 Downloading mypy_extensions-1.1.0-py3-none-any.whl (5.0 kB)
@@ -94,7 +94,7 @@ Downloading platformdirs-4.9.6-py3-none-any.whl (21 kB)
 Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
 Downloading ptyprocess-0.7.0-py2.py3-none-any.whl (13 kB)
 Downloading pygments-2.20.0-py3-none-any.whl (1.2 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 33.4 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 42.2 MB/s  0:00:00
 Downloading stack_data-0.6.3-py3-none-any.whl (24 kB)
 Downloading asttokens-3.0.1-py3-none-any.whl (27 kB)
 Downloading executing-2.2.1-py2.py3-none-any.whl (28 kB)
@@ -103,4 +103,4 @@ Downloading pure_eval-0.2.3-py3-none-any.whl (11 kB)
 Downloading wcwidth-0.7.0-py3-none-any.whl (110 kB)
 Installing collected packages: pure-eval, ptyprocess, wcwidth, traitlets, ruff, pytokens, pygments, psutil, pluggy, platformdirs, pexpect, pathspec, parso, mypy-extensions, iniconfig, executing, decorator, coverage, click, asttokens, stack_data, pytest, prompt_toolkit, matplotlib-inline, jedi, ipython-pygments-lexers, django-extensions, black, pytest-django, pytest-cov, ipython
 
-Successfully installed asttokens-3.0.1 black-26.5.0 click-8.4.0 coverage-7.14.0 decorator-5.3.1 django-extensions-4.1 executing-2.2.1 iniconfig-2.3.0 ipython-9.13.0 ipython-pygments-lexers-1.1.1 jedi-0.20.0 matplotlib-inline-0.2.2 mypy-extensions-1.1.0 parso-0.8.7 pathspec-1.1.1 pexpect-4.9.0 platformdirs-4.9.6 pluggy-1.6.0 prompt_toolkit-3.0.52 psutil-7.2.2 ptyprocess-0.7.0 pure-eval-0.2.3 pygments-2.20.0 pytest-9.0.3 pytest-cov-7.1.0 pytest-django-4.12.0 pytokens-0.4.1 ruff-0.15.13 stack_data-0.6.3 traitlets-5.15.0 wcwidth-0.7.0
+Successfully installed asttokens-3.0.1 black-26.5.1 click-8.4.0 coverage-7.14.0 decorator-5.3.1 django-extensions-4.1 executing-2.2.1 iniconfig-2.3.0 ipython-9.13.0 ipython-pygments-lexers-1.1.1 jedi-0.20.0 matplotlib-inline-0.2.2 mypy-extensions-1.1.0 parso-0.8.7 pathspec-1.1.1 pexpect-4.9.0 platformdirs-4.9.6 pluggy-1.6.0 prompt_toolkit-3.0.52 psutil-7.2.2 ptyprocess-0.7.0 pure-eval-0.2.3 pygments-2.20.0 pytest-9.0.3 pytest-cov-7.1.0 pytest-django-4.12.0 pytokens-0.4.1 ruff-0.15.13 stack_data-0.6.3 traitlets-5.15.0 wcwidth-0.7.0

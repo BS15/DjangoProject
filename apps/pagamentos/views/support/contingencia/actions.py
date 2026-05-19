@@ -17,9 +17,9 @@ from apps.pagamentos.domain_models import Contingencia, Processo
 from apps.pagamentos.views.helpers import (
     determinar_requisitos_contingencia,
     normalizar_dados_propostos_contingencia,
-    sincronizar_flag_contingencia_processo,
     processar_aprovacao_contingencia,
     processar_revisao_contadora_contingencia,
+    sincronizar_flag_contingencia_processo,
 )
 
 
@@ -33,11 +33,11 @@ def add_contingencia_action(request: HttpRequest) -> HttpResponse:
 
     if not processo_id or not justificativa:
         messages.error(request, "Processo e justificativa são obrigatórios.")
-        return redirect("pagamentos:add_contingencia_action")
+        return redirect("pagamentos:contingencia_create")
 
     if not processo_id.isdigit():
         messages.error(request, "ID do Processo inválido.")
-        return redirect("pagamentos:add_contingencia_action")
+        return redirect("pagamentos:contingencia_create")
 
     processo = get_object_or_404(Processo, pk=int(processo_id))
 
@@ -55,7 +55,7 @@ def add_contingencia_action(request: HttpRequest) -> HttpResponse:
             processo_id,
         )
         messages.error(request, "Dados propostos inválidos. Verifique o formato e tente novamente.")
-        return redirect("pagamentos:add_contingencia_action")
+        return redirect("pagamentos:contingencia_create")
 
     status_atual_processo = processo.status.opcao_status if processo.status else ""
     exige_aprovacao_ordenador, exige_aprovacao_conselho, exige_revisao_contadora = determinar_requisitos_contingencia(status_atual_processo)

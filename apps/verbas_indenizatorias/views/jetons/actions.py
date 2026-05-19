@@ -8,10 +8,10 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
-from apps.verbas_indenizatorias.services.cancelamentos import cancelar_verba
-from commons.shared.views import extrair_dados_devolucao_do_post
 from apps.verbas_indenizatorias.forms import JetonForm
 from apps.verbas_indenizatorias.models import Jeton
+from apps.verbas_indenizatorias.services.cancelamentos import cancelar_verba
+from commons.shared.views import extrair_dados_devolucao_do_post
 
 
 @require_POST
@@ -20,7 +20,7 @@ def add_jeton_action(request):
     form = JetonForm(request.POST)
     if not form.is_valid():
         messages.error(request, "Erro ao salvar. Verifique os campos.")
-        return redirect("verbas_indenizatorias:add_jeton_action")
+        return redirect("verbas_indenizatorias:jeton_create")
 
     jeton = form.save()
     logger.info("mutation=add_jeton jeton_id=%s user_id=%s", jeton.id, request.user.pk)

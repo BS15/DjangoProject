@@ -143,7 +143,7 @@ def add_diaria_assinada_action(request):
     form = DiariaComSolicitacaoAssinadaForm(request.POST, request.FILES)
     if not form.is_valid():
         messages.error(request, 'Erro ao salvar diária com solicitação assinada. Verifique os campos.')
-        return redirect('verbas_indenizatorias:add_diaria_assinada_action')
+        return redirect('verbas_indenizatorias:diaria_assinada_create')
 
     with transaction.atomic():
         diaria = _salvar_diaria_base(form, criador=request.user, solicitacao_assinada=True)

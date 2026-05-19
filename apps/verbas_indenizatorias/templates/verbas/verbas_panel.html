@@ -49,7 +49,7 @@
                         <a href="{% url 'verbas_indenizatorias:reembolsos_list' %}" class="btn btn-success btn-sm fw-bold shadow-sm">
                             <i class="bi bi-list-ul"></i> Listar Reembolsos
                         </a>
-                        <a href="{% url 'verbas_indenizatorias:add_reembolso_action' %}" class="btn btn-outline-success btn-sm fw-bold shadow-sm">
+                        <a href="{% url 'verbas_indenizatorias:reembolso_create' %}" class="btn btn-outline-success btn-sm fw-bold shadow-sm">
                             <i class="bi bi-plus-lg"></i> Novo Reembolso
                         </a>
                     </div>
@@ -67,7 +67,7 @@
                         <a href="{% url 'verbas_indenizatorias:jetons_list' %}" class="btn btn-warning btn-sm fw-bold shadow-sm">
                             <i class="bi bi-list-ul"></i> Listar Jetons
                         </a>
-                        <a href="{% url 'verbas_indenizatorias:add_jeton_action' %}" class="btn btn-outline-warning btn-sm fw-bold shadow-sm">
+                        <a href="{% url 'verbas_indenizatorias:jeton_create' %}" class="btn btn-outline-warning btn-sm fw-bold shadow-sm">
                             <i class="bi bi-plus-lg"></i> Novo Jeton
                         </a>
                     </div>
@@ -85,7 +85,7 @@
                         <a href="{% url 'verbas_indenizatorias:auxilios_list' %}" class="btn btn-info btn-sm fw-bold shadow-sm text-white">
                             <i class="bi bi-list-ul"></i> Listar Auxílios
                         </a>
-                        <a href="{% url 'verbas_indenizatorias:add_auxilio_action' %}" class="btn btn-outline-info btn-sm fw-bold shadow-sm">
+                        <a href="{% url 'verbas_indenizatorias:auxilio_create' %}" class="btn btn-outline-info btn-sm fw-bold shadow-sm">
                             <i class="bi bi-plus-lg"></i> Novo Auxílio
                         </a>
                     </div>
@@ -107,17 +107,17 @@
                             <i class="bi bi-wallet2"></i> Minhas Prestações
                         </a>
                         {% if perms.verbas_indenizatorias.pode_autorizar_diarias %}
-                        <a href="{% url 'painel_autorizacao_diarias' %}" class="btn btn-outline-primary btn-sm">
+                        <a href="{% url 'verbas_indenizatorias:painel_autorizacao_diarias' %}" class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-person-check"></i> Proponente: Autorizar Diárias
                         </a>
                         {% endif %}
                         {% if perms.verbas_indenizatorias.analisar_prestacao_contas %}
-                        <a href="{% url 'painel_revisar_prestacoes' %}" class="btn btn-outline-dark btn-sm">
+                        <a href="{% url 'verbas_indenizatorias:revisar_prestacoes_list' %}" class="btn btn-outline-dark btn-sm">
                             <i class="bi bi-clipboard-check"></i> Revisar Prestações
                         </a>
                         {% endif %}
                         {% if perms.pagamentos.operador_contas_a_pagar %}
-                        <a href="{% url 'painel_revisar_solicitacoes' %}" class="btn btn-outline-success btn-sm">
+                        <a href="{% url 'verbas_indenizatorias:revisar_solicitacoes_list' %}" class="btn btn-outline-success btn-sm">
                             <i class="bi bi-list-check"></i> Revisar Solicitações para Agrupamento
                         </a>
                         {% endif %}
@@ -127,10 +127,10 @@
                         </a>
                         {% endif %}
                         {% if perms.verbas_indenizatorias.pode_gerenciar_diarias %}
-                        <a href="{% url 'painel_contingencias_diarias' %}" class="btn btn-outline-warning btn-sm">
+                        <a href="{% url 'verbas_indenizatorias:contingencias_diarias_list' %}" class="btn btn-outline-warning btn-sm">
                             <i class="bi bi-exclamation-triangle"></i> Contingências de Diárias
                         </a>
-                        <a href="{% url 'painel_devolucoes_diarias' %}" class="btn btn-outline-danger btn-sm">
+                        <a href="{% url 'verbas_indenizatorias:devolucoes_diarias_list' %}" class="btn btn-outline-danger btn-sm">
                             <i class="bi bi-arrow-return-left"></i> Devoluções de Diárias
                         </a>
                         {% endif %}

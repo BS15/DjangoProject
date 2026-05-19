@@ -1,27 +1,31 @@
 """Views de acoes da etapa de prestacao de contas de suprimentos."""
 
+import logging
 from typing import Any
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
-from django.core.exceptions import PermissionDenied
 from apps.suprimentos.forms import DespesaSuprimentoForm, EnviarPrestacaoSuprimentoForm
 from apps.suprimentos.models import PrestacaoContasSuprimento, SuprimentoDeFundos
 from apps.suprimentos.services.cancelamentos import cancelar_suprimento
-from commons.shared.views import extrair_dados_devolucao_do_post
 from apps.suprimentos.services.prestacao import (
     encerrar_prestacao_suprimento,
     enviar_prestacao_suprimento,
     obter_ou_criar_prestacao_suprimento,
 )
-from ..helpers import _atualizar_status_apos_fechamento, _pode_acessar_suprimento, _suprimento_encerrado
-import logging
+from commons.shared.views import extrair_dados_devolucao_do_post
+
+from ..helpers import (
+    _atualizar_status_apos_fechamento,
+    _pode_acessar_suprimento,
+    _suprimento_encerrado,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +56,7 @@ def adicionar_despesa_action(request: HttpRequest, pk: int) -> HttpResponse:
         return redirect("suprimentos:suprimento_detail", pk=suprimento.id)
     else:
         messages.error(request, "Verifique os campos da despesa e tente novamente.")
-        return redirect("adicionar_despesa_view", pk=suprimento.id)
+        return redirect("suprimentos:adicionar_despesa_create", pk=suprimento.id)
 
 
 @require_POST
@@ -168,7 +172,7 @@ def cancelar_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
     justificativa = (request.POST.get("justificativa") or "").strip()
     if not justificativa:
         messages.error(request, "A justificativa do cancelamento é obrigatória.")
-        return redirect("suprimentos:cancelar_suprimento_action", pk=pk)
+        return redirect("suprimentos:cancelar_suprimento_spoke", pk=pk)
 
     suprimento: Any = get_object_or_404(
         SuprimentoDeFundos.objects.select_related("processo__status"),
@@ -180,7 +184,7 @@ def cancelar_suprimento_action(request: HttpRequest, pk: int) -> HttpResponse:
     except ValidationError as exc:
         for msg in exc.messages:
             messages.error(request, msg)
-        return redirect("suprimentos:cancelar_suprimento_action", pk=pk)
+        return redirect("suprimentos:cancelar_suprimento_spoke", pk=pk)
 
     logger.info("mutation=cancelar_suprimento suprimento_id=%s user_id=%s", suprimento.id, request.user.pk)
     messages.warning(request, f"Suprimento #{suprimento.id} cancelado.")

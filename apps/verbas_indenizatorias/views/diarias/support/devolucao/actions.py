@@ -9,7 +9,9 @@ from django.views.decorators.http import require_POST
 
 from apps.verbas_indenizatorias.forms import DevolucaoDiariaForm
 from apps.verbas_indenizatorias.models import Diaria
-from apps.verbas_indenizatorias.services.devolucao_diarias import registrar_devolucao_diaria
+from apps.verbas_indenizatorias.services.devolucao_diarias import (
+    registrar_devolucao_diaria,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -25,13 +27,13 @@ def registrar_devolucao_diaria_action(request, pk):
         for field_errors in form.errors.values():
             for err in field_errors:
                 messages.error(request, err)
-        return redirect("verbas_indenizatorias:registrar_devolucao_diaria_action", pk=pk)
+        return redirect("verbas_indenizatorias:devolucao_diaria_create", pk=pk)
 
     try:
         devolucao = registrar_devolucao_diaria(diaria, form, request.user)
     except Exception as exc:
         messages.error(request, f"Dados invalidos: {exc}")
-        return redirect("verbas_indenizatorias:registrar_devolucao_diaria_action", pk=pk)
+        return redirect("verbas_indenizatorias:devolucao_diaria_create", pk=pk)
 
     logger.info(
         "mutation=registrar_devolucao_diaria diaria_id=%s devolucao_id=%s user_id=%s valor=%s",

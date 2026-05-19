@@ -9,9 +9,9 @@ from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
-from commons.shared.text_tools import decimals_equal_money, names_bidirectional_match
 from apps.pagamentos.domain_models import STATUS_PROCESSO_PAGOS_E_POSTERIORES, Processo
 from apps.pagamentos.utils import parse_siscac_report
+from commons.shared.text_tools import decimals_equal_money, names_bidirectional_match
 
 logger = logging.getLogger(__name__)
 
@@ -95,8 +95,8 @@ def sincronizar_siscac(request):
 
 @require_POST
 @permission_required("pagamentos.operador_contas_a_pagar", raise_exception=True)
-def sincronizar_siscac_manual_action(request):
-    """Processa force-sync manual de pares processo|SISCAC onde a correspondência automática falhou."""
+def sincronizar_siscac_resolver_divergencias_action(request):
+    """Processa confirmação de divergências e força sincronização de pares processo|SISCAC selecionados pelo usuário."""
     force_sync_ids = request.POST.getlist("force_sync_ids")
     count = 0
     errors = 0
@@ -107,14 +107,22 @@ def sincronizar_siscac_manual_action(request):
             processo = Processo.objects.get(id=int(processo_id))
             processo.n_pagamento_siscac = siscac_pg
             processo.save(update_fields=["n_pagamento_siscac"])
+            logger.info(
+                "mutation=force_sync_siscac_divergencia processo_id=%s siscac_pg=%s user_id=%s",
+                processo_id, siscac_pg, request.user.pk
+            )
             count += 1
         except (TypeError, ValueError, Processo.DoesNotExist):
             errors += 1
+            logger.warning(
+                "erro=force_sync_failed item=%s user_id=%s",
+                item, request.user.pk
+            )
 
     if count:
-        messages.success(request, f"{count} processo(s) sincronizado(s) com sucesso.")
+        messages.success(request, f"{count} divergência(s) confirmada(s) e {count} processo(s) sincronizado(s) com sucesso.")
     if errors:
-        messages.error(request, f"{errors} item(ns) não puderam ser sincronizados.")
+        messages.error(request, f"{errors} divergência(s) não puderam ser sincronizadas. Verifique os dados e tente novamente.")
     return redirect("pagamentos:sincronizar_siscac")
 
 

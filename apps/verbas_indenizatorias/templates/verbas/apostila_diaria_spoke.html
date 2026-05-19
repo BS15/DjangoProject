@@ -7,7 +7,7 @@
 <a href="{% url 'verbas_indenizatorias:diaria_detail' pk=diaria.id %}" class="btn btn-outline-secondary btn-sm">Voltar ao Hub</a>
 {% endblock %}
 
-{% block form_action %}{% url 'registrar_apostila_diaria_action' pk=diaria.id %}{% endblock %}
+{% block form_action %}{% url 'verbas_indenizatorias:add_contingencia_diaria_action' pk=diaria.id %}{% endblock %}
 
 {% block form_fields %}
 <div class="mb-3">

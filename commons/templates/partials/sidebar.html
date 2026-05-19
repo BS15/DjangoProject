@@ -5,7 +5,7 @@
             <i class="bi bi-person-circle me-1"></i>
             {{ user.get_full_name }} ({{ user.username }})
         </span>
-        <form method="post" action="{% url 'logout' %}" class="mb-0" data-csrf-sync="true">
+        <form method="post" action="{% url 'logout' %}" class="mb-0">
             {% csrf_token %}
             <button type="submit" class="btn btn-outline-light btn-sm fw-bold">
                 <i class="bi bi-box-arrow-right"></i> sair
@@ -23,7 +23,7 @@
     <div class="offcanvas-body p-4">
         <h6 class="sidebar-section-title module-cadastros"><i class="bi bi-journal-bookmark-fill"></i> Módulo de Cadastros</h6>
         <a href="{% url 'cadastros:credores_list' %}" class="btn sidebar-link module-cadastros w-100 fw-bold shadow-sm"><i class="bi bi-people-fill"></i> Lista de Credores</a>
-        <a href="{% url 'pagamentos:assinaturas_list' %}" class="btn sidebar-link module-cadastros w-100 fw-bold shadow-sm"><i class="bi bi-pen-fill"></i> Painel de Assinaturas</a>
+        <a href="{% url 'pagamentos:assinaturas_list' %}" class="btn sidebar-link module-cadastros w-100 fw-bold shadow-sm"><i class="bi bi-pen-fill"></i> Painel de Assinaturas #(Em construção)</a>
         <a href="{% url 'pagamentos:relatorios_list' %}" class="btn sidebar-link module-cadastros w-100 fw-bold shadow-sm mt-2"><i class="bi bi-bar-chart-line-fill"></i> Relatórios</a>
         <a href="{% url 'cadastros:importacao_siscac_detail' %}" class="btn sidebar-link module-cadastros w-100 fw-bold shadow-sm mt-2"><i class="bi bi-cloud-arrow-up-fill"></i> Importar Dados SISCAC</a>
 
@@ -89,7 +89,7 @@
 
         <hr class="my-4 text-muted">
 
-        <form method="post" action="{% url 'logout' %}" data-csrf-sync="true">
+        <form method="post" action="{% url 'logout' %}">
             {% csrf_token %}
             <button type="submit" class="btn btn-outline-danger w-100 fw-bold shadow-sm">
                 <i class="bi bi-box-arrow-right"></i> Sair
@@ -103,31 +103,6 @@
     <i class="bi bi-list fs-4"></i>
 </button>
 
-<script>
-(function () {
-    function getCookie(name) {
-        const prefix = `${name}=`;
-        const parts = document.cookie ? document.cookie.split(';') : [];
-        for (let i = 0; i < parts.length; i++) {
-            const cookie = parts[i].trim();
-            if (cookie.startsWith(prefix)) {
-                return decodeURIComponent(cookie.slice(prefix.length));
-            }
-        }
-        return null;
-    }
-
-    document.querySelectorAll('form[data-csrf-sync="true"]').forEach((form) => {
-        form.addEventListener('submit', () => {
-            const input = form.querySelector('input[name="csrfmiddlewaretoken"]');
-            const csrfToken = getCookie('csrftoken');
-            if (input && csrfToken) {
-                input.value = csrfToken;
-            }
-        });
-    });
-})();
-</script>
 
 {% if total_contas_alerta > 0 %}
 <div class="alert alert-warning alert-dismissible fade show mb-0 rounded-0 border-top-0 border-start-0 border-end-0" role="alert">

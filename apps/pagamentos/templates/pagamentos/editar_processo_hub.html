@@ -70,7 +70,7 @@
 <div class="row g-3 mb-4">
 	{% if not somente_documentos %}
 	<div class="col-md-4">
-		<a href="{% url 'pagamentos:editar_processo_capa_action' pk=processo.id %}" class="card border-0 shadow-sm text-decoration-none h-100">
+		<a href="{% url 'pagamentos:processo_capa_detail' pk=processo.id %}" class="card border-0 shadow-sm text-decoration-none h-100">
 			<div class="card-body text-center py-4">
 				<i class="bi bi-card-text fs-2 text-primary mb-2 d-block"></i>
 				<h6 class="fw-bold mb-1">Capa do Processo</h6>
@@ -80,7 +80,7 @@
 	</div>
 	{% endif %}
 	<div class="col-md-4">
-		<a href="{% url 'pagamentos:editar_processo_documentos_action' pk=processo.id %}" class="card border-0 shadow-sm text-decoration-none h-100">
+		<a href="{% url 'pagamentos:processo_documentos_detail' pk=processo.id %}" class="card border-0 shadow-sm text-decoration-none h-100">
 			<div class="card-body text-center py-4">
 				<i class="bi bi-paperclip fs-2 text-success mb-2 d-block"></i>
 				<h6 class="fw-bold mb-1">Documentos</h6>
@@ -90,7 +90,7 @@
 	</div>
 	{% if not somente_documentos %}
 	<div class="col-md-4">
-		<a href="{% url 'pagamentos:editar_processo_pendencias_action' pk=processo.id %}" class="card border-0 shadow-sm text-decoration-none h-100">
+		<a href="{% url 'pagamentos:processo_pendencias_detail' pk=processo.id %}" class="card border-0 shadow-sm text-decoration-none h-100">
 			<div class="card-body text-center py-4">
 				<i class="bi bi-exclamation-triangle fs-2 text-warning mb-2 d-block"></i>
 				<h6 class="fw-bold mb-1">Pendências</h6>
@@ -101,7 +101,7 @@
 	{% endif %}
 	{% if not somente_documentos %}
 	<div class="col-md-4">
-		<a href="{% url 'documentos_fiscais' pk=processo.id %}" class="card border-0 shadow-sm text-decoration-none h-100">
+		<a href="{% url 'pagamentos:processo_fiscais_detail' pk=processo.id %}" class="card border-0 shadow-sm text-decoration-none h-100">
 			<div class="card-body text-center py-4">
 				<i class="bi bi-receipt fs-2 text-info mb-2 d-block"></i>
 				<h6 class="fw-bold mb-1">Liquidações e retenções</h6>
@@ -111,7 +111,7 @@
 	</div>
 	{% endif %}
 	<div class="col-md-4">
-		<a href="{% url 'pagamentos:add_contingencia_action' %}?processo_id={{ processo.id }}" class="card border-0 shadow-sm text-decoration-none h-100 bg-warning bg-opacity-10">
+		<a href="{% url 'pagamentos:contingencia_create' %}?processo_id={{ processo.id }}" class="card border-0 shadow-sm text-decoration-none h-100 bg-warning bg-opacity-10">
 			<div class="card-body text-center py-4">
 				<i class="bi bi-exclamation-triangle fs-2 text-warning mb-2 d-block"></i>
 				<h6 class="fw-bold mb-1 text-dark">Informar Contingência</h6>
@@ -149,7 +149,7 @@
 <div class="card shadow-sm border-0 mb-3">
 	<div class="card-header bg-white border-bottom py-2 d-flex justify-content-between align-items-center">
 		<h6 class="mb-0 fw-bold text-secondary small"><i class="bi bi-receipt"></i> Liquidações e retenções recentes</h6>
-		<a href="{% url 'documentos_fiscais' pk=processo.id %}" class="btn btn-sm btn-outline-secondary py-0">Gerenciar</a>
+		<a href="{% url 'pagamentos:processo_fiscais_detail' pk=processo.id %}" class="btn btn-sm btn-outline-secondary py-0">Gerenciar</a>
 	</div>
 	<div class="card-body p-0">
 		<table class="table table-sm table-hover mb-0">

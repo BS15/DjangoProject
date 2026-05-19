@@ -65,7 +65,7 @@ Listagem e controle de devolucoes registradas nos processos.
     </td>
     <td class="text-center">
         {% if devolucao.comprovante %}
-        <a href="{% url 'download_arquivo_seguro' 'devolucao' devolucao.id %}" target="_blank" class="btn btn-sm btn-outline-secondary py-0">
+        <a href="{% url 'pagamentos:arquivo_seguro_detail' 'devolucao' devolucao.id %}" target="_blank" class="btn btn-sm btn-outline-secondary py-0">
             <i class="bi bi-file-earmark-arrow-down"></i> Ver
         </a>
         {% else %}

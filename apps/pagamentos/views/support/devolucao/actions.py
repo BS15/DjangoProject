@@ -6,8 +6,8 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
-from apps.pagamentos.forms import DevolucaoForm
 from apps.pagamentos.domain_models import Processo
+from apps.pagamentos.forms import DevolucaoForm
 
 
 @require_POST
@@ -25,7 +25,7 @@ def registrar_devolucao_action(request: HttpRequest, processo_id: int) -> HttpRe
         return redirect("pagamentos:process_detail", processo.id)
 
     messages.error(request, "Não foi possível registrar a devolução. Verifique os dados informados.")
-    return redirect("pagamentos:registrar_devolucao_action", processo_id=processo.id)
+    return redirect("pagamentos:devolucao_create", processo_id=processo.id)
 
 
 __all__ = [

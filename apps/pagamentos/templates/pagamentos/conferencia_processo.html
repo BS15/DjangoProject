@@ -46,10 +46,10 @@
 	<div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
 		<h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-paperclip"></i> Documentos do Processo</h6>
 		<div class="d-flex gap-2">
-			<a href="{% url 'pagamentos:editar_processo_documentos_action' pk=processo.id %}#doc-dropzone-documento" class="btn btn-sm btn-outline-primary">
+			<a href="{% url 'pagamentos:processo_documentos_detail' pk=processo.id %}#doc-dropzone-documento" class="btn btn-sm btn-outline-primary">
 				<i class="bi bi-plus-circle"></i> Adicionar
 			</a>
-			<a href="{% url 'pagamentos:editar_processo_documentos_action' pk=processo.id %}" class="btn btn-sm btn-outline-secondary">
+			<a href="{% url 'pagamentos:processo_documentos_detail' pk=processo.id %}" class="btn btn-sm btn-outline-secondary">
 				<i class="bi bi-pencil-square"></i> Editar
 			</a>
 		</div>
@@ -67,13 +67,13 @@
 						type="button"
 						class="btn btn-sm btn-outline-secondary doc-preview-btn"
 						data-doc-prefix="reviewdocs"
-						data-doc-url="{% url 'download_arquivo_seguro' 'processo' doc.id %}"
+						data-doc-url="{% url 'pagamentos:arquivo_seguro_detail' 'processo' doc.id %}"
 						data-doc-name="{{ doc.arquivo.name|default:'' }}"
 						title="Pré-visualizar arquivo"
 					>
 						<i class="bi bi-eye"></i>
 					</button>
-					<a href="{% url 'download_arquivo_seguro' 'processo' doc.id %}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Abrir em nova aba">
+					<a href="{% url 'pagamentos:arquivo_seguro_detail' 'processo' doc.id %}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Abrir em nova aba">
 						<i class="bi bi-box-arrow-up-right"></i>
 					</a>
 				</div>

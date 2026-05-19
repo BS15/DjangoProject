@@ -25,7 +25,7 @@ def add_contingencia_diaria_action(request, pk):
         for field_errors in form.errors.values():
             for err in field_errors:
                 messages.error(request, err)
-        return redirect("verbas_indenizatorias:add_contingencia_diaria_action", pk=pk)
+        return redirect("verbas_indenizatorias:contingencia_diaria_create", pk=pk)
 
     cd = form.cleaned_data
     try:
@@ -39,7 +39,7 @@ def add_contingencia_diaria_action(request, pk):
         )
     except Exception as exc:
         messages.error(request, f"Erro ao abrir contingencia: {exc}")
-        return redirect("verbas_indenizatorias:add_contingencia_diaria_action", pk=pk)
+        return redirect("verbas_indenizatorias:contingencia_diaria_create", pk=pk)
 
     messages.success(
         request,

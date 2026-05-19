@@ -5,6 +5,6 @@ from .pagamentos import *
 __all__ = [
     "sync_siscac_payments",
     "sincronizar_siscac",
-    "sincronizar_siscac_manual_action",
+    "sincronizar_siscac_resolver_divergencias_action",
     "sincronizar_siscac_auto_action",
 ]

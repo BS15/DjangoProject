@@ -27,7 +27,7 @@
     <div class="card-body p-2">
         {% if prestacao.comprovante_devolucao %}
             <iframe
-                src="{% url 'download_arquivo_seguro' 'suprimento_prestacao' prestacao.id %}"
+                src="{% url 'pagamentos:arquivo_seguro_detail' 'suprimento_prestacao' prestacao.id %}"
                 class="w-100 border-0"
                 style="height: 70vh;"
                 title="Comprovante de Devolução">
@@ -128,7 +128,7 @@
                         <td class="text-end pe-2 fw-bold">R$ {{ despesa.valor|floatformat:2 }}</td>
                         <td>
                             {% if despesa.arquivo %}
-                            <a href="{% url 'download_arquivo_seguro' 'suprimento' despesa.id %}" target="_blank" class="btn btn-xs btn-danger py-0 px-1" title="Ver NF">
+                            <a href="{% url 'pagamentos:arquivo_seguro_detail' 'suprimento' despesa.id %}" target="_blank" class="btn btn-xs btn-danger py-0 px-1" title="Ver NF">
                                 <i class="bi bi-file-pdf"></i>
                             </a>
                             {% endif %}

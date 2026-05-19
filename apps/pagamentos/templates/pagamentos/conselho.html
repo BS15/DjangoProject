@@ -11,7 +11,7 @@
 		<p class="text-muted mb-0 ms-4">Reuniões ativas e processos aguardando apreciação.</p>
 	</div>
 	<div>
-		<a href="{% url 'pagamentos:gerenciar_reunioes_action' %}" class="btn btn-outline-primary btn-sm">
+		<a href="{% url 'pagamentos:reunioes_list' %}" class="btn btn-outline-primary btn-sm">
 			<i class="bi bi-calendar3"></i> Gerenciar Reuniões
 		</a>
 	</div>
@@ -48,7 +48,7 @@
 						<td>{{ reuniao.processos_em_pauta.count }} processo(s)</td>
 						<td class="text-center d-flex justify-content-center gap-2">
 							{% if pode_interagir %}
-							<a href="{% url 'pagamentos:montar_pauta_reuniao_action' reuniao_id=reuniao.id %}"
+							<a href="{% url 'pagamentos:montar_pauta_reuniao_detail' reuniao_id=reuniao.id %}"
 							   class="btn btn-sm btn-outline-primary" title="Montar Pauta">
 								<i class="bi bi-list-check"></i> Montar Pauta
 							</a>
@@ -63,7 +63,7 @@
 					<tr>
 						<td colspan="6" class="text-center py-4 text-muted">
 							<i class="bi bi-calendar-x d-block mb-1 fs-4"></i>
-							Nenhuma reunião ativa. <a href="{% url 'pagamentos:gerenciar_reunioes_action' %}">Criar uma nova</a>.
+							Nenhuma reunião ativa. <a href="{% url 'pagamentos:reunioes_list' %}">Criar uma nova</a>.
 						</td>
 					</tr>
 					{% endfor %}

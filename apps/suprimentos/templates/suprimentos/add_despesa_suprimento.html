@@ -14,7 +14,7 @@
     <a href="{% url 'suprimentos:suprimento_detail' suprimento.id %}" class="btn btn-outline-secondary">Voltar ao Hub</a>
 {% endblock %}
 
-{% block form_action %}{% url 'registrar_despesa_action' suprimento.id %}{% endblock %}
+{% block form_action %}{% url 'suprimentos:adicionar_despesa_action' pk=suprimento.id %}{% endblock %}
 
 {% block form_enctype %}multipart/form-data{% endblock %}
 

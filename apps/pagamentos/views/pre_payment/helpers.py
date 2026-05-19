@@ -1,6 +1,7 @@
 """Funções auxiliares privadas para o módulo de pré-pagamento."""
 
 from datetime import datetime
+from urllib.parse import urlsplit
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
@@ -10,7 +11,10 @@ from django.shortcuts import redirect
 from django.utils.http import url_has_allowed_host_and_scheme
 
 from apps.pagamentos.domain_models import DocumentoProcesso, Processo, TiposDeDocumento
-from apps.pagamentos.validators import STATUS_BLOQUEADOS_TOTAL, STATUS_SOMENTE_DOCUMENTOS
+from apps.pagamentos.validators import (
+    STATUS_BLOQUEADOS_TOTAL,
+    STATUS_SOMENTE_DOCUMENTOS,
+)
 
 
 def _salvar_processo_completo(processo_form, mutator_func=None, **formsets):
@@ -93,6 +97,9 @@ def _validar_regras_edicao_processo(request, processo, status_inicial):
     return None, status_inicial in STATUS_SOMENTE_DOCUMENTOS
 def _redirect_seguro_ou_fallback(request, next_url, fallback_name, pk):
     """Redireciona para `next` quando seguro; caso contrário usa rota fallback."""
+    next_url = (next_url or "").strip()
     if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
-        return redirect(next_url)
+        # Evita tratar nome de rota (ex.: "processo_edit_detail") como destino válido.
+        if urlsplit(next_url).path.startswith("/"):
+            return redirect(next_url)
     return redirect(fallback_name, pk=pk)

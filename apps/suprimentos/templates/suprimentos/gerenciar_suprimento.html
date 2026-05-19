@@ -57,7 +57,7 @@
                         <td class="text-end pe-3 fw-bold text-danger">R$ {{ despesa.valor|floatformat:2 }}</td>
                         <td class="text-center">
                             {% if despesa.arquivo %}
-                                <a href="{% url 'download_arquivo_seguro' 'suprimento' despesa.id %}" target="_blank" class="btn btn-sm btn-danger py-0" title="Ver Comprovante">
+                                <a href="{% url 'pagamentos:arquivo_seguro_detail' 'suprimento' despesa.id %}" target="_blank" class="btn btn-sm btn-danger py-0" title="Ver Comprovante">
                                     <i class="bi bi-file-pdf"></i>
                                 </a>
                             {% else %}

@@ -165,6 +165,34 @@ def test_editar_processo_documentos_action_salva_ordem_e_tipo_em_lote(client):
 
 
 @pytest.mark.django_db
+def test_editar_processo_documentos_action_ignora_next_com_nome_de_rota_sem_namespace(client):
+    processo = _create_processo()
+    tipo = _create_tipo_documento("TIPO BASE", processo.tipo_pagamento)
+    doc = _add_documento(processo, tipo, 1, "doc_base.pdf")
+
+    user = _create_backoffice_user()
+    client.force_login(user)
+
+    response = client.post(
+        reverse("pagamentos:editar_processo_documentos_action", kwargs={"pk": processo.id}),
+        data={
+            "documento-TOTAL_FORMS": "1",
+            "documento-INITIAL_FORMS": "1",
+            "documento-MIN_NUM_FORMS": "0",
+            "documento-MAX_NUM_FORMS": "1000",
+            "documento-0-id": str(doc.id),
+            "documento-0-tipo": str(tipo.id),
+            "documento-0-ordem": "1",
+            "next": "processo_edit_detail",
+        },
+        secure=True,
+    )
+
+    assert response.status_code == 302
+    assert response.url == reverse("pagamentos:processo_edit_detail", kwargs={"pk": processo.id})
+
+
+@pytest.mark.django_db
 def test_extrair_codigo_barras_documento_action_persiste_boleto(client, monkeypatch):
     processo = _create_processo()
     tipo_boleto = _create_tipo_documento("BOLETO BANCARIO", processo.tipo_pagamento)

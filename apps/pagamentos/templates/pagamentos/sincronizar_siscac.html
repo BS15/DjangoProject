@@ -3,11 +3,11 @@
 {% block page_title %}Sincronização SISCAC{% endblock %}
 
 {% block detail_body %}
-<div class="container mt-4 mb-5" style="max-width: 800px;">
+<div class="container-fluid mt-4 mb-5" style="max-width: 1200px;">
 	<div class="d-flex justify-content-between align-items-center mb-4">
 		<div>
-			<h3 class="mb-0 fw-bold"><i class="bi bi-arrow-repeat text-primary me-2"></i> Sincronização SISCAC</h3>
-			<p class="text-muted mb-0">Importação e atualização de dados orçamentários</p>
+			<h3 class="mb-0 fw-bold"><i class="bi bi-arrow-repeat text-primary me-2"></i> Conciliação SISCAC</h3>
+			<p class="text-muted mb-0">Importação de relatório PDF e reconciliação automática de pagamentos</p>
 		</div>
 		<a href="{% url 'pagamentos:home_detail' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
 	</div>
@@ -21,43 +21,307 @@
 	{% endfor %}
 	{% endif %}
 
-	<div class="row g-3">
-		<div class="col-md-6">
-			<div class="card shadow-sm border-0 h-100">
-				<div class="card-body text-center py-5">
-					<i class="bi bi-upload fs-1 text-primary mb-3 d-block"></i>
-					<h5 class="fw-bold">Sincronização Manual</h5>
-					<p class="text-muted small">Importa dados a partir de arquivo CSV</p>
-					<form method="post" action="{% url 'pagamentos:sincronizar_siscac_manual_action' %}" enctype="multipart/form-data">
-						{% csrf_token %}
-						<div class="mb-3">
-							<input type="file" name="arquivo_csv" accept=".csv" class="form-control" required>
-						</div>
-						<button type="submit" class="btn btn-primary fw-bold w-100">
-							<i class="bi bi-cloud-upload"></i> Importar CSV
-						</button>
-					</form>
-				</div>
-			</div>
-		</div>
-		<div class="col-md-6">
+	{% if not resultados %}
+	<div class="row g-3 mb-4">
+		<div class="col-12">
 			<div class="card shadow-sm border-0 h-100">
 				<div class="card-body text-center py-5">
 					<i class="bi bi-cloud-download fs-1 text-success mb-3 d-block"></i>
 					<h5 class="fw-bold">Conciliação Automática</h5>
-					<p class="text-muted small">Importa relatório PDF exportado do SISCAC e concilia com os processos internos automaticamente</p>
+					<p class="text-muted mb-3">Importa relatório PDF exportado do SISCAC e concilia com os processos internos automaticamente</p>
 					<form method="post" action="{% url 'pagamentos:sincronizar_siscac_auto_action' %}" enctype="multipart/form-data">
 						{% csrf_token %}
-						<div class="mb-3">
+						<div class="mb-3" style="max-width: 400px; margin: 0 auto;">
 							<input type="file" name="siscac_pdf" accept=".pdf" class="form-control" required>
 						</div>
-						<button type="submit" class="btn btn-success fw-bold w-100">
-							<i class="bi bi-arrow-repeat"></i> Conciliar Agora
+						<button type="submit" class="btn btn-success fw-bold px-4">
+							<i class="bi bi-arrow-repeat me-2"></i> Conciliar Agora
 						</button>
 					</form>
 				</div>
 			</div>
 		</div>
 	</div>
+	{% endif %}
+
+	{% if resultados %}
+	<div class="mb-4">
+		<div class="row g-2 mb-4">
+			<div class="col-md-4">
+				<div class="card bg-light border-0 shadow-sm">
+					<div class="card-body text-center">
+						<i class="bi bi-check-circle text-success fs-3 mb-2 d-block"></i>
+						<h6 class="text-muted mb-1">Sucessos</h6>
+						<h3 class="fw-bold mb-0">{{ resultados.sucessos|length }}</h3>
+						<small class="text-muted">Pagamentos reconciliados</small>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-4">
+				<div class="card bg-light border-0 shadow-sm">
+					<div class="card-body text-center">
+						<i class="bi bi-exclamation-circle text-warning fs-3 mb-2 d-block"></i>
+						<h6 class="text-muted mb-1">Divergências</h6>
+						<h3 class="fw-bold mb-0">{{ resultados.divergencias|length }}</h3>
+						<small class="text-muted">Requerem análise</small>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-4">
+				<div class="card bg-light border-0 shadow-sm">
+					<div class="card-body text-center">
+						<i class="bi bi-x-circle text-danger fs-3 mb-2 d-block"></i>
+						<h6 class="text-muted mb-1">Não Encontrados</h6>
+						<h3 class="fw-bold mb-0">{{ resultados.nao_encontrados|length }}</h3>
+						<small class="text-muted">Sem correspondência</small>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<ul class="nav nav-tabs mb-3" id="resultsTabs" role="tablist">
+			<li class="nav-item" role="presentation">
+				<button class="nav-link active" id="sucessos-tab" data-bs-toggle="tab" data-bs-target="#sucessos" type="button" role="tab" aria-controls="sucessos" aria-selected="true">
+					<i class="bi bi-check-circle-fill text-success me-2"></i>Sucessos ({{ resultados.sucessos|length }})
+				</button>
+			</li>
+			{% if resultados.divergencias %}
+			<li class="nav-item" role="presentation">
+				<button class="nav-link" id="divergencias-tab" data-bs-toggle="tab" data-bs-target="#divergencias" type="button" role="tab" aria-controls="divergencias" aria-selected="false">
+					<i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Divergências ({{ resultados.divergencias|length }})
+				</button>
+			</li>
+			{% endif %}
+			{% if resultados.nao_encontrados %}
+			<li class="nav-item" role="presentation">
+				<button class="nav-link" id="nao-encontrados-tab" data-bs-toggle="tab" data-bs-target="#nao-encontrados" type="button" role="tab" aria-controls="nao-encontrados" aria-selected="false">
+					<i class="bi bi-x-circle-fill text-danger me-2"></i>Não Encontrados ({{ resultados.nao_encontrados|length }})
+				</button>
+			</li>
+			{% endif %}
+		</ul>
+
+		<div class="tab-content" id="resultsTabContent">
+			<div class="tab-pane fade show active" id="sucessos" role="tabpanel" aria-labelledby="sucessos-tab">
+				<div class="card shadow-sm border-0">
+					<div class="card-body">
+						{% if resultados.sucessos %}
+						<table class="table table-hover mb-0">
+							<thead class="table-light">
+								<tr>
+									<th style="width: 80px;">#</th>
+									<th>SISCAC PG</th>
+									<th>Credor</th>
+									<th class="text-end">Valor</th>
+									<th class="text-center">Status</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for item in resultados.sucessos %}
+								<tr>
+									<td class="fw-bold text-muted">{{ item.id }}</td>
+									<td><code>{{ item.siscac_pg }}</code></td>
+									<td>{{ item.credor }}</td>
+									<td class="text-end fw-bold">R$ {{ item.valor|floatformat:2 }}</td>
+									<td class="text-center"><span class="badge bg-success"><i class="bi bi-check-lg"></i> Ok</span></td>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+						{% else %}
+						<p class="text-muted text-center py-4 mb-0">Nenhum pagamento reconciliado com sucesso.</p>
+						{% endif %}
+					</div>
+				</div>
+			</div>
+
+			{% if resultados.divergencias %}
+			<div class="tab-pane fade" id="divergencias" role="tabpanel" aria-labelledby="divergencias-tab">
+				<div class="card shadow-sm border-0">
+					<div class="card-header bg-warning bg-opacity-10 border-bottom-0">
+						<div class="d-flex align-items-center justify-content-between py-2">
+							<span class="fw-bold text-warning">
+								<i class="bi bi-exclamation-triangle-fill me-2"></i>Divergências Detectadas
+							</span>
+							<label class="form-check-label me-3">
+								<input type="checkbox" id="select-all-divergencias" class="form-check-input" title="Selecionar todos">
+								<span class="small">Selecionar todos</span>
+							</label>
+						</div>
+					</div>
+					<div class="card-body p-0">
+						{% if resultados.divergencias %}
+						<form method="post" action="{% url 'pagamentos:sincronizar_siscac_resolver_divergencias_action' %}" id="divergencias-form">
+							{% csrf_token %}
+							<div id="force-sync-container"></div>
+							<table class="table table-hover mb-0">
+								<thead class="table-light">
+									<tr>
+										<th style="width: 50px;" class="text-center">✓</th>
+										<th style="width: 80px;">Processo</th>
+										<th>Campo</th>
+										<th class="bg-primary-subtle">Sistema</th>
+										<th class="bg-warning-subtle">SISCAC</th>
+										<th style="width: 100px;">SISCAC PG</th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for item in resultados.divergencias %}
+									{% if item.credor_siscac != item.credor_sistema %}
+									<tr class="table-warning">
+										<td class="text-center">
+											<input type="checkbox" class="form-check-input divergencia-check" value="{{ item.processo_id }}|{{ item.siscac_pg }}" data-divergencia-id="{{ item.processo_id }}">
+										</td>
+										<td><strong>#{{ item.processo_id }}</strong></td>
+										<td><span class="badge bg-secondary">Credor</span></td>
+										<td class="bg-primary-subtle"><small>{{ item.credor_sistema }}</small></td>
+										<td class="bg-warning-subtle"><small>{{ item.credor_siscac }}</small></td>
+										<td><code class="small">{{ item.siscac_pg }}</code></td>
+									</tr>
+									{% endif %}
+									{% if item.valor_siscac != item.valor_sistema %}
+									<tr class="table-warning">
+										<td class="text-center">
+											<input type="checkbox" class="form-check-input divergencia-check" value="{{ item.processo_id }}|{{ item.siscac_pg }}" data-divergencia-id="{{ item.processo_id }}">
+										</td>
+										<td><strong>#{{ item.processo_id }}</strong></td>
+										<td><span class="badge bg-secondary">Valor</span></td>
+										<td class="bg-primary-subtle"><small>R$ {{ item.valor_sistema|floatformat:2 }}</small></td>
+										<td class="bg-warning-subtle"><small>R$ {{ item.valor_siscac|floatformat:2 }}</small></td>
+										<td><code class="small">{{ item.siscac_pg }}</code></td>
+									</tr>
+									{% endif %}
+									{% endfor %}
+								</tbody>
+							</table>
+							<div class="d-flex justify-content-between align-items-center p-3 border-top">
+								<span id="divergencia-count" class="text-muted">
+									<strong id="selected-divergencias">0</strong> de {{ resultados.divergencias|length }} selecionados
+								</span>
+								<button type="submit" id="resolver-btn" class="btn btn-warning fw-bold" disabled>
+									<i class="bi bi-check2-circle me-2"></i>Confirmar & Sincronizar
+								</button>
+							</div>
+						</form>
+						{% else %}
+						<p class="text-muted text-center py-4 mb-0">Nenhuma divergência detectada.</p>
+						{% endif %}
+					</div>
+				</div>
+			</div>
+			{% endif %}
+
+			{% if resultados.nao_encontrados %}
+			<div class="tab-pane fade" id="nao-encontrados" role="tabpanel" aria-labelledby="nao-encontrados-tab">
+				<div class="card shadow-sm border-0">
+					<div class="card-header bg-danger bg-opacity-10 border-bottom-0">
+						<span class="fw-bold text-danger">
+							<i class="bi bi-x-circle-fill me-2"></i>Pagamentos do SISCAC sem correspondência no sistema
+						</span>
+					</div>
+					<div class="card-body">
+						{% if resultados.nao_encontrados %}
+						<div class="alert alert-info mb-0">
+							<i class="bi bi-info-circle me-2"></i>
+							<small>Estes pagamentos estão no relatório SISCAC mas não foram encontrados nos processos internos. Verifique se a documentação está completa ou se há divergências de dados.</small>
+						</div>
+						<table class="table table-hover mb-0 mt-3">
+							<thead class="table-light">
+								<tr>
+									<th style="width: 80px;">Processo</th>
+									<th>Credor</th>
+									<th>Data Pagamento</th>
+									<th class="text-end">Valor Líquido</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for item in resultados.nao_encontrados %}
+								<tr>
+									<td class="fw-bold text-muted">#{{ item.id }}</td>
+									<td>{{ item.credor }}</td>
+									<td>{{ item.data_pagamento|date:"d/m/Y" }}</td>
+									<td class="text-end">R$ {{ item.valor_liquido|floatformat:2 }}</td>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+						{% else %}
+						<p class="text-muted text-center py-4 mb-0">Todos os pagamentos foram encontrados.</p>
+						{% endif %}
+					</div>
+				</div>
+			</div>
+			{% endif %}
+		</div>
+
+		<div class="mt-4 text-center">
+			<a href="{% url 'pagamentos:sincronizar_siscac' %}" class="btn btn-outline-secondary">
+				<i class="bi bi-arrow-clockwise me-2"></i>Nova Conciliação
+			</a>
+		</div>
+	</div>
+	{% endif %}
+
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	const selectAllCheckbox = document.getElementById('select-all-divergencias');
+	const divergenciaChecks = document.querySelectorAll('.divergencia-check');
+	const forceSyncContainer = document.getElementById('force-sync-container');
+	const selectedCountSpan = document.getElementById('selected-divergencias');
+	const resolverBtn = document.getElementById('resolver-btn');
+	const divergenciasForm = document.getElementById('divergencias-form');
+
+	if (!selectAllCheckbox || !divergenciaChecks.length) return;
+
+	function updateSelection() {
+		const selected = Array.from(divergenciaChecks).filter(cb => cb.checked);
+
+		// Clear existing hidden inputs
+		forceSyncContainer.innerHTML = '';
+
+		// Add hidden input for each selected divergencia
+		selected.forEach(cb => {
+			const input = document.createElement('input');
+			input.type = 'hidden';
+			input.name = 'force_sync_ids';
+			input.value = cb.value;
+			forceSyncContainer.appendChild(input);
+		});
+
+		// Update count display and button state
+		selectedCountSpan.textContent = selected.length;
+		resolverBtn.disabled = selected.length === 0;
+
+		// Uncheck select-all if not all items are selected
+		if (selected.length === 0) {
+			selectAllCheckbox.checked = false;
+			selectAllCheckbox.indeterminate = false;
+		} else if (selected.length < divergenciaChecks.length) {
+			selectAllCheckbox.indeterminate = true;
+		} else {
+			selectAllCheckbox.checked = true;
+			selectAllCheckbox.indeterminate = false;
+		}
+	}
+
+	// Handle select-all checkbox
+	selectAllCheckbox.addEventListener('change', function() {
+		divergenciaChecks.forEach(cb => cb.checked = this.checked);
+		updateSelection();
+	});
+
+	// Handle individual checkboxes
+	divergenciaChecks.forEach(cb => {
+		cb.addEventListener('change', updateSelection);
+	});
+
+	// Initial state
+	updateSelection();
+});
+</script>
 {% endblock %}

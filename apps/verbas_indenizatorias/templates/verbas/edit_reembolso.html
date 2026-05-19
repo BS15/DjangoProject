@@ -63,7 +63,7 @@
                 <ul class="list-group list-group-flush">
                     {% for doc in comprovantes %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <a href="{% url 'download_arquivo_seguro' 'verba_reembolso_doc' doc.id %}" target="_blank" class="text-decoration-none"><i class="bi bi-file-earmark text-danger"></i> {{ doc.arquivo.name }}</a>
+                        <a href="{% url 'pagamentos:arquivo_seguro_detail' 'verba_reembolso_doc' doc.id %}" target="_blank" class="text-decoration-none"><i class="bi bi-file-earmark text-danger"></i> {{ doc.arquivo.name }}</a>
                     </li>
                     {% empty %}
                     <li class="list-group-item text-center text-muted">Nenhum comprovante anexado. A solicitação não poderá avançar.</li>

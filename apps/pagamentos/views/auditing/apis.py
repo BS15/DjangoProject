@@ -9,7 +9,11 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_GET
 
 from apps.pagamentos.domain_models import Processo
-from ..helpers import _build_payload_documentos_processo_auditoria, _build_payload_processo_detalhes
+
+from ..helpers import (
+    _build_payload_documentos_processo_auditoria,
+    _build_payload_processo_detalhes,
+)
 
 
 def any_permission_required(*permissions):
@@ -32,6 +36,7 @@ def any_permission_required(*permissions):
 @any_permission_required(
     "pagamentos.pode_auditar_conselho",
     "pagamentos.operador_contas_a_pagar",
+    "pagamentos.pode_visualizar_processos_pagamento",
 )
 @require_GET
 @xframe_options_sameorigin
